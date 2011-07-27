@@ -26,9 +26,9 @@ extern "C" {
 //#define ROI //Region Of Interest
 	//#define DISTANCE_DRIVEN
 	//#define CORRECTION
-#define STORE_A_MATRIX
+//#define STORE_A_MATRIX
 //	#define WRITE_INTERMEDIATE_RESULTS
-#define COST_CALCULATE
+//#define COST_CALCULATE
 #define BEAM_CALCULATION
 #ifdef CORRECTION
 	double *NORMALIZATION_FACTOR; 
