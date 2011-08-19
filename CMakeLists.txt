@@ -35,7 +35,7 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY
 
 
 # We setup some CMake variables that will get used later on Eventually  
-SET (PROJECT_CODE_DIR ${PROJECT_SOURCE_DIR}/Source)
+SET (PROJECT_CODE_DIR ${PROJECT_SOURCE_DIR}/Code)
 SET (PROJECT_RESOURCES_DIR ${EIMTomo_SOURCE_DIR}/Resources)
 SET (EXE_DEBUG_EXTENSION "_debug")
 
@@ -80,23 +80,9 @@ if (MSVC)
  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
-set(Reconstruct_HDRS
-  ${EIMTomo_SOURCE_DIR}/allocate.h
-  ${EIMTomo_SOURCE_DIR}/ComputationEngineOptimized.h
-  ${EIMTomo_SOURCE_DIR}/ComputationInputs.h
-)
-set(Reconstruct_SRCS
-  ${EIMTomo_SOURCE_DIR}/allocate.c
-  ${EIMTomo_SOURCE_DIR}/ComputationEngineOptimized.c
-  ${EIMTomo_SOURCE_DIR}/ComputationInputs.c
-  ${EIMTomo_SOURCE_DIR}/Main.c
-)
+
+# Add our executables
+add_subdirectory( ${PROJECT_CODE_DIR}/)
 
 
-set(Reconstruct_PROJECT_FILES
-  ${Reconstruct_HDRS}
-  ${Reconstruct_SRCS}
-)
-
-add_executable(reconstruct ${Reconstruct_PROJECT_FILES} )
 
