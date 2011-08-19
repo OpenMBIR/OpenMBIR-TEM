@@ -68,7 +68,7 @@ if (EIMTomo_USE_MULTITHREADED_ALGOS)
 endif()
 
 # --------------------------------------------------------------------
-# If was are using GCC, make the compiler messages on a single line
+# If we are using GCC, make the compiler messages on a single line
 IF(CMAKE_COMPILER_IS_GNUCC)
   SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
