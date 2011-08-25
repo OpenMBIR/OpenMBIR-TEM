@@ -10,6 +10,8 @@ set(Reconstruct_HDRS
   ${PROJECT_CODE_DIR}/allocate.h
   ${PROJECT_CODE_DIR}/ComputationEngineOptimized.h
   ${PROJECT_CODE_DIR}/ComputationInputs.h
+  ${PROJECT_CODE_DIR}/MyHeader.h
+  
 )
 set(Reconstruct_SRCS
   ${PROJECT_CODE_DIR}/allocate.c
@@ -18,7 +20,7 @@ set(Reconstruct_SRCS
   ${PROJECT_CODE_DIR}/Main.c
 )
 
-
+#
 set(Reconstruct_PROJECT_FILES
   ${Reconstruct_HDRS}
   ${Reconstruct_SRCS}
