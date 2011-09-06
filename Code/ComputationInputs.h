@@ -28,11 +28,11 @@ extern "C" {
 	
 	struct _sinogram
 	{
-		uint16_t N_x;//Number of measurements in x direction
+		uint16_t N_r;//Number of measurements in x direction
 		uint16_t N_theta;//Number of angles
-		uint16_t N_y;//Number of measurements in y direction
-		double delta_x;//Distance between successive measurements along x
-		double delta_y;//Distance between successive measurements along y
+		uint16_t N_t;//Number of measurements in y direction
+		double delta_r;//Distance between successive measurements along x
+		double delta_t;//Distance between successive measurements along y
 		double ***counts;//The measured images should be stored in this once read from the input file. It will be a Ny X (Nz X Nx)
 		double *angles;//Holds the angles through which the object is tilted
 		double R0,RMax;
@@ -46,13 +46,13 @@ extern "C" {
 	{
 		//User Input
 		double LengthZ;//This is the sample thickness
-		double delta_xz;//Voxel size in the x-z plane (assuming square shaped voxels in the x-z plane)
-		double delta_xy;//Voxel size in the x-y plane
+		double delta_rz;//Voxel size in the x-z plane (assuming square shaped voxels in the x-z plane)
+		double delta_ry;//Voxel size in the x-y plane
 		double ***Object;//Holds the volume to be reconstructed 
 		
 		//Computed From User Input
-		double LengthX;//sinogram.N_x * delta_x; 
-		double LengthY;//sinogram.N_y * delta_y
+		double LengthX;//sinogram.N_x * delta_r; 
+		double LengthY;//sinogram.N_y * delta_t
 		uint16_t N_x;//Number of voxels in x direction 
 		uint16_t N_z;//Number of voxels in z direction
 		uint16_t N_y;//Number of measurements in y direction

@@ -83,9 +83,9 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	cost=(double*)get_spc(CmdInputs->NumIter+1,sizeof(double));
 #endif
 	
-	Y_Est=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_x,Sinogram->N_y,sizeof(double));
-	ErrorSino=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_x,Sinogram->N_y,sizeof(double));
-	Weight=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_x,Sinogram->N_y,sizeof(double));
+	Y_Est=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(double));
+	ErrorSino=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(double));
+	Weight=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(double));
 	
 	
 	//calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram Structure are converted to radians
@@ -105,8 +105,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	{
 		for (j=0; j< Geometry->N_x; j++) 
 		{
-			x = Geometry->x0 + ((double)j + 0.5)*Geometry->delta_xz;
-			z = Geometry->z0 + ((double)i+0.5)*Geometry->delta_xz;
+			x = Geometry->x0 + ((double)j + 0.5)*Geometry->delta_rz;
+			z = Geometry->z0 + ((double)i+0.5)*Geometry->delta_rz;
 			if (((x*x)/(EllipseA*EllipseA)) + ((z*z)/(EllipseB*EllipseB)) < 0.95)  
 			{
 				Mask[i][j] = 1;
@@ -125,18 +125,18 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 #endif
 #ifdef CORRECTION
 	//Calculate Normalization factors
-	NORMALIZATION_FACTOR = (double*)get_spc(Sinogram->N_x*Sinogram->N_theta,sizeof(double));
+	NORMALIZATION_FACTOR = (double*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(double));
 	
-	for(i = 0;i < Sinogram->N_x*Sinogram->N_theta;i++)
+	for(i = 0;i < Sinogram->N_r*Sinogram->N_theta;i++)
 		NORMALIZATION_FACTOR[i] = 1.0;
 	
 #endif 
 	
 	//Assign the scaling to a global variable
 #ifdef BEAM_CALCULATION
-	BEAM_WIDTH = (0.5)*Sinogram->delta_x;
+	BEAM_WIDTH = (0.5)*Sinogram->delta_r;
 #else
-	BEAM_WIDTH = Sinogram->delta_x;
+	BEAM_WIDTH = Sinogram->delta_r;
 #endif
 	
 	MRF_P = CmdInputs->p;
@@ -208,8 +208,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	//Forward Project Geometry->Object one slice at a time and compute the  Sinogram for each slice
 	//is Y_Est initailized to zero?
 	for(i = 0; i < Sinogram->N_theta; i++)
-		for(j = 0; j < Sinogram->N_x; j++)
-			for(k = 0;k < Sinogram->N_y; k++)
+		for(j = 0; j < Sinogram->N_r; j++)
+			for(k = 0;k < Sinogram->N_t; k++)
 				Y_Est[i][j][k]=0.0;
 	
 	/*
@@ -267,49 +267,49 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 					//for(q = 0; q < AMatrix[j][k]->count; q++)
 				{
 					//Convert AMatrix->index[p] to a (slice,row,col)
-					row = (int16_t)floor(AMatrix[i][j][k]->index[q]/(Sinogram->N_x*Sinogram->N_y));
-					slice =(int16_t) floor((AMatrix[i][j][k]->index[q]%(Sinogram->N_x*Sinogram->N_y))/(Sinogram->N_x));
-					col =  (int16_t)(AMatrix[i][j][k]->index[q]%(Sinogram->N_x*Sinogram->N_y))%(Sinogram->N_x);
-					//row = (uint32_t)((AMatrix[j][k]->index[q])/Sinogram->N_x);
-					//col = (AMatrix[j][k]->index[q])%Sinogram->N_x;
+					row = (int16_t)floor(AMatrix[i][j][k]->index[q]/(Sinogram->N_r*Sinogram->N_t));
+					slice =(int16_t) floor((AMatrix[i][j][k]->index[q]%(Sinogram->N_r*Sinogram->N_t))/(Sinogram->N_r));
+					col =  (int16_t)(AMatrix[i][j][k]->index[q]%(Sinogram->N_r*Sinogram->N_t))%(Sinogram->N_r);
+					//row = (uint32_t)((AMatrix[j][k]->index[q])/Sinogram->N_r);
+					//col = (AMatrix[j][k]->index[q])%Sinogram->N_r;
 					//printf("(%d,%d)\n",row,col);
 					Y_Est[slice][row][col]+=(AMatrix[i][j][k]->values[q] * Geometry->Object[i][j][k]);
 					//Y_Est[i][row][col]+=(AMatrix[p]->values[q] * Geometry->Object[i][j][k]);
 				}
 				//  p++;
 #else
-                    y = ((double)i+0.5)*Geometry->delta_xy + Geometry->y0;
+                    y = ((double)i+0.5)*Geometry->delta_ry + Geometry->y0;
 					t = y;
-					tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-				    tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax? t + Geometry->delta_xy/2 : Sinogram->TMax;
+					tmin = (t - Geometry->delta_ry/2) > Sinogram->T0 ? t-Geometry->delta_ry/2 : Sinogram->T0;
+				    tmax = (t + Geometry->delta_ry/2) <= Sinogram->TMax? t + Geometry->delta_ry/2 : Sinogram->TMax;
 					
-		           slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_y);
-		           slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_y);
+		           slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
+		           slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
 		
 		           if(slice_index_min < 0)
 			       slice_index_min = 0;
-		           if(slice_index_max >= Sinogram->N_y)
-			       slice_index_max = Sinogram->N_y-1; 
+		           if(slice_index_max >= Sinogram->N_t)
+			       slice_index_max = Sinogram->N_t-1; 
 
 				for(q = 0;q < TempCol[j_new][k_new]->count; q++)
 				{
 				    //calculating the footprint of the voxel in the t-direction
 				    			    					
-					i_theta = floor(TempCol[j_new][k_new]->index[q]/(Sinogram->N_x));
-					i_r =  (TempCol[j_new][k_new]->index[q]%(Sinogram->N_x));
+					i_theta = floor(TempCol[j_new][k_new]->index[q]/(Sinogram->N_r));
+					i_r =  (TempCol[j_new][k_new]->index[q]%(Sinogram->N_r));
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
 					if(i_t == slice_index_min)
-						ProfileThickness = (((i_t+1)*Sinogram->delta_y + Sinogram->T0) - tmin);//Sinogram->delta_y; //Will be < Sinogram->delta_y
+						ProfileThickness = (((i_t+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
 					else 
 					{
 						if (i_t == slice_index_max) 
 						{
-							ProfileThickness = (tmax - ((i_t)*Sinogram->delta_y + Sinogram->T0));//Sinogram->delta_y;//Will be < Sinogram->delta_y	
+							ProfileThickness = (tmax - ((i_t)*Sinogram->delta_t + Sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t	
 						}
 						else 
 						{
-							ProfileThickness = Sinogram->delta_y;
+							ProfileThickness = Sinogram->delta_t;
 						}
 						
 					}
@@ -339,8 +339,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	for (i_theta=0;i_theta<Sinogram->N_theta;i_theta++)//slice index
 	{
 		checksum=0;
-		for(i_r = 0; i_r < Sinogram->N_x;i_r++)
-			for(i_t = 0;i_t < Sinogram->N_y;i_t++)
+		for(i_r = 0; i_r < Sinogram->N_r;i_r++)
+			for(i_t = 0;i_t < Sinogram->N_t;i_t++)
 			{
 				
 				// checksum+=Y_Est[i][j][k];
@@ -376,8 +376,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	temp=0;
 	cost[0]=0;
 	for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)
-		for (i_r = 0; i_r < Sinogram->N_x; i_r++)
-			for( i_t = 0; i_t < Sinogram->N_y; i_t++)
+		for (i_r = 0; i_r < Sinogram->N_r; i_r++)
+			for( i_t = 0; i_t < Sinogram->N_t; i_t++)
 				cost[0] += (ErrorSino[i_theta][i_r][i_t] * ErrorSino[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
 	cost[0]/=2;//accounts for the half in from: (1/2)||Y-AX||^2 + ...
 	
@@ -530,49 +530,48 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 						
 						for (q = 0;q < AMatrix[i][j_new][k_new]->count; q++)
 						{
-							
-							
-							RowIndex = floor(AMatrix[i][j_new][k_new]->index[q]/(Sinogram->N_x*Sinogram->N_y));
-							ColIndex = (AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_x*Sinogram->N_y))%(Sinogram->N_x);
-							SliceIndex = floor((AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_x*Sinogram->N_y))/(Sinogram->N_x)); 
+														
+							RowIndex = floor(AMatrix[i][j_new][k_new]->index[q]/(Sinogram->N_r*Sinogram->N_t));
+							ColIndex = (AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_r*Sinogram->N_t))%(Sinogram->N_r);
+							SliceIndex = floor((AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_r*Sinogram->N_t))/(Sinogram->N_r)); 
 							
 							THETA2 += (AMatrix[i][j_new][k_new]->values[q])*(AMatrix[i][j_new][k_new]->values[q])*Weight[SliceIndex][RowIndex][ColIndex];
 							THETA1 += ErrorSino[SliceIndex][RowIndex][ColIndex]*(AMatrix[i][j_new][k_new]->values[q])*Weight[SliceIndex][RowIndex][ColIndex];
 						}
 #else
 						
-						y = ((double)i+0.5)*Geometry->delta_xy + Geometry->y0;
+						y = ((double)i+0.5)*Geometry->delta_ry + Geometry->y0;
 						t = y;
-						tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-						tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax? t + Geometry->delta_xy/2 : Sinogram->TMax;
+						tmin = (t - Geometry->delta_ry/2) > Sinogram->T0 ? t-Geometry->delta_ry/2 : Sinogram->T0;
+						tmax = (t + Geometry->delta_ry/2) <= Sinogram->TMax? t + Geometry->delta_ry/2 : Sinogram->TMax;
 						
-						slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_y);
-						slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_y);
+						slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
+						slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
 						
 						if(slice_index_min < 0)
 							slice_index_min = 0;
-						if(slice_index_max >= Sinogram->N_y)
-							slice_index_max = Sinogram->N_y-1;
+						if(slice_index_max >= Sinogram->N_t)
+							slice_index_max = Sinogram->N_t-1;
 						
 						//TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
 						for (q = 0;q < TempMemBlock->count; q++)
 						{
 							
-							i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_x));
-							i_r =  (TempMemBlock->index[q]%(Sinogram->N_x));
+							i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
+							i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 							 for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 							 {
 								 if(i_t == slice_index_min)
-									 ProfileThickness = (((i_t+1)*Sinogram->delta_y + Sinogram->T0) - tmin);//Sinogram->delta_y; //Will be < Sinogram->delta_y
+									 ProfileThickness = (((i_t+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
 								 else 
 								 {
 									 if (i_t == slice_index_max) 
 									 {
-										 ProfileThickness = (tmax - ((i_t)*Sinogram->delta_y + Sinogram->T0));//Sinogram->delta_y;//Will be < Sinogram->delta_y	
+										 ProfileThickness = (tmax - ((i_t)*Sinogram->delta_t + Sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t	
 									 }
 									 else 
 									 {
-										 ProfileThickness = Sinogram->delta_y;
+										 ProfileThickness = Sinogram->delta_t;
 									 }
 									 
 								 }
@@ -615,9 +614,9 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 						for (q = 0;q < AMatrix[i][j_new][k_new]->count; q++)
 						{
 							
-							RowIndex = floor(AMatrix[i][j_new][k_new]->index[q]/(Sinogram->N_x*Sinogram->N_y));
-							ColIndex = (AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_x*Sinogram->N_y))%(Sinogram->N_x);
-							SliceIndex = floor((AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_x*Sinogram->N_y))/(Sinogram->N_x)); 
+							RowIndex = floor(AMatrix[i][j_new][k_new]->index[q]/(Sinogram->N_r*Sinogram->N_t));
+							ColIndex = (AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_r*Sinogram->N_t))%(Sinogram->N_r);
+							SliceIndex = floor((AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_r*Sinogram->N_t))/(Sinogram->N_r)); 
 							ErrorSino[SliceIndex][RowIndex][ColIndex] -= (AMatrix[i][j_new][k_new]->values[q] * (Geometry->Object[i][j_new][k_new] - V));
 						}
 #else
@@ -625,21 +624,21 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 					for (q = 0;q < TempMemBlock->count; q++)
 					{
 							
-					i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_x));
-					i_r =  (TempMemBlock->index[q]%(Sinogram->N_x));
+					i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
+					i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
 					if(i_t == slice_index_min)
-						ProfileThickness = (((i_t+1)*Sinogram->delta_y + Sinogram->T0) - tmin);//(Sinogram->delta_y); //Will be < Sinogram->delta_y
+						ProfileThickness = (((i_t+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//(Sinogram->delta_t); //Will be < Sinogram->delta_t
 					else 
 					{
 						if (i_t == slice_index_max) 
 						{
-							ProfileThickness = (tmax - ((i_t)*Sinogram->delta_y + Sinogram->T0));//(Sinogram->delta_y);//Will be < Sinogram->delta_y	
+							ProfileThickness = (tmax - ((i_t)*Sinogram->delta_t + Sinogram->T0));//(Sinogram->delta_t);//Will be < Sinogram->delta_t	
 						}
 						else 
 						{
-							ProfileThickness = (Sinogram->delta_y);
+							ProfileThickness = (Sinogram->delta_t);
 						}
 						
 					}
@@ -668,8 +667,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		temp=0;
 		cost[Iter+1]=0;
 		for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)
-			for (i_r = 0; i_r < Sinogram->N_x; i_r++)
-				for( i_t = 0; i_t < Sinogram->N_y; i_t++)
+			for (i_r = 0; i_r < Sinogram->N_r; i_r++)
+				for( i_t = 0; i_t < Sinogram->N_t; i_t++)
 					cost[Iter+1] += (ErrorSino[i_theta][i_r][i_t] * ErrorSino[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
 		cost[Iter+1]/=2;//Accounting for (1/2) in the cost function
 		//Each neighboring pair should be counted only once
@@ -848,11 +847,11 @@ void* CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 		
 		if(angle <= PI/4)
 		{
-			MaxValLineIntegral = Geometry->delta_xz/cos(angle);
+			MaxValLineIntegral = Geometry->delta_rz/cos(angle);
 		}
 		else
 		{
-			MaxValLineIntegral = Geometry->delta_xz/cos(PI/2-angle);
+			MaxValLineIntegral = Geometry->delta_rz/cos(PI/2-angle);
 		}
 		temp=cos(PI/4);
 		dist1 = temp * cos((PI/4.0 - angle));
@@ -864,7 +863,7 @@ void* CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 		
 		for(j = 0;j<PROFILE_RESOLUTION;j++)
 		{
-			t = 2.0*j / PROFILE_RESOLUTION;//2 is the normalized length of the profile (basically equl to 2*delta_xz) 
+			t = 2.0*j / PROFILE_RESOLUTION;//2 is the normalized length of the profile (basically equl to 2*delta_rz) 
 			if(t <= LeftCorner || t >= RightCorner)
 				VoxProfile[i][j] = 0;
 			else if(t > RightNear)
@@ -921,21 +920,21 @@ void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino*
 	
 	// printf("Space allocated for column %d %d\n",row,col);
 	
-	//Temp->index = (uint32_t*)get_spc(Sinogram->N_x*Sinogram->N_theta,sizeof(uint32_t));
-	//Temp->values = (double*)multialloc(sizeof(double),1,Sinogram->N_x*Sinogram->N_theta);//makes the values =0
+	//Temp->index = (uint32_t*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(uint32_t));
+	//Temp->values = (double*)multialloc(sizeof(double),1,Sinogram->N_r*Sinogram->N_theta);//makes the values =0
 	
-	x = Geometry->x0 + ((double)col+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-	z = Geometry->z0 + ((double)row+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-	y = Geometry->y0 + ((double)slice + 0.5)*Geometry->delta_xy;
+	x = Geometry->x0 + ((double)col+0.5)*Geometry->delta_rz;//0.5 is for center of voxel. x_0 is the left corner
+	z = Geometry->z0 + ((double)row+0.5)*Geometry->delta_rz;//0.5 is for center of voxel. x_0 is the left corner
+	y = Geometry->y0 + ((double)slice + 0.5)*Geometry->delta_ry;
 	
-	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_xz);
+	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_rz);
 	
 	
-	//	Temp->values = (double*)calloc(Sinogram->N_y*Sinogram->N_x*Sinogram->N_theta,sizeof(double));//(double*)get_spc(Sinogram->N_x*Sinogram->N_theta,sizeof(double));//makes the values =0
+	//	Temp->values = (double*)calloc(Sinogram->N_t*Sinogram->N_r*Sinogram->N_theta,sizeof(double));//(double*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(double));//makes the values =0
 	
 	//alternately over estimate the maximum size require for a single AMatrix column
-	AvgNumXElements = ceil(3*Geometry->delta_xz/Sinogram->delta_x);
-	AvgNumYElements = ceil(3*Geometry->delta_xy/Sinogram->delta_y);
+	AvgNumXElements = ceil(3*Geometry->delta_rz/Sinogram->delta_r);
+	AvgNumYElements = ceil(3*Geometry->delta_ry/Sinogram->delta_t);
 	MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*Sinogram->N_theta;
 	
 	Temp->values = (double*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(double));
@@ -950,35 +949,35 @@ void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino*
 		r = x*cosine[i] - z*sine[i];
 		t = y;
 		
-		rmin = r - Geometry->delta_xz;
-		rmax = r + Geometry->delta_xz;
+		rmin = r - Geometry->delta_rz;
+		rmax = r + Geometry->delta_rz;
 		
-		tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-		tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax ? t + Geometry->delta_xy/2 : Sinogram->TMax;		
+		tmin = (t - Geometry->delta_ry/2) > Sinogram->T0 ? t-Geometry->delta_ry/2 : Sinogram->T0;
+		tmax = (t + Geometry->delta_ry/2) <= Sinogram->TMax ? t + Geometry->delta_ry/2 : Sinogram->TMax;		
 		
 		if(rmax < Sinogram->R0 || rmin > Sinogram->RMax)
 			continue;
 		
 		
 		
-		index_min = floor(((rmin - Sinogram->R0)/Sinogram->delta_x));
-		index_max = floor((rmax - Sinogram->R0)/Sinogram->delta_x);
+		index_min = floor(((rmin - Sinogram->R0)/Sinogram->delta_r));
+		index_max = floor((rmax - Sinogram->R0)/Sinogram->delta_r);
 		
-		if(index_max >= Sinogram->N_x)
-			index_max = Sinogram->N_x - 1;
+		if(index_max >= Sinogram->N_r)
+			index_max = Sinogram->N_r - 1;
 		
 		if(index_min < 0)
 			index_min = 0;
 		
-		slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_y);
-		slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_y);
+		slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
+		slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
 		
 		if(slice_index_min < 0)
 			slice_index_min = 0;
-		if(slice_index_max >= Sinogram->N_y)
-			slice_index_max = Sinogram->N_y -1; 
+		if(slice_index_max >= Sinogram->N_t)
+			slice_index_max = Sinogram->N_t -1; 
 		
-		BaseIndex = i*Sinogram->N_x*Sinogram->N_y;
+		BaseIndex = i*Sinogram->N_r*Sinogram->N_t;
 		
 		// if(row == 63 && col == 63)
 		//    printf("%d %d\n",index_min,index_max);
@@ -994,7 +993,7 @@ void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino*
 			Integral = 0.0;
 			
 			//Accounting for Beam width
-			RTemp = (Sinogram->R0 + (((double)j) + 0.5) *(Sinogram->delta_x));//the 0.5 is to get to the center of the detector
+			RTemp = (Sinogram->R0 + (((double)j) + 0.5) *(Sinogram->delta_r));//the 0.5 is to get to the center of the detector
 			
 			LeftEndOfBeam = RTemp - (BEAM_WIDTH/2);//Consider pre storing the divide by 2
 			
@@ -1038,23 +1037,23 @@ void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino*
 				for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++) 			
 				{
 					if(sliceidx == slice_index_min)
-						ProfileThickness = (((sliceidx+1)*Sinogram->delta_y + Sinogram->T0) - tmin);//Sinogram->delta_y; //Will be < Sinogram->delta_y
+						ProfileThickness = (((sliceidx+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
 					else 
 					{
 						if (sliceidx == slice_index_max) 
 						{
-							ProfileThickness = (tmax - ((sliceidx)*Sinogram->delta_y + Sinogram->T0));//Sinogram->delta_y;//Will be < Sinogram->delta_y	
+							ProfileThickness = (tmax - ((sliceidx)*Sinogram->delta_t + Sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t	
 						}
 						else 
 						{
-							ProfileThickness = Sinogram->delta_y;//Sinogram->delta_y;
+							ProfileThickness = Sinogram->delta_t;//Sinogram->delta_t;
 						}
 						
 					}
 					if(ProfileThickness > 0)
 					{
 						
-						FinalIndex = BaseIndex + (int32_t)j + (int32_t)sliceidx * Sinogram->N_x;
+						FinalIndex = BaseIndex + (int32_t)j + (int32_t)sliceidx * Sinogram->N_r;
 						Temp->values[count] = Integral*ProfileThickness;
 						Temp->index[count] = FinalIndex;//can instead store a triple (row,col,slice) for the sinogram
 						//printf("Done\n");
@@ -1098,45 +1097,45 @@ void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino*
 		r = x*cosine[i] - z*sine[i];
 		t = y;
 		
-		tmin = (t - Geometry->delta_xy/2) > -Geometry->LengthY/2 ? t-Geometry->delta_xy/2 : -Geometry->LengthY/2;
-		tmax = (t + Geometry->delta_xy/2) <= Geometry->LengthY/2 ? t + Geometry->delta_xy/2 : Geometry->LengthY/2;
+		tmin = (t - Geometry->delta_ry/2) > -Geometry->LengthY/2 ? t-Geometry->delta_ry/2 : -Geometry->LengthY/2;
+		tmax = (t + Geometry->delta_ry/2) <= Geometry->LengthY/2 ? t + Geometry->delta_ry/2 : Geometry->LengthY/2;
 		
 		
 		if(Sinogram->angles[i]*(180/PI) >= -45 && Sinogram->angles[i]*(180/PI) <= 45)
 		{
-			rmin = r - (Geometry->delta_xz/2)*(cosine[i]);
-			rmax = r + (Geometry->delta_xz/2)*(cosine[i]);
+			rmin = r - (Geometry->delta_rz/2)*(cosine[i]);
+			rmax = r + (Geometry->delta_rz/2)*(cosine[i]);
 		}
 		
 		else
 		{
-			rmin = r - (Geometry->delta_xz/2)*fabs(sine[i]);
-			rmax = r + (Geometry->delta_xz/2)*fabs(sine[i]);
+			rmin = r - (Geometry->delta_rz/2)*fabs(sine[i]);
+			rmax = r + (Geometry->delta_rz/2)*fabs(sine[i]);
 		}
 		
 		
-		if(rmax < Sinogram->R0 || rmin > Sinogram->R0 + Sinogram->N_x*Sinogram->delta_x)
+		if(rmax < Sinogram->R0 || rmin > Sinogram->R0 + Sinogram->N_r*Sinogram->delta_r)
 			continue;
 		
-		index_min = floor(((rmin-Sinogram->R0)/Sinogram->delta_x));
-		index_max = floor((rmax-Sinogram->R0)/Sinogram->delta_x);
+		index_min = floor(((rmin-Sinogram->R0)/Sinogram->delta_r));
+		index_max = floor((rmax-Sinogram->R0)/Sinogram->delta_r);
 		
-		slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_y);
-		slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_y);
+		slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
+		slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
 		
 		if(slice_index_min < 0)
 			slice_index_min = 0;
-		if(slice_index_max >= Sinogram->N_y)
-			slice_index_max = Sinogram->N_y -1; 
+		if(slice_index_max >= Sinogram->N_t)
+			slice_index_max = Sinogram->N_t -1; 
 		
 		
-		if(index_max >= Sinogram->N_x)
-			index_max = Sinogram->N_x-1;
+		if(index_max >= Sinogram->N_r)
+			index_max = Sinogram->N_r-1;
 		
 		if(index_min < 0)
 			index_min = 0;
 		
-		BaseIndex = i*Sinogram->N_x*Sinogram->N_y;
+		BaseIndex = i*Sinogram->N_r*Sinogram->N_t;
 		
 		// if(row == 63 && col == 63)
 		//    printf("%d %d\n",index_min,index_max);
@@ -1148,8 +1147,8 @@ void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino*
 		
 		for(j = index_min;j <= index_max; j++)//Check 
 		{
-			d1  = ((double)j)*Sinogram->delta_x + Sinogram->R0;
-			d2 =  d1 + Sinogram->delta_x;
+			d1  = ((double)j)*Sinogram->delta_r + Sinogram->R0;
+			d2 =  d1 + Sinogram->delta_r;
 			
 			if(rmax < d1)
 			{
@@ -1159,15 +1158,15 @@ void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino*
 			{
 				if(rmin > d1 && rmin < d2 && rmax > d2)
 				{
-					Integral = (d2 - rmin)/Sinogram->delta_x;
+					Integral = (d2 - rmin)/Sinogram->delta_r;
 				}
 				else
 				{
 					if(rmin >= d1 && rmin <= d2 && rmax >= d1 && rmax <= d2)
-						Integral= (rmax - rmin)/Sinogram->delta_x;
+						Integral= (rmax - rmin)/Sinogram->delta_r;
 					else
 						if(rmax > d1 && rmax < d2 && rmin < d1)
-							Integral = (rmax - d1)/Sinogram->delta_x;
+							Integral = (rmax - d1)/Sinogram->delta_r;
 						else
 							if( rmin < d1 && rmax > d2)
 								Integral = 1;
@@ -1183,20 +1182,20 @@ void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino*
 				for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++) 			
 				{
 					if(sliceidx == slice_index_min)
-						ProfileThickness = (((sliceidx+1)*Sinogram->delta_y + Sinogram->T0) - tmin)*Sinogram->delta_y;
+						ProfileThickness = (((sliceidx+1)*Sinogram->delta_t + Sinogram->T0) - tmin)*Sinogram->delta_t;
 					else {
 						if (sliceidx == slice_index_max) 
 						{
-							ProfileThickness = (tmax - ((sliceidx)*Sinogram->delta_y + Sinogram->T0))*Sinogram->delta_y;	
+							ProfileThickness = (tmax - ((sliceidx)*Sinogram->delta_t + Sinogram->T0))*Sinogram->delta_t;	
 						}
 						else {
-							ProfileThickness = Sinogram->delta_y;
+							ProfileThickness = Sinogram->delta_t;
 						}
 						
 					}
 					if (ProfileThickness > 0)
 					{
-						FinalIndex = BaseIndex + (uint32_t)j + (int32_t)sliceidx * Sinogram->N_x;
+						FinalIndex = BaseIndex + (uint32_t)j + (int32_t)sliceidx * Sinogram->N_r;
 						
 						Temp->values[count] = Integral*ProfileThickness;
 						Temp->index[count] = FinalIndex;
@@ -1368,9 +1367,9 @@ double CE_ComputeCost(double*** ErrorSino,double*** Weight,Sino* Sinogram,Geom* 
 	//printf("Cost calculation..\n");
     //  printf("%lf %lf\n",ErrorSino[5][5][5],Weight[5][5][5]);
 	
-	for (i = 0; i < Sinogram->N_y; i++)
+	for (i = 0; i < Sinogram->N_t; i++)
 		for (j = 0; j < Sinogram->N_theta; j++)
-			for( k = 0; k < Sinogram->N_x; k++)
+			for( k = 0; k < Sinogram->N_r; k++)
 				cost+=(ErrorSino[i][j][k] * ErrorSino[i][j][k] * Weight[i][j][k]);
 	
 	for( i=0; i < Geometry->N_y;i++ )
@@ -1403,20 +1402,20 @@ void* CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometr
 	int16_t i,j,k,p,l,NumOfDisplacements,ProfileIndex;
 	//NumOfDisplacements=32;
 	H = (double***)get_3D(1, Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(double));//change from 1 to DETECTOR_RESPONSE_BINS
-	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_xz);
-	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_x/2)/DETECTOR_RESPONSE_BINS;
-	OffsetT = ((Geometry->delta_xy/2) + Sinogram->delta_y/2)/DETECTOR_RESPONSE_BINS;
+	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_rz);
+	OffsetR = ((Geometry->delta_rz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+	OffsetT = ((Geometry->delta_ry/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 	
 	for(k = 0 ; k < Sinogram->N_theta; k++)
 	{
 		for (i = 0; i < DETECTOR_RESPONSE_BINS; i++) //displacement along r 
 		{
 			ProfileCenterR = i*OffsetR;
-			rmin = ProfileCenterR - Geometry->delta_xz;		
+			rmin = ProfileCenterR - Geometry->delta_rz;		
 			for (j = 0 ; j < 1; j++)//displacement along t ;change to DETECTOR_RESPONSE_BINS later  
 			{
 				ProfileCenterT = j*OffsetT;
-				tmin = ProfileCenterT - Geometry->delta_xy/2;			
+				tmin = ProfileCenterT - Geometry->delta_ry/2;			
 				sum = 0;			
 				for (p=0; p < BEAM_RESOLUTION; p++) 
 				{
@@ -1476,15 +1475,15 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col,Sino* Sinogram,
 	
 	
 	
-	x = Geometry->x0 + ((double)col+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-	z = Geometry->z0 + ((double)row+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+	x = Geometry->x0 + ((double)col+0.5)*Geometry->delta_rz;//0.5 is for center of voxel. x_0 is the left corner
+	z = Geometry->z0 + ((double)row+0.5)*Geometry->delta_rz;//0.5 is for center of voxel. x_0 is the left corner
 	
-	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_xz);
+	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_rz);
 	
 	
 	
-	AvgNumXElements = ceil(3*Geometry->delta_xz/Sinogram->delta_x);
-	AvgNumYElements = ceil(3*Geometry->delta_xy/Sinogram->delta_y);
+	AvgNumXElements = ceil(3*Geometry->delta_rz/Sinogram->delta_r);
+	AvgNumYElements = ceil(3*Geometry->delta_ry/Sinogram->delta_t);
 	MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*Sinogram->N_theta;
 	
 	Temp->values = (double*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(double));
@@ -1498,24 +1497,24 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col,Sino* Sinogram,
 		
 		r = x*cosine[i] - z*sine[i];
 	
-		rmin = r - Geometry->delta_xz;
-		rmax = r + Geometry->delta_xz;
+		rmin = r - Geometry->delta_rz;
+		rmax = r + Geometry->delta_rz;
 		
 		if(rmax < Sinogram->R0 || rmin > Sinogram->RMax)
 			continue;
 		
 		
 		
-		index_min = floor(((rmin - Sinogram->R0)/Sinogram->delta_x));
-		index_max = floor((rmax - Sinogram->R0)/Sinogram->delta_x);
+		index_min = floor(((rmin - Sinogram->R0)/Sinogram->delta_r));
+		index_max = floor((rmax - Sinogram->R0)/Sinogram->delta_r);
 		
-		if(index_max >= Sinogram->N_x)
-			index_max = Sinogram->N_x - 1;
+		if(index_max >= Sinogram->N_r)
+			index_max = Sinogram->N_r - 1;
 		
 		if(index_min < 0)
 			index_min = 0;
 	
-		BaseIndex = i*Sinogram->N_x;
+		BaseIndex = i*Sinogram->N_r;
 		
 		// if(row == 63 && col == 63)
 		//    printf("%d %d\n",index_min,index_max);
@@ -1531,7 +1530,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col,Sino* Sinogram,
 			Integral = 0.0;
 			
 			//Accounting for Beam width
-			RTemp = (Sinogram->R0 + (((double)j) + 0.5) *(Sinogram->delta_x));//the 0.5 is to get to the center of the detector
+			RTemp = (Sinogram->R0 + (((double)j) + 0.5) *(Sinogram->delta_r));//the 0.5 is to get to the center of the detector
 			
 			LeftEndOfBeam = RTemp - (BEAM_WIDTH/2);//Consider pre storing the divide by 2
 			
@@ -1639,21 +1638,21 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 	int32_t NumOfDisplacements=32;
 	uint32_t count = 0;
 	
-	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_x/2)/DETECTOR_RESPONSE_BINS;
-	OffsetT = ((Geometry->delta_xz/2) + Sinogram->delta_y/2)/DETECTOR_RESPONSE_BINS;
+	OffsetR = ((Geometry->delta_rz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+	OffsetT = ((Geometry->delta_rz/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 	
 	AMatrixCol* Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
 	AMatrixCol* Temp = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));//This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
 	
-	x = Geometry->x0 + ((double)col+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-	z = Geometry->z0 + ((double)row+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-	y = Geometry->y0 + ((double)slice + 0.5)*Geometry->delta_xy;
+	x = Geometry->x0 + ((double)col+0.5)*Geometry->delta_rz;//0.5 is for center of voxel. x_0 is the left corner
+	z = Geometry->z0 + ((double)row+0.5)*Geometry->delta_rz;//0.5 is for center of voxel. x_0 is the left corner
+	y = Geometry->y0 + ((double)slice + 0.5)*Geometry->delta_ry;
 	
-	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_xz);
+	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_rz);
 	
 	//alternately over estimate the maximum size require for a single AMatrix column
-	AvgNumXElements = ceil(3*Geometry->delta_xz/Sinogram->delta_x);
-	AvgNumYElements = ceil(3*Geometry->delta_xy/Sinogram->delta_y);
+	AvgNumXElements = ceil(3*Geometry->delta_rz/Sinogram->delta_r);
+	AvgNumYElements = ceil(3*Geometry->delta_ry/Sinogram->delta_t);
 	MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*Sinogram->N_theta;
 	
 	Temp->values = (double*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(double));
@@ -1667,35 +1666,35 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 		r = x*cosine[i] - z*sine[i];
 		t = y;
 		
-		rmin = r - Geometry->delta_xz;
-		rmax = r + Geometry->delta_xz;
+		rmin = r - Geometry->delta_rz;
+		rmax = r + Geometry->delta_rz;
 		
-		tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-		tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax ? t + Geometry->delta_xy/2 : Sinogram->TMax;		
+		tmin = (t - Geometry->delta_ry/2) > Sinogram->T0 ? t-Geometry->delta_ry/2 : Sinogram->T0;
+		tmax = (t + Geometry->delta_ry/2) <= Sinogram->TMax ? t + Geometry->delta_ry/2 : Sinogram->TMax;		
 		
 		if(rmax < Sinogram->R0 || rmin > Sinogram->RMax)
 			continue;
 		
 		
 		
-		index_min = floor(((rmin - Sinogram->R0)/Sinogram->delta_x));
-		index_max = floor((rmax - Sinogram->R0)/Sinogram->delta_x);
+		index_min = floor(((rmin - Sinogram->R0)/Sinogram->delta_r));
+		index_max = floor((rmax - Sinogram->R0)/Sinogram->delta_r);
 		
-		if(index_max >= Sinogram->N_x)
-			index_max = Sinogram->N_x - 1;
+		if(index_max >= Sinogram->N_r)
+			index_max = Sinogram->N_r - 1;
 		
 		if(index_min < 0)
 			index_min = 0;
 		
-		slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_y);
-		slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_y);
+		slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
+		slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
 		
 		if(slice_index_min < 0)
 			slice_index_min = 0;
-		if(slice_index_max >= Sinogram->N_y)
-			slice_index_max = Sinogram->N_y -1; 
+		if(slice_index_max >= Sinogram->N_t)
+			slice_index_max = Sinogram->N_t -1; 
 		
-		BaseIndex = i*Sinogram->N_x;//*Sinogram->N_y;
+		BaseIndex = i*Sinogram->N_r;//*Sinogram->N_t;
 		
 		for(j = index_min;j <= index_max; j++)//Check 
 		{
@@ -1703,7 +1702,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 			
 			
 			//Accounting for Beam width
-			R_Center = (Sinogram->R0 + (((double)j) + 0.5) *(Sinogram->delta_x));//the 0.5 is to get to the center of the detector
+			R_Center = (Sinogram->R0 + (((double)j) + 0.5) *(Sinogram->delta_r));//the 0.5 is to get to the center of the detector
 			
 			//Find the difference between the center of detector and center of projection and compute the Index to look up into
 			delta_r = fabs(r - R_Center);
@@ -1715,7 +1714,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 				
 		//		for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++) 			
 		//		{
-					T_Center = (Sinogram->T0 + (((double)sliceidx) + 0.5) *(Sinogram->delta_y));
+					T_Center = (Sinogram->T0 + (((double)sliceidx) + 0.5) *(Sinogram->delta_t));
 					delta_t = fabs(t - T_Center);					
 					index_delta_t = 0;//floor(delta_t/OffsetT);
 				    
@@ -1737,18 +1736,18 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 						//	f2 = (w2/OffsetR)*DetectorResponse[index_delta_t+1 < DETECTOR_RESPONSE_BINS ?index_delta_t+1 : DETECTOR_RESPONSE_BINS-1][i][index_delta_r] + (w1/OffsetR)*DetectorResponse[index_delta_t+1 < DETECTOR_RESPONSE_BINS? index_delta_t+1:DETECTOR_RESPONSE_BINS][i][index_delta_r+1 < DETECTOR_RESPONSE_BINS? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
 					    
 						if(sliceidx == slice_index_min)
-							ContributionAlongT = (sliceidx + 1)*Sinogram->delta_y - tmin;
+							ContributionAlongT = (sliceidx + 1)*Sinogram->delta_t - tmin;
 						else if(sliceidx == slice_index_max)
-							ContributionAlongT = tmax - (sliceidx)*Sinogram->delta_y;
+							ContributionAlongT = tmax - (sliceidx)*Sinogram->delta_t;
 						else {
-							ContributionAlongT = Sinogram->delta_y;
+							ContributionAlongT = Sinogram->delta_t;
 						}
 						
 						
 					    InterpolatedValue = f1;//*ContributionAlongT;//(w3/OffsetT)*f2 + (w4/OffsetT)*f2; 
 						if(InterpolatedValue > 0)
 						{
-							FinalIndex = BaseIndex + (int32_t)j ;//+ (int32_t)sliceidx * Sinogram->N_x;	
+							FinalIndex = BaseIndex + (int32_t)j ;//+ (int32_t)sliceidx * Sinogram->N_r;	
 							Temp->values[count] = InterpolatedValue;//DetectorResponse[index_delta_t][i][index_delta_r];
 							Temp->index[count] = FinalIndex;//can instead store a triple (row,col,slice) for the sinogram
 							count++;

@@ -46,17 +46,17 @@ void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram
 	{
 		fscanf(Fp,"%s",temp);
 		
-		if(strcmp("SinoN_x",temp) == 0)
+		if(strcmp("SinoN_r",temp) == 0)
 		{
 			fscanf(Fp,"%s",temp);
-			Sinogram->N_x=atoi(temp);
-			printf("Sino.N_x=%d\n",Sinogram->N_x);
+			Sinogram->N_r=atoi(temp);
+			printf("Sino.N_r=%d\n",Sinogram->N_r);
 		}
-		else if(strcmp("SinoN_y",temp) == 0)
+		else if(strcmp("SinoN_t",temp) == 0)
 		{
 			fscanf(Fp,"%s",temp);
-			Sinogram->N_y=atoi(temp);
-			printf("Sino.N_y=%d\n",Sinogram->N_y);
+			Sinogram->N_t=atoi(temp);
+			printf("Sino.N_t=%d\n",Sinogram->N_t);
 		}
 		else if(strcmp("SinoN_theta",temp) == 0)
 		{
@@ -65,21 +65,21 @@ void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram
 			printf("Sino.N_theta=%d\n",Sinogram->N_theta);
 			Sinogram->angles = (double*)get_spc(Sinogram->N_theta,sizeof(double));
 		}
-		else if(strcmp("SinoDelta_x",temp) == 0)
+		else if(strcmp("SinoDelta_r",temp) == 0)
 		{
 			fscanf(Fp,"%s",temp);
-			Sinogram->delta_x=(double)atof(temp);
-			printf("Sino.delta_x=%lf\n",Sinogram->delta_x);
-			Sinogram->R0 = -(Sinogram->N_x*Sinogram->delta_x)/2;
-			Sinogram->RMax = (Sinogram->N_x*Sinogram->delta_x)/2;
+			Sinogram->delta_r=(double)atof(temp);
+			printf("Sino.delta_r=%lf\n",Sinogram->delta_r);
+			Sinogram->R0 = -(Sinogram->N_r*Sinogram->delta_r)/2;
+			Sinogram->RMax = (Sinogram->N_r*Sinogram->delta_r)/2;
 		}
-		else if (strcmp("SinoDelta_y",temp) == 0)
+		else if (strcmp("SinoDelta_t",temp) == 0)
 		{
 			fscanf(Fp,"%s",temp);
-			Sinogram->delta_y=(double)atof(temp);
-			printf("Sino.delta_y=%lf\n",Sinogram->delta_y);
-			Sinogram->T0 =  -(Sinogram->N_y*Sinogram->delta_y)/2;
-			Sinogram->TMax = (Sinogram->N_y*Sinogram->delta_y)/2; 
+			Sinogram->delta_t=(double)atof(temp);
+			printf("Sino.delta_t=%lf\n",Sinogram->delta_t);
+			Sinogram->T0 =  -(Sinogram->N_t*Sinogram->delta_t)/2;
+			Sinogram->TMax = (Sinogram->N_t*Sinogram->delta_t)/2; 
 			
 		}
 		else if (strcmp("SinoAngles",temp) == 0)
@@ -101,15 +101,15 @@ void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram
 		else if (strcmp("GeomDeltaXZ",temp) == 0)
 		{
 			fscanf(Fp,"%s",temp);
-			Geometry->delta_xz=(double)atof(temp);
-			printf("Geom.delta_xz=%lf\n",Geometry->delta_xz);
+			Geometry->delta_rz=(double)atof(temp);
+			printf("Geom.delta_rz=%lf\n",Geometry->delta_rz);
 		}    
 		
 		else if (strcmp("GeomDeltaXY",temp) == 0)
 		{
 			fscanf(Fp,"%s",temp);
-			Geometry->delta_xy=(double)atof(temp);
-			printf("Geom.delta_xy=%lf\n",Geometry->delta_xy);
+			Geometry->delta_ry=(double)atof(temp);
+			printf("Geom.delta_ry=%lf\n",Geometry->delta_ry);
 		}
 		else if (strcmp("GeomLengthZ",temp) == 0)
 		{
@@ -136,22 +136,22 @@ void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
   double sum=0;
   
   //Allocate a 3-D matrix to store the singoram in the form of a N_y X N_theta X N_x  matrix 
-//  Sinogram->counts=(double***)get_3D(Sinogram->N_y,Sinogram->N_theta,Sinogram->N_x, sizeof(double));
-	 Sinogram->counts=(double***)get_3D(Sinogram->N_theta,Sinogram->N_x,Sinogram->N_y, sizeof(double));
+//  Sinogram->counts=(double***)get_3D(Sinogram->N_t,Sinogram->N_theta,Sinogram->N_r, sizeof(double));
+	 Sinogram->counts=(double***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t, sizeof(double));
   //Read data into this matrix
   //TODO: clarify this ! Super important ! 
  Fp=fopen(ParsedInput->SinoFile,"r");
 	/*
-  for(i=0;i<Sinogram->N_y;i++)
-    for(j=0;j<Sinogram->N_x;j++)
+  for(i=0;i<Sinogram->N_t;i++)
+    for(j=0;j<Sinogram->N_r;j++)
       for(k=0;k<Sinogram->N_theta;k++)
   {	 
     fread (buffer,sizeof(double),1,Fp);
     Sinogram->counts[i][k][j]=*buffer;
   }
 */
-	for(i=0;i<Sinogram->N_y;i++)
-		for(j=0;j<Sinogram->N_x;j++)
+	for(i=0;i<Sinogram->N_t;i++)
+		for(j=0;j<Sinogram->N_r;j++)
 			for(k=0;k<Sinogram->N_theta;k++)
 			{	 
 				fread (buffer,sizeof(double), 1, Fp);
@@ -161,8 +161,8 @@ void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
   for(i=0;i<Sinogram->N_theta;i++)
   {
     sum=0;
-    for(j=0;j<Sinogram->N_x;j++)
-      for(k=0;k<Sinogram->N_y;k++)
+    for(j=0;j<Sinogram->N_r;j++)
+      for(k=0;k<Sinogram->N_t;k++)
 	sum+=Sinogram->counts[i][j][k];
     printf("Sinogram Checksum %lf\n",sum);
   }
@@ -178,11 +178,11 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
   uint16_t i,j,k;
   double *buffer = (double*)get_spc(1,sizeof(double));
   double sum=0;//check sum TODO delete this later
-  Geometry->LengthX = Sinogram->N_x * Sinogram->delta_x;//sinogram.N_x * delta_x; 
-  Geometry->LengthY = Sinogram->N_y * Sinogram->delta_y;//sinogram.N_y * delta_y
-  Geometry->N_x = ceil(Geometry->LengthX/Geometry->delta_xz);//Number of voxels in x direction 
-  Geometry->N_z = ceil(Geometry->LengthZ/Geometry->delta_xz);//Number of voxels in z direction
-  Geometry->N_y = ceil(Geometry->LengthY/Geometry->delta_xy);//Number of measurements in y direction
+  Geometry->LengthX = Sinogram->N_r * Sinogram->delta_r;//sinogram.N_x * delta_r; 
+  Geometry->LengthY = Sinogram->N_t * Sinogram->delta_t;//sinogram.N_y * delta_t
+  Geometry->N_x = ceil(Geometry->LengthX/Geometry->delta_rz);//Number of voxels in x direction 
+  Geometry->N_z = ceil(Geometry->LengthZ/Geometry->delta_rz);//Number of voxels in z direction
+  Geometry->N_y = ceil(Geometry->LengthY/Geometry->delta_ry);//Number of measurements in y direction
 //  Geometry->Object = (double ***)get_3D(Geometry->N_y,Geometry->N_z,Geometry->N_x,sizeof(double));//Allocate space for the 3-D object
   Geometry->Object = (double ***)get_3D(Geometry->N_z,Geometry->N_x,Geometry->N_y,sizeof(double));//Allocate space for the 3-D object
 //Coordinates of the left corner of the x-z object 

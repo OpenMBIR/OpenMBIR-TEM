@@ -19,7 +19,7 @@ extern "C" {
 	//#define DEBUG	
 #define PROFILE_RESOLUTION 1536
 #define PI 4*atan(1)//3.14159265
-	//Beam Parameters - This is set to some number <<< Sinogram->delta_x.
+	//Beam Parameters - This is set to some number <<< Sinogram->delta_r.
 //#define BEAM_WIDTH 0.050000 
 #define BEAM_RESOLUTION 512
 #define AREA_WEIGHTED
@@ -28,7 +28,7 @@ extern "C" {
 	//#define CORRECTION
 //#define STORE_A_MATRIX
 //	#define WRITE_INTERMEDIATE_RESULTS
-#define COST_CALCULATE
+//#define COST_CALCULATE
 #define BEAM_CALCULATION
 #define DETECTOR_RESPONSE_BINS 32
 #ifdef CORRECTION
