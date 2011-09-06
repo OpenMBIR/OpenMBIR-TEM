@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 //#define DEBUG
 
 
@@ -35,18 +36,25 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	
 	uint8_t err = 0;
 	int16_t Iter;
-	int16_t i,j,k,r,row,col,slice,RowIndex,ColIndex,SliceIndex,Idx;
+	int16_t i,j,k,r,row,col,slice,RowIndex,ColIndex,SliceIndex,Idx,i_r,i_theta,i_t;
 	int16_t NumOfXPixels;
 	int32_t q,p;
+	//Random Indexing Parameters
+	int32_t Index,ArraySize,j_new,k_new;
+	int32_t* Counter;
+	
+	
+	
 	double checksum = 0,temp;
+	double RandomIndexj,RandomIndexi;
 	double *cost;
-	double** VoxelProfile;
+	double** VoxelProfile,***DetectorResponse;
 	double ***Y_Est;//Estimted Sinogram 
 	double ***ErrorSino;//Error Sinogram
 	double ***Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
-#ifdef DEBUG
+
 	FILE *Fp = fopen("ReconstructedSino.bin","w");//Reconstructed Sinogram from initial est
-#endif
+
 	FILE* Fp2;//Cost function 
 	FILE *Fp3;//File to store intermediate outputs of reconstruction
 	
@@ -75,13 +83,21 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	cost=(double*)get_spc(CmdInputs->NumIter+1,sizeof(double));
 #endif
 	
-	Y_Est=(double ***)get_3D(Sinogram->N_y,Sinogram->N_theta,Sinogram->N_x,sizeof(double));
-	ErrorSino=(double ***)get_3D(Sinogram->N_y,Sinogram->N_theta,Sinogram->N_x,sizeof(double));
-	Weight=(double ***)get_3D(Sinogram->N_y,Sinogram->N_theta,Sinogram->N_x,sizeof(double));
+	Y_Est=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_x,Sinogram->N_y,sizeof(double));
+	ErrorSino=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_x,Sinogram->N_y,sizeof(double));
+	Weight=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_x,Sinogram->N_y,sizeof(double));
+	
 	
 	//calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram Structure are converted to radians
 	VoxelProfile = CE_CalculateVoxelProfile(Sinogram,Geometry); //Verified with ML
-#ifdef ROI
+	CE_CalculateSinCos(Sinogram);
+	//Initialize the e-beam 
+	CE_InitializeBeamProfile(Sinogram); //verified with ML
+	
+	//calculate sine and cosine of all angles and store in the global arrays sine and cosine
+	DetectorResponse = CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
+	
+	#ifdef ROI
 	Mask = (uint8_t **)get_img(Geometry->N_x, Geometry->N_z,sizeof(uint8_t));//width,height
 	EllipseA = Geometry->LengthX/2;
 	EllipseB = Geometry->LengthZ/2;
@@ -118,7 +134,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	
 	//Assign the scaling to a global variable
 #ifdef BEAM_CALCULATION
-	BEAM_WIDTH = (1)*Sinogram->delta_x;
+	BEAM_WIDTH = (0.5)*Sinogram->delta_x;
 #else
 	BEAM_WIDTH = Sinogram->delta_x;
 #endif
@@ -134,17 +150,13 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
     checksum=0;
     
 	
-	//Initialize the e-beam 
-	CE_InitializeBeamProfile(Sinogram); //verified with ML
-	
-	//calculate sine and cosine of all angles and store in the global arrays sine and cosine
-	
-	CE_CalculateSinCos(Sinogram);
+
 	
 	
 	//Allocate space for storing columns the A-matrix; an array of pointers to columns 
 	//AMatrixCol** AMatrix=(AMatrixCol **)get_spc(Geometry->N_x*Geometry->N_z,sizeof(AMatrixCol*));
-	
+//	DetectorResponse = CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
+
 #ifdef STORE_A_MATRIX
 	
 	AMatrixCol**** AMatrix = (AMatrixCol ****)multialloc(sizeof(AMatrixCol*),3,Geometry->N_y,Geometry->N_z,Geometry->N_x);
@@ -153,6 +165,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	double t,tmin,tmax,ProfileThickness; 
 	int16_t slice_index_min,slice_index_max;
 	AMatrixCol*** TempCol = (AMatrixCol***)multialloc(sizeof(AMatrixCol*),2,Geometry->N_z,Geometry->N_x);
+	AMatrixCol* Aj;
+	AMatrixCol* TempMemBlock;	
 #endif
 	
 	//Calculating A-Matrix one column at a time
@@ -183,7 +197,9 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
     for(j=0; j < Geometry->N_z; j++)
     for(k=0; k < Geometry->N_x; k++)
     { 
-    TempCol[j][k] = CE_CalculateAMatrixColumnPartial(j,k,Sinogram,Geometry,VoxelProfile);
+   TempCol[j][k] = CE_CalculateAMatrixColumnPartial(j,k,0,Sinogram,Geometry,DetectorResponse);
+//		TempCol[j][k] = CE_CalculateAMatrixColumnPartial(j,k,Sinogram,Geometry,VoxelProfile);
+//	printf("%d\n",TempCol[j][k]->count);
     }
 #endif
 	
@@ -191,20 +207,61 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	
 	//Forward Project Geometry->Object one slice at a time and compute the  Sinogram for each slice
 	//is Y_Est initailized to zero?
-	for(i = 0; i < Sinogram->N_y; i++)
-		for(j = 0; j < Sinogram->N_theta; j++)
-			for(k = 0;k < Sinogram->N_x; k++)
+	for(i = 0; i < Sinogram->N_theta; i++)
+		for(j = 0; j < Sinogram->N_x; j++)
+			for(k = 0;k < Sinogram->N_y; k++)
 				Y_Est[i][j][k]=0.0;
 	
+	/*
 	
+	int i,index,ArraySize=400;
+	int* Counter = (int*)malloc(400*sizeof(int));
+	for(i=0;i < 400;i++)
+		Counter[i] = i;
+	srand(time(NULL));
 	
-	
-	for (i = 0;i < Geometry->N_y; i++)//slice index
+	for (i = 0; i < 400; i++)
 	{
+		index=rand()%ArraySize;
+		printf("%d\n",Counter[index]);
+		memmove(Counter+index,Counter+index+1,(ArraySize - index)*sizeof(int));
+		ArraySize--;
+	}*/
+	
 		//  p=0;//This is used to access the A-Matrix column correspoding the (i,j,k)the voxel location
+	srand(time(NULL));
+	ArraySize= Geometry->N_z*Geometry->N_x;
+	//ArraySizeK = Geometry->N_x;
+	
+	Counter = (int32_t*)malloc(ArraySize*sizeof(int32_t));
+	//CounterK = (int*)malloc(ArraySizeK*sizeof(int));
+	
+	for(j_new = 0;j_new < ArraySize; j_new++)
+		Counter[j_new]=j_new;
+	
+	
+	
+	
+//	for(k = 0;k < ArraySizeK; k++)
+//		CounterK[k]=k;
+	
+	
 		for(j = 0;j < Geometry->N_z; j++)
 			for(k = 0;k < Geometry->N_x; k++)
-			{
+			{			
+				//generating a random index
+				
+				Index = rand()%ArraySize;								
+				k_new = Counter[Index]%Geometry->N_x;
+				j_new = Counter[Index]/Geometry->N_x;
+				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index));	
+				ArraySize--; 
+				
+			//	printf("%d,%d\n",j_new,k_new);
+
+												
+			for (i = 0;i < Geometry->N_y; i++)//slice index
+				{
 #ifdef STORE_A_MATRIX  //A matrix call
 				for(q = 0;q < AMatrix[i][j][k]->count; q++)
 					//for(q = 0; q < AMatrix[j][k]->count; q++)
@@ -234,21 +291,21 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		           if(slice_index_max >= Sinogram->N_y)
 			       slice_index_max = Sinogram->N_y-1; 
 
-				for(q = 0;q < TempCol[j][k]->count; q++)
+				for(q = 0;q < TempCol[j_new][k_new]->count; q++)
 				{
 				    //calculating the footprint of the voxel in the t-direction
 				    			    					
-					RowIndex = floor(TempCol[j][k]->index[q]/(Sinogram->N_x));
-					ColIndex =  (TempCol[j][k]->index[q]%(Sinogram->N_x));
-					for(SliceIndex = slice_index_min ; SliceIndex <= slice_index_max; SliceIndex++)
+					i_theta = floor(TempCol[j_new][k_new]->index[q]/(Sinogram->N_x));
+					i_r =  (TempCol[j_new][k_new]->index[q]%(Sinogram->N_x));
+					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
-					if(SliceIndex == slice_index_min)
-						ProfileThickness = (((SliceIndex+1)*Sinogram->delta_y + Sinogram->T0) - tmin);//Sinogram->delta_y; //Will be < Sinogram->delta_y
+					if(i_t == slice_index_min)
+						ProfileThickness = (((i_t+1)*Sinogram->delta_y + Sinogram->T0) - tmin);//Sinogram->delta_y; //Will be < Sinogram->delta_y
 					else 
 					{
-						if (SliceIndex == slice_index_max) 
+						if (i_t == slice_index_max) 
 						{
-							ProfileThickness = (tmax - ((SliceIndex)*Sinogram->delta_y + Sinogram->T0));//Sinogram->delta_y;//Will be < Sinogram->delta_y	
+							ProfileThickness = (tmax - ((i_t)*Sinogram->delta_y + Sinogram->T0));//Sinogram->delta_y;//Will be < Sinogram->delta_y	
 						}
 						else 
 						{
@@ -256,7 +313,14 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 						}
 						
 					}
-					Y_Est[SliceIndex][RowIndex][ColIndex] += (TempCol[j][k]->values[q] *ProfileThickness* Geometry->Object[i][j][k]);
+						
+						
+						
+						
+					Y_Est[i_theta][i_r][i_t] += (TempCol[j_new][k_new]->values[q] *ProfileThickness* Geometry->Object[j_new][k_new][i]);
+						
+							
+						
 					}
 					
 				}
@@ -264,39 +328,42 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 #endif
 			} 
 		
-	}
+	       }
+		
+	
 	
 	
 	//Calculate Error Sinogram - Can this be combined with previous loop?
 	//Also compute weights of the diagonal covariance matrix
 	
-	for (i=0;i<Sinogram->N_y;i++)//slice index
+	for (i_theta=0;i_theta<Sinogram->N_theta;i_theta++)//slice index
 	{
 		checksum=0;
-		for(j=0;j<Sinogram->N_theta;j++)
-			for(k=0;k<Sinogram->N_x;k++)
+		for(i_r = 0; i_r < Sinogram->N_x;i_r++)
+			for(i_t = 0;i_t < Sinogram->N_y;i_t++)
 			{
 				
 				// checksum+=Y_Est[i][j][k];
-				ErrorSino[i][j][k] = Sinogram->counts[i][j][k] - Y_Est[i][j][k];
-				if(Sinogram->counts[i][j][k] != 0)
-					Weight[i][j][k]=1.0/Sinogram->counts[i][j][k];
+				ErrorSino[i_theta][i_r][i_t] = Sinogram->counts[i_theta][i_r][i_t] - Y_Est[i_theta][i_r][i_t];
+				if(Sinogram->counts[i_theta][i_r][i_t] != 0)
+					Weight[i_theta][i_r][i_t]=1.0/Sinogram->counts[i_theta][i_r][i_t];
 				else
-					Weight[i][j][k]=0;
-#ifdef DEBUG			
+					Weight[i_theta][i_r][i_t]=0;
+//#ifdef DEBUG			
 				//writing the error sinogram
-				fwrite(&ErrorSino[i][j][k],sizeof(double),1,Fp);
-#endif	
-				checksum+=Weight[i][j][k];
+				
+				fwrite(&Y_Est[i_theta][i_r][i_t],sizeof(double),1,Fp);
+//#endif	
+				checksum+=Weight[i_theta][i_r][i_t];
 			}
-		printf("Check sum = %lf\n",checksum);  
+		printf("Check sum of Diagonal Covariance Matrix= %lf\n",checksum);  
 		
 	}
 	
 	free(Y_Est);
-#ifdef DEBUG
+
 	fclose(Fp);
-#endif
+
 	
 	
 	
@@ -308,34 +375,34 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	/*********************Initial Cost Calculation***************************************************/
 	temp=0;
 	cost[0]=0;
-	for (i = 0; i < Sinogram->N_y; i++)
-		for (j = 0; j < Sinogram->N_theta; j++)
-			for( k = 0; k < Sinogram->N_x; k++)
-				cost[0] += (ErrorSino[i][j][k] * ErrorSino[i][j][k] * Weight[i][j][k]);
+	for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)
+		for (i_r = 0; i_r < Sinogram->N_x; i_r++)
+			for( i_t = 0; i_t < Sinogram->N_y; i_t++)
+				cost[0] += (ErrorSino[i_theta][i_r][i_t] * ErrorSino[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
 	cost[0]/=2;//accounts for the half in from: (1/2)||Y-AX||^2 + ...
 	
 	//Each neighboring pair should be counted only once
 	
-	for (i = 0; i < Geometry->N_y; i++)
-		for (j = 0; j < Geometry->N_z; j++)
-			for(k = 0; k < Geometry->N_x; k++)
+	for (i = 0; i < Geometry->N_z; i++)
+		for (j = 0; j < Geometry->N_x; j++)
+			for(k = 0; k < Geometry->N_y; k++)
 			{
 				
-				if(k+1 <  Geometry->N_x)
-					temp += FILTER[1][1][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j][k+1]),MRF_P);
+				if(k+1 <  Geometry->N_y)
+					temp += FILTER[2][1][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j][k+1]),MRF_P);
 				
 				
-				if(j+1 < Geometry->N_z)
+				if(j+1 < Geometry->N_x)
 				{
 					if(k-1 >= 0)
-						temp += FILTER[1][2][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k-1]),MRF_P);
+						temp += FILTER[0][1][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k-1]),MRF_P); //<y,z,x>=><z,x,y>
 					
 					
-					temp += FILTER[1][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k]),MRF_P);
+					temp += FILTER[1][1][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k]),MRF_P);
 					
 					
 					if(k+1 < Geometry->N_x)
-						temp += FILTER[1][2][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k+1]),MRF_P);
+						temp += FILTER[2][1][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k+1]),MRF_P);
 					
 				}
 				
@@ -343,38 +410,38 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				{
 					
 					if(j-1 >= 0)
-						temp += FILTER[2][0][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k]),MRF_P);
+						temp += FILTER[1][2][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k]),MRF_P);
 					
-					temp += FILTER[2][1][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k]),MRF_P);
+					temp += FILTER[1][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k]),MRF_P);
 					
 					if(j+1 < Geometry->N_z)
-						temp += FILTER[2][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k]),MRF_P);
+						temp += FILTER[1][2][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k]),MRF_P);
 					
 					
 					if(j-1 >= 0)
 					{
 						if(k-1 >= 0)
-							temp += FILTER[2][0][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k-1]),MRF_P);
+							temp += FILTER[0][2][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k-1]),MRF_P);
 						
 						if(k+1 < Geometry->N_x)
-							temp += FILTER[2][0][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k+1]),MRF_P);
+							temp += FILTER[2][2][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k+1]),MRF_P);
 						
 					}
 					
 					if(k-1 >= 0)
-						temp += FILTER[2][1][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k-1]),MRF_P);
+						temp += FILTER[0][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k-1]),MRF_P);
 					
 					if(j+1 < Geometry->N_z)
 					{
 						if(k-1 >= 0)
-							temp += FILTER[2][2][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k-1]),MRF_P);
+							temp += FILTER[0][2][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k-1]),MRF_P);
 						
 						if(k+1 < Geometry->N_x)
 							temp+= FILTER[2][2][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k+1]),MRF_P);
 					}
 					
 					if(k+1 < Geometry->N_x)
-						temp+= FILTER[2][1][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k+1]),MRF_P);
+						temp+= FILTER[2][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k+1]),MRF_P);
 				}
 			}
 	
@@ -388,21 +455,36 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	
 	
 	//Loop through every voxel updating it by solving a cost function
+	srand(time(NULL));
 	
 	for(Iter = 0;Iter < CmdInputs->NumIter;Iter++)
 	{
-		
+		ArraySize = Geometry->N_x*Geometry->N_z;
+		for(j_new = 0;j_new < ArraySize; j_new++)
+			Counter[j_new]=j_new;
 		
 		//printf("Iter %d\n",Iter);
-		for (i = 0; i < Geometry->N_y; i++)//slice index
-		{
-			//Idx=0;
-			//printf("Slice %d\n",i);
-			for(j = 0; j < Geometry->N_z; j++)//Row index
-				for(k = 0; k < Geometry->N_x ; k++)//Column index
+		
+			
+		for(j = 0; j < Geometry->N_z; j++)//Row index
+			for(k = 0; k < Geometry->N_x ; k++)//Column index
+			{
+				
+				Index = rand()%ArraySize;
+				k_new = Counter[Index]%Geometry->N_x;
+				j_new = Counter[Index]/Geometry->N_x;
+				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index));	
+			
+				ArraySize--; 
+				
+				
+				TempMemBlock = TempCol[j_new][k_new];
+				
+				
+				for (i = 0; i < Geometry->N_y; i++)//slice index
 				{
 #ifdef ROI
-					if (Mask[j][k] == 1)
+					if (Mask[j_new][k_new] == 1)
 					{
 #endif					
 						
@@ -419,10 +501,10 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 								for(r = -1; r <= 1;r++)
 								{
 									if(i+p >= 0 && i+p < Geometry->N_y)
-										if(j+q >= 0 && j+q < Geometry->N_z)
-											if(k+r >= 0 && k+r < Geometry->N_x)
+										if(j_new+q >= 0 && j_new+q < Geometry->N_z)
+											if(k_new+r >= 0 && k_new+r < Geometry->N_x)
 											{
-												NEIGHBORHOOD[p+1][q+1][r+1] = Geometry->Object[p+i][q+j][r+k];
+												NEIGHBORHOOD[p+1][q+1][r+1] = Geometry->Object[q+j_new][r+k_new][p+i];
 											}
 								}
 						NEIGHBORHOOD[1][1][1] = 0.0;
@@ -440,22 +522,22 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 #endif
 						//Compute theta1 and theta2
 						
-						V = Geometry->Object[i][j][k];//Store the present value of the voxel
+						V = Geometry->Object[j_new][k_new][i];//Store the present value of the voxel
 						THETA1 = 0.0;
 						THETA2 = 0.0;
 						
 #ifdef STORE_A_MATRIX
 						
-						for (q = 0;q < AMatrix[i][j][k]->count; q++)
+						for (q = 0;q < AMatrix[i][j_new][k_new]->count; q++)
 						{
 							
 							
-							RowIndex = floor(AMatrix[i][j][k]->index[q]/(Sinogram->N_x*Sinogram->N_y));
-							ColIndex = (AMatrix[i][j][k]->index[q]%(Sinogram->N_x*Sinogram->N_y))%(Sinogram->N_x);
-							SliceIndex = floor((AMatrix[i][j][k]->index[q]%(Sinogram->N_x*Sinogram->N_y))/(Sinogram->N_x)); 
+							RowIndex = floor(AMatrix[i][j_new][k_new]->index[q]/(Sinogram->N_x*Sinogram->N_y));
+							ColIndex = (AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_x*Sinogram->N_y))%(Sinogram->N_x);
+							SliceIndex = floor((AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_x*Sinogram->N_y))/(Sinogram->N_x)); 
 							
-							THETA2 += (AMatrix[i][j][k]->values[q])*(AMatrix[i][j][k]->values[q])*Weight[SliceIndex][RowIndex][ColIndex];
-							THETA1 += ErrorSino[SliceIndex][RowIndex][ColIndex]*(AMatrix[i][j][k]->values[q])*Weight[SliceIndex][RowIndex][ColIndex];
+							THETA2 += (AMatrix[i][j_new][k_new]->values[q])*(AMatrix[i][j_new][k_new]->values[q])*Weight[SliceIndex][RowIndex][ColIndex];
+							THETA1 += ErrorSino[SliceIndex][RowIndex][ColIndex]*(AMatrix[i][j_new][k_new]->values[q])*Weight[SliceIndex][RowIndex][ColIndex];
 						}
 #else
 						
@@ -473,20 +555,20 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 							slice_index_max = Sinogram->N_y-1;
 						
 						//TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
-						for (q = 0;q < TempCol[j][k]->count; q++)
+						for (q = 0;q < TempMemBlock->count; q++)
 						{
 							
-							RowIndex = floor(TempCol[j][k]->index[q]/(Sinogram->N_x));
-							ColIndex =  (TempCol[j][k]->index[q]%(Sinogram->N_x));
-							 for(SliceIndex = slice_index_min ; SliceIndex <= slice_index_max; SliceIndex++)
+							i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_x));
+							i_r =  (TempMemBlock->index[q]%(Sinogram->N_x));
+							 for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 							 {
-								 if(SliceIndex == slice_index_min)
-									 ProfileThickness = (((SliceIndex+1)*Sinogram->delta_y + Sinogram->T0) - tmin);//Sinogram->delta_y; //Will be < Sinogram->delta_y
+								 if(i_t == slice_index_min)
+									 ProfileThickness = (((i_t+1)*Sinogram->delta_y + Sinogram->T0) - tmin);//Sinogram->delta_y; //Will be < Sinogram->delta_y
 								 else 
 								 {
-									 if (SliceIndex == slice_index_max) 
+									 if (i_t == slice_index_max) 
 									 {
-										 ProfileThickness = (tmax - ((SliceIndex)*Sinogram->delta_y + Sinogram->T0));//Sinogram->delta_y;//Will be < Sinogram->delta_y	
+										 ProfileThickness = (tmax - ((i_t)*Sinogram->delta_y + Sinogram->T0));//Sinogram->delta_y;//Will be < Sinogram->delta_y	
 									 }
 									 else 
 									 {
@@ -496,8 +578,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 								 }
 								 
 								 
-								 THETA2 += (ProfileThickness*ProfileThickness)*(TempCol[j][k]->values[q])*(TempCol[j][k]->values[q])*Weight[SliceIndex][RowIndex][ColIndex];
-								 THETA1 += ErrorSino[SliceIndex][RowIndex][ColIndex]*(TempCol[j][k]->values[q])*(ProfileThickness)*Weight[SliceIndex][RowIndex][ColIndex];
+								 THETA2 += (ProfileThickness*ProfileThickness)*(TempMemBlock->values[q])*(TempMemBlock->values[q])*Weight[i_theta][i_r][i_t];
+								 THETA1 += ErrorSino[i_theta][i_r][i_t]*(TempMemBlock->values[q])*(ProfileThickness)*Weight[i_theta][i_r][i_t];
 							 }
 						}
 #endif
@@ -523,38 +605,37 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 						}
 						else {
 							printf("Error \n");
-						}
+			 	 		}
 						
 						//TODO Print appropriate error messages for other values of error code
-						Geometry->Object[i][j][k] = UpdatedVoxelValue;
+						Geometry->Object[j_new][k_new][i] = UpdatedVoxelValue;
 						//Update the ErrorSinogram
 						
 #ifdef STORE_A_MATRIX
-						for (q = 0;q < AMatrix[i][j][k]->count; q++)
+						for (q = 0;q < AMatrix[i][j_new][k_new]->count; q++)
 						{
 							
-							RowIndex = floor(AMatrix[i][j][k]->index[q]/(Sinogram->N_x*Sinogram->N_y));
-							ColIndex = (AMatrix[i][j][k]->index[q]%(Sinogram->N_x*Sinogram->N_y))%(Sinogram->N_x);
-							SliceIndex = floor((AMatrix[i][j][k]->index[q]%(Sinogram->N_x*Sinogram->N_y))/(Sinogram->N_x)); 
-							
-							ErrorSino[SliceIndex][RowIndex][ColIndex] -= (AMatrix[i][j][k]->values[q] * (Geometry->Object[i][j][k] - V));
+							RowIndex = floor(AMatrix[i][j_new][k_new]->index[q]/(Sinogram->N_x*Sinogram->N_y));
+							ColIndex = (AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_x*Sinogram->N_y))%(Sinogram->N_x);
+							SliceIndex = floor((AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_x*Sinogram->N_y))/(Sinogram->N_x)); 
+							ErrorSino[SliceIndex][RowIndex][ColIndex] -= (AMatrix[i][j_new][k_new]->values[q] * (Geometry->Object[i][j_new][k_new] - V));
 						}
 #else
 							       
-					for (q = 0;q < TempCol[j][k]->count; q++)
+					for (q = 0;q < TempMemBlock->count; q++)
 					{
 							
-					RowIndex = floor(TempCol[j][k]->index[q]/(Sinogram->N_x));
-					ColIndex =  (TempCol[j][k]->index[q]%(Sinogram->N_x));
-					for(SliceIndex = slice_index_min ; SliceIndex <= slice_index_max; SliceIndex++)
+					i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_x));
+					i_r =  (TempMemBlock->index[q]%(Sinogram->N_x));
+					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
-					if(SliceIndex == slice_index_min)
-						ProfileThickness = (((SliceIndex+1)*Sinogram->delta_y + Sinogram->T0) - tmin);//(Sinogram->delta_y); //Will be < Sinogram->delta_y
+					if(i_t == slice_index_min)
+						ProfileThickness = (((i_t+1)*Sinogram->delta_y + Sinogram->T0) - tmin);//(Sinogram->delta_y); //Will be < Sinogram->delta_y
 					else 
 					{
-						if (SliceIndex == slice_index_max) 
+						if (i_t == slice_index_max) 
 						{
-							ProfileThickness = (tmax - ((SliceIndex)*Sinogram->delta_y + Sinogram->T0));//(Sinogram->delta_y);//Will be < Sinogram->delta_y	
+							ProfileThickness = (tmax - ((i_t)*Sinogram->delta_y + Sinogram->T0));//(Sinogram->delta_y);//Will be < Sinogram->delta_y	
 						}
 						else 
 						{
@@ -563,7 +644,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 						
 					}
 											
-							ErrorSino[SliceIndex][RowIndex][ColIndex] -= (TempCol[j][k]->values[q] *ProfileThickness* (Geometry->Object[i][j][k] - V));
+							ErrorSino[i_theta][i_r][i_t] -= (TempMemBlock->values[q] *ProfileThickness* (Geometry->Object[j_new][k_new][i] - V));
 					}
 					}
 #endif
@@ -573,7 +654,9 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 #ifdef ROI
 				} //closing the if for region of interest only updates 
 #endif
-		}
+				
+		
+			}
 		
 		if (CE_Cancel == 1)
 		{
@@ -584,72 +667,72 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		/*********************Cost Calculation***************************************************/
 		temp=0;
 		cost[Iter+1]=0;
-		for (i = 0; i < Sinogram->N_y; i++)
-			for (j = 0; j < Sinogram->N_theta; j++)
-				for( k = 0; k < Sinogram->N_x; k++)
-					cost[Iter+1] += (ErrorSino[i][j][k] * ErrorSino[i][j][k] * Weight[i][j][k]);
+		for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)
+			for (i_r = 0; i_r < Sinogram->N_x; i_r++)
+				for( i_t = 0; i_t < Sinogram->N_y; i_t++)
+					cost[Iter+1] += (ErrorSino[i_theta][i_r][i_t] * ErrorSino[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
 		cost[Iter+1]/=2;//Accounting for (1/2) in the cost function
 		//Each neighboring pair should be counted only once
 		
-		for (i = 0; i < Geometry->N_y; i++)
-			for (j = 0; j < Geometry->N_z; j++)
-				for(k = 0; k < Geometry->N_x; k++)
+		for (i = 0; i < Geometry->N_z; i++)
+			for (j = 0; j < Geometry->N_x; j++)
+				for(k = 0; k < Geometry->N_y; k++)
 				{
 					
-					if(k+1 <  Geometry->N_x)
-						temp += FILTER[1][1][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j][k+1]),MRF_P);
+					if(k+1 <  Geometry->N_y)
+						temp += FILTER[2][1][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j][k+1]),MRF_P);
 					
 					
-					if(j+1 < Geometry->N_z)
+					if(j+1 < Geometry->N_x)
 					{
 						if(k-1 >= 0)
-							temp += FILTER[1][2][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k-1]),MRF_P);
+							temp += FILTER[0][1][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k-1]),MRF_P);
 						
 						
-						temp += FILTER[1][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k]),MRF_P);
+						temp += FILTER[1][1][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k]),MRF_P);
 						
 						
-						if(k+1 < Geometry->N_x)
-							temp += FILTER[1][2][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k+1]),MRF_P);
+						if(k+1 < Geometry->N_y)
+							temp += FILTER[2][1][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k+1]),MRF_P);
 						
 					}
 					
-					if(i+1 < Geometry->N_y)
+					if(i+1 < Geometry->N_z)
 					{
 						
 						if(j-1 >= 0)
-							temp += FILTER[2][0][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k]),MRF_P);
+							temp += FILTER[1][2][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k]),MRF_P);
 						
-						temp += FILTER[2][1][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k]),MRF_P);
+						temp += FILTER[1][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k]),MRF_P);
 						
-						if(j+1 < Geometry->N_z)
-							temp += FILTER[2][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k]),MRF_P);
+						if(j+1 < Geometry->N_x)
+							temp += FILTER[1][2][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k]),MRF_P);
 						
 						
 						if(j-1 >= 0)
 						{
 							if(k-1 >= 0)
-								temp += FILTER[2][0][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k-1]),MRF_P);
+								temp += FILTER[0][2][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k-1]),MRF_P);
 							
-							if(k+1 < Geometry->N_x)
-								temp += FILTER[2][0][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k+1]),MRF_P);
+							if(k+1 < Geometry->N_y)
+								temp += FILTER[2][2][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k+1]),MRF_P);
 							
 						}
 						
 						if(k-1 >= 0)
-							temp += FILTER[2][1][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k-1]),MRF_P);
+							temp += FILTER[0][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k-1]),MRF_P);
 						
-						if(j+1 < Geometry->N_z)
+						if(j+1 < Geometry->N_x)
 						{
 							if(k-1 >= 0)
-								temp += FILTER[2][2][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k-1]),MRF_P);
+								temp += FILTER[0][2][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k-1]),MRF_P);
 							
-							if(k+1 < Geometry->N_x)
+							if(k+1 < Geometry->N_y)
 								temp+= FILTER[2][2][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k+1]),MRF_P);
 						}
 						
-						if(k+1 < Geometry->N_x)
-							temp+= FILTER[2][1][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k+1]),MRF_P);
+						if(k+1 < Geometry->N_y)
+							temp+= FILTER[2][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k+1]),MRF_P);
 					}
 				}
 		
@@ -1188,7 +1271,8 @@ void CE_InitializeBeamProfile(Sino* Sinogram)
 	W=BEAM_WIDTH/2;
 	for (i=0; i < BEAM_RESOLUTION ;i++)
 	{
-		BeamProfile[i] = (1.0/(BEAM_WIDTH)) * ( 1 + cos ((PI/W)*fabs(-W + i*(BEAM_WIDTH/BEAM_RESOLUTION))));
+		//BeamProfile[i] = (1.0/(BEAM_WIDTH)) * ( 1 + cos ((PI/W)*fabs(-W + i*(BEAM_WIDTH/BEAM_RESOLUTION))));
+		BeamProfile[i] = 0.54 - 0.46*cos((2*PI/BEAM_RESOLUTION)*i);
 		sum=sum+BeamProfile[i]; 
 	}
 	
@@ -1306,7 +1390,70 @@ double CE_ComputeCost(double*** ErrorSino,double*** Weight,Sino* Sinogram,Geom* 
 	cost+=(temp/(MRF_P*SIGMA_X_P));
 	return cost;
 }
+
+void* CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
+{
+	FILE* Fp = fopen("DetectorResponse.bin","w");
+	double Offset,Temp,r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,t,tmin;
+	double OffsetR,OffsetT,Left;
+	double ***H;
+	double r0 = -(BEAM_WIDTH)/2;
+	double t0 = -(BEAM_WIDTH)/2; 
+	double StepSize = BEAM_WIDTH/BEAM_RESOLUTION;
+	int16_t i,j,k,p,l,NumOfDisplacements,ProfileIndex;
+	//NumOfDisplacements=32;
+	H = (double***)get_3D(1, Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(double));//change from 1 to DETECTOR_RESPONSE_BINS
+	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_xz);
+	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_x/2)/DETECTOR_RESPONSE_BINS;
+	OffsetT = ((Geometry->delta_xy/2) + Sinogram->delta_y/2)/DETECTOR_RESPONSE_BINS;
+	
+	for(k = 0 ; k < Sinogram->N_theta; k++)
+	{
+		for (i = 0; i < DETECTOR_RESPONSE_BINS; i++) //displacement along r 
+		{
+			ProfileCenterR = i*OffsetR;
+			rmin = ProfileCenterR - Geometry->delta_xz;		
+			for (j = 0 ; j < 1; j++)//displacement along t ;change to DETECTOR_RESPONSE_BINS later  
+			{
+				ProfileCenterT = j*OffsetT;
+				tmin = ProfileCenterT - Geometry->delta_xy/2;			
+				sum = 0;			
+				for (p=0; p < BEAM_RESOLUTION; p++) 
+				{
+					r = r0 + p*StepSize;				
+					if(r < rmin)
+						continue;
+					
+					ProfileIndex = (int32_t)floor((r-rmin)*TempConst);
+					if(ProfileIndex < 0)
+						ProfileIndex = 0;
+					if(ProfileIndex >= PROFILE_RESOLUTION)
+						ProfileIndex = PROFILE_RESOLUTION-1;
+					
+					//for (l =0; l < BEAM_RESOLUTION; l++) 
+					//{
+					//t = t0 + l*StepSize;
+					//if( t < tmin)
+					//   continue;			
+					sum += (VoxelProfile[k][ProfileIndex] * BeamProfile[p]);//;*BeamProfile[l]); 		
+					//}
+					
+				}
+				H[j][k][i] = sum;
+				
+			}
+		}
+	}
+	printf("Detector Done\n");	
+	fwrite(&H[0][0][0], sizeof(double),Sinogram->N_theta*DETECTOR_RESPONSE_BINS, Fp);
+	fclose(Fp);
+	return H;
+}
+
+
+						
 #ifndef STORE_A_MATRIX
+/*
 void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
 {
 	int32_t i,j,k;
@@ -1468,4 +1615,183 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col,Sino* Sinogram,
 	return Ai;
 	
 }
+*/
+
+void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double*** DetectorResponse)
+{
+	int32_t i,j,k,sliceidx;
+	double x,z,y;
+	double r;//this is used to find where does the ray passing through the voxel at certain angle hit the detector
+	double t; //this is similar to r but along the y direction
+	double tmin,tmax;
+	double rmax,rmin;//stores the start and end points of the pixel profile on the detector
+	double R_Center,TempConst,checksum = 0,Integral = 0,delta_r;
+	double T_Center,delta_t;
+	double MaximumSpacePerColumn;//we will use this to allocate space
+	double AvgNumXElements,AvgNumYElements;//This is a measure of the expected amount of space per Amatrixcolumn. We will make a overestimate to avoid seg faults
+	double ProfileThickness,stepsize;
+	double OffsetR;
+	double OffsetT;
+	//interpolation variables 
+	double w1,w2,w3,w4,f1,f2,InterpolatedValue,ContributionAlongT;
+	int32_t index_min,index_max,slice_index_min,slice_index_max,index_delta_r,index_delta_t;//stores the detector index in which the profile lies
+	int32_t BaseIndex,FinalIndex,ProfileIndex=0;
+	int32_t NumOfDisplacements=32;
+	uint32_t count = 0;
+	
+	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_x/2)/DETECTOR_RESPONSE_BINS;
+	OffsetT = ((Geometry->delta_xz/2) + Sinogram->delta_y/2)/DETECTOR_RESPONSE_BINS;
+	
+	AMatrixCol* Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
+	AMatrixCol* Temp = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));//This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
+	
+	x = Geometry->x0 + ((double)col+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+	z = Geometry->z0 + ((double)row+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+	y = Geometry->y0 + ((double)slice + 0.5)*Geometry->delta_xy;
+	
+	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_xz);
+	
+	//alternately over estimate the maximum size require for a single AMatrix column
+	AvgNumXElements = ceil(3*Geometry->delta_xz/Sinogram->delta_x);
+	AvgNumYElements = ceil(3*Geometry->delta_xy/Sinogram->delta_y);
+	MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*Sinogram->N_theta;
+	
+	Temp->values = (double*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(double));
+	Temp->index  = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(uint32_t)); 
+	
+	
+#ifdef AREA_WEIGHTED
+	for(i=0;i<Sinogram->N_theta;i++)
+	{
+		
+		r = x*cosine[i] - z*sine[i];
+		t = y;
+		
+		rmin = r - Geometry->delta_xz;
+		rmax = r + Geometry->delta_xz;
+		
+		tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
+		tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax ? t + Geometry->delta_xy/2 : Sinogram->TMax;		
+		
+		if(rmax < Sinogram->R0 || rmin > Sinogram->RMax)
+			continue;
+		
+		
+		
+		index_min = floor(((rmin - Sinogram->R0)/Sinogram->delta_x));
+		index_max = floor((rmax - Sinogram->R0)/Sinogram->delta_x);
+		
+		if(index_max >= Sinogram->N_x)
+			index_max = Sinogram->N_x - 1;
+		
+		if(index_min < 0)
+			index_min = 0;
+		
+		slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_y);
+		slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_y);
+		
+		if(slice_index_min < 0)
+			slice_index_min = 0;
+		if(slice_index_max >= Sinogram->N_y)
+			slice_index_max = Sinogram->N_y -1; 
+		
+		BaseIndex = i*Sinogram->N_x;//*Sinogram->N_y;
+		
+		for(j = index_min;j <= index_max; j++)//Check 
+		{
+			
+			
+			
+			//Accounting for Beam width
+			R_Center = (Sinogram->R0 + (((double)j) + 0.5) *(Sinogram->delta_x));//the 0.5 is to get to the center of the detector
+			
+			//Find the difference between the center of detector and center of projection and compute the Index to look up into
+			delta_r = fabs(r - R_Center);
+			index_delta_r = floor((delta_r/OffsetR));
+			
+			
+			if (index_delta_r >= 0 && index_delta_r < DETECTOR_RESPONSE_BINS) 
+			{
+				
+		//		for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++) 			
+		//		{
+					T_Center = (Sinogram->T0 + (((double)sliceidx) + 0.5) *(Sinogram->delta_y));
+					delta_t = fabs(t - T_Center);					
+					index_delta_t = 0;//floor(delta_t/OffsetT);
+				    
+					
+					
+					if (index_delta_t >= 0 && index_delta_t < DETECTOR_RESPONSE_BINS) 
+					{
+						
+						//Using index_delta_t,index_delta_t+1,index_delta_r and index_delta_r+1 do bilinear interpolation
+						w1 = delta_r - index_delta_r*OffsetR;
+						w2 = (index_delta_r+1)*OffsetR - delta_r;
+						
+						w3 = delta_t - index_delta_t*OffsetT;
+						w4 = (index_delta_r+1)*OffsetT - delta_t;
+						
+						
+						
+						f1 = (w2/OffsetR)*DetectorResponse[index_delta_t][i][index_delta_r] + (w1/OffsetR)*DetectorResponse[index_delta_t][i][index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
+						//	f2 = (w2/OffsetR)*DetectorResponse[index_delta_t+1 < DETECTOR_RESPONSE_BINS ?index_delta_t+1 : DETECTOR_RESPONSE_BINS-1][i][index_delta_r] + (w1/OffsetR)*DetectorResponse[index_delta_t+1 < DETECTOR_RESPONSE_BINS? index_delta_t+1:DETECTOR_RESPONSE_BINS][i][index_delta_r+1 < DETECTOR_RESPONSE_BINS? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
+					    
+						if(sliceidx == slice_index_min)
+							ContributionAlongT = (sliceidx + 1)*Sinogram->delta_y - tmin;
+						else if(sliceidx == slice_index_max)
+							ContributionAlongT = tmax - (sliceidx)*Sinogram->delta_y;
+						else {
+							ContributionAlongT = Sinogram->delta_y;
+						}
+						
+						
+					    InterpolatedValue = f1;//*ContributionAlongT;//(w3/OffsetT)*f2 + (w4/OffsetT)*f2; 
+						if(InterpolatedValue > 0)
+						{
+							FinalIndex = BaseIndex + (int32_t)j ;//+ (int32_t)sliceidx * Sinogram->N_x;	
+							Temp->values[count] = InterpolatedValue;//DetectorResponse[index_delta_t][i][index_delta_r];
+							Temp->index[count] = FinalIndex;//can instead store a triple (row,col,slice) for the sinogram
+							count++;
+						}
+					}
+					
+					
+				//}
+			}
+			
+			
+		}
+		
+		
+		
+	}
+	
 #endif
+	
+	
+	Ai->values=(double*)get_spc(count,sizeof(double));
+	Ai->index=(uint32_t*)get_spc(count,sizeof(uint32_t));
+	k=0;
+	for(i = 0; i < count; i++)
+	{
+		if(Temp->values[i] > 0.0)
+		{
+			Ai->values[k]=Temp->values[i];
+			checksum+=Ai->values[k];
+			Ai->index[k++]=Temp->index[i];
+		}
+		
+	}
+	
+	Ai->count=k;
+	
+	
+	free(Temp->values);
+	free(Temp->index);
+	free(Temp);
+	return Ai;
+}
+
+#endif
+
+	

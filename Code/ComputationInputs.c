@@ -136,10 +136,12 @@ void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
   double sum=0;
   
   //Allocate a 3-D matrix to store the singoram in the form of a N_y X N_theta X N_x  matrix 
-  Sinogram->counts=(double***)get_3D(Sinogram->N_y,Sinogram->N_theta,Sinogram->N_x, sizeof(double));
+//  Sinogram->counts=(double***)get_3D(Sinogram->N_y,Sinogram->N_theta,Sinogram->N_x, sizeof(double));
+	 Sinogram->counts=(double***)get_3D(Sinogram->N_theta,Sinogram->N_x,Sinogram->N_y, sizeof(double));
   //Read data into this matrix
   //TODO: clarify this ! Super important ! 
-  Fp=fopen(ParsedInput->SinoFile,"r");
+ Fp=fopen(ParsedInput->SinoFile,"r");
+	/*
   for(i=0;i<Sinogram->N_y;i++)
     for(j=0;j<Sinogram->N_x;j++)
       for(k=0;k<Sinogram->N_theta;k++)
@@ -147,13 +149,20 @@ void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
     fread (buffer,sizeof(double),1,Fp);
     Sinogram->counts[i][k][j]=*buffer;
   }
-
+*/
+	for(i=0;i<Sinogram->N_y;i++)
+		for(j=0;j<Sinogram->N_x;j++)
+			for(k=0;k<Sinogram->N_theta;k++)
+			{	 
+				fread (buffer,sizeof(double), 1, Fp);
+				Sinogram->counts[k][j][i] = *buffer;
+			}
       //check sum calculation
-  for(i=0;i<Sinogram->N_y;i++)
+  for(i=0;i<Sinogram->N_theta;i++)
   {
     sum=0;
-    for(j=0;j<Sinogram->N_theta;j++)
-      for(k=0;k<Sinogram->N_x;k++)
+    for(j=0;j<Sinogram->N_x;j++)
+      for(k=0;k<Sinogram->N_y;k++)
 	sum+=Sinogram->counts[i][j][k];
     printf("Sinogram Checksum %lf\n",sum);
   }
@@ -174,7 +183,8 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
   Geometry->N_x = ceil(Geometry->LengthX/Geometry->delta_xz);//Number of voxels in x direction 
   Geometry->N_z = ceil(Geometry->LengthZ/Geometry->delta_xz);//Number of voxels in z direction
   Geometry->N_y = ceil(Geometry->LengthY/Geometry->delta_xy);//Number of measurements in y direction
-  Geometry->Object = (double ***)get_3D(Geometry->N_y,Geometry->N_z,Geometry->N_x,sizeof(double));//Allocate space for the 3-D object
+//  Geometry->Object = (double ***)get_3D(Geometry->N_y,Geometry->N_z,Geometry->N_x,sizeof(double));//Allocate space for the 3-D object
+  Geometry->Object = (double ***)get_3D(Geometry->N_z,Geometry->N_x,Geometry->N_y,sizeof(double));//Allocate space for the 3-D object
 //Coordinates of the left corner of the x-z object 
   Geometry->x0 = -Geometry->LengthX/2;
   Geometry->z0 = -Geometry->LengthZ/2;
@@ -182,24 +192,33 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
   
   //Read the Initial Reconstruction data into a 3-D matrix
   Fp=fopen(ParsedInput->InitialRecon,"r");
-  for(i=0;i<Geometry->N_y;i++)
+/*  for(i=0;i<Geometry->N_y;i++)
     for(j=0;j<Geometry->N_x;j++)
       for(k=0;k<Geometry->N_z;k++)
   {	 
     fread (buffer,sizeof(double),1,Fp);
     Geometry->Object[i][k][j]=*buffer;
 //	printf("%f\n",Geometry->Object[i][j][k]);
-  }
+  }*/
+	
+	for (i = 0; i < Geometry->N_y; i++) {
+		for (j = 0; j < Geometry->N_x; j++) {
+			for (k = 0; k < Geometry->N_z; k++) {
+				fread(buffer, sizeof(double), 1, Fp);
+				Geometry->Object[k][j][i] = *buffer;
+			}
+		}
+	}
 
       //Doing a check sum to verify with matlab
   
   for(i=0;i<Geometry->N_y;i++)
   {
     sum=0;
-    for(j=0;j<Geometry->N_z;j++)
-      for(k=0;k<Geometry->N_x;k++)
+    for(j=0;j<Geometry->N_x;j++)
+      for(k=0;k<Geometry->N_z;k++)
     {
-      sum+=Geometry->Object[i][j][k];
+      sum+=Geometry->Object[k][j][i];
     }
     printf("Geometry check sum %lf\n",sum);
   }

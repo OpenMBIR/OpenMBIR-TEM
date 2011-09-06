@@ -17,7 +17,7 @@ extern "C" {
 	
 	
 	//#define DEBUG	
-#define PROFILE_RESOLUTION 512
+#define PROFILE_RESOLUTION 1536
 #define PI 4*atan(1)//3.14159265
 	//Beam Parameters - This is set to some number <<< Sinogram->delta_x.
 //#define BEAM_WIDTH 0.050000 
@@ -28,8 +28,9 @@ extern "C" {
 	//#define CORRECTION
 //#define STORE_A_MATRIX
 //	#define WRITE_INTERMEDIATE_RESULTS
-//#define COST_CALCULATE
+#define COST_CALCULATE
 #define BEAM_CALCULATION
+#define DETECTOR_RESPONSE_BINS 32
 #ifdef CORRECTION
 	double *NORMALIZATION_FACTOR; 
 #endif
@@ -55,6 +56,7 @@ extern "C" {
     double BEAM_WIDTH;
 	
 	
+	
 	void CE_CalculateSinCos(Sino*);
 	void CE_InitializeBeamProfile(Sino*);
 	void CE_MinMax(double*,double*);
@@ -63,8 +65,9 @@ extern "C" {
 	void* CE_CalculateAMatrixColumn(uint16_t ,uint16_t , uint16_t ,Sino* ,Geom* ,double**);
 	double CE_DerivOfCostFunc(double);
 	double CE_ComputeCost(double***  ,double***  ,Sino* ,Geom* );
-	void* CE_CalculateAMatrixColumnPartial(uint16_t,uint16_t,Sino*,Geom*,double**);
-	
+	void* CE_CalculateAMatrixColumnPartial(uint16_t,uint16_t,uint16_t,Sino*,Geom*,double***);
+//	void* CE_CalculateAMatrixColumnPartial(uint16_t,uint16_t,Sino*,Geom*,double**);
+	void* CE_DetectorResponse(uint16_t ,uint16_t ,Sino* ,Geom* ,double**);
 	double  solve(
 				  double (*f)(), /* pointer to function to be solved */
 				  double a,      /* minimum value of solution */
