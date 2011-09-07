@@ -101,15 +101,15 @@ void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram
 		else if (strcmp("GeomDeltaXZ",temp) == 0)
 		{
 			fscanf(Fp,"%s",temp);
-			Geometry->delta_rz=(double)atof(temp);
-			printf("Geom.delta_rz=%lf\n",Geometry->delta_rz);
+			Geometry->delta_xz=(double)atof(temp);
+			printf("Geom.delta_xz=%lf\n",Geometry->delta_xz);
 		}    
 		
 		else if (strcmp("GeomDeltaXY",temp) == 0)
 		{
 			fscanf(Fp,"%s",temp);
-			Geometry->delta_ry=(double)atof(temp);
-			printf("Geom.delta_ry=%lf\n",Geometry->delta_ry);
+			Geometry->delta_xy=(double)atof(temp);
+			printf("Geom.delta_xy=%lf\n",Geometry->delta_xy);
 		}
 		else if (strcmp("GeomLengthZ",temp) == 0)
 		{
@@ -180,9 +180,9 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
   double sum=0;//check sum TODO delete this later
   Geometry->LengthX = Sinogram->N_r * Sinogram->delta_r;//sinogram.N_x * delta_r; 
   Geometry->LengthY = Sinogram->N_t * Sinogram->delta_t;//sinogram.N_y * delta_t
-  Geometry->N_x = ceil(Geometry->LengthX/Geometry->delta_rz);//Number of voxels in x direction 
-  Geometry->N_z = ceil(Geometry->LengthZ/Geometry->delta_rz);//Number of voxels in z direction
-  Geometry->N_y = ceil(Geometry->LengthY/Geometry->delta_ry);//Number of measurements in y direction
+  Geometry->N_x = ceil(Geometry->LengthX/Geometry->delta_xz);//Number of voxels in x direction 
+  Geometry->N_z = ceil(Geometry->LengthZ/Geometry->delta_xz);//Number of voxels in z direction
+  Geometry->N_y = ceil(Geometry->LengthY/Geometry->delta_xy);//Number of measurements in y direction
 //  Geometry->Object = (double ***)get_3D(Geometry->N_y,Geometry->N_z,Geometry->N_x,sizeof(double));//Allocate space for the 3-D object
   Geometry->Object = (double ***)get_3D(Geometry->N_z,Geometry->N_x,Geometry->N_y,sizeof(double));//Allocate space for the 3-D object
 //Coordinates of the left corner of the x-z object 

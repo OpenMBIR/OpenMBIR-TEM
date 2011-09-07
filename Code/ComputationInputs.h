@@ -46,8 +46,8 @@ extern "C" {
 	{
 		//User Input
 		double LengthZ;//This is the sample thickness
-		double delta_rz;//Voxel size in the x-z plane (assuming square shaped voxels in the x-z plane)
-		double delta_ry;//Voxel size in the x-y plane
+		double delta_xz;//Voxel size in the x-z plane (assuming square shaped voxels in the x-z plane)
+		double delta_xy;//Voxel size in the x-y plane
 		double ***Object;//Holds the volume to be reconstructed 
 		
 		//Computed From User Input
