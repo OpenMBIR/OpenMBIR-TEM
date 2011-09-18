@@ -27,6 +27,7 @@ int main(int argc,char** argv)
 	CommandLineInputs ParsedInput;
 	Sino Sinogram;
 	Geom Geometry;
+	double *buffer=(double*)get_spc(1,sizeof(double));
 	
 	START;
 	
@@ -51,13 +52,17 @@ int main(int argc,char** argv)
 	
 	printf("Main\n");
 	printf("Final Dimensions of Object Nz=%d Nx=%d Ny=%d\n",Geometry.N_z,Geometry.N_x,Geometry.N_y);
-	//for(i = 0;i < Geometry.N_y; i++)
-	//{
-	//	for(j = 0;j < Geometry.N_z; j++)
-	//		for(k = 0;k < Geometry.N_x; k++)
-				fwrite(&Geometry.Object[0][0][0],sizeof(double),Geometry.N_z*Geometry.N_x*Geometry.N_y,Fp);
-	//	printf("%d\n",i);
-	//}
+	
+	for(i = 0;i < Geometry.N_y; i++)
+	{
+		for(j = 0;j < Geometry.N_x; j++)
+			for(k = 0;k < Geometry.N_z; k++)
+			{
+				buffer = &Geometry.Object[k][j][i];
+				fwrite(buffer,sizeof(double),1,Fp);
+			}
+		printf("%d\n",i);
+	}
 	
 	fclose(Fp);
 	STOP;

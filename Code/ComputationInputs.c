@@ -179,7 +179,7 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
   double *buffer = (double*)get_spc(1,sizeof(double));
   double sum=0;//check sum TODO delete this later
   Geometry->LengthX = Sinogram->N_r * Sinogram->delta_r;//sinogram.N_x * delta_r; 
-  Geometry->LengthY = Sinogram->N_t * Sinogram->delta_t;//sinogram.N_y * delta_t
+  Geometry->LengthY = (END_SLICE - START_SLICE)*Geometry->delta_xy;//Sinogram->N_t * Sinogram->delta_t;//sinogram.N_y * delta_t
   Geometry->N_x = ceil(Geometry->LengthX/Geometry->delta_xz);//Number of voxels in x direction 
   Geometry->N_z = ceil(Geometry->LengthZ/Geometry->delta_xz);//Number of voxels in z direction
   Geometry->N_y = ceil(Geometry->LengthY/Geometry->delta_xy);//Number of measurements in y direction
@@ -188,7 +188,7 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
 //Coordinates of the left corner of the x-z object 
   Geometry->x0 = -Geometry->LengthX/2;
   Geometry->z0 = -Geometry->LengthZ/2;
-	Geometry->y0 = -Geometry->LengthY/2;
+  Geometry->y0 = -(Sinogram->N_t * Sinogram->delta_t)/2 + START_SLICE*Geometry->delta_xy;
   
   //Read the Initial Reconstruction data into a 3-D matrix
   Fp=fopen(ParsedInput->InitialRecon,"r");
@@ -205,7 +205,7 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
 		for (j = 0; j < Geometry->N_x; j++) {
 			for (k = 0; k < Geometry->N_z; k++) {
 				fread(buffer, sizeof(double), 1, Fp);
-				Geometry->Object[k][j][i] = *buffer;
+				Geometry->Object[k][j][i] =  *buffer;
 			}
 		}
 	}

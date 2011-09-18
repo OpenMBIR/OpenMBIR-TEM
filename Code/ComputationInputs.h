@@ -3,6 +3,9 @@
 #include <stdint.h> //For typedefs
 #include <stdio.h> //For all other declarations int,FILE etc
 
+#define START_SLICE 0
+#define END_SLICE 4
+
 #ifdef __cplusplus
 extern "C" {
 #endif
