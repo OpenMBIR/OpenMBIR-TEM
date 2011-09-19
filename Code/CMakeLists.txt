@@ -84,12 +84,14 @@ set(Reconstruct_HDRS
   ${EIMTomo_SOURCE_DIR}/allocate.h
   ${EIMTomo_SOURCE_DIR}/ComputationEngineOptimized.h
   ${EIMTomo_SOURCE_DIR}/ComputationInputs.h
+  ${EIMTomo_SOURCE_DIR}/randlib.h
 )
 set(Reconstruct_SRCS
   ${EIMTomo_SOURCE_DIR}/allocate.c
   ${EIMTomo_SOURCE_DIR}/ComputationEngineOptimized.c
   ${EIMTomo_SOURCE_DIR}/ComputationInputs.c
   ${EIMTomo_SOURCE_DIR}/Main.c
+  ${EIMTomo_SOURCE_DIR}/randlib.c 
 )
 
 
