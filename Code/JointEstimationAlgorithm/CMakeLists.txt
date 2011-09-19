@@ -29,6 +29,14 @@ set(JointEstimation_SRCS
 include (${PROJECT_CODE_DIR}/Common/SourceList.cmake)
 include (${PROJECT_CODE_DIR}/mt/SourceList.cmake)
 
+set(GENERATED_HDRS
+    ${CMP_HEADER_DIR}/${CMP_EXTRA_CONFIGURATION_FILE}
+    ${CMP_HEADER_DIR}/${CMP_CONFIGURATION_FILE_NAME}
+    ${CMP_HEADER_DIR}/${CMP_TYPES_FILE_NAME}
+    ${CMP_HEADER_DIR}/${CMP_VERSION_HEADER_FILE_NAME}
+)
+
+cmp_IDE_GENERATED_PROPERTIES("${Project_Name}/Generated" "${GENERATED_HDRS}" "")
 
 # Gather all the source files into a single CMake Variable
 set(JointEstimation_PROJECT_FILES
@@ -38,6 +46,7 @@ set(JointEstimation_PROJECT_FILES
   ${EIMTomo_Common_HDRS}
   ${Mersenne_Twister_SRCS}
   ${Mersenne_Twister_HDRS}
+  ${GENERATED_HDRS}
 )
 
 #add some additional include directories:

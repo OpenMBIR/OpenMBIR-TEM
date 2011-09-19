@@ -62,6 +62,9 @@ SET (CMP_INSTALL_FILES "1")
 set (CMP_ENABLE_PLUGINS "0")
 INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
 
+# We need to include the binary directory which is where our generated files will be
+include_directories(${EIMTomo_BINARY_DIR})
+
 # --------------------------------------------------------------------
 # Generate our ReadMe and License Files
 configure_file(${PROJECT_RESOURCES_DIR}/EIMTomo/License.txt.in

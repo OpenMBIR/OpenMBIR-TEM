@@ -1,7 +1,10 @@
 #ifndef NCICD_COMPUTATIONINPUTS_H_
 #define NCICD_COMPUTATIONINPUTS_H_
-#include <stdint.h> //For typedefs
+
 #include <stdio.h> //For all other declarations int,FILE etc
+
+#include "EIMTomo/common/EIMTomoTypes.h"
+
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,7 +1,10 @@
 #ifndef COMPUTATIONINPUTS_H_
 #define COMPUTATIONINPUTS_H_
-#include <stdint.h> //For typedefs
+
 #include <stdio.h> //For all other declarations int,FILE etc
+
+#include "EIMTomo/common/EIMTomoTypes.h"
+
 
 #define START_SLICE 0
 #define END_SLICE 4
