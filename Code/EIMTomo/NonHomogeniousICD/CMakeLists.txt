@@ -13,18 +13,20 @@ cmake_minimum_required(VERSION 2.8.3)
 
 
 set(NonHomogeniousICD_HDRS
-  ${PROJECT_CODE_DIR}/NonHomogeniousICD/ComputationEngineOptimizedNHICD.h
-  ${PROJECT_CODE_DIR}/NonHomogeniousICD/ComputationInputsNHICD.h
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/ComputationEngineOptimizedNHICD.h
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/ComputationInputsNHICD.h
 )
 set(NonHomogeniousICD_SRCS
-  ${PROJECT_CODE_DIR}/NonHomogeniousICD/ComputationEngineOptimizedNHICD.c
-  ${PROJECT_CODE_DIR}/NonHomogeniousICD/ComputationInputsNHICD.c
-  ${PROJECT_CODE_DIR}/NonHomogeniousICD/NHICDMain.c
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/ComputationEngineOptimizedNHICD.c
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/ComputationInputsNHICD.c
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDMain.c
 )
 
+cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/NHICD" "${NonHomogeniousICD_HDRS}" "${NonHomogeniousICD_SRCS}" "${CMP_INSTALL_FILES}")
+
 # Include the source files for Common source files and the Mersenne Twister RNG
-include (${PROJECT_CODE_DIR}/Common/SourceList.cmake)
-include (${PROJECT_CODE_DIR}/mt/SourceList.cmake)
+include (${PROJECT_CODE_DIR}/EIMTomo/Common/SourceList.cmake)
+include (${PROJECT_CODE_DIR}/EIMTomo/mt/SourceList.cmake)
 
 set(NonHomogeniousICD_PROJECT_FILES
   ${NonHomogeniousICD_HDRS}

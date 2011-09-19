@@ -14,20 +14,23 @@ cmake_minimum_required(VERSION 2.8.3)
 #Define the headers for this program
 
 set(JointEstimation_HDRS
-  ${PROJECT_CODE_DIR}/JointEstimationAlgorithm/ComputationEngineMotionCorrection.h
-  ${PROJECT_CODE_DIR}/JointEstimationAlgorithm/ComputationInputsMotionCorrection.h
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/ComputationEngineMotionCorrection.h
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/ComputationInputsMotionCorrection.h
 )
 
 #Define the source files for this program
 set(JointEstimation_SRCS
-  ${PROJECT_CODE_DIR}/JointEstimationAlgorithm/ComputationEngineMotionCorrection.c
-  ${PROJECT_CODE_DIR}/JointEstimationAlgorithm/ComputationInputsMotionCorrection.c
-  ${PROJECT_CODE_DIR}/JointEstimationAlgorithm/JointEstimationMain.c
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/ComputationEngineMotionCorrection.c
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/ComputationInputsMotionCorrection.c
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/JointEstimationMain.c
 )
 
+cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/JointEstimation" "${JointEstimation_HDRS}" "${JointEstimation_SRCS}" "${CMP_INSTALL_FILES}")
+
+
 # Include the source files for Common source files and the Mersenne Twister RNG
-include (${PROJECT_CODE_DIR}/Common/SourceList.cmake)
-include (${PROJECT_CODE_DIR}/mt/SourceList.cmake)
+include (${PROJECT_CODE_DIR}/EIMTomo/Common/SourceList.cmake)
+include (${PROJECT_CODE_DIR}/EIMTomo/mt/SourceList.cmake)
 
 
 # Gather all the source files into a single CMake Variable

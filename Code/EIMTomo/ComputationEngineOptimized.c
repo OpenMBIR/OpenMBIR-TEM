@@ -9,13 +9,13 @@
 
 #include "ComputationEngineOptimized.h"
 
-#include "Common/allocate.h"
+#include "EIMTomo/common/allocate.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdint.h>
+
 #include <string.h>
 #include <math.h>
-#include <time.h>
+
 //#define DEBUG
 
 

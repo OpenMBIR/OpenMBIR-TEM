@@ -1,7 +1,16 @@
-#ifndef NCICD_COMPUTATIONINPUTS_H_
-#define NCICD_COMPUTATIONINPUTS_H_
-#include <stdint.h> //For typedefs
+#ifndef MOTION_CORRECTION_COMPUTATIONINPUTS_H_
+#define MOTION_CORRECTION_COMPUTATIONINPUTS_H_
+
 #include <stdio.h> //For all other declarations int,FILE etc
+
+
+#include "EIMTomo/common/EIMTomoTypes.h"
+
+
+
+
+#define START_SLICE 500
+#define END_SLICE 504
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,6 +46,9 @@ extern "C" {
 		double *angles;//Holds the angles through which the object is tilted
 		double R0,RMax;
 		double T0,TMax;
+		double *ShiftX;
+		double *ShiftY;
+		double RotationAngle;
 
 	};
 
@@ -89,3 +101,4 @@ extern "C" {
 #endif
 
 #endif //ComputationInputs
+

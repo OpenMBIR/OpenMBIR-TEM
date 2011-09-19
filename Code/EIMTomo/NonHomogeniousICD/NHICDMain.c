@@ -1,10 +1,13 @@
 //#include "ComputationEngine.h"
-#include "ComputationInputsMotionCorrection.h"
+#include "ComputationInputsNHICD.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
 #include <time.h>
+
+#include "EIMTomo/common/EIMTomoTypes.h"
+#include "EIMTomo/common/allocate.h"
+
 //#include "randlib.h"
 clock_t startm, stopm;
 #define START if ( (startm = clock()) == -1) {printf("Error calling clock");exit(1);}
@@ -77,5 +80,4 @@ int main(int argc,char** argv)
 	// return EXIT_SUCCESS;
 	return 0;
 }
-
 

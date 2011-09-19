@@ -62,6 +62,11 @@ SET (CMP_INSTALL_FILES "1")
 set (CMP_ENABLE_PLUGINS "0")
 INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
 
+
+# We need to add the binary directory to our list of include directories so the source files
+# can find the generated header files
+include_directories(${EIMTomo_BINARY_DIR})
+
 # --------------------------------------------------------------------
 # Generate our ReadMe and License Files
 configure_file(${PROJECT_RESOURCES_DIR}/EIMTomo/License.txt.in
@@ -134,8 +139,8 @@ endif()
 
 
 # Add our executables
-add_subdirectory( ${PROJECT_CODE_DIR}/JointEstimationAlgorithm)
-add_subdirectory( ${PROJECT_CODE_DIR}/NonHomogeniousICD)
+add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm)
+#add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD)
 
 
 

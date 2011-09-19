@@ -3,11 +3,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
 #include <math.h>
-//#ifdef __linux__
-#include <getopt.h>
+
 
 extern int optind;
 extern char *optarg;
