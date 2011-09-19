@@ -34,18 +34,68 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY
   )
 
 
-# We setup some CMake variables that will get used later on Eventually  
+if (NOT DEFINED CMP_SOURCE_DIR)
+set(CMP_SOURCE_DIR ${EIMTomo_SOURCE_DIR}/Support/cmp)
+endif()
+
+
+
 SET (PROJECT_CODE_DIR ${PROJECT_SOURCE_DIR}/Code)
-SET (PROJECT_RESOURCES_DIR ${EIMTomo_SOURCE_DIR}/Resources)
+SET (PROJECT_RESOURCES_DIR ${PROJECT_SOURCE_DIR}/Resources)
+SET (PROJECT_PREFIX "EIMTOMO" CACHE STRING "The 3 Letter Prefix to be used for Preprocessor definitions")
 SET (EXE_DEBUG_EXTENSION "_debug")
-SET (CMP_INSTALL_FILES "0")
+SET (PROJECT_INSTALL_HEADERS "1")
+SET (PROJECT_INSTALL_EXECUTABLES "1")
+
+#-------------------------------------------------------------------------------
+# Include the cmp project to perform all the basic configuration tests for the 
+# project.
+#------------------------------------------------------------------------------- 
+set (CMP_HEADER_DIR ${EIMTomo_BINARY_DIR}/EIMTomo/common)
+set (CMP_CONFIGURATION_FILE_NAME "CMPConfiguration.h")
+set (CMP_TYPES_FILE_NAME "EIMTomoTypes.h")
+set (CMP_VERSION_HEADER_FILE_NAME "EIMTomoVersion.h")
+set (CMP_EXTRA_CONFIGURATION_FILE "EIMTomoConfiguration.h")
+set (CMP_PROJECT_NAMESPACE "EIMTomo")
+set (CMP_PROJECT_NAME "EIMTomo")
+SET (CMP_INSTALL_FILES "1")
+set (CMP_ENABLE_PLUGINS "0")
+INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
+
+# --------------------------------------------------------------------
+# Generate our ReadMe and License Files
+configure_file(${PROJECT_RESOURCES_DIR}/EIMTomo/License.txt.in
+                ${PROJECT_BINARY_DIR}/License.txt )
+configure_file(${PROJECT_RESOURCES_DIR}/EIMTomo/ReadMe.txt.in
+                ${PROJECT_BINARY_DIR}/ReadMe.txt )
+                
+# --------------------------------------------------------------------
+# Build shared libraries
+OPTION (BUILD_SHARED_LIBS "Build Shared Libraries" OFF)
+set (EIMTomo_BUILT_AS_DYNAMIC_LIB )
+SET (LIB_TYPE STATIC)
+IF (BUILD_SHARED_LIBS)
+  SET (LIB_TYPE SHARED)
+  SET (EIMTomo_BUILT_AS_DYNAMIC_LIB 1)
+    IF (WIN32)
+    ADD_DEFINITIONS("-DEIMTomo_BUILT_AS_DYNAMIC_LIB")
+  ENDIF (WIN32)
+ENDIF (BUILD_SHARED_LIBS)
+
+# --------------------------------------------------------------------
+# Now configure this extra file with some additional definitions
+configure_file(${PROJECT_RESOURCES_DIR}/EIMTomo/EIMTomoConfiguration.h.in
+               ${CMP_HEADER_DIR}/${CMP_EXTRA_CONFIGURATION_FILE})
 
 # --------------------------------------------------------------------
 # Add in some compiler definitions
 # --------------------------------------------------------------------
 IF ( CMAKE_BUILD_TYPE MATCHES Debug )
   ADD_DEFINITIONS(-DDEBUG)
-  ADD_DEFINITIONS(-Wall)
+  IF (NOT WIN32)
+     #Doing this with NMake files will overwhelm the output
+    ADD_DEFINITIONS(-Wall)
+  ENDIF()
 ENDIF ( CMAKE_BUILD_TYPE MATCHES Debug )
 
 # --------------------------------------------------------------------
