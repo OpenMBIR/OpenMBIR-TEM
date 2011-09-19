@@ -7,20 +7,20 @@
  *
  */
 
-#ifndef COMPUTATIONENGINE_H_
-#define COMPUTATIONENGINE_H_
+#ifndef MOTION_CORRECTION_COMPUTATIONENGINE_H_
+#define MOTION_CORRECTION_COMPUTATIONENGINE_H_
 #ifdef __cplusplus
 extern "C" {
 #endif
-	
+
 #include "ComputationInputsMotionCorrection.h"
-	
-	
-	//#define DEBUG	
+
+
+	//#define DEBUG
 #define PROFILE_RESOLUTION 1536
 #define PI 4*atan(1)//3.14159265
 	//Beam Parameters - This is set to some number <<< Sinogram->delta_r.
-	//#define BEAM_WIDTH 0.050000 
+	//#define BEAM_WIDTH 0.050000
 #define BEAM_RESOLUTION 512
 #define AREA_WEIGHTED
 	//#define ROI //Region Of Interest
@@ -33,34 +33,34 @@ extern "C" {
 #define DETECTOR_RESPONSE_BINS 64
 
 #ifdef CORRECTION
-	double *NORMALIZATION_FACTOR; 
+	double *NORMALIZATION_FACTOR;
 #endif
-	//Structure to store a single column(A_i) of the A-matrix 
-	typedef struct 
+	//Structure to store a single column(A_i) of the A-matrix
+	typedef struct
 	{
 		double* values;//Store the non zero entries
 		uint32_t count;//The number of non zero values present in the column
 		uint32_t *index;//This maps each value to its location in the column. The entries in this can vary from 0 to Sinogram.N_x Sinogram.N_theta-1
 	}AMatrixCol;
-	
-	
-	//Markov Random Field Prior parameters - Globals -:( 
+
+
+	//Markov Random Field Prior parameters - Globals -:(
 	double FILTER[3][3][3]={{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}},
 		{{0.0370,0.0523,0.0370},{0.0523,0.0,0.0523},{0.0370,0.0523,  0.0370}},
 		{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}}};
 	double THETA1,THETA2,NEIGHBORHOOD[3][3][3],V;
 	double MRF_P ;//= 1.1;
 	double SIGMA_X_P;
-	
-	//Global variables 
+
+	//Global variables
 	double *cosine,*sine;//used to store cosine and sine of all angles through which sample is tilted
 	double *BeamProfile;//used to store the shape of the e-beam
     double BEAM_WIDTH;
 	double OffsetR;
 	double OffsetT;
-	
-	
-	
+
+
+
 	void CE_CalculateSinCos(Sino*);
 	void CE_InitializeBeamProfile(Sino*);
 	void CE_MinMax(double*,double*);
@@ -79,7 +79,7 @@ extern "C" {
 				  double err,    /* accuarcy of solution */
 				  int *code      /* error code */
 				  );
-	
+
 #ifdef __cplusplus
 }
 #endif

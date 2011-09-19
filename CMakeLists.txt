@@ -38,6 +38,7 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY
 SET (PROJECT_CODE_DIR ${PROJECT_SOURCE_DIR}/Code)
 SET (PROJECT_RESOURCES_DIR ${EIMTomo_SOURCE_DIR}/Resources)
 SET (EXE_DEBUG_EXTENSION "_debug")
+SET (CMP_INSTALL_FILES "0")
 
 # --------------------------------------------------------------------
 # Add in some compiler definitions
@@ -46,6 +47,20 @@ IF ( CMAKE_BUILD_TYPE MATCHES Debug )
   ADD_DEFINITIONS(-DDEBUG)
   ADD_DEFINITIONS(-Wall)
 ENDIF ( CMAKE_BUILD_TYPE MATCHES Debug )
+
+# --------------------------------------------------------------------
+# If we are using GCC, make the compiler messages on a single line
+IF(CMAKE_COMPILER_IS_GNUCC)
+  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")
+ENDIF(CMAKE_COMPILER_IS_GNUCC)
+IF(CMAKE_COMPILER_IS_GNUCXX)
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0")
+ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+
+if (MSVC)
+ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
+
 
 # --------------------------------------------------------------------
 # Should we use Intel Threading Building Blocks
@@ -67,22 +82,10 @@ if (EIMTomo_USE_MULTITHREADED_ALGOS)
     set (EIMTomo_USE_PARALLEL_ALGORITHMS "1")
 endif()
 
-# --------------------------------------------------------------------
-# If we are using GCC, make the compiler messages on a single line
-IF(CMAKE_COMPILER_IS_GNUCC)
-  SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fmessage-length=0")
-ENDIF(CMAKE_COMPILER_IS_GNUCC)
-IF(CMAKE_COMPILER_IS_GNUCXX)
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmessage-length=0")
-ENDIF(CMAKE_COMPILER_IS_GNUCXX)
-
-if (MSVC)
- add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-endif()
-
 
 # Add our executables
-add_subdirectory( ${PROJECT_CODE_DIR}/)
+add_subdirectory( ${PROJECT_CODE_DIR}/JointEstimationAlgorithm)
+add_subdirectory( ${PROJECT_CODE_DIR}/NonHomogeniousICD)
 
 
 
