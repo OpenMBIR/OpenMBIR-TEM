@@ -22,6 +22,32 @@
 
 
 static char CE_Cancel = 0;
+#ifdef CORRECTION
+  double *NORMALIZATION_FACTOR;
+#endif
+  //Structure to store a single column(A_i) of the A-matrix
+  typedef struct
+  {
+    double* values;//Store the non zero entries
+    uint32_t count;//The number of non zero values present in the column
+    uint32_t *index;//This maps each value to its location in the column. The entries in this can vary from 0 to Sinogram.N_x Sinogram.N_theta-1
+  } AMatrixCol;
+
+
+  //Markov Random Field Prior parameters - Globals -:(
+  double FILTER[3][3][3]={{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}},
+    {{0.0370,0.0523,0.0370},{0.0523,0.0,0.0523},{0.0370,0.0523,  0.0370}},
+    {{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}}};
+  double THETA1,THETA2,NEIGHBORHOOD[3][3][3],V;
+  double MRF_P ;//= 1.1;
+  double SIGMA_X_P;
+
+  //Global variables
+  double *cosine,*sine;//used to store cosine and sine of all angles through which sample is tilted
+  double *BeamProfile;//used to store the shape of the e-beam
+    double BEAM_WIDTH;
+  double OffsetR;
+  double OffsetT;
 
 
 
@@ -1896,7 +1922,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 	int32_t NumOfDisplacements=32;
 	uint32_t count = 0;
 
- 
+
 
 	//OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
 	//OffsetT = ((Geometry->delta_xz/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
@@ -1910,7 +1936,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 
 
   sliceidx = 0;
-	
+
   TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_xz);
 
 	//alternately over estimate the maximum size require for a single AMatrix column
