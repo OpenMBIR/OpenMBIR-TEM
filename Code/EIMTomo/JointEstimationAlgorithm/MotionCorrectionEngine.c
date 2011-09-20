@@ -347,17 +347,14 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			{
 #ifdef STORE_A_MATRIX  //A matrix call
 				for(q = 0;q < AMatrix[i][j][k]->count; q++)
-					//for(q = 0; q < AMatrix[j][k]->count; q++)
+					
 				{
-					//Convert AMatrix->index[p] to a (slice,row,col)
+					
 					row = (int16_t)floor(AMatrix[i][j][k]->index[q]/(Sinogram->N_r*Sinogram->N_t));
 					slice =(int16_t) floor((AMatrix[i][j][k]->index[q]%(Sinogram->N_r*Sinogram->N_t))/(Sinogram->N_r));
 					col =  (int16_t)(AMatrix[i][j][k]->index[q]%(Sinogram->N_r*Sinogram->N_t))%(Sinogram->N_r);
-					//row = (uint32_t)((AMatrix[j][k]->index[q])/Sinogram->N_r);
-					//col = (AMatrix[j][k]->index[q])%Sinogram->N_r;
-					//printf("(%d,%d)\n",row,col);
 					Y_Est[slice][row][col]+=(AMatrix[i][j][k]->values[q] * Geometry->Object[i][j][k]);
-					//Y_Est[i][row][col]+=(AMatrix[p]->values[q] * Geometry->Object[i][j][k]);
+				
 				}
 				//  p++;
 #else
@@ -385,21 +382,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
-						/*if(i_t == slice_index_min)
-							ProfileThickness = (((i_t+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
-						else
-						{
-							if (i_t == slice_index_max)
-							{
-								ProfileThickness = (tmax - ((i_t)*Sinogram->delta_t + Sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t
-							}
-							else
-							{
-								ProfileThickness = Sinogram->delta_t;
-							}
-
-						}*/
-
+					
 						center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
 						delta_t = fabs(center_t - t);
 						index_delta_t = floor(delta_t/OffsetT);
@@ -450,9 +433,9 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 	}
 
-	free_3D((void*)Y_Est);
+//	free_3D((void*)Y_Est);
 	fclose(Fp);
-	free_3D((void*)Sinogram->counts);
+//	free_3D((void*)Sinogram->counts);
 
 
 
@@ -654,20 +637,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 							for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 							{
-							/*	if(i_t == slice_index_min)
-									ProfileThickness = (((i_t+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
-								else
-								{
-									if (i_t == slice_index_max)
-									{
-										ProfileThickness = (tmax - ((i_t)*Sinogram->delta_t + Sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t
-									}
-									else
-									{
-										ProfileThickness = Sinogram->delta_t;
-									}
-
-								}*/
+						
 								center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
 								delta_t = fabs(center_t - t);
 								index_delta_t = floor(delta_t/OffsetT);
@@ -747,20 +717,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 							for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 							{
 
-								/*if(i_t == slice_index_min)
-									ProfileThickness = (((i_t+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//(Sinogram->delta_t); //Will be < Sinogram->delta_t
-								else
-								{
-									if (i_t == slice_index_max)
-									{
-										ProfileThickness = (tmax - ((i_t)*Sinogram->delta_t + Sinogram->T0));//(Sinogram->delta_t);//Will be < Sinogram->delta_t
-									}
-									else
-									{
-										ProfileThickness = (Sinogram->delta_t);
-									}
-
-								}*/
+							
 								center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
 								delta_t = fabs(center_t - t);
 								index_delta_t = floor(delta_t/OffsetT);
@@ -894,7 +851,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		}
 #endif
 	   //Finding the optimal shifts to be applied
-	/*
+	
 
 		for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)
 		{
@@ -999,11 +956,12 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			Sinogram->ShiftX[i_theta]+= (sum1/sum3);
 
 			if(sum4 != 0)
-				Sinogram->ShiftY[i_theta]+=(sum2/sum4);
+				Sinogram->ShiftY[i_theta]+=0;//(sum2/sum4);
 
 			printf("ShiftX=%lf ShiftY=%lf\n",Sinogram->ShiftX[i_theta],Sinogram->ShiftY[i_theta]);
 		}
 
+		//Do partial caclulation for New A matrix columns
 		for(j=0; j < Geometry->N_z; j++)
 			for(k=0; k < Geometry->N_x; k++)
 			{
@@ -1015,8 +973,84 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				//	printf("%d\n",TempCol[j][k]->count);
 			}
 
-	*/
-
+	   //Forward project the object based on new A matrix
+		for(j = 0;j < Geometry->N_z; j++)
+			for(k = 0;k < Geometry->N_x; k++)
+			{
+				
+				for (i = 0;i < Geometry->N_y; i++)//slice index
+				{
+#ifdef STORE_A_MATRIX  //A matrix call
+					for(q = 0;q < AMatrix[i][j][k]->count; q++)
+						
+					{
+						
+						row = (int16_t)floor(AMatrix[i][j][k]->index[q]/(Sinogram->N_r*Sinogram->N_t));
+						slice =(int16_t) floor((AMatrix[i][j][k]->index[q]%(Sinogram->N_r*Sinogram->N_t))/(Sinogram->N_r));
+						col =  (int16_t)(AMatrix[i][j][k]->index[q]%(Sinogram->N_r*Sinogram->N_t))%(Sinogram->N_r);
+						Y_Est[slice][row][col]+=(AMatrix[i][j][k]->values[q] * Geometry->Object[i][j][k]);
+						
+					}
+					//  p++;
+#else
+					y = ((double)i+0.5)*Geometry->delta_xy + Geometry->y0;
+					
+					for(q = 0;q < TempCol[j][k]->count; q++)
+					{
+						//calculating the footprint of the voxel in the t-direction
+						
+						i_theta = floor(TempCol[j][k]->index[q]/(Sinogram->N_r));
+						i_r =  (TempCol[j][k]->index[q]%(Sinogram->N_r));
+						
+						t = y + Sinogram->ShiftY[i_theta];
+						tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
+						tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax? t + Geometry->delta_xy/2 : Sinogram->TMax;
+						
+						slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
+						slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
+						
+						if(slice_index_min < 0)
+							slice_index_min = 0;
+						if(slice_index_max >= Sinogram->N_t)
+							slice_index_max = Sinogram->N_t-1;
+						
+						
+						for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
+						{
+							
+							center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
+							delta_t = fabs(center_t - t);
+							index_delta_t = floor(delta_t/OffsetT);
+							w3 = delta_t - (double)(index_delta_t)*OffsetT;
+							w4 = ((double)index_delta_t+1)*OffsetT - delta_t;
+							ProfileThickness =(w3/OffsetT)*H_t[0][i_theta][index_delta_t] + (w4/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
+							
+							Y_Est[i_theta][i_r][i_t] += (TempCol[j][k]->values[q] *ProfileThickness* Geometry->Object[j][k][i]);
+							
+							
+							
+						}
+						
+					}
+					
+#endif
+				}
+				
+			}
+				
+		//Calculate New Error Sinogram 
+		
+		for (i_theta=0;i_theta<Sinogram->N_theta;i_theta++)//slice index
+		{
+			for(i_r = 0; i_r < Sinogram->N_r;i_r++)
+				for(i_t = 0;i_t < Sinogram->N_t;i_t++)
+				{
+					
+					ErrorSino[i_theta][i_r][i_t] = Sinogram->counts[i_theta][i_r][i_t] - Y_Est[i_theta][i_r][i_t];
+				}
+		
+		}
+		
 	}
 
 
