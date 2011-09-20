@@ -19,6 +19,7 @@
 #include "EIMTomo/common/EIMTomoTypes.h"
 #include "EIMTomo/common/allocate.h"
 #include "EIMTomo/common/EMTime.h"
+#include "EIMTomo/mt/mt19937ar.h"
 
 
 static char CE_Cancel = 0;
@@ -90,7 +91,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	//double OffsetR,OffsetT;
 	double ***H_t;
 	double ProfileCenterT;
-
+	RNGVars* RandomNumber;
+    
   //Allocate space for storing columns the A-matrix; an array of pointers to columns
   //AMatrixCol** AMatrix=(AMatrixCol **)get_spc(Geometry->N_x*Geometry->N_z,sizeof(AMatrixCol*));
   //	DetectorResponse = CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
@@ -309,13 +311,22 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	 printf("%d\n",Counter[index]);
 	 memmove(Counter+index,Counter+index+1,(ArraySize - index)*sizeof(int));
 	 ArraySize--;
-	 }*/
+     }*/
+	
+	//random number intiailizer using seed 1
+	RandomNumber=init_genrand(1);
+	
+	
 
-	//  p=0;//This is used to access the A-Matrix column correspoding the (i,j,k)the voxel location
 	srand(EIMTOMO_getMilliSeconds());
 	ArraySize= Geometry->N_z*Geometry->N_x;
-	//ArraySizeK = Geometry->N_x;
 
+	/*for( i = 0 ; i < ArraySize; i++)
+	{
+		Index=genrand_int32(RandomNumber);
+		printf("%ld\n",Index);
+	}*/
+	
 	Counter = (int32_t*)malloc(ArraySize*sizeof(int32_t));
 	//CounterK = (int*)malloc(ArraySizeK*sizeof(int));
 
@@ -334,7 +345,9 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		{
 			//generating a random index
 
-			Index = rand()%ArraySize;
+		//	Index = rand()%ArraySize;
+			Index=(genrand_int32(RandomNumber))%ArraySize;
+			
 			k_new = Counter[Index]%Geometry->N_x;
 			j_new = Counter[Index]/Geometry->N_x;
 			memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index));
@@ -542,7 +555,9 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			for(k = 0; k < Geometry->N_x ; k++)//Column index
 			{
 
-				Index = rand()%ArraySize;
+				//Index = rand()%ArraySize;
+				Index=(genrand_int32(RandomNumber))%ArraySize;
+				
 				k_new = Counter[Index]%Geometry->N_x;
 				j_new = Counter[Index]/Geometry->N_x;
 				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index));
@@ -852,7 +867,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 #endif
 	   //Finding the optimal shifts to be applied
 	
-
+/*
 		for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)
 		{
 			for (i_r = 0; i_r < Sinogram->N_r ; i_r++)
@@ -1050,6 +1065,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				}
 		
 		}
+ */
 		
 	}
 
