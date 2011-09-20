@@ -1,14 +1,19 @@
 //#include "ComputationEngine.h"
-#include "ComputationInputsMotionCorrection.h"
+
 #include <stdlib.h>
 #include <stdio.h>
-
 #include <string.h>
-#include <time.h>
+
+
+
+#include "EIMTomo/common/allocate.h"
+#include "EIMTomo/common/EMTime.h"
+#include "ComputationInputsMotionCorrection.h"
+
 //#include "randlib.h"
-clock_t startm, stopm;
-#define START if ( (startm = clock()) == -1) {printf("Error calling clock");exit(1);}
-#define STOP if ( (stopm = clock()) == -1) {printf("Error calling clock");exit(1);}
+unsigned long long int startm, stopm;
+#define START if ( (startm = EIMTOMO_getMilliSeconds()) == -1) {printf("Error calling clock");exit(1);}
+#define STOP if ( (stopm = EIMTOMO_getMilliSeconds()) == -1) {printf("Error calling clock");exit(1);}
 #define PRINTTIME printf( "%6.3f seconds used by the processor.\n", ((double)stopm-startm)/CLOCKS_PER_SEC);
 
 /*

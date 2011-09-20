@@ -7,8 +7,6 @@
 #include "EIMTomo/common/EIMTomoTypes.h"
 
 
-
-
 #define START_SLICE 500
 #define END_SLICE 504
 

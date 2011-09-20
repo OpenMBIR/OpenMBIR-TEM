@@ -9,11 +9,12 @@
 
 #ifndef MOTION_CORRECTION_COMPUTATIONENGINE_H_
 #define MOTION_CORRECTION_COMPUTATIONENGINE_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
+
+#include <stddef.h>
 
 #include "ComputationInputsMotionCorrection.h"
+
+
 
 
 	//#define DEBUG
@@ -41,7 +42,12 @@ extern "C" {
 		double* values;//Store the non zero entries
 		uint32_t count;//The number of non zero values present in the column
 		uint32_t *index;//This maps each value to its location in the column. The entries in this can vary from 0 to Sinogram.N_x Sinogram.N_theta-1
-	}AMatrixCol;
+	} AMatrixCol;
+
+
+#ifdef __cplusplus
+  extern "C" {
+#endif
 
 
 	//Markov Random Field Prior parameters - Globals -:(

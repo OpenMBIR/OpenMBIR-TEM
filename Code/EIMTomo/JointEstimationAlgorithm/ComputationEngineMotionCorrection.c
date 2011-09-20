@@ -14,13 +14,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <time.h>
+
 
 #include "EIMTomo/common/EIMTomoTypes.h"
 #include "EIMTomo/common/allocate.h"
-
-
-//#define DEBUG
+#include "EIMTomo/common/EMTime.h"
 
 
 static char CE_Cancel = 0;
@@ -67,7 +65,23 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	double ***H_t;
 	double ProfileCenterT;
 
+  //Allocate space for storing columns the A-matrix; an array of pointers to columns
+  //AMatrixCol** AMatrix=(AMatrixCol **)get_spc(Geometry->N_x*Geometry->N_z,sizeof(AMatrixCol*));
+  //	DetectorResponse = CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
 
+#ifdef STORE_A_MATRIX
+
+  AMatrixCol**** AMatrix = (AMatrixCol****)multialloc(sizeof(AMatrixCol*),3,Geometry->N_y,Geometry->N_z,Geometry->N_x);
+#else
+
+  double y;
+
+  double t,tmin,tmax,ProfileThickness;
+  int16_t slice_index_min,slice_index_max;
+  AMatrixCol*** TempCol = (AMatrixCol***)multialloc(sizeof(AMatrixCol*),2,Geometry->N_z,Geometry->N_x);
+  AMatrixCol* Aj;
+  AMatrixCol* TempMemBlock;
+#endif
 
 
 	FILE *Fp = fopen("ReconstructedSino.bin","w");//Reconstructed Sinogram from initial est
@@ -210,27 +224,6 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
     checksum=0;
 
-
-
-
-
-	//Allocate space for storing columns the A-matrix; an array of pointers to columns
-	//AMatrixCol** AMatrix=(AMatrixCol **)get_spc(Geometry->N_x*Geometry->N_z,sizeof(AMatrixCol*));
-	//	DetectorResponse = CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
-
-#ifdef STORE_A_MATRIX
-
-	AMatrixCol**** AMatrix = (AMatrixCol ****)multialloc(sizeof(AMatrixCol*),3,Geometry->N_y,Geometry->N_z,Geometry->N_x);
-#else
-
-double y;
-
-double t,tmin,tmax,ProfileThickness;
-	int16_t slice_index_min,slice_index_max;
-	AMatrixCol*** TempCol = (AMatrixCol***)multialloc(sizeof(AMatrixCol*),2,Geometry->N_z,Geometry->N_x);
-	AMatrixCol* Aj;
-	AMatrixCol* TempMemBlock;
-#endif
 
 	//Calculating A-Matrix one column at a time
 	//For each entry the idea is to initially allocate space for Sinogram.N_theta * Sinogram.N_x
@@ -1013,6 +1006,9 @@ double t,tmin,tmax,ProfileThickness;
 #ifdef COST_CALCULATE
 	fclose(Fp2);// writing cost function
 #endif
+
+
+
 	//free_3D(neighborhood);
 	// Get values from ComputationInputs and perform calculation
 	// Return any error code
