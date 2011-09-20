@@ -72,6 +72,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	//Random Indexing Parameters
 	int32_t Index,ArraySize,j_new,k_new;
 	int32_t* Counter;
+	
 
 	double checksum = 0,temp;
 	double RandomIndexj,RandomIndexi;
@@ -321,23 +322,12 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	srand(EIMTOMO_getMilliSeconds());
 	ArraySize= Geometry->N_z*Geometry->N_x;
 
-	/*for( i = 0 ; i < ArraySize; i++)
-	{
-		Index=genrand_int32(RandomNumber);
-		printf("%ld\n",Index);
-	}*/
 	
 	Counter = (int32_t*)malloc(ArraySize*sizeof(int32_t));
-	//CounterK = (int*)malloc(ArraySizeK*sizeof(int));
+	
 
 	for(j_new = 0;j_new < ArraySize; j_new++)
 		Counter[j_new]=j_new;
-
-
-
-
-	//	for(k = 0;k < ArraySizeK; k++)
-	//		CounterK[k]=k;
 
 
 	for(j = 0;j < Geometry->N_z; j++)
@@ -345,17 +335,16 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		{
 			//generating a random index
 
-		//	Index = rand()%ArraySize;
+		    //Index = rand()%ArraySize;
 			Index=(genrand_int32(RandomNumber))%ArraySize;
 			
 			k_new = Counter[Index]%Geometry->N_x;
 			j_new = Counter[Index]/Geometry->N_x;
+			
 			memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index));
 			ArraySize--;
 
-			//	printf("%d,%d\n",j_new,k_new);
-
-
+			
 			for (i = 0;i < Geometry->N_y; i++)//slice index
 			{
 #ifdef STORE_A_MATRIX  //A matrix call
@@ -415,8 +404,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			}
 
 		}
-
-
+	
+	
 
 
 	//Calculate Error Sinogram - Can this be combined with previous loop?
@@ -867,7 +856,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 #endif
 	   //Finding the optimal shifts to be applied
 	
-/*
+
 		for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)
 		{
 			for (i_r = 0; i_r < Sinogram->N_r ; i_r++)
@@ -961,10 +950,10 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				{
 					if(Weight[i_theta][i_r][i_t]!=0)
 					{
-					sum1+= (MicroscopeImageDerivR[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]/Weight[i_theta][i_r][i_t]);
-					sum2+= (MicroscopeImageDerivT[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]/Weight[i_theta][i_r][i_t]);
-					sum3+= (MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]/Weight[i_theta][i_r][i_t]);
-					sum4+= (MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]/Weight[i_theta][i_r][i_t]);
+					sum1+= (MicroscopeImageDerivR[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+					sum2+= (MicroscopeImageDerivT[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+					sum3+= (MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]*Weight[i_theta][i_r][i_t]);
+					sum4+= (MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]*Weight[i_theta][i_r][i_t]);
 					}
 				}
 			if(sum3 != 0)
@@ -1065,7 +1054,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				}
 		
 		}
- */
+ 
+		
 		
 	}
 
