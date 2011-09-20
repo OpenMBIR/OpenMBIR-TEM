@@ -92,6 +92,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	//double OffsetR,OffsetT;
 	double ***H_t;
 	double ProfileCenterT;
+	double DataMatchError,PriorModelError;
 	RNGVars* RandomNumber;
     
   //Allocate space for storing columns the A-matrix; an array of pointers to columns
@@ -144,7 +145,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 #endif
   Idx = 0;
 
-	OffsetR = ((Geometry->delta_xz/sqrt(2)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
 	OffsetT = ((Geometry->delta_xy/sqrt(2)) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 
 
@@ -760,7 +761,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 					cost[Iter+1] += (ErrorSino[i_theta][i_r][i_t] * ErrorSino[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
 		cost[Iter+1]/=2;//Accounting for (1/2) in the cost function
 		//Each neighboring pair should be counted only once
-
+       DataMatchError = cost[Iter+1];
+		
 		for (i = 0; i < Geometry->N_z; i++)
 			for (j = 0; j < Geometry->N_x; j++)
 				for(k = 0; k < Geometry->N_y; k++)
@@ -822,12 +824,12 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 							temp+= FILTER[2][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k+1]),MRF_P);
 					}
 				}
+		PriorModelError = temp/(MRF_P*SIGMA_X_P);
+		cost[Iter+1] += PriorModelError;
+       // printf("Cost after updating x\n");
+		printf("%lf\n",cost[Iter+1]);
 
-		cost[Iter] += (temp/(MRF_P*SIGMA_X_P));
-
-		printf("%lf\n",cost[Iter]);
-
-		fwrite(&cost[Iter],sizeof(double),1,Fp2);
+		fwrite(&cost[Iter+1],sizeof(double),1,Fp2);
 		/*******************************************************************************/
 #else
 		printf("%d\n",Iter);
@@ -962,21 +964,28 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			if(sum4 != 0)
 				Sinogram->ShiftY[i_theta]+=0;//(sum2/sum4);
 
-			printf("ShiftX=%lf ShiftY=%lf\n",Sinogram->ShiftX[i_theta],Sinogram->ShiftY[i_theta]);
+	//		printf("ShiftX=%lf ShiftY=%lf\n",Sinogram->ShiftX[i_theta],Sinogram->ShiftY[i_theta]);
 		}
 
-		//Do partial caclulation for New A matrix columns
+		//Do partial calculation for New A matrix columns
 		for(j=0; j < Geometry->N_z; j++)
 			for(k=0; k < Geometry->N_x; k++)
 			{
 				free(TempCol[j][k]->values);
 				free(TempCol[j][k]->index);
-
+                TempCol[j][k]->count=0;
+				
 				TempCol[j][k] = CE_CalculateAMatrixColumnPartial(j,k,0,Sinogram,Geometry,DetectorResponse);
 				//		TempCol[j][k] = CE_CalculateAMatrixColumnPartial(j,k,Sinogram,Geometry,VoxelProfile);
 				//	printf("%d\n",TempCol[j][k]->count);
 			}
 
+		//Initialize estiamted sinogram to zero
+		for(i = 0; i < Sinogram->N_theta; i++)
+			for(j = 0; j < Sinogram->N_r; j++)
+				for(k = 0;k < Sinogram->N_t; k++)
+					Y_Est[i][j][k]=0.0;
+		
 	   //Forward project the object based on new A matrix
 		for(j = 0;j < Geometry->N_z; j++)
 			for(k = 0;k < Geometry->N_x; k++)
@@ -1049,17 +1058,37 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			for(i_r = 0; i_r < Sinogram->N_r;i_r++)
 				for(i_t = 0;i_t < Sinogram->N_t;i_t++)
 				{
-					
 					ErrorSino[i_theta][i_r][i_t] = Sinogram->counts[i_theta][i_r][i_t] - Y_Est[i_theta][i_r][i_t];
-				}
-		
+				}		
 		}
  
+#ifdef COST_CALCULATE
+		/*********************Cost Calculation***************************************************/
+		temp=0;
+		cost[Iter+1]=0;
+		for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)
+			for (i_r = 0; i_r < Sinogram->N_r; i_r++)
+				for( i_t = 0; i_t < Sinogram->N_t; i_t++)
+					cost[Iter+1] += (ErrorSino[i_theta][i_r][i_t] * ErrorSino[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
+		cost[Iter+1]/=2;//Accounting for (1/2) in the cost function
+		//Each neighboring pair should be counted only once
+		//printf("%lf\n",fabs(DataMatchError-cost[Iter+1]));
+		DataMatchError = cost[Iter+1];				
+		
+		cost[Iter+1] += PriorModelError;
+		//printf("Cost after updating shift parameter\n");
+		printf("%lf\n",cost[Iter+1]);
+		
+		fwrite(&cost[Iter],sizeof(double),1,Fp2);
+		/*******************************************************************************/
+#endif //Cost calculation endif
 		
 		
 	}
 
-
+	for(i_theta = 0 ; i_theta < Sinogram->N_theta;i_theta++)
+		printf("%lf\n",Sinogram->ShiftX[i_theta]);
+	
 
 	free_img((void*)VoxelProfile);
 	//free(AMatrix);
@@ -1768,7 +1797,7 @@ void* CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometr
 
 	}
 	printf("Detector Done\n");
-	fwrite(&H_t[0][0][0], sizeof(double),Sinogram->N_theta*DETECTOR_RESPONSE_BINS, Fp);
+	fwrite(&H_r[0][0][0], sizeof(double),Sinogram->N_theta*DETECTOR_RESPONSE_BINS, Fp);
 	fclose(Fp);
 	return H_r;
 }
