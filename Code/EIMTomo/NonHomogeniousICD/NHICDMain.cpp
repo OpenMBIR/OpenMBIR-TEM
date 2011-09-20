@@ -1,17 +1,22 @@
 //#include "ComputationEngine.h"
-#include "ComputationInputsNHICD.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
+
+#include <iostream>
 
 #include "EIMTomo/common/EIMTomoTypes.h"
 #include "EIMTomo/common/allocate.h"
+#include "EIMTomo/common/EMTime.h"
+#include "NHICDInputs.h"
+#include "NHICDCliParser.h"
+#include "NHICDEngine.h"
 
 //#include "randlib.h"
-clock_t startm, stopm;
-#define START if ( (startm = clock()) == -1) {printf("Error calling clock");exit(1);}
-#define STOP if ( (stopm = clock()) == -1) {printf("Error calling clock");exit(1);}
+unsigned long long int startm, stopm;
+#define START if ( (startm = EIMTOMO_getMilliSeconds()) == -1) {printf("Error calling clock");exit(1);}
+#define STOP if ( (stopm = EIMTOMO_getMilliSeconds()) == -1) {printf("Error calling clock");exit(1);}
 #define PRINTTIME printf( "%6.3f seconds used by the processor.\n", ((double)stopm-startm)/CLOCKS_PER_SEC);
 
 /*
@@ -35,7 +40,14 @@ int main(int argc,char** argv)
 	START;
 	
 	error=-1;
-	error=CI_ParseInput(argc,argv,&ParsedInput);
+	NHICDCliParser parser;
+	error = parser.parseCLIArguments(argc, argv, &ParsedInput);
+	if (error < 0)
+	{
+	  std::cout << "Error parsing line command arguments" << std::endl;
+	  return EXIT_FAILURE;
+	}
+
 	if(error != -1)
 	{
 		printf("%s %s %s %s\n",ParsedInput.ParamFile,ParsedInput.SinoFile,ParsedInput.InitialRecon,ParsedInput.OutputFile);

@@ -14,15 +14,17 @@ cmake_minimum_required(VERSION 2.8.3)
 #Define the headers for this program
 
 set(JointEstimation_HDRS
-  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/ComputationEngineMotionCorrection.h
-  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/ComputationInputsMotionCorrection.h
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/MotionCorrectionEngine.h
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/MotionCorrectionInputs.h
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/JointEstimationCLIParser.h
 )
 
 #Define the source files for this program
 set(JointEstimation_SRCS
-  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/ComputationEngineMotionCorrection.c
-  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/ComputationInputsMotionCorrection.c
-  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/JointEstimationMain.c
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/MotionCorrectionEngine.c
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/MotionCorrectionInputs.c
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/JointEstimationCLIParser.cpp
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/JointEstimationMain.cpp
 )
 
 cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/JointEstimation" "${JointEstimation_HDRS}" "${JointEstimation_SRCS}" "${CMP_INSTALL_FILES}")

@@ -1,43 +1,18 @@
 
 
-#include "ComputationInputsMotionCorrection.h"
-#include "EIMTomo/Common/allocate.h"
+#include "MotionCorrectionInputs.h"
+
 
 #include <stdlib.h>
 #include <stdio.h>
-
 #include <string.h>
 #include <math.h>
 
+#include "EIMTomo/Common/allocate.h"
 
 extern int optind;
 extern char *optarg;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-	int CI_ParseInput(int argc,char **argv,CommandLineInputs* Input)
-	{
-		int i,error;
-		error=0;
-		while ((i = getopt(argc, argv, ":p:s:i:o:n:l:m:")) != -1) //p is for parameter file , s for sinogram file,i for Initial Recon Data File name,o is for Output File name
-		{
-			switch (i)
-			{
-				case 'i':Input->InitialRecon = optarg;break;
-				case 'o':Input->OutputFile = optarg;break;
-				case 'p':Input->ParamFile = optarg;break;
-				case 's':Input->SinoFile = optarg;break;
-				case 'n':Input->NumIter = atoi(optarg);break; //n = number of iterations
-				case 'l':Input->SigmaX = (double)atof(optarg);break; //l - lambda
-				case 'm':Input->p = (double)atof(optarg);break;//p = Markov Radom Field Parameter
-				case '?':error=-1;break;
-			}
-		}
-
-		return error;
-	}
 
 	void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
 	{
@@ -256,8 +231,3 @@ extern "C" {
 		fclose(Fp);
 
 	}
-
-
-#ifdef __cplusplus
-}
-#endif

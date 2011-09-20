@@ -13,13 +13,15 @@ cmake_minimum_required(VERSION 2.8.3)
 
 
 set(NonHomogeniousICD_HDRS
-  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/ComputationEngineOptimizedNHICD.h
-  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/ComputationInputsNHICD.h
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDEngine.h
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDInputs.h
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDCliParser.h
 )
 set(NonHomogeniousICD_SRCS
-  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/ComputationEngineOptimizedNHICD.c
-  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/ComputationInputsNHICD.c
-  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDMain.c
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDEngine.c
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDInputs.c
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDCliParser.cpp
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDMain.cpp
 )
 
 cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/NHICD" "${NonHomogeniousICD_HDRS}" "${NonHomogeniousICD_SRCS}" "${CMP_INSTALL_FILES}")

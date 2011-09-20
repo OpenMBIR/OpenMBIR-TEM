@@ -10,16 +10,16 @@
 #ifndef MOTION_CORRECTION_COMPUTATIONENGINE_H_
 #define MOTION_CORRECTION_COMPUTATIONENGINE_H_
 
-#include <stddef.h>
-
-#include "ComputationInputsMotionCorrection.h"
+#include "EIMTomo/common/EIMTomoTypes.h"
+#include "EIMTomo/common/EMMath.h"
+#include "MotionCorrectionInputs.h"
 
 
 
 
 	//#define DEBUG
 #define PROFILE_RESOLUTION 1536
-#define PI 4*atan(1)//3.14159265
+#define PI M_PI
 	//Beam Parameters - This is set to some number <<< Sinogram->delta_r.
 	//#define BEAM_WIDTH 0.050000
 #define BEAM_RESOLUTION 512
@@ -45,11 +45,6 @@
 	} AMatrixCol;
 
 
-#ifdef __cplusplus
-  extern "C" {
-#endif
-
-
 	//Markov Random Field Prior parameters - Globals -:(
 	double FILTER[3][3][3]={{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}},
 		{{0.0370,0.0523,0.0370},{0.0523,0.0,0.0523},{0.0370,0.0523,  0.0370}},
@@ -64,6 +59,11 @@
     double BEAM_WIDTH;
 	double OffsetR;
 	double OffsetT;
+
+
+#ifdef __cplusplus
+  extern "C" {
+#endif
 
 
 

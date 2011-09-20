@@ -4,11 +4,13 @@
 #include <stdio.h>
 #include <string.h>
 
-
+#include <iostream>
 
 #include "EIMTomo/common/allocate.h"
 #include "EIMTomo/common/EMTime.h"
-#include "ComputationInputsMotionCorrection.h"
+#include "MotionCorrectionInputs.h"
+#include "JointEstimationCLIParser.h"
+#include "MotionCorrectionEngine.h"
 
 //#include "randlib.h"
 unsigned long long int startm, stopm;
@@ -37,8 +39,15 @@ int main(int argc,char** argv)
 	START;
 	
 	error=-1;
-	error=CI_ParseInput(argc,argv,&ParsedInput);
-	if(error != -1)
+
+	JointEstimationCLIParser parser;
+	error = parser.parseCLIArguments(argc, argv, &ParsedInput);
+	if (error < 0)
+	{
+	  std::cout << "Error Parsing the Command line Arguments" << std::endl;
+	  return EXIT_FAILURE;
+	}
+	else
 	{
 		printf("%s %s %s %s\n",ParsedInput.ParamFile,ParsedInput.SinoFile,ParsedInput.InitialRecon,ParsedInput.OutputFile);
 		//Read the paramters into the structures

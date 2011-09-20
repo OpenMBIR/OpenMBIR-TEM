@@ -9,11 +9,9 @@
 
 #ifndef NHICD_COMPUTATIONENGINE_H_
 #define NHICD_COMPUTATIONENGINE_H_
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-#include "ComputationInputsNHICD.h"
+#include "EIMTomo/common/EIMTomoTypes.h"
+#include "NHICDInputs.h"
 
 
 	//#define DEBUG
@@ -56,6 +54,9 @@ extern "C" {
     double BEAM_WIDTH;
 
 
+#ifdef __cplusplus
+    extern "C" {
+#endif
 
 	void CE_CalculateSinCos(Sino*);
 	void CE_InitializeBeamProfile(Sino*);

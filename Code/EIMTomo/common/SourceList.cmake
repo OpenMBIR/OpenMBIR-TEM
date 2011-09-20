@@ -15,6 +15,6 @@ set (EIMTomo_Common_HDRS
     ${PROJECT_CODE_DIR}/EIMTomo/common/DLLExport.h
     ${PROJECT_CODE_DIR}/EIMTomo/common/MSVCDefines.h
     ${PROJECT_CODE_DIR}/EIMTomo/common/EMTime.h
-  #  ${PROJECT_CODE_DIR}/EIMTomo/common/randlib.h
+    ${PROJECT_CODE_DIR}/EIMTomo/common/EMMath.h
 )
 cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/common" "${EIMTomo_Common_HDRS}" "${EIMTomo_Common_SRCS}" "${CMP_INSTALL_FILES}")
