@@ -8,7 +8,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "EIMTomo/Common/allocate.h"
+#include "EIMTomo/common/allocate.h"
 
 extern int optind;
 extern char *optarg;

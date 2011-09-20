@@ -27,7 +27,7 @@ set(NonHomogeniousICD_SRCS
 cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/NHICD" "${NonHomogeniousICD_HDRS}" "${NonHomogeniousICD_SRCS}" "${CMP_INSTALL_FILES}")
 
 # Include the source files for Common source files and the Mersenne Twister RNG
-include (${PROJECT_CODE_DIR}/EIMTomo/Common/SourceList.cmake)
+include (${PROJECT_CODE_DIR}/EIMTomo/common/SourceList.cmake)
 include (${PROJECT_CODE_DIR}/EIMTomo/mt/SourceList.cmake)
 
 set(GENERATED_HDRS
