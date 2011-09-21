@@ -19,7 +19,7 @@ set(BasicReconstructionAlgorithm_HDRS
 set(NonHomogeniousICD_SRCS
   ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/ComputationEngineOptimized.c
   ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/ComputationInputs.c
-  ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/Main.cpp
+  ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/Main.c
 )
 
 cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/BasicReconstructionAlgorithm" "${BasicReconstructionAlgorithm_HDRS}" "${BasicReconstructionAlgorithm_SRCS}" "${CMP_INSTALL_FILES}")
@@ -50,5 +50,5 @@ set(BasicReconstructionAlgorithm_PROJECT_FILES
 #add some additional include directories:
 include_directories(${PROJECT_CODE_DIR})
 
-add_executable(NHICD ${BasicReconstructionAlgorithm_PROJECT_FILES} )
+add_executable(BasicReconstructionAlgorithm ${BasicReconstructionAlgorithm_PROJECT_FILES} )
 
