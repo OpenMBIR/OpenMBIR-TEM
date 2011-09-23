@@ -1,11 +1,13 @@
 /*
- *  ComputationEngineOptimized.c
- *  HAADFSTEM_Xcode
- *
- *  Created by Singanallur Venkatakrishnan on 6/29/11.
- *  Copyright 2011 Purdue University. All rights reserved.
- *
- */
+
+ Copyright (c) 2011, Singnallur Venkatakrishnan and Charles Bouman
+
+  All rights reserved.
+ BSD License: http://www.opensource.org/licenses/bsd-license.html
+
+ This code was partly written under US Air Force Contract FA8650-07-D-5800
+
+*/
 
 #include "MotionCorrectionEngine.h"
 
@@ -78,6 +80,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	double RandomIndexj,RandomIndexi;
 	double *cost;
 	double** VoxelProfile,***DetectorResponse;
+	double*** H_rDeriv;
 	double ***Y_Est;//Estimted Sinogram
 	double ***ErrorSino;//Error Sinogram
 	double ***Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
@@ -94,6 +97,10 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	double ProfileCenterT;
 	double DataMatchError,PriorModelError;
 	RNGVars* RandomNumber;
+	double ManualShift[87]={-0.192584004101240,	-0.206643413819620,	-0.148091936792610	,0.200643860672210,	0.119064408064640,	0.0823215800185999,	-0.0898639756886690,	0.181723431322310,	-0.110613749290870,	0.196619069196380	,-0.0768786743342798	,0.00291303168036983,	-0.139525861615640,	-0.107518539200350	,-0.201860280278160	,-0.195461252165390	,0.0829184736312519	,-0.0993729161673972	,0.151095086657030	,0.234729526847682	,-0.122037130183730	,-1.12177950999381e-05	,0.0100389294269698	,-0.202361119033680	,-0.0549333242112802	,-0.0588331947942300,	-0.179721152823110	,-0.152744712264840,	-0.0383607578073426,	0.158538765292540	,0.130033994715640	,-0.193255966538050,	0.235662923767947	,0.00504930574388807	,0.166036427158870,	-0.239340324820580	,-0.106347235839460,	-0.000235812077419961	,0.0144558127290303	,0.220190566210180	,-0.0909859520745302,	0.228784431249630	,0.214277267699680	,-0.0108249212321399	,0.201634987109570,	-0.159074276929812,	-0.158773546039640,	-0.111219796183420,	0.175067278761020,	-0.0798026264541536	,-0.00929747125526903	,-0.236487277381930	,-0.0744957463561802	,-0.150165287676200	,0.0231011456365402	,0.0338042481082701	,-0.162656897701020	,0.208265092570540,	0.183414496196420,	0.163305693440500,	0.0545310988381322,	-0.165689871419535	,-0.151682195801220	,0.219764410415053	,0.0503711146932102,	-0.0134379152541479,	0.0416002660346102,	-0.0784299454868496	,-0.0639866795950499	,0.104007960019140	,0.0341744148756400,	0.242256437181990,	-0.242031862189577,	0.166415795042670	,0.196891827535670,	0.0637951299722301,	0.150940798728510	,0.00515618099199000	,0.0802532933046201	,-0.225815232388863	,-0.210166019918282,	0.223661501159600,	-0.118929047758498,	0.115440286800720	,0.0385821924955998	,-0.0239354506074201	,-0.221368492138470
+	};
+	double testval=-0.5;
+	double sign_deriv;
     
   //Allocate space for storing columns the A-matrix; an array of pointers to columns
   //AMatrixCol** AMatrix=(AMatrixCol **)get_spc(Geometry->N_x*Geometry->N_z,sizeof(AMatrixCol*));
@@ -147,7 +154,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
 	OffsetT = ((Geometry->delta_xy/sqrt(2)) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
-
+	H_rDeriv = (double***)get_3D(1, Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(double));//change from 1 to DETECTOR_RESPONSE_BINS
 
 	Y_Est=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(double));
 	ErrorSino=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(double));
@@ -166,6 +173,14 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	//calculate sine and cosine of all angles and store in the global arrays sine and cosine
 	DetectorResponse = CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response along r -direction
 
+	for(k=0;k < Sinogram->N_theta;k++)
+	{
+	H_rDeriv[0][k][0]=0;
+	for(i = 1; i < DETECTOR_RESPONSE_BINS-1; i++)
+		H_rDeriv[0][k][i] = (DetectorResponse[0][k][i+1]-DetectorResponse[0][k][i-1])/(2*OffsetR);
+	H_rDeriv[0][k][DETECTOR_RESPONSE_BINS-1]=0; //TODO - this is not correct obviously
+	}
+	
 
 	//Detector Response along T-direction
 	for(k = 0 ; k <Sinogram->N_theta; k++)
@@ -337,7 +352,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			//generating a random index
 
 		    //Index = rand()%ArraySize;
-			Index=(genrand_int32(RandomNumber))%ArraySize;
+			Index=(genrand_int31(RandomNumber))%ArraySize;
 			
 			k_new = Counter[Index]%Geometry->N_x;
 			j_new = Counter[Index]/Geometry->N_x;
@@ -534,6 +549,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 	for(Iter = 0;Iter < CmdInputs->NumIter;Iter++)
 	{
+		
+		 
 		ArraySize = Geometry->N_x*Geometry->N_z;
 		for(j_new = 0;j_new < ArraySize; j_new++)
 			Counter[j_new]=j_new;
@@ -546,7 +563,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			{
 
 				//Index = rand()%ArraySize;
-				Index=(genrand_int32(RandomNumber))%ArraySize;
+				Index=(genrand_int31(RandomNumber))%ArraySize;
 				
 				k_new = Counter[Index]%Geometry->N_x;
 				j_new = Counter[Index]/Geometry->N_x;
@@ -750,7 +767,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		{
 			return err;
 		}
-
+		 
+        
 #ifdef COST_CALCULATE
 		/*********************Cost Calculation***************************************************/
 		temp=0;
@@ -856,10 +874,12 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			fclose(Fp3);
 		}
 #endif
+		
 	   //Finding the optimal shifts to be applied
 	
+	
 
-		for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)
+		for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)//Sinogram->N_theta
 		{
 			for (i_r = 0; i_r < Sinogram->N_r ; i_r++)
 				for (i_t = 0; i_t < Sinogram->N_t; i_t++)
@@ -914,13 +934,34 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 							//Now we should have h_r and h_r'
 							center_r = Sinogram->R0 + ((double)i_r + 0.5)*Sinogram->delta_r ;
 							delta_r = fabs(center_r - r);
+							
+							if(r - center_r > 0)
+								sign_deriv=1;
+							else {
+								sign_deriv=-1;
+							}
+
 
 							index_delta_r = floor((delta_r/OffsetR));
+							
+							if(index_delta_r < DETECTOR_RESPONSE_BINS)
+							{
 							w1 = delta_r - index_delta_r*OffsetR;
 							w2 = (index_delta_r+1)*OffsetR - delta_r;
 							f1 = (w2/OffsetR)*DetectorResponse[0][i_theta][index_delta_r] + (w1/OffsetR)*DetectorResponse[0][i_theta][index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
-							derivative_r = (DetectorResponse[0][i_theta][index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1]-DetectorResponse[0][i_theta][index_delta_r])/OffsetR;
+							derivative_r = (DetectorResponse[0][i_theta][index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1] - DetectorResponse[0][i_theta][index_delta_r])/OffsetR;
+							}
+							else 
+							{
+								f1=0;
+								derivative_r=0;
+							}
 
+                           // derivative_r = H_rDeriv[0][i_theta][index_delta_r];
+							
+							//printf("%d\n",i_r);
+						
+							
 							for (i_t = slice_index_min; i_t <= slice_index_max; i_t ++)
 							{
 								//compute delta_t and then use linear interpolation to get a value
@@ -933,10 +974,9 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 								w2 = (index_delta_t+1)*OffsetT - delta_t;
 								f2 = (w2/OffsetR)*H_t[0][i_theta][index_delta_t] + (w1/OffsetR)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 								derivative_t = (H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1]-H_t[0][i_theta][index_delta_t])/OffsetT;
-
-
-								MicroscopeImageDerivR[i_r][i_t]+=derivative_r*f2*Geometry->Object[j][k][i];
-								MicroscopeImageDerivT[i_r][i_t]+=derivative_t*f1*Geometry->Object[j][k][i];
+								
+								MicroscopeImageDerivR[i_r][i_t]+=(sign_deriv*derivative_r*f2*Geometry->Object[j][k][i]);
+								MicroscopeImageDerivT[i_r][i_t]+=(derivative_t*f1*Geometry->Object[j][k][i]);
 							}
 						}
 					}
@@ -950,23 +990,28 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			for (i_r = 0; i_r < Sinogram->N_r ; i_r++)
 				for (i_t = 0; i_t < Sinogram->N_t; i_t++)
 				{
-					if(Weight[i_theta][i_r][i_t]!=0)
+					if(Weight[i_theta][i_r][i_t] != 0)
 					{
 					sum1+= (MicroscopeImageDerivR[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
-					sum2+= (MicroscopeImageDerivT[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+					//sum2+= (MicroscopeImageDerivT[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
 					sum3+= (MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]*Weight[i_theta][i_r][i_t]);
-					sum4+= (MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]*Weight[i_theta][i_r][i_t]);
+					//sum4+= (MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]*Weight[i_theta][i_r][i_t]);
+				//	sum2+=((ErrorSino[i_theta][i_r][i_t] - testval*MicroscopeImageDerivR[i_r][i_t])*(ErrorSino[i_theta][i_r][i_t] - testval*MicroscopeImageDerivR[i_r][i_t])*Weight[i_theta][i_r][i_t]);		
 					}
 				}
 			if(sum3 != 0)
-			Sinogram->ShiftX[i_theta]+= (sum1/sum3);
+				Sinogram->ShiftX[i_theta]+=((sum1/sum3));
 
 			if(sum4 != 0)
 				Sinogram->ShiftY[i_theta]+=0;//(sum2/sum4);
 
-	//		printf("ShiftX=%lf ShiftY=%lf\n",Sinogram->ShiftX[i_theta],Sinogram->ShiftY[i_theta]);
+			
+			printf("ShiftX=%lf ShiftY=%lf\n",Sinogram->ShiftX[i_theta],Sinogram->ShiftY[i_theta]);
 		}
 
+	
+	
+		
 		//Do partial calculation for New A matrix columns
 		for(j=0; j < Geometry->N_z; j++)
 			for(k=0; k < Geometry->N_x; k++)
@@ -980,7 +1025,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				//	printf("%d\n",TempCol[j][k]->count);
 			}
 
-		//Initialize estiamted sinogram to zero
+		//Initialize estimated sinogram to zero
 		for(i = 0; i < Sinogram->N_theta; i++)
 			for(j = 0; j < Sinogram->N_r; j++)
 				for(k = 0;k < Sinogram->N_t; k++)
@@ -1061,6 +1106,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 					ErrorSino[i_theta][i_r][i_t] = Sinogram->counts[i_theta][i_r][i_t] - Y_Est[i_theta][i_r][i_t];
 				}		
 		}
+	 
+		
  
 #ifdef COST_CALCULATE
 		/*********************Cost Calculation***************************************************/
@@ -1072,16 +1119,17 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 					cost[Iter+1] += (ErrorSino[i_theta][i_r][i_t] * ErrorSino[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
 		cost[Iter+1]/=2;//Accounting for (1/2) in the cost function
 		//Each neighboring pair should be counted only once
-		//printf("%lf\n",fabs(DataMatchError-cost[Iter+1]));
-		DataMatchError = cost[Iter+1];				
+		//printf("%lf\n",(DataMatchError-cost[Iter+1]));
+		DataMatchError = cost[Iter+1];		
 		
-		cost[Iter+1] += PriorModelError;
+		cost[Iter+1] += PriorModelError; //TODO: Remoev this 
+		
 		//printf("Cost after updating shift parameter\n");
 		printf("%lf\n",cost[Iter+1]);
-		
 		fwrite(&cost[Iter],sizeof(double),1,Fp2);
 		/*******************************************************************************/
 #endif //Cost calculation endif
+		
 		
 		
 	}
@@ -1770,11 +1818,11 @@ void* CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometr
 			}
 		}
 
-		/*H_rDeriv[0][k][0]=0;
+		H_rDeriv[0][k][0]=0;
 		for(i = 1; i < DETECTOR_RESPONSE_BINS-1; i++)
 			H_rDeriv[0][k][i] = (H_r[0][k][i+1]-H_r[0][k][i-1])/(2*OffsetR);
 		H_rDeriv[0][k][DETECTOR_RESPONSE_BINS-1]=0; //TODO - this is not correct obviously
-		*/
+		
 
 		for (i = 0; i < DETECTOR_RESPONSE_BINS; i++)
 		{
