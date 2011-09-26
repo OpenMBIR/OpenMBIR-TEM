@@ -879,7 +879,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		
 	   //Finding the optimal shifts to be applied
 	
-	/*
+	
 
 		for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)//Sinogram->N_theta
 		{
@@ -1015,7 +1015,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 					sum1+= (MicroscopeImageDerivR[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
 					sum2+= (MicroscopeImageDerivT[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
 					sum3+= (MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]*Weight[i_theta][i_r][i_t]);
-					sum4+= (MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]*Weight[i_theta][i_r][i_t]);		
+					sum4+= (MicroscopeImageDerivT[i_r][i_t]*MicroscopeImageDerivT[i_r][i_t]*Weight[i_theta][i_r][i_t]);		
 					}
 				}
 			if(sum3 != 0)
@@ -1126,7 +1126,6 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				}		
 		}
 	 
-		*/
  
 #ifdef COST_CALCULATE
 		/*********************Cost Calculation***************************************************/
@@ -1141,7 +1140,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		//printf("%lf\n",(DataMatchError-cost[Iter+1]));
 		DataMatchError = cost[Iter+1];		
 		
-		cost[Iter+1] += PriorModelError; //TODO: Remoev this 
+		cost[Iter+1] += PriorModelError;  
 		
 		//printf("Cost after updating shift parameter\n");
 		printf("%lf\n",cost[Iter+1]);
