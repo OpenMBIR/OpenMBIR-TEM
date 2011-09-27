@@ -101,6 +101,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	};
 	double testval=-0.5;
 	double sign_deriv_r,sign_deriv_t;
+	//Variables to store determinant
+	double a,b,c,d,e,determinant;
     
   //Allocate space for storing columns the A-matrix; an array of pointers to columns
   //AMatrixCol** AMatrix=(AMatrixCol **)get_spc(Geometry->N_x*Geometry->N_z,sizeof(AMatrixCol*));
@@ -405,7 +407,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 						index_delta_t = floor(delta_t/OffsetT);
 						w3 = delta_t - (double)(index_delta_t)*OffsetT;
 						w4 = ((double)index_delta_t+1)*OffsetT - delta_t;
-						ProfileThickness =(w3/OffsetT)*H_t[0][i_theta][index_delta_t] + (w4/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
+						ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 
 						Y_Est[i_theta][i_r][i_t] += (TempCol[j_new][k_new]->values[q] *ProfileThickness* Geometry->Object[j_new][k_new][i]);
 
@@ -671,7 +673,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 								w4 = (index_delta_t+1)*OffsetT - delta_t;
 
 								//TODO: interpolation
-								ProfileThickness =(w3/OffsetT)*H_t[0][i_theta][index_delta_t] + (w4/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
+								ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 
 								THETA2 += (ProfileThickness*ProfileThickness)*(TempMemBlock->values[q])*(TempMemBlock->values[q])*Weight[i_theta][i_r][i_t];
 								THETA1 += ErrorSino[i_theta][i_r][i_t]*(TempMemBlock->values[q])*(ProfileThickness)*Weight[i_theta][i_r][i_t];
@@ -747,10 +749,9 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 								index_delta_t = floor(delta_t/OffsetT);
 								w3 = delta_t - index_delta_t*OffsetT;
 								w4 = (index_delta_t+1)*OffsetT - delta_t;
-							    ProfileThickness =(w3/OffsetT)*H_t[0][i_theta][index_delta_t] + (w4/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
+							    ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 
-
-
+                               
 								 ErrorSino[i_theta][i_r][i_t] -= (TempMemBlock->values[q] *ProfileThickness* (Geometry->Object[j_new][k_new][i] - V));
 							}
 						}
@@ -878,7 +879,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 #endif
 		
 	   //Finding the optimal shifts to be applied
-	
+	   
+		
 	
 
 		for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)//Sinogram->N_theta
@@ -985,7 +987,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 								{
 								w1 = delta_t - index_delta_t*OffsetT;
 								w2 = (index_delta_t+1)*OffsetT - delta_t;
-								f2 = (w2/OffsetR)*H_t[0][i_theta][index_delta_t] + (w1/OffsetR)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
+								f2 = (w2/OffsetT)*H_t[0][i_theta][index_delta_t] + (w1/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 								derivative_t = (H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1]-H_t[0][i_theta][index_delta_t])/OffsetT;
 								}
 								else 
@@ -1007,23 +1009,39 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			sum2=0;
 			sum3=0;
 			sum4=0;
+			a=0;
+			b=0;
+			c=0;
+			d=0;
+			e=0;
 			for (i_r = 0; i_r < Sinogram->N_r ; i_r++)
 				for (i_t = 0; i_t < Sinogram->N_t; i_t++)
 				{
 					if(Weight[i_theta][i_r][i_t] != 0)
 					{
-					sum1+= (MicroscopeImageDerivR[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
-					sum2+= (MicroscopeImageDerivT[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
-					sum3+= (MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]*Weight[i_theta][i_r][i_t]);
-					sum4+= (MicroscopeImageDerivT[i_r][i_t]*MicroscopeImageDerivT[i_r][i_t]*Weight[i_theta][i_r][i_t]);		
+//					sum1+= (MicroscopeImageDerivR[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+						c+=(MicroscopeImageDerivR[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+//					sum2+= (MicroscopeImageDerivT[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+						e+=(MicroscopeImageDerivT[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+//					sum3+= (MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]*Weight[i_theta][i_r][i_t]);
+						a+=(MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]*Weight[i_theta][i_r][i_t]);
+//					sum4+= (MicroscopeImageDerivT[i_r][i_t]*MicroscopeImageDerivT[i_r][i_t]*Weight[i_theta][i_r][i_t]);		
+						d+=(MicroscopeImageDerivT[i_r][i_t]*MicroscopeImageDerivT[i_r][i_t]*Weight[i_theta][i_r][i_t]);
+						b+=(MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivT[i_r][i_t]*Weight[i_theta][i_r][i_t]);
 					}
 				}
-			if(sum3 != 0)
-				Sinogram->ShiftX[i_theta]+=((sum1/sum3));
-
-			if(sum4 != 0)
-				Sinogram->ShiftY[i_theta]+=(sum2/sum4);
-
+			
+			
+			
+		
+			
+			//Solving the linear equations in 2 unknowns 
+			determinant = (a*d) - (b*b);
+			temp = (d*c - b*e)/determinant;
+			Sinogram->ShiftX[i_theta]+=temp;
+			
+			temp = (a*e - b*c)/determinant;	
+			Sinogram->ShiftY[i_theta]+=temp;
 			
 			//printf("ShiftX=%lf ShiftY=%lf\n",Sinogram->ShiftX[i_theta],Sinogram->ShiftY[i_theta]);
 		}
@@ -1100,7 +1118,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 							index_delta_t = floor(delta_t/OffsetT);
 							w3 = delta_t - (double)(index_delta_t)*OffsetT;
 							w4 = ((double)index_delta_t+1)*OffsetT - delta_t;
-							ProfileThickness =(w3/OffsetT)*H_t[0][i_theta][index_delta_t] + (w4/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
+							ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 							
 							Y_Est[i_theta][i_r][i_t] += (TempCol[j][k]->values[q] *ProfileThickness* Geometry->Object[j][k][i]);
 							
@@ -1126,7 +1144,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				}		
 		}
 	 
- 
+      
+	
 #ifdef COST_CALCULATE
 		/*********************Cost Calculation***************************************************/
 		temp=0;
@@ -1152,9 +1171,13 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		
 	}
 
+	printf("FinalShiftX\n");
 	for(i_theta = 0 ; i_theta < Sinogram->N_theta;i_theta++)
 		printf("%lf\n",Sinogram->ShiftX[i_theta]);
-	
+
+	printf("FinalShiftY\n");	
+	for(i_theta = 0 ; i_theta < Sinogram->N_theta;i_theta++)
+		printf("%lf\n",Sinogram->ShiftY[i_theta]);
 
 	free_img((void*)VoxelProfile);
 	//free(AMatrix);
