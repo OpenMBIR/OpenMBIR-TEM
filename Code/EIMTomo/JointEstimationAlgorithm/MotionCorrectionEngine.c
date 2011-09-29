@@ -332,10 +332,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
      }*/
 	
 	//random number intiailizer using seed 1
-	RandomNumber=init_genrand(2);
-	
-	
-
+	RandomNumber=init_genrand(1);
 	srand(EIMTOMO_getMilliSeconds());
 	ArraySize= Geometry->N_z*Geometry->N_x;	
 	Counter = (int32_t*)malloc(ArraySize*sizeof(int32_t));
@@ -405,13 +402,17 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 						center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
 						delta_t = fabs(center_t - t);
 						index_delta_t = floor(delta_t/OffsetT);
+						if(index_delta_t < DETECTOR_RESPONSE_BINS)
+						{
 						w3 = delta_t - (double)(index_delta_t)*OffsetT;
 						w4 = ((double)index_delta_t+1)*OffsetT - delta_t;
 						ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
-
+						}
+						else 
+						{
+							ProfileThickness=0;
+						}
 						Y_Est[i_theta][i_r][i_t] += (TempCol[j_new][k_new]->values[q] *ProfileThickness* Geometry->Object[j_new][k_new][i]);
-
-
 
 					}
 
@@ -473,7 +474,6 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	cost[0]/=2;//accounts for the half in from: (1/2)||Y-AX||^2 + ...
 
 	//Each neighboring pair should be counted only once
-
 	for (i = 0; i < Geometry->N_z; i++)
 		for (j = 0; j < Geometry->N_x; j++)
 			for(k = 0; k < Geometry->N_y; k++)
@@ -546,8 +546,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 
 	//Loop through every voxel updating it by solving a cost function
-	srand(time(NULL));
-
+	
 	for(Iter = 0;Iter < CmdInputs->NumIter;Iter++)
 	{
 		
@@ -565,12 +564,10 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 				//Index = rand()%ArraySize;
 				Index=(genrand_int31(RandomNumber))%ArraySize;
-				
 				k_new = Counter[Index]%Geometry->N_x;
 				j_new = Counter[Index]/Geometry->N_x;
 				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
-                //k_new=k;//DELETE
-				//j_new=j;//DELETE
+                
 				
 				
 				ArraySize--;
@@ -668,12 +665,17 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 								delta_t = fabs(center_t - t);
 								index_delta_t = floor(delta_t/OffsetT);
 
-
+                                if(index_delta_t < DETECTOR_RESPONSE_BINS)
+								{
 								w3 = delta_t - index_delta_t*OffsetT;
 								w4 = (index_delta_t+1)*OffsetT - delta_t;
-
 								//TODO: interpolation
 								ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
+								}
+								else 
+								{
+									ProfileThickness=0;
+								}
 
 								THETA2 += (ProfileThickness*ProfileThickness)*(TempMemBlock->values[q])*(TempMemBlock->values[q])*Weight[i_theta][i_r][i_t];
 								THETA1 += ErrorSino[i_theta][i_r][i_t]*(TempMemBlock->values[q])*(ProfileThickness)*Weight[i_theta][i_r][i_t];
@@ -739,19 +741,22 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 								slice_index_max = Sinogram->N_t-1;
 
 
-
 							for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 							{
-
 							
 								center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
 								delta_t = fabs(center_t - t);
 								index_delta_t = floor(delta_t/OffsetT);
+								
+								if(index_delta_t < DETECTOR_RESPONSE_BINS)
+								{
 								w3 = delta_t - index_delta_t*OffsetT;
 								w4 = (index_delta_t+1)*OffsetT - delta_t;
 							    ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
-
-                               
+                                }
+								else {
+									ProfileThickness=0;
+								}
 								 ErrorSino[i_theta][i_r][i_t] -= (TempMemBlock->values[q] *ProfileThickness* (Geometry->Object[j_new][k_new][i] - V));
 							}
 						}
@@ -881,7 +886,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	   //Finding the optimal shifts to be applied
 	   
 		
-	
+	/*
 
 		for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)//Sinogram->N_theta
 		{
@@ -995,7 +1000,6 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 									f2 = 0;
 									derivative_t = 0;
 								}
-
 								
 								MicroscopeImageDerivR[i_r][i_t]+=(sign_deriv_r*derivative_r*f2*Geometry->Object[j][k][i]);
 								MicroscopeImageDerivT[i_r][i_t]+=(sign_deriv_t*derivative_t*f1*Geometry->Object[j][k][i]);
@@ -1019,35 +1023,203 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				{
 					if(Weight[i_theta][i_r][i_t] != 0)
 					{
-//					sum1+= (MicroscopeImageDerivR[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
-						c+=(MicroscopeImageDerivR[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+//					sum1+= (MicroscopeImageDerivR[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);						
 //					sum2+= (MicroscopeImageDerivT[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
-						e+=(MicroscopeImageDerivT[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
-//					sum3+= (MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]*Weight[i_theta][i_r][i_t]);
+//					sum3+= (MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]*Weight[i_theta][i_r][i_t]);						
+//					sum4+= (MicroscopeImageDerivT[i_r][i_t]*MicroscopeImageDerivT[i_r][i_t]*Weight[i_theta][i_r][i_t]);	
+						c+=(MicroscopeImageDerivR[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
 						a+=(MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivR[i_r][i_t]*Weight[i_theta][i_r][i_t]);
-//					sum4+= (MicroscopeImageDerivT[i_r][i_t]*MicroscopeImageDerivT[i_r][i_t]*Weight[i_theta][i_r][i_t]);		
+						e+=(MicroscopeImageDerivT[i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
 						d+=(MicroscopeImageDerivT[i_r][i_t]*MicroscopeImageDerivT[i_r][i_t]*Weight[i_theta][i_r][i_t]);
 						b+=(MicroscopeImageDerivR[i_r][i_t]*MicroscopeImageDerivT[i_r][i_t]*Weight[i_theta][i_r][i_t]);
 					}
 				}
 			
-			
-			
-		
-			
+							
+			temp=0;
 			//Solving the linear equations in 2 unknowns 
+
+			b=0;//Only for shep logan testing purposes - REMOVE this otherwise
 			determinant = (a*d) - (b*b);
+			
+			if(determinant != 0)
 			temp = (d*c - b*e)/determinant;
+			
 			Sinogram->ShiftX[i_theta]+=temp;
 			
+			temp=0;
+			if(determinant != 0)
 			temp = (a*e - b*c)/determinant;	
-			Sinogram->ShiftY[i_theta]+=temp;
 			
+			Sinogram->ShiftY[i_theta]+=0;//temp;
 			//printf("ShiftX=%lf ShiftY=%lf\n",Sinogram->ShiftX[i_theta],Sinogram->ShiftY[i_theta]);
 		}
+	*/
+		
+		//Attempting to compute a numerical derivative (c(\psi + 0.1)-c(\psi))/0.1 and do a gradient descent like thing
+		
+		
+		for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)//Sinogram->N_theta
+		{
+			for (i_r = 0; i_r < Sinogram->N_r ; i_r++)
+				for (i_t = 0; i_t < Sinogram->N_t; i_t++)
+				{
+					MicroscopeImageDerivR[i_r][i_t] = 0;
+					MicroscopeImageDerivT[i_r][i_t] = 0;
+				}
+			
+			for (j = 0; j < Geometry->N_z; j++)
+			{
+				for (k=0; k < Geometry->N_x; k++)
+				{
+					x = Geometry->x0 + ((double)k+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+					z = Geometry->z0 + ((double)j+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. z_0 is the left corner
+					
+					r = x*cosine[i_theta] - z*sine[i_theta] + Sinogram->ShiftX[i_theta] + 0.1;
+					rmin = r - Geometry->delta_xz;
+					rmax = r + Geometry->delta_xz;
+					
+					if(rmax < Sinogram->R0 || rmin > Sinogram->RMax)
+						continue;
+					
+					index_min = floor(((rmin - Sinogram->R0)/Sinogram->delta_r));
+					index_max = floor((rmax - Sinogram->R0)/Sinogram->delta_r);
+					
+					if(index_max >= Sinogram->N_r)
+						index_max = Sinogram->N_r - 1;
+					
+					if(index_min < 0)
+						index_min = 0;
+					
+					for (i = 0; i < Geometry->N_y ; i++)
+					{
+						y = Geometry->y0 + ((double)i+ 0.5)*Geometry->delta_xy;
+						t = y + Sinogram->ShiftY[i_theta];
+						
+						tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
+						tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax? t + Geometry->delta_xy/2 : Sinogram->TMax;
+						
+						slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
+						slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
+						
+						if(slice_index_min < 0)
+							slice_index_min = 0;
+						if(slice_index_max >= Sinogram->N_t)
+							slice_index_max = Sinogram->N_t-1;
+						
+						for (i_r = index_min; i_r <= index_max; i_r++)
+						{
+							//compute delta_r and then use linear interpolation to get a value for r
+							//also use these h_r values to obtain an estimate of the derivative at that point
+							//Now we should have h_r and h_r'
+							center_r = Sinogram->R0 + ((double)i_r + 0.5)*Sinogram->delta_r ;
+							delta_r = fabs(center_r - r);
+							
+							if(r - center_r > 0)
+								sign_deriv_r=1;
+							else 
+							{
+								sign_deriv_r=-1;
+							}
+							
+							
+							index_delta_r = floor((delta_r/OffsetR));
+							
+							if(index_delta_r < DETECTOR_RESPONSE_BINS)
+							{
+								w1 = delta_r - index_delta_r*OffsetR;
+								w2 = (index_delta_r+1)*OffsetR - delta_r;
+								f1 = (w2/OffsetR)*DetectorResponse[0][i_theta][index_delta_r] + (w1/OffsetR)*DetectorResponse[0][i_theta][index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
+								derivative_r = (DetectorResponse[0][i_theta][index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1] - DetectorResponse[0][i_theta][index_delta_r])/OffsetR;
+							}
+							else 
+							{
+								f1=0;
+								derivative_r=0;
+							}
+							
+							// derivative_r = H_rDeriv[0][i_theta][index_delta_r];
+							
+							//printf("%d\n",i_r);
+							
+							
+							for (i_t = slice_index_min; i_t <= slice_index_max; i_t ++)
+							{
+								//compute delta_t and then use linear interpolation to get a value
+								//use this to compue the derivative of h_t at that point
+								//Now we should have h_t and h_t'
+								center_t = Sinogram->T0 + ((double)i_t + 0.5)*Sinogram->delta_t;
+								delta_t = fabs(center_t - t);
+								
+								if(t - center_t > 0)
+									sign_deriv_t=1;
+								else {
+									sign_deriv_t=-1;
+								}
+								
+								index_delta_t = floor((delta_t/OffsetT));
+								
+								if(index_delta_t < DETECTOR_RESPONSE_BINS)
+								{
+									w1 = delta_t - index_delta_t*OffsetT;
+									w2 = (index_delta_t+1)*OffsetT - delta_t;
+									f2 = (w2/OffsetT)*H_t[0][i_theta][index_delta_t] + (w1/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
+									derivative_t = (H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1]-H_t[0][i_theta][index_delta_t])/OffsetT;
+								}
+								else 
+								{
+									f2 = 0;
+									derivative_t = 0;
+								}
+								
+								MicroscopeImageDerivR[i_r][i_t]+=(f1*f2*Geometry->Object[j][k][i]);
+								//MicroscopeImageDerivR[i_r][i_t]+=(sign_deriv_r*derivative_r*f2*Geometry->Object[j][k][i]);
+								//MicroscopeImageDerivT[i_r][i_t]+=(sign_deriv_t*derivative_t*f1*Geometry->Object[j][k][i]);
+							}
+						}
+					}
+					
+				}
+			}
+			sum1=0;
+			sum2=0;
+			sum3=0;
+			sum4=0;
+			a=0;
+			b=0;
+			c=0;
+			d=0;
+			e=0;
+			for (i_r = 0; i_r < Sinogram->N_r ; i_r++)
+				for (i_t = 0; i_t < Sinogram->N_t; i_t++)
+				{
+					if(Weight[i_theta][i_r][i_t] != 0)
+					{
+						sum1+=((Sinogram->counts[i_theta][i_r][i_t] - MicroscopeImageDerivR[i_r][i_t])*(Sinogram->counts[i_theta][i_r][i_t] - MicroscopeImageDerivR[i_r][i_t])*Weight[i_theta][i_r][i_t]);//Computing c(psi + 0.1) 
+						sum2+=(ErrorSino[i_theta][i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);//c(psi)
+					}
+				}
+			
+			
+			temp=0;
+			//Solving the linear equations in 2 unknowns 
+			sum1/=2;
+			sum2/=2;
+			temp = (sum1 - sum2)/0.1; //gradient						
 
-	
-	
+			if(temp > 0)
+				Sinogram->ShiftX[i_theta]+=0.008;
+			else {
+				Sinogram->ShiftX[i_theta]-=0.008;
+			}
+
+			
+					
+			Sinogram->ShiftY[i_theta]+=0;//temp;
+			//printf("ShiftX=%lf ShiftY=%lf\n",Sinogram->ShiftX[i_theta],Sinogram->ShiftY[i_theta]);
+		}
+		
+		
 		
 		//Do partial calculation for New A matrix columns
 		for(j=0; j < Geometry->N_z; j++)
@@ -1116,12 +1288,14 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 							center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
 							delta_t = fabs(center_t - t);
 							index_delta_t = floor(delta_t/OffsetT);
+							
+							if(index_delta_t < DETECTOR_RESPONSE_BINS)
+							{
 							w3 = delta_t - (double)(index_delta_t)*OffsetT;
 							w4 = ((double)index_delta_t+1)*OffsetT - delta_t;
-							ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
-							
+							ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];							
 							Y_Est[i_theta][i_r][i_t] += (TempCol[j][k]->values[q] *ProfileThickness* Geometry->Object[j][k][i]);
-							
+							}
 							
 							
 						}
@@ -1144,7 +1318,9 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				}		
 		}
 	 
-      
+	 
+	//	temp=(fabs(Sinogram->ShiftX[1])-6.4060)*(fabs(Sinogram->ShiftX[1])-6.4060) + (fabs(Sinogram->ShiftY[1])-4.4301)*(fabs(Sinogram->ShiftY[1])-4.4301);
+	//	printf("Squared Error in Shift %d = %lf\n",1,temp);
 	
 #ifdef COST_CALCULATE
 		/*********************Cost Calculation***************************************************/
