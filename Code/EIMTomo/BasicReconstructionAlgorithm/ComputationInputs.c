@@ -1,5 +1,5 @@
 #include "ComputationInputs.h"
-#include "Common/allocate.h"
+#include "EIMTomo/common/allocate.h"
 
 #include <stdlib.h>
 #include <stdio.h>
