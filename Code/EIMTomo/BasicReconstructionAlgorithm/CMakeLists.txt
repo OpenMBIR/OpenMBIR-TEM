@@ -16,7 +16,7 @@ set(BasicReconstructionAlgorithm_HDRS
   ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/ComputationEngineOptimized.h
   ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/ComputationInputs.h
 )
-set(NonHomogeniousICD_SRCS
+set(BasicReconstructionAlgorithm_SRCS
   ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/ComputationEngineOptimized.c
   ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/ComputationInputs.c
   ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/Main.c
