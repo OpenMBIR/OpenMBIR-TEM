@@ -10,6 +10,7 @@
 #include "ComputationEngineOptimized.h"
 
 #include "EIMTomo/common/allocate.h"
+#include "EIMTomo/mt/mt19937ar.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -39,19 +40,24 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	int16_t i,j,k,r,row,col,slice,RowIndex,ColIndex,SliceIndex,Idx,i_r,i_theta,i_t;
 	int16_t NumOfXPixels;
 	int32_t q,p;
+	int16_t index_delta_t;
 	//Random Indexing Parameters
 	int32_t Index,ArraySize,j_new,k_new;
 	int32_t* Counter;
 
 
-
+	double center_r,center_t,delta_r,delta_t;
+	double w3,w4;
 	double checksum = 0,temp;
 	double RandomIndexj,RandomIndexi;
 	double *cost;
 	double** VoxelProfile,***DetectorResponse;
+	double ***H_t;
+	double ProfileCenterT;
 	double ***Y_Est;//Estimted Sinogram
 	double ***ErrorSino;//Error Sinogram
 	double ***Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
+	RNGVars* RandomNumber;
 
 	FILE *Fp = fopen("ReconstructedSino.bin","w");//Reconstructed Sinogram from initial est
 
@@ -96,6 +102,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 	//calculate sine and cosine of all angles and store in the global arrays sine and cosine
 	DetectorResponse = CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
+	H_t = (double***)get_3D(1, Sinogram->N_theta, DETECTOR_RESPONSE_BINS, sizeof(double));//detector response along t
 
 	#ifdef ROI
 	Mask = (uint8_t **)get_img(Geometry->N_x, Geometry->N_z,sizeof(uint8_t));//width,height
@@ -142,11 +149,49 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	MRF_P = CmdInputs->p;
 	SIGMA_X_P = pow(CmdInputs->SigmaX,MRF_P);
 
-	for(i=0;i<Sinogram->N_theta;i++)
+	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+	OffsetT = ((Geometry->delta_xz/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
+
+
+	for(k = 0 ; k <Sinogram->N_theta; k++)
+	{
+		for (i = 0; i < DETECTOR_RESPONSE_BINS; i++)
+		{
+			ProfileCenterT = i*OffsetT;
+			if(Geometry->delta_xy >= Sinogram->delta_t)
+			{
+				if(ProfileCenterT <= ((Geometry->delta_xy/2) - (Sinogram->delta_t/2)))
+					H_t[0][k][i] = Sinogram->delta_t;
+				else {
+					H_t[0][k][i] = -1*ProfileCenterT + (Geometry->delta_xy/2) + Sinogram->delta_t/2;
+				}
+				if(H_t[0][k][i] < 0)
+					H_t[0][k][i] =0;
+				
+			}
+			else {
+				if(ProfileCenterT <= Sinogram->delta_t/2 - Geometry->delta_xy/2)
+					H_t[0][k][i] = Geometry->delta_xy;
+				else {
+					H_t[0][k][i] = -ProfileCenterT + (Geometry->delta_xy/2) + Sinogram->delta_t/2;
+				}
+				
+				if(H_t[0][k][i] < 0)
+					H_t[0][k][i] =0;
+				
+			}
+			
+			
+			
+			
+		}
+	}
+	
+	/*for(i=0;i<Sinogram->N_theta;i++)
 		for(j=0;j< PROFILE_RESOLUTION;j++)
 			checksum+=VoxelProfile[i][j];
     printf("CHK SUM%lf\n",checksum);
-
+*/
     checksum=0;
 
 
@@ -229,6 +274,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	}*/
 
 		//  p=0;//This is used to access the A-Matrix column correspoding the (i,j,k)the voxel location
+	RandomNumber=init_genrand(1);
 	srand(time(NULL));
 	ArraySize= Geometry->N_z*Geometry->N_x;
 	//ArraySizeK = Geometry->N_x;
@@ -250,10 +296,11 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			for(k = 0;k < Geometry->N_x; k++)
 			{
 				//generating a random index
-				Index = rand()%ArraySize;
+				//Index = rand()%ArraySize;
+				Index=(genrand_int31(RandomNumber))%ArraySize;
 				k_new = Counter[Index]%Geometry->N_x;
 				j_new = Counter[Index]/Geometry->N_x;
-				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index));
+				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
 				ArraySize--;
 
 			//	printf("%d,%d\n",j_new,k_new);
@@ -277,6 +324,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				}
 				//  p++;
 #else
+					
                     y = ((double)i+0.5)*Geometry->delta_xy + Geometry->y0;
 					t = y;
 					tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
@@ -296,38 +344,32 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 					i_theta = floor(TempCol[j_new][k_new]->index[q]/(Sinogram->N_r));
 					i_r =  (TempCol[j_new][k_new]->index[q]%(Sinogram->N_r));
+					
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
-					if(i_t == slice_index_min)
-						ProfileThickness = (((i_t+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
-					else
-					{
-						if (i_t == slice_index_max)
+						center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
+						delta_t = fabs(center_t - t);
+						index_delta_t = floor(delta_t/OffsetT);
+						if(index_delta_t < DETECTOR_RESPONSE_BINS)
 						{
-							ProfileThickness = (tmax - ((i_t)*Sinogram->delta_t + Sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t
+							w3 = delta_t - (double)(index_delta_t)*OffsetT;
+							w4 = ((double)index_delta_t+1)*OffsetT - delta_t;
+							ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 						}
-						else
+						else 
 						{
-							ProfileThickness = Sinogram->delta_t;
+							ProfileThickness=0;
 						}
-
-					}
-
-
-
-
-					Y_Est[i_theta][i_r][i_t] += (TempCol[j_new][k_new]->values[q] *ProfileThickness* Geometry->Object[j_new][k_new][i]);
-
-
-
-					}
-
+						Y_Est[i_theta][i_r][i_t] += (TempCol[j_new][k_new]->values[q] *ProfileThickness* Geometry->Object[j_new][k_new][i]);
+				
+				    }
 				}
 
 #endif
-			}
+			
 
 	       }
+			}
 
 
 
@@ -360,7 +402,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	}
 
 	free(Y_Est);
-
+    free(Sinogram->counts);
 	fclose(Fp);
 
 
@@ -469,10 +511,11 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			for(k = 0; k < Geometry->N_x ; k++)//Column index
 			{
 
-				Index = rand()%ArraySize;
+				//Index = rand()%ArraySize;
+				Index=(genrand_int31(RandomNumber))%ArraySize;
 				k_new = Counter[Index]%Geometry->N_x;
 				j_new = Counter[Index]/Geometry->N_x;
-				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index));
+				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
 
 				ArraySize--;
 
@@ -560,21 +603,21 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 							i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 							 for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 							 {
-								 if(i_t == slice_index_min)
-									 ProfileThickness = (((i_t+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
-								 else
+								 center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
+								 delta_t = fabs(center_t - t);
+								 index_delta_t = floor(delta_t/OffsetT);
+								 
+								 if(index_delta_t < DETECTOR_RESPONSE_BINS)
 								 {
-									 if (i_t == slice_index_max)
-									 {
-										 ProfileThickness = (tmax - ((i_t)*Sinogram->delta_t + Sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t
-									 }
-									 else
-									 {
-										 ProfileThickness = Sinogram->delta_t;
-									 }
-
+									 w3 = delta_t - index_delta_t*OffsetT;
+									 w4 = (index_delta_t+1)*OffsetT - delta_t;
+									 //TODO: interpolation
+									 ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 								 }
-
+								 else 
+								 {
+									 ProfileThickness=0;
+								 }
 
 								 THETA2 += (ProfileThickness*ProfileThickness)*(TempMemBlock->values[q])*(TempMemBlock->values[q])*Weight[i_theta][i_r][i_t];
 								 THETA1 += ErrorSino[i_theta][i_r][i_t]*(TempMemBlock->values[q])*(ProfileThickness)*Weight[i_theta][i_r][i_t];
@@ -625,22 +668,24 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 					i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
 					i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
+					
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
-					if(i_t == slice_index_min)
-						ProfileThickness = (((i_t+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//(Sinogram->delta_t); //Will be < Sinogram->delta_t
-					else
-					{
-						if (i_t == slice_index_max)
+						center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
+						delta_t = fabs(center_t - t);
+						index_delta_t = floor(delta_t/OffsetT);
+							
+						if(index_delta_t < DETECTOR_RESPONSE_BINS)
 						{
-							ProfileThickness = (tmax - ((i_t)*Sinogram->delta_t + Sinogram->T0));//(Sinogram->delta_t);//Will be < Sinogram->delta_t
+							w3 = delta_t - index_delta_t*OffsetT;
+							w4 = (index_delta_t+1)*OffsetT - delta_t;
+								//TODO: interpolation
+							ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 						}
-						else
+						else 
 						{
-							ProfileThickness = (Sinogram->delta_t);
+							ProfileThickness=0;
 						}
-
-					}
 
 							ErrorSino[i_theta][i_r][i_t] -= (TempMemBlock->values[q] *ProfileThickness* (Geometry->Object[j_new][k_new][i] - V));
 					}
@@ -734,11 +779,11 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 					}
 				}
 
-		cost[Iter] += (temp/(MRF_P*SIGMA_X_P));
+		cost[Iter+1] += (temp/(MRF_P*SIGMA_X_P));
 
-		printf("%lf\n",cost[Iter]);
+		printf("%lf\n",cost[Iter+1]);
 
-		fwrite(&cost[Iter],sizeof(double),1,Fp2);
+		fwrite(&cost[Iter+1],sizeof(double),1,Fp2);
 		/*******************************************************************************/
 #else
 		printf("%d\n",Iter);
@@ -1628,8 +1673,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 	double MaximumSpacePerColumn;//we will use this to allocate space
 	double AvgNumXElements,AvgNumYElements;//This is a measure of the expected amount of space per Amatrixcolumn. We will make a overestimate to avoid seg faults
 	double ProfileThickness,stepsize;
-	double OffsetR;
-	double OffsetT;
+	
 	//interpolation variables
 	double w1,w2,w3,w4,f1,f2,InterpolatedValue,ContributionAlongT;
 	int32_t index_min,index_max,slice_index_min,slice_index_max,index_delta_r,index_delta_t;//stores the detector index in which the profile lies
@@ -1637,9 +1681,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 	int32_t NumOfDisplacements=32;
 	uint32_t count = 0;
 
-	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
-	OffsetT = ((Geometry->delta_xz/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
-
+	
 	AMatrixCol* Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
 	AMatrixCol* Temp = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));//This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
 
