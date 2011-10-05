@@ -172,15 +172,6 @@ function(BuildQtAppBundle)
                 RELEASE_OUTPUT_NAME ${QAB_TARGET}
     )
 
-#-- Create an Install Rule for the main app bundle target
-    INSTALL(TARGETS ${QAB_TARGET}
-        COMPONENT ${QAB_COMPONENT}
-        RUNTIME DESTINATION ${QAB_INSTALL_DEST}
-        LIBRARY DESTINATION ${QAB_INSTALL_DEST} 
-        ARCHIVE DESTINATION ${QAB_INSTALL_DEST}        
-        BUNDLE DESTINATION ${QAB_INSTALL_DEST}
-    )
-
 #-- Create install rules for any Qt Plugins that are needed
     set(pi_dest ${QAB_INSTALL_DEST}/plugins)
     # if we are on OS X then we set the plugin installation location to inside the App bundle
@@ -196,6 +187,7 @@ function(BuildQtAppBundle)
     
     set(app_plugin_list "")
     set(lib_search_dirs "")
+
 #-- It is important as you build up the list to modify the path to the Qt Plugin
 #-- to point to the plugin that will appear in the Application bundle and NOT
 #-- the path to your Qt installation. If you do NOT do this step properly AND you
@@ -229,7 +221,16 @@ function(BuildQtAppBundle)
             list(APPEND app_plugin_list "\${CMAKE_INSTALL_PREFIX}/${pi_dest}/${plugin_name}")
         endforeach()
     endif(APPLE)
-        
+    
+    #-- Create an Install Rule for the main app bundle target
+    INSTALL(TARGETS ${QAB_TARGET}
+        COMPONENT ${QAB_COMPONENT}
+        RUNTIME DESTINATION ${QAB_INSTALL_DEST}
+        LIBRARY DESTINATION ${QAB_INSTALL_DEST} 
+        ARCHIVE DESTINATION ${QAB_INSTALL_DEST}        
+        BUNDLE DESTINATION ${QAB_INSTALL_DEST}
+    )
+    
 #-- Create last install rule that will run fixup_bundle() on OS X Machines. Other platforms we
 #-- are going to create the install rules elsewhere
     if(APPLE)
@@ -238,11 +239,20 @@ function(BuildQtAppBundle)
         set (OSX_MAKE_STANDALONE_BUNDLE_CMAKE_SCRIPT 
                     "${QAB_BINARY_DIR}/OSX_Scripts/${QAB_TARGET}_CompleteBundle.cmake")
         
+        set(OPTIMIZE_BUNDLE_SHELL_SCRIPT
+            "${QAB_BINARY_DIR}/OSX_Scripts/${QAB_TARGET}_OptimizeBundle.sh")
+        
         CONFIGURE_FILE("${CMP_OSX_TOOLS_SOURCE_DIR}/CompleteBundle.cmake.in"
                 "${OSX_MAKE_STANDALONE_BUNDLE_CMAKE_SCRIPT}" @ONLY IMMEDIATE)
-         
+
+        set(PROJECT_INSTALL_DIR ${osx_app_name}.app)
+        CONFIGURE_FILE("${CMP_OSX_TOOLS_SOURCE_DIR}/ThinAndShareLibraries.sh.in"
+                "${OPTIMIZE_BUNDLE_SHELL_SCRIPT}" @ONLY IMMEDIATE)
+                
         install(SCRIPT "${OSX_MAKE_STANDALONE_BUNDLE_CMAKE_SCRIPT}" COMPONENT ${QAB_COMPONENT})
     endif(APPLE)
+    
+
 endfunction()
 
 # --------------------------------------------------------------------
@@ -313,11 +323,17 @@ function(BuildToolBundle)
         list(APPEND lib_search_dirs "${QAB_LIB_SEARCH_DIRS}")
         
         set (OSX_MAKE_STANDALONE_BUNDLE_CMAKE_SCRIPT 
-                    "${QAB_BINARY_DIR}/OSX_Scripts/${QAB_TARGET}_CompleteBundle.cmake")
-        
+            "${QAB_BINARY_DIR}/OSX_Scripts/${QAB_TARGET}_CompleteTool.cmake")
+        set(OPTIMIZE_BUNDLE_SHELL_SCRIPT
+            "${QAB_BINARY_DIR}/OSX_Scripts/${QAB_TARGET}_OptimizeTool.sh")
+
+        set(PROJECT_INSTALL_DIR "tools")
         CONFIGURE_FILE("${CMP_OSX_TOOLS_SOURCE_DIR}/CompleteTool.cmake.in"
                 "${OSX_MAKE_STANDALONE_BUNDLE_CMAKE_SCRIPT}" @ONLY IMMEDIATE)
-         
+        
+        CONFIGURE_FILE("${CMP_OSX_TOOLS_SOURCE_DIR}/CompleteTool.sh.in"
+                "${OPTIMIZE_BUNDLE_SHELL_SCRIPT}" @ONLY IMMEDIATE)
+                
         install(SCRIPT "${OSX_MAKE_STANDALONE_BUNDLE_CMAKE_SCRIPT}" COMPONENT ${QAB_COMPONENT})
     endif(APPLE)
 endfunction()
@@ -449,9 +465,9 @@ macro(PluginProperties targetName DEBUG_EXTENSION projectVersion binaryDir plugi
     
     # Add the plugin to our list of plugins that will need to be installed
     if (CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT MSVC)
-        file(APPEND ${binaryDir}/${pluginfile} "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib${targetName}${DEBUG_EXTENSION}.plugin;")
+        file(APPEND ${pluginfile} "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib${targetName}${DEBUG_EXTENSION}.plugin;")
     else()
-        file(APPEND ${binaryDir}/${pluginfile} "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib${targetName}.plugin;")
+        file(APPEND ${pluginfile} "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/lib${targetName}.plugin;")
     endif()
     
     if (NOT APPLE)
@@ -612,8 +628,8 @@ endmacro()
 #-- Copy all the dependent DLLs into the current build directory so that the test
 #-- can run.
 MACRO (CMP_COPY_DEPENDENT_LIBRARIES _libraryList)
- # message(STATUS "#--------------------------------------------")
- # message(STATUS "CMP_COPY_DEPENDENT_LIBRARIES: ${_libraryList}")
+#  message(STATUS "#--------------------------------------------")
+#  message(STATUS "CMP_COPY_DEPENDENT_LIBRARIES: ${_libraryList}")
   set (_libraryList ${_libraryList})
   SET (TYPES Debug Release)
   if (MSVC)
@@ -629,7 +645,7 @@ MACRO (CMP_COPY_DEPENDENT_LIBRARIES _libraryList)
      # message(STATUS "${upperlib}_IS_SHARED: ${${upperlib}_IS_SHARED}")
       if (${upperlib}_IS_SHARED)
         FOREACH(BTYPE ${TYPES} )
-         # message(STATUS "Looking for ${BTYPE} DLL Version of ${lib}")
+        #  message(STATUS "Looking for ${BTYPE} DLL Version of ${lib}")
           STRING(TOUPPER ${BTYPE} TYPE)        
           get_filename_component(lib_path ${${upperlib}_LIBRARY_${TYPE}} PATH)
           get_filename_component(lib_name ${${upperlib}_LIBRARY_${TYPE}} NAME_WE)
@@ -638,14 +654,14 @@ MACRO (CMP_COPY_DEPENDENT_LIBRARIES _libraryList)
           
           find_file(${upperlib}_LIBRARY_DLL_${TYPE}
                         NAMES ${lib_name}.dll
-                        PATHS  ${lib_path}/../bin ${lib_path}/.. ${lib_path}/
+                        PATHS  ${lib_path}/../bin ${lib_path}/.. ${lib_path}/ ${${upperlib}_BIN_DIR}
                         NO_DEFAULT_PATH )
       #    message(STATUS "${upperlib}_LIBRARY_DLL_${TYPE}: ${${upperlib}_LIBRARY_DLL_${TYPE}}")
           mark_as_advanced(${upperlib}_LIBRARY_DLL_${TYPE})
           if ( ${${upperlib}_LIBRARY_DLL_${TYPE}} STREQUAL  "${upperlib}_LIBRARY_DLL_${TYPE}-NOTFOUND")
             message(FATAL_ERROR "According to how ${upperlib}_LIBRARY_${TYPE} was found the library should"
                                 " have been built as a DLL but no .dll file can be found. I looked in the "
-                                " following locations:  ${lib_path}\n  ${lib_path}/..\n  ${lib_path}/../bin")
+                                " following locations:\n  ${lib_path}\n  ${lib_path}/..\n  ${lib_path}/../bin\n  ${${upperlib}_BIN_DIR}")
           endif()
 
          # SET(${upperlib}_LIBRARY_DLL_${TYPE} "${${upperlib}_LIBRARY_DLL_${TYPE}}/${lib_name}.dll" CACHE FILEPATH "The path to the DLL Portion of the library" FORCE)
@@ -668,7 +684,7 @@ endmacro()
 # properly installed with your project.
 # --------------------------------------------------------------------
 MACRO (CMP_LIBRARIES_INSTALL_RULES _libraryList destination)
-  #  message(STATUS "CMP_LIBRARIES_INSTALL_RULES")
+#  message(STATUS "CMP_LIBRARIES_INSTALL_RULES")
   set (_libraryList ${_libraryList})
   SET (TYPES Debug Release)
   if (MSVC)
@@ -683,14 +699,14 @@ MACRO (CMP_LIBRARIES_INSTALL_RULES _libraryList destination)
           
           find_file(${upperlib}_LIBRARY_DLL_${TYPE}
                         NAMES ${lib_name}.dll
-                        PATHS  ${lib_path}/../bin ${lib_path}/.. ${lib_path}/
+                        PATHS  ${lib_path}/../bin ${lib_path}/.. ${lib_path}/ ${${upperlib}_BIN_DIR}
                         NO_DEFAULT_PATH )
          # message(STATUS "${upperlib}_LIBRARY_DLL_${TYPE}: ${${upperlib}_LIBRARY_DLL_${TYPE}}")
           mark_as_advanced(${upperlib}_LIBRARY_DLL_${TYPE})
           if ( ${${upperlib}_LIBRARY_DLL_${TYPE}} STREQUAL  "${upperlib}_LIBRARY_DLL_${TYPE}-NOTFOUND")
-             message(STATUS "A Companion DLL for ${upperlib}_LIBRARY_${TYPE} was NOT found which usually means"
-                                " that the library was NOT built as a DLL. I looked in the "
-                                " following locations:  ${lib_path}\n  ${lib_path}/..\n  ${lib_path}/../bin")
+             message(STATUS "A Companion DLL for ${upperlib}_LIBRARY_${TYPE} was NOT found which usually means\n"
+                                " that the library was NOT built as a DLL. I looked in the \n"
+                                " following locations:\n  ${lib_path}\n  ${lib_path}/..\n  ${lib_path}/../bin\n  ${${upperlib}_BIN_DIR}")
           else()
              # set(${upperlib}_LIBRARY_DLL_${TYPE}  ${${upperlib}_LIBRARY_DLL_${TYPE}}/${lib_name}.dll)
            #   message(STATUS "${upperlib}_LIBRARY_DLL_${TYPE}: ${${upperlib}_LIBRARY_DLL_${TYPE}}")
@@ -786,4 +802,93 @@ macro(cmpGenerateVersionString GENERATED_FILE_PATH NAMESPACE cmpProjectName)
     MARK_AS_ADVANCED(${CMP_PROJECT_NAME}_VERSION ${CMP_PROJECT_NAME}_VER_MAJOR ${CMP_PROJECT_NAME}_VER_MINOR ${CMP_PROJECT_NAME}_VER_PATCH)
 endmacro()
 
+#-------------------------------------------------------------------------------
+# We are going to use Git functionality to create a version number for our package
+# The specific functionality we are going to use is the 'git describe' function
+# which should return the latest tag, the number commits since that tag and the
+# SHA1 of that commit. If we fail to find git then we fall back to a manually
+# entered version number.
+#
+function(cmpVersionStringsFromGit)
+    set(options)
+    set(oneValueArgs GENERATED_FILE_PATH NAMESPACE cmpProjectName)
+    cmake_parse_arguments(GVS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+    
+   # message(STATUS "--------------------------------------------")
+  #  message(STATUS "GVS_NAMESPACE: ${GVS_NAMESPACE}")
+  #  message(STATUS "GVS_cmpProjectName: ${GVS_cmpProjectName}")
+   # message(STATUS "GVS_GENERATED_FILE_PATH: ${GVS_GENERATED_FILE_PATH}")
+    
+    Find_package(Git)
+
+    if (GIT_FOUND)
+        execute_process(COMMAND ${GIT_EXECUTABLE} describe
+            OUTPUT_VARIABLE DVERS
+            RESULT_VARIABLE did_run
+         )
+        string(STRIP ${DVERS} DVERS)
+       # message(STATUS "DVERS: ${DVERS}")
+        string(REPLACE  "-" ";" VERSION_LIST ${DVERS})
+       # message(STATUS "VERSION_LIST: ${VERSION_LIST}")
+        list(GET VERSION_LIST 0 VERSION_GEN_VER_MAJOR)
+        list(GET VERSION_LIST 1 VERSION_GEN_VER_MINOR)
+        list(GET VERSION_LIST 2 VERSION_GEN_VER_PATCH)
+    
+        set (VERSION_GEN_NAMESPACE "${GVS_NAMESPACE}")
+        set (VERSION_GEN_NAME "${GVS_cmpProjectName}")
+      #  message(STATUS "VERSION_GEN_VER_MAJOR: ${VERSION_GEN_VER_MAJOR}")
+       # message(STATUS "VERSION_GEN_VER_MINOR: ${VERSION_GEN_VER_MINOR}")
+       # message(STATUS "VERSION_GEN_VER_PATCH: ${VERSION_GEN_VER_PATCH}")
+
+        set (${GVS_cmpProjectName}_VER_MAJOR ${VERSION_GEN_VER_MAJOR} CACHE STRING "" FORCE)
+        set (${GVS_cmpProjectName}_VER_MINOR ${VERSION_GEN_VER_MINOR} CACHE STRING "" FORCE)
+        set (${GVS_cmpProjectName}_VER_PATCH ${VERSION_GEN_VER_PATCH} CACHE STRING "" FORCE)
+        set(VERSION_GEN_COMPLETE "${VERSION_GEN_VER_MAJOR}.${VERSION_GEN_VER_MINOR}.${VERSION_GEN_VER_PATCH}" )
+       # message(STATUS "VERSION_GEN_COMPLETE: ${VERSION_GEN_COMPLETE}")
+       # message(STATUS "${GVS_cmpProjectName}_VER_MAJOR: ${${GVS_cmpProjectName}_VER_MAJOR}")
+       # message(STATUS "${GVS_cmpProjectName}_VER_MINOR: ${${GVS_cmpProjectName}_VER_MINOR}")
+       # message(STATUS "${GVS_cmpProjectName}_VER_PATCH: ${${GVS_cmpProjectName}_VER_PATCH}")
+        
+        set(${GVS_cmpProjectName}_VERSION "${${GVS_cmpProjectName}_VER_MAJOR}.${${GVS_cmpProjectName}_VER_MINOR}.${${GVS_cmpProjectName}_VER_PATCH}" CACHE STRING "Full Version Number" FORCE)
+         
+        mark_as_advanced( ${GVS_cmpProjectName}_VER_MAJOR ${GVS_cmpProjectName}_VER_MINOR ${GVS_cmpProjectName}_VER_PATCH)
+        set (PROJECT_PREFIX "${GVS_cmpProjectName}")
+        configure_file(${CMP_CONFIGURED_FILES_SOURCE_DIR}/cmpVersion.h.in   ${GVS_GENERATED_FILE_PATH}  )
+    #    MARK_AS_ADVANCED(${CMP_PROJECT_NAME}_VERSION ${CMP_PROJECT_NAME}_VER_MAJOR ${CMP_PROJECT_NAME}_VER_MINOR ${CMP_PROJECT_NAME}_VER_PATCH)
+    else()
+       cmpGenerateVersionString( ${GVS_GENERATED_FILE_PATH} ${GVS_NAMESPACE} ${GVS_cmpProjectName} )
+    
+    endif()
+
+endfunction()
+
+#-------------------------------------------------------------------------------
+# Function COMPILE_TOOL to help alleviate lots of extra code below for adding
+# simple command line tools that just need one or two source files
+#
+function(COMPILE_TOOL)
+    set(options)
+    set(oneValueArgs TARGET DEBUG_EXTENSION BINARY_DIR COMPONENT INSTALL_DEST DEFINITION)
+    set(multiValueArgs SOURCES LINK_LIBRARIES)
+    cmake_parse_arguments(D3DTOOL "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+    
+    if ( ${D3DTOOL_DEFINITION} )
+    add_definitions(-D${DEFINITION})
+    endif()
+    
+    BuildToolBundle(
+        TARGET ${D3DTOOL_TARGET}
+        SOURCES ${D3DTOOL_SOURCES}
+        DEBUG_EXTENSION ${D3DTOOL_DEBUG_EXTENSION}
+        VERSION_MAJOR ${D3DTOOL_DREAM3D_VER_MAJOR}
+        VERSION_MINOR ${D3DTOOL_DREAM3D_VER_MINOR}
+        VERSION_PATCH ${D3DTOOL_DREAM3D_VER_PATCH}
+        BINARY_DIR    ${D3DTOOL_BINARY_DIR}
+        LINK_LIBRARIES ${D3DTOOL_LINK_LIBRARIES}
+        LIB_SEARCH_DIRS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        COMPONENT     Applications
+        INSTALL_DEST  "${D3DTOOL_INSTALL_DEST}"
+    ) 
+
+endfunction()
 

@@ -52,14 +52,15 @@ SET (PROJECT_INSTALL_EXECUTABLES "1")
 # project.
 #------------------------------------------------------------------------------- 
 set (CMP_HEADER_DIR ${EIMTomo_BINARY_DIR}/EIMTomo/common)
-set (CMP_CONFIGURATION_FILE_NAME "CMPConfiguration.h")
+set (CMP_CONFIGURATION_FILE_NAME "EIMTomoConfiguration.h")
 set (CMP_TYPES_FILE_NAME "EIMTomoTypes.h")
 set (CMP_VERSION_HEADER_FILE_NAME "EIMTomoVersion.h")
-set (CMP_EXTRA_CONFIGURATION_FILE "EIMTomoConfiguration.h")
+set (CMP_TOP_HEADER_FILE "EIMTomo.h")
 set (CMP_PROJECT_NAMESPACE "EIMTomo")
 set (CMP_PROJECT_NAME "EIMTomo")
 SET (CMP_INSTALL_FILES "1")
 set (CMP_ENABLE_PLUGINS "0")
+set (CMP_GENERATE_VERSION_STRING 1)
 INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
 
 
@@ -89,8 +90,8 @@ ENDIF (BUILD_SHARED_LIBS)
 
 # --------------------------------------------------------------------
 # Now configure this extra file with some additional definitions
-configure_file(${PROJECT_RESOURCES_DIR}/EIMTomo/EIMTomoConfiguration.h.in
-               ${CMP_HEADER_DIR}/${CMP_EXTRA_CONFIGURATION_FILE})
+configure_file(${PROJECT_CODE_DIR}/EIMTomo/EIMTomoLibConfiguration.h.in
+               ${CMP_HEADER_DIR}/${CMP_TOP_HEADER_FILE})
 
 # --------------------------------------------------------------------
 # Add in some compiler definitions
