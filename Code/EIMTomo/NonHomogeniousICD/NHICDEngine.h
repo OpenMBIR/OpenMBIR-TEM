@@ -10,7 +10,7 @@
 #ifndef NHICD_COMPUTATIONENGINE_H_
 #define NHICD_COMPUTATIONENGINE_H_
 
-#include "EIMTomo/common/EIMTomoTypes.h"
+#include "EIMTomo/EIMTomo.h"
 #include "NHICDInputs.h"
 
 

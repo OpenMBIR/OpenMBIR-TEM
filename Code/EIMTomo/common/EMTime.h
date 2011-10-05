@@ -9,7 +9,8 @@
 #ifndef _EMTime_h_
 #define _EMTime_h_
 
-#include <EIMTomo/common/EIMTomoTypes.h>
+#include "EIMTomo/EIMTomo.h"
+
 #if CMP_HAVE_TIME_H
 #include <time.h>
 #endif

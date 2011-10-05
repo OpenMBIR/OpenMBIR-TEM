@@ -11,13 +11,20 @@
 
 #include <tclap/CmdLine.h>
 #include <tclap/ValueArg.h>
-#include "EIMTomo/common/EIMTomoVersion.h"
 
+#include "EIMTomo/EIMTomoVersion.h"
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 JointEstimationCLIParser::JointEstimationCLIParser()
 {
 
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 JointEstimationCLIParser::~JointEstimationCLIParser()
 {
 
@@ -47,7 +54,7 @@ int JointEstimationCLIParser::parseCLIArguments(int argc,char *argv[], CommandLi
 {
   if ( NULL == Input)
   {
-    printf("The EMMPM_Inputs pointer was null. Returning early.\n");
+    printf("The EIMTomo Inputs pointer was null. Returning early.\n");
     return -1;
   }
 

@@ -1,7 +1,7 @@
 
+#include "EIMTomo/EIMTomo.h"
 
-
-#if 1
+#if USE_MERSENNE_TWISTER
 
 #include "EIMTomo/mt/mt19937ar.h"
 

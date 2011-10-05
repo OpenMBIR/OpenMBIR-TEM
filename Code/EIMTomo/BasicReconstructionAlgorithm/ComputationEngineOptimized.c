@@ -9,13 +9,14 @@
 
 #include "ComputationEngineOptimized.h"
 
-#include "EIMTomo/common/allocate.h"
-#include "EIMTomo/mt/mt19937ar.h"
+
 #include <stdlib.h>
 #include <stdio.h>
-
 #include <string.h>
-#include <math.h>
+
+#include "EIMTomo/common/allocate.h"
+#include "EIMTomo/common/EIMTomoRandom.h"
+#include "EIMTomo/common/EMMath.h"
 
 //#define DEBUG
 

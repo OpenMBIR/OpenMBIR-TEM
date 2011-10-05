@@ -51,7 +51,7 @@ SET (PROJECT_INSTALL_EXECUTABLES "1")
 # Include the cmp project to perform all the basic configuration tests for the 
 # project.
 #------------------------------------------------------------------------------- 
-set (CMP_HEADER_DIR ${EIMTomo_BINARY_DIR}/EIMTomo/common)
+set (CMP_HEADER_DIR ${EIMTomo_BINARY_DIR}/EIMTomo)
 set (CMP_CONFIGURATION_FILE_NAME "EIMTomoConfiguration.h")
 set (CMP_TYPES_FILE_NAME "EIMTomoTypes.h")
 set (CMP_VERSION_HEADER_FILE_NAME "EIMTomoVersion.h")
@@ -87,6 +87,13 @@ IF (BUILD_SHARED_LIBS)
     ADD_DEFINITIONS("-DEIMTomo_BUILT_AS_DYNAMIC_LIB")
   ENDIF (WIN32)
 ENDIF (BUILD_SHARED_LIBS)
+
+
+# --------------------------------------------------------------------
+# Add in the Mersenne Twister Random Number Generator code
+set (USE_MERSENNE_TWISTER 1 CACHE BOOL "" )
+
+
 
 # --------------------------------------------------------------------
 # Now configure this extra file with some additional definitions

@@ -1,10 +1,12 @@
-#include "EIMTomo/common/EIMTomoTypes.h"
 
-#ifdef EIMTOMO_HAVE_STDLIB_H
+
+#include "EIMTomo/EIMTomo.h"
+
+#ifdef CMP_HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
 
-#if EIMTOMO_HAVE_STDINT_H
+#if CMP_HAVE_STDINT_H
 #include <stdint.h>
 #endif
 

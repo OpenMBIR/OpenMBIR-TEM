@@ -14,7 +14,7 @@
 #include <string.h>
 
 
-#include "EIMTomo/common/EIMTomoTypes.h"
+
 #include "EIMTomo/common/allocate.h"
 #include "EIMTomo/common/EMTime.h"
 #include "EIMTomo/common/EMMath.h"
