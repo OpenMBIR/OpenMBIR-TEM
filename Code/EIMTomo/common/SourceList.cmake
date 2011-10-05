@@ -12,9 +12,10 @@ set (EIMTomo_Common_SRCS
 
 set (EIMTomo_Common_HDRS
     ${PROJECT_CODE_DIR}/EIMTomo/common/allocate.h
-    ${PROJECT_CODE_DIR}/EIMTomo/common/DLLExport.h
+    ${PROJECT_CODE_DIR}/EIMTomo/common/EIMTomoDLLExport.h
     ${PROJECT_CODE_DIR}/EIMTomo/common/MSVCDefines.h
     ${PROJECT_CODE_DIR}/EIMTomo/common/EMTime.h
     ${PROJECT_CODE_DIR}/EIMTomo/common/EMMath.h
+    ${PROJECT_CODE_DIR}/EIMTomo/common/EIMTomoRandom.h
 )
 cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/common" "${EIMTomo_Common_HDRS}" "${EIMTomo_Common_SRCS}" "${CMP_INSTALL_FILES}")
