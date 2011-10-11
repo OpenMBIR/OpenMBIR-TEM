@@ -18,7 +18,7 @@ extern "C" {
 	
 	//#define DEBUG	
 #define PROFILE_RESOLUTION 1536
-#define PI 4*atan(1)//3.14159265
+//#define PI 4*atan(1)//3.14159265
 	//Beam Parameters - This is set to some number <<< Sinogram->delta_r.
 //#define BEAM_WIDTH 0.050000 
 #define BEAM_RESOLUTION 512
@@ -43,17 +43,6 @@ extern "C" {
 	}AMatrixCol;
 	
 	
-	//Markov Random Field Prior parameters - Globals -:( 
-	double FILTER[3][3][3]={{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}},
-		{{0.0370,0.0523,0.0370},{0.0523,0.0,0.0523},{0.0370,0.0523,  0.0370}},
-		{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}}};
-	double THETA1,THETA2,NEIGHBORHOOD[3][3][3],V;
-	double MRF_P ;//= 1.1;
-	double SIGMA_X_P;
-	
-	double *cosine,*sine;//used to store cosine and sine of all angles through which sample is tilted
-	double *BeamProfile;//used to store the shape of the e-beam
-    double BEAM_WIDTH;
 	
 	
 	
