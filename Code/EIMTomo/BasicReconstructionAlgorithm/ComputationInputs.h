@@ -5,9 +5,11 @@
 
 #include "EIMTomo/common/EIMTomoTypes.h"
 
-
+#define PI 4*atan(1)
 #define START_SLICE 0
-#define END_SLICE 4
+#define END_SLICE 3
+
+
 
 #ifdef __cplusplus
 extern "C" {
