@@ -282,11 +282,6 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 
 
-
-//	for(k = 0;k < ArraySizeK; k++)
-//		CounterK[k]=k;
-
-
 		for(j = 0;j < Geometry->N_z; j++)
 			for(k = 0;k < Geometry->N_x; k++)
 			{
@@ -295,7 +290,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				Index = rand()%ArraySize;
 				k_new = Counter[Index]%Geometry->N_x;
 				j_new = Counter[Index]/Geometry->N_x;
-				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index));
+				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
 				ArraySize--;
 
 			//	printf("%d,%d\n",j_new,k_new);
@@ -506,7 +501,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 		//printf("Iter %d\n",Iter);
 
-		if(Iter%2  == 0)
+		if(Iter%2  == 0) //Homogenouse update
 		{
 		//Homogenous Update
 		for(j = 0; j < Geometry->N_z; j++)//Row index
@@ -728,7 +723,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 
 		}
-		else
+		else//Nonhomgenous update
 		{
 
 			//Non-homogenous Update - K times of the values with highest say 10% of  UpdateMap vals
@@ -1050,7 +1045,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 					}
 				}
 
-		cost[Iter] += (temp/(MRF_P*SIGMA_X_P));
+		cost[Iter+1] += (temp/(MRF_P*SIGMA_X_P));
 
 
 		//Calculating the approximate error magnitude in terms of the updates
