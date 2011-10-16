@@ -7,8 +7,8 @@
 #include "EIMTomo/common/EIMTomoTypes.h"
 
 
-#define START_SLICE 500
-#define END_SLICE 504
+#define START_SLICE 0 //This is used to select whcih slice to reconstruct - REMOVE this in the final versions of the code
+#define END_SLICE 3//This is used to select whcih slice to reconstruct - REMOVE this in the final versions of the code
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,7 +59,6 @@ extern "C" {
 		double delta_xz;//Voxel size in the x-z plane (assuming square shaped voxels in the x-z plane)
 		double delta_xy;//Voxel size in the x-y plane
 		double ***Object;//Holds the volume to be reconstructed
-
 		//Computed From User Input
 		double LengthX;//sinogram.N_x * delta_r;
 		double LengthY;//sinogram.N_y * delta_t
