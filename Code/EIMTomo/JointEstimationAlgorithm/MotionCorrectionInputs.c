@@ -113,7 +113,7 @@ extern char *optarg;
 				for(i=0;i<Sinogram->N_theta;i++)
 				{
 					fscanf(Fp,"%s",temp);
-					Sinogram->ShiftY[i]=-(double)atof(temp);
+					Sinogram->ShiftY[i]=0;//(double)atof(temp);
 					Sinogram->ShiftY[i]*=Sinogram->delta_t;
 					printf("%lf\n",Sinogram->ShiftY[i]);
 				}
@@ -177,6 +177,7 @@ extern char *optarg;
 
 		fclose(Fp);
 
+		
 	}
 
 	void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs* ParsedInput)

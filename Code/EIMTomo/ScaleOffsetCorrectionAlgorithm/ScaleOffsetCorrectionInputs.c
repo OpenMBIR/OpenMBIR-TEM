@@ -21,7 +21,7 @@ int CI_ParseInput(int argc,char **argv,CommandLineInputs* Input)
 {
 	int j,error;
 	error=0;
-	while ((j = getopt(argc, argv, ":p:s:i:o:n:l:m:")) != -1) //p is for parameter file , s for sinogram file,i for Initial Recon Data File name,o is for Output File name
+	while ((j = getopt(argc, argv, ":p:s:i:o:n:l:m:g:")) != -1) //p is for parameter file , s for sinogram file,i for Initial Recon Data File name,o is for Output File name
 	{
 		switch (j)
 		{
@@ -32,6 +32,7 @@ int CI_ParseInput(int argc,char **argv,CommandLineInputs* Input)
 			case 'n':Input->NumIter = atoi(optarg);break; //n = number of iterations
 			case 'l':Input->SigmaX = (DATA_TYPE)atof(optarg);break; //l - lambda
 			case 'm':Input->p = (DATA_TYPE)atof(optarg);break;//p = Markov Radom Field Parameter
+			case 'g':Input->InitialParameters = optarg;break;//the values of the initial gain and offset
 			case '?':error=-1;break;
 		}
 	}
@@ -232,7 +233,7 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
 		for (j = 0; j < Geometry->N_x; j++) {
 			for (k = 0; k < Geometry->N_z; k++) {
 				fread(buffer, sizeof(double), 1, Fp);
-				Geometry->Object[k][j][i] =  0;//(DATA_TYPE)(*buffer);
+				Geometry->Object[k][j][i] = (DATA_TYPE)(*buffer);
 			}
 		}
 	}

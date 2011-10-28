@@ -23,8 +23,8 @@ extern "C" {
 //#define BEAM_WIDTH 0.050000 
 #define BEAM_RESOLUTION 512
 #define AREA_WEIGHTED
-//#define ROI //Region Of Interest
-//#define STOPPING_THRESHOLD 0.001
+#define ROI //Region Of Interest
+#define STOPPING_THRESHOLD 0.009
 //#define	SURROGATE_FUNCTION
 	//#define DISTANCE_DRIVEN
 	//#define CORRECTION
@@ -33,9 +33,10 @@ extern "C" {
 #define COST_CALCULATE
 //#define BEAM_CALCULATION
 #define DETECTOR_RESPONSE_BINS 64
-#ifdef CORRECTION
-	DATA_TYPE *NORMALIZATION_FACTOR; 
-#endif
+#define JOINT_ESTIMATION
+#define NOISE_MODEL
+//#define	CIRCULAR_BOUNDARY_CONDITION
+	
 	//Structure to store a single column(A_i) of the A-matrix 
 	typedef struct 
 	{
@@ -70,6 +71,8 @@ extern "C" {
 				  int *code      /* error code */
 				  );
 	double CE_SurrogateFunctionBasedMin();
+	double CE_ConstraintEquation(DATA_TYPE);
+	DATA_TYPE* CE_RootsOfQuadraticFunction(DATA_TYPE,DATA_TYPE,DATA_TYPE);
 	
 #ifdef __cplusplus
 }

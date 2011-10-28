@@ -21,6 +21,7 @@
 
 
 static char CE_Cancel = 0;
+uint8_t BOUNDARYFLAG[3][3][3];//if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered 
 //Markov Random Field Prior parameters - Globals DATA_TYPE 
 DATA_TYPE FILTER[3][3][3]={{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}},
 	{{0.0370,0.0523,0.0370},{0.0523,0.0,0.0523},{0.0370,0.0523,  0.0370}},
@@ -34,11 +35,33 @@ DATA_TYPE *BeamProfile;//used to store the shape of the e-beam
 DATA_TYPE BEAM_WIDTH;
 DATA_TYPE OffsetR;
 DATA_TYPE OffsetT;
-DATA_TYPE lambda=1;
+uint8_t NumOuterIter=3;
+DATA_TYPE **QuadraticParameters;//holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
+DATA_TYPE **Qk_cost,**bk_cost,*ck_cost;//these are the terms of the quadratic cost function 
+DATA_TYPE *d1,*d2;//hold the intermediate values needed to compute optimal mu_k
+uint16_t NumOfViews;//this is kind of redundant but in order to avoid repeatedly send this info to the rooting function we save number of views 
+DATA_TYPE LogGain;//again these information  are available but to prevent repeatedly sending it to the rooting functions we store it in a variable
 
 inline double Clip(double x, double a, double b)
 {
 	return (x < a) ? a : ((x > b) ? b:x);
+}
+
+inline int16_t mod(int16_t a,int16_t b)
+{
+	int16_t temp;
+	temp=a%b;
+	if(temp < 0)
+		return temp + b;
+	else {
+		return temp;
+	}
+
+}
+
+inline double Minimum(double a, double b)
+{
+	return (a < b ? a: b);
 }
 
 
@@ -57,15 +80,19 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	int16_t Iter,OuterIter;
 	int16_t i,j,k,r,row,col,slice,RowIndex,ColIndex,SliceIndex,Idx,i_r,i_theta,i_t;
 	int16_t NumOfXPixels;
-	int32_t q,p;
+	int16_t q,p,tempindex_x,tempindex_y,tempindex_z;
 	int16_t index_delta_t;
 	int16_t index_min,index_max,index_delta_r;
 	//Random Indexing Parameters
 	int32_t Index,ArraySize,j_new,k_new;
 	int32_t* Counter;
+	
+	uint16_t cost_counter=0;
     uint16_t VoxelLineAccessCounter;
 	uint16_t MaxNumberOfDetectorElts;
+	
     
+
 	DATA_TYPE center_r,center_t,delta_r,delta_t;
 	DATA_TYPE w3,w4;
 	DATA_TYPE checksum = 0,temp;
@@ -86,13 +113,16 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	DATA_TYPE ***Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
 	RNGVars* RandomNumber;
 
+	//File variables
 	FILE *Fp = fopen("ReconstructedSino.bin","w");//Reconstructed Sinogram from initial est
-
 	FILE* Fp2;//Cost function
 	FILE *Fp3;//File to store intermediate outputs of reconstruction
-
+	FILE *Fp4=fopen("FinalGainParameters.bin","w");
+	FILE *Fp5=fopen("FinalOffsetParameters.bin","w");
+	FILE *Fp6 = fopen(CmdInputs->InitialParameters, "r");//contains the initial gains and offset	
+	DATA_TYPE buffer;
 	//Optimization variables
-	DATA_TYPE low,high;
+	DATA_TYPE low,high,dist;
 	DATA_TYPE UpdatedVoxelValue,SurrogateUpdate;
 	DATA_TYPE accuracy =1e-7;
 	int16_t errorcode=-1;
@@ -102,17 +132,22 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	ScaleOffsetParams NuisanceParams;
 	DATA_TYPE numerator_sum =0;
 	DATA_TYPE denominator_sum = 0;
+	DATA_TYPE x,z;
 	DATA_TYPE **MicroscopeImage; //This is used to store the projection of the object for each view 
 	DATA_TYPE rmin,rmax; //min and max indices of a projection on the detector along the r-direction
 	DATA_TYPE w1,w2,f1,f2;
     DATA_TYPE k1,k2,k3;//Quadratic equation coefficients 
 	DATA_TYPE product;
 	DATA_TYPE sum;
+	DATA_TYPE a,b,c,d,e,determinant;
+	DATA_TYPE LagrangeMultiplier,temp_mu;
+	DATA_TYPE* root;
 	
 	MicroscopeImage = (DATA_TYPE**)get_img(Sinogram->N_t, Sinogram->N_r, sizeof(DATA_TYPE));
 	
 	NuisanceParams.I_0 = (DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
 	NuisanceParams.mu = (DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
+	
 	
 	
 #ifdef WRITE_INTERMEDIATE_RESULTS
@@ -127,11 +162,11 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 #ifdef ROI
 	uint8_t** Mask;
-	DATA_TYPE EllipseA,EllipseB,x,z;
+	DATA_TYPE EllipseA,EllipseB;
 #endif
 
 #ifdef COST_CALCULATE
-	cost=(DATA_TYPE*)get_spc(CmdInputs->NumIter+1,sizeof(DATA_TYPE));
+	cost=(DATA_TYPE*)get_spc((CmdInputs->NumIter+1)*NumOuterIter*3,sizeof(DATA_TYPE));//the factor 3 is in there to ensure we can store 3 costs per iteration one after update x, then mu and then I
 #endif
 
 	Y_Est=(DATA_TYPE ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(DATA_TYPE));
@@ -152,6 +187,16 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	
 	MRF_P = CmdInputs->p;
 	SIGMA_X_P = pow(CmdInputs->SigmaX,MRF_P);
+	
+	//globals assosiated with finding the optimal gain and offset parameters
+	QuadraticParameters = get_img(3, Sinogram->N_theta, sizeof(DATA_TYPE));//Hold the coefficients of a quadratic equation
+	Qk_cost=get_img(3, Sinogram->N_theta, sizeof(DATA_TYPE));
+	bk_cost=get_img(2, Sinogram->N_theta, sizeof(DATA_TYPE));
+	ck_cost=get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
+	NumOfViews = Sinogram->N_theta;
+	LogGain = Sinogram->N_theta*log(Sinogram->InitialGain);
+	d1=(DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
+	d2=(DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
 	
 	
 	
@@ -178,7 +223,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		{
 			x = Geometry->x0 + ((DATA_TYPE)j + 0.5)*Geometry->delta_xz;
 			z = Geometry->z0 + ((DATA_TYPE)i + 0.5)*Geometry->delta_xz;
-			if (x >= -175 && x <= 175 && z>= -75 && z <= +75)
+			if (x >= -(Sinogram->N_r*Sinogram->delta_r)/2 && x <= (Sinogram->N_r*Sinogram->delta_r)/2 && z>= -Geometry->LengthZ/2 && z <= Geometry->LengthZ/2)
 			{
 				Mask[i][j] = 1;
 			}
@@ -203,11 +248,24 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	
 	//Scale and Offset Parameters Initialization
 	
+	sum=0;
 	for(k=0 ; k < Sinogram->N_theta;k++)
 	{
-		NuisanceParams.I_0[k]= Sinogram->InitialGain;
-		NuisanceParams.mu[k] = Sinogram->InitialOffset;
+		fread(&buffer, 1, sizeof(double), Fp6);
+		NuisanceParams.I_0[k]= buffer;//Sinogram->InitialGain;		
+		sum+=log(buffer);
 	}
+	sum/=Sinogram->N_theta;
+	printf("%lf\n",exp(sum));
+	
+	for(k=0 ; k < Sinogram->N_theta;k++)
+	{
+		fread(&buffer, 1, sizeof(double), Fp6);
+		NuisanceParams.mu[k] = buffer;//Sinogram->InitialOffset;
+	}
+	
+	fclose(Fp6);
+	
 
 
 
@@ -387,21 +445,13 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	
 	
 	START;
-
+//Forward Projection
 
 		for(j = 0;j < Geometry->N_z; j++)
 			for(k = 0;k < Geometry->N_x; k++)
 			{
-				//generating a random index
-				//Index = rand()%ArraySize;
-				Index=(genrand_int31(RandomNumber))%ArraySize;
-				k_new = Counter[Index]%Geometry->N_x;
-				j_new = Counter[Index]/Geometry->N_x;
-				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
-				ArraySize--;
 
-			//	printf("%d,%d\n",j_new,k_new);
-               if(TempCol[j_new][k_new]->count > 0)
+               if(TempCol[j][k]->count > 0)
 			   {
 			for (i = 0;i < Geometry->N_y; i++)//slice index
 				{
@@ -419,16 +469,15 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			       slice_index_max = Sinogram->N_t-1;
 					*/
 
-				for(q = 0;q < TempCol[j_new][k_new]->count; q++)
+				for(q = 0;q < TempCol[j][k]->count; q++)
 				{
 				    //calculating the footprint of the voxel in the t-direction
 
-					i_theta = floor(TempCol[j_new][k_new]->index[q]/(Sinogram->N_r));
-					i_r =  (TempCol[j_new][k_new]->index[q]%(Sinogram->N_r));
+					i_theta = floor(TempCol[j][k]->index[q]/(Sinogram->N_r));
+					i_r =  (TempCol[j][k]->index[q]%(Sinogram->N_r));
 					
 					VoxelLineAccessCounter=0;
 					for(i_t = VoxelLineResponse[i].index[0]; i_t <= VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
-					//for(i_t = slice_index_min; i_t <= slice_index_max; i_t++)
 					{
 						/*center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
 						delta_t = fabs(center_t - t);
@@ -443,8 +492,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 						{
 							ProfileThickness=0;
 						}*/
-						Y_Est[i_theta][i_r][i_t] += (NuisanceParams.I_0[i_theta]*(TempCol[j_new][k_new]->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter++]* Geometry->Object[j_new][k_new][i]));
-						//	Y_Est[i_theta][i_r][i_t] += (NuisanceParams.I_0[i_theta]*(TempCol[j_new][k_new]->values[q] *ProfileThickness* Geometry->Object[j_new][k_new][i]));
+						Y_Est[i_theta][i_r][i_t] += (NuisanceParams.I_0[i_theta]*(TempCol[j][k]->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter++]* Geometry->Object[j][k][i]));
 				
 				    }
 				}
@@ -468,6 +516,25 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 	//Calculate Error Sinogram - Can this be combined with previous loop?
 	//Also compute weights of the diagonal covariance matrix
+	
+#ifdef NOISE_MODEL
+	for (i_theta = 0;i_theta < Sinogram->N_theta; i_theta++)//slice index
+	{
+		sum=0;
+		for(i_r = 0; i_r < Sinogram->N_r;i_r++)
+			for(i_t = 0;i_t < Sinogram->N_t;i_t++)
+				sum+=(Sinogram->counts[i_theta][i_r][i_t]);
+		
+		sum/=(Sinogram->N_r*Sinogram->N_theta);
+		
+		for(i_r = 0; i_r < Sinogram->N_r;i_r++)
+			for(i_t = 0;i_t < Sinogram->N_t;i_t++)
+				if(sum != 0)
+					Weight[i_theta][i_r][i_t]=1.0/sum;//The variancfor each view ~1/averagesignal in that view
+		
+	}
+#endif//Noise model
+	
 
 	for (i_theta = 0;i_theta < Sinogram->N_theta; i_theta++)//slice index
 	{
@@ -478,10 +545,13 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 				// checksum+=Y_Est[i][j][k];
 				ErrorSino[i_theta][i_r][i_t] = Sinogram->counts[i_theta][i_r][i_t] - Y_Est[i_theta][i_r][i_t]-NuisanceParams.mu[i_theta];
+#ifndef NOISE_MODEL
 				if(Sinogram->counts[i_theta][i_r][i_t] != 0)
 					Weight[i_theta][i_r][i_t]=1.0/Sinogram->counts[i_theta][i_r][i_t];
 				else
 					Weight[i_theta][i_r][i_t]=0;
+#endif
+				
 //#ifdef DEBUG
 				//writing the error sinogram
 			//	if(i_t == 0)
@@ -493,8 +563,9 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 	}
 
-	free(Y_Est);
-    free(Sinogram->counts);
+
+//	free(Y_Est);
+ //   free(Sinogram->counts);
 	//fclose(Fp);
 
 
@@ -504,14 +575,15 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 #ifdef COST_CALCULATE
 	Fp2 = fopen("CostFunc.bin","w");
 
-	printf("Cost Function Calcluation \n");
+	printf("Cost Function Calculation \n");
 	/*********************Initial Cost Calculation***************************************************/
 		
-	cost[0] = CE_ComputeCost(ErrorSino,Weight, Sinogram,Geometry);
+	cost[cost_counter] = CE_ComputeCost(ErrorSino,Weight, Sinogram,Geometry);
 
-	printf("%lf\n",cost[0]);
+	printf("%lf\n",cost[cost_counter]);
 
-	fwrite(&cost[0],sizeof(DATA_TYPE),1,Fp2);
+	fwrite(&cost[cost_counter],sizeof(DATA_TYPE),1,Fp2);
+	cost_counter++;
 	/*******************************************************************************/
 #endif //Cost calculation endif
 
@@ -522,7 +594,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	
 
 	
-	for(OuterIter = 0; OuterIter < 1; OuterIter++)
+	for(OuterIter = 0; OuterIter < NumOuterIter; OuterIter++)
 	{
 	for(Iter = 0;Iter < CmdInputs->NumIter;Iter++)
 	{
@@ -551,14 +623,15 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				{
 				for (i = 0; i < Geometry->N_y; i++)//slice index
 				{
-
-
 						//Neighborhood of (i,j,k) should be initialized to zeros each time
-
 						for(p = 0; p <= 2; p++)
 							for(q = 0; q <= 2; q++)
 								for (r = 0; r <= 2;r++)
+								{
 									NEIGHBORHOOD[p][q][r] = 0.0;
+									BOUNDARYFLAG[p][q][r]=0;
+								}
+#ifndef CIRCULAR_BOUNDARY_CONDITION
 
 						//For a given (i,j,k) store its 26 point neighborhood
 						for(p = -1; p <=1; p++)
@@ -570,8 +643,27 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 											if(k_new+r >= 0 && k_new+r < Geometry->N_x)
 											{
 												NEIGHBORHOOD[p+1][q+1][r+1] = Geometry->Object[q+j_new][r+k_new][p+i];
+												BOUNDARYFLAG[p+1][q+1][r+1]=1;
 											}
+									else {
+										BOUNDARYFLAG[p+1][q+1][r+1]=0;
+									}
+
+
 								}
+#else
+					for(p = -1; p <=1; p++)
+						for(q = -1; q <= 1; q++)
+							for(r = -1; r <= 1;r++)
+							{
+								tempindex_x = mod(r+k_new,Geometry->N_x);																
+								tempindex_y =mod(p+i,Geometry->N_y);								
+								tempindex_z = mod(q+j_new,Geometry->N_z);
+		                        NEIGHBORHOOD[p+1][q+1][r+1] = Geometry->Object[tempindex_z][tempindex_x][tempindex_y];
+								BOUNDARYFLAG[p+1][q+1][r+1]=1;
+							}
+ 
+#endif//circular boundary condition check
 						NEIGHBORHOOD[1][1][1] = 0.0;
 
 #ifdef DEBUG
@@ -661,7 +753,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 						{
 							//    printf("(%lf,%lf,%lf)\n",low,high,UpdatedVoxelValue);
 						//	printf("Updated %lf\n",UpdatedVoxelValue);
-							if(UpdatedVoxelValue < 0.0)//Enforcing positivity constraints
+						if(UpdatedVoxelValue < 0.0)//Enforcing positivity constraints
 								UpdatedVoxelValue = 0.0;
 						}
 						else {
@@ -724,14 +816,30 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 					continue;
 				}
 
-				
-
-
-
 
 			}
 		STOP;
 		PRINTTIME;
+		
+#ifdef COST_CALCULATE
+		/*********************Cost Calculation***************************************************/
+		
+		cost[cost_counter]=CE_ComputeCost(ErrorSino,Weight,Sinogram,Geometry);
+		printf("%lf\n",cost[cost_counter]);
+		
+		if(cost[cost_counter]-cost[cost_counter-1] > 0)
+		{
+			printf("Cost just increased!\n");
+			break;
+		}
+		
+		fwrite(&cost[cost_counter],sizeof(DATA_TYPE),1,Fp2);
+		cost_counter++;
+		/*******************************************************************************/
+#else
+		printf("%d\n",Iter);
+#endif //Cost calculation endif
+		
 		
 #ifdef ROI
 		if(AverageMagnitudeOfRecon > 0)
@@ -750,21 +858,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			return err;
 		}
 
-#ifdef COST_CALCULATE
-		/*********************Cost Calculation***************************************************/
-	
-		cost[Iter+1]=CE_ComputeCost(ErrorSino,Weight,Sinogram,Geometry);
-		printf("%lf\n",cost[Iter+1]);
 
-		if(cost[Iter+1]-cost[Iter] > 0)
-			printf("Cost just increased!\n");
-		
-
-		fwrite(&cost[Iter+1],sizeof(DATA_TYPE),1,Fp2);
-		/*******************************************************************************/
-#else
-		printf("%d\n",Iter);
-#endif //Cost calculation endif
 
 #ifdef WRITE_INTERMEDIATE_RESULTS
 
@@ -789,198 +883,306 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 #endif
 	}
 		
-	//Joint Scale Estimation 
-	/*
 	
-	 for(i = 0; i < Sinogram->N_theta; i++)
-	 for(j = 0; j < Sinogram->N_r; j++)
-	 for(k = 0;k < Sinogram->N_t; k++)
-	 Y_Est[i][j][k]=0.0;
-	 
-	 //Offset Estimation
-	 
+
+#ifdef JOINT_ESTIMATION	
+			
+		//high=5e100;//this maintains the max and min bracket values for rooting lambda
+		high=(DATA_TYPE)INT64_MAX; 
+		low=(DATA_TYPE)INT64_MIN;
+	 //Joint Scale And Offset Estimation	 
+		
+		//forward project
+		for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++) 
+			for(i_r = 0; i_r < Sinogram->N_r; i_r++)
+			   for(i_t = 0;i_t < Sinogram->N_t; i_t++)
+			       Y_Est[i_theta][i_r][i_t]=0.0;
+		
+		for(j = 0;j < Geometry->N_z; j++)
+			for(k = 0;k < Geometry->N_x; k++)
+			{
+				if(TempCol[j][k]->count > 0)
+				{
+					for (i = 0;i < Geometry->N_y; i++)//slice index
+					{
+												
+						for(q = 0;q < TempCol[j][k]->count; q++)
+						{
+							//calculating the footprint of the voxel in the t-direction
+							
+							i_theta = floor(TempCol[j][k]->index[q]/(Sinogram->N_r));
+							i_r =  (TempCol[j][k]->index[q]%(Sinogram->N_r));
+							
+							VoxelLineAccessCounter=0;
+							for(i_t = VoxelLineResponse[i].index[0]; i_t <= VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
+							{
+								Y_Est[i_theta][i_r][i_t] += ((TempCol[j][k]->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter++]* Geometry->Object[j][k][i]));
+								
+							}
+						}
+						
+					}
+				}
+				
+				
+			}
+		
 	 for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
-	 {
-	 numerator_sum =0;
-	 denominator_sum = 0;
-	 for(i_r=0; i_r < Sinogram->N_r; i_r++)
-	 for(i_t = 0; i_t < Sinogram->N_t; i_t++)
-	 {
-	 numerator_sum+= ((ErrorSino[i_theta][i_r][i_t])*Weight[i_theta][i_r][i_t]);
-	 denominator_sum += Weight[i_theta][i_r][i_t];
-	 }
-	 if(denominator_sum != 0)
-	 temp = numerator_sum/denominator_sum;		
-	 
-	 
-	 for(i_r=0; i_r < Sinogram->N_r; i_r++)
-	 for(i_t = 0; i_t < Sinogram->N_t; i_t++)
-	 {
-	 ErrorSino[i_theta][i_r][i_t] -= (temp);
-	 } 
-	 NuisanceParams.mu[i_theta]+=temp;
-	 //	printf("%lf\n",NuisanceParams.mu[i_theta]);
-	 }
-	 
-	 //printf("After Offset Update %lf\n",CE_ComputeCost(ErrorSino,Weight,Sinogram,Geometry));	
-	 //Scale parameter estimation
-	 
-	 
-	 //Forward Project and compute coefficients
-	 for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
-	 {
-	 
-	 
-	 for (j = 0; j < Geometry->N_z; j++)
-	 {
-	 for (k=0; k < Geometry->N_x; k++)
-	 {
-	 x = Geometry->x0 + ((DATA_TYPE)k+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-	 z = Geometry->z0 + ((DATA_TYPE)j+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. z_0 is the left corner
-	 
-	 r = x*cosine[i_theta] - z*sine[i_theta];
-	 rmin = r - Geometry->delta_xz;
-	 rmax = r + Geometry->delta_xz;
-	 
-	 if(rmax < Sinogram->R0 || rmin > Sinogram->RMax)
-	 continue;
-	 
-	 index_min = floor(((rmin - Sinogram->R0)/Sinogram->delta_r));
-	 index_max = floor((rmax - Sinogram->R0)/Sinogram->delta_r);
-	 
-	 if(index_max >= Sinogram->N_r)
-	 index_max = Sinogram->N_r - 1;
-	 
-	 if(index_min < 0)
-	 index_min = 0;
-	 
-	 for (i = 0; i < Geometry->N_y ; i++)
-	 {
-	 y = Geometry->y0 + ((double)i+ 0.5)*Geometry->delta_xy;
-	 t = y;
-	 
-	 tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-	 tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax? t + Geometry->delta_xy/2 : Sinogram->TMax;
-	 
-	 slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
-	 slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
-	 
-	 if(slice_index_min < 0)
-	 slice_index_min = 0;
-	 if(slice_index_max >= Sinogram->N_t)
-	 slice_index_max = Sinogram->N_t-1;
-	 
-	 for (i_r = index_min; i_r <= index_max; i_r++)
-	 {
-	 center_r = Sinogram->R0 + ((double)i_r + 0.5)*Sinogram->delta_r ;
-	 delta_r = fabs(center_r - r);
-	 index_delta_r = floor((delta_r/OffsetR));
-	 
-	 if(index_delta_r < DETECTOR_RESPONSE_BINS)
-	 {
-	 w1 = delta_r - index_delta_r*OffsetR;
-	 w2 = (index_delta_r+1)*OffsetR - delta_r;
-	 f1 = (w2/OffsetR)*DetectorResponse[0][i_theta][index_delta_r] + (w1/OffsetR)*DetectorResponse[0][i_theta][index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
-	 }
-	 else 
-	 {
-	 f1=0;
-	 }
-	 
-	 
-	 
-	 for (i_t = slice_index_min; i_t <= slice_index_max; i_t ++)
-	 {		
-	 center_t = Sinogram->T0 + ((double)i_t + 0.5)*Sinogram->delta_t;
-	 delta_t = fabs(center_t - t);								
-	 index_delta_t = floor((delta_t/OffsetT));
-	 
-	 if(index_delta_t < DETECTOR_RESPONSE_BINS)
-	 {
-	 w1 = delta_t - index_delta_t*OffsetT;
-	 w2 = (index_delta_t+1)*OffsetT - delta_t;
-	 f2 = (w2/OffsetT)*H_t[0][i_theta][index_delta_t] + (w1/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
-	 }
-	 else 
-	 {
-	 f2 = 0;
-	 }
-	 
-	 Y_Est[i_theta][i_r][i_t]+=(f1*f2*Geometry->Object[j][k][i]);	
+	 {	 	 
+		 a=0;
+		 b=0;
+		 c=0;
+		 d=0;
+		 e=0;
+		 numerator_sum=0;
+		 denominator_sum=0;
+
+		 
+		 //compute the parameters of the quadratic for each view 
+		 for (i_r =0; i_r < Sinogram->N_r; i_r++) 
+			 	for(i_t = 0;i_t < Sinogram->N_t; i_t++)
+		        {
+					
+					numerator_sum+=(Sinogram->counts[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+					denominator_sum+=(Weight[i_theta][i_r][i_t]);
+					
+					a += (Y_Est[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+					b += (Y_Est[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]*Sinogram->counts[i_theta][i_r][i_t]);
+					c += (Sinogram->counts[i_theta][i_r][i_t]*Sinogram->counts[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+					d += (Y_Est[i_theta][i_r][i_t]*Y_Est[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+			 
+		        }
+		 
+		 bk_cost[i_theta][1] = numerator_sum;//yt*\lambda*1
+		 bk_cost[i_theta][0] = b;//yt*\lambda*(Ax)
+		 ck_cost[i_theta] = c;//yt*\lambda*y
+		 Qk_cost[i_theta][2] = denominator_sum;
+		 Qk_cost[i_theta][1] = a;
+		 Qk_cost[i_theta][0] = d;
+		 
+	
+		 
+		 d1[i_theta]=numerator_sum/denominator_sum;
+		 d2[i_theta]=a/denominator_sum;
+	
+		 a=0;
+		 b=0;
+		 for (i_r =0; i_r < Sinogram->N_r; i_r++) 
+			 for(i_t = 0;i_t < Sinogram->N_t; i_t++)
+			 {
+				 a+=((Y_Est[i_theta][i_r][i_t]-d2[i_theta])*Weight[i_theta][i_r][i_t]*Y_Est[i_theta][i_r][i_t]);
+				 b-=((Sinogram->counts[i_theta][i_r][i_t]-d1[i_theta])*Weight[i_theta][i_r][i_t]*Y_Est[i_theta][i_r][i_t]);
+			 }
+		 
+		 QuadraticParameters[i_theta][0]=a;
+		 QuadraticParameters[i_theta][1]=b;
+		 
+		 temp = (QuadraticParameters[i_theta][1]*QuadraticParameters[i_theta][1])/(4*QuadraticParameters[i_theta][0]);
+		 
+		 
+		 if(temp > 0 && temp < high)
+			 high = temp; //high holds the maximum value for the rooting operation. beyond this value discriminants become negative. Basically high = min{b^2/4*a}
+		 else if(temp < 0 && temp > low)
+			 low=temp;
+		 
+		 
 	 
 	 }
-	 }
-	 }
-	 
-	 }
-	 
-	 }
-	 
-	 numerator_sum =0;
-	 denominator_sum = 0;
-	 
-	 k1=0;k2=0;k3=0;
-	 
-	 for(i_r=0; i_r < Sinogram->N_r; i_r++)
-	 for(i_t = 0; i_t < Sinogram->N_t; i_t++)
-	 {
-	 numerator_sum	+= ((Sinogram->counts[i_theta][i_r][i_t]-NuisanceParams.mu[i_theta])*Weight[i_theta][i_r][i_t]*Y_Est[i_theta][i_r][i_t]);
-	 denominator_sum += (Weight[i_theta][i_r][i_t]*Y_Est[i_theta][i_r][i_t]*Y_Est[i_theta][i_r][i_t]);
-	 }
-	 if(denominator_sum != 0)
-	 temp = numerator_sum/denominator_sum;
-	 
-	 NuisanceParams.I_0[i_theta]=temp;
-	 
-	 
-	 }
-	 
+		//compute cost
+		/********************************************************************************************/
+		sum=0;
+		for (i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+		{
+			sum += (Qk_cost[i_theta][0]*NuisanceParams.I_0[i_theta]*NuisanceParams.I_0[i_theta] + 2*Qk_cost[i_theta][1]*NuisanceParams.I_0[i_theta]*NuisanceParams.mu[i_theta] + NuisanceParams.mu[i_theta]*NuisanceParams.mu[i_theta]*Qk_cost[i_theta][2] - 2*(bk_cost[i_theta][0]*NuisanceParams.I_0[i_theta] + NuisanceParams.mu[i_theta]*bk_cost[i_theta][1]) + ck_cost[i_theta]);//evaluating the cost function
+		}
+		sum/=2;
+		printf("The value of the data match error prior to updating the I and mu =%lf\n",sum);
+		
+		/********************************************************************************************/
+		
+		//Root the expression using the derived quadratic parameters. Need to choose min and max values 
+		printf("Rooting the equation to solve for the optimal lagrange multiplier\n");
+		
+		if(high != (DATA_TYPE)INT64_MAX)
+		{
+		high-=0.5;//Since the high value is set to make all discriminants exactly >=0 there are some issues when it is very close due to round off issues. So we get sqrt(-6e-20) for example. So subtract an arbitrary value like 0.5		
+		//we need to find a window within which we need to root the expression . the upper bound is clear but lower bound we need to look for one
+		//low=high;
+		dist=-1;
+		}
+		else if (low != (DATA_TYPE)INT64_MIN)
+		{
+			low +=0.5;
+			//high=low;
+			dist=1;
+		}
+
+	/*	fa=CE_ConstraintEquation(high);
+		signa=fa>0;
+		fb=CE_ConstraintEquation(low);
+		signb = fb>0;
+		dist=1;
+		while (signb != signa ) 
+		{
+			low = low - dist;
+			fb=CE_ConstraintEquation(low);
+			signb = fb>0;
+			dist*=2;
+		}*/
+		
+		errorcode=-1;
+		while(errorcode != 0 && low <= high)//0 implies the signof the function at low and high is the same
+		{
+		LagrangeMultiplier=solve(CE_ConstraintEquation, low, high, 1e-10, &errorcode);
+			low=low+dist;
+			dist*=2;
+		}
+		
+		
+		
+		//Based on the optimal lambda compute the optimal mu and I0 values
+		for (i_theta =0; i_theta < Sinogram->N_theta; i_theta++) 
+		{
+			
+			root = CE_RootsOfQuadraticFunction(QuadraticParameters[i_theta][0],QuadraticParameters[i_theta][1],LagrangeMultiplier);//returns the 2 roots of the quadratic parameterized by a,b,c
+			a=root[0];
+			b=root[0];
+			if(root[0] >= 0 && root[1] >= 0)
+			{
+				temp_mu = d1[i_theta] - root[0]*d2[i_theta];//for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
+				a = (Qk_cost[i_theta][0]*root[0]*root[0] + 2*Qk_cost[i_theta][1]*root[0]*temp_mu + temp_mu*temp_mu*Qk_cost[i_theta][2] - 2*(bk_cost[i_theta][0]*root[0] + temp_mu*bk_cost[i_theta][1]) + ck_cost[i_theta]);//evaluating the cost function
+
+				temp_mu = d1[i_theta] - root[1]*d2[i_theta];//for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
+				b = (Qk_cost[i_theta][0]*root[1]*root[1] + 2*Qk_cost[i_theta][1]*root[1]*temp_mu + temp_mu*temp_mu*Qk_cost[i_theta][2] - 2*(bk_cost[i_theta][0]*root[1] + temp_mu*bk_cost[i_theta][1]) + ck_cost[i_theta]);//evaluating the cost function
+			}
+			
+			if(a == Minimum(a, b))
+			NuisanceParams.I_0[i_theta] = root[0];
+			else 
+			{
+				NuisanceParams.I_0[i_theta] = root[1];
+			}
+
+			free(root);//freeing the memory holding the roots of the quadratic equation
+			
+			NuisanceParams.mu[i_theta] = d1[i_theta] - d2[i_theta]*NuisanceParams.I_0[i_theta];//some function of I_0[i_theta]
+		}
+		
 	 //Re normalization
-	 //product=1;
-	 sum=0;
+	
+	 /*sum=0;
 	 for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
-	 sum+=(log(NuisanceParams.I_0[i_theta]));
-	 
+	 sum+=(log(NuisanceParams.I_0[i_theta]));	 
 	 sum/=Sinogram->N_theta;
+	 temp=exp(sum) - Sinogram->InitialGain;
 	 
-	 temp=exp(log(I0)-sum);
-	 
-	 
-	 
-	 //Reproject to compute Error Sinogram
+		printf("%lf\n",temp);*/
+	
+
+		
+		/********************************************************************************************/
+		//checking to see if the cost went down
+		
+		sum=0;
+		for (i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+		{
+			sum += (Qk_cost[i_theta][0]*NuisanceParams.I_0[i_theta]*NuisanceParams.I_0[i_theta] + 2*Qk_cost[i_theta][1]*NuisanceParams.I_0[i_theta]*NuisanceParams.mu[i_theta] + NuisanceParams.mu[i_theta]*NuisanceParams.mu[i_theta]*Qk_cost[i_theta][2] - 2*(bk_cost[i_theta][0]*NuisanceParams.I_0[i_theta] + NuisanceParams.mu[i_theta]*bk_cost[i_theta][1]) + ck_cost[i_theta]);//evaluating the cost function
+		}
+		sum/=2;
+		
+		printf("The value of the data match error after updating the I and mu =%lf\n",sum);	
+				
+		/*****************************************************************************************************/
+
+	 //Reproject to compute Error Sinogram for ICD
 	 for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
 	 {
-	 
-	 NuisanceParams.I_0[i_theta]*=temp;			
-	 
 	 for(i_r=0; i_r < Sinogram->N_r; i_r++)
 	 for(i_t = 0; i_t < Sinogram->N_t; i_t++)
 	 {
 	 ErrorSino[i_theta][i_r][i_t] = Sinogram->counts[i_theta][i_r][i_t] - NuisanceParams.mu[i_theta]-(NuisanceParams.I_0[i_theta]*Y_Est[i_theta][i_r][i_t]);
 	 }
 	 }
-	 
+		
+	
+		//Printing the gain and offset after updating
+		/*
+	printf("Offsets\n");
+	for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+	{
+		printf("%lf\n",NuisanceParams.mu[i_theta]);
+	}
 	 printf("Gain\n");
 	 for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
 	 {
 	 printf("%lf\n",NuisanceParams.I_0[i_theta]);
-	 }
-	 //printf("After Gain Update %lf\n",CE_ComputeCost(ErrorSino,Weight,Sinogram,Geometry));	
-	 */
+	 }*/
+		
+		
+#ifdef COST_CALCULATE
+		cost[cost_counter]=CE_ComputeCost(ErrorSino,Weight,Sinogram,Geometry);
+	 printf("After Gain Update %lf\n",cost[cost_counter]);
+		
+		if(cost[cost_counter]-cost[cost_counter-1] > 0)
+		{
+			printf("Cost just increased!\n");
+			break;
+		}
+		fwrite(&cost[cost_counter],sizeof(DATA_TYPE),1,Fp2);
+		cost_counter++;
+		
+#endif
+		
+#ifdef NOISE_MODEL
+		//Updating the Weights
+		for( i_theta=0;i_theta < Sinogram->N_theta;i_theta++)
+		{
+			sum=0;
+			for(i_r=0; i_r < Sinogram->N_r; i_r++)
+				for(i_t = 0; i_t < Sinogram->N_t; i_t++)
+					sum+=(ErrorSino[i_theta][i_r][i_t]*ErrorSino[i_theta][i_r][i_t]);
+			sum/=(Sinogram->N_r*Sinogram->N_t);
+			
+			for(i_r=0; i_r < Sinogram->N_r; i_r++)
+				for(i_t = 0; i_t < Sinogram->N_t; i_t++)
+					if(sum != 0)
+					Weight[i_theta][i_r][i_t]=1.0/sum;
+			
+		}
+		
+#ifdef COST_CALCULATE
+		cost[cost_counter]=CE_ComputeCost(ErrorSino,Weight,Sinogram,Geometry);
+		printf("After Gain Update %lf\n",cost[cost_counter]);
+		
+		if(cost[cost_counter]-cost[cost_counter-1] > 0)
+		{
+			printf("Cost just increased!\n");
+			break;
+		}
+		fwrite(&cost[cost_counter],sizeof(DATA_TYPE),1,Fp2);
+		cost_counter++;
+		
+#endif//cost 
+		
+#endif//NOISE_MODEL
 	 
+#endif//Joint estimation endif	
 	 
 	}
 
-	/*printf("Offsets\n");
+	printf("Offsets\n");
 	for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
 	{
 		printf("%lf\n",NuisanceParams.mu[i_theta]);
+		fwrite(&NuisanceParams.mu[i_theta],sizeof(DATA_TYPE),1,Fp5);
 	}
 	printf("Gain\n");
 	for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
 	{
 		printf("%lf\n",NuisanceParams.I_0[i_theta]);
-	}*/
+		fwrite(&NuisanceParams.I_0[i_theta],sizeof(DATA_TYPE),1,Fp4);
+	}
+	printf("Number of costs recorded %d\n",cost_counter);
 	
     START;
 	//calculates Ax and returns a pointer to the memory block
@@ -1618,6 +1820,68 @@ void CE_InitializeBeamProfile(Sino* Sinogram)
 
 
 }
+DATA_TYPE* CE_RootsOfQuadraticFunction(DATA_TYPE a,DATA_TYPE b,DATA_TYPE c)
+{
+	DATA_TYPE* temp = get_spc(2, sizeof(double));
+	DATA_TYPE value=0,discriminant;
+	temp[0]=-1;
+	temp[1]=-1;
+	discriminant=b*b - 4*a*c;
+	if(discriminant < 0)
+	{
+	    printf("Quadratic has no real roots\n");
+		return temp;
+	}
+	else
+	{
+		value=sqrt(discriminant);
+		temp[0]= (-b + value)/(2*a);
+		temp[1] = (-b - value)/(2*a);
+	}
+	return temp;
+
+}
+double CE_ConstraintEquation(DATA_TYPE lambda)
+{
+	double sum=0,temp_cost=0,min=(double)INT64_MAX;
+	double value=0;
+	double* root;
+	double temp_mu;
+	uint8_t i,min_index=0;
+	uint16_t i_theta;
+	
+	for(i_theta =0; i_theta < NumOfViews;i_theta++)
+	{
+		//temp=((QuadraticParameters[i_theta][1]*QuadraticParameters[i_theta][1])-4*QuadraticParameters[i_theta][0]*lambda);
+		root=CE_RootsOfQuadraticFunction(QuadraticParameters[i_theta][0], QuadraticParameters[i_theta][1], lambda);
+		//Evaluate which root results in a lower cost function
+		for( i=0; i < 2;i++)
+		{
+			if(root[i] > 0) // If the value of I0[k] is positive
+			{
+			temp_mu = d1[i_theta] - root[i]*d2[i_theta];//for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
+			temp_cost = (Qk_cost[i_theta][0]*root[i]*root[i] + 2*Qk_cost[i_theta][1]*root[i]*temp_mu + temp_mu*temp_mu*Qk_cost[i_theta][2] - 2*(bk_cost[i_theta][0]*root[i] + temp_mu*bk_cost[i_theta][1]) + ck_cost[i_theta]);//evaluating the cost function
+				if(temp_cost < min)
+				{
+					min = temp_cost;
+					min_index = i;
+					
+				}
+			}
+		}
+		
+			if(root[min_index] > 0)
+		    sum+=log(root[min_index]);//max{(-b+sqrt(b^2 - 4*a*c))/2*a,(-b+sqrt(b^2 - 4*a*c))/2*a}		
+			else 
+			{
+				printf("Log of a negative number\n");
+			}
+		free(root);
+
+	}	
+	value = sum - LogGain;
+	return value;
+}
 
 double CE_DerivOfCostFunc(double u)
 {
@@ -1628,11 +1892,13 @@ double CE_DerivOfCostFunc(double u)
 		for (j = 0; j <3; j++)
 			for (k = 0;k < 3; k++)
 			{
-
+				if(BOUNDARYFLAG[i][j][k] == 1)
+				{
 				if( u - NEIGHBORHOOD[i][j][k] >= 0.0)
 					temp+=((double)FILTER[i][j][k]*(1.0)*pow(fabs(u-(double)NEIGHBORHOOD[i][j][k]),(double)(MRF_P-1)));
 				else
 					temp+=((double)FILTER[i][j][k]*(-1.0)*pow(fabs(u-(double)NEIGHBORHOOD[i][j][k]),(double)(MRF_P -1)));
+				}
 			}
 
 	//printf("V While updating %lf\n",V);
@@ -1707,6 +1973,8 @@ DATA_TYPE CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,Sino* Sinogr
 
 	cost/=2;
 	
+	printf("Data mismatch term =%lf\n",cost);
+	
 	for (i = 0; i < Geometry->N_z; i++)
 		for (j = 0; j < Geometry->N_x; j++)
 			for(k = 0; k < Geometry->N_y; k++)
@@ -1772,6 +2040,17 @@ DATA_TYPE CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,Sino* Sinogr
 	//printf("Cost calculation End..\n");
 
 	cost+=(temp/(MRF_P*SIGMA_X_P));
+	
+#ifdef NOISE_MODEL
+	temp=0;
+	for(i=0;i< Sinogram->N_theta;i++)
+		if(Weight[i][0][0] != 0)
+		temp += log(2*PI*Weight[i][0][0]);
+	
+	temp*=((Sinogram->N_r*Sinogram->N_t)/2);
+	
+	cost+=temp;
+#endif//noise model
 	return cost;
 }
 
