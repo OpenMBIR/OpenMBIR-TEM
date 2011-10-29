@@ -120,7 +120,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	FILE *Fp4=fopen("FinalGainParameters.bin","w");
 	FILE *Fp5=fopen("FinalOffsetParameters.bin","w");
 	FILE *Fp6 = fopen(CmdInputs->InitialParameters, "r");//contains the initial gains and offset	
-	FILE *Fp7 = fopen("/ResultFolder/FinalVariances.bin","w");
+	FILE *Fp7 = fopen("FinalVariances.bin","w");
 	DATA_TYPE buffer;
 	//Optimization variables
 	DATA_TYPE low,high,dist;
@@ -238,14 +238,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 
 #endif
-#ifdef CORRECTION
-	//Calculate Normalization factors
-	NORMALIZATION_FACTOR = (DATA_TYPE*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(DATA_TYPE));
 
-	for(i = 0;i < Sinogram->N_r*Sinogram->N_theta;i++)
-		NORMALIZATION_FACTOR[i] = 1.0;
-
-#endif
 	
 	//Scale and Offset Parameters Initialization
 	
@@ -253,7 +246,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	for(k=0 ; k < Sinogram->N_theta;k++)
 	{
 		fread(&buffer, 1, sizeof(double), Fp6);
-		NuisanceParams.I_0[k]= buffer;//Sinogram->InitialGain;		
+		NuisanceParams.I_0[k]= Sinogram->InitialGain;		
 		sum+=log(buffer);
 	}
 	sum/=Sinogram->N_theta;
@@ -262,7 +255,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	for(k=0 ; k < Sinogram->N_theta;k++)
 	{
 		fread(&buffer, 1, sizeof(double), Fp6);
-		NuisanceParams.mu[k] = buffer;//Sinogram->InitialOffset;
+		NuisanceParams.mu[k] = Sinogram->InitialOffset;
 	}
 	
 	fclose(Fp6);
