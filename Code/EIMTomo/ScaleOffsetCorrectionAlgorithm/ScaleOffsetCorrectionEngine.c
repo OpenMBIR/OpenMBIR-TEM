@@ -35,7 +35,7 @@ DATA_TYPE *BeamProfile;//used to store the shape of the e-beam
 DATA_TYPE BEAM_WIDTH;
 DATA_TYPE OffsetR;
 DATA_TYPE OffsetT;
-uint8_t NumOuterIter=3;
+uint8_t NumOuterIter=1;
 DATA_TYPE **QuadraticParameters;//holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
 DATA_TYPE **Qk_cost,**bk_cost,*ck_cost;//these are the terms of the quadratic cost function 
 DATA_TYPE *d1,*d2;//hold the intermediate values needed to compute optimal mu_k
@@ -120,6 +120,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	FILE *Fp4=fopen("FinalGainParameters.bin","w");
 	FILE *Fp5=fopen("FinalOffsetParameters.bin","w");
 	FILE *Fp6 = fopen(CmdInputs->InitialParameters, "r");//contains the initial gains and offset	
+	FILE *Fp7 = fopen("/ResultFolder/FinalVariances.bin","w");
 	DATA_TYPE buffer;
 	//Optimization variables
 	DATA_TYPE low,high,dist;
@@ -1184,6 +1185,14 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	}
 	printf("Number of costs recorded %d\n",cost_counter);
 	
+	printf("Variance\n");
+	for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+	{
+		printf("%lf\n",Weight[i_theta][0][0]);
+		fwrite(&(Weight[i_theta][0][0]),sizeof(DATA_TYPE),1,Fp7);
+	}
+		
+	
     START;
 	//calculates Ax and returns a pointer to the memory block
 	Final_Sinogram=ForwardProject(Sinogram, Geometry, DetectorResponse, H_t);
@@ -1214,6 +1223,11 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 #ifdef COST_CALCULATE
 	fclose(Fp2);// writing cost function
 #endif
+	fclose(Fp3);
+	fclose(Fp4);
+	fclose(Fp5);
+	fclose(Fp6);
+	fclose(Fp7);
 	//free_3D(neighborhood);
 	// Get values from ComputationInputs and perform calculation
 	// Return any error code
