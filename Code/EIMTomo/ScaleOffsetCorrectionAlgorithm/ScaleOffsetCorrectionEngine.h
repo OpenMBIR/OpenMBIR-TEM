@@ -16,7 +16,7 @@ extern "C" {
 #include "ScaleOffsetCorrectionInputs.h"
 	
 	
-	//#define DEBUG	
+	//#define DEBUG	,
 #define PROFILE_RESOLUTION 1536
 //#define PI 4*atan(1)//3.14159265
 	//Beam Parameters - This is set to some number <<< Sinogram->delta_r.
@@ -34,7 +34,7 @@ extern "C" {
 //#define BEAM_CALCULATION
 #define DETECTOR_RESPONSE_BINS 64
 #define JOINT_ESTIMATION
-#define NOISE_MODEL
+//#define NOISE_MODEL
 //#define	CIRCULAR_BOUNDARY_CONDITION
 	
 	//Structure to store a single column(A_i) of the A-matrix 
