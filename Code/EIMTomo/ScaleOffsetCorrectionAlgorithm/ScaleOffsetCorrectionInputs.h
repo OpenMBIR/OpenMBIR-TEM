@@ -53,7 +53,11 @@ extern "C" {
 		DATA_TYPE *angles;//Holds the angles through which the object is tilted
 		DATA_TYPE R0,RMax;
 		DATA_TYPE T0,TMax;
-		DATA_TYPE InitialGain,InitialOffset;//Initial scale and offset of the sinogram data 		
+		DATA_TYPE TargetGain;//,InitialOffset;//Initial scale and offset of the sinogram data
+ 		uint8_t *ViewMask;//Which views to keep and which to reject
+		uint16_t N_tStart,N_tEnd,N_rStart,N_rEnd;//Which region of the sinogram to keep in the r and t directions
+		DATA_TYPE *InitialGain;//Reads in the initial value for the gain for each view
+		DATA_TYPE *InitialOffset;
 	};
 	
 	typedef struct _sinogram Sino;
@@ -75,7 +79,6 @@ extern "C" {
 		DATA_TYPE x0;// -LengthX/2
 		DATA_TYPE z0;// -LengthZ/2
 		DATA_TYPE y0;//-LengthY/2
-		uint16_t StartSlice,EndSlice;//Indicates Region of the object to reconstruct		
 	};
 	
 	typedef struct _geometry Geom;
@@ -97,7 +100,10 @@ extern "C" {
 	int CI_ParseInput(int ,char**,CommandLineInputs*);
 	void CI_ReadParameterFile(FILE* ,CommandLineInputs* ,Sino* ,Geom*);
 	void CI_InitializeSinoParameters(Sino *,CommandLineInputs*);
+	void CI_MaskSinogram(Sino*,Sino*);
 	void CI_InitializeGeomParameters(Sino* ,Geom* ,CommandLineInputs*);
+	DATA_TYPE AbsMaxArray(DATA_TYPE* ,uint16_t);
+
 	
 	
 #ifdef __cplusplus
