@@ -35,7 +35,7 @@ DATA_TYPE *BeamProfile;//used to store the shape of the e-beam
 DATA_TYPE BEAM_WIDTH;
 DATA_TYPE OffsetR;
 DATA_TYPE OffsetT;
-uint8_t NumOuterIter=1;
+uint8_t NumOuterIter=3;
 DATA_TYPE **QuadraticParameters;//holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
 DATA_TYPE **Qk_cost,**bk_cost,*ck_cost;//these are the terms of the quadratic cost function 
 DATA_TYPE *d1,*d2;//hold the intermediate values needed to compute optimal mu_k
@@ -116,10 +116,10 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	//File variables
 	FILE *Fp = fopen("ReconstructedSino.bin","w");//Reconstructed Sinogram from initial est
 	FILE* Fp2;//Cost function
-	FILE *Fp3;//File to store intermediate outputs of reconstruction
+	//FILE *Fp3;//File to store intermediate outputs of reconstruction
 	FILE *Fp4=fopen("FinalGainParameters.bin","w");
 	FILE *Fp5=fopen("FinalOffsetParameters.bin","w");
-	FILE *Fp6 = fopen(CmdInputs->InitialParameters, "r");//contains the initial gains and offset	
+//	FILE *Fp6 = fopen(CmdInputs->InitialParameters, "r");//contains the initial gains and offset	
 	FILE *Fp7 = fopen("FinalVariances.bin","w");
 	DATA_TYPE buffer;
 	//Optimization variables
@@ -195,7 +195,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	bk_cost=get_img(2, Sinogram->N_theta, sizeof(DATA_TYPE));
 	ck_cost=get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
 	NumOfViews = Sinogram->N_theta;
-	LogGain = Sinogram->N_theta*log(Sinogram->InitialGain);
+	LogGain = Sinogram->N_theta*log(Sinogram->TargetGain);
 	d1=(DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
 	d2=(DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
 	
@@ -245,20 +245,29 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	sum=0;
 	for(k=0 ; k < Sinogram->N_theta;k++)
 	{
-		fread(&buffer, 1, sizeof(double), Fp6);
-		NuisanceParams.I_0[k]= Sinogram->InitialGain;		
-		sum+=log(buffer);
+		//fread(&buffer, 1, sizeof(double), Fp6);
+		NuisanceParams.I_0[k]= Sinogram->InitialGain[k];//;		
+		sum+=log(NuisanceParams.I_0[k]);
 	}
 	sum/=Sinogram->N_theta;
-	printf("%lf\n",exp(sum));
+	sum=exp(sum);
+	printf("The geometric mean of the gains is %lf\n",sum);
+	
+	//Checking if the input parameters satisfy the target geometric mean
+	if(fabs(sum - Sinogram->TargetGain) > 1e-5)
+	{
+		printf("The input paramters dont meet the constraint\n");
+		return;
+	}
+	
 	
 	for(k=0 ; k < Sinogram->N_theta;k++)
 	{
-		fread(&buffer, 1, sizeof(double), Fp6);
-		NuisanceParams.mu[k] = Sinogram->InitialOffset;
+		//fread(&buffer, 1, sizeof(double), Fp6);
+		NuisanceParams.mu[k] = Sinogram->InitialOffset[k];
 	}
 	
-	fclose(Fp6);
+	//fclose(Fp6);
 	
 
 
@@ -404,7 +413,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			
 			if(ProfileThickness != 0)//Store the response of this slice
 			{				
-			//	printf("%d %lf\n",i_t,ProfileThickness);
+				printf("%d %lf\n",i_t,ProfileThickness);
 				VoxelLineResponse[i].values[VoxelLineResponse[i].count]=ProfileThickness;
 				VoxelLineResponse[i].index[VoxelLineResponse[i].count++]=i_t;
 			}
@@ -610,9 +619,9 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				Index=(genrand_int31(RandomNumber))%ArraySize;
 				k_new = Counter[Index]%Geometry->N_x;
 				j_new = Counter[Index]/Geometry->N_x;
-				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
+				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));//TODO: Instead just swap the value in Index with the one in ArraySize
 				ArraySize--;
-				TempMemBlock = TempCol[j_new][k_new];
+				TempMemBlock = TempCol[j_new][k_new];//Remove this
 				if(TempMemBlock->count > 0)
 				{
 				for (i = 0; i < Geometry->N_y; i++)//slice index
@@ -1068,7 +1077,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	 for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
 	 sum+=(log(NuisanceParams.I_0[i_theta]));	 
 	 sum/=Sinogram->N_theta;
-	 temp=exp(sum) - Sinogram->InitialGain;
+	 temp=exp(sum) - Sinogram->TargetGain;
 	 
 		printf("%lf\n",temp);*/
 	
@@ -1216,10 +1225,10 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 #ifdef COST_CALCULATE
 	fclose(Fp2);// writing cost function
 #endif
-	fclose(Fp3);
+	//fclose(Fp3);
 	fclose(Fp4);
 	fclose(Fp5);
-	fclose(Fp6);
+	//fclose(Fp6);
 	fclose(Fp7);
 	//free_3D(neighborhood);
 	// Get values from ComputationInputs and perform calculation
