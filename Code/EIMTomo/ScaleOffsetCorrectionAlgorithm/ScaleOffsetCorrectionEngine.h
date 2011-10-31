@@ -34,7 +34,7 @@ extern "C" {
 //#define BEAM_CALCULATION
 #define DETECTOR_RESPONSE_BINS 64
 #define JOINT_ESTIMATION
-//#define NOISE_MODEL
+#define NOISE_MODEL
 //#define	CIRCULAR_BOUNDARY_CONDITION
 	
 	//Structure to store a single column(A_i) of the A-matrix 

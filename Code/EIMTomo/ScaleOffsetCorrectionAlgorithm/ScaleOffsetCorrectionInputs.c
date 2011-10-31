@@ -21,7 +21,7 @@ int CI_ParseInput(int argc,char **argv,CommandLineInputs* Input)
 {
 	int j,error;
 	error=0;
-	while ((j = getopt(argc, argv, ":p:s:i:o:n:l:m:g:")) != -1) //p is for parameter file , s for sinogram file,i for Initial Recon Data File name,o is for Output File name
+	while ((j = getopt(argc, argv, ":p:s:i:o:n:l:m:g:O:")) != -1) //p is for parameter file , s for sinogram file,i for Initial Recon Data File name,o is for Output File name
 	{
 		switch (j)
 		{
@@ -33,6 +33,7 @@ int CI_ParseInput(int argc,char **argv,CommandLineInputs* Input)
 			case 'l':Input->SigmaX = (DATA_TYPE)atof(optarg);break; //l - lambda
 			case 'm':Input->p = (DATA_TYPE)atof(optarg);break;//p = Markov Radom Field Parameter
 			case 'g':Input->InitialParameters = optarg;break;//the values of the initial gain and offset
+			case 'O':Input->NumOuterIter = atoi(optarg);break;//Number of Outer Iterations for the joint estimation
 			case '?':error=-1;break;
 		}
 	}

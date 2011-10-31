@@ -39,6 +39,7 @@ int main(int argc,char** argv)
 		fclose(Fp);
 		//Based on the inputs , calculate the "other" variables in the structure definition
 		CI_InitializeSinoParameters(&Sinogram,&ParsedInput);
+		//CI_MaskSinogram(&OriginalSinogram,&MaskedSinogram);
 		CI_InitializeGeomParameters(&Sinogram,&Geometry,&ParsedInput);
 	}
 			

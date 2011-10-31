@@ -35,7 +35,7 @@ DATA_TYPE *BeamProfile;//used to store the shape of the e-beam
 DATA_TYPE BEAM_WIDTH;
 DATA_TYPE OffsetR;
 DATA_TYPE OffsetT;
-uint8_t NumOuterIter=3;
+
 DATA_TYPE **QuadraticParameters;//holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
 DATA_TYPE **Qk_cost,**bk_cost,*ck_cost;//these are the terms of the quadratic cost function 
 DATA_TYPE *d1,*d2;//hold the intermediate values needed to compute optimal mu_k
@@ -167,7 +167,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 #endif
 
 #ifdef COST_CALCULATE
-	cost=(DATA_TYPE*)get_spc((CmdInputs->NumIter+1)*NumOuterIter*3,sizeof(DATA_TYPE));//the factor 3 is in there to ensure we can store 3 costs per iteration one after update x, then mu and then I
+	cost=(DATA_TYPE*)get_spc((CmdInputs->NumIter+1)*CmdInputs->NumOuterIter*3,sizeof(DATA_TYPE));//the factor 3 is in there to ensure we can store 3 costs per iteration one after update x, then mu and then I
 #endif
 
 	Y_Est=(DATA_TYPE ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(DATA_TYPE));
@@ -413,7 +413,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			
 			if(ProfileThickness != 0)//Store the response of this slice
 			{				
-				printf("%d %lf\n",i_t,ProfileThickness);
+				//printf("%d %lf\n",i_t,ProfileThickness);
 				VoxelLineResponse[i].values[VoxelLineResponse[i].count]=ProfileThickness;
 				VoxelLineResponse[i].index[VoxelLineResponse[i].count++]=i_t;
 			}
@@ -597,7 +597,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	
 
 	
-	for(OuterIter = 0; OuterIter < NumOuterIter; OuterIter++)
+	for(OuterIter = 0; OuterIter < CmdInputs->NumOuterIter; OuterIter++)
 	{
 	for(Iter = 0;Iter < CmdInputs->NumIter;Iter++)
 	{

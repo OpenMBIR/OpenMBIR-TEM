@@ -92,6 +92,7 @@ extern "C" {
 		char* InitialParameters;//a file containing initial gains and offsets 
 		//This is read from the paramter file
 		int16_t NumIter;
+		uint16_t NumOuterIter;
 		DATA_TYPE SigmaX;
 		DATA_TYPE p;
 	};
