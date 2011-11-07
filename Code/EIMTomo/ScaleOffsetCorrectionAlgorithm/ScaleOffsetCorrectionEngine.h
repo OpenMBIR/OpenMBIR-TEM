@@ -34,8 +34,10 @@ extern "C" {
 //#define BEAM_CALCULATION
 #define DETECTOR_RESPONSE_BINS 64
 #define JOINT_ESTIMATION
-#define NOISE_MODEL
+//#define NOISE_MODEL
+#define POSITIVITY_CONSTRAINT
 //#define	CIRCULAR_BOUNDARY_CONDITION
+//#define DEBUG_CONSTRAINT_OPT
 	
 	//Structure to store a single column(A_i) of the A-matrix 
 	typedef struct 
