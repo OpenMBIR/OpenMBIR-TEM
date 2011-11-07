@@ -366,8 +366,19 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
 	//Find the maximum absolute tilt angle 
 	max= AbsMaxArray(Sinogram->angles, Sinogram->N_theta);
 	
-  Geometry->LengthZ*=Z_STRETCH; 
+#ifndef FORWARD_PROJECT_MODE
+    Geometry->LengthZ*=Z_STRETCH; 
+	
+#ifdef EXTEND_OBJECT
 	Geometry->LengthX = ((Sinogram->N_r * Sinogram->delta_r)/cos(max*PI/180)) + Geometry->LengthZ*tan(max*PI/180);
+#else
+	Geometry->LengthX = ((Sinogram->N_r * Sinogram->delta_r));
+#endif //Extend object endif
+	
+#else
+	Geometry->LengthX = ((Sinogram->N_r * Sinogram->delta_r));
+#endif//Forward projector mode end if
+	
 //  Geometry->LengthY = (Geometry->EndSlice- Geometry->StartSlice)*Geometry->delta_xy;
 	Geometry->LengthY = (Sinogram->N_tEnd-Sinogram->N_tStart + 1)*Sinogram->delta_t; 
   
@@ -398,11 +409,21 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
 //	printf("%f\n",Geometry->Object[i][j][k]);
   }*/
 
-	for (i = 0; i < Geometry->N_y; i++) {
-		for (j = 0; j < Geometry->N_x; j++) {
-			for (k = 0; k < Geometry->N_z; k++) {
+	for (i = 0; i < Geometry->N_y; i++) 
+	{
+		for (j = 0; j < Geometry->N_x; j++) 
+		{
+			for (k = 0; k < Geometry->N_z; k++) 
+			{
+				if(Fp == NULL)//If no input file has been specified or if the file does not exist just set the default values to be zero
+				{
+				Geometry->Object[k][j][i] = 0;	
+				}
+				else//If the iput file exists read the values
+				{
 				fread(buffer, sizeof(double), 1, Fp);
 				Geometry->Object[k][j][i] = (DATA_TYPE)(*buffer);
+				}
 			}
 		}
 	}

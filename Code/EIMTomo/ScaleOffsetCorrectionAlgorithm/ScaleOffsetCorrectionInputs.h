@@ -12,6 +12,9 @@ clock_t startm, stopm;
 #define STOP if ( (stopm = clock()) == -1) {printf("Error calling clock");exit(1);}
 #define PRINTTIME printf( "%6.3f seconds used by the processor.\n", ((double)stopm-startm)/CLOCKS_PER_SEC);
 
+//#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
+#define EXTEND_OBJECT
+
 #define X_STRETCH 1
 #define Z_STRETCH 2
 
