@@ -5,14 +5,6 @@
 
 #include "EIMTomo/EIMTomo.h"
 
-#ifdef EIMTOMO_HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-
-#if EIMTOMO_HAVE_STDINT_H
-#include <stdint.h>
-#endif
-
 
 
 

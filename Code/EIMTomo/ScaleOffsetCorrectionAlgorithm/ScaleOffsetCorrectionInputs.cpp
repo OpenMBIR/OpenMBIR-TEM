@@ -1,47 +1,120 @@
 #include "ScaleOffsetCorrectionInputs.h"
-#include "EIMTomo/common/allocate.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
+
+#include <tclap/CmdLine.h>
+#include <tclap/ValueArg.h>
+
+#include "EIMTomo/EIMTomo.h"
+#include "EIMTomo/common/EIMTime.h"
+#include "EIMTomo/common/EIMMath.h"
+#include "EIMTomo/common/allocate.h"
+#include "EIMTomo/EIMTomoVersion.h"
 
 
-extern int optind;
-extern char *optarg;
+//#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
+#define EXTEND_OBJECT
 
-//#define START_SLICE 0
-//#define END_SLICE 348
+#define X_STRETCH 1
+#define Z_STRETCH 2
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int CI_ParseInput(int argc,char **argv,CommandLineInputs* Input)
+ScaleOffsetCorrectionInputs::ScaleOffsetCorrectionInputs()
 {
-	int j,error;
-	error=0;
-	while ((j = getopt(argc, argv, ":p:s:i:o:n:l:m:g:O:")) != -1) //p is for parameter file , s for sinogram file,i for Initial Recon Data File name,o is for Output File name
-	{
-		switch (j)
-		{
-			case 'i':Input->InitialRecon = optarg;break;
-			case 'o':Input->OutputFile = optarg;break;
-			case 'p':Input->ParamFile = optarg;break;
-			case 's':Input->SinoFile = optarg;break;
-			case 'n':Input->NumIter = atoi(optarg);break; //n = number of iterations
-			case 'l':Input->SigmaX = (DATA_TYPE)atof(optarg);break; //l - lambda
-			case 'm':Input->p = (DATA_TYPE)atof(optarg);break;//p = Markov Radom Field Parameter
-			case 'g':Input->InitialParameters = optarg;break;//the values of the initial gain and offset
-			case 'O':Input->NumOuterIter = atoi(optarg);break;//Number of Outer Iterations for the joint estimation
-			case '?':error=-1;break;
-		}
-	}
 
-	return error;
 }
 
-void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
+ScaleOffsetCorrectionInputs::~ScaleOffsetCorrectionInputs()
+{
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+char* ScaleOffsetCorrectionInputs::copyFilenameToNewCharBuffer(const std::string &fname)
+{
+  std::string::size_type size = fname.size() + 1;
+  char* buf = NULL;
+  if (size > 1)
+  {
+    buf = (char*)malloc(size);
+    ::memset(buf, 0, size);
+    strncpy(buf, fname.c_str(), size - 1);
+  }
+  return buf;
+}
+
+
+
+int ScaleOffsetCorrectionInputs::CI_ParseInput(int argc,char **argv,CommandLineInputs* Input)
+{
+  if ( NULL == Input)
+  {
+    printf("The EMMPM_Inputs pointer was null. Returning early.\n");
+    return -1;
+  }
+
+  TCLAP::CmdLine cmd("", ' ', EIMTomo::Version::Complete);
+  TCLAP::ValueArg<std::string> in_paramFile("p", "paramfile", "The Parameter File", true, "", "");
+  cmd.add(in_paramFile);
+  TCLAP::ValueArg<std::string> in_sinoFile("s", "sinofile", "The Sinogram File", true, "", "");
+  cmd.add(in_sinoFile);
+  TCLAP::ValueArg<std::string> in_inputFile("i", "inputfile", "Input Data File", true, "", "");
+  cmd.add(in_inputFile);
+  TCLAP::ValueArg<std::string> in_outputFile("o", "outputfile", "The Output File", true, "", "");
+  cmd.add(in_outputFile);
+
+
+  TCLAP::ValueArg<int> in_numIter("n", "numIter", "Number of Iterations", true, 0, "0");
+  cmd.add(in_numIter);
+  TCLAP::ValueArg<double> in_sigmaX("l", "sigmax", "Sigma X Value", true, 1.0, "1.0");
+  cmd.add(in_sigmaX);
+  TCLAP::ValueArg<double> in_markov("m", "", "Markov Random Field Parameter", true, 0.0, "0.0");
+  cmd.add(in_markov);
+
+  TCLAP::ValueArg<std::string> InitialParameters("g", "", "InitialParameters", true, "", "");
+  cmd.add(InitialParameters);
+
+  TCLAP::ValueArg<int> NumOuterIter("O", "", "NumOuterIter", true, 0, "0");
+  cmd.add(NumOuterIter);
+
+  if (argc < 2)
+  {
+    std::cout << "Joint Estimation Command Line Version " << cmd.getVersion() << std::endl;
+    std::vector<std::string> args;
+    args.push_back(argv[0]);
+    args.push_back("-h");
+    cmd.parse(args);
+    return -1;
+  }
+
+
+  try
+  {
+    int error = 0;
+    cmd.parse(argc, argv);
+    Input->InitialRecon = copyFilenameToNewCharBuffer(in_inputFile.getValue());
+    Input->OutputFile = copyFilenameToNewCharBuffer(in_outputFile.getValue());
+    Input->ParamFile = copyFilenameToNewCharBuffer(in_paramFile.getValue());
+    Input->SinoFile = copyFilenameToNewCharBuffer(in_sinoFile.getValue());
+    Input->NumIter = in_numIter.getValue();
+    Input->SigmaX = in_sigmaX.getValue();
+    Input->p = in_markov.getValue();
+    Input->InitialParameters = copyFilenameToNewCharBuffer(InitialParameters.getValue());
+    Input->NumOuterIter = NumOuterIter.getValue();
+  }
+  catch (TCLAP::ArgException &e)
+  {
+    std::cerr << " error: " << e.error() << " for arg " << e.argId() << std::endl;
+    std::cout << "** Unknown Arguments. Displaying help listing instead. **" << std::endl;
+    return -1;
+  }
+  return 0;
+}
+
+void ScaleOffsetCorrectionInputs::CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
 {
 	char temp[20];
 	int16_t i;
@@ -70,7 +143,7 @@ void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram
 			Sinogram->N_theta=atoi(temp);
 			printf("Sino.N_theta=%d\n",Sinogram->N_theta);
 			Sinogram->angles = (DATA_TYPE*)get_spc(Sinogram->N_theta,sizeof(DATA_TYPE));
-			Sinogram->ViewMask = (DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(uint8_t));
+			Sinogram->ViewMask = (uint8_t*)get_spc(Sinogram->N_theta, sizeof(uint8_t));
 
 		}
 		else if(strcmp("SinoDelta_r",temp) == 0)
@@ -213,7 +286,7 @@ void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram
 
 }
 
-void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
+void ScaleOffsetCorrectionInputs::CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
 {
   int16_t i,j,k;
 	uint16_t view_count=0,TotalNumMaskedViews;
@@ -356,7 +429,7 @@ void CI_MaskSinogram(Sino* OriginalSinogram,Sino* NewSinogram)
 }
 	 */
 
-void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs* ParsedInput)
+void ScaleOffsetCorrectionInputs::CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs* ParsedInput)
 {
   FILE* Fp;
   uint16_t i,j,k;
@@ -447,7 +520,7 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
 }
 
 //Finds the maximum of absolute value elements in an array
-DATA_TYPE AbsMaxArray(DATA_TYPE* Array ,uint16_t NumElts)
+DATA_TYPE ScaleOffsetCorrectionInputs::AbsMaxArray(DATA_TYPE* Array ,uint16_t NumElts)
 {
 	uint16_t i;
 	DATA_TYPE max;
@@ -459,6 +532,3 @@ DATA_TYPE AbsMaxArray(DATA_TYPE* Array ,uint16_t NumElts)
 
 }
 
-#ifdef __cplusplus
-}
-#endif

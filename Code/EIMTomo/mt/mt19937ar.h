@@ -44,12 +44,22 @@
 */
 #define MERSENNNE_TWISTER_N 624
 #define M 397
+#ifndef _mt19937ar_h_
+#define _mt19937ar_h_
+
+
+
 
 typedef struct
 {
     unsigned long mt[MERSENNNE_TWISTER_N]; /* the array for the state vector  */
     int mti; // =N+1; /* mti==N+1 means mt[N] is not initialized */
 } RNGVars;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /* Free the memory allocated for the random number state */
 void freeRandStruct(RNGVars* vars);
@@ -81,3 +91,9 @@ double genrand_real3(RNGVars* vars);
 
 /* generates a random number on [0,1) with 53-bit resolution*/
 double genrand_res53(RNGVars* vars);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _mt19937ar_h_  */

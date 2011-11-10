@@ -8,45 +8,51 @@
  */
 
 #include "ScaleOffsetCorrectionEngine.h"
-#include "EIMTomo/common/allocate.h"
 
-#include "EIMTomo/mt/mt19937ar.h"
 #include <stdlib.h>
 #include <stdio.h>
 
 #include <string.h>
 #include <math.h>
 
-//#define DEBUG
+#include "EIMTomo/common/EIMMath.h"
+#include "EIMTomo/common/allocate.h"
+#include "EIMTomo/common/EIMTime.h"
+#include "EIMTomo/mt/mt19937ar.h"
 
 
-static char CE_Cancel = 0;
-uint8_t BOUNDARYFLAG[3][3][3];//if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
-//Markov Random Field Prior parameters - Globals DATA_TYPE
-DATA_TYPE FILTER[3][3][3]={{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}},
-	{{0.0370,0.0523,0.0370},{0.0523,0.0,0.0523},{0.0370,0.0523,  0.0370}},
-	{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}}};
-DATA_TYPE THETA1,THETA2,NEIGHBORHOOD[3][3][3],V;
-DATA_TYPE MRF_P;
-DATA_TYPE SIGMA_X_P;
-#ifdef QGGMRF
-//QGGMRF extras
-DATA_TYPE MRF_Q,MRF_C;
-DATA_TYPE QGGMRF_Params[26][3];
-DATA_TYPE MRF_ALPHA;
-#endif
+//#define DEBUG ,
+#define PROFILE_RESOLUTION 1536
+//#define PI 4*atan(1)//3.14159265
+//Beam Parameters - This is set to some number <<< Sinogram->delta_r.
+//#define BEAM_WIDTH 0.050000
+#define BEAM_RESOLUTION 512
+#define AREA_WEIGHTED
+#define ROI //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
+#define STOPPING_THRESHOLD 0.0009
+//#define SURROGATE_FUNCTION
+//#define QGGMRF
+//#define DISTANCE_DRIVEN
+//#define CORRECTION
+//#define STORE_A_MATRIX
+//#define WRITE_INTERMEDIATE_RESULTS
+#define COST_CALCULATE
+//#define BEAM_CALCULATION
+#define DETECTOR_RESPONSE_BINS 64
+#define JOINT_ESTIMATION
+//#define NOISE_MODEL
+#define POSITIVITY_CONSTRAINT
+//#define CIRCULAR_BOUNDARY_CONDITION
+#define DEBUG_CONSTRAINT_OPT
+#define RANDOM_ORDER_UPDATES
 
-DATA_TYPE *cosine,*sine;//used to store cosine and sine of all angles through which sample is tilted
-DATA_TYPE *BeamProfile;//used to store the shape of the e-beam
-DATA_TYPE BEAM_WIDTH;
-DATA_TYPE OffsetR;
-DATA_TYPE OffsetT;
+#define START startm = EIMTOMO_getMilliSeconds();
+#define STOP stopm = EIMTOMO_getMilliSeconds();
+#define PRINTTIME printf( "%6.3f seconds used by the processor.\n", ((double)stopm-startm)/1000.0);
 
-DATA_TYPE **QuadraticParameters;//holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
-DATA_TYPE **Qk_cost,**bk_cost,*ck_cost;//these are the terms of the quadratic cost function
-DATA_TYPE *d1,*d2;//hold the intermediate values needed to compute optimal mu_k
-uint16_t NumOfViews;//this is kind of redundant but in order to avoid repeatedly send this info to the rooting function we save number of views
-DATA_TYPE LogGain;//again these information  are available but to prevent repeatedly sending it to the rooting functions we store it in a variable
+
+
+
 
 inline double Clip(double x, double a, double b)
 {
@@ -71,6 +77,224 @@ inline double Minimum(double a, double b)
 }
 
 
+class CE_ConstraintEquation
+{
+  public:
+    CE_ConstraintEquation(uint16_t NumOfViews,
+                          DATA_TYPE** QuadraticParameters,
+                          DATA_TYPE* d1, DATA_TYPE* d2,
+                          DATA_TYPE** Qk_cost,
+                          DATA_TYPE** bk_cost,
+                          DATA_TYPE* ck_cost,
+                          DATA_TYPE LogGain) :
+        NumOfViews(NumOfViews),
+        QuadraticParameters(QuadraticParameters),
+        d1(d1),
+        d2(d2),
+        Qk_cost(Qk_cost),
+        bk_cost(bk_cost),
+        ck_cost(ck_cost),
+        LogGain(LogGain)
+    {
+    }
+
+    virtual ~CE_ConstraintEquation()
+    {
+    }
+
+    /**
+     *
+     * @param a
+     * @param b
+     * @param c
+     * @return
+     */
+    DATA_TYPE* CE_RootsOfQuadraticFunction(DATA_TYPE a, DATA_TYPE b, DATA_TYPE c)
+    {
+      DATA_TYPE* temp = (DATA_TYPE*)get_spc(2, sizeof(double));
+      DATA_TYPE value = 0, discriminant;
+      temp[0] = -1;
+      temp[1] = -1;
+      discriminant = b * b - 4 * a * c;
+      if(discriminant < 0)
+      {
+        printf("Quadratic has no real roots\n");
+        return temp;
+      }
+      else
+      {
+        value = sqrt(discriminant);
+        temp[0] = (-b + value) / (2 * a);
+        temp[1] = (-b - value) / (2 * a);
+      }
+      return temp;
+
+    }
+
+    /**
+     *
+     * @param lamda
+     * @return
+     */
+    double execute(DATA_TYPE lambda)
+    {
+      double sum = 0, temp_cost = 0, min = (double)INT64_MAX;
+      double value = 0;
+      double* root;
+      double temp_mu;
+      uint8_t i, min_index = 0;
+      uint16_t i_theta;
+
+      for (i_theta = 0; i_theta < NumOfViews; i_theta++)
+      {
+        //temp=((QuadraticParameters[i_theta][1]*QuadraticParameters[i_theta][1])-4*QuadraticParameters[i_theta][0]*lambda);
+        root = CE_RootsOfQuadraticFunction(QuadraticParameters[i_theta][0], QuadraticParameters[i_theta][1], lambda);
+        //Evaluate which root results in a lower cost function
+        for (i = 0; i < 2; i++)
+        {
+          if(root[i] > 0) // If the value of I0[k] is positive
+          {
+            temp_mu = d1[i_theta] - root[i] * d2[i_theta]; //for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
+            temp_cost = (Qk_cost[i_theta][0] * root[i] * root[i] + 2 * Qk_cost[i_theta][1] * root[i] * temp_mu + temp_mu * temp_mu * Qk_cost[i_theta][2]
+                - 2 * (bk_cost[i_theta][0] * root[i] + temp_mu * bk_cost[i_theta][1]) + ck_cost[i_theta]); //evaluating the cost function
+            if(temp_cost < min)
+            {
+              min = temp_cost;
+              min_index = i;
+
+            }
+          }
+        }
+
+        if(root[min_index] > 0) sum += log(root[min_index]); //max{(-b+sqrt(b^2 - 4*a*c))/2*a,(-b+sqrt(b^2 - 4*a*c))/2*a}
+        else
+        {
+          printf("Log of a negative number\n");
+        }
+        free(root);
+
+      }
+      value = sum - LogGain;
+      return value;
+    }
+
+  protected:
+    CE_ConstraintEquation() {}
+
+  private:
+    uint16_t NumOfViews;
+    DATA_TYPE** QuadraticParameters;
+    DATA_TYPE* d1;
+    DATA_TYPE* d2; //hold the intermediate values needed to compute optimal mu_k
+    DATA_TYPE** Qk_cost;
+    DATA_TYPE** bk_cost;
+    DATA_TYPE* ck_cost; //these are the terms of the quadratic cost function
+    DATA_TYPE LogGain;
+    CE_ConstraintEquation(const CE_ConstraintEquation&); // Copy Constructor Not Implemented
+    void operator=(const CE_ConstraintEquation&); // Operator '=' Not Implemented
+};
+
+/**
+ *
+ */
+class DerivOfCostFunc
+{
+  public:
+    DerivOfCostFunc(uint8_t BOUNDARYFLAG[3][3][3],
+                    DATA_TYPE NEIGHBORHOOD[3][3][3],
+                    DATA_TYPE FILTER[3][3][3],
+                    DATA_TYPE V,
+                    DATA_TYPE THETA1,
+                    DATA_TYPE THETA2,
+                    DATA_TYPE SIGMA_X_P,
+                    DATA_TYPE MRF_P) :
+
+                      V(V),
+                      THETA1(THETA1),
+                      THETA2(THETA2),
+                      SIGMA_X_P(SIGMA_X_P),
+                      MRF_P(MRF_P)
+    {
+    }
+
+    virtual ~DerivOfCostFunc()
+    {
+    }
+
+    double execute(DATA_TYPE u) const
+    {
+      double temp = 0;
+      double value = 0;
+      uint8_t i, j, k;
+      for (i = 0; i < 3; i++)
+        for (j = 0; j < 3; j++)
+          for (k = 0; k < 3; k++)
+          {
+            if(BOUNDARYFLAG[i][j][k] == 1)
+            {
+              if(u - NEIGHBORHOOD[i][j][k] >= 0.0) temp +=
+                  ((double)FILTER[i][j][k] * (1.0) * pow(fabs(u - (double)NEIGHBORHOOD[i][j][k]), (double)(MRF_P - 1)));
+              else temp += ((double)FILTER[i][j][k] * (-1.0) * pow(fabs(u - (double)NEIGHBORHOOD[i][j][k]), (double)(MRF_P - 1)));
+            }
+          }
+
+      //printf("V While updating %lf\n",V);
+      //scanf("Enter value %d\n",&k);
+      value = THETA1 + THETA2 * (u - V) + (temp / SIGMA_X_P);
+
+      return value;
+    }
+
+  protected:
+    DerivOfCostFunc() {}
+
+  private:
+    uint8_t BOUNDARYFLAG[3][3][3];
+    DATA_TYPE NEIGHBORHOOD[3][3][3];
+    DATA_TYPE FILTER[3][3][3];
+    DATA_TYPE V;
+    DATA_TYPE THETA1;
+    DATA_TYPE THETA2;
+    DATA_TYPE SIGMA_X_P;
+    DATA_TYPE MRF_P;
+
+    DerivOfCostFunc(const DerivOfCostFunc&); // Copy Constructor Not Implemented
+    void operator=(const DerivOfCostFunc&); // Operator '=' Not Implemented
+};
+
+
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+SOCEngine::SOCEngine() :
+    CE_Cancel(false)
+{
+
+        FILTER[0][0][0] = 0.0302; FILTER[0][0][1] = 0.0370; FILTER[0][0][2] = 0.0302;
+        FILTER[0][1][0] = 0.0370; FILTER[0][1][1] = 0.0523; FILTER[0][1][2] = 0.0370;
+        FILTER[0][2][0] = 0.0302; FILTER[0][2][1] = 0.0370; FILTER[0][2][2] = 0.0302;
+
+        FILTER[1][0][0] = 0.0370; FILTER[1][0][1] = 0.0523; FILTER[1][0][2] = 0.0370;
+        FILTER[1][1][0] = 0.0523; FILTER[1][1][1] = 0.0000; FILTER[1][1][2] = 0.0523;
+        FILTER[1][2][0] = 0.0370; FILTER[1][2][1] = 0.0523; FILTER[1][2][2] = 0.0370;
+
+        FILTER[2][0][0] = 0.0302; FILTER[2][0][1] = 0.0370; FILTER[2][0][2] = 0.0302;
+        FILTER[2][1][0] = 0.0370; FILTER[2][1][1] = 0.0523; FILTER[2][1][2] = 0.0370;
+        FILTER[2][2][0] = 0.0302; FILTER[2][2][1] = 0.0370; FILTER[2][2][2] = 0.0302;
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+SOCEngine::~SOCEngine()
+{
+
+}
+
+
 // void CE_cancel()
 // {
 // CE_Cancel = 1;
@@ -79,7 +303,7 @@ inline double Minimum(double a, double b)
 //
 // -----------------------------------------------------------------------------
 
-int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdInputs)
+int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdInputs)
 {
 
 	uint8_t err = 0;
@@ -101,9 +325,10 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	DATA_TYPE center_r,center_t,delta_r,delta_t;
 	DATA_TYPE w3,w4;
 	DATA_TYPE checksum = 0,temp;
-	DATA_TYPE *cost;
-	DATA_TYPE** VoxelProfile,***DetectorResponse;
-	DATA_TYPE ***H_t;
+	DATA_TYPE* cost;
+	DATA_TYPE** VoxelProfile;
+	DATA_TYPE*** DetectorResponse;
+	DATA_TYPE*** H_t;
 	DATA_TYPE ProfileCenterT;
 
 #ifdef ROI
@@ -139,7 +364,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	DATA_TYPE accuracy =1e-7;//This is the rooting accuracy for x
 	DATA_TYPE LambdaRootingAccuracy=1e-10;//accuracy for rooting Lambda
 	DATA_TYPE perturbation=1e-30;//perturbs the rooting range
-	int16_t errorcode=-1;
+	int32_t errorcode=-1;
 	uint16_t rooting_attempt_counter;
 	uint16_t MaxNumRootingAttempts = 1000;//for lambda this corresponds to a distance of 2^1000
 	//Pointer to  1-D minimization Function
@@ -217,10 +442,10 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 #endif //QGGMRF
 
 	//globals assosiated with finding the optimal gain and offset parameters
-	QuadraticParameters = get_img(3, Sinogram->N_theta, sizeof(DATA_TYPE));//Hold the coefficients of a quadratic equation
-	Qk_cost=get_img(3, Sinogram->N_theta, sizeof(DATA_TYPE));
-	bk_cost=get_img(2, Sinogram->N_theta, sizeof(DATA_TYPE));
-	ck_cost=get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
+	QuadraticParameters = (DATA_TYPE**)(get_img(3, Sinogram->N_theta, sizeof(DATA_TYPE)));//Hold the coefficients of a quadratic equation
+	Qk_cost=(DATA_TYPE**)get_img(3, Sinogram->N_theta, sizeof(DATA_TYPE));
+	bk_cost=(DATA_TYPE**)get_img(2, Sinogram->N_theta, sizeof(DATA_TYPE));
+	ck_cost=(DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
 	NumOfViews = Sinogram->N_theta;
 	LogGain = Sinogram->N_theta*log(Sinogram->TargetGain);
 	d1=(DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
@@ -231,14 +456,14 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 
 	//calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram Structure are converted to radians
-	VoxelProfile = CE_CalculateVoxelProfile(Sinogram,Geometry); //Verified with ML
+	VoxelProfile = (DATA_TYPE**)CE_CalculateVoxelProfile(Sinogram,Geometry); //Verified with ML
 	//Pre compute sine and cos theta to speed up computations
 	CE_CalculateSinCos(Sinogram);
 	//Initialize the e-beam
 	CE_InitializeBeamProfile(Sinogram); //verified with ML
 
 	//calculate sine and cosine of all angles and store in the global arrays sine and cosine
-	DetectorResponse = CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
+	DetectorResponse = (DATA_TYPE***)CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
 	H_t = (DATA_TYPE***)get_3D(1, Sinogram->N_theta, DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//detector response along t
 
 #ifdef RANDOM_ORDER_UPDATES
@@ -291,7 +516,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	if(fabs(sum - Sinogram->TargetGain) > 1e-5)
 	{
 		printf("The input paramters dont meet the constraint\n");
-		return;
+		return 0;
 	}
 
 
@@ -405,8 +630,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
     for(j=0; j < Geometry->N_z; j++)
     for(k=0; k < Geometry->N_x; k++)
     {
-   TempCol[j][k] = CE_CalculateAMatrixColumnPartial(j,k,0,Sinogram,Geometry,DetectorResponse);
-		temp+=TempCol[j][k]->count;
+      TempCol[j][k] = (AMatrixCol*)CE_CalculateAMatrixColumnPartial(j, k, 0, Sinogram, Geometry, DetectorResponse);
+      temp += TempCol[j][k]->count;
     }
 #endif
 
@@ -469,8 +694,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	 Y_Est[i][j][k]=0.0;
 
 
-	RandomNumber=init_genrand(1);
-	srand(time(NULL));
+	RandomNumber=init_genrand(1ul);
+//	srand(time(NULL));
 	ArraySize= Geometry->N_z*Geometry->N_x;
 	//ArraySizeK = Geometry->N_x;
 
@@ -633,10 +858,6 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 
 	//Loop through every voxel updating it by solving a cost function
-	srand(time(NULL));
-
-
-
 
 	for(OuterIter = 0; OuterIter < CmdInputs->NumOuterIter; OuterIter++)
 	{
@@ -800,7 +1021,10 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 						//printf("V before updating %lf",V);
 #ifndef SURROGATE_FUNCTION
 					//TODO : What if theta1 = 0 ? Then this will give error
-					UpdatedVoxelValue = (DATA_TYPE)solve(CE_DerivOfCostFunc,(double)low,(double)high,(double)accuracy,&errorcode);
+					DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
+
+
+					UpdatedVoxelValue = (DATA_TYPE)solve<DerivOfCostFunc>(&docf,(double)low,(double)high,(double)accuracy,&errorcode);
 
 #else
 
@@ -1112,13 +1336,15 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		}*/
 		rooting_attempt_counter=0;
 		errorcode=-1;
+		CE_ConstraintEquation ce(NumOfViews, QuadraticParameters, d1, d2, Qk_cost, bk_cost, ck_cost, LogGain);
 		while(errorcode != 0 && low <= high && rooting_attempt_counter < MaxNumRootingAttempts)//0 implies the signof the function at low and high is the same
 		{
-		    LagrangeMultiplier=solve(CE_ConstraintEquation, low, high, LambdaRootingAccuracy, &errorcode);
-			low=low+dist;
-			dist*=2;
-			rooting_attempt_counter++;
-		}
+
+      LagrangeMultiplier=solve<CE_ConstraintEquation>(&ce, low, high, LambdaRootingAccuracy, &errorcode);
+      low=low+dist;
+      dist*=2;
+      rooting_attempt_counter++;
+    }
 
 
 		//Something went wrong and the algorithm was unable to bracket the root within the given interval
@@ -1147,12 +1373,13 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			break;
 		}
 
+		CE_ConstraintEquation conEqn(NumOfViews, QuadraticParameters, d1, d2, Qk_cost, bk_cost, ck_cost, LogGain);
 
 		//Based on the optimal lambda compute the optimal mu and I0 values
 		for (i_theta =0; i_theta < Sinogram->N_theta; i_theta++)
 		{
 
-			root = CE_RootsOfQuadraticFunction(QuadraticParameters[i_theta][0],QuadraticParameters[i_theta][1],LagrangeMultiplier);//returns the 2 roots of the quadratic parameterized by a,b,c
+			root = conEqn.CE_RootsOfQuadraticFunction(QuadraticParameters[i_theta][0],QuadraticParameters[i_theta][1],LagrangeMultiplier);//returns the 2 roots of the quadratic parameterized by a,b,c
 			a=root[0];
 			b=root[0];
 			if(root[0] >= 0 && root[1] >= 0)
@@ -1319,15 +1546,15 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			}
 	}
 
-	free_img((void*)VoxelProfile);
+	free_img((void**)VoxelProfile);
 	//free(AMatrix);
 #ifdef STORE_A_MATRIX
 	multifree(AMatrix,2);
 	//#else
 	//	free((void*)TempCol);
 #endif
-	free_3D((void*)ErrorSino);
-	free_3D((void*)Weight);
+	free_3D((void***)ErrorSino);
+	free_3D((void***)Weight);
 #ifdef COST_CALCULATE
 	fclose(Fp2);// writing cost function
 #endif
@@ -1347,7 +1574,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
  //Finds the min and max of the neighborhood . This is required prior to calling
  solve()
  *****************************************************************************/
-void CE_MinMax(DATA_TYPE *low,DATA_TYPE *high)
+void SOCEngine::CE_MinMax(DATA_TYPE *low,DATA_TYPE *high)
 {
 	uint8_t i,j,k;
 	*low=NEIGHBORHOOD[0][0][0];
@@ -1381,7 +1608,7 @@ void CE_MinMax(DATA_TYPE *low,DATA_TYPE *high)
 
 
 
-void* CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
+void* SOCEngine::CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 {
 	DATA_TYPE angle,MaxValLineIntegral;
 	DATA_TYPE temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
@@ -1442,7 +1669,7 @@ void* CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 /*******************************************************************
  Forwards Projects the Object and stores it in a 3-D matrix
  ********************************************************************/
-DATA_TYPE*** ForwardProject(Sino *Sinogram,Geom* Geometry,DATA_TYPE*** DetectorResponse,DATA_TYPE*** H_t)
+DATA_TYPE*** SOCEngine::ForwardProject(Sino *Sinogram,Geom* Geometry,DATA_TYPE*** DetectorResponse,DATA_TYPE*** H_t)
 {
 	DATA_TYPE x,z,y;
 	DATA_TYPE r,rmin,rmax,t,tmin,tmax;
@@ -1546,7 +1773,7 @@ DATA_TYPE*** ForwardProject(Sino *Sinogram,Geom* Geometry,DATA_TYPE*** DetectorR
 	return Y_Est;
 }
 
-void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,DATA_TYPE** VoxelProfile)
+void* SOCEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,DATA_TYPE** VoxelProfile)
 {
 	int32_t i,j,k,sliceidx;
 	DATA_TYPE x,z,y;
@@ -1903,7 +2130,7 @@ void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino*
 
 /* Initializes the global variables cosine and sine to speed up computation
  */
-void CE_CalculateSinCos(Sino* Sinogram)
+void SOCEngine::CE_CalculateSinCos(Sino* Sinogram)
 {
 	uint16_t i;
 	cosine=(DATA_TYPE*)get_spc(Sinogram->N_theta,sizeof(DATA_TYPE));
@@ -1916,7 +2143,7 @@ void CE_CalculateSinCos(Sino* Sinogram)
 	}
 }
 
-void CE_InitializeBeamProfile(Sino* Sinogram)
+void SOCEngine::CE_InitializeBeamProfile(Sino* Sinogram)
 {
 	uint16_t i;
 	DATA_TYPE sum=0,W;
@@ -1942,70 +2169,10 @@ void CE_InitializeBeamProfile(Sino* Sinogram)
 
 
 }
-DATA_TYPE* CE_RootsOfQuadraticFunction(DATA_TYPE a,DATA_TYPE b,DATA_TYPE c)
-{
-	DATA_TYPE* temp = get_spc(2, sizeof(double));
-	DATA_TYPE value=0,discriminant;
-	temp[0]=-1;
-	temp[1]=-1;
-	discriminant=b*b - 4*a*c;
-	if(discriminant < 0)
-	{
-	    printf("Quadratic has no real roots\n");
-		return temp;
-	}
-	else
-	{
-		value=sqrt(discriminant);
-		temp[0]= (-b + value)/(2*a);
-		temp[1] = (-b - value)/(2*a);
-	}
-	return temp;
 
-}
-double CE_ConstraintEquation(DATA_TYPE lambda)
-{
-	double sum=0,temp_cost=0,min=(double)INT64_MAX;
-	double value=0;
-	double* root;
-	double temp_mu;
-	uint8_t i,min_index=0;
-	uint16_t i_theta;
 
-	for(i_theta =0; i_theta < NumOfViews;i_theta++)
-	{
-		//temp=((QuadraticParameters[i_theta][1]*QuadraticParameters[i_theta][1])-4*QuadraticParameters[i_theta][0]*lambda);
-		root=CE_RootsOfQuadraticFunction(QuadraticParameters[i_theta][0], QuadraticParameters[i_theta][1], lambda);
-		//Evaluate which root results in a lower cost function
-		for( i=0; i < 2;i++)
-		{
-			if(root[i] > 0) // If the value of I0[k] is positive
-			{
-			temp_mu = d1[i_theta] - root[i]*d2[i_theta];//for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-			temp_cost = (Qk_cost[i_theta][0]*root[i]*root[i] + 2*Qk_cost[i_theta][1]*root[i]*temp_mu + temp_mu*temp_mu*Qk_cost[i_theta][2] - 2*(bk_cost[i_theta][0]*root[i] + temp_mu*bk_cost[i_theta][1]) + ck_cost[i_theta]);//evaluating the cost function
-				if(temp_cost < min)
-				{
-					min = temp_cost;
-					min_index = i;
-
-				}
-			}
-		}
-
-			if(root[min_index] > 0)
-		    sum+=log(root[min_index]);//max{(-b+sqrt(b^2 - 4*a*c))/2*a,(-b+sqrt(b^2 - 4*a*c))/2*a}
-			else
-			{
-				printf("Log of a negative number\n");
-			}
-		free(root);
-
-	}
-	value = sum - LogGain;
-	return value;
-}
-
-double CE_DerivOfCostFunc(double u)
+#if 0
+double SOCEngine::CE_DerivOfCostFunc(double u)
 {
 	double temp=0;
 	double value=0;
@@ -2029,58 +2196,14 @@ double CE_DerivOfCostFunc(double u)
 
 	return value;
 }
+#endif
 
 
-double solve(
-			  double (*f)(), /* pointer to function to be solved */
-			  double a,      /* minimum value of solution */
-			  double b,      /* maximum value of solution */
-			  double err,    /* accuarcy of solution */
-			  int *code      /* error code */
-			  )
-/* Solves equation (*f)(x) = 0 on x in [a,b]. Uses half interval method.*/
-/* Requires that (*f)(a) and (*f)(b) have opposite signs.		*/
-/* Returns code=0 if signs are opposite.				*/
-/* Returns code=1 if signs are both positive. 				*/
-/* Returns code=-1 if signs are both negative. 				*/
-{
-	int     signa,signb,signc;
-	double  fa,fb,fc,c,signaling_nan();
-	double  dist;
 
-	fa = (*f)(a);
-	signa = fa>0;
-	fb = (*f)(b);
-	signb = fb>0;
 
-	/* check starting conditions */
-	if(signa == signb) {
-		if(signa==1) *code = 1;
-		else *code = -1;
-		return(0.0);
-	}
-	else *code = 0;
 
-	/* half interval search */
-	if((dist=b-a)<0 ) dist = -dist;
-	while(dist>err) {
-		c = (b+a)/2;
-		fc = (*f)(c);
-		signc = fc>0;
-		if(signa == signc) { a = c; fa = fc; }
-		else { b = c; fb = fc; }
-		if( (dist=b-a)<0 ) dist = -dist;
-	}
 
-	/* linear interpolation */
-	if( (fb-fa)==0 ) return(a);
-	else {
-		c = (a*fb - b*fa)/(fb-fa);
-		return(c);
-	}
-}
-
-DATA_TYPE CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,Sino* Sinogram,Geom* Geometry)
+DATA_TYPE SOCEngine::CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,Sino* Sinogram,Geom* Geometry)
 {
 	DATA_TYPE cost=0,temp=0,delta;
 	int16_t i,j,k,p,q,r;
@@ -2276,7 +2399,7 @@ DATA_TYPE CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,Sino* Sinogr
 	return cost;
 }
 
-void* CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometry,DATA_TYPE** VoxelProfile)
+void* SOCEngine::CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometry,DATA_TYPE** VoxelProfile)
 {
 	FILE* Fp = fopen("DetectorResponse.bin","w");
 	DATA_TYPE r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,t,tmin;
@@ -2500,7 +2623,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col,Sino* Sinogram,
 }
 */
 
-void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,DATA_TYPE*** DetectorResponse)
+void* SOCEngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,DATA_TYPE*** DetectorResponse)
 {
 	int32_t i,j,k,sliceidx;
 	DATA_TYPE x,z,y;
@@ -2671,7 +2794,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 
 #endif
 
-double CE_SurrogateFunctionBasedMin()
+double SOCEngine::CE_SurrogateFunctionBasedMin()
 {
 	double numerator_sum=0;
 	double denominator_sum=0;
@@ -2713,7 +2836,7 @@ double CE_SurrogateFunctionBasedMin()
 }
 #ifdef QGGMRF
 //Function to compute parameters of thesurrogate function
-void CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
+void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
 {
 	DATA_TYPE Delta0,DeltaMin,DeltaMax,T,a,b,c;
 	uint8_t i,j,k,count=0;
@@ -2743,7 +2866,7 @@ void CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
 
 }
 
-DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
+DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
 {
 	DATA_TYPE u,temp1,temp2;
 	uint8_t i,j,k,count=0;
@@ -2766,12 +2889,12 @@ DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
 
 
 
-DATA_TYPE CE_QGGMRF_Value(DATA_TYPE delta)
+DATA_TYPE SOCEngine::CE_QGGMRF_Value(DATA_TYPE delta)
 {
 	return (pow(fabs(delta),MRF_P))/(1 + pow(fabs(delta/MRF_C),MRF_Q));
 }
 
-DATA_TYPE CE_QGGMRF_Derivative(DATA_TYPE delta)
+DATA_TYPE SOCEngine::CE_QGGMRF_Derivative(DATA_TYPE delta)
 {
 	DATA_TYPE temp=0,temp1,temp2;
 	temp1=pow(fabs(delta/MRF_C),MRF_P-MRF_Q);
@@ -2782,7 +2905,7 @@ DATA_TYPE CE_QGGMRF_Derivative(DATA_TYPE delta)
 		return ((temp2/(1+temp1))*(MRF_P - ((MRF_P-MRF_Q)*temp1)/(1+temp1)));
 	}
 }
-DATA_TYPE CE_QGGMRF_SecondDerivative(DATA_TYPE delta)
+DATA_TYPE SOCEngine::CE_QGGMRF_SecondDerivative(DATA_TYPE delta)
 {
 	DATA_TYPE temp=2;
 	return temp;

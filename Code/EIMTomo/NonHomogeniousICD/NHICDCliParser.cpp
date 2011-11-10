@@ -56,21 +56,28 @@ int NHICDCliParser::parseCLIArguments(int argc,char *argv[], CommandLineInputs* 
   }
 
   TCLAP::CmdLine cmd("", ' ', EIMTomo::Version::Complete);
-
-  TCLAP::ValueArg<std::string> in_inputFile("i", "inputfile", "Input Data File", true, "", "");
-  cmd.add(in_inputFile);
-  TCLAP::ValueArg<std::string> in_outputFile("o", "outputfile", "The Output File", true, "", "");
-  cmd.add(in_outputFile);
   TCLAP::ValueArg<std::string> in_paramFile("p", "paramfile", "The Parameter File", true, "", "");
   cmd.add(in_paramFile);
   TCLAP::ValueArg<std::string> in_sinoFile("s", "sinofile", "The Sinogram File", true, "", "");
   cmd.add(in_sinoFile);
+  TCLAP::ValueArg<std::string> in_inputFile("i", "inputfile", "Input Data File", true, "", "");
+  cmd.add(in_inputFile);
+  TCLAP::ValueArg<std::string> in_outputFile("o", "outputfile", "The Output File", true, "", "");
+  cmd.add(in_outputFile);
+
+
   TCLAP::ValueArg<int> in_numIter("n", "numIter", "Number of Iterations", true, 0, "0");
   cmd.add(in_numIter);
   TCLAP::ValueArg<double> in_sigmaX("l", "sigmax", "Sigma X Value", true, 1.0, "1.0");
   cmd.add(in_sigmaX);
   TCLAP::ValueArg<double> in_markov("m", "", "Markov Random Field Parameter", true, 0.0, "0.0");
   cmd.add(in_markov);
+
+  TCLAP::ValueArg<std::string> InitialParameters("g", "", "InitialParameters", true, "", "");
+  cmd.add(InitialParameters);
+
+  TCLAP::ValueArg<int> NumOuterIter("O", "", "NumOuterIter", true, 0, "0");
+  cmd.add(NumOuterIter);
 
   if (argc < 2)
   {
@@ -94,6 +101,7 @@ int NHICDCliParser::parseCLIArguments(int argc,char *argv[], CommandLineInputs* 
     Input->NumIter = in_numIter.getValue();
     Input->SigmaX = in_sigmaX.getValue();
     Input->p = in_markov.getValue();
+
   }
   catch (TCLAP::ArgException &e)
   {

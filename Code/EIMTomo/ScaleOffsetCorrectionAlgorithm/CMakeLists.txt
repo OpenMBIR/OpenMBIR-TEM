@@ -17,9 +17,9 @@ set(ScaleOffsetCorrectionAlgorithm_HDRS
   ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionInputs.h
 )
 set(ScaleOffsetCorrectionAlgorithm_SRCS
-  ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionEngine.c
-  ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionInputs.c
-  ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionMain.c
+  ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionEngine.cpp
+  ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionInputs.cpp
+  ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionMain.cpp
 )
 
 cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/ScaleOffsetCorrectionAlgorithm" "${ScaleOffsetCorrectionAlgorithm_HDRS}" "${ScaleOffsetCorrectionAlgorithm_SRCS}" "${CMP_INSTALL_FILES}")
@@ -46,6 +46,14 @@ set(ScaleOffsetCorrectionAlgorithm_PROJECT_FILES
   ${Mersenne_Twister_HDRS}
   ${GENERATED_HDRS}
 )
+
+if ( ${EIMTomo_USE_MERSENNE_TWISTER} )
+    set(ScaleOffsetCorrectionAlgorithm_PROJECT_FILES
+      ${ScaleOffsetCorrectionAlgorithm_PROJECT_FILES}
+      ${Mersenne_Twister_SRCS}
+      ${Mersenne_Twister_HDRS}
+    )
+endif()
 
 #add some additional include directories:
 include_directories(${PROJECT_CODE_DIR})
