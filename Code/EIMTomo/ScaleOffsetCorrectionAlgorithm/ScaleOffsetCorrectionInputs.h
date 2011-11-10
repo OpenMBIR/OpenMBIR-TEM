@@ -20,7 +20,7 @@ uint64_t startm, stopm;
 
 typedef double DATA_TYPE;
 
-#define PI 4*atan(1)
+
 
 #ifdef __cplusplus
 extern "C" {

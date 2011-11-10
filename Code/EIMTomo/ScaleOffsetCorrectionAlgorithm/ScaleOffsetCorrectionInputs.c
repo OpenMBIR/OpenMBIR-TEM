@@ -71,7 +71,7 @@ void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram
 			printf("Sino.N_theta=%d\n",Sinogram->N_theta);
 			Sinogram->angles = (DATA_TYPE*)get_spc(Sinogram->N_theta,sizeof(DATA_TYPE));
 			Sinogram->ViewMask = (DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(uint8_t));
-			
+
 		}
 		else if(strcmp("SinoDelta_r",temp) == 0)
 		{
@@ -101,13 +101,13 @@ void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram
 				fscanf(Fp,"%s",temp);
 				Sinogram->ViewMask[i]=atoi(temp); //A mask to select or reject the view i
 				if(Sinogram->ViewMask[i] == 1)
-					view_count++;								
-				
+					view_count++;
+
 			//	printf("Mask %d\n",Sinogram->ViewMask[i]);
 			}
 			printf("Number Of Views %d\n",view_count);
 			MaskedViewAngles = (DATA_TYPE*)get_spc(view_count, sizeof(DATA_TYPE));
-			
+
 			view_count=0;
 			for(i=0;i<Sinogram->N_theta;i++)
 			{
@@ -116,18 +116,18 @@ void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram
 					MaskedViewAngles[view_count++]=Sinogram->angles[i];
 				}
 			}
-					
+
 			free(Sinogram->angles);//clear the initial set of view angles to replace it with the masked set
-			
+
 		   Sinogram->angles = (DATA_TYPE*)get_spc(view_count,sizeof(DATA_TYPE));
-			
-			for (i=0; i < view_count;i++) 
+
+			for (i=0; i < view_count;i++)
 			{
 				Sinogram->angles[i] = MaskedViewAngles[i];
 			}
-			
-			
-			
+
+
+
 		}
 	/*	else if (strcmp("Iter",temp) == 0)
 		{
@@ -170,7 +170,7 @@ void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram
 		 printf("Geom.EndSlice=%d\n",Geometry->EndSlice);
 		 }
 		 */
-		
+
 		 else if (strcmp("TargetGain",temp) == 0)
 		 {
 		 fscanf(Fp,"%s",temp);
@@ -225,7 +225,7 @@ void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
 		if(Sinogram->ViewMask[i] == 1)
 			view_count++;
 	TotalNumMaskedViews=view_count;
-			
+
   //Allocate a 3-D matrix to store the singoram in the form of a N_y X N_theta X N_x  matrix
 //  Sinogram->counts=(DATA_TYPE***)get_3D(Sinogram->N_t,Sinogram->N_theta,Sinogram->N_r, sizeof(DATA_TYPE));
 	 Sinogram->counts=(DATA_TYPE***)get_3D(TotalNumMaskedViews,Sinogram->N_rEnd-Sinogram->N_rStart+1,Sinogram->N_tEnd-Sinogram->N_rStart+1, sizeof(DATA_TYPE));
@@ -252,17 +252,17 @@ void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
 				if(Sinogram->ViewMask[k] == 1 && j >= Sinogram->N_rStart && j <= Sinogram->N_rEnd && i >= Sinogram->N_tStart && i <= Sinogram->N_tEnd)
 				Sinogram->counts[view_count++][j-Sinogram->N_rStart][i-Sinogram->N_tStart] = (DATA_TYPE)(*buffer);
 			}
-			
-				
+
+
 		}
 	fclose(Fp);
-	
+
 	//The normalization and offset parameters for the views
 	Sinogram->InitialGain=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
 	Sinogram->InitialOffset=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
-	
+
 	Fp=fopen(ParsedInput->InitialParameters,"r");//This file contains the Initial unscatterd counts and background scatter for each view
-	
+
 	view_count=0;
 	for( i = 0; i < Sinogram->N_theta; i++)
 	{
@@ -277,10 +277,10 @@ void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
 		if(Sinogram->ViewMask[i] == 1)
 			Sinogram->InitialOffset[view_count++]=(DATA_TYPE)(*buffer);
 	}
-	
-	
-	
-	
+
+
+
+
 	Sinogram->N_theta = TotalNumMaskedViews;
 	Sinogram->N_r = (Sinogram->N_rEnd-Sinogram->N_rStart+1);
 	Sinogram->N_t = (Sinogram->N_tEnd-Sinogram->N_tStart+1);
@@ -289,9 +289,9 @@ void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
 	Sinogram->T0 =  -(Sinogram->N_t*Sinogram->delta_t)/2;
 	Sinogram->TMax = (Sinogram->N_t*Sinogram->delta_t)/2;
 
-	
+
 	printf("Size of the Masked Sinogram N_r =%d N_t = %d N_theta=%d\n",Sinogram->N_r,Sinogram->N_t,Sinogram->N_theta);
-	
+
       //check sum calculation
   for(i=0;i<Sinogram->N_theta;i++)
   {
@@ -302,28 +302,28 @@ void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
     printf("Sinogram Checksum %f\n",sum);
   }
   //end ofcheck sum
-	
 
-   
+
+
 
   fclose(Fp);
 
 }
-	
+
 	/*
-	
-//This function takes the original sinogram and creates a masked version of it based on the ROI parameters . In the final version of the code all this should be incorporated into 
-//FILE read instead of pruning it in the program after reading the whole input file	
+
+//This function takes the original sinogram and creates a masked version of it based on the ROI parameters . In the final version of the code all this should be incorporated into
+//FILE read instead of pruning it in the program after reading the whole input file
 void CI_MaskSinogram(Sino* OriginalSinogram,Sino* NewSinogram)
 {
 	uint16_t i_theta,i_r,i_t,view_count=0;
 	NewSinogram->N_r = (OriginalSinogram->N_rEnd-OriginalSinogram->N_rStart+1);
 	NewSinogram->N_t = (OriginalSinogram->N_tEnd-OriginalSinogram->N_tStart+1);
-	
+
 	for(i_theta = 0;i_theta < OriginalSinogram->N_theta;i_theta++)
 		view_count+=OriginalSinogram->ViewMask[i_theta];
-	
-	NewSinogram->N_theta = view_count;	
+
+	NewSinogram->N_theta = view_count;
 	NewSinogram->angles=(DATA_TYPE*)get_spc(NewSinogram->N_theta, sizeof(DATA_TYPE));
 	NewSinogram->counts=(DATA_TYPE***)get_3D(NewSinogram->N_theta,NewSinogram->N_r,NewSinogram->N_t, sizeof(DATA_TYPE));
 
@@ -333,26 +333,26 @@ void CI_MaskSinogram(Sino* OriginalSinogram,Sino* NewSinogram)
 		if(OriginalSinogram->ViewMask[i_theta] == 1)//View is to be taken into account
 		{
 			NewSinogram->angles[view_count]=OriginalSinogram->angles[i_theta];
-			for (i_r = OriginalSinogram->N_rStart; i_r <= OriginalSinogram->N_rEnd; i_r++) 
+			for (i_r = OriginalSinogram->N_rStart; i_r <= OriginalSinogram->N_rEnd; i_r++)
 				for(i_t = OriginalSinogram->N_tStart; i_t <= OriginalSinogram->N_tEnd;i_t++)
 					NewSinogram[view_count][i_r-OriginalSinogram->N_rStart][i_t - OriginalSinogram->N_tStart] = OriginalSinogram->counts[i_theta][i_r][i_t];
 			view_count++;
 		}
 	}
 	NewSinogram->delta_r=OriginalSinogram->delta_r;
-	NewSinogram->delta_t =OriginalSinogram->delta_t; 
-	
+	NewSinogram->delta_t =OriginalSinogram->delta_t;
+
 	NewSinogram->R0 = -(NewSinogram->N_r*NewSinogram->delta_r)/2;
 	NewSinogram->RMax = (NewSinogram->N_r*NewSinogram->delta_r)/2;
 	NewSinogram->T0 =  -(NewSinogram->N_t*NewSinogram->delta_t)/2;
 	NewSinogram->TMax = (NewSinogram->N_t*NewSinogram->delta_t)/2;
 	NewSinogram->TargetGain=OriginalSinogram->TargetGain;
 	NewSinogram->InitialOffset=	OriginalSinogram->InitialOffset;
-	
-	free(OriginalSinogram->counts);//this is a huge array; eliminate it 
+
+	free(OriginalSinogram->counts);//this is a huge array; eliminate it
 	free(OriginalSinogram->angles);
-	
-	
+
+
 }
 	 */
 
@@ -362,26 +362,26 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
   uint16_t i,j,k;
   double *buffer = (double*)get_spc(1,sizeof(double));
   DATA_TYPE sum=0,max;
-	
-	//Find the maximum absolute tilt angle 
+
+	//Find the maximum absolute tilt angle
 	max= AbsMaxArray(Sinogram->angles, Sinogram->N_theta);
-	
+
 #ifndef FORWARD_PROJECT_MODE
-    Geometry->LengthZ*=Z_STRETCH; 
-	
+    Geometry->LengthZ*=Z_STRETCH;
+
 #ifdef EXTEND_OBJECT
-	Geometry->LengthX = ((Sinogram->N_r * Sinogram->delta_r)/cos(max*PI/180)) + Geometry->LengthZ*tan(max*PI/180) ;
+	Geometry->LengthX = ((Sinogram->N_r * Sinogram->delta_r)/cos(max*M_PI/180)) + Geometry->LengthZ*tan(max*M_PI/180) ;
 #else
 	Geometry->LengthX = ((Sinogram->N_r * Sinogram->delta_r));
 #endif //Extend object endif
-	
+
 #else
 	Geometry->LengthX = ((Sinogram->N_r * Sinogram->delta_r));
 #endif//Forward projector mode end if
-	
+
 //  Geometry->LengthY = (Geometry->EndSlice- Geometry->StartSlice)*Geometry->delta_xy;
-	Geometry->LengthY = (Sinogram->N_tEnd-Sinogram->N_tStart + 1)*Sinogram->delta_t; 
-  
+	Geometry->LengthY = (Sinogram->N_tEnd-Sinogram->N_tStart + 1)*Sinogram->delta_t;
+
   Geometry->N_x = ceil(Geometry->LengthX/Geometry->delta_xz);//Number of voxels in x direction
   Geometry->N_z = ceil(Geometry->LengthZ/Geometry->delta_xz);//Number of voxels in z direction
   Geometry->N_y = floor(Geometry->LengthY/Geometry->delta_xy);//Number of measurements in y direction
@@ -389,7 +389,7 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
 	printf("Geometry->Nz=%d\n",Geometry->N_z);
 	printf("Geometry->Nx=%d\n",Geometry->N_x);
     printf("Geometry->Ny=%d\n",Geometry->N_y);
-	
+
 //  Geometry->Object = (DATA_TYPE ***)get_3D(Geometry->N_y,Geometry->N_z,Geometry->N_x,sizeof(DATA_TYPE));//Allocate space for the 3-D object
   Geometry->Object = (DATA_TYPE ***)get_3D(Geometry->N_z,Geometry->N_x,Geometry->N_y,sizeof(DATA_TYPE));//Allocate space for the 3-D object
 //Coordinates of the left corner of the x-z object
@@ -409,15 +409,15 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
 //	printf("%f\n",Geometry->Object[i][j][k]);
   }*/
 
-	for (i = 0; i < Geometry->N_y; i++) 
+	for (i = 0; i < Geometry->N_y; i++)
 	{
-		for (j = 0; j < Geometry->N_x; j++) 
+		for (j = 0; j < Geometry->N_x; j++)
 		{
-			for (k = 0; k < Geometry->N_z; k++) 
+			for (k = 0; k < Geometry->N_z; k++)
 			{
 				if(Fp == NULL)//If no input file has been specified or if the file does not exist just set the default values to be zero
 				{
-				Geometry->Object[k][j][i] = 0;	
+				Geometry->Object[k][j][i] = 0;
 				}
 				else//If the iput file exists read the values
 				{
@@ -456,7 +456,7 @@ DATA_TYPE AbsMaxArray(DATA_TYPE* Array ,uint16_t NumElts)
 		if(fabs(Array[i]) > max)
 			max=fabs(Array[i]);
 	return max;
-		
+
 }
 
 #ifdef __cplusplus
