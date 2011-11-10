@@ -145,9 +145,9 @@ endif()
 
 
 # Add our executables
-add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm)
-add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD)
-add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm)
+#add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm)
+#add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD)
+#add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm)
 add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm)
 
 
