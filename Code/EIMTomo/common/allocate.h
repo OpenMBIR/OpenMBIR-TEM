@@ -1,5 +1,5 @@
-#ifndef _allocate.h_
-#define _allocate.h_
+#ifndef _allocate_h_
+#define _allocate_h_
 
 
 
@@ -38,4 +38,4 @@ extern "C"
 
 
 
-#endif /* _allocate.h_  */
+#endif /* _allocate_h_  */
