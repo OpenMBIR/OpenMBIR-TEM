@@ -3,14 +3,14 @@
 
 #include <stdio.h> //For all other declarations int,FILE etc
 
-#include "EIMTomo/common/EIMTomoTypes.h"
 
-#include <time.h>
+#include "EIMTomo/EIMTomo.h"
+#include "EIMTomo/common/EIMTime.h"
 
-clock_t startm, stopm;
-#define START if ( (startm = clock()) == -1) {printf("Error calling clock");exit(1);}
-#define STOP if ( (stopm = clock()) == -1) {printf("Error calling clock");exit(1);}
-#define PRINTTIME printf( "%6.3f seconds used by the processor.\n", ((double)stopm-startm)/CLOCKS_PER_SEC);
+uint64_t startm, stopm;
+#define START startm = EIMTOMO_getMilliSeconds();
+#define STOP stopm = EIMTOMO_getMilliSeconds();
+#define PRINTTIME printf( "%6.3f seconds used by the processor.\n", ((double)stopm-startm)/1000.0);
 
 //#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
 #define EXTEND_OBJECT
@@ -25,13 +25,13 @@ typedef double DATA_TYPE;
 #ifdef __cplusplus
 extern "C" {
 #endif
-	
+
 	/* Axes conventions:
-	 
+
 	      . Y
 	     .
-	    .  
-	   . 
+	    .
+	   .
 	  .
 	 .
 	 ---------------------> X
@@ -44,7 +44,7 @@ extern "C" {
 	 V
 	 Z
 	 */
-	
+
 	struct _sinogram
 	{
 		uint16_t N_r;//Number of measurements in x direction
@@ -62,37 +62,37 @@ extern "C" {
 		DATA_TYPE *InitialGain;//Reads in the initial value for the gain for each view
 		DATA_TYPE *InitialOffset;
 	};
-	
+
 	typedef struct _sinogram Sino;
-	
-	struct _geometry 
+
+	struct _geometry
 	{
 		//User Input
 		DATA_TYPE LengthZ;//This is the sample thickness
 		DATA_TYPE delta_xz;//Voxel size in the x-z plane (assuming square shaped voxels in the x-z plane)
 		DATA_TYPE delta_xy;//Voxel size in the x-y plane
-		DATA_TYPE ***Object;//Holds the volume to be reconstructed 
+		DATA_TYPE ***Object;//Holds the volume to be reconstructed
 		//Computed From User Input
-		DATA_TYPE LengthX;//sinogram.N_x * delta_r; 
+		DATA_TYPE LengthX;//sinogram.N_x * delta_r;
 		DATA_TYPE LengthY;//sinogram.N_y * delta_t
-		uint16_t N_x;//Number of voxels in x direction 
+		uint16_t N_x;//Number of voxels in x direction
 		uint16_t N_z;//Number of voxels in z direction
 		uint16_t N_y;//Number of measurements in y direction
-		//Coordinates of the left corner of the x-z object 
+		//Coordinates of the left corner of the x-z object
 		DATA_TYPE x0;// -LengthX/2
 		DATA_TYPE z0;// -LengthZ/2
 		DATA_TYPE y0;//-LengthY/2
 	};
-	
+
 	typedef struct _geometry Geom;
-	
+
 	struct _command_line_inputs
 	{
 		char* ParamFile;
 		char* SinoFile;
 		char* InitialRecon;
 		char* OutputFile;
-		char* InitialParameters;//a file containing initial gains and offsets 
+		char* InitialParameters;//a file containing initial gains and offsets
 		//This is read from the paramter file
 		int16_t NumIter;
 		uint16_t NumOuterIter;
@@ -100,7 +100,7 @@ extern "C" {
 		DATA_TYPE p;
 	};
 	typedef struct _command_line_inputs CommandLineInputs;
-	
+
 	int CI_ParseInput(int ,char**,CommandLineInputs*);
 	void CI_ReadParameterFile(FILE* ,CommandLineInputs* ,Sino* ,Geom*);
 	void CI_InitializeSinoParameters(Sino *,CommandLineInputs*);
@@ -108,8 +108,8 @@ extern "C" {
 	void CI_InitializeGeomParameters(Sino* ,Geom* ,CommandLineInputs*);
 	DATA_TYPE AbsMaxArray(DATA_TYPE* ,uint16_t);
 
-	
-	
+
+
 #ifdef __cplusplus
 }
 #endif

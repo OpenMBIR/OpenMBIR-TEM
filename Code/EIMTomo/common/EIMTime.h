@@ -6,10 +6,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef _EMTime_h_
-#define _EMTime_h_
+#ifndef _EIMTime_h_
+#define _EIMTime_h_
 
-#include <EIMTomo/common/EIMTomoTypes.h>
+#include "EIMTomo/EIMTomoTypes.h"
 #if CMP_HAVE_TIME_H
 #include <time.h>
 #endif

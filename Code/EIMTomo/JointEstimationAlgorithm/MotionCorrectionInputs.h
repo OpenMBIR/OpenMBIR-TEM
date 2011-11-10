@@ -4,7 +4,7 @@
 #include <stdio.h> //For all other declarations int,FILE etc
 
 
-#include "EIMTomo/common/EIMTomoTypes.h"
+#include "EIMTomo/EIMTomo.h"
 
 
 #define START_SLICE 0 //This is used to select whcih slice to reconstruct - REMOVE this in the final versions of the code

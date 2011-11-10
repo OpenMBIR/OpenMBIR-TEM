@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "EIMTomo/common/EMTime.h"
+#include "EIMTomo/common/EIMTime.h"
 #include "EIMTomo/common/MSVCDefines.h"
 
 static char em_log_time[128];

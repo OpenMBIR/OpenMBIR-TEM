@@ -35,7 +35,7 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY
 
 
 if (NOT DEFINED CMP_SOURCE_DIR)
-set(CMP_SOURCE_DIR ${EIMTomo_SOURCE_DIR}/Support/CMP)
+set(CMP_SOURCE_DIR ${EIMTomo_SOURCE_DIR}/Support/cmp)
 endif()
 
 
@@ -51,17 +51,18 @@ SET (PROJECT_INSTALL_EXECUTABLES "1")
 # Include the cmp project to perform all the basic configuration tests for the 
 # project.
 #------------------------------------------------------------------------------- 
-set (CMP_HEADER_DIR ${EIMTomo_BINARY_DIR}/EIMTomo/common)
-set (CMP_CONFIGURATION_FILE_NAME "CMPConfiguration.h")
+set (CMP_HEADER_DIR ${EIMTomo_BINARY_DIR}/EIMTomo)
+set (CMP_CONFIGURATION_FILE_NAME "EIMTomoConfiguration.h")
 set (CMP_TYPES_FILE_NAME "EIMTomoTypes.h")
 set (CMP_VERSION_HEADER_FILE_NAME "EIMTomoVersion.h")
-set (CMP_EXTRA_CONFIGURATION_FILE "EIMTomoConfiguration.h")
-set (CMP_PROJECT_NAMESPACE "EIMTomo")
-set (CMP_PROJECT_NAME "EIMTomo")
-SET (CMP_INSTALL_FILES "1")
+set (CMP_TOP_HEADER_FILE "EIMTomo.h")
+set (CMP_PROJECT_NAMESPACE "${PROJECT_NAME}")
+set (CMP_PROJECT_NAME "${PROJECT_NAME}")
 set (CMP_ENABLE_PLUGINS "0")
+set (CMP_LIB_SEARCH_DIRS "")
+set (CMP_GENERATE_VERSION_STRING 1)
+set (CMP_INSTALL_FILES 1)
 INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
-
 
 # We need to add the binary directory to our list of include directories so the source files
 # can find the generated header files
@@ -87,10 +88,34 @@ IF (BUILD_SHARED_LIBS)
   ENDIF (WIN32)
 ENDIF (BUILD_SHARED_LIBS)
 
+OPTION (EIMTomo_TIFF_SUPPORT "Add libTiff Support" ON)
+OPTION (EIMTomo_HDF5_SUPPORT "Add HDF5 Support" OFF)
+OPTION (EIMTomo_USE_MERSENNE_TWISTER "Use the Mersenne Twister RNG" ON)
+
+# --------------------------------------------------------------------
+# Should we use Intel Threading Building Blocks
+# --------------------------------------------------------------------
+option(EIMTomo_USE_PARALLEL_ALGORITHMS "Use MultiThreaded Algorithms where possible" OFF)
+if (EIMTomo_USE_PARALLEL_ALGORITHMS)
+    find_package(TBB)
+    if (TBB_FOUND)
+        include_directories(${TBB_INCLUDE_DIRS} )
+        CMP_COPY_DEPENDENT_LIBRARIES("tbb;tbb_malloc")
+        # Append the locations of the TBB libraries to our Library Search Paths
+        list(APPEND CMP_LIB_SEARCH_DIRS ${TBB_BINARY_DIR} ${TBBG_LIBRARY_DIR} )
+        # Create an install rule to copy the dependent shared library over to the installed location
+        CMP_LIBRARIES_INSTALL_RULES("tbb;tbb_malloc" ".")
+    else()
+        message(FATAL_ERROR "The Intel Threading Building Blocks library is needed to enable the multithreaded algorithms. Please make sure it is installed properly")
+    endif()
+endif()
+
+
 # --------------------------------------------------------------------
 # Now configure this extra file with some additional definitions
-configure_file(${PROJECT_RESOURCES_DIR}/EIMTomo/EIMTomoConfiguration.h.in
-               ${CMP_HEADER_DIR}/${CMP_EXTRA_CONFIGURATION_FILE})
+configure_file(${EIMTomo_SOURCE_DIR}/Resources/EIMTomo/EIMTomoConfiguration.h.in
+               ${EIMTomo_BINARY_DIR}/EIMTomo/${CMP_TOP_HEADER_FILE})
+
 
 # --------------------------------------------------------------------
 # Add in some compiler definitions
@@ -117,25 +142,6 @@ if (MSVC)
 endif()
 
 
-# --------------------------------------------------------------------
-# Should we use Intel Threading Building Blocks
-# --------------------------------------------------------------------
-set (EIMTomo_USE_PARALLEL_ALGORITHMS "")
-option(EIMTomo_USE_MULTITHREADED_ALGOS "Use MultiThreaded Algorithms where possible" OFF)
-if (EIMTomo_USE_MULTITHREADED_ALGOS)
-    find_package(TBB)
-    if (TBB_FOUND)
-        include_directories(${TBB_INCLUDE_DIRS} )
-        CMP_COPY_DEPENDENT_LIBRARIES("tbb;tbb_malloc")
-        # Append the locations of the TBB libraries to our Library Search Paths
-        list(APPEND CMP_LIB_SEARCH_DIRS ${TBB_BINARY_DIR} ${TBBG_LIBRARY_DIR} )
-        # Create an install rule to copy the dependent shared library over to the installed location
-        CMP_LIBRARIES_INSTALL_RULES("tbb;tbb_malloc" ".")
-    else()
-        message(FATAL_ERROR "The Intel Threading Building Blocks library is needed to enable the multithreaded algorithms. Please make sure it is installed properly")
-    endif()
-    set (EIMTomo_USE_PARALLEL_ALGORITHMS "1")
-endif()
 
 
 # Add our executables

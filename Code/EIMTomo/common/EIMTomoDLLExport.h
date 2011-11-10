@@ -8,8 +8,8 @@
 //                           FA8650-04-C-5229
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef _EIMTOMO_DLL_EXPORT_H_
-#define _EIMTOMO_DLL_EXPORT_H_
+#ifndef _EIMTomo_DLL_EXPORT_H_
+#define _EIMTomo_DLL_EXPORT_H_
 
 
 #if defined (_MSC_VER)
@@ -24,53 +24,53 @@
   #pragma warning(disable: 4548)
 #endif
 
-/* Cmake will define EIMTOMOLib_EXPORTS on Windows when it
+/* Cmake will define EIMTomoLib_EXPORTS on Windows when it
 configures to build a shared library. If you are going to use
 another build system on windows or create the visual studio
-projects by hand you need to define EIMTOMOLib_EXPORTS when
+projects by hand you need to define EIMTomoLib_EXPORTS when
 building the MXADatModel DLL on windows.
 */
 
-#if defined (EIMTOMO_BUILT_AS_DYNAMIC_LIB)
+#if defined (EIMTomo_BUILT_AS_DYNAMIC_LIB)
 
-  #if defined (EIMTOMOLib_EXPORTS)  /* Compiling the MXA DLL/Dylib */
+  #if defined (EIMTomoLib_EXPORTS)  /* Compiling the MXA DLL/Dylib */
     #if defined (_MSC_VER)  /* MSVC Compiler Case */
-      #define  EIMTOMO_EXPORT __declspec(dllexport)
+      #define  EIMTomo_EXPORT __declspec(dllexport)
     #elif (__GNUC__ >= 4)  /* GCC 4.x has support for visibility options */
-      #define EIMTOMO_EXPORT __attribute__ ((visibility("default")))
+      #define EIMTomo_EXPORT __attribute__ ((visibility("default")))
     #endif
   #else  /* Importing the DLL into another project */
     #if defined (_MSC_VER)  /* MSVC Compiler Case */
-      #define  EIMTOMO_EXPORT __declspec(dllimport)
+      #define  EIMTomo_EXPORT __declspec(dllimport)
     #elif (__GNUC__ >= 4)  /* GCC 4.x has support for visibility options */
-      #define EIMTOMO_EXPORT __attribute__ ((visibility("default")))
+      #define EIMTomo_EXPORT __attribute__ ((visibility("default")))
     #endif
   #endif
 #endif
 
-/* If EIMTOMO_EXPORT was never defined, define it here */
-#ifndef EIMTOMO_EXPORT
-  #define EIMTOMO_EXPORT
+/* If EIMTomo_EXPORT was never defined, define it here */
+#ifndef EIMTomo_EXPORT
+  #define EIMTomo_EXPORT
 #endif
 
 #if 0
 #if defined (_WIN32) || defined __CYGWIN__
 
-  #if defined (EIMTOMO_BUILT_AS_DYNAMIC_LIB)
-    #if defined(EIMTOMOLib_EXPORTS)
-      #define  EIMTOMO_EXPORT __declspec(dllexport)
+  #if defined (EIMTomo_BUILT_AS_DYNAMIC_LIB)
+    #if defined(EIMTomoLib_EXPORTS)
+      #define  EIMTomo_EXPORT __declspec(dllexport)
     #else
-      #define  EIMTOMO_EXPORT __declspec(dllimport)
-    #endif /* EIMTOMOLib_EXPORTS */
+      #define  EIMTomo_EXPORT __declspec(dllimport)
+    #endif /* EIMTomoLib_EXPORTS */
   #else
-    #define EIMTOMO_EXPORT
+    #define EIMTomo_EXPORT
   #endif
 #elif __GNUC__ >= 4
  #define FLOW_DLL __attribute__ ((visibility("default")))
  #define DLL_LOCAL  __attribute__ ((visibility("hidden")
-#else /* defined (_WIN32) && defined (EIMTOMO_BUILD_SHARED_LIBS)  */
- #define EIMTOMO_EXPORT
+#else /* defined (_WIN32) && defined (EIMTomo_BUILD_SHARED_LIBS)  */
+ #define EIMTomo_EXPORT
 #endif
 #endif
 
-#endif /* _EIMTOMO_DLL_EXPORT_H_ */
+#endif /* _EIMTomo_DLL_EXPORT_H_ */

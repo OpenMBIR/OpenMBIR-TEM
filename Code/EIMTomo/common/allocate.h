@@ -1,4 +1,9 @@
-#include "EIMTomo/common/EIMTomoTypes.h"
+#ifndef _allocate.h_
+#define _allocate.h_
+
+
+
+#include "EIMTomo/EIMTomo.h"
 
 #ifdef EIMTOMO_HAVE_STDLIB_H
 #include <stdlib.h>
@@ -30,3 +35,7 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
+
+
+
+#endif /* _allocate.h_  */
