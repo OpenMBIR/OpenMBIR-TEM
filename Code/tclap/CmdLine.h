@@ -407,11 +407,13 @@ inline void CmdLine::add( Arg& a )
 inline void CmdLine::add( Arg* a )
 {
 	for( ArgListIterator it = _argList.begin(); it != _argList.end(); it++ )
-		if ( *a == *(*it) )
+		if ( *a == *(*it) ) {
+		  std::cout << "a: " << a->longID() << std::endl;
+		  std::cout << "it: "  << (*it)->longID() << std::endl;
 			throw( SpecificationException(
 			       	"Argument with same flag/name already exists!",
 					a->longID() ) );
-
+		}
 	a->addToList( _argList );
 
 	if ( a->isRequired() )
@@ -607,7 +609,7 @@ inline void CmdLine::reset()
 	{
 		(*it)->reset();
 	}
-	
+
 	_progName.clear();
 }
 

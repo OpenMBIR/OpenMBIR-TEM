@@ -67,14 +67,16 @@ int ScaleOffsetCorrectionInputs::CI_ParseInput(int argc,char **argv,CommandLineI
   cmd.add(in_outputFile);
 
 
+
+
   TCLAP::ValueArg<int> in_numIter("n", "numIter", "Number of Iterations", true, 0, "0");
   cmd.add(in_numIter);
   TCLAP::ValueArg<double> in_sigmaX("l", "sigmax", "Sigma X Value", true, 1.0, "1.0");
   cmd.add(in_sigmaX);
-  TCLAP::ValueArg<double> in_markov("m", "", "Markov Random Field Parameter", true, 0.0, "0.0");
-  cmd.add(in_markov);
 
-  TCLAP::ValueArg<std::string> InitialParameters("g", "", "InitialParameters", true, "", "");
+  TCLAP::ValueArg<double> in_markov("m", "mrf", "Markov Random Field Parameter", true, 0.0, "0.0");
+  cmd.add(in_markov);
+  TCLAP::ValueArg<std::string> InitialParameters("g", "initp", "InitialParameters", true, "", "");
   cmd.add(InitialParameters);
 
   TCLAP::ValueArg<int> NumOuterIter("O", "", "NumOuterIter", true, 0, "0");
