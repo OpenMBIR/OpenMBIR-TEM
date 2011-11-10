@@ -23,21 +23,24 @@ extern "C" {
 //#define BEAM_WIDTH 0.050000 
 #define BEAM_RESOLUTION 512
 #define AREA_WEIGHTED
-#define ROI //Region Of Interest
-#define STOPPING_THRESHOLD 0.009
-//#define	SURROGATE_FUNCTION
-	//#define DISTANCE_DRIVEN
-	//#define CORRECTION
+#define ROI //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
+#define STOPPING_THRESHOLD 0.0009
+//#define SURROGATE_FUNCTION
+//#define QGGMRF
+//#define DISTANCE_DRIVEN
+//#define CORRECTION
 //#define STORE_A_MATRIX
-//	#define WRITE_INTERMEDIATE_RESULTS
+//#define WRITE_INTERMEDIATE_RESULTS
 #define COST_CALCULATE
 //#define BEAM_CALCULATION
 #define DETECTOR_RESPONSE_BINS 64
 #define JOINT_ESTIMATION
 //#define NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
-//#define	CIRCULAR_BOUNDARY_CONDITION
-//#define DEBUG_CONSTRAINT_OPT
+//#define CIRCULAR_BOUNDARY_CONDITION
+#define DEBUG_CONSTRAINT_OPT
+#define RANDOM_ORDER_UPDATES
+
 	
 	//Structure to store a single column(A_i) of the A-matrix 
 	typedef struct 
@@ -63,7 +66,6 @@ extern "C" {
 	double CE_DerivOfCostFunc(double);
 	DATA_TYPE CE_ComputeCost(DATA_TYPE***  ,DATA_TYPE***  ,Sino* ,Geom* );
 	void* CE_CalculateAMatrixColumnPartial(uint16_t,uint16_t,uint16_t,Sino*,Geom*,DATA_TYPE***);
-//	void* CE_CalculateAMatrixColumnPartial(uint16_t,uint16_t,Sino*,Geom*,DATA_TYPE**);
 	void* CE_DetectorResponse(uint16_t ,uint16_t ,Sino* ,Geom* ,DATA_TYPE**);
 	double  solve(
 				  double (*f)(), /* pointer to function to be solved */
@@ -75,6 +77,13 @@ extern "C" {
 	double CE_SurrogateFunctionBasedMin();
 	double CE_ConstraintEquation(DATA_TYPE);
 	DATA_TYPE* CE_RootsOfQuadraticFunction(DATA_TYPE,DATA_TYPE,DATA_TYPE);
+#ifdef QGGMRF
+	DATA_TYPE CE_QGGMRF_Value(DATA_TYPE );
+	DATA_TYPE CE_QGGMRF_Derivative(DATA_TYPE);
+	DATA_TYPE CE_QGGMRF_SecondDerivative(DATA_TYPE);
+	void CE_ComputeQGGMRFParameters(DATA_TYPE ,DATA_TYPE);
+    DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE ,DATA_TYPE );
+#endif//qggmrf
 	
 #ifdef __cplusplus
 }

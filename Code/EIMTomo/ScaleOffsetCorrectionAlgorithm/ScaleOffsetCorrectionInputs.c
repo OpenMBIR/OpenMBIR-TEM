@@ -370,7 +370,7 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
     Geometry->LengthZ*=Z_STRETCH; 
 	
 #ifdef EXTEND_OBJECT
-	Geometry->LengthX = ((Sinogram->N_r * Sinogram->delta_r)/cos(max*PI/180)) + Geometry->LengthZ*tan(max*PI/180);
+	Geometry->LengthX = ((Sinogram->N_r * Sinogram->delta_r)/cos(max*PI/180)) + Geometry->LengthZ*tan(max*PI/180) ;
 #else
 	Geometry->LengthX = ((Sinogram->N_r * Sinogram->delta_r));
 #endif //Extend object endif

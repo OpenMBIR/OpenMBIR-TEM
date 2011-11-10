@@ -27,8 +27,14 @@ DATA_TYPE FILTER[3][3][3]={{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.030
 	{{0.0370,0.0523,0.0370},{0.0523,0.0,0.0523},{0.0370,0.0523,  0.0370}},
 	{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}}};
 DATA_TYPE THETA1,THETA2,NEIGHBORHOOD[3][3][3],V;
-DATA_TYPE MRF_P ;
+DATA_TYPE MRF_P;
 DATA_TYPE SIGMA_X_P;
+#ifdef QGGMRF
+//QGGMRF extras
+DATA_TYPE MRF_Q,MRF_C;
+DATA_TYPE QGGMRF_Params[26][3];
+DATA_TYPE MRF_ALPHA;
+#endif
 
 DATA_TYPE *cosine,*sine;//used to store cosine and sine of all angles through which sample is tilted
 DATA_TYPE *BeamProfile;//used to store the shape of the e-beam
@@ -86,6 +92,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	//Random Indexing Parameters
 	int32_t Index,ArraySize,j_new,k_new,temp_index;
 	int32_t* Counter;
+	uint8_t **VisitCount;
 	
 	uint16_t cost_counter=0;
     uint16_t VoxelLineAccessCounter;
@@ -131,7 +138,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	DATA_TYPE UpdatedVoxelValue,SurrogateUpdate;
 	DATA_TYPE accuracy =1e-7;//This is the rooting accuracy for x
 	DATA_TYPE LambdaRootingAccuracy=1e-10;//accuracy for rooting Lambda
-	DATA_TYPE perturbation=0.005;//perturbs the rooting range
+	DATA_TYPE perturbation=1e-30;//perturbs the rooting range
 	int16_t errorcode=-1;
 	uint16_t rooting_attempt_counter;
 	uint16_t MaxNumRootingAttempts = 1000;//for lambda this corresponds to a distance of 2^1000
@@ -194,8 +201,20 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	BEAM_WIDTH = Sinogram->delta_r;
 #endif
 	
+#ifndef QGGMRF
 	MRF_P = CmdInputs->p;
 	SIGMA_X_P = pow(CmdInputs->SigmaX,MRF_P);
+#else
+	MRF_P=2;
+	MRF_Q=1.2;
+	MRF_C=30;
+	MRF_ALPHA=1.5;
+	SIGMA_X_P = pow(CmdInputs->SigmaX,MRF_P);
+	for(i=0;i < 3;i++)
+		for(j=0; j < 3;j++)
+			for(k=0; k < 3;k++)
+				FILTER[i][j][k]*=(1.0/SIGMA_X_P);
+#endif //QGGMRF
 	
 	//globals assosiated with finding the optimal gain and offset parameters
 	QuadraticParameters = get_img(3, Sinogram->N_theta, sizeof(DATA_TYPE));//Hold the coefficients of a quadratic equation
@@ -222,6 +241,13 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	DetectorResponse = CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
 	H_t = (DATA_TYPE***)get_3D(1, Sinogram->N_theta, DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//detector response along t
 
+#ifdef RANDOM_ORDER_UPDATES
+	VisitCount=(uint8_t **)get_img(Geometry->N_x, Geometry->N_z,sizeof(uint8_t));//width,height
+	for(i=0;i<Geometry->N_z;i++)
+		for(j=0;j < Geometry->N_x;j++)
+			VisitCount[i][j]=0;
+#endif//Random update 
+	
 	#ifdef ROI
 	Mask = (uint8_t **)get_img(Geometry->N_x, Geometry->N_z,sizeof(uint8_t));//width,height
 	EllipseA = Geometry->LengthX/2;
@@ -616,28 +642,42 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	{
 	for(Iter = 0;Iter < CmdInputs->NumIter;Iter++)
 	{
-		ArraySize = Geometry->N_x*Geometry->N_z;
-		for(j_new = 0;j_new < ArraySize; j_new++)
-			Counter[j_new]=j_new;
+		
 
 		//printf("Iter %d\n",Iter);
 #ifdef ROI
         AverageUpdate=0;
 		AverageMagnitudeOfRecon=0;
 #endif
+		
+#ifdef RANDOM_ORDER_UPDATES
+		ArraySize = Geometry->N_x*Geometry->N_z;
+		for(j_new = 0;j_new < ArraySize; j_new++)
+			Counter[j_new]=j_new;
+		
+		for(j=0;j<Geometry->N_z;j++)
+			for(k=0;k < Geometry->N_x;k++)
+				VisitCount[j][k]=0;
+#endif
+		
 		START;
 		for(j = 0; j < Geometry->N_z; j++)//Row index
 			for(k = 0; k < Geometry->N_x ; k++)//Column index
 			{
-
-				//Index = rand()%ArraySize;
+#ifdef RANDOM_ORDER_UPDATES
+				//RandomNumber=init_genrand(Iter);
 				Index=(genrand_int31(RandomNumber))%ArraySize;
 				k_new = Counter[Index]%Geometry->N_x;
 				j_new = Counter[Index]/Geometry->N_x;
-				//memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));//TODO: Instead just swap the value in Index with the one in ArraySize
+                //memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));//TODO: Instead just swap the value in Index with the one in ArraySize
 				Counter[Index]=Counter[ArraySize-1];
-				
+				VisitCount[j_new][k_new]=1;
 				ArraySize--;
+#else
+				j_new=j;
+				k_new=k;
+#endif //Random order updates
+				
 				TempMemBlock = TempCol[j_new][k_new];//Remove this
 				if(TempMemBlock->count > 0)
 				{
@@ -760,13 +800,21 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 						//printf("V before updating %lf",V);
 #ifndef SURROGATE_FUNCTION
 					//TODO : What if theta1 = 0 ? Then this will give error
-						UpdatedVoxelValue = (DATA_TYPE)solve(CE_DerivOfCostFunc,(double)low,(double)high,(double)accuracy,&errorcode);
+					UpdatedVoxelValue = (DATA_TYPE)solve(CE_DerivOfCostFunc,(double)low,(double)high,(double)accuracy,&errorcode);
 					
 #else
+	
 					errorcode=0;
-					SurrogateUpdate=(DATA_TYPE)CE_SurrogateFunctionBasedMin();					
+#ifdef QGGMRF
+					UpdatedVoxelValue = CE_FunctionalSubstitution(low,high);
+					
+#else			
+					SurrogateUpdate=CE_SurrogateFunctionBasedMin();					
 					UpdatedVoxelValue=SurrogateUpdate;
-#endif
+#endif //QGGMRF
+					
+
+#endif//Surrogate function
 					//printf("%lf\n",SurrogateUpdate);
 					
 						if(errorcode == 0)
@@ -783,7 +831,10 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 							if(THETA1 ==0 && low == 0 && high == 0)
 								UpdatedVoxelValue=0;
 							else
+							{
 							printf("Error \n");
+								printf("%d %d\n",j_new,k_new);
+							}
 			 	 		}
 
 						//TODO Print appropriate error messages for other values of error code
@@ -844,6 +895,13 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		STOP;
 		PRINTTIME;
 		
+#ifdef RANDOM_ORDER_UPDATES
+		for(j = 0; j < Geometry->N_z; j++)//Row index
+			for(k = 0; k < Geometry->N_x ; k++)//Column index
+		if(VisitCount[j][k] == 0)
+			printf("Pixel (%d %d) not visited\n",j,k);
+#endif
+		
 #ifdef COST_CALCULATE
 		/*********************Cost Calculation***************************************************/
 		
@@ -874,7 +932,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			break;
 		}
 		}
-#endif
+#endif//ROI end
 
 		if (CE_Cancel == 1)
 		{
@@ -1073,6 +1131,18 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 			{
 				printf("%lf %lf %lf\n",QuadraticParameters[i_theta][0],QuadraticParameters[i_theta][1],QuadraticParameters[i_theta][2]);
 			}
+#ifdef DEBUG_CONSTRAINT_OPT
+			
+			//for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
+			//{
+			fwrite(&Qk_cost[0][0], sizeof(DATA_TYPE), Sinogram->N_theta*3, Fp8);
+			//}
+			//for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
+			//{
+			fwrite(&bk_cost[0][0], sizeof(DATA_TYPE), Sinogram->N_theta*2, Fp8);
+			//}
+			fwrite(&ck_cost[0], sizeof(DATA_TYPE), Sinogram->N_theta, Fp8);
+#endif
 			
 			break;
 		}
@@ -1116,17 +1186,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	 
 		printf("%lf\n",temp);*/
 	
-#ifdef DEBUG_CONSTRAINT_OPT
-		//for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
-		//{
-			fwrite(&Qk_cost[0][0], sizeof(DATA_TYPE), Sinogram->N_theta*3, Fp8);
-		//}
-		//for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
-		//{
-			fwrite(&bk_cost[0][0], sizeof(DATA_TYPE), Sinogram->N_theta*2, Fp8);
-		//}
-		fwrite(&ck_cost[0], sizeof(DATA_TYPE), Sinogram->N_theta, Fp8);
-#endif
+
 		
 		/********************************************************************************************/
 		//checking to see if the cost went down
@@ -1216,6 +1276,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	 
 #endif//Joint estimation endif	
 	 
+		printf("Outer Iter %d\n",OuterIter+1);
 	}
 
 	printf("Offsets\n");
@@ -2021,7 +2082,7 @@ double solve(
 
 DATA_TYPE CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,Sino* Sinogram,Geom* Geometry)
 {
-	DATA_TYPE cost=0,temp=0;
+	DATA_TYPE cost=0,temp=0,delta;
 	int16_t i,j,k,p,q,r;
 
 	//printf("Cost calculation..\n");
@@ -2035,7 +2096,7 @@ DATA_TYPE CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,Sino* Sinogr
 	cost/=2;
 	
 	printf("Data mismatch term =%lf\n",cost);
-	
+#ifndef QGGMRF
 	for (i = 0; i < Geometry->N_z; i++)
 		for (j = 0; j < Geometry->N_x; j++)
 			for(k = 0; k < Geometry->N_y; k++)
@@ -2097,10 +2158,110 @@ DATA_TYPE CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,Sino* Sinogr
 						temp+= FILTER[2][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k+1]),MRF_P);
 				}
 			}
+		cost+=(temp/(MRF_P*SIGMA_X_P));
+#else
+	for (i = 0; i < Geometry->N_z; i++)
+		for (j = 0; j < Geometry->N_x; j++)
+			for(k = 0; k < Geometry->N_y; k++)
+			{
+				
+				if(k+1 <  Geometry->N_y)
+				{
+					delta=Geometry->Object[i][j][k]-Geometry->Object[i][j][k+1];
+					temp += FILTER[2][1][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+				}
+											 
+				
+				
+				if(j+1 < Geometry->N_x)
+				{
+					if(k-1 >= 0)
+					{
+						delta=Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k-1];
+						temp += FILTER[0][1][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+					}
+					
+					delta=Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k];
+					temp += FILTER[1][1][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+					
+					
+					if(k+1 < Geometry->N_y)
+					{
+						delta=Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k+1];
+						temp += FILTER[2][1][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+					}
+					
+				}
+				
+				if(i+1 < Geometry->N_z)
+				{
+					
+					if(j-1 >= 0)
+					{
+						delta = Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k];
+						temp += FILTER[1][2][0]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+					}
+					
+					delta=Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k];
+					temp += FILTER[1][2][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+					
+					if(j+1 < Geometry->N_x)
+					{
+						delta=Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k];
+						temp += FILTER[1][2][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+					}
+					
+					
+					if(j-1 >= 0)
+					{
+						if(k-1 >= 0)
+						{
+							delta=Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k-1];
+							temp += FILTER[0][2][0]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+						}
+						
+						if(k+1 < Geometry->N_y)
+						{
+							delta=Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k+1];
+							temp += FILTER[2][2][0]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+						}
+						
+					}
+					
+					if(k-1 >= 0)
+					{
+						delta = Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k-1];
+						temp += FILTER[0][2][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+					}
+					
+					if(j+1 < Geometry->N_x)
+					{
+						if(k-1 >= 0)
+						{
+							delta = Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k-1];
+							temp += FILTER[0][2][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+						}
+						
+						if(k+1 < Geometry->N_y)
+						{
+							delta = Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k+1];
+							temp+= FILTER[2][2][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+						}
+					}
+					
+					if(k+1 < Geometry->N_y)
+					{
+						delta = Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k+1];
+						temp+= FILTER[2][2][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+					}
+				}
+			}
+			cost+=(temp);
+#endif //QGGMRF
 	
 	//printf("Cost calculation End..\n");
 
-	cost+=(temp/(MRF_P*SIGMA_X_P));
+
 	
 #ifdef NOISE_MODEL
 	temp=0;
@@ -2509,45 +2670,6 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 }
 
 #endif
-/*
-//Function to compute parameters of thesurrogate function 
-void CE_ComputeParameters(DATA_TYPE x_j,DATA_TYPE x_k,DATA_TYPE umin,DATA_TYPE umax)
-{
-	DATA_TYPE Delta0,DeltaMin,DeltaMax,T,a,b,c;
-	Delta0 = x_j - x_k;
-	DeltaMin = umin - x_k;
-	DeltaMax = umax - x_k;
-	if(fabs(Delta0) <= Min(fabs(DeltaMin),fabs(DeltaMax)))
-		T = -Delta0;
-	else if(fabs(DeltaMin) <= Min(fabs(Delta0),fabs(DeltaMax)))
-		T = DeltaMin;
-	else if(fabs(DeltaMax) <= Min(fabs(DeltaMin),fabs(Delta0)))
-		T = DeltaMax;
-	if(Delta0 != 0)
-		a=
-		else {
-			a = 
-		}
-	b = ;
-	c = ;
-   
-}
-
-DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE x, int16_t j)
-{
-	int16_t i,j,k;
-	DATA_TYPE umin,umax,x_j;
-	DATA_TYPE sum1=0,sum2=0;
-	CE_MinMax(&umin,&umax);
-	for(i = -1; i<=1 ;i++)
-		for(j=-1;j<=1;j++)
-			for(k=-1; k <=1; k++)
-				ComputeParameters(x,, <#DATA_TYPE umin#>, <#DATA_TYPE umax#>)
-	
-	
-}
-
-*/
 
 double CE_SurrogateFunctionBasedMin()
 {
@@ -2570,12 +2692,102 @@ double CE_SurrogateFunctionBasedMin()
 			}
 	numerator_sum/=SIGMA_X_P;
 	denominator_sum/=SIGMA_X_P;
-	alpha=(-THETA1 - numerator_sum)/(THETA2 + denominator_sum);
-	
+    
+	numerator_sum+=THETA1;
+	denominator_sum+=THETA2;
+	if(THETA2 > 0)
+	{
+	alpha=(-1*numerator_sum)/(denominator_sum);
 	update = V+Clip(alpha, -V,INFINITY);
+	}
+	else 
+	{
+		update=0;		
+	}
+    
+	if(update > 70000)
+		printf("%lf\n",update);
+		
 	return update;	
 	
 }
+#ifdef QGGMRF
+//Function to compute parameters of thesurrogate function 
+void CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
+{
+	DATA_TYPE Delta0,DeltaMin,DeltaMax,T,a,b,c;
+	uint8_t i,j,k,count=0;
+	for(i=0;i<3;i++)
+		for (j=0; j < 3; j++) 
+			for(k=0; k < 3;k++)
+				if(i != 1 || j !=1 || k != 1)
+				{
+					Delta0 = V - NEIGHBORHOOD[i][j][k];
+					DeltaMin = umin - NEIGHBORHOOD[i][j][k];
+					DeltaMax = umax - NEIGHBORHOOD[i][j][k];
+					if(fabs(Delta0) <= Minimum(fabs(DeltaMin),fabs(DeltaMax)))
+						T = -Delta0;
+					else if(fabs(DeltaMin) <= Minimum(fabs(Delta0),fabs(DeltaMax)))
+						T = DeltaMin;
+					else if(fabs(DeltaMax) <= Minimum(fabs(DeltaMin),fabs(Delta0)))
+						T = DeltaMax;
+					if(Delta0 != 0)
+						QGGMRF_Params[count][0] = (CE_QGGMRF_Value(T) - CE_QGGMRF_Value(Delta0))/((T-Delta0)*(T - Delta0)) - CE_QGGMRF_Derivative(Delta0)/(T-Delta0);
+					else {
+						QGGMRF_Params[count][0] = CE_QGGMRF_SecondDerivative(0)/2; 
+					}
+					QGGMRF_Params[count][1] = CE_QGGMRF_Derivative(Delta0) - 2*QGGMRF_Params[count][0]*V;
+					QGGMRF_Params[count][2] = CE_QGGMRF_Value(Delta0) - QGGMRF_Params[count][0]*V*V - QGGMRF_Params[count][1]*V;
+					count++;
+				}
+	
+}
 
+DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
+{
+	DATA_TYPE u,temp1,temp2;
+	uint8_t i,j,k,count=0;
+	CE_ComputeQGGMRFParameters(umin, umax);
+	for(i=0;i<3;i++)
+		for (j=0; j < 3; j++) 
+			for(k=0; k < 3;k++)
+				if(i != 1 || j !=1 || k != 1)
+				{
+					temp1+=NEIGHBORHOOD[i][j][k]*QGGMRF_Params[count][1];
+					temp2+=NEIGHBORHOOD[i][j][k]*QGGMRF_Params[count][0];
+					count++;
+				}
+	u=(-temp1+THETA2*V +THETA1)/(2*temp2 + THETA2);
+	
+	return Clip(V + MRF_ALPHA*(u-V),umin , umax);
+	
+}
+
+
+
+
+DATA_TYPE CE_QGGMRF_Value(DATA_TYPE delta)
+{
+	return (pow(fabs(delta),MRF_P))/(1 + pow(fabs(delta/MRF_C),MRF_Q));
+}
+
+DATA_TYPE CE_QGGMRF_Derivative(DATA_TYPE delta)
+{
+	DATA_TYPE temp=0,temp1,temp2;
+	temp1=pow(fabs(delta/MRF_C),MRF_P-MRF_Q);
+	temp2=pow(fabs(delta),MRF_P-1);
+	if(delta < 0)
+		return ((-1*temp2/(1+temp1))*(MRF_P - ((MRF_P-MRF_Q)*temp1)/(1+temp1)));
+	else {
+		return ((temp2/(1+temp1))*(MRF_P - ((MRF_P-MRF_Q)*temp1)/(1+temp1)));
+	}
+}
+DATA_TYPE CE_QGGMRF_SecondDerivative(DATA_TYPE delta)
+{
+	DATA_TYPE temp=2;
+	return temp;
+}
+
+#endif
 
 
