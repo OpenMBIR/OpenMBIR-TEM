@@ -7,46 +7,133 @@
  *
  */
 
+#include "BasicReconstructionEngine.h"
 
-
+// C Includes
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
+// C++ Includes
+#include <limits>
 
-#include "EIMTomo/EIMTomo.h"
+// Our own includes
+#include "EIMTomo/common/EIMMath.h"
 #include "EIMTomo/common/allocate.h"
 #include "EIMTomo/common/EIMTime.h"
-#include "EIMTomo/common/EIMMath.h"
-#include "NHICDEngine.h"
+#include "EIMTomo/mt/mt19937ar.h"
 
-static char CE_Cancel = 0;
+/**
+ *
+ */
+class DerivOfCostFunc
+{
+  public:
+    DerivOfCostFunc(DATA_TYPE NEIGHBORHOOD[3][3][3],
+                    DATA_TYPE FILTER[3][3][3],
+                    DATA_TYPE V,
+                    DATA_TYPE THETA1,
+                    DATA_TYPE THETA2,
+                    DATA_TYPE SIGMA_X_P,
+                    DATA_TYPE MRF_P) :
+      V(V),
+      THETA1(THETA1),
+      THETA2(THETA2),
+      SIGMA_X_P(SIGMA_X_P),
+      MRF_P(MRF_P)
+    {
+    }
+
+    virtual ~DerivOfCostFunc()
+    {
+    }
+
+    double execute(DATA_TYPE u) const
+    {
+      double temp = 0, value;
+      uint8_t i, j, k;
+      for (i = 0; i < 3; i++)
+        for (j = 0; j < 3; j++)
+          for (k = 0; k < 3; k++)
+          {
+
+            if(u - NEIGHBORHOOD[i][j][k] >= 0.0) temp += (FILTER[i][j][k] * (1.0) * pow(fabs(u - NEIGHBORHOOD[i][j][k]), (MRF_P - 1)));
+            else temp += (FILTER[i][j][k] * (-1.0) * pow(fabs(u - NEIGHBORHOOD[i][j][k]), (MRF_P - 1)));
+          }
+
+      //printf("V WHile updating %lf\n",V);
+      //scanf("Enter value %d\n",&k);
+      value = THETA1 + THETA2 * (u - V) + (temp / SIGMA_X_P);
+
+      return value;
+}
+
+  protected:
+    DerivOfCostFunc() {}
+
+  private:
+    DATA_TYPE NEIGHBORHOOD[3][3][3];
+    DATA_TYPE FILTER[3][3][3];
+    DATA_TYPE V;
+    DATA_TYPE THETA1;
+    DATA_TYPE THETA2;
+    DATA_TYPE SIGMA_X_P;
+    DATA_TYPE MRF_P;
+
+    DerivOfCostFunc(const DerivOfCostFunc&); // Copy Constructor Not Implemented
+    void operator=(const DerivOfCostFunc&); // Operator '=' Not Implemented
+};
 
 
-#ifdef CORRECTION
-  double *NORMALIZATION_FACTOR;
-#endif
-  //Structure to store a single column(A_i) of the A-matrix
-  typedef struct
-  {
-    double* values;//Store the non zero entries
-    uint32_t count;//The number of non zero values present in the column
-    uint32_t *index;//This maps each value to its location in the column. The entries in this can vary from 0 to Sinogram.N_x Sinogram.N_theta-1
-  }AMatrixCol;
 
+//#define DEBUG
 
-  //Markov Random Field Prior parameters - Globals -:(
-  double FILTER[3][3][3]={{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}},
-    {{0.0370,0.0523,0.0370},{0.0523,0.0,0.0523},{0.0370,0.0523,  0.0370}},
-    {{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}}};
-  double THETA1,THETA2,NEIGHBORHOOD[3][3][3],V;
-  double MRF_P ;//= 1.1;
-  double SIGMA_X_P;
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+BREngine::BREngine() :
+    CE_Cancel(false)
+{
 
-  double *cosine,*sine;//used to store cosine and sine of all angles through which sample is tilted
-  double *BeamProfile;//used to store the shape of the e-beam
-    double BEAM_WIDTH;
+  FILTER[0][0][0] = 0.0302;
+  FILTER[0][0][1] = 0.0370;
+  FILTER[0][0][2] = 0.0302;
+  FILTER[0][1][0] = 0.0370;
+  FILTER[0][1][1] = 0.0523;
+  FILTER[0][1][2] = 0.0370;
+  FILTER[0][2][0] = 0.0302;
+  FILTER[0][2][1] = 0.0370;
+  FILTER[0][2][2] = 0.0302;
 
+  FILTER[1][0][0] = 0.0370;
+  FILTER[1][0][1] = 0.0523;
+  FILTER[1][0][2] = 0.0370;
+  FILTER[1][1][0] = 0.0523;
+  FILTER[1][1][1] = 0.0000;
+  FILTER[1][1][2] = 0.0523;
+  FILTER[1][2][0] = 0.0370;
+  FILTER[1][2][1] = 0.0523;
+  FILTER[1][2][2] = 0.0370;
+
+  FILTER[2][0][0] = 0.0302;
+  FILTER[2][0][1] = 0.0370;
+  FILTER[2][0][2] = 0.0302;
+  FILTER[2][1][0] = 0.0370;
+  FILTER[2][1][1] = 0.0523;
+  FILTER[2][1][2] = 0.0370;
+  FILTER[2][2][0] = 0.0302;
+  FILTER[2][2][1] = 0.0370;
+  FILTER[2][2][2] = 0.0302;
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+BREngine::~BREngine()
+{
+
+}
 
 // void CE_cancel()
 // {
@@ -56,59 +143,41 @@ static char CE_Cancel = 0;
 //
 // -----------------------------------------------------------------------------
 
-int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdInputs)
+int BREngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdInputs)
 {
 
 	uint8_t err = 0;
-	int16_t Iter,NonHomIter;
-	int16_t i,j,k,r,row,col,slice,RowIndex,ColIndex,SliceIndex,Idx,i_r,i_theta,i_t,s,w;
+	int16_t Iter;
+	int16_t i,j,k,r,row,col,slice,RowIndex,ColIndex,SliceIndex,Idx,i_r,i_theta,i_t;
 	int16_t NumOfXPixels;
 	int32_t q,p;
+	int16_t index_delta_t;
 	//Random Indexing Parameters
 	int32_t Index,ArraySize,j_new,k_new;
 	int32_t* Counter;
-	uint32_t UpdateCount=0;
 
 
-
-  //Allocate space for storing columns the A-matrix; an array of pointers to columns
-  //AMatrixCol** AMatrix=(AMatrixCol **)get_spc(Geometry->N_x*Geometry->N_z,sizeof(AMatrixCol*));
-  //	DetectorResponse = CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
-
-#ifdef STORE_A_MATRIX
-
-  AMatrixCol**** AMatrix = (AMatrixCol ****)multialloc(sizeof(AMatrixCol*),3,Geometry->N_y,Geometry->N_z,Geometry->N_x);
-#else
-  double y;
-  double t,tmin,tmax,ProfileThickness;
-  int16_t slice_index_min;
-  int16_t slice_index_max;
-  AMatrixCol*** TempCol = (AMatrixCol***)multialloc(sizeof(AMatrixCol*),2,Geometry->N_z,Geometry->N_x);
-  AMatrixCol* Aj;
-  AMatrixCol* TempMemBlock;
-#endif
-
-
+	double center_r,center_t,delta_r,delta_t;
+	double w3,w4;
 	double checksum = 0,temp;
 	double RandomIndexj,RandomIndexi;
 	double *cost;
 	double** VoxelProfile,***DetectorResponse;
-	double ***Y_Est;//Estimted Sinogram
+	double ***H_t;
+	double ProfileCenterT;
+	//variables used to stop the process
+	double AverageUpdate;
+	double AverageMagnitudeOfRecon;
+
+	double ***Y_Est;//Estimated Sinogram
 	double ***ErrorSino;//Error Sinogram
 	double ***Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
-    double **UpdateMap;
-	double MaxUpdateMagnitude;
-	double HammingWindow[5][5]={{0.0013 ,   0.0086 ,   0.0159 ,   0.0086,    0.0013},
-		{0.0086 ,   0.0581    ,0.1076   , 0.0581  ,  0.0086},
-		{0.0159  ,  0.1076 ,   0.1993 ,   0.1076  ,  0.0159},
-		{0.0086  ,  0.0581  ,  0.1076  ,  0.0581  ,  0.0086},
-		{0.0013   , 0.0086 ,   0.0159 ,   0.0086  ,  0.0013}};
+	RNGVars* RandomNumber;
 
 	FILE *Fp = fopen("ReconstructedSino.bin","w");//Reconstructed Sinogram from initial est
 
 	FILE* Fp2;//Cost function
 	FILE *Fp3;//File to store intermediate outputs of reconstruction
-	FILE *Fp4 = fopen("UpdateMap.bin","w");
 
 	//Optimization variables
 	double low,high;
@@ -139,24 +208,19 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	ErrorSino=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(double));
 	Weight=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(double));
 
-
-	UpdateMap = (double**)get_img(Geometry->N_x, Geometry->N_z, sizeof(double));//width = N_x height = N_z
-
-	for( j = 0; j < Geometry->N_z; j++)
-		for (k = 0; k < Geometry->N_x; k++)
-		UpdateMap[j][k]=0;
-
-
+	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+	OffsetT = ((Geometry->delta_xz/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 	//calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram Structure are converted to radians
-	VoxelProfile = CE_CalculateVoxelProfile(Sinogram,Geometry); //Verified with ML
+	VoxelProfile = (double**)CE_CalculateVoxelProfile(Sinogram,Geometry); //Verified with ML
 	CE_CalculateSinCos(Sinogram);
 	//Initialize the e-beam
 	CE_InitializeBeamProfile(Sinogram); //verified with ML
 
 	//calculate sine and cosine of all angles and store in the global arrays sine and cosine
-	DetectorResponse = CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
+	DetectorResponse = (double***)CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
+	H_t = (double***)get_3D(1, Sinogram->N_theta, DETECTOR_RESPONSE_BINS, sizeof(double));//detector response along t
 
-#ifdef ROI
+	#ifdef ROI
 	Mask = (uint8_t **)get_img(Geometry->N_x, Geometry->N_z,sizeof(uint8_t));//width,height
 	EllipseA = Geometry->LengthX/2;
 	EllipseB = Geometry->LengthZ/2;
@@ -165,16 +229,14 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		for (j=0; j< Geometry->N_x; j++)
 		{
 			x = Geometry->x0 + ((double)j + 0.5)*Geometry->delta_xz;
-			z = Geometry->z0 + ((double)i+0.5)*Geometry->delta_xz;
-			if (((x*x)/(EllipseA*EllipseA)) + ((z*z)/(EllipseB*EllipseB)) < 0.80)
+			z = Geometry->z0 + ((double)i + 0.5)*Geometry->delta_xz;
+			if (x >= -64 && x <= 64 && z>= -64 && z <= 64)
 			{
 				Mask[i][j] = 1;
 			}
 			else
 			{
 				Mask[i][j] =0;
-				//for(k = 0;k < Geometry->N_y; k++)
-				//Geometry->Object[k][i][j] = 0;
 			}
 
 		}
@@ -182,7 +244,6 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 
 #endif
-
 #ifdef CORRECTION
 	//Calculate Normalization factors
 	NORMALIZATION_FACTOR = (double*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(double));
@@ -199,16 +260,73 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	BEAM_WIDTH = Sinogram->delta_r;
 #endif
 
+
 	MRF_P = CmdInputs->p;
 	SIGMA_X_P = pow(CmdInputs->SigmaX,MRF_P);
 
-	for(i=0;i<Sinogram->N_theta;i++)
+
+
+
+	for(k = 0 ; k <Sinogram->N_theta; k++)
+	{
+		for (i = 0; i < DETECTOR_RESPONSE_BINS; i++)
+		{
+			ProfileCenterT = i*OffsetT;
+			if(Geometry->delta_xy >= Sinogram->delta_t)
+			{
+				if(ProfileCenterT <= ((Geometry->delta_xy/2) - (Sinogram->delta_t/2)))
+					H_t[0][k][i] = Sinogram->delta_t;
+				else {
+					H_t[0][k][i] = -1*ProfileCenterT + (Geometry->delta_xy/2) + Sinogram->delta_t/2;
+				}
+				if(H_t[0][k][i] < 0)
+					H_t[0][k][i] =0;
+
+			}
+			else {
+				if(ProfileCenterT <= Sinogram->delta_t/2 - Geometry->delta_xy/2)
+					H_t[0][k][i] = Geometry->delta_xy;
+				else {
+					H_t[0][k][i] = -ProfileCenterT + (Geometry->delta_xy/2) + Sinogram->delta_t/2;
+				}
+
+				if(H_t[0][k][i] < 0)
+					H_t[0][k][i] =0;
+
+			}
+
+
+
+
+		}
+	}
+
+	/*for(i=0;i<Sinogram->N_theta;i++)
 		for(j=0;j< PROFILE_RESOLUTION;j++)
 			checksum+=VoxelProfile[i][j];
     printf("CHK SUM%lf\n",checksum);
-
+*/
     checksum=0;
 
+
+
+
+
+	//Allocate space for storing columns the A-matrix; an array of pointers to columns
+	//AMatrixCol** AMatrix=(AMatrixCol **)get_spc(Geometry->N_x*Geometry->N_z,sizeof(AMatrixCol*));
+//	DetectorResponse = CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
+
+#ifdef STORE_A_MATRIX
+
+	AMatrixCol**** AMatrix = (AMatrixCol ****)multialloc(sizeof(AMatrixCol*),3,Geometry->N_y,Geometry->N_z,Geometry->N_x);
+#else
+	double y;
+	double t,tmin,tmax,ProfileThickness;
+	int16_t slice_index_min,slice_index_max;
+	AMatrixCol*** TempCol = (AMatrixCol***)multialloc(sizeof(AMatrixCol*),2,Geometry->N_z,Geometry->N_x);
+	AMatrixCol* Aj;
+	AMatrixCol* TempMemBlock;
+#endif
 
 	//Calculating A-Matrix one column at a time
 	//For each entry the idea is to initially allocate space for Sinogram.N_theta * Sinogram.N_x
@@ -238,7 +356,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
     for(j=0; j < Geometry->N_z; j++)
     for(k=0; k < Geometry->N_x; k++)
     {
-   TempCol[j][k] = CE_CalculateAMatrixColumnPartial(j,k,0,Sinogram,Geometry,DetectorResponse);
+   TempCol[j][k] = (AMatrixCol*)CE_CalculateAMatrixColumnPartial(j,k,0,Sinogram,Geometry,DetectorResponse);
 //		TempCol[j][k] = CE_CalculateAMatrixColumnPartial(j,k,Sinogram,Geometry,VoxelProfile);
 //	printf("%d\n",TempCol[j][k]->count);
     }
@@ -270,6 +388,21 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	}*/
 
 		//  p=0;//This is used to access the A-Matrix column correspoding the (i,j,k)the voxel location
+
+
+
+	//Attempt to normalize measurement
+	/*for(i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)
+		for(i_r = 0; i_r < Sinogram->N_r; i_r++)
+			for(i_t = 0; i_t < Sinogram->N_t; i_t++)
+			{
+				Sinogram->counts[i_theta][i_r][i_t]*=0.0025;
+				Sinogram->counts[i_theta][i_r][i_t]-=22.4524;
+			}
+	*/
+
+
+	RandomNumber=init_genrand(1);
 	srand(time(NULL));
 	ArraySize= Geometry->N_z*Geometry->N_x;
 	//ArraySizeK = Geometry->N_x;
@@ -282,12 +415,17 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 
 
+
+//	for(k = 0;k < ArraySizeK; k++)
+//		CounterK[k]=k;
+
+
 		for(j = 0;j < Geometry->N_z; j++)
 			for(k = 0;k < Geometry->N_x; k++)
 			{
 				//generating a random index
-
-				Index = rand()%ArraySize;
+				//Index = rand()%ArraySize;
+				Index=(genrand_int31(RandomNumber))%ArraySize;
 				k_new = Counter[Index]%Geometry->N_x;
 				j_new = Counter[Index]/Geometry->N_x;
 				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
@@ -314,6 +452,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 				}
 				//  p++;
 #else
+
                     y = ((double)i+0.5)*Geometry->delta_xy + Geometry->y0;
 					t = y;
 					tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
@@ -333,38 +472,32 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 					i_theta = floor(TempCol[j_new][k_new]->index[q]/(Sinogram->N_r));
 					i_r =  (TempCol[j_new][k_new]->index[q]%(Sinogram->N_r));
+
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
-					if(i_t == slice_index_min)
-						ProfileThickness = (((i_t+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
-					else
-					{
-						if (i_t == slice_index_max)
+						center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
+						delta_t = fabs(center_t - t);
+						index_delta_t = floor(delta_t/OffsetT);
+						if(index_delta_t < DETECTOR_RESPONSE_BINS)
 						{
-							ProfileThickness = (tmax - ((i_t)*Sinogram->delta_t + Sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t
+							w3 = delta_t - (double)(index_delta_t)*OffsetT;
+							w4 = ((double)index_delta_t+1)*OffsetT - delta_t;
+							ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 						}
 						else
 						{
-							ProfileThickness = Sinogram->delta_t;
+							ProfileThickness=0;
 						}
+						Y_Est[i_theta][i_r][i_t] += ((TempCol[j_new][k_new]->values[q] *ProfileThickness* Geometry->Object[j_new][k_new][i]));
 
-					}
-
-
-
-
-					Y_Est[i_theta][i_r][i_t] += (TempCol[j_new][k_new]->values[q] *ProfileThickness* Geometry->Object[j_new][k_new][i]);
-
-
-
-					}
-
+				    }
 				}
 
 #endif
-			}
+
 
 	       }
+			}
 
 
 
@@ -397,7 +530,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	}
 
 	free(Y_Est);
-
+    free(Sinogram->counts);
 	fclose(Fp);
 
 
@@ -501,30 +634,29 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 		//printf("Iter %d\n",Iter);
 
-		if(Iter%2  == 0) //Homogenouse update
-		{
-		//Homogenous Update
+        AverageUpdate=0;
+		AverageMagnitudeOfRecon=0;
+
 		for(j = 0; j < Geometry->N_z; j++)//Row index
 			for(k = 0; k < Geometry->N_x ; k++)//Column index
 			{
 
-				Index = rand()%ArraySize;
+				//Index = rand()%ArraySize;
+				Index=(genrand_int31(RandomNumber))%ArraySize;
 				k_new = Counter[Index]%Geometry->N_x;
 				j_new = Counter[Index]/Geometry->N_x;
-				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index));
+				memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
 
 				ArraySize--;
 
 
 				TempMemBlock = TempCol[j_new][k_new];
-				UpdateMap[j_new][k_new]=0;
+
 
 				for (i = 0; i < Geometry->N_y; i++)//slice index
 				{
-#ifdef ROI
-					if (Mask[j_new][k_new] == 1)
-					{
-#endif
+
+
 						//Neighborhood of (i,j,k) should be initialized to zeros each time
 
 						for(p = 0; p <= 2; p++)
@@ -598,28 +730,27 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 							i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 							 for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 							 {
-								 if(i_t == slice_index_min)
-									 ProfileThickness = (((i_t+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
+								 center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
+								 delta_t = fabs(center_t - t);
+								 index_delta_t = floor(delta_t/OffsetT);
+
+								 if(index_delta_t < DETECTOR_RESPONSE_BINS)
+								 {
+									 w3 = delta_t - index_delta_t*OffsetT;
+									 w4 = (index_delta_t+1)*OffsetT - delta_t;
+									 //TODO: interpolation
+									 ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
+								 }
 								 else
 								 {
-									 if (i_t == slice_index_max)
-									 {
-										 ProfileThickness = (tmax - ((i_t)*Sinogram->delta_t + Sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t
-									 }
-									 else
-									 {
-										 ProfileThickness = Sinogram->delta_t;
-									 }
-
+									 ProfileThickness=0;
 								 }
-
 
 								 THETA2 += (ProfileThickness*ProfileThickness)*(TempMemBlock->values[q])*(TempMemBlock->values[q])*Weight[i_theta][i_r][i_t];
 								 THETA1 += ErrorSino[i_theta][i_r][i_t]*(TempMemBlock->values[q])*(ProfileThickness)*Weight[i_theta][i_r][i_t];
 							 }
 						}
 #endif
-
 						THETA1*=-1;
 						CE_MinMax(&low,&high);
 
@@ -631,7 +762,8 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 						//Solve the 1-D optimization problem
 						//printf("V before updating %lf",V);
-						UpdatedVoxelValue = solve(CE_DerivOfCostFunc,low,high,accuracy,&errorcode);
+						DerivOfCostFunc docf(NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
+						UpdatedVoxelValue = solve(&docf,low,high,accuracy,&errorcode);
 						if(errorcode == 0)
 						{
 							//    printf("(%lf,%lf,%lf)\n",low,high,UpdatedVoxelValue);
@@ -645,10 +777,17 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 						//TODO Print appropriate error messages for other values of error code
 						Geometry->Object[j_new][k_new][i] = UpdatedVoxelValue;
-						//Update the ErrorSinogram
 
-						//Updating the magnitude map for NH-ICD
-						UpdateMap[j_new][k_new] +=  fabs(Geometry->Object[j_new][k_new][i] - V);
+#ifdef ROI
+						if(Mask[j_new][k_new] == 1)
+						{
+
+							AverageUpdate+=fabs(Geometry->Object[j_new][k_new][i]-V);
+							AverageMagnitudeOfRecon+=Geometry->Object[j_new][k_new][i];
+						}
+#endif
+
+						//Update the ErrorSinogram
 
 #ifdef STORE_A_MATRIX
 						for (q = 0;q < AMatrix[i][j_new][k_new]->count; q++)
@@ -666,311 +805,53 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 					i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
 					i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
+
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
-					if(i_t == slice_index_min)
-						ProfileThickness = (((i_t+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//(Sinogram->delta_t); //Will be < Sinogram->delta_t
-					else
-					{
-						if (i_t == slice_index_max)
+						center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
+						delta_t = fabs(center_t - t);
+						index_delta_t = floor(delta_t/OffsetT);
+
+						if(index_delta_t < DETECTOR_RESPONSE_BINS)
 						{
-							ProfileThickness = (tmax - ((i_t)*Sinogram->delta_t + Sinogram->T0));//(Sinogram->delta_t);//Will be < Sinogram->delta_t
+							w3 = delta_t - index_delta_t*OffsetT;
+							w4 = (index_delta_t+1)*OffsetT - delta_t;
+								//TODO: interpolation
+							ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 						}
 						else
 						{
-							ProfileThickness = (Sinogram->delta_t);
+							ProfileThickness=0;
 						}
 
-					}
-
-							ErrorSino[i_theta][i_r][i_t] -= (TempMemBlock->values[q] *ProfileThickness* (Geometry->Object[j_new][k_new][i] - V));
+							ErrorSino[i_theta][i_r][i_t] -=((TempMemBlock->values[q] *ProfileThickness* (Geometry->Object[j_new][k_new][i] - V)));
 					}
 					}
 #endif
 						Idx++;
-
-
-
-#ifdef ROI
-				} //closing the if for region of interest only updates
-#endif
-
-				}
-			}
-			//Need to filter Update map
-			for(j = 0; j < Geometry->N_z; j ++)
-				for(k = 0; k < Geometry->N_x; k++)
-				{
-					temp=0;
-					for(s=-2 ; s <= 2 ; s++)
-						for(w = -2; w <= 2; w++)
-							if(j+s >= 0 && j+s < Geometry->N_z && k + w >= 0 && k+w < Geometry->N_x)
-								temp+=(UpdateMap[j+s][k+w]*HammingWindow[s+2][w+2]);
-					UpdateMap[j][k]=temp;
-
-				}
-
-			//Find Max
-			MaxUpdateMagnitude = -1;
-			for (j=20; j < Geometry->N_z-20; j++)
-				for (k=0+50; k < Geometry->N_x-50; k++)
-					if(MaxUpdateMagnitude < UpdateMap[j][k])
-						MaxUpdateMagnitude = UpdateMap[j][k];
-
-
-
-
-
-
-		}
-		else//Nonhomgenous update
-		{
-
-			//Non-homogenous Update - K times of the values with highest say 10% of  UpdateMap vals
-
-			for(NonHomIter = 0; NonHomIter < 10;NonHomIter++)//Need to change 10 to some other number possibly
-			{
-				ArraySize = Geometry->N_x*Geometry->N_z;
-				for(j_new = 0;j_new < ArraySize; j_new++)
-					Counter[j_new]=j_new;
-				//Need to filter the UpdateMap
-				UpdateCount=0;
-
-				//printf("MaxUpdateMag=%lf\n",MaxUpdateMagnitude);
-
-			for(j = 0; j < Geometry->N_z; j++)//Row index
-				for(k = 0; k < Geometry->N_x ; k++)//Column index
-				{
-					Index = rand()%ArraySize;
-					k_new = Counter[Index]%Geometry->N_x;
-					j_new = Counter[Index]/Geometry->N_x;
-					memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index));
-
-					ArraySize--;
-
-
-					TempMemBlock = TempCol[j_new][k_new];
-
-					if(UpdateMap[j_new][k_new] > 0.4*MaxUpdateMagnitude)
-					{
-					UpdateCount++;
-					UpdateMap[j_new][k_new]=0;
-					for (i = 0; i < Geometry->N_y; i++)//slice index
-					{
-#ifdef ROI
-						if (Mask[j_new][k_new] == 1)
-						{
-#endif
-
-							//Neighborhood of (i,j,k) should be initialized to zeros each time
-
-							for(p = 0; p <= 2; p++)
-								for(q = 0; q <= 2; q++)
-									for (r = 0; r <= 2;r++)
-										NEIGHBORHOOD[p][q][r] = 0.0;
-
-							//For a given (i,j,k) store its 26 point neighborhood
-							for(p = -1; p <=1; p++)
-								for(q = -1; q <= 1; q++)
-									for(r = -1; r <= 1;r++)
-									{
-										if(i+p >= 0 && i+p < Geometry->N_y)
-											if(j_new+q >= 0 && j_new+q < Geometry->N_z)
-												if(k_new+r >= 0 && k_new+r < Geometry->N_x)
-												{
-													NEIGHBORHOOD[p+1][q+1][r+1] = Geometry->Object[q+j_new][r+k_new][p+i];
-												}
-									}
-							NEIGHBORHOOD[1][1][1] = 0.0;
-
-#ifdef DEBUG
-							if(i==0 && j == 31 && k == 31)
-							{
-								printf("***************************\n");
-								printf("Geom %lf\n",Geometry->Object[i][31][31]);
-								for(p = 0; p <= 2; p++)
-									for(q = 0; q <= 2; q++)
-										for (r = 0; r <= 2;r++)
-											printf("%lf\n",NEIGHBORHOOD[p][q][r]);
-							}
-#endif
-							//Compute theta1 and theta2
-
-							V = Geometry->Object[j_new][k_new][i];//Store the present value of the voxel
-							THETA1 = 0.0;
-							THETA2 = 0.0;
-
-#ifdef STORE_A_MATRIX
-
-							for (q = 0;q < AMatrix[i][j_new][k_new]->count; q++)
-							{
-
-								RowIndex = floor(AMatrix[i][j_new][k_new]->index[q]/(Sinogram->N_r*Sinogram->N_t));
-								ColIndex = (AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_r*Sinogram->N_t))%(Sinogram->N_r);
-								SliceIndex = floor((AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_r*Sinogram->N_t))/(Sinogram->N_r));
-
-								THETA2 += (AMatrix[i][j_new][k_new]->values[q])*(AMatrix[i][j_new][k_new]->values[q])*Weight[SliceIndex][RowIndex][ColIndex];
-								THETA1 += ErrorSino[SliceIndex][RowIndex][ColIndex]*(AMatrix[i][j_new][k_new]->values[q])*Weight[SliceIndex][RowIndex][ColIndex];
-							}
-#else
-
-							y = ((double)i+0.5)*Geometry->delta_xy + Geometry->y0;
-							t = y;
-							tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-							tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax? t + Geometry->delta_xy/2 : Sinogram->TMax;
-
-							slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
-							slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
-
-							if(slice_index_min < 0)
-								slice_index_min = 0;
-							if(slice_index_max >= Sinogram->N_t)
-								slice_index_max = Sinogram->N_t-1;
-
-							//TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
-							for (q = 0;q < TempMemBlock->count; q++)
-							{
-
-								i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
-								i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
-								for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
-								{
-									if(i_t == slice_index_min)
-										ProfileThickness = (((i_t+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
-									else
-									{
-										if (i_t == slice_index_max)
-										{
-											ProfileThickness = (tmax - ((i_t)*Sinogram->delta_t + Sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t
-										}
-										else
-										{
-											ProfileThickness = Sinogram->delta_t;
-										}
-
-									}
-
-
-									THETA2 += (ProfileThickness*ProfileThickness)*(TempMemBlock->values[q])*(TempMemBlock->values[q])*Weight[i_theta][i_r][i_t];
-									THETA1 += ErrorSino[i_theta][i_r][i_t]*(TempMemBlock->values[q])*(ProfileThickness)*Weight[i_theta][i_r][i_t];
-								}
-							}
-#endif
-
-							THETA1*=-1;
-							CE_MinMax(&low,&high);
-
-
-#ifdef DEBUG
-							if(i ==0 && j==31 && k==31)
-								printf("(%lf,%lf,%lf) \n",low,high,V - (THETA1/THETA2));
-#endif
-
-							//Solve the 1-D optimization problem
-							//printf("V before updating %lf",V);
-							UpdatedVoxelValue = solve(CE_DerivOfCostFunc,low,high,accuracy,&errorcode);
-							if(errorcode == 0)
-							{
-								//    printf("(%lf,%lf,%lf)\n",low,high,UpdatedVoxelValue);
-								//printf("%lf\n",UpdatedVoxelValue);
-								if(UpdatedVoxelValue < 0.0)//Enforcing positivity constraints
-									UpdatedVoxelValue = 0.0;
-							}
-							else {
-								printf("Error \n");
-							}
-
-							//TODO Print appropriate error messages for other values of error code
-							Geometry->Object[j_new][k_new][i] = UpdatedVoxelValue;
-							//Update the ErrorSinogram
-
-							//Updating the magnitude map for NH-ICD
-							UpdateMap[j_new][k_new] +=  fabs(Geometry->Object[j_new][k_new][i] - V);
-
-#ifdef STORE_A_MATRIX
-							for (q = 0;q < AMatrix[i][j_new][k_new]->count; q++)
-							{
-
-								RowIndex = floor(AMatrix[i][j_new][k_new]->index[q]/(Sinogram->N_r*Sinogram->N_t));
-								ColIndex = (AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_r*Sinogram->N_t))%(Sinogram->N_r);
-								SliceIndex = floor((AMatrix[i][j_new][k_new]->index[q]%(Sinogram->N_r*Sinogram->N_t))/(Sinogram->N_r));
-								ErrorSino[SliceIndex][RowIndex][ColIndex] -= (AMatrix[i][j_new][k_new]->values[q] * (Geometry->Object[i][j_new][k_new] - V));
-							}
-#else
-
-							for (q = 0;q < TempMemBlock->count; q++)
-							{
-
-								i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
-								i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
-								for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
-								{
-									if(i_t == slice_index_min)
-										ProfileThickness = (((i_t+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//(Sinogram->delta_t); //Will be < Sinogram->delta_t
-									else
-									{
-										if (i_t == slice_index_max)
-										{
-											ProfileThickness = (tmax - ((i_t)*Sinogram->delta_t + Sinogram->T0));//(Sinogram->delta_t);//Will be < Sinogram->delta_t
-										}
-										else
-										{
-											ProfileThickness = (Sinogram->delta_t);
-										}
-
-									}
-
-									ErrorSino[i_theta][i_r][i_t] -= (TempMemBlock->values[q] *ProfileThickness* (Geometry->Object[j_new][k_new][i] - V));
-								}
-							}
-#endif
-							Idx++;
-
-
-#ifdef ROI
-					} //closing the if for region of interest only updates
-#endif
-
-
-				    }
-						}
-				}
-				//printf("Number of voxel lines updated =%d\n",UpdateCount);
-				//Need to filter Update map
-				for(j = 0; j < Geometry->N_z; j ++)
-					for(k = 0; k < Geometry->N_x; k++)
-					{
-						temp=0;
-						for(s=-2 ; s <= 2 ; s++)
-							for(w = -2; w <= 2; w++)
-								if(j+s >= 0 && j+s < Geometry->N_z && k + w >= 0 && k+w < Geometry->N_x)
-									temp+=(UpdateMap[j+s][k+w]*HammingWindow[s+2][w+2]);
-						UpdateMap[j][k]=temp;
-
 					}
 
-				MaxUpdateMagnitude = -1;
-				for (j=0+20; j < Geometry->N_z-20; j++)
-					for (k=0+50; k < Geometry->N_x-50; k++)
-						if(UpdateMap[j][k] > MaxUpdateMagnitude)
-							MaxUpdateMagnitude = UpdateMap[j][k];
-
-
 
 
 
 			}
 
+#ifdef ROI
+		if(AverageMagnitudeOfRecon > 0)
+		{
+			//printf("%lf\n",AverageUpdate/AverageMagnitudeOfRecon);
+		if((AverageUpdate/AverageMagnitudeOfRecon) < .005)
+		{
+			printf("This is the terminating point %d\n",Iter);
+			break;
 		}
+		}
+#endif
 
 		if (CE_Cancel == 1)
 		{
 			return err;
 		}
-
-
-
-
 
 #ifdef COST_CALCULATE
 		/*********************Cost Calculation***************************************************/
@@ -1047,18 +928,12 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 		cost[Iter+1] += (temp/(MRF_P*SIGMA_X_P));
 
+		if(cost[Iter+1]-cost[Iter] > 0)
+			printf("Cost just increased!\n");
 
-		//Calculating the approximate error magnitude in terms of the updates
-/*		temp=0;
-		for (j=0; j < Geometry->N_z; j++)
-			for (k=0; k < Geometry->N_x; k++)
-				temp+=UpdateMap[j][k];
+		printf("%lf\n",cost[Iter+1]);
 
-		cost[Iter] = temp;*/
-
-		printf("%lf\n",cost[Iter]);
-
-		fwrite(&cost[Iter],sizeof(double),1,Fp2);
+		fwrite(&cost[Iter+1],sizeof(double),1,Fp2);
 		/*******************************************************************************/
 #else
 		printf("%d\n",Iter);
@@ -1086,22 +961,19 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 		}
 #endif
 
-
 	}
 
-	for (j=0; j < Geometry->N_z; j++)
-		for (k=0; k < Geometry->N_x; k++)
-			fwrite(&UpdateMap[j][k], sizeof(double), 1, Fp4);
 
-	free_img((void*)VoxelProfile);
+
+	free_img((void**)VoxelProfile);
 	//free(AMatrix);
 #ifdef STORE_A_MATRIX
 	multifree(AMatrix,2);
 	//#else
 	//	free((void*)TempCol);
 #endif
-	free_3D((void*)ErrorSino);
-	free_3D((void*)Weight);
+	free_3D((void***)ErrorSino);
+	free_3D((void***)Weight);
 #ifdef COST_CALCULATE
 	fclose(Fp2);// writing cost function
 #endif
@@ -1116,7 +988,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
  //Finds the min and max of the neighborhood . This is required prior to calling
  solve()
  *****************************************************************************/
-void CE_MinMax(double *low,double *high)
+void BREngine::CE_MinMax(double *low,double *high)
 {
 	uint8_t i,j,k;
 	*low=NEIGHBORHOOD[0][0][0];
@@ -1148,7 +1020,7 @@ void CE_MinMax(double *low,double *high)
 
 
 
-void* CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
+void* BREngine::CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 {
 	double angle,MaxValLineIntegral;
 	double temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
@@ -1159,25 +1031,25 @@ void* CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 
 	for (i=0;i<Sinogram->N_theta;i++)
 	{
-		Sinogram->angles[i]=Sinogram->angles[i]*(PI/180.0);
+		Sinogram->angles[i]=Sinogram->angles[i]*(M_PI/180.0);
 		angle=Sinogram->angles[i];
-		while(angle > PI/2)
-			angle -= PI/2;
+		while(angle > M_PI/2)
+			angle -= M_PI/2;
 
 		while(angle < 0)
-			angle +=PI/2;
+			angle +=M_PI/2;
 
-		if(angle <= PI/4)
+		if(angle <= M_PI/4)
 		{
 			MaxValLineIntegral = Geometry->delta_xz/cos(angle);
 		}
 		else
 		{
-			MaxValLineIntegral = Geometry->delta_xz/cos(PI/2-angle);
+			MaxValLineIntegral = Geometry->delta_xz/cos(M_PI/2-angle);
 		}
-		temp=cos(PI/4);
-		dist1 = temp * cos((PI/4.0 - angle));
-		dist2 = temp * fabs((cos((PI/4.0 + angle))));
+		temp=cos(M_PI/4);
+		dist1 = temp * cos((M_PI/4.0 - angle));
+		dist2 = temp * fabs((cos((M_PI/4.0 + angle))));
 		LeftCorner = 1-dist1;
 		LeftNear = 1-dist2;
 		RightNear = 1+dist2;
@@ -1209,12 +1081,12 @@ void* CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 /*******************************************************************
  Find each column of the Forward Projection Matrix A
  ********************************************************************/
-void ForwardProject(Sino *Sinogram,Geom* Geom)
+void BREngine::ForwardProject(Sino *Sinogram,Geom* Geom)
 {
 
 }
 
-void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
+void* BREngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
 {
 	int32_t i,j,k,sliceidx;
 	double x,z,y;
@@ -1423,7 +1295,7 @@ void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino*
 		tmax = (t + Geometry->delta_xy/2) <= Geometry->LengthY/2 ? t + Geometry->delta_xy/2 : Geometry->LengthY/2;
 
 
-		if(Sinogram->angles[i]*(180/PI) >= -45 && Sinogram->angles[i]*(180/PI) <= 45)
+		if(Sinogram->angles[i]*(180/M_PI) >= -45 && Sinogram->angles[i]*(180/M_PI) <= 45)
 		{
 			rmin = r - (Geometry->delta_xz/2)*(cosine[i]);
 			rmax = r + (Geometry->delta_xz/2)*(cosine[i]);
@@ -1530,7 +1402,7 @@ void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino*
 			}
 			else
 			{
-				//  printf("%lf \n",Sinogram->angles[i]*180/PI);
+				//  printf("%lf \n",Sinogram->angles[i]*180/M_PI);
 			}
 		}
 
@@ -1571,7 +1443,7 @@ void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino*
 
 /* Initializes the global variables cosine and sine to speed up computation
  */
-void CE_CalculateSinCos(Sino* Sinogram)
+void BREngine::CE_CalculateSinCos(Sino* Sinogram)
 {
 	uint16_t i;
 	cosine=(double*)get_spc(Sinogram->N_theta,sizeof(double));
@@ -1584,7 +1456,7 @@ void CE_CalculateSinCos(Sino* Sinogram)
 	}
 }
 
-void CE_InitializeBeamProfile(Sino* Sinogram)
+void BREngine::CE_InitializeBeamProfile(Sino* Sinogram)
 {
 	uint16_t i;
 	double sum=0,W;
@@ -1592,8 +1464,8 @@ void CE_InitializeBeamProfile(Sino* Sinogram)
 	W=BEAM_WIDTH/2;
 	for (i=0; i < BEAM_RESOLUTION ;i++)
 	{
-		//BeamProfile[i] = (1.0/(BEAM_WIDTH)) * ( 1 + cos ((PI/W)*fabs(-W + i*(BEAM_WIDTH/BEAM_RESOLUTION))));
-		BeamProfile[i] = 0.54 - 0.46*cos((2*PI/BEAM_RESOLUTION)*i);
+		//BeamProfile[i] = (1.0/(BEAM_WIDTH)) * ( 1 + cos ((M_PI/W)*fabs(-W + i*(BEAM_WIDTH/BEAM_RESOLUTION))));
+		BeamProfile[i] = 0.54 - 0.46*cos((2*M_PI/BEAM_RESOLUTION)*i);
 		sum=sum+BeamProfile[i];
 	}
 
@@ -1606,82 +1478,10 @@ void CE_InitializeBeamProfile(Sino* Sinogram)
 		// printf("%lf\n",BeamProfile[i]);
 	}
 
-
-
-}
-
-double CE_DerivOfCostFunc(double u)
-{
-	double temp=0,value;
-	uint8_t i,j,k;
-	for (i = 0;i < 3;i++)
-		for (j = 0; j <3; j++)
-			for (k = 0;k < 3; k++)
-			{
-
-				if( u - NEIGHBORHOOD[i][j][k] >= 0.0)
-					temp+=(FILTER[i][j][k]*(1.0)*pow(fabs(u-NEIGHBORHOOD[i][j][k]),(MRF_P-1)));
-				else
-					temp+=(FILTER[i][j][k]*(-1.0)*pow(fabs(u-NEIGHBORHOOD[i][j][k]),(MRF_P -1)));
-			}
-
-	//printf("V WHile updating %lf\n",V);
-	//scanf("Enter value %d\n",&k);
-	value = THETA1 +  THETA2*(u-V) + (temp/SIGMA_X_P);
-
-	return value;
 }
 
 
-double  solve(
-			  double (*f)(), /* pointer to function to be solved */
-			  double a,      /* minimum value of solution */
-			  double b,      /* maximum value of solution */
-			  double err,    /* accuarcy of solution */
-			  int *code      /* error code */
-			  )
-/* Solves equation (*f)(x) = 0 on x in [a,b]. Uses half interval method.*/
-/* Requires that (*f)(a) and (*f)(b) have opposite signs.		*/
-/* Returns code=0 if signs are opposite.				*/
-/* Returns code=1 if signs are both positive. 				*/
-/* Returns code=-1 if signs are both negative. 				*/
-{
-	int     signa,signb,signc;
-	double  fa,fb,fc,c,signaling_nan();
-	double  dist;
-
-	fa = (*f)(a);
-	signa = fa>0;
-	fb = (*f)(b);
-	signb = fb>0;
-
-	/* check starting conditions */
-	if( signa==signb ) {
-		if(signa==1) *code = 1;
-		else *code = -1;
-		return(0.0);
-	}
-	else *code = 0;
-
-	/* half interval search */
-	if( (dist=b-a)<0 ) dist = -dist;
-	while(dist>err) {
-		c = (b+a)/2;
-		fc = (*f)(c);  signc = fc>0;
-		if(signa == signc) { a = c; fa = fc; }
-		else { b = c; fb = fc; }
-		if( (dist=b-a)<0 ) dist = -dist;
-	}
-
-	/* linear interpolation */
-	if( (fb-fa)==0 ) return(a);
-	else {
-		c = (a*fb - b*fa)/(fb-fa);
-		return(c);
-	}
-}
-
-double CE_ComputeCost(double*** ErrorSino,double*** Weight,Sino* Sinogram,Geom* Geometry)
+double BREngine::CE_ComputeCost(double*** ErrorSino,double*** Weight,Sino* Sinogram,Geom* Geometry)
 {
 	double cost=0,temp=0;
 	int16_t i,j,k,p,q,r;
@@ -1693,6 +1493,7 @@ double CE_ComputeCost(double*** ErrorSino,double*** Weight,Sino* Sinogram,Geom* 
 		for (j = 0; j < Sinogram->N_theta; j++)
 			for( k = 0; k < Sinogram->N_r; k++)
 				cost+=(ErrorSino[i][j][k] * ErrorSino[i][j][k] * Weight[i][j][k]);
+	cost/=2;
 
 	for( i=0; i < Geometry->N_y;i++ )
 		for (j = 0; j < Geometry->N_z; j++)
@@ -1712,11 +1513,11 @@ double CE_ComputeCost(double*** ErrorSino,double*** Weight,Sino* Sinogram,Geom* 
 	return cost;
 }
 
-void* CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
+void* BREngine::CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
 {
 	FILE* Fp = fopen("DetectorResponse.bin","w");
 	double Offset,Temp,r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,t,tmin;
-	double OffsetR,OffsetT,Left;
+	//double OffsetR,OffsetT,Left;
 	double ***H;
 	double r0 = -(BEAM_WIDTH)/2;
 	double t0 = -(BEAM_WIDTH)/2;
@@ -1725,8 +1526,8 @@ void* CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometr
 	//NumOfDisplacements=32;
 	H = (double***)get_3D(1, Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(double));//change from 1 to DETECTOR_RESPONSE_BINS
 	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_xz);
-	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
-	OffsetT = ((Geometry->delta_xy/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
+	//OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+	//OffsetT = ((Geometry->delta_xy/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 
 	for(k = 0 ; k < Sinogram->N_theta; k++)
 	{
@@ -1938,7 +1739,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col,Sino* Sinogram,
 }
 */
 
-void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double*** DetectorResponse)
+void* BREngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double*** DetectorResponse)
 {
 	int32_t i,j,k,sliceidx;
 	double x,z,y;
@@ -1951,22 +1752,17 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 	double MaximumSpacePerColumn;//we will use this to allocate space
 	double AvgNumXElements,AvgNumYElements;//This is a measure of the expected amount of space per Amatrixcolumn. We will make a overestimate to avoid seg faults
 	double ProfileThickness,stepsize;
-	double OffsetR;
-	double OffsetT;
+
 	//interpolation variables
 	double w1,w2,w3,w4,f1,f2,InterpolatedValue,ContributionAlongT;
 	int32_t index_min,index_max,slice_index_min,slice_index_max,index_delta_r,index_delta_t;//stores the detector index in which the profile lies
 	int32_t BaseIndex,FinalIndex,ProfileIndex=0;
 	int32_t NumOfDisplacements=32;
 	uint32_t count = 0;
-  AMatrixCol* Ai = NULL;
-  AMatrixCol* Temp = NULL;
 
-	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
-	OffsetT = ((Geometry->delta_xz/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 
-	Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
-	Temp = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));//This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
+	AMatrixCol* Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
+	AMatrixCol* Temp = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));//This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
 
 	x = Geometry->x0 + ((double)col+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
 	z = Geometry->z0 + ((double)row+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
@@ -2116,5 +1912,45 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 }
 
 #endif
+/*
+//Function to compute parameters of thesurrogate function
+void CE_ComputeParameters(double x_j,double x_k,double umin,double umax)
+{
+	double Delta0,DeltaMin,DeltaMax,T,a,b,c;
+	Delta0 = x_j - x_k;
+	DeltaMin = umin - x_k;
+	DeltaMax = umax - x_k;
+	if(fabs(Delta0) <= Min(fabs(DeltaMin),fabs(DeltaMax)))
+		T = -Delta0;
+	else if(fabs(DeltaMin) <= Min(fabs(Delta0),fabs(DeltaMax)))
+		T = DeltaMin;
+	else if(fabs(DeltaMax) <= Min(fabs(DeltaMin),fabs(Delta0)))
+		T = DeltaMax;
+	if(Delta0 != 0)
+		a=
+		else {
+			a =
+		}
+	b = ;
+	c = ;
+
+}
+
+double CE_FunctionalSubstitution(double x, int16_t j)
+{
+	int16_t i,j,k;
+	double umin,umax,x_j;
+	double sum1=0,sum2=0;
+	CE_MinMax(&umin,&umax);
+	for(i = -1; i<=1 ;i++)
+		for(j=-1;j<=1;j++)
+			for(k=-1; k <=1; k++)
+				ComputeParameters(x,, <#double umin#>, <#double umax#>)
+
+
+}
+
+*/
+
 
 
