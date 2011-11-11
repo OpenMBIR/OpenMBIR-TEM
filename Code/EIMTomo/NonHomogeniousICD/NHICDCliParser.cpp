@@ -1,33 +1,37 @@
 /*
- * JointEstimationCLIParser.cpp
+ * NHICDCliParser.cpp
  *
  *  Created on: Sep 19, 2011
  *      Author: mjackson
  */
 
-#include "JointEstimationCLIParser.h"
-
+#include "NHICDCliParser.h"
 #include <string.h>
 
 #include <tclap/CmdLine.h>
 #include <tclap/ValueArg.h>
-#include "EIMTomo/EIMTomoVersion.h"
-
-JointEstimationCLIParser::JointEstimationCLIParser()
-{
-
-}
-
-JointEstimationCLIParser::~JointEstimationCLIParser()
-{
-
-}
-
+#include "EIMTomo/common/EIMTomoVersion.h"
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-char* JointEstimationCLIParser::copyFilenameToNewCharBuffer(const std::string &fname)
+NHICDCliParser::NHICDCliParser()
+{
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+NHICDCliParser::~NHICDCliParser()
+{
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+char* NHICDCliParser::copyFilenameToNewCharBuffer(const std::string &fname)
 {
   std::string::size_type size = fname.size() + 1;
   char* buf = NULL;
@@ -43,11 +47,11 @@ char* JointEstimationCLIParser::copyFilenameToNewCharBuffer(const std::string &f
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int JointEstimationCLIParser::parseCLIArguments(int argc,char *argv[], CommandLineInputs* Input)
+int NHICDCliParser::parseCLIArguments(int argc,char *argv[], CommandLineInputs* Input)
 {
   if ( NULL == Input)
   {
-    printf("The EIMTomo_Inputs pointer was null. Returning early.\n");
+    printf("The EMMPM_Inputs pointer was null. Returning early.\n");
     return -1;
   }
 

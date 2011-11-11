@@ -8,43 +8,33 @@
  */
 
 
-#include "NHICDEngine.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 
-#include "EIMTomo/EIMTomo.h"
+#include "EIMTomo/common/EIMTomoTypes.h"
 #include "EIMTomo/common/allocate.h"
-#include "EIMTomo/common/EIMTime.h"
-#include "EIMTomo/common/EIMMath.h"
+#include "EIMTomo/common/EMTime.h"
+#include "EIMTomo/common/EMMath.h"
+#include "NHICDEngine.h"
 
-
-  //#define DEBUG
-#define PROFILE_RESOLUTION 1536
-
-  //Beam Parameters - This is set to some number <<< Sinogram->delta_r.
-//#define BEAM_WIDTH 0.050000
-#define BEAM_RESOLUTION 512
-#define AREA_WEIGHTED
-//#define ROI //Region Of Interest
-  //#define DISTANCE_DRIVEN
-  //#define CORRECTION
-//#define STORE_A_MATRIX
-//  #define WRITE_INTERMEDIATE_RESULTS
-#define COST_CALCULATE
-#define BEAM_CALCULATION
-#define DETECTOR_RESPONSE_BINS 64
-
-
+static char CE_Cancel = 0;
 
 
 #ifdef CORRECTION
   double *NORMALIZATION_FACTOR;
 #endif
+  //Structure to store a single column(A_i) of the A-matrix
+  typedef struct
+  {
+    double* values;//Store the non zero entries
+    uint32_t count;//The number of non zero values present in the column
+    uint32_t *index;//This maps each value to its location in the column. The entries in this can vary from 0 to Sinogram.N_x Sinogram.N_theta-1
+  }AMatrixCol;
 
-#if 0
+
   //Markov Random Field Prior parameters - Globals -:(
   double FILTER[3][3][3]={{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}},
     {{0.0370,0.0523,0.0370},{0.0523,0.0,0.0523},{0.0370,0.0523,  0.0370}},
@@ -56,119 +46,6 @@
   double *cosine,*sine;//used to store cosine and sine of all angles through which sample is tilted
   double *BeamProfile;//used to store the shape of the e-beam
     double BEAM_WIDTH;
-#endif
-
-
-
- /**
- *
- */
-class DerivOfCostFunc
-{
-  public:
-    DerivOfCostFunc(DATA_TYPE NEIGHBORHOOD[3][3][3],
-                    DATA_TYPE FILTER[3][3][3],
-                    DATA_TYPE V,
-                    DATA_TYPE THETA1,
-                    DATA_TYPE THETA2,
-                    DATA_TYPE SIGMA_X_P,
-                    DATA_TYPE MRF_P) :
-
-        V(V), THETA1(THETA1), THETA2(THETA2), SIGMA_X_P(SIGMA_X_P), MRF_P(MRF_P)
-    {
-    }
-
-    virtual ~DerivOfCostFunc()
-    {
-    }
-
-    double execute(DATA_TYPE u) const
-    {
-      double temp = 0, value;
-      uint8_t i, j, k;
-      for (i = 0; i < 3; i++)
-        for (j = 0; j < 3; j++)
-          for (k = 0; k < 3; k++)
-          {
-
-            if(u - NEIGHBORHOOD[i][j][k] >= 0.0) temp += (FILTER[i][j][k] * (1.0) * pow(fabs(u - NEIGHBORHOOD[i][j][k]), (MRF_P - 1)));
-            else temp += (FILTER[i][j][k] * (-1.0) * pow(fabs(u - NEIGHBORHOOD[i][j][k]), (MRF_P - 1)));
-          }
-
-      //printf("V WHile updating %lf\n",V);
-      //scanf("Enter value %d\n",&k);
-      value = THETA1 + THETA2 * (u - V) + (temp / SIGMA_X_P);
-
-      return value;
-    }
-
-  protected:
-    DerivOfCostFunc()
-    {
-    }
-
-  private:
-    DATA_TYPE NEIGHBORHOOD[3][3][3];
-    DATA_TYPE FILTER[3][3][3];
-    DATA_TYPE V;
-    DATA_TYPE THETA1;
-    DATA_TYPE THETA2;
-    DATA_TYPE SIGMA_X_P;
-    DATA_TYPE MRF_P;
-
-    DerivOfCostFunc(const DerivOfCostFunc&); // Copy Constructor Not Implemented
-    void operator=(const DerivOfCostFunc&); // Operator '=' Not Implemented
-};
-
-
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-NHICDEngine::NHICDEngine() :
-    CE_Cancel(false)
-{
-
-  FILTER[0][0][0] = 0.0302;
-  FILTER[0][0][1] = 0.0370;
-  FILTER[0][0][2] = 0.0302;
-  FILTER[0][1][0] = 0.0370;
-  FILTER[0][1][1] = 0.0523;
-  FILTER[0][1][2] = 0.0370;
-  FILTER[0][2][0] = 0.0302;
-  FILTER[0][2][1] = 0.0370;
-  FILTER[0][2][2] = 0.0302;
-
-  FILTER[1][0][0] = 0.0370;
-  FILTER[1][0][1] = 0.0523;
-  FILTER[1][0][2] = 0.0370;
-  FILTER[1][1][0] = 0.0523;
-  FILTER[1][1][1] = 0.0000;
-  FILTER[1][1][2] = 0.0523;
-  FILTER[1][2][0] = 0.0370;
-  FILTER[1][2][1] = 0.0523;
-  FILTER[1][2][2] = 0.0370;
-
-  FILTER[2][0][0] = 0.0302;
-  FILTER[2][0][1] = 0.0370;
-  FILTER[2][0][2] = 0.0302;
-  FILTER[2][1][0] = 0.0370;
-  FILTER[2][1][1] = 0.0523;
-  FILTER[2][1][2] = 0.0370;
-  FILTER[2][2][0] = 0.0302;
-  FILTER[2][2][1] = 0.0370;
-  FILTER[2][2][2] = 0.0302;
-
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-NHICDEngine::~NHICDEngine()
-{
-
-}
-
 
 
 // void CE_cancel()
@@ -179,7 +56,7 @@ NHICDEngine::~NHICDEngine()
 //
 // -----------------------------------------------------------------------------
 
-int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdInputs)
+int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdInputs)
 {
 
 	uint8_t err = 0;
@@ -271,13 +148,13 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
 
 
 	//calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram Structure are converted to radians
-	VoxelProfile = (double**)CE_CalculateVoxelProfile(Sinogram,Geometry); //Verified with ML
+	VoxelProfile = CE_CalculateVoxelProfile(Sinogram,Geometry); //Verified with ML
 	CE_CalculateSinCos(Sinogram);
 	//Initialize the e-beam
 	CE_InitializeBeamProfile(Sinogram); //verified with ML
 
 	//calculate sine and cosine of all angles and store in the global arrays sine and cosine
-	DetectorResponse = (double***)CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
+	DetectorResponse = CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
 
 #ifdef ROI
 	Mask = (uint8_t **)get_img(Geometry->N_x, Geometry->N_z,sizeof(uint8_t));//width,height
@@ -361,7 +238,7 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
     for(j=0; j < Geometry->N_z; j++)
     for(k=0; k < Geometry->N_x; k++)
     {
-   TempCol[j][k] = (AMatrixCol*)CE_CalculateAMatrixColumnPartial(j,k,0,Sinogram,Geometry,DetectorResponse);
+   TempCol[j][k] = CE_CalculateAMatrixColumnPartial(j,k,0,Sinogram,Geometry,DetectorResponse);
 //		TempCol[j][k] = CE_CalculateAMatrixColumnPartial(j,k,Sinogram,Geometry,VoxelProfile);
 //	printf("%d\n",TempCol[j][k]->count);
     }
@@ -454,7 +331,7 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
 				{
 				    //calculating the footprint of the voxel in the t-direction
 
-					i_theta = floor(static_cast<float>(TempCol[j_new][k_new]->index[q]/(Sinogram->N_r)));
+					i_theta = floor(TempCol[j_new][k_new]->index[q]/(Sinogram->N_r));
 					i_r =  (TempCol[j_new][k_new]->index[q]%(Sinogram->N_r));
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
@@ -717,7 +594,7 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
 						for (q = 0;q < TempMemBlock->count; q++)
 						{
 
-							i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
+							i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
 							i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 							 for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 							 {
@@ -754,9 +631,7 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
 
 						//Solve the 1-D optimization problem
 						//printf("V before updating %lf",V);
-            DerivOfCostFunc docf(NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
-
-						UpdatedVoxelValue = solve(&docf,low,high,accuracy,&errorcode);
+						UpdatedVoxelValue = solve(CE_DerivOfCostFunc,low,high,accuracy,&errorcode);
 						if(errorcode == 0)
 						{
 							//    printf("(%lf,%lf,%lf)\n",low,high,UpdatedVoxelValue);
@@ -789,7 +664,7 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
 					for (q = 0;q < TempMemBlock->count; q++)
 					{
 
-					i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
+					i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
 					i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
@@ -956,7 +831,7 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
 							for (q = 0;q < TempMemBlock->count; q++)
 							{
 
-								i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
+								i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
 								i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 								for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 								{
@@ -993,8 +868,7 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
 
 							//Solve the 1-D optimization problem
 							//printf("V before updating %lf",V);
-							DerivOfCostFunc docf(NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
-							UpdatedVoxelValue = solve(&docf,low,high,accuracy,&errorcode);
+							UpdatedVoxelValue = solve(CE_DerivOfCostFunc,low,high,accuracy,&errorcode);
 							if(errorcode == 0)
 							{
 								//    printf("(%lf,%lf,%lf)\n",low,high,UpdatedVoxelValue);
@@ -1027,7 +901,7 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
 							for (q = 0;q < TempMemBlock->count; q++)
 							{
 
-								i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
+								i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
 								i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 								for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 								{
@@ -1219,15 +1093,15 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
 		for (k=0; k < Geometry->N_x; k++)
 			fwrite(&UpdateMap[j][k], sizeof(double), 1, Fp4);
 
-	free_img((void**)VoxelProfile);
+	free_img((void*)VoxelProfile);
 	//free(AMatrix);
 #ifdef STORE_A_MATRIX
 	multifree(AMatrix,2);
 	//#else
 	//	free((void*)TempCol);
 #endif
-	free_3D((void***)ErrorSino);
-	free_3D((void***)Weight);
+	free_3D((void*)ErrorSino);
+	free_3D((void*)Weight);
 #ifdef COST_CALCULATE
 	fclose(Fp2);// writing cost function
 #endif
@@ -1242,7 +1116,7 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
  //Finds the min and max of the neighborhood . This is required prior to calling
  solve()
  *****************************************************************************/
-void NHICDEngine::CE_MinMax(double *low,double *high)
+void CE_MinMax(double *low,double *high)
 {
 	uint8_t i,j,k;
 	*low=NEIGHBORHOOD[0][0][0];
@@ -1274,7 +1148,7 @@ void NHICDEngine::CE_MinMax(double *low,double *high)
 
 
 
-void* NHICDEngine::CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
+void* CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 {
 	double angle,MaxValLineIntegral;
 	double temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
@@ -1285,25 +1159,25 @@ void* NHICDEngine::CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 
 	for (i=0;i<Sinogram->N_theta;i++)
 	{
-		Sinogram->angles[i]=Sinogram->angles[i]*(M_PI/180.0);
+		Sinogram->angles[i]=Sinogram->angles[i]*(PI/180.0);
 		angle=Sinogram->angles[i];
-		while(angle > M_PI/2.0)
-			angle -= M_PI/2.0;
+		while(angle > PI/2)
+			angle -= PI/2;
 
 		while(angle < 0)
-			angle +=M_PI/2.0;
+			angle +=PI/2;
 
-		if(angle <= M_PI/4.0)
+		if(angle <= PI/4)
 		{
 			MaxValLineIntegral = Geometry->delta_xz/cos(angle);
 		}
 		else
 		{
-			MaxValLineIntegral = Geometry->delta_xz/cos(M_PI/2.0-angle);
+			MaxValLineIntegral = Geometry->delta_xz/cos(PI/2-angle);
 		}
-		temp=cos(M_PI/4.0);
-		dist1 = temp * cos((M_PI/4.0 - angle));
-		dist2 = temp * fabs((cos((M_PI/4.0 + angle))));
+		temp=cos(PI/4);
+		dist1 = temp * cos((PI/4.0 - angle));
+		dist2 = temp * fabs((cos((PI/4.0 + angle))));
 		LeftCorner = 1-dist1;
 		LeftNear = 1-dist2;
 		RightNear = 1+dist2;
@@ -1335,12 +1209,12 @@ void* NHICDEngine::CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 /*******************************************************************
  Find each column of the Forward Projection Matrix A
  ********************************************************************/
-void NHICDEngine::ForwardProject(Sino *Sinogram,Geom* Geom)
+void ForwardProject(Sino *Sinogram,Geom* Geom)
 {
 
 }
 
-void* NHICDEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
+void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
 {
 	int32_t i,j,k,sliceidx;
 	double x,z,y;
@@ -1549,7 +1423,7 @@ void* NHICDEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t
 		tmax = (t + Geometry->delta_xy/2) <= Geometry->LengthY/2 ? t + Geometry->delta_xy/2 : Geometry->LengthY/2;
 
 
-		if(Sinogram->angles[i]*(180/M_PI) >= -45 && Sinogram->angles[i]*(180/M_PI) <= 45)
+		if(Sinogram->angles[i]*(180/PI) >= -45 && Sinogram->angles[i]*(180/PI) <= 45)
 		{
 			rmin = r - (Geometry->delta_xz/2)*(cosine[i]);
 			rmax = r + (Geometry->delta_xz/2)*(cosine[i]);
@@ -1656,7 +1530,7 @@ void* NHICDEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t
 			}
 			else
 			{
-				//  printf("%lf \n",Sinogram->angles[i]*180/M_PI);
+				//  printf("%lf \n",Sinogram->angles[i]*180/PI);
 			}
 		}
 
@@ -1697,7 +1571,7 @@ void* NHICDEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t
 
 /* Initializes the global variables cosine and sine to speed up computation
  */
-void NHICDEngine::CE_CalculateSinCos(Sino* Sinogram)
+void CE_CalculateSinCos(Sino* Sinogram)
 {
 	uint16_t i;
 	cosine=(double*)get_spc(Sinogram->N_theta,sizeof(double));
@@ -1710,7 +1584,7 @@ void NHICDEngine::CE_CalculateSinCos(Sino* Sinogram)
 	}
 }
 
-void NHICDEngine::CE_InitializeBeamProfile(Sino* Sinogram)
+void CE_InitializeBeamProfile(Sino* Sinogram)
 {
 	uint16_t i;
 	double sum=0,W;
@@ -1718,8 +1592,8 @@ void NHICDEngine::CE_InitializeBeamProfile(Sino* Sinogram)
 	W=BEAM_WIDTH/2;
 	for (i=0; i < BEAM_RESOLUTION ;i++)
 	{
-		//BeamProfile[i] = (1.0/(BEAM_WIDTH)) * ( 1 + cos ((M_PI/W)*fabs(-W + i*(BEAM_WIDTH/BEAM_RESOLUTION))));
-		BeamProfile[i] = 0.54 - 0.46*cos((2*M_PI/BEAM_RESOLUTION)*i);
+		//BeamProfile[i] = (1.0/(BEAM_WIDTH)) * ( 1 + cos ((PI/W)*fabs(-W + i*(BEAM_WIDTH/BEAM_RESOLUTION))));
+		BeamProfile[i] = 0.54 - 0.46*cos((2*PI/BEAM_RESOLUTION)*i);
 		sum=sum+BeamProfile[i];
 	}
 
@@ -1736,7 +1610,78 @@ void NHICDEngine::CE_InitializeBeamProfile(Sino* Sinogram)
 
 }
 
-double NHICDEngine::CE_ComputeCost(double*** ErrorSino,double*** Weight,Sino* Sinogram,Geom* Geometry)
+double CE_DerivOfCostFunc(double u)
+{
+	double temp=0,value;
+	uint8_t i,j,k;
+	for (i = 0;i < 3;i++)
+		for (j = 0; j <3; j++)
+			for (k = 0;k < 3; k++)
+			{
+
+				if( u - NEIGHBORHOOD[i][j][k] >= 0.0)
+					temp+=(FILTER[i][j][k]*(1.0)*pow(fabs(u-NEIGHBORHOOD[i][j][k]),(MRF_P-1)));
+				else
+					temp+=(FILTER[i][j][k]*(-1.0)*pow(fabs(u-NEIGHBORHOOD[i][j][k]),(MRF_P -1)));
+			}
+
+	//printf("V WHile updating %lf\n",V);
+	//scanf("Enter value %d\n",&k);
+	value = THETA1 +  THETA2*(u-V) + (temp/SIGMA_X_P);
+
+	return value;
+}
+
+
+double  solve(
+			  double (*f)(), /* pointer to function to be solved */
+			  double a,      /* minimum value of solution */
+			  double b,      /* maximum value of solution */
+			  double err,    /* accuarcy of solution */
+			  int *code      /* error code */
+			  )
+/* Solves equation (*f)(x) = 0 on x in [a,b]. Uses half interval method.*/
+/* Requires that (*f)(a) and (*f)(b) have opposite signs.		*/
+/* Returns code=0 if signs are opposite.				*/
+/* Returns code=1 if signs are both positive. 				*/
+/* Returns code=-1 if signs are both negative. 				*/
+{
+	int     signa,signb,signc;
+	double  fa,fb,fc,c,signaling_nan();
+	double  dist;
+
+	fa = (*f)(a);
+	signa = fa>0;
+	fb = (*f)(b);
+	signb = fb>0;
+
+	/* check starting conditions */
+	if( signa==signb ) {
+		if(signa==1) *code = 1;
+		else *code = -1;
+		return(0.0);
+	}
+	else *code = 0;
+
+	/* half interval search */
+	if( (dist=b-a)<0 ) dist = -dist;
+	while(dist>err) {
+		c = (b+a)/2;
+		fc = (*f)(c);  signc = fc>0;
+		if(signa == signc) { a = c; fa = fc; }
+		else { b = c; fb = fc; }
+		if( (dist=b-a)<0 ) dist = -dist;
+	}
+
+	/* linear interpolation */
+	if( (fb-fa)==0 ) return(a);
+	else {
+		c = (a*fb - b*fa)/(fb-fa);
+		return(c);
+	}
+}
+
+double CE_ComputeCost(double*** ErrorSino,double*** Weight,Sino* Sinogram,Geom* Geometry)
 {
 	double cost=0,temp=0;
 	int16_t i,j,k,p,q,r;
@@ -1767,7 +1712,7 @@ double NHICDEngine::CE_ComputeCost(double*** ErrorSino,double*** Weight,Sino* Si
 	return cost;
 }
 
-void* NHICDEngine::CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
+void* CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
 {
 	FILE* Fp = fopen("DetectorResponse.bin","w");
 	double Offset,Temp,r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,t,tmin;
@@ -1780,7 +1725,7 @@ void* NHICDEngine::CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,
 	//NumOfDisplacements=32;
 	H = (double***)get_3D(1, Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(double));//change from 1 to DETECTOR_RESPONSE_BINS
 	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_xz);
-	OffsetR = ((Geometry->delta_xz/sqrt(3.0)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
 	OffsetT = ((Geometry->delta_xy/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 
 	for(k = 0 ; k < Sinogram->N_theta; k++)
@@ -1993,7 +1938,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col,Sino* Sinogram,
 }
 */
 
-void* NHICDEngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double*** DetectorResponse)
+void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double*** DetectorResponse)
 {
 	int32_t i,j,k,sliceidx;
 	double x,z,y;
@@ -2017,7 +1962,7 @@ void* NHICDEngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, u
   AMatrixCol* Ai = NULL;
   AMatrixCol* Temp = NULL;
 
-	OffsetR = ((Geometry->delta_xz/sqrt(3.0)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
 	OffsetT = ((Geometry->delta_xz/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 
 	Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));

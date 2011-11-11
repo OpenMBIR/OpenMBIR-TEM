@@ -7,18 +7,20 @@
  *
  */
 
-#ifndef NHICD_COMPUTATIONENGINE_H_
-#define NHICD_COMPUTATIONENGINE_H_
-
-#include "EIMTomo/common/EIMTomoTypes.h"
-#include "NHICDInputs.h"
-
-
-	//#define DEBUG
+#ifndef COMPUTATIONENGINE_H_
+#define COMPUTATIONENGINE_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
+	
+#include "ComputationInputs.h"
+	
+	
+	//#define DEBUG	
 #define PROFILE_RESOLUTION 1536
-#define PI 4*atan(1)//3.14159265
+//#define PI 4*atan(1)//3.14159265
 	//Beam Parameters - This is set to some number <<< Sinogram->delta_r.
-//#define BEAM_WIDTH 0.050000
+//#define BEAM_WIDTH 0.050000 
 #define BEAM_RESOLUTION 512
 #define AREA_WEIGHTED
 //#define ROI //Region Of Interest
@@ -29,12 +31,21 @@
 #define COST_CALCULATE
 #define BEAM_CALCULATION
 #define DETECTOR_RESPONSE_BINS 64
-
-
-#ifdef __cplusplus
-    extern "C" {
+#ifdef CORRECTION
+	double *NORMALIZATION_FACTOR; 
 #endif
-
+	//Structure to store a single column(A_i) of the A-matrix 
+	typedef struct 
+	{
+		double* values;//Store the non zero entries
+		uint32_t count;//The number of non zero values present in the column
+		uint32_t *index;//This maps each value to its location in the column. The entries in this can vary from 0 to Sinogram.N_x Sinogram.N_theta-1
+	}AMatrixCol;
+	
+	
+	
+	
+	
 	void CE_CalculateSinCos(Sino*);
 	void CE_InitializeBeamProfile(Sino*);
 	void CE_MinMax(double*,double*);
@@ -53,7 +64,7 @@
 				  double err,    /* accuarcy of solution */
 				  int *code      /* error code */
 				  );
-
+	
 #ifdef __cplusplus
 }
 #endif

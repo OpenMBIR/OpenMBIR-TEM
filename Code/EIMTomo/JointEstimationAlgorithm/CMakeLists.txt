@@ -8,25 +8,26 @@
 #-- This code was partly written under US Air Force Contract FA8650-07-D-5800
 #--
 #--////////////////////////////////////////////////////////////////////////////
-project (MotionCorrection)
+project (JointEstimation)
 cmake_minimum_required(VERSION 2.8.3)
 
 #Define the headers for this program
 
-set(MotionCorrection_HDRS
-  ${PROJECT_CODE_DIR}/EIMTomo/MotionCorrectionAlgorithm/MotionCorrectionEngine.h
-  ${PROJECT_CODE_DIR}/EIMTomo/MotionCorrectionAlgorithm/MotionCorrectionInputs.h
-  ${PROJECT_CODE_DIR}/EIMTomo/MotionCorrectionAlgorithm/MotionCorrectionStructures.h
+set(JointEstimation_HDRS
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/MotionCorrectionEngine.h
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/MotionCorrectionInputs.h
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/JointEstimationCLIParser.h
 )
 
 #Define the source files for this program
-set(MotionCorrection_SRCS
-  ${PROJECT_CODE_DIR}/EIMTomo/MotionCorrectionAlgorithm/MotionCorrectionEngine.cpp
-  ${PROJECT_CODE_DIR}/EIMTomo/MotionCorrectionAlgorithm/MotionCorrectionInputs.cpp
-  ${PROJECT_CODE_DIR}/EIMTomo/MotionCorrectionAlgorithm/MotionCorrectionMain.cpp
+set(JointEstimation_SRCS
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/MotionCorrectionEngine.c
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/MotionCorrectionInputs.c
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/JointEstimationCLIParser.cpp
+  ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm/JointEstimationMain.cpp
 )
 
-cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/MotionCorrection" "${MotionCorrection_HDRS}" "${MotionCorrection_SRCS}" "${CMP_INSTALL_FILES}")
+cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/JointEstimation" "${JointEstimation_HDRS}" "${JointEstimation_SRCS}" "${CMP_INSTALL_FILES}")
 
 
 # Include the source files for Common source files and the Mersenne Twister RNG
@@ -43,9 +44,9 @@ set(GENERATED_HDRS
 cmp_IDE_GENERATED_PROPERTIES("${Project_Name}/Generated" "${GENERATED_HDRS}" "")
 
 # Gather all the source files into a single CMake Variable
-set(MotionCorrection_PROJECT_FILES
-  ${MotionCorrection_HDRS}
-  ${MotionCorrection_SRCS}
+set(JointEstimation_PROJECT_FILES
+  ${JointEstimation_HDRS}
+  ${JointEstimation_SRCS}
   ${EIMTomo_Common_SRCS}
   ${EIMTomo_Common_HDRS}
   ${Mersenne_Twister_SRCS}
@@ -61,5 +62,5 @@ set(MotionCorrection_PROJECT_FILES
 include_directories(${PROJECT_CODE_DIR})
 
 # Create the executable.
-add_executable(MotionCorrection ${MotionCorrection_PROJECT_FILES} )
+add_executable(JointEstimation ${JointEstimation_PROJECT_FILES} )
 

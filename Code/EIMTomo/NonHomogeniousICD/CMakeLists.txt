@@ -15,10 +15,12 @@ cmake_minimum_required(VERSION 2.8.3)
 set(NonHomogeniousICD_HDRS
   ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDEngine.h
   ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDInputs.h
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDCliParser.h
 )
 set(NonHomogeniousICD_SRCS
-  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDEngine.cpp
-  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDInputs.cpp
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDEngine.c
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDInputs.c
+  ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDCliParser.cpp
   ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD/NHICDMain.cpp
 )
 

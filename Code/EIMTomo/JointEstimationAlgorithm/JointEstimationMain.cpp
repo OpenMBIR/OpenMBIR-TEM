@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include "EIMTomo/common/allocate.h"
-#include "EIMTomo/common/EIMTime.h"
+#include "EIMTomo/common/EMTime.h"
 #include "MotionCorrectionInputs.h"
 #include "JointEstimationCLIParser.h"
 #include "MotionCorrectionEngine.h"
@@ -22,7 +22,7 @@ unsigned long long int startm, stopm;
  CE => Computation Engine
  CI => Computation Inputs
  N_ => Number of ..
-
+ 
  */
 
 
@@ -35,9 +35,9 @@ int main(int argc,char** argv)
 	Sino Sinogram;
 	Geom Geometry;
 	double *buffer=(double*)get_spc(1,sizeof(double));
-
+	
 	START;
-
+	
 	error=-1;
 
 	JointEstimationCLIParser parser;
@@ -58,15 +58,15 @@ int main(int argc,char** argv)
 		CI_InitializeSinoParameters(&Sinogram,&ParsedInput);
 		CI_InitializeGeomParameters(&Sinogram,&Geometry,&ParsedInput);
 	}
-
-
-
+	
+	
+	
 	error=CE_MAPICDReconstruct(&Sinogram,&Geometry,&ParsedInput);
 	Fp=fopen(ParsedInput.OutputFile,"w");
-
+	
 	printf("Main\n");
 	printf("Final Dimensions of Object Nz=%d Nx=%d Ny=%d\n",Geometry.N_z,Geometry.N_x,Geometry.N_y);
-
+	
 	for(i = 0;i < Geometry.N_y; i++)
 	{
 		for(j = 0;j < Geometry.N_x; j++)
@@ -77,17 +77,17 @@ int main(int argc,char** argv)
 			}
 		printf("%d\n",i);
 	}
-
+	
 	fclose(Fp);
 	STOP;
-	PRINTTIME;
+	PRINTTIME; 
 	// if(error < 0)
 	// {
-	// //TODO:clean up memory here
+	// //TODO:clean up memory here 
 	// return EXIT_FAILURE;
 	// }
 	// //TODO:free memory
-	//
+	// 
 	// return EXIT_SUCCESS;
 	return 0;
 }
