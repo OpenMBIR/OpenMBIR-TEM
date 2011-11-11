@@ -205,9 +205,9 @@ class CE_ConstraintEquation
 class DerivOfCostFunc
 {
   public:
-    DerivOfCostFunc(uint8_t BOUNDARYFLAG[3][3][3],
-                    DATA_TYPE NEIGHBORHOOD[3][3][3],
-                    DATA_TYPE FILTER[3][3][3],
+    DerivOfCostFunc(uint8_t _BOUNDARYFLAG[3][3][3],
+                    DATA_TYPE _NEIGHBORHOOD[3][3][3],
+                    DATA_TYPE _FILTER[3][3][3],
                     DATA_TYPE V,
                     DATA_TYPE THETA1,
                     DATA_TYPE THETA2,
@@ -220,6 +220,18 @@ class DerivOfCostFunc
                       SIGMA_X_P(SIGMA_X_P),
                       MRF_P(MRF_P)
     {
+      for(size_t i = 0; i < 3; ++i)
+      {
+        for(size_t j = 0; j < 3; ++j)
+        {
+          for(size_t k = 0; k < 3; ++k)
+          {
+            this->BOUNDARYFLAG[i][j][k] = _BOUNDARYFLAG[i][j][k];
+            this->NEIGHBORHOOD[i][j][k] = _NEIGHBORHOOD[i][j][k];
+            this->FILTER[i][j][k] = _FILTER[i][j][k];
+          }
+        }
+      }
     }
 
     virtual ~DerivOfCostFunc()
@@ -393,7 +405,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 	NuisanceParams.I_0 = (DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
 	NuisanceParams.mu = (DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
- 
+
   // initialize variables
   Idx = 0;
 
@@ -2648,7 +2660,7 @@ void* SOCEngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uin
 	int32_t BaseIndex,FinalIndex,ProfileIndex=0;
 	int32_t NumOfDisplacements=32;
 	uint32_t count = 0;
-  
+
   sliceidx = 0;
 
 	AMatrixCol* Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
