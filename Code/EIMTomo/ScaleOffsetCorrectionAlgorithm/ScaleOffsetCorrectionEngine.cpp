@@ -39,12 +39,14 @@
 #define COST_CALCULATE
 //#define BEAM_CALCULATION
 #define DETECTOR_RESPONSE_BINS 64
-#define JOINT_ESTIMATION
+//#define JOINT_ESTIMATION
 //#define NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
 //#define CIRCULAR_BOUNDARY_CONDITION
-#define DEBUG_CONSTRAINT_OPT
+//#define DEBUG_CONSTRAINT_OPT
 #define RANDOM_ORDER_UPDATES
+
+//#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
 
 #define START startm = EIMTOMO_getMilliSeconds();
 #define STOP stopm = EIMTOMO_getMilliSeconds();
@@ -831,7 +833,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 
 #ifdef FORWARD_PROJECT_MODE
-	return;//exit the program once we finish forward projecting the object
+	return 0;//exit the program once we finish forward projecting the object
 #endif
 //	free(Y_Est);
  //   free(Sinogram->counts);
@@ -1010,7 +1012,6 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 						}
 						THETA1*=-1;
 						CE_MinMax(&low,&high);
-
 
 #ifdef DEBUG
 						if(i ==0 && j==31 && k==31)

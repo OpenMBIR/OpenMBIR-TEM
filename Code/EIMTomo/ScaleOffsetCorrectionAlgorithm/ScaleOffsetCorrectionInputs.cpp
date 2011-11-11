@@ -13,12 +13,12 @@
 #include "EIMTomo/common/allocate.h"
 #include "EIMTomo/EIMTomoVersion.h"
 
-
-//#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
 #define EXTEND_OBJECT
 
 #define X_STRETCH 1
 #define Z_STRETCH 2
+
+
 
 ScaleOffsetCorrectionInputs::ScaleOffsetCorrectionInputs()
 {
@@ -61,7 +61,7 @@ int ScaleOffsetCorrectionInputs::CI_ParseInput(int argc,char **argv,CommandLineI
   cmd.add(in_paramFile);
   TCLAP::ValueArg<std::string> in_sinoFile("s", "sinofile", "The Sinogram File", true, "", "");
   cmd.add(in_sinoFile);
-  TCLAP::ValueArg<std::string> in_inputFile("i", "inputfile", "Input Data File", true, "", "");
+  TCLAP::ValueArg<std::string> in_inputFile("i", "inputfile", "Input Data File", false, "", "");
   cmd.add(in_inputFile);
   TCLAP::ValueArg<std::string> in_outputFile("o", "outputfile", "The Output File", true, "", "");
   cmd.add(in_outputFile);
@@ -497,7 +497,7 @@ void ScaleOffsetCorrectionInputs::CI_InitializeGeomParameters(Sino* Sinogram,Geo
 				else//If the iput file exists read the values
 				{
 				fread(buffer, sizeof(double), 1, Fp);
-				Geometry->Object[k][j][i] = (DATA_TYPE)(*buffer);
+					Geometry->Object[k][j][i] = (DATA_TYPE)(*buffer);
 				}
 			}
 		}
