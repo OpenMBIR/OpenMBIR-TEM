@@ -143,14 +143,19 @@ endif()
 add_subdirectory( ${PROJECT_CODE_DIR}/MXA ${PROJECT_BINARY_DIR}/MXA)
 
 
+macro(Add_Algorithm name)
 
+option( EIMTomo_BUILD_${name} "" ON )
+if ( ${EIMTomo_BUILD_${name}} )
+    add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/${name})
+endif()
+endmacro()
 # Add our executables
 
-add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm)
-add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD)
-add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm)
-add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm)
-
+Add_Algorithm(JointEstimationAlgorithm)
+Add_Algorithm(NonHomogeniousICD)
+Add_Algorithm(BasicReconstructionAlgorithm)
+Add_Algorithm(ScaleOffsetCorrectionAlgorithm)
 
 
 
