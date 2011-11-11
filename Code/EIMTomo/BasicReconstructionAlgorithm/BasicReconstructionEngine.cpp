@@ -208,7 +208,7 @@ int BREngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInp
 	ErrorSino=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(double));
 	Weight=(double ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(double));
 
-	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+	OffsetR = ((Geometry->delta_xz/sqrt(3.0)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
 	OffsetT = ((Geometry->delta_xz/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 	//calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram Structure are converted to radians
 	VoxelProfile = (double**)CE_CalculateVoxelProfile(Sinogram,Geometry); //Verified with ML
@@ -470,7 +470,7 @@ int BREngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInp
 				{
 				    //calculating the footprint of the voxel in the t-direction
 
-					i_theta = floor(TempCol[j_new][k_new]->index[q]/(Sinogram->N_r));
+					i_theta = floor(static_cast<float>(TempCol[j_new][k_new]->index[q]/(Sinogram->N_r)));
 					i_r =  (TempCol[j_new][k_new]->index[q]%(Sinogram->N_r));
 
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
@@ -726,7 +726,7 @@ int BREngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInp
 						for (q = 0;q < TempMemBlock->count; q++)
 						{
 
-							i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
+							i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
 							i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 							 for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 							 {
@@ -803,7 +803,7 @@ int BREngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInp
 					for (q = 0;q < TempMemBlock->count; q++)
 					{
 
-					i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
+					i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
 					i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)

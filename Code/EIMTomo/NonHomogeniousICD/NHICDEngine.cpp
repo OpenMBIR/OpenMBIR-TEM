@@ -22,7 +22,7 @@
 
   //#define DEBUG
 #define PROFILE_RESOLUTION 1536
-#define PI 4*atan(1)//3.14159265
+
   //Beam Parameters - This is set to some number <<< Sinogram->delta_r.
 //#define BEAM_WIDTH 0.050000
 #define BEAM_RESOLUTION 512
@@ -453,7 +453,7 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
 				{
 				    //calculating the footprint of the voxel in the t-direction
 
-					i_theta = floor(TempCol[j_new][k_new]->index[q]/(Sinogram->N_r));
+					i_theta = floor(static_cast<float>(TempCol[j_new][k_new]->index[q]/(Sinogram->N_r)));
 					i_r =  (TempCol[j_new][k_new]->index[q]%(Sinogram->N_r));
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
@@ -716,7 +716,7 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
 						for (q = 0;q < TempMemBlock->count; q++)
 						{
 
-							i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
+							i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
 							i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 							 for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 							 {
@@ -788,7 +788,7 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
 					for (q = 0;q < TempMemBlock->count; q++)
 					{
 
-					i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
+					i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
 					i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
@@ -955,7 +955,7 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
 							for (q = 0;q < TempMemBlock->count; q++)
 							{
 
-								i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
+								i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
 								i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 								for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 								{
@@ -1026,7 +1026,7 @@ int NHICDEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLine
 							for (q = 0;q < TempMemBlock->count; q++)
 							{
 
-								i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
+								i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
 								i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 								for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 								{
@@ -1284,25 +1284,25 @@ void* NHICDEngine::CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 
 	for (i=0;i<Sinogram->N_theta;i++)
 	{
-		Sinogram->angles[i]=Sinogram->angles[i]*(PI/180.0);
+		Sinogram->angles[i]=Sinogram->angles[i]*(M_PI/180.0);
 		angle=Sinogram->angles[i];
-		while(angle > PI/2)
-			angle -= PI/2;
+		while(angle > M_PI/2.0)
+			angle -= M_PI/2.0;
 
 		while(angle < 0)
-			angle +=PI/2;
+			angle +=M_PI/2.0;
 
-		if(angle <= PI/4)
+		if(angle <= M_PI/4.0)
 		{
 			MaxValLineIntegral = Geometry->delta_xz/cos(angle);
 		}
 		else
 		{
-			MaxValLineIntegral = Geometry->delta_xz/cos(PI/2-angle);
+			MaxValLineIntegral = Geometry->delta_xz/cos(M_PI/2.0-angle);
 		}
-		temp=cos(PI/4);
-		dist1 = temp * cos((PI/4.0 - angle));
-		dist2 = temp * fabs((cos((PI/4.0 + angle))));
+		temp=cos(M_PI/4.0);
+		dist1 = temp * cos((M_PI/4.0 - angle));
+		dist2 = temp * fabs((cos((M_PI/4.0 + angle))));
 		LeftCorner = 1-dist1;
 		LeftNear = 1-dist2;
 		RightNear = 1+dist2;
@@ -1548,7 +1548,7 @@ void* NHICDEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t
 		tmax = (t + Geometry->delta_xy/2) <= Geometry->LengthY/2 ? t + Geometry->delta_xy/2 : Geometry->LengthY/2;
 
 
-		if(Sinogram->angles[i]*(180/PI) >= -45 && Sinogram->angles[i]*(180/PI) <= 45)
+		if(Sinogram->angles[i]*(180/M_PI) >= -45 && Sinogram->angles[i]*(180/M_PI) <= 45)
 		{
 			rmin = r - (Geometry->delta_xz/2)*(cosine[i]);
 			rmax = r + (Geometry->delta_xz/2)*(cosine[i]);
@@ -1655,7 +1655,7 @@ void* NHICDEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t
 			}
 			else
 			{
-				//  printf("%lf \n",Sinogram->angles[i]*180/PI);
+				//  printf("%lf \n",Sinogram->angles[i]*180/M_PI);
 			}
 		}
 
@@ -1717,8 +1717,8 @@ void NHICDEngine::CE_InitializeBeamProfile(Sino* Sinogram)
 	W=BEAM_WIDTH/2;
 	for (i=0; i < BEAM_RESOLUTION ;i++)
 	{
-		//BeamProfile[i] = (1.0/(BEAM_WIDTH)) * ( 1 + cos ((PI/W)*fabs(-W + i*(BEAM_WIDTH/BEAM_RESOLUTION))));
-		BeamProfile[i] = 0.54 - 0.46*cos((2*PI/BEAM_RESOLUTION)*i);
+		//BeamProfile[i] = (1.0/(BEAM_WIDTH)) * ( 1 + cos ((M_PI/W)*fabs(-W + i*(BEAM_WIDTH/BEAM_RESOLUTION))));
+		BeamProfile[i] = 0.54 - 0.46*cos((2*M_PI/BEAM_RESOLUTION)*i);
 		sum=sum+BeamProfile[i];
 	}
 
@@ -1779,7 +1779,7 @@ void* NHICDEngine::CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,
 	//NumOfDisplacements=32;
 	H = (double***)get_3D(1, Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(double));//change from 1 to DETECTOR_RESPONSE_BINS
 	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_xz);
-	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+	OffsetR = ((Geometry->delta_xz/sqrt(3.0)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
 	OffsetT = ((Geometry->delta_xy/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 
 	for(k = 0 ; k < Sinogram->N_theta; k++)
@@ -2016,7 +2016,7 @@ void* NHICDEngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, u
   AMatrixCol* Ai = NULL;
   AMatrixCol* Temp = NULL;
 
-	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+	OffsetR = ((Geometry->delta_xz/sqrt(3.0)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
 	OffsetT = ((Geometry->delta_xz/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 
 	Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
