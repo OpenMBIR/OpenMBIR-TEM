@@ -825,9 +825,18 @@ function(cmpVersionStringsFromGit)
         execute_process(COMMAND ${GIT_EXECUTABLE} describe
             OUTPUT_VARIABLE DVERS
             RESULT_VARIABLE did_run
+            ERROR_VARIABLE err_dvers
+            WORKING_DIRECTORY ${${PROJECT_NAME}_SOURCE_DIR}
          )
+         if (0)
+            message(STATUS "${PROJECT_NAME}_SOURCE_DIR: ${${PROJECT_NAME}_SOURCE_DIR}")
+            message(STATUS "GIT_EXECUTABLE: ${GIT_EXECUTABLE}")
+            message(STATUS "did_run: ${did_run}")
+            message(STATUS "err_dvers: ${err_dvers}")
+            message(STATUS "DVERS: ${DVERS}")
+          endif()
         string(STRIP ${DVERS} DVERS)
-       # message(STATUS "DVERS: ${DVERS}")
+       #
         string(REPLACE  "-" ";" VERSION_LIST ${DVERS})
        # message(STATUS "VERSION_LIST: ${VERSION_LIST}")
         list(GET VERSION_LIST 0 VERSION_GEN_VER_MAJOR)
