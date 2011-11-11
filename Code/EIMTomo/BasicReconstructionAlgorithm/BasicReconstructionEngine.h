@@ -7,21 +7,40 @@
  *
  */
 
-#ifndef NHICD_COMPUTATIONENGINE_H_
-#define NHICD_COMPUTATIONENGINE_H_
+#ifndef COMPUTATIONENGINE_H_
+#define COMPUTATIONENGINE_H_
+
 
 #include "EIMTomo/EIMTomo.h"
 
+#include "BasicReconstructionStructures.h"
+#include "BasicReconstructionInputs.h"
 
-#include "NHICDStructures.h"
-#include "NHICDInputs.h"
 
-class NHICDEngine
+	//#define DEBUG
+#define PROFILE_RESOLUTION 1536
+//#define PI 4*atan(1)//3.14159265
+	//Beam Parameters - This is set to some number <<< Sinogram->delta_r.
+//#define BEAM_WIDTH 0.050000
+#define BEAM_RESOLUTION 512
+#define AREA_WEIGHTED
+//#define ROI //Region Of Interest
+	//#define DISTANCE_DRIVEN
+	//#define CORRECTION
+//#define STORE_A_MATRIX
+//	#define WRITE_INTERMEDIATE_RESULTS
+#define COST_CALCULATE
+#define BEAM_CALCULATION
+#define DETECTOR_RESPONSE_BINS 64
+#ifdef CORRECTION
+	double *NORMALIZATION_FACTOR;
+#endif
+
+class BREngine
 {
-public:
-    NHICDEngine();
-    virtual ~NHICDEngine();
-
+  public:
+	    BREngine();
+	    virtual ~BREngine();
 
 	void CE_CalculateSinCos(Sino*);
 	void CE_InitializeBeamProfile(Sino*);
@@ -34,7 +53,9 @@ public:
 	void* CE_CalculateAMatrixColumnPartial(uint16_t,uint16_t,uint16_t,Sino*,Geom*,double***);
 //	void* CE_CalculateAMatrixColumnPartial(uint16_t,uint16_t,Sino*,Geom*,double**);
 	void* CE_DetectorResponse(uint16_t ,uint16_t ,Sino* ,Geom* ,double**);
+
 	void ForwardProject(Sino *Sinogram,Geom* Geom);
+
 
 	template<class Functor>
 	double  solve(
@@ -86,30 +107,27 @@ public:
 	}
 
 
-
 private:
-  bool CE_Cancel;
-  //Markov Random Field Prior parameters - Globals -:(
-  double FILTER[3][3][3];
-  double THETA1;
-  double THETA2;
-  double NEIGHBORHOOD[3][3][3];
-  double V;
-  double MRF_P ;//= 1.1;
-  double SIGMA_X_P;
+	bool CE_Cancel;
+	//Markov Random Field Prior parameters - Globals -:(
+	double FILTER[3][3][3];
+	double THETA1;
+	double THETA2;
+	double NEIGHBORHOOD[3][3][3];
+	double V;
+	double MRF_P ;//= 1.1;
+	double SIGMA_X_P;
 
-  double* cosine;
-  double* sine;//used to store cosine and sine of all angles through which sample is tilted
-  double* BeamProfile;//used to store the shape of the e-beam
-  double BEAM_WIDTH;
-  double OffsetR;
-  double OffsetT;
+	double* cosine;
+	double* sine;//used to store cosine and sine of all angles through which sample is tilted
+	double* BeamProfile;//used to store the shape of the e-beam
+	double BEAM_WIDTH;
+	double OffsetR;
+	double OffsetT;
 
-
-	NHICDEngine(const NHICDEngine&); // Copy Constructor Not Implemented
-  void operator=(const NHICDEngine&); // Operator '=' Not Implemented
+	BREngine(const BREngine&); // Copy Constructor Not Implemented
+  void operator=(const BREngine&); // Operator '=' Not Implemented
 
 };
-
 #endif //CompEngine
 

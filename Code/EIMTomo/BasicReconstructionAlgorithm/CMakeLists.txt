@@ -13,13 +13,14 @@ cmake_minimum_required(VERSION 2.8.3)
 
 
 set(BasicReconstructionAlgorithm_HDRS
-  ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/ComputationEngineOptimized.h
-  ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/ComputationInputs.h
+  ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/BasicReconstructionEngine.h
+  ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/BasicReconstructionInputs.h
+  ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/BasicReconstructionStructures.h
 )
 set(BasicReconstructionAlgorithm_SRCS
-  ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/ComputationEngineOptimized.c
-  ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/ComputationInputs.c
-  ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/Main.c
+  ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/BasicReconstructionEngine.cpp
+  ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/BasicReconstructionInputs.cpp
+  ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm/BasicReconstructionMain.cpp
 )
 
 cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/BasicReconstructionAlgorithm" "${BasicReconstructionAlgorithm_HDRS}" "${BasicReconstructionAlgorithm_SRCS}" "${CMP_INSTALL_FILES}")

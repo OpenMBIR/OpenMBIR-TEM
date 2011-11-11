@@ -1,5 +1,3 @@
-//#include "ComputationEngine.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -7,17 +5,15 @@
 #include <iostream>
 
 #include "EIMTomo/EIMTomo.h"
-#include "EIMTomo/common/allocate.h"
 #include "EIMTomo/common/EIMTime.h"
+#include "EIMTomo/common/allocate.h"
+
 #include "NHICDInputs.h"
-#include "NHICDCliParser.h"
 #include "NHICDEngine.h"
 
-//#include "randlib.h"
-unsigned long long int startm, stopm;
-#define START if ( (startm = EIMTOMO_getMilliSeconds()) == -1) {printf("Error calling clock");exit(1);}
-#define STOP if ( (stopm = EIMTOMO_getMilliSeconds()) == -1) {printf("Error calling clock");exit(1);}
-#define PRINTTIME printf( "%6.3f seconds used by the processor.\n", ((double)stopm-startm)/CLOCKS_PER_SEC);
+#define START startm = EIMTOMO_getMilliSeconds();
+#define STOP stopm = EIMTOMO_getMilliSeconds();
+#define PRINTTIME printf( "%6.3f seconds used by the processor.\n", ((double)stopm-startm)/1000.0);
 
 /*
  CE => Computation Engine
@@ -37,11 +33,16 @@ int main(int argc,char** argv)
 	Geom Geometry;
 	double *buffer=(double*)get_spc(1,sizeof(double));
 
+  uint64_t startm;
+  uint64_t stopm;
+
+
 	START;
 
 	error=-1;
-	NHICDCliParser parser;
-	error = parser.parseCLIArguments(argc, argv, &ParsedInput);
+	NHICDInputs soci;
+
+  error = soci.CI_ParseInput(argc, argv, &ParsedInput);
 	if (error < 0)
 	{
 	  std::cout << "Error parsing line command arguments" << std::endl;
@@ -53,16 +54,16 @@ int main(int argc,char** argv)
 		printf("%s %s %s %s\n",ParsedInput.ParamFile,ParsedInput.SinoFile,ParsedInput.InitialRecon,ParsedInput.OutputFile);
 		//Read the paramters into the structures
 		Fp = fopen(ParsedInput.ParamFile,"r");
-		CI_ReadParameterFile(Fp,&ParsedInput,&Sinogram,&Geometry);
+		soci.CI_ReadParameterFile(Fp,&ParsedInput,&Sinogram,&Geometry);
 		fclose(Fp);
 		//Based on the inputs , calculate the "other" variables in the structure definition
-		CI_InitializeSinoParameters(&Sinogram,&ParsedInput);
-		CI_InitializeGeomParameters(&Sinogram,&Geometry,&ParsedInput);
+		soci.CI_InitializeSinoParameters(&Sinogram,&ParsedInput);
+		soci.CI_InitializeGeomParameters(&Sinogram,&Geometry,&ParsedInput);
 	}
 
 
-
-	error=CE_MAPICDReconstruct(&Sinogram,&Geometry,&ParsedInput);
+	NHICDEngine engine;
+	error=engine.CE_MAPICDReconstruct(&Sinogram,&Geometry,&ParsedInput);
 	Fp=fopen(ParsedInput.OutputFile,"w");
 
 	printf("Main\n");

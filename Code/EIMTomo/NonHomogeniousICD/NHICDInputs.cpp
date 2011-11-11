@@ -1,42 +1,115 @@
-#include "ComputationInputs.h"
-#include "EIMTomo/common/allocate.h"
+#include "NHICDInputs.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
+
+#include <tclap/CmdLine.h>
+#include <tclap/ValueArg.h>
+
+#include "EIMTomo/EIMTomo.h"
+#include "EIMTomo/common/EIMTime.h"
+#include "EIMTomo/common/EIMMath.h"
+#include "EIMTomo/common/allocate.h"
+#include "EIMTomo/EIMTomoVersion.h"
 
 
-extern int optind;
-extern char *optarg;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-int CI_ParseInput(int argc,char **argv,CommandLineInputs* Input)
+NHICDInputs::NHICDInputs()
 {
-	int i,error;
-	error=0;
-	while ((i = getopt(argc, argv, ":p:s:i:o:n:l:m:")) != -1) //p is for parameter file , s for sinogram file,i for Initial Recon Data File name,o is for Output File name
-	{
-		switch (i)
-		{
-			case 'i':Input->InitialRecon = optarg;break;
-			case 'o':Input->OutputFile = optarg;break;
-			case 'p':Input->ParamFile = optarg;break;
-			case 's':Input->SinoFile = optarg;break;
-			case 'n':Input->NumIter = atoi(optarg);break; //n = number of iterations
-			case 'l':Input->SigmaX = (double)atof(optarg);break; //l - lambda
-			case 'm':Input->p = (double)atof(optarg);break;//p = Markov Radom Field Parameter
-			case '?':error=-1;break;
-		}
-	}
 
-	return error;
 }
 
-void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
+NHICDInputs::~NHICDInputs()
+{
+
+}
+
+int NHICDInputs::CI_ParseInput(int argc,char **argv,CommandLineInputs* Input)
+{
+  if ( NULL == Input)
+  {
+    printf("The EMMPM_Inputs pointer was null. Returning early.\n");
+    return -1;
+  }
+
+  TCLAP::CmdLine cmd("", ' ', EIMTomo::Version::Complete);
+  TCLAP::ValueArg<std::string> in_paramFile("p", "paramfile", "The Parameter File", true, "", "");
+  cmd.add(in_paramFile);
+  TCLAP::ValueArg<std::string> in_sinoFile("s", "sinofile", "The Sinogram File", true, "", "");
+  cmd.add(in_sinoFile);
+  TCLAP::ValueArg<std::string> in_inputFile("i", "inputfile", "Input Data File", true, "", "");
+  cmd.add(in_inputFile);
+  TCLAP::ValueArg<std::string> in_outputFile("o", "outputfile", "The Output File", true, "", "");
+  cmd.add(in_outputFile);
+
+
+  TCLAP::ValueArg<int> in_numIter("n", "numIter", "Number of Iterations", true, 0, "0");
+  cmd.add(in_numIter);
+  TCLAP::ValueArg<double> in_sigmaX("l", "sigmax", "Sigma X Value", true, 1.0, "1.0");
+  cmd.add(in_sigmaX);
+  TCLAP::ValueArg<double> in_markov("m", "", "Markov Random Field Parameter", true, 0.0, "0.0");
+  cmd.add(in_markov);
+
+  TCLAP::ValueArg<std::string> InitialParameters("g", "", "InitialParameters", true, "", "");
+  cmd.add(InitialParameters);
+
+  TCLAP::ValueArg<int> NumOuterIter("O", "", "NumOuterIter", true, 0, "0");
+  cmd.add(NumOuterIter);
+
+  if (argc < 2)
+  {
+    std::cout << "Joint Estimation Command Line Version " << cmd.getVersion() << std::endl;
+    std::vector<std::string> args;
+    args.push_back(argv[0]);
+    args.push_back("-h");
+    cmd.parse(args);
+    return -1;
+  }
+
+
+  try
+  {
+    int error = 0;
+    cmd.parse(argc, argv);
+    Input->InitialRecon = copyFilenameToNewCharBuffer(in_inputFile.getValue());
+    Input->OutputFile = copyFilenameToNewCharBuffer(in_outputFile.getValue());
+    Input->ParamFile = copyFilenameToNewCharBuffer(in_paramFile.getValue());
+    Input->SinoFile = copyFilenameToNewCharBuffer(in_sinoFile.getValue());
+    Input->NumIter = in_numIter.getValue();
+    Input->SigmaX = in_sigmaX.getValue();
+    Input->p = in_markov.getValue();
+
+  }
+  catch (TCLAP::ArgException &e)
+  {
+    std::cerr << " error: " << e.error() << " for arg " << e.argId() << std::endl;
+    std::cout << "** Unknown Arguments. Displaying help listing instead. **" << std::endl;
+    return -1;
+  }
+  return 0;
+}
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+char* NHICDInputs::copyFilenameToNewCharBuffer(const std::string &fname)
+{
+  std::string::size_type size = fname.size() + 1;
+  char* buf = NULL;
+  if (size > 1)
+  {
+    buf = (char*)malloc(size);
+    ::memset(buf, 0, size);
+    strncpy(buf, fname.c_str(), size - 1);
+  }
+  return buf;
+}
+
+
+
+
+void NHICDInputs::CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
 {
 	char temp[20];
 	int16_t i;
@@ -126,7 +199,7 @@ void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram
 
 }
 
-void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
+void NHICDInputs::CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
 {
   int16_t i,j,k;
   FILE* Fp;
@@ -170,14 +243,14 @@ void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
 
 }
 
-void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs* ParsedInput)
+void NHICDInputs::CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs* ParsedInput)
 {
   FILE* Fp;
   uint16_t i,j,k;
   double *buffer = (double*)get_spc(1,sizeof(double));
   double sum=0;//check sum TODO delete this later
-  Geometry->LengthX = (Sinogram->N_r * Sinogram->delta_r);//sinogram.N_x * delta_r;
-  Geometry->LengthY = (END_SLICE - START_SLICE)*Geometry->delta_xy;//Sinogram->N_t * Sinogram->delta_t;//sinogram.N_y * delta_t
+  Geometry->LengthX = Sinogram->N_r * Sinogram->delta_r;//sinogram.N_x * delta_r;
+  Geometry->LengthY = Sinogram->N_t * Sinogram->delta_t;//sinogram.N_y * delta_t
   Geometry->N_x = ceil(Geometry->LengthX/Geometry->delta_xz);//Number of voxels in x direction
   Geometry->N_z = ceil(Geometry->LengthZ/Geometry->delta_xz);//Number of voxels in z direction
   Geometry->N_y = ceil(Geometry->LengthY/Geometry->delta_xy);//Number of measurements in y direction
@@ -186,7 +259,7 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
 //Coordinates of the left corner of the x-z object
   Geometry->x0 = -Geometry->LengthX/2;
   Geometry->z0 = -Geometry->LengthZ/2;
-  Geometry->y0 = -(Sinogram->N_t * Sinogram->delta_t)/2 + START_SLICE*Geometry->delta_xy;
+	Geometry->y0 = -Geometry->LengthY/2;
 
   //Read the Initial Reconstruction data into a 3-D matrix
   Fp=fopen(ParsedInput->InitialRecon,"r");
@@ -203,7 +276,7 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
 		for (j = 0; j < Geometry->N_x; j++) {
 			for (k = 0; k < Geometry->N_z; k++) {
 				fread(buffer, sizeof(double), 1, Fp);
-				Geometry->Object[k][j][i] =  0;//*buffer;
+				Geometry->Object[k][j][i] = *buffer;
 			}
 		}
 	}
@@ -226,7 +299,3 @@ void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs
 
 }
 
-
-#ifdef __cplusplus
-}
-#endif
