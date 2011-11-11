@@ -61,7 +61,7 @@
    too, hence the sequence as it is: load math.h, then see what's
 lacking still.
 */
-//#define _USE_MATH_DEFINES 1
+#define _USE_MATH_DEFINES 1
 #endif
 
 #include <math.h>
@@ -69,7 +69,7 @@ lacking still.
 
 #ifndef M_E
 #define M_E            2.7182818284590452354   /* e */
- #endif
+#endif
 
 #ifndef M_LOG2E
 #define M_LOG2E        1.4426950408889634074   /* log_2 e */
@@ -85,6 +85,10 @@ lacking still.
 
 #ifndef M_LN10
 #define M_LN10         2.30258509299404568402  /* log_e 10 */
+#endif
+
+#ifndef M_PI
+#define M_PI           3.14159265358979323846  /* pi */
 #endif
 
 #ifndef M_PI_2
@@ -115,14 +119,9 @@ lacking still.
 #define M_SQRT1_2      0.70710678118654752440  /* 1/sqrt(2) */
 #endif
 
+
 #ifndef M_2PI
 #define M_2PI           6.283185307179586232    /* 2*pi  */
-
-
-#ifndef M_PI
-#define M_PI        3.14159265358979323846  /* pi */
-#endif
-
 #endif
 
 

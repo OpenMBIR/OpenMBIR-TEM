@@ -9,12 +9,15 @@
 
 #include "ScaleOffsetCorrectionEngine.h"
 
+// C Includes
 #include <stdlib.h>
 #include <stdio.h>
-
 #include <string.h>
-#include <math.h>
 
+// C++ Includes
+#include <limits>
+
+// Our own includes
 #include "EIMTomo/common/EIMMath.h"
 #include "EIMTomo/common/allocate.h"
 #include "EIMTomo/common/EIMTime.h"
@@ -388,7 +391,9 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 	NuisanceParams.I_0 = (DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
 	NuisanceParams.mu = (DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
-
+ 
+  // initialize variables
+  Idx = 0;
 
 
 #ifdef WRITE_INTERMEDIATE_RESULTS
@@ -417,7 +422,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 	//Setting the value of all the global variables
 
-	OffsetR = ((Geometry->delta_xz/sqrt(3)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+	OffsetR = ((Geometry->delta_xz/sqrt(3.0)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
 	OffsetT = ((Geometry->delta_xz/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 
 #ifdef BEAM_CALCULATION
@@ -735,7 +740,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 				{
 				    //calculating the footprint of the voxel in the t-direction
 
-					i_theta = floor(TempCol[j][k]->index[q]/(Sinogram->N_r));
+					i_theta = floor(static_cast<float>(TempCol[j][k]->index[q]/(Sinogram->N_r)));
 					i_r =  (TempCol[j][k]->index[q]%(Sinogram->N_r));
 
 					VoxelLineAccessCounter=0;
@@ -981,7 +986,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 						for (q = 0;q < TempMemBlock->count; q++)
 						{
 
-							i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
+							i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
 							i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 							VoxelLineAccessCounter=0;
 							for(i_t = VoxelLineResponse[i].index[0]; i_t <= VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
@@ -1080,7 +1085,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 					for (q = 0;q < TempMemBlock->count; q++)
 					{
 
-					i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
+					i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
 					i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 					VoxelLineAccessCounter=0;
 					for(i_t = VoxelLineResponse[i].index[0]; i_t <= VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
@@ -1215,14 +1220,13 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 						{
 							//calculating the footprint of the voxel in the t-direction
 
-							i_theta = floor(TempCol[j][k]->index[q]/(Sinogram->N_r));
+							i_theta = floor(static_cast<float>(TempCol[j][k]->index[q]/(Sinogram->N_r)));
 							i_r =  (TempCol[j][k]->index[q]%(Sinogram->N_r));
 
 							VoxelLineAccessCounter=0;
 							for(i_t = VoxelLineResponse[i].index[0]; i_t <= VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
 							{
 								Y_Est[i_theta][i_r][i_t] += ((TempCol[j][k]->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter++]* Geometry->Object[j][k][i]));
-
 							}
 						}
 
@@ -2643,6 +2647,8 @@ void* SOCEngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uin
 	int32_t BaseIndex,FinalIndex,ProfileIndex=0;
 	int32_t NumOfDisplacements=32;
 	uint32_t count = 0;
+  
+  sliceidx = 0;
 
 	AMatrixCol* Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
 	AMatrixCol* Temp = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));//This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
@@ -2818,10 +2824,11 @@ double SOCEngine::CE_SurrogateFunctionBasedMin()
 
 	numerator_sum+=THETA1;
 	denominator_sum+=THETA2;
+
 	if(THETA2 > 0)
 	{
-	alpha=(-1*numerator_sum)/(denominator_sum);
-	update = V+Clip(alpha, -V,INFINITY);
+	  alpha=(-1*numerator_sum)/(denominator_sum);
+	  update = V+Clip(alpha, -V, std::numeric_limits<float>::infinity() );
 	}
 	else
 	{
