@@ -60,3 +60,6 @@ include_directories(${PROJECT_CODE_DIR})
 
 add_executable(ScaleOffsetCorrectionAlgorithm ${ScaleOffsetCorrectionAlgorithm_PROJECT_FILES} )
 
+
+configure_file(${EIMTomo_SOURCE_DIR}/Resources/InputFiles/RunningTheCode.sh.in
+               ${EIMTomo_BINARY_DIR}/ScaleOffsetCorrectionAlgorithm.sh)

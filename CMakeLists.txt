@@ -115,8 +115,7 @@ endif()
 # Now configure this extra file with some additional definitions
 configure_file(${EIMTomo_SOURCE_DIR}/Resources/EIMTomo/EIMTomoConfiguration.h.in
                ${EIMTomo_BINARY_DIR}/EIMTomo/${CMP_TOP_HEADER_FILE})
-
-
+               
 # --------------------------------------------------------------------
 # Add in some compiler definitions
 # --------------------------------------------------------------------

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+cd "@EIMTomo_BINARY_DIR@"
+
+
+INPUT_FILE_DIR="@PROJECT_RESOURCES_DIR@/InputFiles"
+PARAM_FILE="$INPUT_FILE_DIR/ParamsWithROIAndViewSelectShepLogan.txt"
+SINO_FILE="$INPUT_FILE_DIR/ScheppLoganSinogram128NoiselessLimitedAngle.bin"
+GEOM_FILE="$INPUT_FILE_DIR/GainOffsetParams_ShepLoganPhantom.bin"
+OUTPUT_FILE="@EIMTomo_BINARY_DIR@/TestOutput.bin"
+
+"@EIMTomo_BINARY_DIR@/Bin/ScaleOffsetCorrectionAlgorithm" -p "$PARAM_FILE"  -s "$SINO_FILE" -g "$GEOM_FILE" -o "$OUTPUT_FILE" -m 1.2 -l 0.4 -n 10 -O 1
+
