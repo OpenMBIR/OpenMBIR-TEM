@@ -1,15 +1,21 @@
-#ifndef NCICD_COMPUTATIONINPUTS_H_
-#define NCICD_COMPUTATIONINPUTS_H_
+#ifndef MOTION_CORRECTION_COMPUTATIONINPUTS_H_
+#define MOTION_CORRECTION_COMPUTATIONINPUTS_H_
 
-#include <stdio.h>
+#include <stdio.h> //For all other declarations int,FILE etc
 #include <string>
-#include "NHICDStructures.h"
+#include "MotionCorrectionStructures.h"
 
-class NHICDInputs
+#define START_SLICE 0 //This is used to select whcih slice to reconstruct - REMOVE this in the final versions of the code
+#define END_SLICE 3//This is used to select whcih slice to reconstruct - REMOVE this in the final versions of the code
+
+
+
+class MotionCorrectionInputs
 {
+
   public:
-    NHICDInputs();
-    virtual ~NHICDInputs();
+    MotionCorrectionInputs();
+    virtual ~MotionCorrectionInputs();
 
     int CI_ParseInput(int argc, char **argv, CommandLineInputs* Input);
     void CI_ReadParameterFile(FILE *Fp, CommandLineInputs* ParsedInput, Sino* Sinogram, Geom* Geometry);
@@ -24,9 +30,8 @@ class NHICDInputs
     char* copyFilenameToNewCharBuffer(const std::string &fname);
 
   private:
-    NHICDInputs(const NHICDInputs&); // Copy Constructor Not Implemented
-    void operator=(const NHICDInputs&); // Operator '=' Not Implemented
-
+    MotionCorrectionInputs(const MotionCorrectionInputs&); // Copy Constructor Not Implemented
+    void operator=(const MotionCorrectionInputs&); // Operator '=' Not Implemented
 };
 
 #endif //ComputationInputs

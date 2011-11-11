@@ -8,6 +8,7 @@
  */
 
 
+#include "NHICDEngine.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,7 +19,7 @@
 #include "EIMTomo/common/allocate.h"
 #include "EIMTomo/common/EIMTime.h"
 #include "EIMTomo/common/EIMMath.h"
-#include "NHICDEngine.h"
+
 
   //#define DEBUG
 #define PROFILE_RESOLUTION 1536

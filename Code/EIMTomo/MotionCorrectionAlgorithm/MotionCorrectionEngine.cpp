@@ -11,32 +11,43 @@
 
 #include "MotionCorrectionEngine.h"
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 
 
 #include "EIMTomo/EIMTomo.h"
 #include "EIMTomo/common/allocate.h"
 #include "EIMTomo/common/EIMTime.h"
+#include "EIMTomo/common/EIMMath.h"
 #include "EIMTomo/mt/mt19937ar.h"
 
 
-static char CE_Cancel = 0;
+
+
+  //#define DEBUG
+#define PROFILE_RESOLUTION 1536
+#define PI M_PI
+  //Beam Parameters - This is set to some number <<< Sinogram->delta_r.
+  //#define BEAM_WIDTH 0.050000
+#define BEAM_RESOLUTION 512
+#define AREA_WEIGHTED
+  //#define ROI //Region Of Interest
+  //#define DISTANCE_DRIVEN
+  //#define CORRECTION
+  //#define STORE_A_MATRIX
+  //  #define WRITE_INTERMEDIATE_RESULTS
+  #define COST_CALCULATE
+#define BEAM_CALCULATION
+#define DETECTOR_RESPONSE_BINS 64
+
+
+
 #ifdef CORRECTION
   double *NORMALIZATION_FACTOR;
 #endif
-  //Structure to store a single column(A_i) of the A-matrix
-  typedef struct
-  {
-    double* values;//Store the non zero entries
-    uint32_t count;//The number of non zero values present in the column
-    uint32_t *index;//This maps each value to its location in the column. The entries in this can vary from 0 to Sinogram.N_x Sinogram.N_theta-1
-  } AMatrixCol;
 
-
+#if 0
   //Markov Random Field Prior parameters - Globals -:(
   double FILTER[3][3][3]={{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}},
     {{0.0370,0.0523,0.0370},{0.0523,0.0,0.0523},{0.0370,0.0523,  0.0370}},
@@ -51,18 +62,128 @@ static char CE_Cancel = 0;
     double BEAM_WIDTH;
   double OffsetR;
   double OffsetT;
+#endif
 
 
 
-// void CE_cancel()
-// {
-// CE_Cancel = 1;
-// }
+  /**
+  *
+  */
+ class DerivOfCostFunc
+ {
+   public:
+     DerivOfCostFunc(DATA_TYPE NEIGHBORHOOD[3][3][3],
+                     DATA_TYPE FILTER[3][3][3],
+                     DATA_TYPE V,
+                     DATA_TYPE THETA1,
+                     DATA_TYPE THETA2,
+                     DATA_TYPE SIGMA_X_P,
+                     DATA_TYPE MRF_P) :
+
+         V(V), THETA1(THETA1), THETA2(THETA2), SIGMA_X_P(SIGMA_X_P), MRF_P(MRF_P)
+     {
+     }
+
+     virtual ~DerivOfCostFunc()
+     {
+     }
+
+     double execute(DATA_TYPE u) const
+     {
+
+       double temp=0,value;
+       uint8_t i,j,k;
+       for (i = 0;i < 3;i++)
+         for (j = 0; j <3; j++)
+           for (k = 0;k < 3; k++)
+           {
+
+             if( u - NEIGHBORHOOD[i][j][k] >= 0.0)
+               temp+=(FILTER[i][j][k]*(1.0)*pow(fabs(u-NEIGHBORHOOD[i][j][k]),(MRF_P-1)));
+             else
+               temp+=(FILTER[i][j][k]*(-1.0)*pow(fabs(u-NEIGHBORHOOD[i][j][k]),(MRF_P -1)));
+           }
+
+       //printf("V WHile updating %lf\n",V);
+       //scanf("Enter value %d\n",&k);
+       value = THETA1 +  THETA2*(u-V) + (temp/SIGMA_X_P);
+
+       return value;
+
+     }
+
+   protected:
+     DerivOfCostFunc()
+     {
+     }
+
+   private:
+     DATA_TYPE NEIGHBORHOOD[3][3][3];
+     DATA_TYPE FILTER[3][3][3];
+     DATA_TYPE V;
+     DATA_TYPE THETA1;
+     DATA_TYPE THETA2;
+     DATA_TYPE SIGMA_X_P;
+     DATA_TYPE MRF_P;
+
+     DerivOfCostFunc(const DerivOfCostFunc&); // Copy Constructor Not Implemented
+     void operator=(const DerivOfCostFunc&); // Operator '=' Not Implemented
+ };
+
+
+ // -----------------------------------------------------------------------------
+ //
+ // -----------------------------------------------------------------------------
+ MotionCorrectionEngine::MotionCorrectionEngine() :
+     CE_Cancel(false)
+ {
+
+   FILTER[0][0][0] = 0.0302;
+   FILTER[0][0][1] = 0.0370;
+   FILTER[0][0][2] = 0.0302;
+   FILTER[0][1][0] = 0.0370;
+   FILTER[0][1][1] = 0.0523;
+   FILTER[0][1][2] = 0.0370;
+   FILTER[0][2][0] = 0.0302;
+   FILTER[0][2][1] = 0.0370;
+   FILTER[0][2][2] = 0.0302;
+
+   FILTER[1][0][0] = 0.0370;
+   FILTER[1][0][1] = 0.0523;
+   FILTER[1][0][2] = 0.0370;
+   FILTER[1][1][0] = 0.0523;
+   FILTER[1][1][1] = 0.0000;
+   FILTER[1][1][2] = 0.0523;
+   FILTER[1][2][0] = 0.0370;
+   FILTER[1][2][1] = 0.0523;
+   FILTER[1][2][2] = 0.0370;
+
+   FILTER[2][0][0] = 0.0302;
+   FILTER[2][0][1] = 0.0370;
+   FILTER[2][0][2] = 0.0302;
+   FILTER[2][1][0] = 0.0370;
+   FILTER[2][1][1] = 0.0523;
+   FILTER[2][1][2] = 0.0370;
+   FILTER[2][2][0] = 0.0302;
+   FILTER[2][2][1] = 0.0370;
+   FILTER[2][2][2] = 0.0302;
+
+ }
+
+ // -----------------------------------------------------------------------------
+ //
+ // -----------------------------------------------------------------------------
+ MotionCorrectionEngine::~MotionCorrectionEngine()
+ {
+
+ }
+
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
 
-int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdInputs)
+int  MotionCorrectionEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdInputs)
 {
 
 	uint8_t err = 0;
@@ -694,7 +815,9 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 
 						//Solve the 1-D optimization problem
 						//printf("V before updating %lf",V);
-						UpdatedVoxelValue = solve(CE_DerivOfCostFunc,low,high,accuracy,&errorcode);
+				     DerivOfCostFunc docf(NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
+
+						UpdatedVoxelValue = solve(&docf,low,high,accuracy,&errorcode);
 						if(errorcode == 0)
 						{
 							//    printf("(%lf,%lf,%lf)\n",low,high,UpdatedVoxelValue);
@@ -1355,15 +1478,15 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
 	for(i_theta = 0 ; i_theta < Sinogram->N_theta;i_theta++)
 		printf("%lf\n",Sinogram->ShiftY[i_theta]);
 
-	free_img((void*)VoxelProfile);
+	free_img((void**)VoxelProfile);
 	//free(AMatrix);
 #ifdef STORE_A_MATRIX
 	multifree(AMatrix,2);
 	//#else
 	//	free((void*)TempCol);
 #endif
-	free_3D((void*)ErrorSino);
-	free_3D((void*)Weight);
+	free_3D((void***)ErrorSino);
+	free_3D((void***)Weight);
 #ifdef COST_CALCULATE
 	fclose(Fp2);// writing cost function
 #endif
@@ -1381,7 +1504,7 @@ int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdIn
  //Finds the min and max of the neighborhood . This is required prior to calling
  solve()
  *****************************************************************************/
-void CE_MinMax(double *low,double *high)
+void  MotionCorrectionEngine::CE_MinMax(double *low,double *high)
 {
 	uint8_t i,j,k;
 	*low=NEIGHBORHOOD[0][0][0];
@@ -1413,7 +1536,7 @@ void CE_MinMax(double *low,double *high)
 
 
 
-void* CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
+void*  MotionCorrectionEngine::CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 {
 	double angle,MaxValLineIntegral;
 	double temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
@@ -1474,12 +1597,12 @@ void* CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 /*******************************************************************
  Find each column of the Forward Projection Matrix A
  ********************************************************************/
-void ForwardProject(Sino *Sinogram,Geom* Geom)
+void  MotionCorrectionEngine::ForwardProject(Sino *Sinogram,Geom* Geom)
 {
 
 }
 
-void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
+void*  MotionCorrectionEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
 {
 	int32_t i,j,k,sliceidx;
 	double x,z,y;
@@ -1836,7 +1959,7 @@ void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino*
 
 /* Initializes the global variables cosine and sine to speed up computation
  */
-void CE_CalculateSinCos(Sino* Sinogram)
+void  MotionCorrectionEngine::CE_CalculateSinCos(Sino* Sinogram)
 {
 	uint16_t i;
 	cosine=(double*)get_spc(Sinogram->N_theta,sizeof(double));
@@ -1849,7 +1972,7 @@ void CE_CalculateSinCos(Sino* Sinogram)
 	}
 }
 
-void CE_InitializeBeamProfile(Sino* Sinogram)
+void  MotionCorrectionEngine::CE_InitializeBeamProfile(Sino* Sinogram)
 {
 	uint16_t i;
 	double sum=0,W;
@@ -1875,78 +1998,7 @@ void CE_InitializeBeamProfile(Sino* Sinogram)
 
 }
 
-double CE_DerivOfCostFunc(double u)
-{
-	double temp=0,value;
-	uint8_t i,j,k;
-	for (i = 0;i < 3;i++)
-		for (j = 0; j <3; j++)
-			for (k = 0;k < 3; k++)
-			{
-
-				if( u - NEIGHBORHOOD[i][j][k] >= 0.0)
-					temp+=(FILTER[i][j][k]*(1.0)*pow(fabs(u-NEIGHBORHOOD[i][j][k]),(MRF_P-1)));
-				else
-					temp+=(FILTER[i][j][k]*(-1.0)*pow(fabs(u-NEIGHBORHOOD[i][j][k]),(MRF_P -1)));
-			}
-
-	//printf("V WHile updating %lf\n",V);
-	//scanf("Enter value %d\n",&k);
-	value = THETA1 +  THETA2*(u-V) + (temp/SIGMA_X_P);
-
-	return value;
-}
-
-
-double  solve(
-			  double (*f)(), /* pointer to function to be solved */
-			  double a,      /* minimum value of solution */
-			  double b,      /* maximum value of solution */
-			  double err,    /* accuarcy of solution */
-			  int *code      /* error code */
-			  )
-/* Solves equation (*f)(x) = 0 on x in [a,b]. Uses half interval method.*/
-/* Requires that (*f)(a) and (*f)(b) have opposite signs.		*/
-/* Returns code=0 if signs are opposite.				*/
-/* Returns code=1 if signs are both positive. 				*/
-/* Returns code=-1 if signs are both negative. 				*/
-{
-	int     signa,signb,signc;
-	double  fa,fb,fc,c,signaling_nan();
-	double  dist;
-
-	fa = (*f)(a);
-	signa = fa>0;
-	fb = (*f)(b);
-	signb = fb>0;
-
-	/* check starting conditions */
-	if( signa==signb ) {
-		if(signa==1) *code = 1;
-		else *code = -1;
-		return(0.0);
-	}
-	else *code = 0;
-
-	/* half interval search */
-	if( (dist=b-a)<0 ) dist = -dist;
-	while(dist>err) {
-		c = (b+a)/2;
-		fc = (*f)(c);  signc = fc>0;
-		if(signa == signc) { a = c; fa = fc; }
-		else { b = c; fb = fc; }
-		if( (dist=b-a)<0 ) dist = -dist;
-	}
-
-	/* linear interpolation */
-	if( (fb-fa)==0 ) return(a);
-	else {
-		c = (a*fb - b*fa)/(fb-fa);
-		return(c);
-	}
-}
-
-double CE_ComputeCost(double*** ErrorSino,double*** Weight,Sino* Sinogram,Geom* Geometry)
+double  MotionCorrectionEngine::CE_ComputeCost(double*** ErrorSino,double*** Weight,Sino* Sinogram,Geom* Geometry)
 {
 	double cost=0,temp=0;
 	int16_t i,j,k,p,q,r;
@@ -1977,7 +2029,7 @@ double CE_ComputeCost(double*** ErrorSino,double*** Weight,Sino* Sinogram,Geom* 
 	return cost;
 }
 
-void* CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
+void*  MotionCorrectionEngine::CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
 {
 	FILE* Fp = fopen("DetectorResponse.bin","w");
 	double Offset,Temp,r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,t,tmin;
@@ -2234,7 +2286,7 @@ void* CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometr
  }
  */
 
-void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double*** DetectorResponse)
+void*  MotionCorrectionEngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double*** DetectorResponse)
 {
 	int32_t i,j,k,sliceidx;
 	double x,z,y;
