@@ -3,7 +3,7 @@
 
 #include <stdio.h> //For all other declarations int,FILE etc
 
-#include "EIMTomo/common/EIMTomoTypes.h"
+#include "EIMTomo/EIMTomo.h"
 
 #define PI 4*atan(1)
 #define START_SLICE 0

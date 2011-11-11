@@ -7,8 +7,8 @@
 
 
 #include "EIMTomo/common/allocate.h"
-#include "EIMTomo/common/EMTime.h"
-#include "EIMTomo/common/EMMath.h"
+#include "EIMTomo/common/EIMTime.h"
+#include "EIMTomo/common/EIMMath.h"
 
 #include "NHICDInputs.h"
 

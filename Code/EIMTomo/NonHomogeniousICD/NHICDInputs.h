@@ -3,7 +3,7 @@
 
 #include <stdio.h> //For all other declarations int,FILE etc
 
-#include "EIMTomo/common/EIMTomoTypes.h"
+#include "EIMTomo/EIMTomo.h"
 
 
 #ifdef __cplusplus

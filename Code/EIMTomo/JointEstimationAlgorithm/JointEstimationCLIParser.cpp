@@ -11,7 +11,7 @@
 
 #include <tclap/CmdLine.h>
 #include <tclap/ValueArg.h>
-#include "EIMTomo/common/EIMTomoVersion.h"
+#include "EIMTomo/EIMTomoVersion.h"
 
 JointEstimationCLIParser::JointEstimationCLIParser()
 {

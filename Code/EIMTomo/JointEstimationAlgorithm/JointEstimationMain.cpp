@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include "EIMTomo/common/allocate.h"
-#include "EIMTomo/common/EMTime.h"
+#include "EIMTomo/common/EIMTime.h"
 #include "MotionCorrectionInputs.h"
 #include "JointEstimationCLIParser.h"
 #include "MotionCorrectionEngine.h"

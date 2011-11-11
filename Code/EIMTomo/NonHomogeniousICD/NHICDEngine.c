@@ -14,10 +14,10 @@
 #include <string.h>
 
 
-#include "EIMTomo/common/EIMTomoTypes.h"
+#include "EIMTomo/EIMTomo.h"
 #include "EIMTomo/common/allocate.h"
-#include "EIMTomo/common/EMTime.h"
-#include "EIMTomo/common/EMMath.h"
+#include "EIMTomo/common/EIMTime.h"
+#include "EIMTomo/common/EIMMath.h"
 #include "NHICDEngine.h"
 
 static char CE_Cancel = 0;
