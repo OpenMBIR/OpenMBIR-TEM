@@ -1,11 +1,22 @@
+
+// C Includes
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
+// C++ includes
+#include <string>
+#include <iostream>
+
+
+// EIMTomo Includes
 #include "EIMTomo/EIMTomo.h"
 #include "EIMTomo/common/EIMTime.h"
 #include "EIMTomo/common/allocate.h"
 
+// MXA Includes
+#include "MXA/Utilities/MXADir.h"
+#include "ScaleOffsetCorrectionConstants.h"
 #include "ScaleOffsetCorrectionInputs.h"
 #include "ScaleOffsetCorrectionEngine.h"
 
@@ -49,6 +60,17 @@ int main(int argc, char** argv)
     //CI_MaskSinogram(&OriginalSinogram,&MaskedSinogram);
     soci.CI_InitializeGeomParameters(&Sinogram, &Geometry, &ParsedInput);
   }
+
+  // Make sure the output directory is created if it does not exist
+ if ( MXADir::exists(ScaleOffsetCorrection::OutputDirectory) == false)
+ {
+   if (MXADir::mkdir(ScaleOffsetCorrection::OutputDirectory, true) == false)
+   {
+     std::cout << "Error creating the output directory '" << ScaleOffsetCorrection::OutputDirectory << "'\n   Exiting Now."  << std::endl;
+     return EXIT_FAILURE;
+   }
+ }
+
 
   SOCEngine soce;
   error = soce.CE_MAPICDReconstruct(&Sinogram, &Geometry, &ParsedInput);

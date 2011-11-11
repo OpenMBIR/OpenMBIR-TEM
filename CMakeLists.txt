@@ -140,10 +140,12 @@ if (MSVC)
  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
+add_subdirectory( ${PROJECT_CODE_DIR}/MXA ${PROJECT_BINARY_DIR}/MXA)
 
 
 
 # Add our executables
+
 add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/JointEstimationAlgorithm)
 add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/NonHomogeniousICD)
 add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/BasicReconstructionAlgorithm)

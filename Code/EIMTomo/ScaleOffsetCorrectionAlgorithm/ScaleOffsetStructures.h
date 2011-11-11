@@ -4,11 +4,10 @@
 #define SCALEOFFSETSTRUCTURES_H_
 
 
-
-
 typedef double DATA_TYPE;
 
 #include "EIMTomo/EIMTomo.h"
+
 
 
   /* Axes conventions:
