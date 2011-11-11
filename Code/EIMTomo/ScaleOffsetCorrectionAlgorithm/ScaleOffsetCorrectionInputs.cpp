@@ -52,7 +52,7 @@ int ScaleOffsetCorrectionInputs::CI_ParseInput(int argc,char **argv,CommandLineI
 {
   if ( NULL == Input)
   {
-    printf("The EMMPM_Inputs pointer was null. Returning early.\n");
+    printf("The CommandLineInputspointer was null. Returning early.\n");
     return -1;
   }
 
@@ -84,7 +84,7 @@ int ScaleOffsetCorrectionInputs::CI_ParseInput(int argc,char **argv,CommandLineI
 
   if (argc < 2)
   {
-    std::cout << "Joint Estimation Command Line Version " << cmd.getVersion() << std::endl;
+    std::cout << "Scale Offset Correction Command Line Version " << cmd.getVersion() << std::endl;
     std::vector<std::string> args;
     args.push_back(argv[0]);
     args.push_back("-h");

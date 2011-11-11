@@ -17,7 +17,6 @@ class ScaleOffsetCorrectionInputs
     int CI_ParseInput(int argc, char **argv, CommandLineInputs* Input);
     void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram,Geom* Geometry);
     void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput);
-  //  void CI_MaskSinogram(Sino*, Sino*);
     void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs* ParsedInput);
     DATA_TYPE AbsMaxArray(DATA_TYPE* Array, uint16_t NumElts);
 
