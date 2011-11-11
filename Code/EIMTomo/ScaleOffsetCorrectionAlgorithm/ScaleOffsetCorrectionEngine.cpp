@@ -2473,15 +2473,17 @@ DATA_TYPE SOCEngine::CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,S
 
 void* SOCEngine::CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometry,DATA_TYPE** VoxelProfile)
 {
-  std::string filepath(ScaleOffsetCorrection::OutputDirectory);
-  filepath =+ MXADir::Separator;
-  filepath.append(ScaleOffsetCorrection::DetectorResponseFile);
-	FILE* Fp = fopen(filepath.c_str(),"w");
-	if (NULL == Fp)
-	{
-	  std::cout << "Error Creating Output file " << filepath << std::endl;
-	  return NULL;
-	}
+
+  FILE* Fp = NULL;
+  int err = 0;
+  MAKE_OUTPUT_FILE(Fp, err, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::DetectorResponseFile)
+  if (err = 1)
+  {
+    std::cout << "Error creating output file for Detector Response." << std::endl;
+    return NULL;
+  }
+
+
 	DATA_TYPE r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,t,tmin;
 	//DATA_TYPE OffsetR,OffsetT,Left;
 	DATA_TYPE ***H;
