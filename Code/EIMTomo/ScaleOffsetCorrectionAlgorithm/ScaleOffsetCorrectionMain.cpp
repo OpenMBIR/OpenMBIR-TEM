@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 // C++ includes
 #include <string>
@@ -30,15 +31,23 @@
  N_ => Number of ..
 
  */
+#define MAKE_OUTPUT_FILE(Fp, err, outdir, filename)\
+    {\
+    std::string filepath(outdir);\
+    filepath =+ MXADir::Separator;\
+    filepath.append(filename);\
+    Fp = fopen(filepath.c_str(),"wb");\
+    if (Fp == NULL) { std::cout << "Error Opening Output file " << filepath << std::endl; err = 1; }\
+    }
 
 int main(int argc, char** argv)
 {
   int16_t error, i, j, k;
-  FILE* Fp;
+  FILE* Fp = NULL;
   CommandLineInputs ParsedInput;
   Sino Sinogram;
   Geom Geometry;
-  DATA_TYPE *buffer = (DATA_TYPE*)get_spc(1, sizeof(DATA_TYPE));
+  DATA_TYPE* buffer = (DATA_TYPE*)get_spc(1, sizeof(DATA_TYPE));
   uint64_t startm;
   uint64_t stopm;
 
@@ -50,9 +59,15 @@ int main(int argc, char** argv)
   error = soci.CI_ParseInput(argc, argv, &ParsedInput);
   if(error != -1)
   {
-    printf("%s %s %s %s\n", ParsedInput.ParamFile, ParsedInput.SinoFile, ParsedInput.InitialRecon, ParsedInput.OutputFile);
+    printf("%s \n%s \n%s \n%s\n", ParsedInput.ParamFile, ParsedInput.SinoFile, ParsedInput.InitialRecon, ParsedInput.OutputFile);
     //Read the paramters into the structures
     Fp = fopen(ParsedInput.ParamFile, "r");
+    if (errno)
+    {
+    std::cout << "Error Opening File: " << errno << std::endl;
+    return EXIT_FAILURE;
+    }
+
     soci.CI_ReadParameterFile(Fp, &ParsedInput, &Sinogram, &Geometry);
     fclose(Fp);
     //Based on the inputs , calculate the "other" variables in the structure definition
@@ -70,7 +85,6 @@ int main(int argc, char** argv)
      return EXIT_FAILURE;
    }
  }
-
 
   SOCEngine soce;
   error = soce.CE_MAPICDReconstruct(&Sinogram, &Geometry, &ParsedInput);

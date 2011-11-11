@@ -329,9 +329,8 @@ SOCEngine::~SOCEngine()
 #define MAKE_OUTPUT_FILE(Fp, err, outdir, filename)\
     {\
     std::string filepath(outdir);\
-    filepath =+ MXADir::Separator;\
-    filepath.append(filename);\
-    Fp = fopen(filepath.c_str(),"w");\
+    filepath = filepath.append(MXADir::getSeparator()).append(filename);\
+    Fp = fopen(filepath.c_str(),"wb");\
     if (Fp == NULL) { std::cout << "Error Opening Output file " << filepath << std::endl; err = 1; }\
     }
 
@@ -390,7 +389,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	{
 
 	}
-
+	fprintf(Fp, "Testing 1, 2, 3\n");
   MAKE_OUTPUT_FILE(Fp5, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::FinalOffsetParametersFile);
   if (fileError == 1)
   {
