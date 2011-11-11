@@ -1597,7 +1597,7 @@ void*  MotionCorrectionEngine::CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geo
 /*******************************************************************
  Find each column of the Forward Projection Matrix A
  ********************************************************************/
-void  MotionCorrectionEngine::ForwardProject(Sino *Sinogram,Geom* Geom)
+
 {
 
 }
