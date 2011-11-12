@@ -42,8 +42,8 @@
 #define COST_CALCULATE
 //#define BEAM_CALCULATION
 #define DETECTOR_RESPONSE_BINS 64
-//#define JOINT_ESTIMATION
-//#define NOISE_MODEL
+#define JOINT_ESTIMATION
+#define NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
 //#define CIRCULAR_BOUNDARY_CONDITION
 //#define DEBUG_CONSTRAINT_OPT
@@ -199,36 +199,39 @@ class CE_ConstraintEquation
     void operator=(const CE_ConstraintEquation&); // Operator '=' Not Implemented
 };
 
+
 /**
  *
  */
 class DerivOfCostFunc
 {
+
   public:
     DerivOfCostFunc(uint8_t _BOUNDARYFLAG[3][3][3],
                     DATA_TYPE _NEIGHBORHOOD[3][3][3],
                     DATA_TYPE _FILTER[3][3][3],
-                    DATA_TYPE V,
+                    DATA_TYPE _V,
                     DATA_TYPE THETA1,
                     DATA_TYPE THETA2,
                     DATA_TYPE SIGMA_X_P,
                     DATA_TYPE MRF_P) :
 
-                      V(V),
+                      V(_V),
                       THETA1(THETA1),
                       THETA2(THETA2),
                       SIGMA_X_P(SIGMA_X_P),
                       MRF_P(MRF_P)
     {
+			
       for(size_t i = 0; i < 3; ++i)
       {
         for(size_t j = 0; j < 3; ++j)
         {
           for(size_t k = 0; k < 3; ++k)
           {
-            this->BOUNDARYFLAG[i][j][k] = _BOUNDARYFLAG[i][j][k];
-            this->NEIGHBORHOOD[i][j][k] = _NEIGHBORHOOD[i][j][k];
-            this->FILTER[i][j][k] = _FILTER[i][j][k];
+            BOUNDARYFLAG[i][j][k] = _BOUNDARYFLAG[i][j][k];
+            NEIGHBORHOOD[i][j][k] = _NEIGHBORHOOD[i][j][k];
+            FILTER[i][j][k] = _FILTER[i][j][k];
           }
         }
       }
@@ -1040,7 +1043,6 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 #ifndef SURROGATE_FUNCTION
 					//TODO : What if theta1 = 0 ? Then this will give error
 					DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
-
 
 					UpdatedVoxelValue = (DATA_TYPE)solve<DerivOfCostFunc>(&docf,(double)low,(double)high,(double)accuracy,&errorcode);
 
@@ -2407,7 +2409,7 @@ DATA_TYPE SOCEngine::CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,S
 	temp=0;
 	for(i=0;i< Sinogram->N_theta;i++)
 		if(Weight[i][0][0] != 0)
-		temp += log(2*PI*Weight[i][0][0]);
+		temp += log(2*M_PI*Weight[i][0][0]);
 
 	temp*=((Sinogram->N_r*Sinogram->N_t)/2);
 
