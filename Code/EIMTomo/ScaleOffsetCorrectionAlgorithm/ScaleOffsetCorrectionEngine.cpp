@@ -2507,7 +2507,7 @@ void* SOCEngine::CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Ge
   FILE* Fp = NULL;
   int err = 0;
   MAKE_OUTPUT_FILE(Fp, err, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::DetectorResponseFile)
-  if (err = 1)
+  if (err == 1)
   {
     std::cout << "Error creating output file for Detector Response." << std::endl;
     return NULL;
