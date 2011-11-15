@@ -396,13 +396,20 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 	}
 	fprintf(Fp, "Testing 1, 2, 3\n");
+	
+	MAKE_OUTPUT_FILE(Fp4, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::FinalGainParametersFile);
+	if (fileError == 1)
+	{
+		
+	}
+	
   MAKE_OUTPUT_FILE(Fp5, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::FinalOffsetParametersFile);
   if (fileError == 1)
   {
 
   }
 
-
+	
 #ifdef FORWARD_PROJECT_MODE
   MAKE_OUTPUT_FILE(Fp6, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::ForwardProjectedObjectFile);
   if (fileError == 1)
@@ -410,6 +417,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
   }
 #endif
+	
   MAKE_OUTPUT_FILE(Fp7, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::FinalVariancesFile);
   if (fileError == 1)
   {
