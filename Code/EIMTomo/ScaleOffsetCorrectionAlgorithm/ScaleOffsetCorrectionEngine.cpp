@@ -381,7 +381,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	RNGVars* RandomNumber;
 
 	//File variables
-	FILE* Fp = NULL;
+	FILE* Fp1 = NULL;
 	FILE* Fp2 = NULL;
 	FILE* Fp4 = NULL;
 	FILE* Fp5 = NULL;
@@ -390,12 +390,12 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	FILE* Fp8 = NULL;
 
 	int fileError = 0;
-	MAKE_OUTPUT_FILE(Fp, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::ReconstructedSinogramFile);
+	MAKE_OUTPUT_FILE(Fp1, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::ReconstructedSinogramFile);
 	if (fileError == 1)
 	{
 
 	}
-	fprintf(Fp, "Testing 1, 2, 3\n");
+//	fprintf(Fp, "Testing 1, 2, 3\n");
 	
 	MAKE_OUTPUT_FILE(Fp4, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::FinalGainParametersFile);
 	if (fileError == 1)
@@ -900,7 +900,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 //#ifdef DEBUG
 				//writing the error sinogram
 			//	if(i_t == 0)
-			//	fwrite(&ErrorSino[i_theta][i_r][i_t],sizeof(DATA_TYPE),1,Fp);
+			//	fwrite(&ErrorSino[i_theta][i_r][i_t],sizeof(DATA_TYPE),1,Fp1);
 //#endif
 #ifdef FORWARD_PROJECT_MODE
 				temp=Y_Est[i_theta][i_r][i_t]/NuisanceParams.I_0[i_theta];
@@ -926,7 +926,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 #ifdef COST_CALCULATE
 	fileError = 0;
-  MAKE_OUTPUT_FILE(Fp2, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::ConstFunctionFile);
+  MAKE_OUTPUT_FILE(Fp2, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::CostFunctionFile);
   if (fileError == 1)
   {
 
@@ -1643,7 +1643,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 			{
 				Final_Sinogram[i_theta][i_r][i_t]*=NuisanceParams.I_0[i_theta];
 				Final_Sinogram[i_theta][i_r][i_t]+=NuisanceParams.mu[i_theta];
-				fwrite(&Final_Sinogram[i_theta][i_r][i_t], sizeof(DATA_TYPE),1,Fp);
+				fwrite(&Final_Sinogram[i_theta][i_r][i_t], sizeof(DATA_TYPE),1,Fp1);
 			}
 	}
 
@@ -1656,6 +1656,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 #endif
 	free_3D((void***)ErrorSino);
 	free_3D((void***)Weight);
+	fclose(Fp1);
 #ifdef COST_CALCULATE
 	fclose(Fp2);// writing cost function
 #endif
