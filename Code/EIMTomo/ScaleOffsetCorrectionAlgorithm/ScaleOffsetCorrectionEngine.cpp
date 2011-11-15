@@ -16,12 +16,18 @@
 
 // C++ Includes
 #include <limits>
+#include <iostream>
 
 // Our own includes
 #include "EIMTomo/common/EIMMath.h"
 #include "EIMTomo/common/allocate.h"
 #include "EIMTomo/common/EIMTime.h"
 #include "EIMTomo/mt/mt19937ar.h"
+#include "ScaleOffsetCorrectionConstants.h"
+
+
+// MXA includes
+#include "MXA/Utilities/MXADir.h"
 
 
 //#define DEBUG ,
@@ -326,6 +332,14 @@ SOCEngine::~SOCEngine()
 //
 // -----------------------------------------------------------------------------
 
+#define MAKE_OUTPUT_FILE(Fp, err, outdir, filename)\
+    {\
+    std::string filepath(outdir);\
+    filepath = filepath.append(MXADir::getSeparator()).append(filename);\
+    Fp = fopen(filepath.c_str(),"wb");\
+    if (Fp == NULL) { std::cout << "Error Opening Output file " << filepath << std::endl; err = 1; }\
+    }
+
 int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdInputs)
 {
 
@@ -367,18 +381,47 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	RNGVars* RandomNumber;
 
 	//File variables
+	FILE* Fp = NULL;
+	FILE* Fp2 = NULL;
+	FILE* Fp4 = NULL;
+	FILE* Fp5 = NULL;
+	FILE* Fp6 = NULL;
+	FILE* Fp7 = NULL;
+	FILE* Fp8 = NULL;
 
-	FILE *Fp = fopen("ReconstructedSino.bin","w");//Reconstructed Sinogram from initial est
-	FILE* Fp2;//Cost function
-	//FILE *Fp3;//File to store intermediate outputs of reconstruction
-	FILE *Fp4=fopen("FinalGainParameters.bin","w");
-	FILE *Fp5=fopen("FinalOffsetParameters.bin","w");
+	int fileError = 0;
+	MAKE_OUTPUT_FILE(Fp, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::ReconstructedSinogramFile);
+	if (fileError == 1)
+	{
+
+	}
+	fprintf(Fp, "Testing 1, 2, 3\n");
+  MAKE_OUTPUT_FILE(Fp5, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::FinalOffsetParametersFile);
+  if (fileError == 1)
+  {
+
+  }
+
+
 #ifdef FORWARD_PROJECT_MODE
-	FILE *Fp6 = fopen("ForwardProjectedObject.bin", "w");
+  MAKE_OUTPUT_FILE(Fp6, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::ForwardProjectedObjectFile);
+  if (fileError == 1)
+  {
+
+  }
 #endif
-	FILE *Fp7 = fopen("FinalVariances.bin","w");
+  MAKE_OUTPUT_FILE(Fp7, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::FinalVariancesFile);
+  if (fileError == 1)
+  {
+
+  }
 #ifdef DEBUG_CONSTRAINT_OPT
 	FILE *Fp8 = fopen("CostFunctionCoefficients.bin","w");
+  MAKE_OUTPUT_FILE(Fp8, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::CostFunctionCoefficientsFile);
+  if (fileError == 1)
+  {
+
+  }
 #endif
 	DATA_TYPE buffer;
 	//Optimization variables
@@ -874,7 +917,13 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 
 #ifdef COST_CALCULATE
-	Fp2 = fopen("CostFunc.bin","w");
+	fileError = 0;
+  MAKE_OUTPUT_FILE(Fp2, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::ConstFunctionFile);
+  if (fileError == 1)
+  {
+
+  }
+
 
 	printf("Cost Function Calculation \n");
 	/*********************Initial Cost Calculation***************************************************/
@@ -1659,7 +1708,13 @@ void* SOCEngine::CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 	DATA_TYPE** VoxProfile = (DATA_TYPE**)multialloc(sizeof(DATA_TYPE),2,Sinogram->N_theta,PROFILE_RESOLUTION);
 	DATA_TYPE checksum=0;
 	uint16_t i,j;
-	FILE* Fp = fopen("VoxelProfile.bin","w");
+	FILE* Fp = NULL;
+	int fileError = 0;
+  MAKE_OUTPUT_FILE(Fp, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::VoxelProfileFile);
+  if (fileError == 1)
+  {
+
+  }
 
 	for (i=0;i<Sinogram->N_theta;i++)
 	{
@@ -2448,7 +2503,17 @@ DATA_TYPE SOCEngine::CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,S
 
 void* SOCEngine::CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometry,DATA_TYPE** VoxelProfile)
 {
-	FILE* Fp = fopen("DetectorResponse.bin","w");
+
+  FILE* Fp = NULL;
+  int err = 0;
+  MAKE_OUTPUT_FILE(Fp, err, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::DetectorResponseFile)
+  if (err = 1)
+  {
+    std::cout << "Error creating output file for Detector Response." << std::endl;
+    return NULL;
+  }
+
+
 	DATA_TYPE r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,t,tmin;
 	//DATA_TYPE OffsetR,OffsetT,Left;
 	DATA_TYPE ***H;
