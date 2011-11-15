@@ -35,14 +35,14 @@ class SOCEngine
     int CE_MAPICDReconstruct(Sino*, Geom*, CommandLineInputs*);
     void* CE_CalculateAMatrixColumn(uint16_t, uint16_t, uint16_t, Sino*, Geom*, DATA_TYPE**);
 
-    double CE_DerivOfCostFunc(double);
+    //double CE_DerivOfCostFunc(double);
 
     DATA_TYPE CE_ComputeCost(DATA_TYPE***, DATA_TYPE***, Sino*, Geom*);
     void* CE_CalculateAMatrixColumnPartial(uint16_t, uint16_t, uint16_t, Sino*, Geom*, DATA_TYPE***);
     void* CE_DetectorResponse(uint16_t, uint16_t, Sino*, Geom*, DATA_TYPE**);
 
-    template<class functor>
-    double solve(functor* f, /* pointer to function to be solved */
+    template<typename T>
+    double solve(T* f, /* pointer to function to be solved */
                  double a, /* minimum value of solution */
                  double b, /* maximum value of solution */
                  double err, /* accuarcy of solution */
@@ -152,5 +152,6 @@ class SOCEngine
     SOCEngine(const SOCEngine&); // Copy Constructor Not Implemented
     void operator=(const SOCEngine&); // Operator '=' Not Implemented
 };
+
 
 #endif //CompEngine

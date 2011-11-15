@@ -32,7 +32,7 @@
 #define BEAM_RESOLUTION 512
 #define AREA_WEIGHTED
 #define ROI //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
-#define STOPPING_THRESHOLD 0.0009
+#define STOPPING_THRESHOLD 0.009
 //#define SURROGATE_FUNCTION
 //#define QGGMRF
 //#define DISTANCE_DRIVEN
@@ -101,7 +101,7 @@ class CE_ConstraintEquation
         ck_cost(ck_cost),
         LogGain(LogGain)
     {
-    }
+    }//constructor which assigns values to the private members of the class ; The members of the class and the parameters have the same name here 
 
     virtual ~CE_ConstraintEquation()
     {
@@ -171,10 +171,13 @@ class CE_ConstraintEquation
           }
         }
 
-        if(root[min_index] > 0) sum += log(root[min_index]); //max{(-b+sqrt(b^2 - 4*a*c))/2*a,(-b+sqrt(b^2 - 4*a*c))/2*a}
+        if(root[min_index] > 0) 
+			sum += log(root[min_index]); //max{(-b+sqrt(b^2 - 4*a*c))/2*a,(-b+sqrt(b^2 - 4*a*c))/2*a}
         else
         {
           printf("Log of a negative number\n");
+			printf("View %d\n",i_theta);
+			printf("Roots of the quadratic are %lf %lf \n",root[0],root[1]);
         }
         free(root);
 
@@ -211,16 +214,16 @@ class DerivOfCostFunc
                     DATA_TYPE _NEIGHBORHOOD[3][3][3],
                     DATA_TYPE _FILTER[3][3][3],
                     DATA_TYPE _V,
-                    DATA_TYPE THETA1,
-                    DATA_TYPE THETA2,
-                    DATA_TYPE SIGMA_X_P,
-                    DATA_TYPE MRF_P) :
+                    DATA_TYPE _THETA1,
+                    DATA_TYPE _THETA2,
+                    DATA_TYPE _SIGMA_X_P,
+                    DATA_TYPE _MRF_P) :
 
                       V(_V),
-                      THETA1(THETA1),
-                      THETA2(THETA2),
-                      SIGMA_X_P(SIGMA_X_P),
-                      MRF_P(MRF_P)
+                      THETA1(_THETA1),
+                      THETA2(_THETA2),
+                      SIGMA_X_P(_SIGMA_X_P),
+                      MRF_P(_MRF_P)
     {
 			
       for(size_t i = 0; i < 3; ++i)
@@ -523,7 +526,8 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 	//Scale and Offset Parameters Initialization
 
-	sum=0;
+	sum = 0;
+	temp = 0;
 	for(k=0 ; k < Sinogram->N_theta;k++)
 	{
 		//fread(&buffer, 1, sizeof(double), Fp6);
@@ -537,8 +541,11 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	//Checking if the input parameters satisfy the target geometric mean
 	if(fabs(sum - Sinogram->TargetGain) > 1e-5)
 	{
-		printf("The input paramters dont meet the constraint\n");
-		return 0;
+		printf("The input paramters dont meet the constraint..Renormalizing\n");
+        temp = exp(log(Sinogram->TargetGain) - log(sum));
+		for (k = 0 ; k < Sinogram->N_theta; k++) {
+			NuisanceParams.I_0[k]=Sinogram->InitialGain[k]*temp;
+		}
 	}
 
 
@@ -674,6 +681,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 		if(slice_index_max >= Sinogram->N_t)
 			slice_index_max = Sinogram->N_t-1;
 
+		
 		//printf("%d %d\n",slice_index_min,slice_index_max);
 
 		for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
@@ -694,7 +702,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 			if(ProfileThickness != 0)//Store the response of this slice
 			{
-				//printf("%d %lf\n",i_t,ProfileThickness);
+				printf("%d %lf\n",i_t,ProfileThickness);
 				VoxelLineResponse[i].values[VoxelLineResponse[i].count]=ProfileThickness;
 				VoxelLineResponse[i].index[VoxelLineResponse[i].count++]=i_t;
 			}
@@ -757,11 +765,11 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 				{
 				    //calculating the footprint of the voxel in the t-direction
 
-					i_theta = floor(static_cast<float>(TempCol[j][k]->index[q]/(Sinogram->N_r)));
+					i_theta = int16_t(floor(static_cast<float>(TempCol[j][k]->index[q]/(Sinogram->N_r))));
 					i_r =  (TempCol[j][k]->index[q]%(Sinogram->N_r));
 
 					VoxelLineAccessCounter=0;
-					for(i_t = VoxelLineResponse[i].index[0]; i_t <= VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
+					for(i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)//CHANGED from <= to <
 					{
 						/*center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
 						delta_t = fabs(center_t - t);
@@ -775,7 +783,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 						else
 						{
 							ProfileThickness=0;
-						}*/
+						}*/					
 						Y_Est[i_theta][i_r][i_t] += (NuisanceParams.I_0[i_theta]*(TempCol[j][k]->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter++]* Geometry->Object[j][k][i]));
 
 				    }
@@ -809,13 +817,12 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 			for(i_t = 0;i_t < Sinogram->N_t;i_t++)
 				sum+=(Sinogram->counts[i_theta][i_r][i_t]);
 
-		sum/=(Sinogram->N_r*Sinogram->N_theta);
+		sum/=(Sinogram->N_r*Sinogram->N_t);
 
 		for(i_r = 0; i_r < Sinogram->N_r;i_r++)
 			for(i_t = 0;i_t < Sinogram->N_t;i_t++)
 				if(sum != 0)
-					Weight[i_theta][i_r][i_t]=1.0/sum;//The variancfor each view ~1/averagecounts in that view
-
+					Weight[i_theta][i_r][i_t]=1.0/sum;//The variance for each view ~=averagecounts in that view
 	}
 #endif//Noise model
 
@@ -829,6 +836,9 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 				// checksum+=Y_Est[i][j][k];
 				ErrorSino[i_theta][i_r][i_t] = Sinogram->counts[i_theta][i_r][i_t] - Y_Est[i_theta][i_r][i_t]-NuisanceParams.mu[i_theta];
+			//	if(fabs(ErrorSino[i_theta][i_r][i_t]) > 20000)
+			//		printf("%d %d %d %lf %lf %lf\n",i_theta,i_r,i_t,ErrorSino[i_theta][i_r][i_t],Weight[i_theta][i_r][i_t],Y_Est[i_theta][i_r][i_t]);
+				
 #ifndef NOISE_MODEL
 				if(Sinogram->counts[i_theta][i_r][i_t] != 0)
 					Weight[i_theta][i_r][i_t]=1.0/Sinogram->counts[i_theta][i_r][i_t];
@@ -885,7 +895,6 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	{
 	for(Iter = 0;Iter < CmdInputs->NumIter;Iter++)
 	{
-
 
 		//printf("Iter %d\n",Iter);
 #ifdef ROI
@@ -1006,7 +1015,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 							i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
 							i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 							VoxelLineAccessCounter=0;
-							for(i_t = VoxelLineResponse[i].index[0]; i_t <= VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
+							for(i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
 							// for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 							 {
 								/* center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
@@ -1103,7 +1112,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 					i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
 					i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
 					VoxelLineAccessCounter=0;
-					for(i_t = VoxelLineResponse[i].index[0]; i_t <= VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
+					for(i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
 					//for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
 					/*	center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
@@ -1235,11 +1244,11 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 						{
 							//calculating the footprint of the voxel in the t-direction
 
-							i_theta = floor(static_cast<float>(TempCol[j][k]->index[q]/(Sinogram->N_r)));
+							i_theta = int16_t(floor(static_cast<float>(TempCol[j][k]->index[q]/(Sinogram->N_r))));
 							i_r =  (TempCol[j][k]->index[q]%(Sinogram->N_r));
 
 							VoxelLineAccessCounter=0;
-							for(i_t = VoxelLineResponse[i].index[0]; i_t <= VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
+							for(i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
 							{
 								Y_Est[i_theta][i_r][i_t] += ((TempCol[j][k]->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter++]* Geometry->Object[j][k][i]));
 							}
@@ -1356,6 +1365,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 		rooting_attempt_counter=0;
 		errorcode=-1;
 		CE_ConstraintEquation ce(NumOfViews, QuadraticParameters, d1, d2, Qk_cost, bk_cost, ck_cost, LogGain);
+		
 		while(errorcode != 0 && low <= high && rooting_attempt_counter < MaxNumRootingAttempts)//0 implies the signof the function at low and high is the same
 		{
 
@@ -1486,6 +1496,16 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 		cost_counter++;
 
 #endif
+		printf("Offsets\n");
+		for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+		{
+			printf("%lf\n",NuisanceParams.mu[i_theta]);
+		}
+		printf("Gain\n");
+		for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+		{
+			printf("%lf\n",NuisanceParams.I_0[i_theta]);
+		}
 
 #ifdef NOISE_MODEL
 		//Updating the Weights
@@ -1538,6 +1558,11 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 		fwrite(&NuisanceParams.I_0[i_theta],sizeof(DATA_TYPE),1,Fp4);
 	}
 	printf("Number of costs recorded %d\n",cost_counter);
+	printf("Final Cost\n");
+	for(i = 0 ; i < cost_counter; i++)
+	{
+		printf("%lf\n",cost[i]);
+	}
 
 	printf("Variance\n");
 	for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
@@ -2227,17 +2252,20 @@ DATA_TYPE SOCEngine::CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,S
 	DATA_TYPE cost=0,temp=0,delta;
 	int16_t i,j,k,p,q,r;
 
-	//printf("Cost calculation..\n");
-    //  printf("%lf %lf\n",ErrorSino[5][5][5],Weight[5][5][5]);
-
+//Data Mismatch Error
 	for (i = 0; i < Sinogram->N_theta; i++)
 		for (j = 0; j < Sinogram->N_r; j++)
 			for( k = 0; k < Sinogram->N_t; k++)
+			{
 				cost+=(ErrorSino[i][j][k] * ErrorSino[i][j][k] * Weight[i][j][k]);
+				
+			}
 
-	cost/=2;
+	cost/=2; 
 
 	printf("Data mismatch term =%lf\n",cost);
+	
+//Prior Model Error
 #ifndef QGGMRF
 	for (i = 0; i < Geometry->N_z; i++)
 		for (j = 0; j < Geometry->N_x; j++)
@@ -2404,12 +2432,12 @@ DATA_TYPE SOCEngine::CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,S
 	//printf("Cost calculation End..\n");
 
 
-
+//Noise Error
 #ifdef NOISE_MODEL
 	temp=0;
 	for(i=0;i< Sinogram->N_theta;i++)
 		if(Weight[i][0][0] != 0)
-		temp += log(2*M_PI*Weight[i][0][0]);
+		temp += log(2*M_PI*(1.0/Weight[i][0][0]));//2*pi*sigma_k^{2}
 
 	temp*=((Sinogram->N_r*Sinogram->N_t)/2);
 
