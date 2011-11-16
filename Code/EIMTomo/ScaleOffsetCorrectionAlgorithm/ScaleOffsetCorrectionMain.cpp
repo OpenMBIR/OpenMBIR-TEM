@@ -87,7 +87,7 @@ int main(int argc, char** argv)
  }
 
   SOCEngine soce(&Sinogram, &Geometry, &ParsedInput);
-  error = soce.CE_MAPICDReconstruct();
+  error = soce.mapicdReconstruct();
   Fp = fopen(ParsedInput.OutputFile.c_str(), "w");
 
   printf("Main\n");

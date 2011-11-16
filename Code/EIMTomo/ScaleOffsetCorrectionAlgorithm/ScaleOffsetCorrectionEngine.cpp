@@ -368,7 +368,7 @@ void SOCEngine::initVariables()
     if (Fp == NULL) { std::cout << "Error Opening Output file " << filepath << std::endl; err = 1; }\
     }
 
-int SOCEngine::CE_MAPICDReconstruct()
+int SOCEngine::mapicdReconstruct()
 {
   if (m_Sinogram == NULL || m_Geometry == NULL || m_CmdInputs == NULL)
   {
@@ -555,14 +555,14 @@ int SOCEngine::CE_MAPICDReconstruct()
 
 
 	//calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram Structure are converted to radians
-	VoxelProfile = (DATA_TYPE**)CE_CalculateVoxelProfile(); //Verified with ML
+	VoxelProfile = (DATA_TYPE**)calculateVoxelProfile(); //Verified with ML
 	//Pre compute sine and cos theta to speed up computations
-	CE_CalculateSinCos();
+	calculateSinCos();
 	//Initialize the e-beam
-	CE_InitializeBeamProfile(); //verified with ML
+	initializeBeamProfile(); //verified with ML
 
 	//calculate sine and cosine of all angles and store in the global arrays sine and cosine
-	DetectorResponse = (DATA_TYPE***)CE_DetectorResponse(0,0,VoxelProfile);//System response
+	DetectorResponse = (DATA_TYPE***)detectorResponse(0,0,VoxelProfile);//System response
 	H_t = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta, DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//detector response along t
 
 #ifdef RANDOM_ORDER_UPDATES
@@ -720,7 +720,7 @@ int SOCEngine::CE_MAPICDReconstruct()
 			for (k = 0; k < m_Geometry->N_x; k++)
 			{
 				//  AMatrix[q++]=CE_CalculateAMatrixColumn(i,j,Sinogram,Geometry,VoxelProfile);
-				AMatrix[i][j][k]=CE_CalculateAMatrixColumn(j,k,i,m_Sinogram,m_Geometry,VoxelProfile);//row,col,slice
+				AMatrix[i][j][k]=calculateAMatrixColumn(j,k,i,m_Sinogram,m_Geometry,VoxelProfile);//row,col,slice
 
 				for(p = 0; p < AMatrix[i][j][k]->count; p++)
 					checksum += AMatrix[i][j][k]->values[p];
@@ -733,7 +733,7 @@ int SOCEngine::CE_MAPICDReconstruct()
     for(j=0; j < m_Geometry->N_z; j++)
     for(k=0; k < m_Geometry->N_x; k++)
     {
-      TempCol[j][k] = (AMatrixCol*)CE_CalculateAMatrixColumnPartial(j, k, 0, DetectorResponse);
+      TempCol[j][k] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, DetectorResponse);
       temp += TempCol[j][k]->count;
     }
 #endif
@@ -959,7 +959,7 @@ int SOCEngine::CE_MAPICDReconstruct()
 	printf("Cost Function Calculation \n");
 	/*********************Initial Cost Calculation***************************************************/
 
-	cost[cost_counter] = CE_ComputeCost(ErrorSino,Weight);
+	cost[cost_counter] = computeCost(ErrorSino,Weight);
 
 	printf("%lf\n",cost[cost_counter]);
 
@@ -1120,7 +1120,7 @@ int SOCEngine::CE_MAPICDReconstruct()
 							 }
 						}
 						THETA1*=-1;
-						CE_MinMax(&low,&high);
+						minMax(&low,&high);
 
 #ifdef DEBUG
 						if(i ==0 && j==31 && k==31)
@@ -1142,7 +1142,7 @@ int SOCEngine::CE_MAPICDReconstruct()
 					UpdatedVoxelValue = CE_FunctionalSubstitution(low,high);
 
 #else
-					SurrogateUpdate=CE_SurrogateFunctionBasedMin();
+					SurrogateUpdate=surrogateFunctionBasedMin();
 					UpdatedVoxelValue=SurrogateUpdate;
 #endif //QGGMRF
 
@@ -1238,7 +1238,7 @@ int SOCEngine::CE_MAPICDReconstruct()
 #ifdef COST_CALCULATE
 		/*********************Cost Calculation***************************************************/
 
-		cost[cost_counter]=CE_ComputeCost(ErrorSino,Weight);
+		cost[cost_counter]=computeCost(ErrorSino,Weight);
 		printf("%lf\n",cost[cost_counter]);
 
 		if(cost[cost_counter]-cost[cost_counter-1] > 0)
@@ -1564,7 +1564,7 @@ int SOCEngine::CE_MAPICDReconstruct()
 
 
 #ifdef COST_CALCULATE
-		cost[cost_counter]=CE_ComputeCost(ErrorSino,Weight);
+		cost[cost_counter]=computeCost(ErrorSino,Weight);
 	 printf("After Gain Update %lf\n",cost[cost_counter]);
 
 		if(cost[cost_counter]-cost[cost_counter-1] > 0)
@@ -1605,7 +1605,7 @@ int SOCEngine::CE_MAPICDReconstruct()
 		}
 
 #ifdef COST_CALCULATE
-		cost[cost_counter]=CE_ComputeCost(ErrorSino,Weight);
+		cost[cost_counter]=computeCost(ErrorSino,Weight);
 		printf("After Noise Variance Update %lf\n",cost[cost_counter]);
 		fwrite(&cost[cost_counter],sizeof(DATA_TYPE),1,Fp2);
 		if(cost[cost_counter]-cost[cost_counter-1] > 0)
@@ -1654,7 +1654,7 @@ int SOCEngine::CE_MAPICDReconstruct()
 
     START;
 	//calculates Ax and returns a pointer to the memory block
-	Final_Sinogram=ForwardProject(DetectorResponse, H_t);
+	Final_Sinogram=forwardProject(DetectorResponse, H_t);
 	STOP;
 	PRINTTIME;
 
@@ -1698,7 +1698,7 @@ int SOCEngine::CE_MAPICDReconstruct()
  //Finds the min and max of the neighborhood . This is required prior to calling
  solve()
  *****************************************************************************/
-void SOCEngine::CE_MinMax(DATA_TYPE *low,DATA_TYPE *high)
+void SOCEngine::minMax(DATA_TYPE *low,DATA_TYPE *high)
 {
 	uint8_t i,j,k;
 	*low=NEIGHBORHOOD[0][0][0];
@@ -1732,7 +1732,7 @@ void SOCEngine::CE_MinMax(DATA_TYPE *low,DATA_TYPE *high)
 
 
 
-void* SOCEngine::CE_CalculateVoxelProfile()
+void* SOCEngine::calculateVoxelProfile()
 {
 	DATA_TYPE angle,MaxValLineIntegral;
 	DATA_TYPE temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
@@ -1799,7 +1799,7 @@ void* SOCEngine::CE_CalculateVoxelProfile()
 /*******************************************************************
  Forwards Projects the Object and stores it in a 3-D matrix
  ********************************************************************/
-DATA_TYPE*** SOCEngine::ForwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE*** H_t)
+DATA_TYPE*** SOCEngine::forwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE*** H_t)
 {
 	DATA_TYPE x,z,y;
 	DATA_TYPE r,rmin,rmax,t,tmin,tmax;
@@ -1903,7 +1903,7 @@ DATA_TYPE*** SOCEngine::ForwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE**
 	return Y_Est;
 }
 
-void* SOCEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice,
+void* SOCEngine::calculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice,
                                            DATA_TYPE** VoxelProfile)
 {
 	int32_t i,j,k,sliceidx;
@@ -2261,7 +2261,7 @@ void* SOCEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t s
 
 /* Initializes the global variables cosine and sine to speed up computation
  */
-void SOCEngine::CE_CalculateSinCos()
+void SOCEngine::calculateSinCos()
 {
 	uint16_t i;
 	cosine=(DATA_TYPE*)get_spc(m_Sinogram->N_theta,sizeof(DATA_TYPE));
@@ -2274,7 +2274,7 @@ void SOCEngine::CE_CalculateSinCos()
 	}
 }
 
-void SOCEngine::CE_InitializeBeamProfile()
+void SOCEngine::initializeBeamProfile()
 {
 	uint16_t i;
 	DATA_TYPE sum=0,W;
@@ -2334,7 +2334,7 @@ double SOCEngine::CE_DerivOfCostFunc(double u)
 
 
 
-DATA_TYPE SOCEngine::CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
+DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 {
 	DATA_TYPE cost=0,temp=0,delta;
 	int16_t i,j,k,p,q,r;
@@ -2533,7 +2533,7 @@ DATA_TYPE SOCEngine::CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 	return cost;
 }
 
-void* SOCEngine::CE_DetectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelProfile)
+void* SOCEngine::detectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelProfile)
 {
 
   FILE* Fp = NULL;
@@ -2767,7 +2767,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col,Sino* Sinogram,
 }
 */
 
-void* SOCEngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, DATA_TYPE*** DetectorResponse)
+void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, DATA_TYPE*** DetectorResponse)
 {
 	int32_t i,j,k,sliceidx;
 	DATA_TYPE x,z,y;
@@ -2940,7 +2940,7 @@ void* SOCEngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uin
 
 #endif
 
-double SOCEngine::CE_SurrogateFunctionBasedMin()
+double SOCEngine::surrogateFunctionBasedMin()
 {
 	double numerator_sum=0;
 	double denominator_sum=0;
