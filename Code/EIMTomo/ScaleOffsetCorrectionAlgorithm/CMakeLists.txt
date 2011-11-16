@@ -29,6 +29,7 @@ cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/ScaleOffsetCorrectionAlgorithm" "${ScaleOffs
 # Include the source files for Common source files and the Mersenne Twister RNG
 include (${PROJECT_CODE_DIR}/EIMTomo/common/SourceList.cmake)
 include (${PROJECT_CODE_DIR}/EIMTomo/mt/SourceList.cmake)
+include (${PROJECT_CODE_DIR}/EIMTomo/IO/SourceList.cmake)
 
 set(GENERATED_HDRS
     ${CMP_HEADER_DIR}/${CMP_EXTRA_CONFIGURATION_FILE}
@@ -44,6 +45,8 @@ set(ScaleOffsetCorrectionAlgorithm_PROJECT_FILES
   ${ScaleOffsetCorrectionAlgorithm_SRCS}
   ${EIMTomo_Common_SRCS}
   ${EIMTomo_Common_HDRS}
+  ${EIMTomo_IO_SRCS}
+  ${EIMTomo_IO_HDRS}
   ${Mersenne_Twister_SRCS}
   ${Mersenne_Twister_HDRS}
   ${GENERATED_HDRS}

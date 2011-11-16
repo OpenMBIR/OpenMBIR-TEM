@@ -304,7 +304,7 @@ class DerivOfCostFunc
 //
 // -----------------------------------------------------------------------------
 SOCEngine::SOCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs) :
-    CE_Cancel(false),
+    m_Cancel(false),
 m_CmdInputs(inputs),
 m_Sinogram(sinogram),
 m_Geometry(geometry)
@@ -316,7 +316,7 @@ m_Geometry(geometry)
 //
 // -----------------------------------------------------------------------------
 SOCEngine::SOCEngine() :
-    CE_Cancel(false),
+    m_Cancel(false),
     m_CmdInputs(NULL),
     m_Sinogram(NULL),
     m_Geometry(NULL)
@@ -376,7 +376,7 @@ int SOCEngine::mapicdReconstruct()
 {
   if (m_Sinogram == NULL || m_Geometry == NULL || m_CmdInputs == NULL)
   {
-    return 0;
+    return -1;
   }
 	uint8_t err = 0;
 	int16_t Iter,OuterIter;
@@ -1287,7 +1287,7 @@ int SOCEngine::mapicdReconstruct()
 		}
 #endif//ROI end
 
-		if (CE_Cancel == 1)
+		if (m_Cancel == true)
 		{
 			return err;
 		}

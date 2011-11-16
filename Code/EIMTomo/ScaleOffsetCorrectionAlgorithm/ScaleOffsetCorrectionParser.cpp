@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 #include <tclap/CmdLine.h>
 #include <tclap/ValueArg.h>
@@ -157,13 +158,24 @@ int ScaleOffsetCorrectionParser::parseArguments(int argc,char **argv,TomoInputs*
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ScaleOffsetCorrectionParser::readParameterFile(FILE *Fp,TomoInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
+int ScaleOffsetCorrectionParser::readParameterFile(const std::string &filepath,TomoInputs* inputs,Sino* Sinogram,Geom* Geometry)
 {
-	char temp[20];
+
+  FILE* Fp = NULL;
+  char temp[20];
 	int16_t i;
 	uint16_t view_count;
 	//DATA_TYPE tempvariable=0;
 	DATA_TYPE *MaskedViewAngles;
+	int32_t err = 0;
+  //Read the paramters into the structures
+  Fp = fopen(inputs->ParamFile.c_str(), "r");
+  if(errno > 0)
+  {
+    std::cout << "Error (" << errno << ") Opening Parameter File '" << inputs->ParamFile << std::endl;
+    return -1;
+  }
+
 	while(!feof(Fp))
 	{
 		fscanf(Fp,"%s",temp);
@@ -248,8 +260,8 @@ void ScaleOffsetCorrectionParser::readParameterFile(FILE *Fp,TomoInputs* ParsedI
 	/*	else if (strcmp("Iter",temp) == 0)
 		{
 			fscanf(Fp,"%s",temp);
-			ParsedInput->NumIter=atoi(temp);
-			printf("Params.NumIter=%d\n",ParsedInput->NumIter);
+			inputs->NumIter=atoi(temp);
+			printf("Params.NumIter=%d\n",inputs->NumIter);
 		}*/
 
 		else if (strcmp("GeomDeltaXZ",temp) == 0)
@@ -327,6 +339,8 @@ void ScaleOffsetCorrectionParser::readParameterFile(FILE *Fp,TomoInputs* ParsedI
 
 	}
 
+  fclose(Fp);
+  return err;
 }
 
 void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoInputs* ParsedInput)

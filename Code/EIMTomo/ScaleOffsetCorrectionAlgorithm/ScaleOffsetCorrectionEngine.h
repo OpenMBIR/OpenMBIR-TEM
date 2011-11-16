@@ -45,7 +45,7 @@ class SOCEngine
 
   private:
 
-    bool CE_Cancel;
+    bool m_Cancel;
     uint8_t BOUNDARYFLAG[3][3][3]; //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
     //Markov Random Field Prior parameters - Globals DATA_TYPE
     DATA_TYPE FILTER[3][3][3];

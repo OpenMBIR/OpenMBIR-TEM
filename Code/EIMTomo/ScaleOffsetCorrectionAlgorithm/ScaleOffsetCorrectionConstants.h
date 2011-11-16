@@ -26,6 +26,11 @@ namespace ScaleOffsetCorrection
   const std::string ForwardProjectedObjectFile("ForwardProjectedObject.bin");
   const std::string CostFunctionCoefficientsFile("CostFunctionCoefficients.bin");
 
+  namespace VTK
+  {
+    const std::string TomoVoxelScalarName("TomoVoxel");
+  }
+
 }
 
 
