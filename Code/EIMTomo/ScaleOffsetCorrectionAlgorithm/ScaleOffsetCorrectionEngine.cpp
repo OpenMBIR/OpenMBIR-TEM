@@ -261,8 +261,8 @@ class DerivOfCostFunc
           {
             if(BOUNDARYFLAG[i][j][k] == 1)
             {
-              if(u - NEIGHBORHOOD[i][j][k] >= 0.0) temp +=
-                  ((double)FILTER[i][j][k] * (1.0) * pow(fabs(u - (double)NEIGHBORHOOD[i][j][k]), (double)(MRF_P - 1)));
+              if(u - NEIGHBORHOOD[i][j][k] >= 0.0) 
+				  temp +=((double)FILTER[i][j][k] * (1.0) * pow(fabs(u - (double)NEIGHBORHOOD[i][j][k]), (double)(MRF_P - 1)));
               else temp += ((double)FILTER[i][j][k] * (-1.0) * pow(fabs(u - (double)NEIGHBORHOOD[i][j][k]), (double)(MRF_P - 1)));
             }
           }
