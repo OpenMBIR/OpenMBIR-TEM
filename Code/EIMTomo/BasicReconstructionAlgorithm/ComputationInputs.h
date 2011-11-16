@@ -86,10 +86,10 @@ extern "C" {
 	};
 	typedef struct _command_line_inputs CommandLineInputs;
 	
-	int CI_ParseInput(int ,char**,CommandLineInputs*);
-	void CI_ReadParameterFile(FILE* ,CommandLineInputs* ,Sino* ,Geom*);
-	void CI_InitializeSinoParameters(Sino *,CommandLineInputs*);
-	void CI_InitializeGeomParameters(Sino* ,Geom* ,CommandLineInputs*);
+	int parseArguments(int ,char**,CommandLineInputs*);
+	void readParameterFile(FILE* ,CommandLineInputs* ,Sino* ,Geom*);
+	void initializeSinoParameters(Sino *,CommandLineInputs*);
+	void initializeGeomParameters(Sino* ,Geom* ,CommandLineInputs*);
 	
 	
 #ifdef __cplusplus

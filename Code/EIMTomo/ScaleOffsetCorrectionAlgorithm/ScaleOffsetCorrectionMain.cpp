@@ -56,7 +56,7 @@ int main(int argc, char** argv)
   error = -1;
   ScaleOffsetCorrectionInputs soci;
 
-  error = soci.CI_ParseInput(argc, argv, &ParsedInput);
+  error = soci.parseArguments(argc, argv, &ParsedInput);
   if(error != -1)
   {
     printf("%s \n%s \n%s \n%s\n", ParsedInput.ParamFile, ParsedInput.SinoFile, ParsedInput.InitialRecon, ParsedInput.OutputFile);
@@ -68,12 +68,12 @@ int main(int argc, char** argv)
     return EXIT_FAILURE;
     }
 
-    soci.CI_ReadParameterFile(Fp, &ParsedInput, &Sinogram, &Geometry);
+    soci.readParameterFile(Fp, &ParsedInput, &Sinogram, &Geometry);
     fclose(Fp);
     //Based on the inputs , calculate the "other" variables in the structure definition
-    soci.CI_InitializeSinoParameters(&Sinogram, &ParsedInput);
+    soci.initializeSinoParameters(&Sinogram, &ParsedInput);
     //CI_MaskSinogram(&OriginalSinogram,&MaskedSinogram);
-    soci.CI_InitializeGeomParameters(&Sinogram, &Geometry, &ParsedInput);
+    soci.initializeGeomParameters(&Sinogram, &Geometry, &ParsedInput);
   }
 
   // Make sure the output directory is created if it does not exist

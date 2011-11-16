@@ -52,11 +52,11 @@ int main(int argc,char** argv)
 		printf("%s %s %s %s\n",ParsedInput.ParamFile,ParsedInput.SinoFile,ParsedInput.InitialRecon,ParsedInput.OutputFile);
 		//Read the paramters into the structures
 		Fp = fopen(ParsedInput.ParamFile,"r");
-		CI_ReadParameterFile(Fp,&ParsedInput,&Sinogram,&Geometry);
+		readParameterFile(Fp,&ParsedInput,&Sinogram,&Geometry);
 		fclose(Fp);
 		//Based on the inputs , calculate the "other" variables in the structure definition
-		CI_InitializeSinoParameters(&Sinogram,&ParsedInput);
-		CI_InitializeGeomParameters(&Sinogram,&Geometry,&ParsedInput);
+		initializeSinoParameters(&Sinogram,&ParsedInput);
+		initializeGeomParameters(&Sinogram,&Geometry,&ParsedInput);
 	}
 	
 	

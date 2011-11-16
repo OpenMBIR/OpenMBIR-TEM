@@ -14,7 +14,7 @@ extern char *optarg;
 extern "C" {
 #endif
 
-int CI_ParseInput(int argc,char **argv,CommandLineInputs* Input)
+int parseArguments(int argc,char **argv,CommandLineInputs* Input)
 {
 	int i,error;
 	error=0;
@@ -36,7 +36,7 @@ int CI_ParseInput(int argc,char **argv,CommandLineInputs* Input)
 	return error;
 }
 
-void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
+void readParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
 {
 	char temp[20];
 	int16_t i;
@@ -126,7 +126,7 @@ void CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram
 
 }
 
-void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
+void initializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
 {
   int16_t i,j,k;
   FILE* Fp;
@@ -170,7 +170,7 @@ void CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
 
 }
 
-void CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs* ParsedInput)
+void initializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs* ParsedInput)
 {
   FILE* Fp;
   uint16_t i,j,k;

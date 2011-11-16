@@ -48,7 +48,7 @@ char* ScaleOffsetCorrectionInputs::copyFilenameToNewCharBuffer(const std::string
 
 
 
-int ScaleOffsetCorrectionInputs::CI_ParseInput(int argc,char **argv,CommandLineInputs* Input)
+int ScaleOffsetCorrectionInputs::parseArguments(int argc,char **argv,CommandLineInputs* Input)
 {
   if ( NULL == Input)
   {
@@ -116,7 +116,7 @@ int ScaleOffsetCorrectionInputs::CI_ParseInput(int argc,char **argv,CommandLineI
   return 0;
 }
 
-void ScaleOffsetCorrectionInputs::CI_ReadParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
+void ScaleOffsetCorrectionInputs::readParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
 {
 	char temp[20];
 	int16_t i;
@@ -288,7 +288,7 @@ void ScaleOffsetCorrectionInputs::CI_ReadParameterFile(FILE *Fp,CommandLineInput
 
 }
 
-void ScaleOffsetCorrectionInputs::CI_InitializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
+void ScaleOffsetCorrectionInputs::initializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
 {
   int16_t i,j,k;
 	uint16_t view_count=0,TotalNumMaskedViews;
@@ -431,7 +431,7 @@ void CI_MaskSinogram(Sino* OriginalSinogram,Sino* NewSinogram)
 }
 	 */
 
-void ScaleOffsetCorrectionInputs::CI_InitializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs* ParsedInput)
+void ScaleOffsetCorrectionInputs::initializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs* ParsedInput)
 {
   FILE* Fp;
   uint16_t i,j,k;
@@ -439,7 +439,7 @@ void ScaleOffsetCorrectionInputs::CI_InitializeGeomParameters(Sino* Sinogram,Geo
   DATA_TYPE sum=0,max;
 
 	//Find the maximum absolute tilt angle
-	max= AbsMaxArray(Sinogram->angles, Sinogram->N_theta);
+	max= absMaxArray(Sinogram->angles, Sinogram->N_theta);
 
 #ifndef FORWARD_PROJECT_MODE
     Geometry->LengthZ*=Z_STRETCH;
@@ -522,7 +522,7 @@ void ScaleOffsetCorrectionInputs::CI_InitializeGeomParameters(Sino* Sinogram,Geo
 }
 
 //Finds the maximum of absolute value elements in an array
-DATA_TYPE ScaleOffsetCorrectionInputs::AbsMaxArray(DATA_TYPE* Array ,uint16_t NumElts)
+DATA_TYPE ScaleOffsetCorrectionInputs::absMaxArray(DATA_TYPE* Array ,uint16_t NumElts)
 {
 	uint16_t i;
 	DATA_TYPE max;
