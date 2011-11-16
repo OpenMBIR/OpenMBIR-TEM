@@ -13,7 +13,7 @@
 #include "EIMTomo/EIMTomo.h"
 
 #include "ScaleOffsetStructures.h"
-#include "ScaleOffsetCorrectionInputs.h"
+#include "ScaleOffsetCorrectionParser.h"
 
 /**
  *

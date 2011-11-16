@@ -1,4 +1,3 @@
-
 // C Includes
 #include <stdlib.h>
 #include <stdio.h>
@@ -9,7 +8,6 @@
 #include <string>
 #include <iostream>
 
-
 // EIMTomo Includes
 #include "EIMTomo/EIMTomo.h"
 #include "EIMTomo/common/EIMTime.h"
@@ -18,7 +16,7 @@
 // MXA Includes
 #include "MXA/Utilities/MXADir.h"
 #include "ScaleOffsetCorrectionConstants.h"
-#include "ScaleOffsetCorrectionInputs.h"
+#include "ScaleOffsetCorrectionParser.h"
 #include "ScaleOffsetCorrectionEngine.h"
 
 #define START startm = EIMTOMO_getMilliSeconds();
@@ -59,13 +57,31 @@ int main(int argc, char** argv)
   error = soci.parseArguments(argc, argv, &ParsedInput);
   if(error != -1)
   {
-    printf("%s \n%s \n%s \n%s\n", ParsedInput.ParamFile.c_str(), ParsedInput.SinoFile.c_str(), ParsedInput.InitialRecon.c_str(), ParsedInput.OutputFile.c_str());
+    printf("***************\nParameter File: %s\nSinogram File: %s\nInitial Reconstruction File: %s\nOutput Directory: %s\nOutput File: %s\n***************\n",
+           ParsedInput.ParamFile.c_str(),
+           ParsedInput.SinoFile.c_str(),
+           ParsedInput.InitialRecon.c_str(),
+           ParsedInput.outputDir.c_str(),
+           ParsedInput.OutputFile.c_str());
+
+    // Make sure the output directory is created if it does not exist
+    if(MXADir::exists(ParsedInput.outputDir) == false)
+    {
+      std::cout << "Output Directory '" << ParsedInput.outputDir << "' does NOT exist. Attempting to create it." << std::endl;
+      if(MXADir::mkdir(ParsedInput.outputDir, true) == false)
+      {
+        std::cout << "Error creating the output directory '" << ParsedInput.outputDir << "'\n   Exiting Now." << std::endl;
+        return EXIT_FAILURE;
+      }
+      std::cout << "Output Directory Created." << std::endl;
+    }
+
     //Read the paramters into the structures
     Fp = fopen(ParsedInput.ParamFile.c_str(), "r");
-    if (errno)
+    if(errno)
     {
-    std::cout << "Error Opening File: " << errno << std::endl;
-    return EXIT_FAILURE;
+      std::cout << "Error Opening File: " << errno << std::endl;
+      return EXIT_FAILURE;
     }
 
     soci.readParameterFile(Fp, &ParsedInput, &Sinogram, &Geometry);
@@ -76,18 +92,13 @@ int main(int argc, char** argv)
     soci.initializeGeomParameters(&Sinogram, &Geometry, &ParsedInput);
   }
 
-  // Make sure the output directory is created if it does not exist
- if ( MXADir::exists(ParsedInput.outputDir) == false)
- {
-   if (MXADir::mkdir(ParsedInput.outputDir, true) == false)
-   {
-     std::cout << "Error creating the output directory '" << ParsedInput.outputDir << "'\n   Exiting Now."  << std::endl;
-     return EXIT_FAILURE;
-   }
- }
-
   SOCEngine soce(&Sinogram, &Geometry, &ParsedInput);
   error = soce.mapicdReconstruct();
+  if(error == 0)
+  {
+    std::cout << "Error During Reconstruction" << std::endl;
+    return EXIT_FAILURE;
+  }
   Fp = fopen(ParsedInput.OutputFile.c_str(), "w");
 
   printf("Main\n");

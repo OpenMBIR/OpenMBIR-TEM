@@ -269,8 +269,8 @@ class DerivOfCostFunc
           {
             if(BOUNDARYFLAG[i][j][k] == 1)
             {
-              if(u - NEIGHBORHOOD[i][j][k] >= 0.0) temp +=
-                  ((double)FILTER[i][j][k] * (1.0) * pow(fabs(u - (double)NEIGHBORHOOD[i][j][k]), (double)(MRF_P - 1)));
+              if(u - NEIGHBORHOOD[i][j][k] >= 0.0)
+				  temp +=((double)FILTER[i][j][k] * (1.0) * pow(fabs(u - (double)NEIGHBORHOOD[i][j][k]), (double)(MRF_P - 1)));
               else temp += ((double)FILTER[i][j][k] * (-1.0) * pow(fabs(u - (double)NEIGHBORHOOD[i][j][k]), (double)(MRF_P - 1)));
             }
           }
@@ -368,6 +368,10 @@ void SOCEngine::initVariables()
     if (Fp == NULL) { std::cout << "Error Opening Output file " << filepath << std::endl; err = 1; }\
     }
 
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 int SOCEngine::mapicdReconstruct()
 {
   if (m_Sinogram == NULL || m_Geometry == NULL || m_CmdInputs == NULL)
@@ -412,7 +416,7 @@ int SOCEngine::mapicdReconstruct()
 	RNGVars* RandomNumber;
 
 	//File variables
-	FILE* Fp = NULL;
+	FILE* Fp1 = NULL;
 	FILE* Fp2 = NULL;
 	FILE* Fp4 = NULL;
 	FILE* Fp5 = NULL;
@@ -421,12 +425,20 @@ int SOCEngine::mapicdReconstruct()
 	FILE* Fp8 = NULL;
 
 	int fileError = 0;
-	MAKE_OUTPUT_FILE(Fp, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::ReconstructedSinogramFile);
+
+	MAKE_OUTPUT_FILE(Fp1, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::ReconstructedSinogramFile);
 	if (fileError == 1)
 	{
 
 	}
-	fprintf(Fp, "Testing 1, 2, 3\n");
+
+
+	MAKE_OUTPUT_FILE(Fp4, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::FinalGainParametersFile);
+	if (fileError == 1)
+	{
+
+	}
+
   MAKE_OUTPUT_FILE(Fp5, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::FinalOffsetParametersFile);
   if (fileError == 1)
   {
@@ -441,6 +453,7 @@ int SOCEngine::mapicdReconstruct()
 
   }
 #endif
+
   MAKE_OUTPUT_FILE(Fp7, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::FinalVariancesFile);
   if (fileError == 1)
   {
@@ -563,6 +576,13 @@ int SOCEngine::mapicdReconstruct()
 
 	//calculate sine and cosine of all angles and store in the global arrays sine and cosine
 	DetectorResponse = (DATA_TYPE***)detectorResponse(0,0,VoxelProfile);//System response
+	if (NULL == DetectorResponse)
+	{
+	  std::cout << "Error Calling function detectorResponse in file " << __FILE__ << "(" << __LINE__ << ")" << std::endl;
+	  return 0;
+	}
+
+
 	H_t = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta, DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//detector response along t
 
 #ifdef RANDOM_ORDER_UPDATES
@@ -923,7 +943,7 @@ int SOCEngine::mapicdReconstruct()
 //#ifdef DEBUG
 				//writing the error sinogram
 			//	if(i_t == 0)
-			//	fwrite(&ErrorSino[i_theta][i_r][i_t],sizeof(DATA_TYPE),1,Fp);
+			//	fwrite(&ErrorSino[i_theta][i_r][i_t],sizeof(DATA_TYPE),1,Fp1);
 //#endif
 #ifdef FORWARD_PROJECT_MODE
 				temp=Y_Est[i_theta][i_r][i_t]/NuisanceParams.I_0[i_theta];
@@ -949,7 +969,7 @@ int SOCEngine::mapicdReconstruct()
 
 #ifdef COST_CALCULATE
 	fileError = 0;
-  MAKE_OUTPUT_FILE(Fp2, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::ConstFunctionFile);
+  MAKE_OUTPUT_FILE(Fp2, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::CostFunctionFile);
   if (fileError == 1)
   {
 
@@ -1666,7 +1686,7 @@ int SOCEngine::mapicdReconstruct()
 			{
 				Final_Sinogram[i_theta][i_r][i_t]*=NuisanceParams.I_0[i_theta];
 				Final_Sinogram[i_theta][i_r][i_t]+=NuisanceParams.mu[i_theta];
-				fwrite(&Final_Sinogram[i_theta][i_r][i_t], sizeof(DATA_TYPE),1,Fp);
+				fwrite(&Final_Sinogram[i_theta][i_r][i_t], sizeof(DATA_TYPE),1,Fp1);
 			}
 	}
 
@@ -1679,6 +1699,7 @@ int SOCEngine::mapicdReconstruct()
 #endif
 	free_3D((void***)ErrorSino);
 	free_3D((void***)Weight);
+	fclose(Fp1);
 #ifdef COST_CALCULATE
 	fclose(Fp2);// writing cost function
 #endif
@@ -2539,7 +2560,7 @@ void* SOCEngine::detectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelPr
   FILE* Fp = NULL;
   int err = 0;
   MAKE_OUTPUT_FILE(Fp, err, m_CmdInputs->outputDir, ScaleOffsetCorrection::DetectorResponseFile)
-  if (err = 1)
+  if (err == 1)
   {
     std::cout << "Error creating output file for Detector Response." << std::endl;
     return NULL;
