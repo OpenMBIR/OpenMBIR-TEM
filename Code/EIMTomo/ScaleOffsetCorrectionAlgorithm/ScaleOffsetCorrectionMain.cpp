@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 {
   int16_t error, i, j, k;
   FILE* Fp = NULL;
-  CommandLineInputs ParsedInput;
+  ScaleOffsetCorrectionInputs ParsedInput;
   Sino Sinogram;
   Geom Geometry;
   DATA_TYPE* buffer = (DATA_TYPE*)get_spc(1, sizeof(DATA_TYPE));
@@ -54,14 +54,14 @@ int main(int argc, char** argv)
   START;
 
   error = -1;
-  ScaleOffsetCorrectionInputs soci;
+  ScaleOffsetCorrectionParser soci;
 
   error = soci.parseArguments(argc, argv, &ParsedInput);
   if(error != -1)
   {
-    printf("%s \n%s \n%s \n%s\n", ParsedInput.ParamFile, ParsedInput.SinoFile, ParsedInput.InitialRecon, ParsedInput.OutputFile);
+    printf("%s \n%s \n%s \n%s\n", ParsedInput.ParamFile.c_str(), ParsedInput.SinoFile.c_str(), ParsedInput.InitialRecon.c_str(), ParsedInput.OutputFile.c_str());
     //Read the paramters into the structures
-    Fp = fopen(ParsedInput.ParamFile, "r");
+    Fp = fopen(ParsedInput.ParamFile.c_str(), "r");
     if (errno)
     {
     std::cout << "Error Opening File: " << errno << std::endl;
@@ -77,18 +77,18 @@ int main(int argc, char** argv)
   }
 
   // Make sure the output directory is created if it does not exist
- if ( MXADir::exists(ScaleOffsetCorrection::OutputDirectory) == false)
+ if ( MXADir::exists(ParsedInput.outputDir) == false)
  {
-   if (MXADir::mkdir(ScaleOffsetCorrection::OutputDirectory, true) == false)
+   if (MXADir::mkdir(ParsedInput.outputDir, true) == false)
    {
-     std::cout << "Error creating the output directory '" << ScaleOffsetCorrection::OutputDirectory << "'\n   Exiting Now."  << std::endl;
+     std::cout << "Error creating the output directory '" << ParsedInput.outputDir << "'\n   Exiting Now."  << std::endl;
      return EXIT_FAILURE;
    }
  }
 
-  SOCEngine soce;
-  error = soce.CE_MAPICDReconstruct(&Sinogram, &Geometry, &ParsedInput);
-  Fp = fopen(ParsedInput.OutputFile, "w");
+  SOCEngine soce(&Sinogram, &Geometry, &ParsedInput);
+  error = soce.CE_MAPICDReconstruct();
+  Fp = fopen(ParsedInput.OutputFile.c_str(), "w");
 
   printf("Main\n");
   printf("Final Dimensions of Object Nz=%d Nx=%d Ny=%d\n", Geometry.N_z, Geometry.N_x, Geometry.N_y);
@@ -96,11 +96,13 @@ int main(int argc, char** argv)
   for (i = 0; i < Geometry.N_y; i++)
   {
     for (j = 0; j < Geometry.N_x; j++)
+    {
       for (k = 0; k < Geometry.N_z; k++)
       {
         buffer = &Geometry.Object[k][j][i];
         fwrite(buffer, sizeof(DATA_TYPE), 1, Fp);
       }
+    }
     printf("%d\n", i);
   }
 

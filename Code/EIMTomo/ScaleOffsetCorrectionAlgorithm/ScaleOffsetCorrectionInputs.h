@@ -8,16 +8,16 @@
 
 
 
-class ScaleOffsetCorrectionInputs
+class ScaleOffsetCorrectionParser
 {
   public:
-    ScaleOffsetCorrectionInputs();
-    virtual ~ScaleOffsetCorrectionInputs();
+    ScaleOffsetCorrectionParser();
+    virtual ~ScaleOffsetCorrectionParser();
 
-    int parseArguments(int argc, char **argv, CommandLineInputs* Input);
-    void readParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram,Geom* Geometry);
-    void initializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput);
-    void initializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs* ParsedInput);
+    int parseArguments(int argc, char **argv, ScaleOffsetCorrectionInputs* Input);
+    void readParameterFile(FILE *Fp,ScaleOffsetCorrectionInputs* ParsedInput,Sino* Sinogram,Geom* Geometry);
+    void initializeSinoParameters(Sino* Sinogram,ScaleOffsetCorrectionInputs* ParsedInput);
+    void initializeGeomParameters(Sino* Sinogram,Geom* Geometry,ScaleOffsetCorrectionInputs* ParsedInput);
     DATA_TYPE absMaxArray(DATA_TYPE* Array, uint16_t NumElts);
 
     /**
@@ -32,8 +32,8 @@ class ScaleOffsetCorrectionInputs
     uint64_t startm;
     uint64_t stopm;
 
-    ScaleOffsetCorrectionInputs(const ScaleOffsetCorrectionInputs&); // Copy Constructor Not Implemented
-    void operator=(const ScaleOffsetCorrectionInputs&); // Operator '=' Not Implemented
+    ScaleOffsetCorrectionParser(const ScaleOffsetCorrectionParser&); // Copy Constructor Not Implemented
+    void operator=(const ScaleOffsetCorrectionParser&); // Operator '=' Not Implemented
 
 };
 

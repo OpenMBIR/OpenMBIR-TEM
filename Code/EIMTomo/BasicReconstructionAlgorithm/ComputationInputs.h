@@ -84,12 +84,12 @@ extern "C" {
 		double SigmaX;
 		double p;
 	};
-	typedef struct _command_line_inputs CommandLineInputs;
+	typedef struct _command_line_inputs ScaleOffsetCorrectionInputs;
 	
-	int parseArguments(int ,char**,CommandLineInputs*);
-	void readParameterFile(FILE* ,CommandLineInputs* ,Sino* ,Geom*);
-	void initializeSinoParameters(Sino *,CommandLineInputs*);
-	void initializeGeomParameters(Sino* ,Geom* ,CommandLineInputs*);
+	int parseArguments(int ,char**,ScaleOffsetCorrectionInputs*);
+	void readParameterFile(FILE* ,ScaleOffsetCorrectionInputs* ,Sino* ,Geom*);
+	void initializeSinoParameters(Sino *,ScaleOffsetCorrectionInputs*);
+	void initializeGeomParameters(Sino* ,Geom* ,ScaleOffsetCorrectionInputs*);
 	
 	
 #ifdef __cplusplus

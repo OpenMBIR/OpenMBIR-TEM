@@ -24,22 +24,25 @@ class SOCEngine
 {
 
   public:
-    SOCEngine();
+    SOCEngine(Sino* sinogram, Geom* geometry, ScaleOffsetCorrectionInputs* inputs);
     virtual ~SOCEngine();
 
-    DATA_TYPE*** ForwardProject(Sino*, Geom*, DATA_TYPE***, DATA_TYPE***);
-    void CE_CalculateSinCos(Sino*);
-    void CE_InitializeBeamProfile(Sino*);
+//    void setInputs(CommandLineInputs* inputs);
+//    CommandLineInputs* getInputs();
+
+    int CE_MAPICDReconstruct();
+
+    DATA_TYPE*** ForwardProject( DATA_TYPE***, DATA_TYPE***);
+    void CE_CalculateSinCos();
+    void CE_InitializeBeamProfile();
     void CE_MinMax(DATA_TYPE*, DATA_TYPE*);
-    void* CE_CalculateVoxelProfile(Sino*, Geom*);
-    int CE_MAPICDReconstruct(Sino*, Geom*, CommandLineInputs*);
-    void* CE_CalculateAMatrixColumn(uint16_t, uint16_t, uint16_t, Sino*, Geom*, DATA_TYPE**);
+    void* CE_CalculateVoxelProfile();
 
-    //double CE_DerivOfCostFunc(double);
+    void* CE_CalculateAMatrixColumn(uint16_t, uint16_t, uint16_t, DATA_TYPE**);
 
-    DATA_TYPE CE_ComputeCost(DATA_TYPE***, DATA_TYPE***, Sino*, Geom*);
-    void* CE_CalculateAMatrixColumnPartial(uint16_t, uint16_t, uint16_t, Sino*, Geom*, DATA_TYPE***);
-    void* CE_DetectorResponse(uint16_t, uint16_t, Sino*, Geom*, DATA_TYPE**);
+    DATA_TYPE CE_ComputeCost(DATA_TYPE***, DATA_TYPE***);
+    void* CE_CalculateAMatrixColumnPartial(uint16_t, uint16_t, uint16_t, DATA_TYPE***);
+    void* CE_DetectorResponse(uint16_t, uint16_t, DATA_TYPE**);
 
     template<typename T>
     double solve(T* f, /* pointer to function to be solved */
@@ -111,6 +114,12 @@ class SOCEngine
     void CE_ComputeQGGMRFParameters(DATA_TYPE ,DATA_TYPE);
     DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE ,DATA_TYPE );
 #endif//qggmrf
+
+  protected:
+    // Protect this constructor because we want to force the use of the other
+    SOCEngine();
+    void initVariables();
+
   private:
 
     bool CE_Cancel;
@@ -148,6 +157,10 @@ class SOCEngine
 
     uint64_t startm;
     uint64_t stopm;
+
+    ScaleOffsetCorrectionInputs* m_CmdInputs;
+    Sino* m_Sinogram;
+    Geom* m_Geometry;
 
     SOCEngine(const SOCEngine&); // Copy Constructor Not Implemented
     void operator=(const SOCEngine&); // Operator '=' Not Implemented

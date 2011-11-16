@@ -15,7 +15,7 @@
 namespace ScaleOffsetCorrection
 {
 
-  const std::string OutputDirectory("ScaleOffsetCorrection_Output");
+//  const std::string OutputDirectory("ScaleOffsetCorrection_Output");
   const std::string DetectorResponseFile("DetectorResponse.bin");
   const std::string ConstFunctionFile("ConstFunc.bin");
   const std::string FinalGainParametersFile("FinalGainParameters.bin");

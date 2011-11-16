@@ -20,12 +20,12 @@
 
 
 
-ScaleOffsetCorrectionInputs::ScaleOffsetCorrectionInputs()
+ScaleOffsetCorrectionParser::ScaleOffsetCorrectionParser()
 {
 
 }
 
-ScaleOffsetCorrectionInputs::~ScaleOffsetCorrectionInputs()
+ScaleOffsetCorrectionParser::~ScaleOffsetCorrectionParser()
 {
 
 }
@@ -33,7 +33,7 @@ ScaleOffsetCorrectionInputs::~ScaleOffsetCorrectionInputs()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-char* ScaleOffsetCorrectionInputs::copyFilenameToNewCharBuffer(const std::string &fname)
+char* ScaleOffsetCorrectionParser::copyFilenameToNewCharBuffer(const std::string &fname)
 {
   std::string::size_type size = fname.size() + 1;
   char* buf = NULL;
@@ -48,7 +48,7 @@ char* ScaleOffsetCorrectionInputs::copyFilenameToNewCharBuffer(const std::string
 
 
 
-int ScaleOffsetCorrectionInputs::parseArguments(int argc,char **argv,CommandLineInputs* Input)
+int ScaleOffsetCorrectionParser::parseArguments(int argc,char **argv,ScaleOffsetCorrectionInputs* Input)
 {
   if ( NULL == Input)
   {
@@ -66,6 +66,8 @@ int ScaleOffsetCorrectionInputs::parseArguments(int argc,char **argv,CommandLine
   TCLAP::ValueArg<std::string> in_outputFile("o", "outputfile", "The Output File", true, "", "");
   cmd.add(in_outputFile);
 
+  TCLAP::ValueArg<std::string> in_outputDir("", "outdir", "The Output dir", true, ".", ".");
+  cmd.add(in_outputDir);
 
 
 
@@ -95,16 +97,16 @@ int ScaleOffsetCorrectionInputs::parseArguments(int argc,char **argv,CommandLine
 
   try
   {
-    int error = 0;
     cmd.parse(argc, argv);
-    Input->InitialRecon = copyFilenameToNewCharBuffer(in_inputFile.getValue());
-    Input->OutputFile = copyFilenameToNewCharBuffer(in_outputFile.getValue());
-    Input->ParamFile = copyFilenameToNewCharBuffer(in_paramFile.getValue());
-    Input->SinoFile = copyFilenameToNewCharBuffer(in_sinoFile.getValue());
+    Input->InitialRecon = in_inputFile.getValue();
+    Input->OutputFile = in_outputFile.getValue();
+    Input->ParamFile = in_paramFile.getValue();
+    Input->SinoFile = in_sinoFile.getValue();
+    Input->outputDir = in_outputDir.getValue();
     Input->NumIter = in_numIter.getValue();
     Input->SigmaX = in_sigmaX.getValue();
     Input->p = in_markov.getValue();
-    Input->InitialParameters = copyFilenameToNewCharBuffer(InitialParameters.getValue());
+    Input->InitialParameters = InitialParameters.getValue();
     Input->NumOuterIter = NumOuterIter.getValue();
   }
   catch (TCLAP::ArgException &e)
@@ -116,12 +118,15 @@ int ScaleOffsetCorrectionInputs::parseArguments(int argc,char **argv,CommandLine
   return 0;
 }
 
-void ScaleOffsetCorrectionInputs::readParameterFile(FILE *Fp,CommandLineInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ScaleOffsetCorrectionParser::readParameterFile(FILE *Fp,ScaleOffsetCorrectionInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
 {
 	char temp[20];
 	int16_t i;
 	uint16_t view_count;
-	DATA_TYPE tempvariable=0;
+	//DATA_TYPE tempvariable=0;
 	DATA_TYPE *MaskedViewAngles;
 	while(!feof(Fp))
 	{
@@ -288,7 +293,7 @@ void ScaleOffsetCorrectionInputs::readParameterFile(FILE *Fp,CommandLineInputs* 
 
 }
 
-void ScaleOffsetCorrectionInputs::initializeSinoParameters(Sino* Sinogram,CommandLineInputs* ParsedInput)
+void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,ScaleOffsetCorrectionInputs* ParsedInput)
 {
   int16_t i,j,k;
 	uint16_t view_count=0,TotalNumMaskedViews;
@@ -306,7 +311,7 @@ void ScaleOffsetCorrectionInputs::initializeSinoParameters(Sino* Sinogram,Comman
 	 Sinogram->counts=(DATA_TYPE***)get_3D(TotalNumMaskedViews,Sinogram->N_rEnd-Sinogram->N_rStart+1,Sinogram->N_tEnd-Sinogram->N_rStart+1, sizeof(DATA_TYPE));
   //Read data into this matrix
   //TODO: clarify this ! Super important !
- Fp=fopen(ParsedInput->SinoFile,"r");
+ Fp=fopen(ParsedInput->SinoFile.c_str(),"r");
 	/*
   for(i=0;i<Sinogram->N_t;i++)
     for(j=0;j<Sinogram->N_r;j++)
@@ -336,7 +341,7 @@ void ScaleOffsetCorrectionInputs::initializeSinoParameters(Sino* Sinogram,Comman
 	Sinogram->InitialGain=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
 	Sinogram->InitialOffset=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
 
-	Fp=fopen(ParsedInput->InitialParameters,"r");//This file contains the Initial unscatterd counts and background scatter for each view
+	Fp=fopen(ParsedInput->InitialParameters.c_str(),"r");//This file contains the Initial unscatterd counts and background scatter for each view
 
 	view_count=0;
 	for( i = 0; i < Sinogram->N_theta; i++)
@@ -431,7 +436,7 @@ void CI_MaskSinogram(Sino* OriginalSinogram,Sino* NewSinogram)
 }
 	 */
 
-void ScaleOffsetCorrectionInputs::initializeGeomParameters(Sino* Sinogram,Geom* Geometry,CommandLineInputs* ParsedInput)
+void ScaleOffsetCorrectionParser::initializeGeomParameters(Sino* Sinogram,Geom* Geometry,ScaleOffsetCorrectionInputs* ParsedInput)
 {
   FILE* Fp;
   uint16_t i,j,k;
@@ -463,7 +468,7 @@ void ScaleOffsetCorrectionInputs::initializeGeomParameters(Sino* Sinogram,Geom* 
 
 	printf("Geometry->Nz=%d\n",Geometry->N_z);
 	printf("Geometry->Nx=%d\n",Geometry->N_x);
-    printf("Geometry->Ny=%d\n",Geometry->N_y);
+  printf("Geometry->Ny=%d\n",Geometry->N_y);
 
 //  Geometry->Object = (DATA_TYPE ***)get_3D(Geometry->N_y,Geometry->N_z,Geometry->N_x,sizeof(DATA_TYPE));//Allocate space for the 3-D object
   Geometry->Object = (DATA_TYPE ***)get_3D(Geometry->N_z,Geometry->N_x,Geometry->N_y,sizeof(DATA_TYPE));//Allocate space for the 3-D object
@@ -474,7 +479,7 @@ void ScaleOffsetCorrectionInputs::initializeGeomParameters(Sino* Sinogram,Geom* 
 	Geometry->y0 = -(Geometry->LengthY)/2 ;
 
   //Read the Initial Reconstruction data into a 3-D matrix
-  Fp=fopen(ParsedInput->InitialRecon,"r");
+  Fp=fopen(ParsedInput->InitialRecon.c_str(),"r");
 /*  for(i=0;i<Geometry->N_y;i++)
     for(j=0;j<Geometry->N_x;j++)
       for(k=0;k<Geometry->N_z;k++)
@@ -522,7 +527,7 @@ void ScaleOffsetCorrectionInputs::initializeGeomParameters(Sino* Sinogram,Geom* 
 }
 
 //Finds the maximum of absolute value elements in an array
-DATA_TYPE ScaleOffsetCorrectionInputs::absMaxArray(DATA_TYPE* Array ,uint16_t NumElts)
+DATA_TYPE ScaleOffsetCorrectionParser::absMaxArray(DATA_TYPE* Array ,uint16_t NumElts)
 {
 	uint16_t i;
 	DATA_TYPE max;

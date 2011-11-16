@@ -87,7 +87,13 @@ inline double Minimum(double a, double b)
 	return (a < b ? a: b);
 }
 
-
+/**
+ * @class CE_ConstraintEquation CE_ConstraintEquation.h EIMTomo/ScaleOffsetCorrectionEngine.h
+ * @brief
+ * @author
+ * @date Nov 1, 2011
+ * @version 1.0
+ */
 class CE_ConstraintEquation
 {
   public:
@@ -107,7 +113,7 @@ class CE_ConstraintEquation
         ck_cost(ck_cost),
         LogGain(LogGain)
     {
-    }//constructor which assigns values to the private members of the class ; The members of the class and the parameters have the same name here 
+    }//constructor which assigns values to the private members of the class ; The members of the class and the parameters have the same name here
 
     virtual ~CE_ConstraintEquation()
     {
@@ -177,7 +183,7 @@ class CE_ConstraintEquation
           }
         }
 
-        if(root[min_index] > 0) 
+        if(root[min_index] > 0)
 			sum += log(root[min_index]); //max{(-b+sqrt(b^2 - 4*a*c))/2*a,(-b+sqrt(b^2 - 4*a*c))/2*a}
         else
         {
@@ -210,7 +216,9 @@ class CE_ConstraintEquation
 
 
 /**
- *
+ * @brief
+ * @author
+ * @version
  */
 class DerivOfCostFunc
 {
@@ -231,7 +239,7 @@ class DerivOfCostFunc
                       SIGMA_X_P(_SIGMA_X_P),
                       MRF_P(_MRF_P)
     {
-			
+
       for(size_t i = 0; i < 3; ++i)
       {
         for(size_t j = 0; j < 3; ++j)
@@ -292,13 +300,43 @@ class DerivOfCostFunc
 };
 
 
-
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+SOCEngine::SOCEngine(Sino* sinogram, Geom* geometry, ScaleOffsetCorrectionInputs* inputs) :
+    CE_Cancel(false),
+m_CmdInputs(inputs),
+m_Sinogram(sinogram),
+m_Geometry(geometry)
+{
+  initVariables();
+}
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
 SOCEngine::SOCEngine() :
-    CE_Cancel(false)
+    CE_Cancel(false),
+    m_CmdInputs(NULL),
+    m_Sinogram(NULL),
+    m_Geometry(NULL)
+{
+  initVariables();
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+SOCEngine::~SOCEngine()
+{
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::initVariables()
 {
 
         FILTER[0][0][0] = 0.0302; FILTER[0][0][1] = 0.0370; FILTER[0][0][2] = 0.0302;
@@ -312,17 +350,7 @@ SOCEngine::SOCEngine() :
         FILTER[2][0][0] = 0.0302; FILTER[2][0][1] = 0.0370; FILTER[2][0][2] = 0.0302;
         FILTER[2][1][0] = 0.0370; FILTER[2][1][1] = 0.0523; FILTER[2][1][2] = 0.0370;
         FILTER[2][2][0] = 0.0302; FILTER[2][2][1] = 0.0370; FILTER[2][2][2] = 0.0302;
-
 }
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-SOCEngine::~SOCEngine()
-{
-
-}
-
 
 // void CE_cancel()
 // {
@@ -340,9 +368,12 @@ SOCEngine::~SOCEngine()
     if (Fp == NULL) { std::cout << "Error Opening Output file " << filepath << std::endl; err = 1; }\
     }
 
-int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineInputs* CmdInputs)
+int SOCEngine::CE_MAPICDReconstruct()
 {
-
+  if (m_Sinogram == NULL || m_Geometry == NULL || m_CmdInputs == NULL)
+  {
+    return 0;
+  }
 	uint8_t err = 0;
 	int16_t Iter,OuterIter;
 	int16_t i,j,k,r,row,col,slice,RowIndex,ColIndex,SliceIndex,Idx,i_r,i_theta,i_t;
@@ -390,13 +421,13 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	FILE* Fp8 = NULL;
 
 	int fileError = 0;
-	MAKE_OUTPUT_FILE(Fp, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::ReconstructedSinogramFile);
+	MAKE_OUTPUT_FILE(Fp, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::ReconstructedSinogramFile);
 	if (fileError == 1)
 	{
 
 	}
 	fprintf(Fp, "Testing 1, 2, 3\n");
-  MAKE_OUTPUT_FILE(Fp5, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::FinalOffsetParametersFile);
+  MAKE_OUTPUT_FILE(Fp5, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::FinalOffsetParametersFile);
   if (fileError == 1)
   {
 
@@ -404,20 +435,20 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 
 #ifdef FORWARD_PROJECT_MODE
-  MAKE_OUTPUT_FILE(Fp6, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::ForwardProjectedObjectFile);
+  MAKE_OUTPUT_FILE(Fp6, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::ForwardProjectedObjectFile);
   if (fileError == 1)
   {
 
   }
 #endif
-  MAKE_OUTPUT_FILE(Fp7, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::FinalVariancesFile);
+  MAKE_OUTPUT_FILE(Fp7, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::FinalVariancesFile);
   if (fileError == 1)
   {
 
   }
 #ifdef DEBUG_CONSTRAINT_OPT
 	FILE *Fp8 = fopen("CostFunctionCoefficients.bin","w");
-  MAKE_OUTPUT_FILE(Fp8, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::CostFunctionCoefficientsFile);
+  MAKE_OUTPUT_FILE(Fp8, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::CostFunctionCoefficientsFile);
   if (fileError == 1)
   {
 
@@ -450,10 +481,10 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	DATA_TYPE LagrangeMultiplier,temp_mu;
 	DATA_TYPE* root;
 
-	MicroscopeImage = (DATA_TYPE**)get_img(Sinogram->N_t, Sinogram->N_r, sizeof(DATA_TYPE));
+	MicroscopeImage = (DATA_TYPE**)get_img(m_Sinogram->N_t, m_Sinogram->N_r, sizeof(DATA_TYPE));
 
-	NuisanceParams.I_0 = (DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
-	NuisanceParams.mu = (DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
+	NuisanceParams.I_0 = (DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
+	NuisanceParams.mu = (DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
 
   // initialize variables
   Idx = 0;
@@ -461,7 +492,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 #ifdef WRITE_INTERMEDIATE_RESULTS
 	DATA_TYPE Fraction = 0.1;//write this fraction of the iterations
-	int16_t NumOfWrites = floor((DATA_TYPE)(CmdInputs->NumIter)*Fraction);
+	int16_t NumOfWrites = floor((DATA_TYPE)(m_CmdInputs->NumIter)*Fraction);
 	int16_t WriteCount = 0;
 	char Filename[100];
 	char buffer[20];
@@ -475,34 +506,34 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 #endif
 
 #ifdef COST_CALCULATE
-	cost=(DATA_TYPE*)get_spc((CmdInputs->NumIter+1)*CmdInputs->NumOuterIter*3,sizeof(DATA_TYPE));//the factor 3 is in there to ensure we can store 3 costs per iteration one after update x, then mu and then I
+	cost=(DATA_TYPE*)get_spc((m_CmdInputs->NumIter+1)*m_CmdInputs->NumOuterIter*3,sizeof(DATA_TYPE));//the factor 3 is in there to ensure we can store 3 costs per iteration one after update x, then mu and then I
 #endif
 
-	Y_Est=(DATA_TYPE ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(DATA_TYPE));
-	ErrorSino=(DATA_TYPE ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(DATA_TYPE));
-	Weight=(DATA_TYPE ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(DATA_TYPE));
+	Y_Est=(DATA_TYPE ***)get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
+	ErrorSino=(DATA_TYPE ***)get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
+	Weight=(DATA_TYPE ***)get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
 
 
 	//Setting the value of all the global variables
 
-	OffsetR = ((Geometry->delta_xz/sqrt(3.0)) + Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
-	OffsetT = ((Geometry->delta_xz/2) + Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
+	OffsetR = ((m_Geometry->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+	OffsetT = ((m_Geometry->delta_xz/2) + m_Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 
 #ifdef BEAM_CALCULATION
-	BEAM_WIDTH = (0.5)*Sinogram->delta_r;
+	BEAM_WIDTH = (0.5)*m_Sinogram->delta_r;
 #else
-	BEAM_WIDTH = Sinogram->delta_r;
+	BEAM_WIDTH = m_Sinogram->delta_r;
 #endif
 
 #ifndef QGGMRF
-	MRF_P = CmdInputs->p;
-	SIGMA_X_P = pow(CmdInputs->SigmaX,MRF_P);
+	MRF_P = m_CmdInputs->p;
+	SIGMA_X_P = pow(m_CmdInputs->SigmaX,MRF_P);
 #else
 	MRF_P=2;
 	MRF_Q=1.2;
 	MRF_C=30;
 	MRF_ALPHA=1.5;
-	SIGMA_X_P = pow(CmdInputs->SigmaX,MRF_P);
+	SIGMA_X_P = pow(m_CmdInputs->SigmaX,MRF_P);
 	for(i=0;i < 3;i++)
 		for(j=0; j < 3;j++)
 			for(k=0; k < 3;k++)
@@ -510,48 +541,48 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 #endif //QGGMRF
 
 	//globals assosiated with finding the optimal gain and offset parameters
-	QuadraticParameters = (DATA_TYPE**)(get_img(3, Sinogram->N_theta, sizeof(DATA_TYPE)));//Hold the coefficients of a quadratic equation
-	Qk_cost=(DATA_TYPE**)get_img(3, Sinogram->N_theta, sizeof(DATA_TYPE));
-	bk_cost=(DATA_TYPE**)get_img(2, Sinogram->N_theta, sizeof(DATA_TYPE));
-	ck_cost=(DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
-	NumOfViews = Sinogram->N_theta;
-	LogGain = Sinogram->N_theta*log(Sinogram->TargetGain);
-	d1=(DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
-	d2=(DATA_TYPE*)get_spc(Sinogram->N_theta, sizeof(DATA_TYPE));
+	QuadraticParameters = (DATA_TYPE**)(get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE)));//Hold the coefficients of a quadratic equation
+	Qk_cost=(DATA_TYPE**)get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE));
+	bk_cost=(DATA_TYPE**)get_img(2, m_Sinogram->N_theta, sizeof(DATA_TYPE));
+	ck_cost=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
+	NumOfViews = m_Sinogram->N_theta;
+	LogGain = m_Sinogram->N_theta*log(m_Sinogram->TargetGain);
+	d1=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
+	d2=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
 
 
 
 
 
 	//calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram Structure are converted to radians
-	VoxelProfile = (DATA_TYPE**)CE_CalculateVoxelProfile(Sinogram,Geometry); //Verified with ML
+	VoxelProfile = (DATA_TYPE**)CE_CalculateVoxelProfile(); //Verified with ML
 	//Pre compute sine and cos theta to speed up computations
-	CE_CalculateSinCos(Sinogram);
+	CE_CalculateSinCos();
 	//Initialize the e-beam
-	CE_InitializeBeamProfile(Sinogram); //verified with ML
+	CE_InitializeBeamProfile(); //verified with ML
 
 	//calculate sine and cosine of all angles and store in the global arrays sine and cosine
-	DetectorResponse = (DATA_TYPE***)CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
-	H_t = (DATA_TYPE***)get_3D(1, Sinogram->N_theta, DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//detector response along t
+	DetectorResponse = (DATA_TYPE***)CE_DetectorResponse(0,0,VoxelProfile);//System response
+	H_t = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta, DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//detector response along t
 
 #ifdef RANDOM_ORDER_UPDATES
-	VisitCount=(uint8_t **)get_img(Geometry->N_x, Geometry->N_z,sizeof(uint8_t));//width,height
-	for(i=0;i<Geometry->N_z;i++)
-		for(j=0;j < Geometry->N_x;j++)
+	VisitCount=(uint8_t **)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
+	for(i=0;i<m_Geometry->N_z;i++)
+		for(j=0;j < m_Geometry->N_x;j++)
 			VisitCount[i][j]=0;
 #endif//Random update
 
 	#ifdef ROI
-	Mask = (uint8_t **)get_img(Geometry->N_x, Geometry->N_z,sizeof(uint8_t));//width,height
-	EllipseA = Geometry->LengthX/2;
-	EllipseB = Geometry->LengthZ/2;
-	for (i = 0; i < Geometry->N_z ; i++)
+	Mask = (uint8_t **)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
+	EllipseA = m_Geometry->LengthX/2;
+	EllipseB = m_Geometry->LengthZ/2;
+	for (i = 0; i < m_Geometry->N_z ; i++)
 	{
-		for (j=0; j< Geometry->N_x; j++)
+		for (j=0; j< m_Geometry->N_x; j++)
 		{
-			x = Geometry->x0 + ((DATA_TYPE)j + 0.5)*Geometry->delta_xz;
-			z = Geometry->z0 + ((DATA_TYPE)i + 0.5)*Geometry->delta_xz;
-			if (x >= -(Sinogram->N_r*Sinogram->delta_r)/2 && x <= (Sinogram->N_r*Sinogram->delta_r)/2 && z>= -Geometry->LengthZ/2 && z <= Geometry->LengthZ/2)
+			x = m_Geometry->x0 + ((DATA_TYPE)j + 0.5)*m_Geometry->delta_xz;
+			z = m_Geometry->z0 + ((DATA_TYPE)i + 0.5)*m_Geometry->delta_xz;
+			if (x >= -(m_Sinogram->N_r*m_Sinogram->delta_r)/2 && x <= (m_Sinogram->N_r*m_Sinogram->delta_r)/2 && z>= -m_Geometry->LengthZ/2 && z <= m_Geometry->LengthZ/2)
 			{
 				Mask[i][j] = 1;
 			}
@@ -571,31 +602,31 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 	sum = 0;
 	temp = 0;
-	for(k=0 ; k < Sinogram->N_theta;k++)
+	for(k=0 ; k < m_Sinogram->N_theta;k++)
 	{
 		//fread(&buffer, 1, sizeof(double), Fp6);
-		NuisanceParams.I_0[k]= Sinogram->InitialGain[k];//;
+		NuisanceParams.I_0[k]= m_Sinogram->InitialGain[k];//;
 		sum+=log(NuisanceParams.I_0[k]);
 	}
-	sum/=Sinogram->N_theta;
+	sum/=m_Sinogram->N_theta;
 	sum=exp(sum);
 	printf("The geometric mean of the gains is %lf\n",sum);
 
 	//Checking if the input parameters satisfy the target geometric mean
-	if(fabs(sum - Sinogram->TargetGain) > 1e-5)
+	if(fabs(sum - m_Sinogram->TargetGain) > 1e-5)
 	{
 		printf("The input paramters dont meet the constraint..Renormalizing\n");
-        temp = exp(log(Sinogram->TargetGain) - log(sum));
-		for (k = 0 ; k < Sinogram->N_theta; k++) {
-			NuisanceParams.I_0[k]=Sinogram->InitialGain[k]*temp;
+        temp = exp(log(m_Sinogram->TargetGain) - log(sum));
+		for (k = 0 ; k < m_Sinogram->N_theta; k++) {
+			NuisanceParams.I_0[k]=m_Sinogram->InitialGain[k]*temp;
 		}
 	}
 
 
-	for(k=0 ; k < Sinogram->N_theta;k++)
+	for(k=0 ; k < m_Sinogram->N_theta;k++)
 	{
 		//fread(&buffer, 1, sizeof(double), Fp6);
-		NuisanceParams.mu[k] = Sinogram->InitialOffset[k];
+		NuisanceParams.mu[k] = m_Sinogram->InitialOffset[k];
 	}
 
 	//fclose(Fp6);
@@ -604,27 +635,27 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 
 
-	for(k = 0 ; k <Sinogram->N_theta; k++)
+	for(k = 0 ; k <m_Sinogram->N_theta; k++)
 	{
 		for (i = 0; i < DETECTOR_RESPONSE_BINS; i++)
 		{
 			ProfileCenterT = i*OffsetT;
-			if(Geometry->delta_xy >= Sinogram->delta_t)
+			if(m_Geometry->delta_xy >= m_Sinogram->delta_t)
 			{
-				if(ProfileCenterT <= ((Geometry->delta_xy/2) - (Sinogram->delta_t/2)))
-					H_t[0][k][i] = Sinogram->delta_t;
+				if(ProfileCenterT <= ((m_Geometry->delta_xy/2) - (m_Sinogram->delta_t/2)))
+					H_t[0][k][i] = m_Sinogram->delta_t;
 				else {
-					H_t[0][k][i] = -1*ProfileCenterT + (Geometry->delta_xy/2) + Sinogram->delta_t/2;
+					H_t[0][k][i] = -1*ProfileCenterT + (m_Geometry->delta_xy/2) + m_Sinogram->delta_t/2;
 				}
 				if(H_t[0][k][i] < 0)
 					H_t[0][k][i] =0;
 
 			}
 			else {
-				if(ProfileCenterT <= Sinogram->delta_t/2 - Geometry->delta_xy/2)
-					H_t[0][k][i] = Geometry->delta_xy;
+				if(ProfileCenterT <= m_Sinogram->delta_t/2 - m_Geometry->delta_xy/2)
+					H_t[0][k][i] = m_Geometry->delta_xy;
 				else {
-					H_t[0][k][i] = -ProfileCenterT + (Geometry->delta_xy/2) + Sinogram->delta_t/2;
+					H_t[0][k][i] = -ProfileCenterT + (m_Geometry->delta_xy/2) + m_Sinogram->delta_t/2;
 				}
 
 				if(H_t[0][k][i] < 0)
@@ -655,18 +686,18 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 #ifdef STORE_A_MATRIX
 
-	AMatrixCol**** AMatrix = (AMatrixCol ****)multialloc(sizeof(AMatrixCol*),3,Geometry->N_y,Geometry->N_z,Geometry->N_x);
+	AMatrixCol**** AMatrix = (AMatrixCol ****)multialloc(sizeof(AMatrixCol*),3,m_Geometry->N_y,m_Geometry->N_z,m_Geometry->N_x);
 #else
 	DATA_TYPE y;
 	DATA_TYPE t,tmin,tmax,ProfileThickness;
 	int16_t slice_index_min,slice_index_max;
-	AMatrixCol*** TempCol = (AMatrixCol***)multialloc(sizeof(AMatrixCol*),2,Geometry->N_z,Geometry->N_x);//stores 2-D forward projector
+	AMatrixCol*** TempCol = (AMatrixCol***)multialloc(sizeof(AMatrixCol*),2,m_Geometry->N_z,m_Geometry->N_x);//stores 2-D forward projector
 //	AMatrixCol* Aj;
 	AMatrixCol* TempMemBlock;
 	//T-direction response
-	AMatrixCol* VoxelLineResponse=(AMatrixCol*)get_spc(Geometry->N_y, sizeof(AMatrixCol));
-	MaxNumberOfDetectorElts = (uint16_t)((Geometry->delta_xy/Sinogram->delta_t)+2);
-    for (i=0; i < Geometry->N_y; i++) {
+	AMatrixCol* VoxelLineResponse=(AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));
+	MaxNumberOfDetectorElts = (uint16_t)((m_Geometry->delta_xy/m_Sinogram->delta_t)+2);
+    for (i=0; i < m_Geometry->N_y; i++) {
 		VoxelLineResponse[i].count=0;
 		VoxelLineResponse[i].values=(DATA_TYPE*)get_spc(MaxNumberOfDetectorElts, sizeof(DATA_TYPE));
 		VoxelLineResponse[i].index=(uint32_t*)get_spc(MaxNumberOfDetectorElts, sizeof(uint32_t));
@@ -684,12 +715,12 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	q = 0;
 
 #ifdef STORE_A_MATRIX
-	for(i = 0;i < Geometry->N_y; i++)
-		for(j = 0;j < Geometry->N_z; j++)
-			for (k = 0; k < Geometry->N_x; k++)
+	for(i = 0;i < m_Geometry->N_y; i++)
+		for(j = 0;j < m_Geometry->N_z; j++)
+			for (k = 0; k < m_Geometry->N_x; k++)
 			{
 				//  AMatrix[q++]=CE_CalculateAMatrixColumn(i,j,Sinogram,Geometry,VoxelProfile);
-				AMatrix[i][j][k]=CE_CalculateAMatrixColumn(j,k,i,Sinogram,Geometry,VoxelProfile);//row,col,slice
+				AMatrix[i][j][k]=CE_CalculateAMatrixColumn(j,k,i,m_Sinogram,m_Geometry,VoxelProfile);//row,col,slice
 
 				for(p = 0; p < AMatrix[i][j][k]->count; p++)
 					checksum += AMatrix[i][j][k]->values[p];
@@ -699,37 +730,37 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	printf("Stored A matrix\n");
 #else
 	temp=0;
-    for(j=0; j < Geometry->N_z; j++)
-    for(k=0; k < Geometry->N_x; k++)
+    for(j=0; j < m_Geometry->N_z; j++)
+    for(k=0; k < m_Geometry->N_x; k++)
     {
-      TempCol[j][k] = (AMatrixCol*)CE_CalculateAMatrixColumnPartial(j, k, 0, Sinogram, Geometry, DetectorResponse);
+      TempCol[j][k] = (AMatrixCol*)CE_CalculateAMatrixColumnPartial(j, k, 0, DetectorResponse);
       temp += TempCol[j][k]->count;
     }
 #endif
 
 	//Storing the response along t-direction for each voxel line
 
-	for (i =0; i < Geometry->N_y; i++)
+	for (i =0; i < m_Geometry->N_y; i++)
 	{
-		y = ((DATA_TYPE)i+0.5)*Geometry->delta_xy + Geometry->y0;
+		y = ((DATA_TYPE)i+0.5)*m_Geometry->delta_xy + m_Geometry->y0;
 		t = y;
-		tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-		tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax? t + Geometry->delta_xy/2 : Sinogram->TMax;
+		tmin = (t - m_Geometry->delta_xy/2) > m_Sinogram->T0 ? t-m_Geometry->delta_xy/2 : m_Sinogram->T0;
+		tmax = (t + m_Geometry->delta_xy/2) <= m_Sinogram->TMax? t + m_Geometry->delta_xy/2 : m_Sinogram->TMax;
 
-		slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
-		slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
+		slice_index_min = floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t);
+		slice_index_max = floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t);
 
 		if(slice_index_min < 0)
 			slice_index_min = 0;
-		if(slice_index_max >= Sinogram->N_t)
-			slice_index_max = Sinogram->N_t-1;
+		if(slice_index_max >= m_Sinogram->N_t)
+			slice_index_max = m_Sinogram->N_t-1;
 
-		
+
 		//printf("%d %d\n",slice_index_min,slice_index_max);
 
 		for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 		{
-			center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
+			center_t = ((DATA_TYPE)i_t + 0.5)*m_Sinogram->delta_t + m_Sinogram->T0;
 			delta_t = fabs(center_t - t);
 			index_delta_t = floor(delta_t/OffsetT);
 			if(index_delta_t < DETECTOR_RESPONSE_BINS)
@@ -756,20 +787,20 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 
 	printf("Number of non zero entries of the forward projector is %lf\n",temp);
-	printf("Geometry-Z %d\n",Geometry->N_z);
+	printf("Geometry-Z %d\n",m_Geometry->N_z);
 
 
 	//Forward Project Geometry->Object one slice at a time and compute the  Sinogram for each slice
 	//is Y_Est initailized to zero?
-	for(i = 0; i < Sinogram->N_theta; i++)
-	 for(j = 0; j < Sinogram->N_r; j++)
-	 for(k = 0;k < Sinogram->N_t; k++)
+	for(i = 0; i < m_Sinogram->N_theta; i++)
+	 for(j = 0; j < m_Sinogram->N_r; j++)
+	 for(k = 0;k < m_Sinogram->N_t; k++)
 	 Y_Est[i][j][k]=0.0;
 
 
 	RandomNumber=init_genrand(1ul);
 //	srand(time(NULL));
-	ArraySize= Geometry->N_z*Geometry->N_x;
+	ArraySize= m_Geometry->N_z*m_Geometry->N_x;
 	//ArraySizeK = Geometry->N_x;
 
 	Counter = (int32_t*)malloc(ArraySize*sizeof(int32_t));
@@ -782,13 +813,13 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	START;
 //Forward Projection
 
-		for(j = 0;j < Geometry->N_z; j++)
-			for(k = 0;k < Geometry->N_x; k++)
+		for(j = 0;j < m_Geometry->N_z; j++)
+			for(k = 0;k < m_Geometry->N_x; k++)
 			{
 
                if(TempCol[j][k]->count > 0)
 			   {
-			for (i = 0;i < Geometry->N_y; i++)//slice index
+			for (i = 0;i < m_Geometry->N_y; i++)//slice index
 				{
                  /*  y = ((DATA_TYPE)i+0.5)*Geometry->delta_xy + Geometry->y0;
 					t = y;
@@ -808,8 +839,8 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 				{
 				    //calculating the footprint of the voxel in the t-direction
 
-					i_theta = int16_t(floor(static_cast<float>(TempCol[j][k]->index[q]/(Sinogram->N_r))));
-					i_r =  (TempCol[j][k]->index[q]%(Sinogram->N_r));
+					i_theta = int16_t(floor(static_cast<float>(TempCol[j][k]->index[q]/(m_Sinogram->N_r))));
+					i_r =  (TempCol[j][k]->index[q]%(m_Sinogram->N_r));
 
 					VoxelLineAccessCounter=0;
 					for(i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)//CHANGED from <= to <
@@ -826,8 +857,8 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 						else
 						{
 							ProfileThickness=0;
-						}*/					
-						Y_Est[i_theta][i_r][i_t] += (NuisanceParams.I_0[i_theta]*(TempCol[j][k]->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter++]* Geometry->Object[j][k][i]));
+						}*/
+						Y_Est[i_theta][i_r][i_t] += (NuisanceParams.I_0[i_theta]*(TempCol[j][k]->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter++]* m_Geometry->Object[j][k][i]));
 
 				    }
 				}
@@ -853,38 +884,38 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	//Also compute weights of the diagonal covariance matrix
 
 #ifdef NOISE_MODEL
-	for (i_theta = 0;i_theta < Sinogram->N_theta; i_theta++)//slice index
+	for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
 	{
 		sum=0;
-		for(i_r = 0; i_r < Sinogram->N_r;i_r++)
-			for(i_t = 0;i_t < Sinogram->N_t;i_t++)
-				sum+=(Sinogram->counts[i_theta][i_r][i_t]);
+		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
+			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
+				sum+=(m_Sinogram->counts[i_theta][i_r][i_t]);
 
-		sum/=(Sinogram->N_r*Sinogram->N_t);
+		sum/=(m_Sinogram->N_r*m_Sinogram->N_t);
 
-		for(i_r = 0; i_r < Sinogram->N_r;i_r++)
-			for(i_t = 0;i_t < Sinogram->N_t;i_t++)
+		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
+			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
 				if(sum != 0)
 					Weight[i_theta][i_r][i_t]=1.0/sum;//The variance for each view ~=averagecounts in that view
 	}
 #endif//Noise model
 
 
-	for (i_theta = 0;i_theta < Sinogram->N_theta; i_theta++)//slice index
+	for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
 	{
 		checksum=0;
-		for(i_r = 0; i_r < Sinogram->N_r;i_r++)
-			for(i_t = 0;i_t < Sinogram->N_t;i_t++)
+		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
+			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
 			{
 
 				// checksum+=Y_Est[i][j][k];
-				ErrorSino[i_theta][i_r][i_t] = Sinogram->counts[i_theta][i_r][i_t] - Y_Est[i_theta][i_r][i_t]-NuisanceParams.mu[i_theta];
+				ErrorSino[i_theta][i_r][i_t] = m_Sinogram->counts[i_theta][i_r][i_t] - Y_Est[i_theta][i_r][i_t]-NuisanceParams.mu[i_theta];
 			//	if(fabs(ErrorSino[i_theta][i_r][i_t]) > 20000)
 			//		printf("%d %d %d %lf %lf %lf\n",i_theta,i_r,i_t,ErrorSino[i_theta][i_r][i_t],Weight[i_theta][i_r][i_t],Y_Est[i_theta][i_r][i_t]);
-				
+
 #ifndef NOISE_MODEL
-				if(Sinogram->counts[i_theta][i_r][i_t] != 0)
-					Weight[i_theta][i_r][i_t]=1.0/Sinogram->counts[i_theta][i_r][i_t];
+				if(m_Sinogram->counts[i_theta][i_r][i_t] != 0)
+					Weight[i_theta][i_r][i_t]=1.0/m_Sinogram->counts[i_theta][i_r][i_t];
 				else
 					Weight[i_theta][i_r][i_t]=0;
 #endif
@@ -918,7 +949,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 #ifdef COST_CALCULATE
 	fileError = 0;
-  MAKE_OUTPUT_FILE(Fp2, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::ConstFunctionFile);
+  MAKE_OUTPUT_FILE(Fp2, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::ConstFunctionFile);
   if (fileError == 1)
   {
 
@@ -928,7 +959,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	printf("Cost Function Calculation \n");
 	/*********************Initial Cost Calculation***************************************************/
 
-	cost[cost_counter] = CE_ComputeCost(ErrorSino,Weight, Sinogram,Geometry);
+	cost[cost_counter] = CE_ComputeCost(ErrorSino,Weight);
 
 	printf("%lf\n",cost[cost_counter]);
 
@@ -940,9 +971,9 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 	//Loop through every voxel updating it by solving a cost function
 
-	for(OuterIter = 0; OuterIter < CmdInputs->NumOuterIter; OuterIter++)
+	for(OuterIter = 0; OuterIter < m_CmdInputs->NumOuterIter; OuterIter++)
 	{
-	for(Iter = 0;Iter < CmdInputs->NumIter;Iter++)
+	for(Iter = 0;Iter < m_CmdInputs->NumIter;Iter++)
 	{
 
 		//printf("Iter %d\n",Iter);
@@ -952,24 +983,24 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 #endif
 
 #ifdef RANDOM_ORDER_UPDATES
-		ArraySize = Geometry->N_x*Geometry->N_z;
+		ArraySize = m_Geometry->N_x*m_Geometry->N_z;
 		for(j_new = 0;j_new < ArraySize; j_new++)
 			Counter[j_new]=j_new;
 
-		for(j=0;j<Geometry->N_z;j++)
-			for(k=0;k < Geometry->N_x;k++)
+		for(j=0;j<m_Geometry->N_z;j++)
+			for(k=0;k < m_Geometry->N_x;k++)
 				VisitCount[j][k]=0;
 #endif
 
 		START;
-		for(j = 0; j < Geometry->N_z; j++)//Row index
-			for(k = 0; k < Geometry->N_x ; k++)//Column index
+		for(j = 0; j < m_Geometry->N_z; j++)//Row index
+			for(k = 0; k < m_Geometry->N_x ; k++)//Column index
 			{
 #ifdef RANDOM_ORDER_UPDATES
 				//RandomNumber=init_genrand(Iter);
 				Index=(genrand_int31(RandomNumber))%ArraySize;
-				k_new = Counter[Index]%Geometry->N_x;
-				j_new = Counter[Index]/Geometry->N_x;
+				k_new = Counter[Index]%m_Geometry->N_x;
+				j_new = Counter[Index]/m_Geometry->N_x;
                 //memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));//TODO: Instead just swap the value in Index with the one in ArraySize
 				Counter[Index]=Counter[ArraySize-1];
 				VisitCount[j_new][k_new]=1;
@@ -982,7 +1013,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 				TempMemBlock = TempCol[j_new][k_new];//Remove this
 				if(TempMemBlock->count > 0)
 				{
-				for (i = 0; i < Geometry->N_y; i++)//slice index
+				for (i = 0; i < m_Geometry->N_y; i++)//slice index
 				{
 						//Neighborhood of (i,j,k) should be initialized to zeros each time
 						for(p = 0; p <= 2; p++)
@@ -999,11 +1030,11 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 							for(q = -1; q <= 1; q++)
 								for(r = -1; r <= 1;r++)
 								{
-									if(i+p >= 0 && i+p < Geometry->N_y)
-										if(j_new+q >= 0 && j_new+q < Geometry->N_z)
-											if(k_new+r >= 0 && k_new+r < Geometry->N_x)
+									if(i+p >= 0 && i+p < m_Geometry->N_y)
+										if(j_new+q >= 0 && j_new+q < m_Geometry->N_z)
+											if(k_new+r >= 0 && k_new+r < m_Geometry->N_x)
 											{
-												NEIGHBORHOOD[p+1][q+1][r+1] = Geometry->Object[q+j_new][r+k_new][p+i];
+												NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object[q+j_new][r+k_new][p+i];
 												BOUNDARYFLAG[p+1][q+1][r+1]=1;
 											}
 									else {
@@ -1017,10 +1048,10 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 						for(q = -1; q <= 1; q++)
 							for(r = -1; r <= 1;r++)
 							{
-								tempindex_x = mod(r+k_new,Geometry->N_x);
-								tempindex_y =mod(p+i,Geometry->N_y);
-								tempindex_z = mod(q+j_new,Geometry->N_z);
-		                        NEIGHBORHOOD[p+1][q+1][r+1] = Geometry->Object[tempindex_z][tempindex_x][tempindex_y];
+								tempindex_x = mod(r+k_new,m_Geometry->N_x);
+								tempindex_y =mod(p+i,m_Geometry->N_y);
+								tempindex_z = mod(q+j_new,m_Geometry->N_z);
+		                        NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object[tempindex_z][tempindex_x][tempindex_y];
 								BOUNDARYFLAG[p+1][q+1][r+1]=1;
 							}
 
@@ -1031,7 +1062,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 						if(i==0 && j == 31 && k == 31)
 						{
 							printf("***************************\n");
-							printf("Geom %lf\n",Geometry->Object[i][31][31]);
+							printf("Geom %lf\n",m_Geometry->Object[i][31][31]);
 							for(p = 0; p <= 2; p++)
 								for(q = 0; q <= 2; q++)
 									for (r = 0; r <= 2;r++)
@@ -1040,7 +1071,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 #endif
 						//Compute theta1 and theta2
 
-						V = Geometry->Object[j_new][k_new][i];//Store the present value of the voxel
+						V = m_Geometry->Object[j_new][k_new][i];//Store the present value of the voxel
 						THETA1 = 0.0;
 						THETA2 = 0.0;
 
@@ -1061,8 +1092,8 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 						for (q = 0;q < TempMemBlock->count; q++)
 						{
 
-							i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
-							i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
+							i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(m_Sinogram->N_r)));
+							i_r =  (TempMemBlock->index[q]%(m_Sinogram->N_r));
 							VoxelLineAccessCounter=0;
 							for(i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
 							// for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
@@ -1140,14 +1171,14 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 			 	 		}
 
 						//TODO Print appropriate error messages for other values of error code
-						Geometry->Object[j_new][k_new][i] = UpdatedVoxelValue;
+						m_Geometry->Object[j_new][k_new][i] = UpdatedVoxelValue;
 
 #ifdef ROI
 						if(Mask[j_new][k_new] == 1)
 						{
 
-							AverageUpdate+=fabs(Geometry->Object[j_new][k_new][i]-V);
-							AverageMagnitudeOfRecon+=Geometry->Object[j_new][k_new][i];
+							AverageUpdate+=fabs(m_Geometry->Object[j_new][k_new][i]-V);
+							AverageMagnitudeOfRecon+=m_Geometry->Object[j_new][k_new][i];
 						}
 #endif
 
@@ -1158,8 +1189,8 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 					for (q = 0;q < TempMemBlock->count; q++)
 					{
 
-					i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(Sinogram->N_r)));
-					i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
+					i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(m_Sinogram->N_r)));
+					i_r =  (TempMemBlock->index[q]%(m_Sinogram->N_r));
 					VoxelLineAccessCounter=0;
 					for(i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
 					//for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
@@ -1180,7 +1211,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 							ProfileThickness=0;
 						}*/
 
-							ErrorSino[i_theta][i_r][i_t] -=(NuisanceParams.I_0[i_theta]*(TempMemBlock->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter]* (Geometry->Object[j_new][k_new][i] - V)));
+							ErrorSino[i_theta][i_r][i_t] -=(NuisanceParams.I_0[i_theta]*(TempMemBlock->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter]* (m_Geometry->Object[j_new][k_new][i] - V)));
 						    VoxelLineAccessCounter++;
 					}
 					}
@@ -1198,8 +1229,8 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 		PRINTTIME;
 
 #ifdef RANDOM_ORDER_UPDATES
-		for(j = 0; j < Geometry->N_z; j++)//Row index
-			for(k = 0; k < Geometry->N_x ; k++)//Column index
+		for(j = 0; j < m_Geometry->N_z; j++)//Row index
+			for(k = 0; k < m_Geometry->N_x ; k++)//Column index
 		if(VisitCount[j][k] == 0)
 			printf("Pixel (%d %d) not visited\n",j,k);
 #endif
@@ -1207,7 +1238,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 #ifdef COST_CALCULATE
 		/*********************Cost Calculation***************************************************/
 
-		cost[cost_counter]=CE_ComputeCost(ErrorSino,Weight,Sinogram,Geometry);
+		cost[cost_counter]=CE_ComputeCost(ErrorSino,Weight);
 		printf("%lf\n",cost[cost_counter]);
 
 		if(cost[cost_counter]-cost[cost_counter-1] > 0)
@@ -1256,8 +1287,8 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 			//	for (i=0; i < Geometry->N_y; i++)
 			//		for (j=0; j < Geometry->N_z; j++)
 			//			for (k=0; k < Geometry->N_x; k++)
-			TempPointer = Geometry->Object;
-			NumOfBytesWritten=fwrite(&(Geometry->Object[0][0][0]), sizeof(DATA_TYPE),Geometry->N_x*Geometry->N_y*Geometry->N_z, Fp3);
+			TempPointer = m_Geometry->Object;
+			NumOfBytesWritten=fwrite(&(m_Geometry->Object[0][0][0]), sizeof(DATA_TYPE),m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z, Fp3);
 	 		printf("%d\n",NumOfBytesWritten);
 
 
@@ -1276,30 +1307,30 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	 //Joint Scale And Offset Estimation
 
 		//forward project
-		for (i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)
-			for(i_r = 0; i_r < Sinogram->N_r; i_r++)
-			   for(i_t = 0;i_t < Sinogram->N_t; i_t++)
+		for (i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+			for(i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+			   for(i_t = 0;i_t < m_Sinogram->N_t; i_t++)
 			       Y_Est[i_theta][i_r][i_t]=0.0;
 
-		for(j = 0;j < Geometry->N_z; j++)
-			for(k = 0;k < Geometry->N_x; k++)
+		for(j = 0;j < m_Geometry->N_z; j++)
+			for(k = 0;k < m_Geometry->N_x; k++)
 			{
 				if(TempCol[j][k]->count > 0)
 				{
-					for (i = 0;i < Geometry->N_y; i++)//slice index
+					for (i = 0;i < m_Geometry->N_y; i++)//slice index
 					{
 
 						for(q = 0;q < TempCol[j][k]->count; q++)
 						{
 							//calculating the footprint of the voxel in the t-direction
 
-							i_theta = int16_t(floor(static_cast<float>(TempCol[j][k]->index[q]/(Sinogram->N_r))));
-							i_r =  (TempCol[j][k]->index[q]%(Sinogram->N_r));
+							i_theta = int16_t(floor(static_cast<float>(TempCol[j][k]->index[q]/(m_Sinogram->N_r))));
+							i_r =  (TempCol[j][k]->index[q]%(m_Sinogram->N_r));
 
 							VoxelLineAccessCounter=0;
 							for(i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
 							{
-								Y_Est[i_theta][i_r][i_t] += ((TempCol[j][k]->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter++]* Geometry->Object[j][k][i]));
+								Y_Est[i_theta][i_r][i_t] += ((TempCol[j][k]->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter++]* m_Geometry->Object[j][k][i]));
 							}
 						}
 
@@ -1309,7 +1340,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 			}
 
-	 for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+	 for(i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 	 {
 		 a=0;
 		 b=0;
@@ -1321,16 +1352,16 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 
 		 //compute the parameters of the quadratic for each view
-		 for (i_r =0; i_r < Sinogram->N_r; i_r++)
-			 	for(i_t = 0;i_t < Sinogram->N_t; i_t++)
+		 for (i_r =0; i_r < m_Sinogram->N_r; i_r++)
+			 	for(i_t = 0;i_t < m_Sinogram->N_t; i_t++)
 		        {
 
-					numerator_sum+=(Sinogram->counts[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+					numerator_sum+=(m_Sinogram->counts[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
 					denominator_sum+=(Weight[i_theta][i_r][i_t]);
 
 					a += (Y_Est[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
-					b += (Y_Est[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]*Sinogram->counts[i_theta][i_r][i_t]);
-					c += (Sinogram->counts[i_theta][i_r][i_t]*Sinogram->counts[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+					b += (Y_Est[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]*m_Sinogram->counts[i_theta][i_r][i_t]);
+					c += (m_Sinogram->counts[i_theta][i_r][i_t]*m_Sinogram->counts[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
 					d += (Y_Est[i_theta][i_r][i_t]*Y_Est[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
 
 		        }
@@ -1349,11 +1380,11 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 		 a=0;
 		 b=0;
-		 for (i_r =0; i_r < Sinogram->N_r; i_r++)
-			 for(i_t = 0;i_t < Sinogram->N_t; i_t++)
+		 for (i_r =0; i_r < m_Sinogram->N_r; i_r++)
+			 for(i_t = 0;i_t < m_Sinogram->N_t; i_t++)
 			 {
 				 a+=((Y_Est[i_theta][i_r][i_t]-d2[i_theta])*Weight[i_theta][i_r][i_t]*Y_Est[i_theta][i_r][i_t]);
-				 b-=((Sinogram->counts[i_theta][i_r][i_t]-d1[i_theta])*Weight[i_theta][i_r][i_t]*Y_Est[i_theta][i_r][i_t]);
+				 b-=((m_Sinogram->counts[i_theta][i_r][i_t]-d1[i_theta])*Weight[i_theta][i_r][i_t]*Y_Est[i_theta][i_r][i_t]);
 			 }
 
 		 QuadraticParameters[i_theta][0]=a;
@@ -1373,7 +1404,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 		//compute cost
 		/********************************************************************************************/
 		sum=0;
-		for (i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+		for (i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 		{
 			sum += (Qk_cost[i_theta][0]*NuisanceParams.I_0[i_theta]*NuisanceParams.I_0[i_theta] + 2*Qk_cost[i_theta][1]*NuisanceParams.I_0[i_theta]*NuisanceParams.mu[i_theta] + NuisanceParams.mu[i_theta]*NuisanceParams.mu[i_theta]*Qk_cost[i_theta][2] - 2*(bk_cost[i_theta][0]*NuisanceParams.I_0[i_theta] + NuisanceParams.mu[i_theta]*bk_cost[i_theta][1]) + ck_cost[i_theta]);//evaluating the cost function
 		}
@@ -1414,7 +1445,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 		rooting_attempt_counter=0;
 		errorcode=-1;
 		CE_ConstraintEquation ce(NumOfViews, QuadraticParameters, d1, d2, Qk_cost, bk_cost, ck_cost, LogGain);
-		
+
 		while(errorcode != 0 && low <= high && rooting_attempt_counter < MaxNumRootingAttempts)//0 implies the signof the function at low and high is the same
 		{
 
@@ -1431,7 +1462,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 			printf("The rooting for lambda was unsuccesful\n");
 			printf("Low = %lf High = %lf\n",low,high);
 			printf("Quadratic Parameters\n");
-			for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
+			for(i_theta =0; i_theta < m_Sinogram->N_theta;i_theta++)
 			{
 				printf("%lf %lf %lf\n",QuadraticParameters[i_theta][0],QuadraticParameters[i_theta][1],QuadraticParameters[i_theta][2]);
 			}
@@ -1439,13 +1470,13 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 			//for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
 			//{
-			fwrite(&Qk_cost[0][0], sizeof(DATA_TYPE), Sinogram->N_theta*3, Fp8);
+			fwrite(&Qk_cost[0][0], sizeof(DATA_TYPE), m_Sinogram->N_theta*3, Fp8);
 			//}
 			//for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
 			//{
-			fwrite(&bk_cost[0][0], sizeof(DATA_TYPE), Sinogram->N_theta*2, Fp8);
+			fwrite(&bk_cost[0][0], sizeof(DATA_TYPE), m_Sinogram->N_theta*2, Fp8);
 			//}
-			fwrite(&ck_cost[0], sizeof(DATA_TYPE), Sinogram->N_theta, Fp8);
+			fwrite(&ck_cost[0], sizeof(DATA_TYPE), m_Sinogram->N_theta, Fp8);
 #endif
 
 			break;
@@ -1454,7 +1485,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 		CE_ConstraintEquation conEqn(NumOfViews, QuadraticParameters, d1, d2, Qk_cost, bk_cost, ck_cost, LogGain);
 
 		//Based on the optimal lambda compute the optimal mu and I0 values
-		for (i_theta =0; i_theta < Sinogram->N_theta; i_theta++)
+		for (i_theta =0; i_theta < m_Sinogram->N_theta; i_theta++)
 		{
 
 			root = conEqn.CE_RootsOfQuadraticFunction(QuadraticParameters[i_theta][0],QuadraticParameters[i_theta][1],LagrangeMultiplier);//returns the 2 roots of the quadratic parameterized by a,b,c
@@ -1497,7 +1528,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 		//checking to see if the cost went down
 
 		sum=0;
-		for (i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+		for (i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 		{
 			sum += (Qk_cost[i_theta][0]*NuisanceParams.I_0[i_theta]*NuisanceParams.I_0[i_theta] + 2*Qk_cost[i_theta][1]*NuisanceParams.I_0[i_theta]*NuisanceParams.mu[i_theta] + NuisanceParams.mu[i_theta]*NuisanceParams.mu[i_theta]*Qk_cost[i_theta][2] - 2*(bk_cost[i_theta][0]*NuisanceParams.I_0[i_theta] + NuisanceParams.mu[i_theta]*bk_cost[i_theta][1]) + ck_cost[i_theta]);//evaluating the cost function
 		}
@@ -1508,12 +1539,12 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 		/*****************************************************************************************************/
 
 	 //Reproject to compute Error Sinogram for ICD
-	 for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+	 for(i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 	 {
-	 for(i_r=0; i_r < Sinogram->N_r; i_r++)
-	 for(i_t = 0; i_t < Sinogram->N_t; i_t++)
+	 for(i_r=0; i_r < m_Sinogram->N_r; i_r++)
+	 for(i_t = 0; i_t < m_Sinogram->N_t; i_t++)
 	 {
-	 ErrorSino[i_theta][i_r][i_t] = Sinogram->counts[i_theta][i_r][i_t] - NuisanceParams.mu[i_theta]-(NuisanceParams.I_0[i_theta]*Y_Est[i_theta][i_r][i_t]);
+	 ErrorSino[i_theta][i_r][i_t] = m_Sinogram->counts[i_theta][i_r][i_t] - NuisanceParams.mu[i_theta]-(NuisanceParams.I_0[i_theta]*Y_Est[i_theta][i_r][i_t]);
 	 }
 	 }
 
@@ -1533,7 +1564,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 
 #ifdef COST_CALCULATE
-		cost[cost_counter]=CE_ComputeCost(ErrorSino,Weight,Sinogram,Geometry);
+		cost[cost_counter]=CE_ComputeCost(ErrorSino,Weight);
 	 printf("After Gain Update %lf\n",cost[cost_counter]);
 
 		if(cost[cost_counter]-cost[cost_counter-1] > 0)
@@ -1546,35 +1577,35 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
 #endif
 		printf("Offsets\n");
-		for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+		for(i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 		{
 			printf("%lf\n",NuisanceParams.mu[i_theta]);
 		}
 		printf("Gain\n");
-		for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+		for(i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 		{
 			printf("%lf\n",NuisanceParams.I_0[i_theta]);
 		}
 
 #ifdef NOISE_MODEL
 		//Updating the Weights
-		for( i_theta=0;i_theta < Sinogram->N_theta;i_theta++)
+		for( i_theta=0;i_theta < m_Sinogram->N_theta;i_theta++)
 		{
 			sum=0;
-			for(i_r=0; i_r < Sinogram->N_r; i_r++)
-				for(i_t = 0; i_t < Sinogram->N_t; i_t++)
+			for(i_r=0; i_r < m_Sinogram->N_r; i_r++)
+				for(i_t = 0; i_t < m_Sinogram->N_t; i_t++)
 					sum+=(ErrorSino[i_theta][i_r][i_t]*ErrorSino[i_theta][i_r][i_t]);
-			sum/=(Sinogram->N_r*Sinogram->N_t);
+			sum/=(m_Sinogram->N_r*m_Sinogram->N_t);
 
-			for(i_r=0; i_r < Sinogram->N_r; i_r++)
-				for(i_t = 0; i_t < Sinogram->N_t; i_t++)
+			for(i_r=0; i_r < m_Sinogram->N_r; i_r++)
+				for(i_t = 0; i_t < m_Sinogram->N_t; i_t++)
 					if(sum != 0)
 					Weight[i_theta][i_r][i_t]=1.0/sum;
 
 		}
 
 #ifdef COST_CALCULATE
-		cost[cost_counter]=CE_ComputeCost(ErrorSino,Weight,Sinogram,Geometry);
+		cost[cost_counter]=CE_ComputeCost(ErrorSino,Weight);
 		printf("After Noise Variance Update %lf\n",cost[cost_counter]);
 		fwrite(&cost[cost_counter],sizeof(DATA_TYPE),1,Fp2);
 		if(cost[cost_counter]-cost[cost_counter-1] > 0)
@@ -1595,13 +1626,13 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	}
 
 	printf("Offsets\n");
-	for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+	for(i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 	{
 		printf("%lf\n",NuisanceParams.mu[i_theta]);
 		fwrite(&NuisanceParams.mu[i_theta],sizeof(DATA_TYPE),1,Fp5);
 	}
 	printf("Gain\n");
-	for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+	for(i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 	{
 		printf("%lf\n",NuisanceParams.I_0[i_theta]);
 		fwrite(&NuisanceParams.I_0[i_theta],sizeof(DATA_TYPE),1,Fp4);
@@ -1614,7 +1645,7 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 	}
 
 	printf("Variance\n");
-	for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+	for(i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 	{
 		printf("%lf\n",Weight[i_theta][0][0]);
 		fwrite(&(Weight[i_theta][0][0]),sizeof(DATA_TYPE),1,Fp7);
@@ -1623,15 +1654,15 @@ int SOCEngine::CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,CommandLineIn
 
     START;
 	//calculates Ax and returns a pointer to the memory block
-	Final_Sinogram=ForwardProject(Sinogram, Geometry, DetectorResponse, H_t);
+	Final_Sinogram=ForwardProject(DetectorResponse, H_t);
 	STOP;
 	PRINTTIME;
 
 	//Writing the final sinogram
-	for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+	for(i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 	{
-		for(i_r=0; i_r < Sinogram->N_r; i_r++)
-			for(i_t = 0; i_t < Sinogram->N_t; i_t++)
+		for(i_r=0; i_r < m_Sinogram->N_r; i_r++)
+			for(i_t = 0; i_t < m_Sinogram->N_t; i_t++)
 			{
 				Final_Sinogram[i_theta][i_r][i_t]*=NuisanceParams.I_0[i_theta];
 				Final_Sinogram[i_theta][i_r][i_t]+=NuisanceParams.mu[i_theta];
@@ -1701,25 +1732,25 @@ void SOCEngine::CE_MinMax(DATA_TYPE *low,DATA_TYPE *high)
 
 
 
-void* SOCEngine::CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
+void* SOCEngine::CE_CalculateVoxelProfile()
 {
 	DATA_TYPE angle,MaxValLineIntegral;
 	DATA_TYPE temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
-	DATA_TYPE** VoxProfile = (DATA_TYPE**)multialloc(sizeof(DATA_TYPE),2,Sinogram->N_theta,PROFILE_RESOLUTION);
+	DATA_TYPE** VoxProfile = (DATA_TYPE**)multialloc(sizeof(DATA_TYPE),2,m_Sinogram->N_theta,PROFILE_RESOLUTION);
 	DATA_TYPE checksum=0;
 	uint16_t i,j;
 	FILE* Fp = NULL;
 	int fileError = 0;
-  MAKE_OUTPUT_FILE(Fp, fileError, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::VoxelProfileFile);
+  MAKE_OUTPUT_FILE(Fp, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::VoxelProfileFile);
   if (fileError == 1)
   {
 
   }
 
-	for (i=0;i<Sinogram->N_theta;i++)
+	for (i=0;i<m_Sinogram->N_theta;i++)
 	{
-		Sinogram->angles[i]=Sinogram->angles[i]*(M_PI/180.0);
-		angle=Sinogram->angles[i];
+		m_Sinogram->angles[i]=m_Sinogram->angles[i]*(M_PI/180.0);
+		angle=m_Sinogram->angles[i];
 		while(angle > M_PI_2)
 			angle -= M_PI_2;
 
@@ -1728,11 +1759,11 @@ void* SOCEngine::CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 
 		if(angle <= M_PI_4)
 		{
-			MaxValLineIntegral = Geometry->delta_xz/cos(angle);
+			MaxValLineIntegral = m_Geometry->delta_xz/cos(angle);
 		}
 		else
 		{
-			MaxValLineIntegral = Geometry->delta_xz/cos(M_PI_2-angle);
+			MaxValLineIntegral = m_Geometry->delta_xz/cos(M_PI_2-angle);
 		}
 		temp=cos(M_PI_4);
 		dist1 = temp * cos((M_PI_4 - angle));
@@ -1768,7 +1799,7 @@ void* SOCEngine::CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 /*******************************************************************
  Forwards Projects the Object and stores it in a 3-D matrix
  ********************************************************************/
-DATA_TYPE*** SOCEngine::ForwardProject(Sino *Sinogram,Geom* Geometry,DATA_TYPE*** DetectorResponse,DATA_TYPE*** H_t)
+DATA_TYPE*** SOCEngine::ForwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE*** H_t)
 {
 	DATA_TYPE x,z,y;
 	DATA_TYPE r,rmin,rmax,t,tmin,tmax;
@@ -1778,53 +1809,53 @@ DATA_TYPE*** SOCEngine::ForwardProject(Sino *Sinogram,Geom* Geometry,DATA_TYPE**
 	int16_t i,j,k;
 	int16_t index_delta_t,index_delta_r;
 	DATA_TYPE*** Y_Est;
-	Y_Est=(DATA_TYPE ***)get_3D(Sinogram->N_theta,Sinogram->N_r,Sinogram->N_t,sizeof(DATA_TYPE));
+	Y_Est=(DATA_TYPE ***)get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
 
-	for (j = 0; j < Geometry->N_z; j++)
+	for (j = 0; j < m_Geometry->N_z; j++)
 	{
-		for (k=0; k < Geometry->N_x; k++)
+		for (k=0; k < m_Geometry->N_x; k++)
 		{
-			x = Geometry->x0 + ((DATA_TYPE)k+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-			z = Geometry->z0 + ((DATA_TYPE)j+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. z_0 is the left corner
+			x = m_Geometry->x0 + ((DATA_TYPE)k+0.5)*m_Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+			z = m_Geometry->z0 + ((DATA_TYPE)j+0.5)*m_Geometry->delta_xz;//0.5 is for center of voxel. z_0 is the left corner
 
-			for (i = 0; i < Geometry->N_y ; i++)
+			for (i = 0; i < m_Geometry->N_y ; i++)
 			{
-				for(i_theta = 0;i_theta < Sinogram->N_theta;i_theta++)
+				for(i_theta = 0;i_theta < m_Sinogram->N_theta;i_theta++)
 				{
 					r = x*cosine[i_theta] - z*sine[i_theta];
-					rmin = r - Geometry->delta_xz;
-					rmax = r + Geometry->delta_xz;
+					rmin = r - m_Geometry->delta_xz;
+					rmax = r + m_Geometry->delta_xz;
 
-					if(rmax < Sinogram->R0 || rmin > Sinogram->RMax)
+					if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax)
 						continue;
 
-					index_min = floor(((rmin - Sinogram->R0)/Sinogram->delta_r));
-					index_max = floor((rmax - Sinogram->R0)/Sinogram->delta_r);
+					index_min = floor(((rmin - m_Sinogram->R0)/m_Sinogram->delta_r));
+					index_max = floor((rmax - m_Sinogram->R0)/m_Sinogram->delta_r);
 
-					if(index_max >= Sinogram->N_r)
-						index_max = Sinogram->N_r - 1;
+					if(index_max >= m_Sinogram->N_r)
+						index_max = m_Sinogram->N_r - 1;
 
 					if(index_min < 0)
 						index_min = 0;
 
-					y = Geometry->y0 + ((double)i+ 0.5)*Geometry->delta_xy;
+					y = m_Geometry->y0 + ((double)i+ 0.5)*m_Geometry->delta_xy;
 					t = y;
 
 
-					tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-					tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax? t + Geometry->delta_xy/2 : Sinogram->TMax;
+					tmin = (t - m_Geometry->delta_xy/2) > m_Sinogram->T0 ? t-m_Geometry->delta_xy/2 : m_Sinogram->T0;
+					tmax = (t + m_Geometry->delta_xy/2) <= m_Sinogram->TMax? t + m_Geometry->delta_xy/2 : m_Sinogram->TMax;
 
-					slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
-					slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
+					slice_index_min = floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t);
+					slice_index_max = floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t);
 
 					if(slice_index_min < 0)
 						slice_index_min = 0;
-					if(slice_index_max >= Sinogram->N_t)
-						slice_index_max = Sinogram->N_t-1;
+					if(slice_index_max >= m_Sinogram->N_t)
+						slice_index_max = m_Sinogram->N_t-1;
 
 					for (i_r = index_min; i_r <= index_max; i_r++)
 					{
-						center_r = Sinogram->R0 + ((double)i_r + 0.5)*Sinogram->delta_r ;
+						center_r = m_Sinogram->R0 + ((double)i_r + 0.5)*m_Sinogram->delta_r ;
 						delta_r = fabs(center_r - r);
 						index_delta_r = floor((delta_r/OffsetR));
 
@@ -1843,7 +1874,7 @@ DATA_TYPE*** SOCEngine::ForwardProject(Sino *Sinogram,Geom* Geometry,DATA_TYPE**
 
 						for (i_t = slice_index_min; i_t <= slice_index_max; i_t ++)
 						{
-							center_t = Sinogram->T0 + ((double)i_t + 0.5)*Sinogram->delta_t;
+							center_t = m_Sinogram->T0 + ((double)i_t + 0.5)*m_Sinogram->delta_t;
 							delta_t = fabs(center_t - t);
 							index_delta_t = floor((delta_t/OffsetT));
 
@@ -1858,7 +1889,7 @@ DATA_TYPE*** SOCEngine::ForwardProject(Sino *Sinogram,Geom* Geometry,DATA_TYPE**
 								f2 = 0;
 							}
 
-							Y_Est[i_theta][i_r][i_t]+=(f1*f2*Geometry->Object[j][k][i]);
+							Y_Est[i_theta][i_r][i_t]+=(f1*f2*m_Geometry->Object[j][k][i]);
 
 						}
 					}
@@ -1872,7 +1903,8 @@ DATA_TYPE*** SOCEngine::ForwardProject(Sino *Sinogram,Geom* Geometry,DATA_TYPE**
 	return Y_Est;
 }
 
-void* SOCEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,DATA_TYPE** VoxelProfile)
+void* SOCEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice,
+                                           DATA_TYPE** VoxelProfile)
 {
 	int32_t i,j,k,sliceidx;
 	DATA_TYPE x,z,y;
@@ -1903,19 +1935,19 @@ void* SOCEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t s
 	//Temp->index = (uint32_t*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(uint32_t));
 	//Temp->values = (DATA_TYPE*)multialloc(sizeof(DATA_TYPE),1,Sinogram->N_r*Sinogram->N_theta);//makes the values =0
 
-	x = Geometry->x0 + ((DATA_TYPE)col+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-	z = Geometry->z0 + ((DATA_TYPE)row+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-	y = Geometry->y0 + ((DATA_TYPE)slice + 0.5)*Geometry->delta_xy;
+	x = m_Geometry->x0 + ((DATA_TYPE)col+0.5)*m_Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+	z = m_Geometry->z0 + ((DATA_TYPE)row+0.5)*m_Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+	y = m_Geometry->y0 + ((DATA_TYPE)slice + 0.5)*m_Geometry->delta_xy;
 
-	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_xz);
+	TempConst=(PROFILE_RESOLUTION)/(2*m_Geometry->delta_xz);
 
 
 	//	Temp->values = (DATA_TYPE*)calloc(Sinogram->N_t*Sinogram->N_r*Sinogram->N_theta,sizeof(DATA_TYPE));//(DATA_TYPE*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(DATA_TYPE));//makes the values =0
 
 	//alternately over estimate the maximum size require for a single AMatrix column
-	AvgNumXElements = ceil(3*Geometry->delta_xz/Sinogram->delta_r);
-	AvgNumYElements = ceil(3*Geometry->delta_xy/Sinogram->delta_t);
-	MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*Sinogram->N_theta;
+	AvgNumXElements = ceil(3*m_Geometry->delta_xz/m_Sinogram->delta_r);
+	AvgNumYElements = ceil(3*m_Geometry->delta_xy/m_Sinogram->delta_t);
+	MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*m_Sinogram->N_theta;
 
 	Temp->values = (DATA_TYPE*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(DATA_TYPE));
 	Temp->index  = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(uint32_t));
@@ -1923,41 +1955,41 @@ void* SOCEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t s
 	//printf("%lf",Temp->values[10]);
 
 #ifdef AREA_WEIGHTED
-	for(i=0;i<Sinogram->N_theta;i++)
+	for(i=0;i<m_Sinogram->N_theta;i++)
 	{
 
 		r = x*cosine[i] - z*sine[i];
 		t = y;
 
-		rmin = r - Geometry->delta_xz;
-		rmax = r + Geometry->delta_xz;
+		rmin = r - m_Geometry->delta_xz;
+		rmax = r + m_Geometry->delta_xz;
 
-		tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-		tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax ? t + Geometry->delta_xy/2 : Sinogram->TMax;
+		tmin = (t - m_Geometry->delta_xy/2) > m_Sinogram->T0 ? t-m_Geometry->delta_xy/2 : m_Sinogram->T0;
+		tmax = (t + m_Geometry->delta_xy/2) <= m_Sinogram->TMax ? t + m_Geometry->delta_xy/2 : m_Sinogram->TMax;
 
-		if(rmax < Sinogram->R0 || rmin > Sinogram->RMax)
+		if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax)
 			continue;
 
 
 
-		index_min = floor(((rmin - Sinogram->R0)/Sinogram->delta_r));
-		index_max = floor((rmax - Sinogram->R0)/Sinogram->delta_r);
+		index_min = floor(((rmin - m_Sinogram->R0)/m_Sinogram->delta_r));
+		index_max = floor((rmax - m_Sinogram->R0)/m_Sinogram->delta_r);
 
-		if(index_max >= Sinogram->N_r)
-			index_max = Sinogram->N_r - 1;
+		if(index_max >= m_Sinogram->N_r)
+			index_max = m_Sinogram->N_r - 1;
 
 		if(index_min < 0)
 			index_min = 0;
 
-		slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
-		slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
+		slice_index_min = floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t);
+		slice_index_max = floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t);
 
 		if(slice_index_min < 0)
 			slice_index_min = 0;
-		if(slice_index_max >= Sinogram->N_t)
-			slice_index_max = Sinogram->N_t -1;
+		if(slice_index_max >= m_Sinogram->N_t)
+			slice_index_max = m_Sinogram->N_t -1;
 
-		BaseIndex = i*Sinogram->N_r*Sinogram->N_t;
+		BaseIndex = i*m_Sinogram->N_r*m_Sinogram->N_t;
 
 		// if(row == 63 && col == 63)
 		//    printf("%d %d\n",index_min,index_max);
@@ -1973,7 +2005,7 @@ void* SOCEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t s
 			Integral = 0.0;
 
 			//Accounting for Beam width
-			RTemp = (Sinogram->R0 + (((DATA_TYPE)j) + 0.5) *(Sinogram->delta_r));//the 0.5 is to get to the center of the detector
+			RTemp = (m_Sinogram->R0 + (((DATA_TYPE)j) + 0.5) *(m_Sinogram->delta_r));//the 0.5 is to get to the center of the detector
 
 			LeftEndOfBeam = RTemp - (BEAM_WIDTH/2);//Consider pre storing the divide by 2
 
@@ -2017,23 +2049,23 @@ void* SOCEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t s
 				for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++)
 				{
 					if(sliceidx == slice_index_min)
-						ProfileThickness = (((sliceidx+1)*Sinogram->delta_t + Sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
+						ProfileThickness = (((sliceidx+1)*m_Sinogram->delta_t + m_Sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
 					else
 					{
 						if (sliceidx == slice_index_max)
 						{
-							ProfileThickness = (tmax - ((sliceidx)*Sinogram->delta_t + Sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t
+							ProfileThickness = (tmax - ((sliceidx)*m_Sinogram->delta_t + m_Sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t
 						}
 						else
 						{
-							ProfileThickness = Sinogram->delta_t;//Sinogram->delta_t;
+							ProfileThickness = m_Sinogram->delta_t;//Sinogram->delta_t;
 						}
 
 					}
 					if(ProfileThickness > 0)
 					{
 
-						FinalIndex = BaseIndex + (int32_t)j + (int32_t)sliceidx * Sinogram->N_r;
+						FinalIndex = BaseIndex + (int32_t)j + (int32_t)sliceidx * m_Sinogram->N_r;
 						Temp->values[count] = Integral*ProfileThickness;
 						Temp->index[count] = FinalIndex;//can instead store a triple (row,col,slice) for the sinogram
 						//printf("Done\n");
@@ -2071,51 +2103,51 @@ void* SOCEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t s
 
 #ifdef DISTANCE_DRIVEN
 
-	for(i=0;i<Sinogram->N_theta;i++)
+	for(i=0;i<m_Sinogram->N_theta;i++)
 	{
 
 		r = x*cosine[i] - z*sine[i];
 		t = y;
 
-		tmin = (t - Geometry->delta_xy/2) > -Geometry->LengthY/2 ? t-Geometry->delta_xy/2 : -Geometry->LengthY/2;
-		tmax = (t + Geometry->delta_xy/2) <= Geometry->LengthY/2 ? t + Geometry->delta_xy/2 : Geometry->LengthY/2;
+		tmin = (t - m_Geometry->delta_xy/2) > -m_Geometry->LengthY/2 ? t-m_Geometry->delta_xy/2 : -m_Geometry->LengthY/2;
+		tmax = (t + m_Geometry->delta_xy/2) <= m_Geometry->LengthY/2 ? t + m_Geometry->delta_xy/2 : m_Geometry->LengthY/2;
 
 
-		if(Sinogram->angles[i]*(180/PI) >= -45 && Sinogram->angles[i]*(180/PI) <= 45)
+		if(m_Sinogram->angles[i]*(180/PI) >= -45 && m_Sinogram->angles[i]*(180/PI) <= 45)
 		{
-			rmin = r - (Geometry->delta_xz/2)*(cosine[i]);
-			rmax = r + (Geometry->delta_xz/2)*(cosine[i]);
+			rmin = r - (m_Geometry->delta_xz/2)*(cosine[i]);
+			rmax = r + (m_Geometry->delta_xz/2)*(cosine[i]);
 		}
 
 		else
 		{
-			rmin = r - (Geometry->delta_xz/2)*fabs(sine[i]);
-			rmax = r + (Geometry->delta_xz/2)*fabs(sine[i]);
+			rmin = r - (m_Geometry->delta_xz/2)*fabs(sine[i]);
+			rmax = r + (m_Geometry->delta_xz/2)*fabs(sine[i]);
 		}
 
 
-		if(rmax < Sinogram->R0 || rmin > Sinogram->R0 + Sinogram->N_r*Sinogram->delta_r)
+		if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->R0 + m_Sinogram->N_r*m_Sinogram->delta_r)
 			continue;
 
-		index_min = floor(((rmin-Sinogram->R0)/Sinogram->delta_r));
-		index_max = floor((rmax-Sinogram->R0)/Sinogram->delta_r);
+		index_min = floor(((rmin-m_Sinogram->R0)/m_Sinogram->delta_r));
+		index_max = floor((rmax-m_Sinogram->R0)/m_Sinogram->delta_r);
 
-		slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
-		slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
+		slice_index_min = floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t);
+		slice_index_max = floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t);
 
 		if(slice_index_min < 0)
 			slice_index_min = 0;
-		if(slice_index_max >= Sinogram->N_t)
-			slice_index_max = Sinogram->N_t -1;
+		if(slice_index_max >= m_Sinogram->N_t)
+			slice_index_max = m_Sinogram->N_t -1;
 
 
-		if(index_max >= Sinogram->N_r)
-			index_max = Sinogram->N_r-1;
+		if(index_max >= m_Sinogram->N_r)
+			index_max = m_Sinogram->N_r-1;
 
 		if(index_min < 0)
 			index_min = 0;
 
-		BaseIndex = i*Sinogram->N_r*Sinogram->N_t;
+		BaseIndex = i*m_Sinogram->N_r*m_Sinogram->N_t;
 
 		// if(row == 63 && col == 63)
 		//    printf("%d %d\n",index_min,index_max);
@@ -2127,8 +2159,8 @@ void* SOCEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t s
 
 		for(j = index_min;j <= index_max; j++)//Check
 		{
-			d1  = ((DATA_TYPE)j)*Sinogram->delta_r + Sinogram->R0;
-			d2 =  d1 + Sinogram->delta_r;
+			d1  = ((DATA_TYPE)j)*m_Sinogram->delta_r + m_Sinogram->R0;
+			d2 =  d1 + m_Sinogram->delta_r;
 
 			if(rmax < d1)
 			{
@@ -2138,15 +2170,15 @@ void* SOCEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t s
 			{
 				if(rmin > d1 && rmin < d2 && rmax > d2)
 				{
-					Integral = (d2 - rmin)/Sinogram->delta_r;
+					Integral = (d2 - rmin)/m_Sinogram->delta_r;
 				}
 				else
 				{
 					if(rmin >= d1 && rmin <= d2 && rmax >= d1 && rmax <= d2)
-						Integral= (rmax - rmin)/Sinogram->delta_r;
+						Integral= (rmax - rmin)/m_Sinogram->delta_r;
 					else
 						if(rmax > d1 && rmax < d2 && rmin < d1)
-							Integral = (rmax - d1)/Sinogram->delta_r;
+							Integral = (rmax - d1)/m_Sinogram->delta_r;
 						else
 							if( rmin < d1 && rmax > d2)
 								Integral = 1;
@@ -2162,20 +2194,20 @@ void* SOCEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t s
 				for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++)
 				{
 					if(sliceidx == slice_index_min)
-						ProfileThickness = (((sliceidx+1)*Sinogram->delta_t + Sinogram->T0) - tmin)*Sinogram->delta_t;
+						ProfileThickness = (((sliceidx+1)*m_Sinogram->delta_t + m_Sinogram->T0) - tmin)*m_Sinogram->delta_t;
 					else {
 						if (sliceidx == slice_index_max)
 						{
-							ProfileThickness = (tmax - ((sliceidx)*Sinogram->delta_t + Sinogram->T0))*Sinogram->delta_t;
+							ProfileThickness = (tmax - ((sliceidx)*m_Sinogram->delta_t + m_Sinogram->T0))*m_Sinogram->delta_t;
 						}
 						else {
-							ProfileThickness = Sinogram->delta_t;
+							ProfileThickness = m_Sinogram->delta_t;
 						}
 
 					}
 					if (ProfileThickness > 0)
 					{
-						FinalIndex = BaseIndex + (uint32_t)j + (int32_t)sliceidx * Sinogram->N_r;
+						FinalIndex = BaseIndex + (uint32_t)j + (int32_t)sliceidx * m_Sinogram->N_r;
 
 						Temp->values[count] = Integral*ProfileThickness;
 						Temp->index[count] = FinalIndex;
@@ -2229,20 +2261,20 @@ void* SOCEngine::CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t s
 
 /* Initializes the global variables cosine and sine to speed up computation
  */
-void SOCEngine::CE_CalculateSinCos(Sino* Sinogram)
+void SOCEngine::CE_CalculateSinCos()
 {
 	uint16_t i;
-	cosine=(DATA_TYPE*)get_spc(Sinogram->N_theta,sizeof(DATA_TYPE));
-	sine=(DATA_TYPE*)get_spc(Sinogram->N_theta,sizeof(DATA_TYPE));
-	for(i=0;i<Sinogram->N_theta;i++)
+	cosine=(DATA_TYPE*)get_spc(m_Sinogram->N_theta,sizeof(DATA_TYPE));
+	sine=(DATA_TYPE*)get_spc(m_Sinogram->N_theta,sizeof(DATA_TYPE));
+	for(i=0;i<m_Sinogram->N_theta;i++)
 	{
-		cosine[i]=cos(Sinogram->angles[i]);
-		sine[i]=sin(Sinogram->angles[i]);
+		cosine[i]=cos(m_Sinogram->angles[i]);
+		sine[i]=sin(m_Sinogram->angles[i]);
 
 	}
 }
 
-void SOCEngine::CE_InitializeBeamProfile(Sino* Sinogram)
+void SOCEngine::CE_InitializeBeamProfile()
 {
 	uint16_t i;
 	DATA_TYPE sum=0,W;
@@ -2261,7 +2293,7 @@ void SOCEngine::CE_InitializeBeamProfile(Sino* Sinogram)
 	{
 
 		BeamProfile[i]/=sum;
-		BeamProfile[i]/=Sinogram->delta_t;
+		BeamProfile[i]/=m_Sinogram->delta_t;
 		// printf("%lf\n",BeamProfile[i]);
 	}
 
@@ -2302,137 +2334,137 @@ double SOCEngine::CE_DerivOfCostFunc(double u)
 
 
 
-DATA_TYPE SOCEngine::CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,Sino* Sinogram,Geom* Geometry)
+DATA_TYPE SOCEngine::CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 {
 	DATA_TYPE cost=0,temp=0,delta;
 	int16_t i,j,k,p,q,r;
 
 //Data Mismatch Error
-	for (i = 0; i < Sinogram->N_theta; i++)
-		for (j = 0; j < Sinogram->N_r; j++)
-			for( k = 0; k < Sinogram->N_t; k++)
+	for (i = 0; i < m_Sinogram->N_theta; i++)
+		for (j = 0; j < m_Sinogram->N_r; j++)
+			for( k = 0; k < m_Sinogram->N_t; k++)
 			{
 				cost+=(ErrorSino[i][j][k] * ErrorSino[i][j][k] * Weight[i][j][k]);
-				
+
 			}
 
-	cost/=2; 
+	cost/=2;
 
 	printf("Data mismatch term =%lf\n",cost);
-	
+
 //Prior Model Error
 #ifndef QGGMRF
-	for (i = 0; i < Geometry->N_z; i++)
-		for (j = 0; j < Geometry->N_x; j++)
-			for(k = 0; k < Geometry->N_y; k++)
+	for (i = 0; i < m_Geometry->N_z; i++)
+		for (j = 0; j < m_Geometry->N_x; j++)
+			for(k = 0; k < m_Geometry->N_y; k++)
 			{
 
-				if(k+1 <  Geometry->N_y)
-					temp += FILTER[2][1][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j][k+1]),MRF_P);
+				if(k+1 <  m_Geometry->N_y)
+					temp += FILTER[2][1][1]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j][k+1]),MRF_P);
 
 
-				if(j+1 < Geometry->N_x)
+				if(j+1 < m_Geometry->N_x)
 				{
 					if(k-1 >= 0)
-						temp += FILTER[0][1][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k-1]),MRF_P);
+						temp += FILTER[0][1][2]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j+1][k-1]),MRF_P);
 
 
-					temp += FILTER[1][1][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k]),MRF_P);
+					temp += FILTER[1][1][2]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j+1][k]),MRF_P);
 
 
-					if(k+1 < Geometry->N_y)
-						temp += FILTER[2][1][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k+1]),MRF_P);
+					if(k+1 < m_Geometry->N_y)
+						temp += FILTER[2][1][2]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j+1][k+1]),MRF_P);
 
 				}
 
-				if(i+1 < Geometry->N_z)
+				if(i+1 < m_Geometry->N_z)
 				{
 
 					if(j-1 >= 0)
-						temp += FILTER[1][2][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k]),MRF_P);
+						temp += FILTER[1][2][0]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j-1][k]),MRF_P);
 
-					temp += FILTER[1][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k]),MRF_P);
+					temp += FILTER[1][2][1]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j][k]),MRF_P);
 
-					if(j+1 < Geometry->N_x)
-						temp += FILTER[1][2][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k]),MRF_P);
+					if(j+1 < m_Geometry->N_x)
+						temp += FILTER[1][2][2]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j+1][k]),MRF_P);
 
 
 					if(j-1 >= 0)
 					{
 						if(k-1 >= 0)
-							temp += FILTER[0][2][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k-1]),MRF_P);
+							temp += FILTER[0][2][0]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j-1][k-1]),MRF_P);
 
-						if(k+1 < Geometry->N_y)
-							temp += FILTER[2][2][0]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k+1]),MRF_P);
+						if(k+1 < m_Geometry->N_y)
+							temp += FILTER[2][2][0]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j-1][k+1]),MRF_P);
 
 					}
 
 					if(k-1 >= 0)
-						temp += FILTER[0][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k-1]),MRF_P);
+						temp += FILTER[0][2][1]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j][k-1]),MRF_P);
 
-					if(j+1 < Geometry->N_x)
+					if(j+1 < m_Geometry->N_x)
 					{
 						if(k-1 >= 0)
-							temp += FILTER[0][2][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k-1]),MRF_P);
+							temp += FILTER[0][2][2]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j+1][k-1]),MRF_P);
 
-						if(k+1 < Geometry->N_y)
-							temp+= FILTER[2][2][2]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k+1]),MRF_P);
+						if(k+1 < m_Geometry->N_y)
+							temp+= FILTER[2][2][2]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j+1][k+1]),MRF_P);
 					}
 
-					if(k+1 < Geometry->N_y)
-						temp+= FILTER[2][2][1]*pow(fabs(Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k+1]),MRF_P);
+					if(k+1 < m_Geometry->N_y)
+						temp+= FILTER[2][2][1]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j][k+1]),MRF_P);
 				}
 			}
 		cost+=(temp/(MRF_P*SIGMA_X_P));
 #else
-	for (i = 0; i < Geometry->N_z; i++)
-		for (j = 0; j < Geometry->N_x; j++)
-			for(k = 0; k < Geometry->N_y; k++)
+	for (i = 0; i < m_Geometry->N_z; i++)
+		for (j = 0; j < m_Geometry->N_x; j++)
+			for(k = 0; k < m_Geometry->N_y; k++)
 			{
 
-				if(k+1 <  Geometry->N_y)
+				if(k+1 <  m_Geometry->N_y)
 				{
-					delta=Geometry->Object[i][j][k]-Geometry->Object[i][j][k+1];
+					delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j][k+1];
 					temp += FILTER[2][1][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 				}
 
 
 
-				if(j+1 < Geometry->N_x)
+				if(j+1 < m_Geometry->N_x)
 				{
 					if(k-1 >= 0)
 					{
-						delta=Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k-1];
+						delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j+1][k-1];
 						temp += FILTER[0][1][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 					}
 
-					delta=Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k];
+					delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j+1][k];
 					temp += FILTER[1][1][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 
 
-					if(k+1 < Geometry->N_y)
+					if(k+1 < m_Geometry->N_y)
 					{
-						delta=Geometry->Object[i][j][k]-Geometry->Object[i][j+1][k+1];
+						delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j+1][k+1];
 						temp += FILTER[2][1][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 					}
 
 				}
 
-				if(i+1 < Geometry->N_z)
+				if(i+1 < m_Geometry->N_z)
 				{
 
 					if(j-1 >= 0)
 					{
-						delta = Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k];
+						delta = m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j-1][k];
 						temp += FILTER[1][2][0]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 					}
 
-					delta=Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k];
+					delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j][k];
 					temp += FILTER[1][2][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 
-					if(j+1 < Geometry->N_x)
+					if(j+1 < m_Geometry->N_x)
 					{
-						delta=Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k];
+						delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j+1][k];
 						temp += FILTER[1][2][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 					}
 
@@ -2441,13 +2473,13 @@ DATA_TYPE SOCEngine::CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,S
 					{
 						if(k-1 >= 0)
 						{
-							delta=Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k-1];
+							delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j-1][k-1];
 							temp += FILTER[0][2][0]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 						}
 
-						if(k+1 < Geometry->N_y)
+						if(k+1 < m_Geometry->N_y)
 						{
-							delta=Geometry->Object[i][j][k]-Geometry->Object[i+1][j-1][k+1];
+							delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j-1][k+1];
 							temp += FILTER[2][2][0]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 						}
 
@@ -2455,28 +2487,28 @@ DATA_TYPE SOCEngine::CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,S
 
 					if(k-1 >= 0)
 					{
-						delta = Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k-1];
+						delta = m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j][k-1];
 						temp += FILTER[0][2][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 					}
 
-					if(j+1 < Geometry->N_x)
+					if(j+1 < m_Geometry->N_x)
 					{
 						if(k-1 >= 0)
 						{
-							delta = Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k-1];
+							delta = m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j+1][k-1];
 							temp += FILTER[0][2][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 						}
 
-						if(k+1 < Geometry->N_y)
+						if(k+1 < m_Geometry->N_y)
 						{
-							delta = Geometry->Object[i][j][k]-Geometry->Object[i+1][j+1][k+1];
+							delta = m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j+1][k+1];
 							temp+= FILTER[2][2][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 						}
 					}
 
-					if(k+1 < Geometry->N_y)
+					if(k+1 < m_Geometry->N_y)
 					{
-						delta = Geometry->Object[i][j][k]-Geometry->Object[i+1][j][k+1];
+						delta = m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j][k+1];
 						temp+= FILTER[2][2][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 					}
 				}
@@ -2490,23 +2522,23 @@ DATA_TYPE SOCEngine::CE_ComputeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight,S
 //Noise Error
 #ifdef NOISE_MODEL
 	temp=0;
-	for(i=0;i< Sinogram->N_theta;i++)
+	for(i=0;i< m_Sinogram->N_theta;i++)
 		if(Weight[i][0][0] != 0)
 		temp += log(2*M_PI*(1.0/Weight[i][0][0]));//2*pi*sigma_k^{2}
 
-	temp*=((Sinogram->N_r*Sinogram->N_t)/2);
+	temp*=((m_Sinogram->N_r*m_Sinogram->N_t)/2);
 
 	cost+=temp;
 #endif//noise model
 	return cost;
 }
 
-void* SOCEngine::CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometry,DATA_TYPE** VoxelProfile)
+void* SOCEngine::CE_DetectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelProfile)
 {
 
   FILE* Fp = NULL;
   int err = 0;
-  MAKE_OUTPUT_FILE(Fp, err, ScaleOffsetCorrection::OutputDirectory, ScaleOffsetCorrection::DetectorResponseFile)
+  MAKE_OUTPUT_FILE(Fp, err, m_CmdInputs->outputDir, ScaleOffsetCorrection::DetectorResponseFile)
   if (err = 1)
   {
     std::cout << "Error creating output file for Detector Response." << std::endl;
@@ -2522,19 +2554,19 @@ void* SOCEngine::CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Ge
 	DATA_TYPE StepSize = BEAM_WIDTH/BEAM_RESOLUTION;
 	int16_t i,j,k,p,l,NumOfDisplacements,ProfileIndex;
 	//NumOfDisplacements=32;
-	H = (DATA_TYPE***)get_3D(1, Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//change from 1 to DETECTOR_RESPONSE_BINS
-	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_xz);
+	H = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//change from 1 to DETECTOR_RESPONSE_BINS
+	TempConst=(PROFILE_RESOLUTION)/(2*m_Geometry->delta_xz);
 
-	for(k = 0 ; k < Sinogram->N_theta; k++)
+	for(k = 0 ; k < m_Sinogram->N_theta; k++)
 	{
 		for (i = 0; i < DETECTOR_RESPONSE_BINS; i++) //displacement along r
 		{
 			ProfileCenterR = i*OffsetR;
-			rmin = ProfileCenterR - Geometry->delta_xz;
+			rmin = ProfileCenterR - m_Geometry->delta_xz;
 			for (j = 0 ; j < 1; j++)//displacement along t ;change to DETECTOR_RESPONSE_BINS later
 			{
 				ProfileCenterT = j*OffsetT;
-				tmin = ProfileCenterT - Geometry->delta_xy/2;
+				tmin = ProfileCenterT - m_Geometry->delta_xy/2;
 				sum = 0;
 				for (p=0; p < BEAM_RESOLUTION; p++)
 				{
@@ -2563,7 +2595,7 @@ void* SOCEngine::CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Ge
 		}
 	}
 	printf("Detector Done\n");
-	fwrite(&H[0][0][0], sizeof(DATA_TYPE),Sinogram->N_theta*DETECTOR_RESPONSE_BINS, Fp);
+	fwrite(&H[0][0][0], sizeof(DATA_TYPE),m_Sinogram->N_theta*DETECTOR_RESPONSE_BINS, Fp);
 	fclose(Fp);
 	return H;
 }
@@ -2735,7 +2767,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col,Sino* Sinogram,
 }
 */
 
-void* SOCEngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,DATA_TYPE*** DetectorResponse)
+void* SOCEngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, DATA_TYPE*** DetectorResponse)
 {
 	int32_t i,j,k,sliceidx;
 	DATA_TYPE x,z,y;
@@ -2761,64 +2793,64 @@ void* SOCEngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uin
 	AMatrixCol* Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
 	AMatrixCol* Temp = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));//This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
 
-	x = Geometry->x0 + ((DATA_TYPE)col+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-	z = Geometry->z0 + ((DATA_TYPE)row+0.5)*Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-	y = Geometry->y0 + ((DATA_TYPE)slice + 0.5)*Geometry->delta_xy;
+	x = m_Geometry->x0 + ((DATA_TYPE)col+0.5)*m_Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+	z = m_Geometry->z0 + ((DATA_TYPE)row+0.5)*m_Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+	y = m_Geometry->y0 + ((DATA_TYPE)slice + 0.5)*m_Geometry->delta_xy;
 
-	TempConst=(PROFILE_RESOLUTION)/(2*Geometry->delta_xz);
+	TempConst=(PROFILE_RESOLUTION)/(2*m_Geometry->delta_xz);
 
 	//alternately over estimate the maximum size require for a single AMatrix column
-	AvgNumXElements = ceil(3*Geometry->delta_xz/Sinogram->delta_r);
-	AvgNumYElements = ceil(3*Geometry->delta_xy/Sinogram->delta_t);
-	MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*Sinogram->N_theta;
+	AvgNumXElements = ceil(3*m_Geometry->delta_xz/m_Sinogram->delta_r);
+	AvgNumYElements = ceil(3*m_Geometry->delta_xy/m_Sinogram->delta_t);
+	MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*m_Sinogram->N_theta;
 
 	Temp->values = (DATA_TYPE*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(DATA_TYPE));
 	Temp->index  = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(uint32_t));
 
 
 #ifdef AREA_WEIGHTED
-	for(i=0;i<Sinogram->N_theta;i++)
+	for(i=0;i<m_Sinogram->N_theta;i++)
 	{
 
 		r = x*cosine[i] - z*sine[i];
 		t = y;
 
-		rmin = r - Geometry->delta_xz;
-		rmax = r + Geometry->delta_xz;
+		rmin = r - m_Geometry->delta_xz;
+		rmax = r + m_Geometry->delta_xz;
 
-		tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-		tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax ? t + Geometry->delta_xy/2 : Sinogram->TMax;
+		tmin = (t - m_Geometry->delta_xy/2) > m_Sinogram->T0 ? t-m_Geometry->delta_xy/2 : m_Sinogram->T0;
+		tmax = (t + m_Geometry->delta_xy/2) <= m_Sinogram->TMax ? t + m_Geometry->delta_xy/2 : m_Sinogram->TMax;
 
-		if(rmax < Sinogram->R0 || rmin > Sinogram->RMax)
+		if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax)
 			continue;
 
 
 
-		index_min = floor(((rmin - Sinogram->R0)/Sinogram->delta_r));
-		index_max = floor((rmax - Sinogram->R0)/Sinogram->delta_r);
+		index_min = floor(((rmin - m_Sinogram->R0)/m_Sinogram->delta_r));
+		index_max = floor((rmax - m_Sinogram->R0)/m_Sinogram->delta_r);
 
 
-		if(index_max >= Sinogram->N_r)
-			index_max = Sinogram->N_r - 1;
+		if(index_max >= m_Sinogram->N_r)
+			index_max = m_Sinogram->N_r - 1;
 
 		if(index_min < 0)
 			index_min = 0;
 
-		slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
-		slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
+		slice_index_min = floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t);
+		slice_index_max = floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t);
 
 		if(slice_index_min < 0)
 			slice_index_min = 0;
-		if(slice_index_max >= Sinogram->N_t)
-			slice_index_max = Sinogram->N_t -1;
+		if(slice_index_max >= m_Sinogram->N_t)
+			slice_index_max = m_Sinogram->N_t -1;
 
-		BaseIndex = i*Sinogram->N_r;//*Sinogram->N_t;
+		BaseIndex = i*m_Sinogram->N_r;//*Sinogram->N_t;
 
 		for(j = index_min;j <= index_max; j++)//Check
 		{
 
 			//Accounting for Beam width
-			R_Center = (Sinogram->R0 + (((DATA_TYPE)j) + 0.5) *(Sinogram->delta_r));//the 0.5 is to get to the center of the detector
+			R_Center = (m_Sinogram->R0 + (((DATA_TYPE)j) + 0.5) *(m_Sinogram->delta_r));//the 0.5 is to get to the center of the detector
 
 			//Find the difference between the center of detector and center of projection and compute the Index to look up into
 			delta_r = fabs(r - R_Center);
@@ -2830,7 +2862,7 @@ void* SOCEngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uin
 
 		//		for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++)
 		//		{
-					T_Center = (Sinogram->T0 + (((DATA_TYPE)sliceidx) + 0.5) *(Sinogram->delta_t));
+					T_Center = (m_Sinogram->T0 + (((DATA_TYPE)sliceidx) + 0.5) *(m_Sinogram->delta_t));
 					delta_t = fabs(t - T_Center);
 					index_delta_t = 0;//floor(delta_t/OffsetT);
 
@@ -2851,11 +2883,11 @@ void* SOCEngine::CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uin
 						//	f2 = (w2/OffsetR)*DetectorResponse[index_delta_t+1 < DETECTOR_RESPONSE_BINS ?index_delta_t+1 : DETECTOR_RESPONSE_BINS-1][i][index_delta_r] + (w1/OffsetR)*DetectorResponse[index_delta_t+1 < DETECTOR_RESPONSE_BINS? index_delta_t+1:DETECTOR_RESPONSE_BINS][i][index_delta_r+1 < DETECTOR_RESPONSE_BINS? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
 
 						if(sliceidx == slice_index_min)
-							ContributionAlongT = (sliceidx + 1)*Sinogram->delta_t - tmin;
+							ContributionAlongT = (sliceidx + 1)*m_Sinogram->delta_t - tmin;
 						else if(sliceidx == slice_index_max)
-							ContributionAlongT = tmax - (sliceidx)*Sinogram->delta_t;
+							ContributionAlongT = tmax - (sliceidx)*m_Sinogram->delta_t;
 						else {
-							ContributionAlongT = Sinogram->delta_t;
+							ContributionAlongT = m_Sinogram->delta_t;
 						}
 
 

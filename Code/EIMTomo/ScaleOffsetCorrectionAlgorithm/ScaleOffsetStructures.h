@@ -3,6 +3,7 @@
 #ifndef SCALEOFFSETSTRUCTURES_H_
 #define SCALEOFFSETSTRUCTURES_H_
 
+#include <string>
 
 typedef double DATA_TYPE;
 
@@ -71,17 +72,19 @@ typedef double DATA_TYPE;
 
   typedef struct
   {
-    char* ParamFile;
-    char* SinoFile;
-    char* InitialRecon;
-    char* OutputFile;
-    char* InitialParameters;//a file containing initial gains and offsets
+    std::string ParamFile;
+    std::string SinoFile;
+    std::string InitialRecon;
+    std::string OutputFile;
+    std::string InitialParameters;//a file containing initial gains and offsets
+    std::string outputDir; // Output directory
+
     //This is read from the paramter file
     int16_t NumIter;
     uint16_t NumOuterIter;
     DATA_TYPE SigmaX;
     DATA_TYPE p;
-  } CommandLineInputs;
+  } ScaleOffsetCorrectionInputs;
 
   //Structure to store a single column(A_i) of the A-matrix
   typedef struct

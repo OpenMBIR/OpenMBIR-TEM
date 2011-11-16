@@ -32,7 +32,7 @@ int main(int argc,char** argv)
 {
 	int16_t error,i,j,k;
 	FILE* Fp;
-	CommandLineInputs ParsedInput;
+	ScaleOffsetCorrectionInputs ParsedInput;
 	Sino Sinogram;
 	Geom Geometry;
 	double *buffer=(double*)get_spc(1,sizeof(double));
