@@ -140,15 +140,18 @@ if (MSVC)
  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
+# Add the MXA as a library project
 add_subdirectory( ${PROJECT_CODE_DIR}/MXA ${PROJECT_BINARY_DIR}/MXA)
 
-
+# --------------------------------------------------------------------
+# Macro that takes a subdirectory and creates a cmake option variable
+# which allows developers to turn off those sub projects if needed.
+# --------------------------------------------------------------------
 macro(Add_Algorithm name)
-
-option( EIMTomo_BUILD_${name} "" ON )
-if ( ${EIMTomo_BUILD_${name}} )
-    add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/${name})
-endif()
+    option( EIMTomo_BUILD_${name} "" ON )
+    if ( ${EIMTomo_BUILD_${name}} )
+        add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/${name})
+    endif()
 endmacro()
 # Add our executables
 
