@@ -47,7 +47,7 @@ char* NHICDCliParser::copyFilenameToNewCharBuffer(const std::string &fname)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int NHICDCliParser::parseCLIArguments(int argc,char *argv[], ScaleOffsetCorrectionInputs* Input)
+int NHICDCliParser::parseCLIArguments(int argc,char *argv[], TomoInputs* Input)
 {
   if ( NULL == Input)
   {

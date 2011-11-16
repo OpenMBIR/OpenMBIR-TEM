@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 {
   int16_t error, i, j, k;
   FILE* Fp = NULL;
-  ScaleOffsetCorrectionInputs ParsedInput;
+  TomoInputs ParsedInput;
   Sino Sinogram;
   Geom Geometry;
   DATA_TYPE* buffer = (DATA_TYPE*)get_spc(1, sizeof(DATA_TYPE));

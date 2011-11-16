@@ -303,7 +303,7 @@ class DerivOfCostFunc
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-SOCEngine::SOCEngine(Sino* sinogram, Geom* geometry, ScaleOffsetCorrectionInputs* inputs) :
+SOCEngine::SOCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs) :
     CE_Cancel(false),
 m_CmdInputs(inputs),
 m_Sinogram(sinogram),

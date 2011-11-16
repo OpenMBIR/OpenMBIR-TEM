@@ -56,7 +56,7 @@ static char CE_Cancel = 0;
 //
 // -----------------------------------------------------------------------------
 
-int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,ScaleOffsetCorrectionInputs* CmdInputs)
+int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,TomoInputs* CmdInputs)
 {
 
 	uint8_t err = 0;

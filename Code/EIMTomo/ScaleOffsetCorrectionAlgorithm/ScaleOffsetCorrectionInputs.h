@@ -14,10 +14,10 @@ class ScaleOffsetCorrectionParser
     ScaleOffsetCorrectionParser();
     virtual ~ScaleOffsetCorrectionParser();
 
-    int parseArguments(int argc, char **argv, ScaleOffsetCorrectionInputs* Input);
-    void readParameterFile(FILE *Fp,ScaleOffsetCorrectionInputs* ParsedInput,Sino* Sinogram,Geom* Geometry);
-    void initializeSinoParameters(Sino* Sinogram,ScaleOffsetCorrectionInputs* ParsedInput);
-    void initializeGeomParameters(Sino* Sinogram,Geom* Geometry,ScaleOffsetCorrectionInputs* ParsedInput);
+    int parseArguments(int argc, char **argv, TomoInputs* Input);
+    void readParameterFile(FILE *Fp,TomoInputs* ParsedInput,Sino* Sinogram,Geom* Geometry);
+    void initializeSinoParameters(Sino* Sinogram,TomoInputs* ParsedInput);
+    void initializeGeomParameters(Sino* Sinogram,Geom* Geometry,TomoInputs* ParsedInput);
     DATA_TYPE absMaxArray(DATA_TYPE* Array, uint16_t NumElts);
 
     /**

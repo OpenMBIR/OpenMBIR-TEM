@@ -24,7 +24,7 @@ class SOCEngine
 {
 
   public:
-    SOCEngine(Sino* sinogram, Geom* geometry, ScaleOffsetCorrectionInputs* inputs);
+    SOCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs);
     virtual ~SOCEngine();
 
 //    void setInputs(CommandLineInputs* inputs);
@@ -158,7 +158,7 @@ class SOCEngine
     uint64_t startm;
     uint64_t stopm;
 
-    ScaleOffsetCorrectionInputs* m_CmdInputs;
+    TomoInputs* m_CmdInputs;
     Sino* m_Sinogram;
     Geom* m_Geometry;
 

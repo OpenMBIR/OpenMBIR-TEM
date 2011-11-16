@@ -28,7 +28,7 @@ class NHICDCliParser
      * @param inputs
      * @return
      */
-    int parseCLIArguments(int argc,char *argv[], ScaleOffsetCorrectionInputs* inputs);
+    int parseCLIArguments(int argc,char *argv[], TomoInputs* inputs);
 
     /**
      * @brief Copys the std::string contents into a newly malloc'ed char array which

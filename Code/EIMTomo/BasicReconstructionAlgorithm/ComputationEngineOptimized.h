@@ -50,7 +50,7 @@ extern "C" {
 	void CE_InitializeBeamProfile(Sino*);
 	void CE_MinMax(double*,double*);
 	void* CE_CalculateVoxelProfile(Sino*,Geom*);
-	int CE_MAPICDReconstruct(Sino*,Geom*,ScaleOffsetCorrectionInputs*);
+	int CE_MAPICDReconstruct(Sino*,Geom*,TomoInputs*);
 	void* CE_CalculateAMatrixColumn(uint16_t ,uint16_t , uint16_t ,Sino* ,Geom* ,double**);
 	double CE_DerivOfCostFunc(double);
 	double CE_ComputeCost(double***  ,double***  ,Sino* ,Geom* );

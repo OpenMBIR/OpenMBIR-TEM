@@ -43,7 +43,7 @@ char* JointEstimationCLIParser::copyFilenameToNewCharBuffer(const std::string &f
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int JointEstimationCLIParser::parseCLIArguments(int argc,char *argv[], ScaleOffsetCorrectionInputs* Input)
+int JointEstimationCLIParser::parseCLIArguments(int argc,char *argv[], TomoInputs* Input)
 {
   if ( NULL == Input)
   {

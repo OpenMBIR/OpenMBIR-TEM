@@ -14,7 +14,7 @@ extern char *optarg;
 extern "C" {
 #endif
 
-int parseArguments(int argc,char **argv,ScaleOffsetCorrectionInputs* Input)
+int parseArguments(int argc,char **argv,TomoInputs* Input)
 {
 	int i,error;
 	error=0;
@@ -36,7 +36,7 @@ int parseArguments(int argc,char **argv,ScaleOffsetCorrectionInputs* Input)
 	return error;
 }
 
-void readParameterFile(FILE *Fp,ScaleOffsetCorrectionInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
+void readParameterFile(FILE *Fp,TomoInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
 {
 	char temp[20];
 	int16_t i;
@@ -126,7 +126,7 @@ void readParameterFile(FILE *Fp,ScaleOffsetCorrectionInputs* ParsedInput,Sino* S
 
 }
 
-void initializeSinoParameters(Sino* Sinogram,ScaleOffsetCorrectionInputs* ParsedInput)
+void initializeSinoParameters(Sino* Sinogram,TomoInputs* ParsedInput)
 {
   int16_t i,j,k;
   FILE* Fp;
@@ -170,7 +170,7 @@ void initializeSinoParameters(Sino* Sinogram,ScaleOffsetCorrectionInputs* Parsed
 
 }
 
-void initializeGeomParameters(Sino* Sinogram,Geom* Geometry,ScaleOffsetCorrectionInputs* ParsedInput)
+void initializeGeomParameters(Sino* Sinogram,Geom* Geometry,TomoInputs* ParsedInput)
 {
   FILE* Fp;
   uint16_t i,j,k;
