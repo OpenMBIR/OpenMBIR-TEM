@@ -1,5 +1,5 @@
-#ifndef COMPUTATIONINPUTS_H_
-#define COMPUTATIONINPUTS_H_
+#ifndef _SCALEOFFSET_CORRECTION_PARSER_H_
+#define _SCALEOFFSET_CORRECTION_PARSER_H_
 
 #include <stdio.h>
 #include <string>
@@ -7,7 +7,13 @@
 
 
 
-
+/**
+ * @class ScaleOffsetCorrectionParser ScaleOffsetCorrectionParser.h ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionParser.h
+ * @brief
+ * @author
+ * @date Nov 16, 2011
+ * @version 1.0
+ */
 class ScaleOffsetCorrectionParser
 {
   public:

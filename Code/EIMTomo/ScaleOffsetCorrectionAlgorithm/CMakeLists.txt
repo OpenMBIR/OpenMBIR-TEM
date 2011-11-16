@@ -14,13 +14,13 @@ cmake_minimum_required(VERSION 2.8.3)
 
 set(ScaleOffsetCorrectionAlgorithm_HDRS
   ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionEngine.h
-  ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionInputs.h
+  ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionParser.h
   ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetStructures.h
   ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionConstants.h
 )
 set(ScaleOffsetCorrectionAlgorithm_SRCS
   ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionEngine.cpp
-  ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionInputs.cpp
+  ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionParser.cpp
   ${PROJECT_CODE_DIR}/EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionMain.cpp
 )
 
