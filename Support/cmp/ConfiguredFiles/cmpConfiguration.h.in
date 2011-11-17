@@ -68,6 +68,11 @@
 #cmakedefine CMP_HAVE_SYS_TIME_H @CMP_HAVE_SYS_TIME_H@
 #endif
 
+#ifndef CMP_HAVE_SYS_PARAM_H
+/* Define to 1 if you have the <sys/param.h> header file. */
+#cmakedefine CMP_HAVE_SYS_PARAM_H @CMP_HAVE_SYS_PARAM_H@
+#endif
+
 #ifndef CMP_HAVE_TIME_GETTIMEOFDAY
 /* Do we have the "gettimeofday" function */
 #cmakedefine CMP_HAVE_TIME_GETTIMEOFDAY @CMP_HAVE_TIME_GETTIMEOFDAY@

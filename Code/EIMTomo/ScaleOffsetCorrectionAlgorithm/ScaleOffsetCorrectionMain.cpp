@@ -1,9 +1,17 @@
+
+#include "EIMTomo/EIMTomoConfiguration.h"
+
+
 // C Includes
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-
+#ifdef CMP_HAVE_SYS_PARAM_H
+#include <sys/param.h>  // MAXPATHLEN definition
+#else
+#error sys/paramh is needed for this code and was not found on your system
+#endif
 // C++ includes
 #include <string>
 #include <iostream>
@@ -113,6 +121,12 @@ int main(int argc, char** argv)
            inputs.outputDir.c_str(),
            inputs.OutputFile.c_str());
 
+    char path1[MAXPATHLEN];  // This is a buffer for the text
+    ::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
+    getcwd(path1, MAXPATHLEN);
+    std::cout << "Current Working Directory: " << path1 << std::endl;
+
+
     // Make sure the output directory is created if it does not exist
     if(MXADir::exists(inputs.outputDir) == false)
     {
@@ -124,7 +138,9 @@ int main(int argc, char** argv)
       }
       std::cout << "Output Directory Created." << std::endl;
     }
-
+    ::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
+    getcwd(path1, MAXPATHLEN);
+    std::cout << "Current Working Directory: " << path1 << std::endl;
 
     error = soci.readParameterFile(inputs.ParamFile, &inputs, &sinogram, &geometry);
     if (error < 0)

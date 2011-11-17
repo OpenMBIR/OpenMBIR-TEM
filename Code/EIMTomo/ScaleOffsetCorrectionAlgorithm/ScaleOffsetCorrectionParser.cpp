@@ -169,8 +169,9 @@ int ScaleOffsetCorrectionParser::readParameterFile(const std::string &filepath,T
 	DATA_TYPE *MaskedViewAngles;
 	int32_t err = 0;
   //Read the paramters into the structures
+	errno = 0;
   Fp = fopen(inputs->ParamFile.c_str(), "r");
-  if(errno > 0)
+  if(NULL == Fp)
   {
     std::cout << "Error (" << errno << ") Opening Parameter File '" << inputs->ParamFile << std::endl;
     return -1;
