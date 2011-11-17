@@ -1613,6 +1613,8 @@ int SOCEngine::mapicdReconstruct()
 		cost_counter++;
 
 #endif
+		printf("Lagrange Multiplier = %lf\n",LagrangeMultiplier);
+		
 		printf("Offsets\n");
 		for(i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 		{
@@ -1623,6 +1625,7 @@ int SOCEngine::mapicdReconstruct()
 		{
 			printf("%lf\n",NuisanceParams.I_0[i_theta]);
 		}
+		
 
 #ifdef NOISE_MODEL
 		//Updating the Weights
