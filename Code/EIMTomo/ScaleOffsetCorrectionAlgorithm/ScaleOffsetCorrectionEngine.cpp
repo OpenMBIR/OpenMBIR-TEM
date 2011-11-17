@@ -433,7 +433,6 @@ int SOCEngine::mapicdReconstruct()
 
 	}
 
-
 	MAKE_OUTPUT_FILE(Fp4, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::FinalGainParametersFile);
 	if (fileError == 1)
 	{
@@ -445,7 +444,6 @@ int SOCEngine::mapicdReconstruct()
   {
 
   }
-
 
 #ifdef FORWARD_PROJECT_MODE
   MAKE_OUTPUT_FILE(Fp6, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::ForwardProjectedObjectFile);
@@ -1536,19 +1534,19 @@ int SOCEngine::mapicdReconstruct()
 #else
 		sum1=0;
 		sum2=0;
-		for(i_theta = 0;i_theta < Sinogram->N_theta; i_theta++)
+		for(i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)
 		{
 			sum1 +=(1.0/(Qk_cost[i_theta][0] - Qk_cost[i_theta][1]*d2[i_theta]));
 			sum2 +=((bk_cost[i_theta][0] - Qk_cost[i_theta][1]*d1[i_theta])/(Qk_cost[i_theta][0] - Qk_cost[i_theta][1]*d2[i_theta]));
 		}
-		LagrangeMultiplier= (-Sinogram->N_theta*Sinogram->TargetGain + sum2)/sum1;
-		for (i_theta =0; i_theta < Sinogram->N_theta; i_theta++)
+		LagrangeMultiplier= (-m_Sinogram->N_theta*m_Sinogram->TargetGain + sum2)/sum1;
+		for (i_theta =0; i_theta < m_Sinogram->N_theta; i_theta++)
 		{
-			
-			NuisanceParams.I_0[i_theta] = (-1*LagrangeMultiplier - Qk_cost[i_theta][1]*d1[i_theta] + bk_cost[i_theta][0])/(Qk_cost[i_theta][0] - Qk_cost[i_theta][1]*d2[i_theta]);		
+
+			NuisanceParams.I_0[i_theta] = (-1*LagrangeMultiplier - Qk_cost[i_theta][1]*d1[i_theta] + bk_cost[i_theta][0])/(Qk_cost[i_theta][0] - Qk_cost[i_theta][1]*d2[i_theta]);
 			NuisanceParams.mu[i_theta] = d1[i_theta] - d2[i_theta]*NuisanceParams.I_0[i_theta];//some function of I_0[i_theta]
 		}
-			
+
 #endif //Type of constraing Geometric or arithmetic
 
 	 //Re normalization
