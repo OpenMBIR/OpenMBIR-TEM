@@ -38,7 +38,7 @@
 #define BEAM_RESOLUTION 512
 #define AREA_WEIGHTED
 #define ROI //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
-#define STOPPING_THRESHOLD 0.009
+#define STOPPING_THRESHOLD 0.0045
 //#define SURROGATE_FUNCTION
 //#define QGGMRF
 //#define DISTANCE_DRIVEN
@@ -397,6 +397,7 @@ int SOCEngine::mapicdReconstruct()
 	DATA_TYPE center_r,center_t,delta_r,delta_t;
 	DATA_TYPE w3,w4;
 	DATA_TYPE checksum = 0,temp;
+	DATA_TYPE sum1,sum2;
 	DATA_TYPE* cost;
 	DATA_TYPE** VoxelProfile;
 	DATA_TYPE*** DetectorResponse;
@@ -1433,6 +1434,7 @@ int SOCEngine::mapicdReconstruct()
 
 		/********************************************************************************************/
 
+#ifdef GEOMETRIC_MEAN_CONSTRAINT
 		//Root the expression using the derived quadratic parameters. Need to choose min and max values
 		printf("Rooting the equation to solve for the optimal lagrange multiplier\n");
 
@@ -1531,6 +1533,23 @@ int SOCEngine::mapicdReconstruct()
 
 			NuisanceParams.mu[i_theta] = d1[i_theta] - d2[i_theta]*NuisanceParams.I_0[i_theta];//some function of I_0[i_theta]
 		}
+#else
+		sum1=0;
+		sum2=0;
+		for(i_theta = 0;i_theta < Sinogram->N_theta; i_theta++)
+		{
+			sum1 +=(1.0/(Qk_cost[i_theta][0] - Qk_cost[i_theta][1]*d2[i_theta]));
+			sum2 +=((bk_cost[i_theta][0] - Qk_cost[i_theta][1]*d1[i_theta])/(Qk_cost[i_theta][0] - Qk_cost[i_theta][1]*d2[i_theta]));
+		}
+		LagrangeMultiplier= (-Sinogram->N_theta*Sinogram->TargetGain + sum2)/sum1;
+		for (i_theta =0; i_theta < Sinogram->N_theta; i_theta++)
+		{
+			
+			NuisanceParams.I_0[i_theta] = (-1*LagrangeMultiplier - Qk_cost[i_theta][1]*d1[i_theta] + bk_cost[i_theta][0])/(Qk_cost[i_theta][0] - Qk_cost[i_theta][1]*d2[i_theta]);		
+			NuisanceParams.mu[i_theta] = d1[i_theta] - d2[i_theta]*NuisanceParams.I_0[i_theta];//some function of I_0[i_theta]
+		}
+			
+#endif //Type of constraing Geometric or arithmetic
 
 	 //Re normalization
 
