@@ -85,12 +85,12 @@ extern "C" {
 		double SigmaX;
 		double p;
 	};
-	typedef struct _command_line_inputs CommandLineInputs;
+	typedef struct _command_line_inputs TomoInputs;
 
-	int CI_ParseInput(int ,char**,CommandLineInputs*);
-	void CI_ReadParameterFile(FILE* ,CommandLineInputs* ,Sino* ,Geom*);
-	void CI_InitializeSinoParameters(Sino *,CommandLineInputs*);
-	void CI_InitializeGeomParameters(Sino* ,Geom* ,CommandLineInputs*);
+	int parseArguments(int ,char**,TomoInputs*);
+	void readParameterFile(FILE* ,TomoInputs* ,Sino* ,Geom*);
+	void initializeSinoParameters(Sino *,TomoInputs*);
+	void initializeGeomParameters(Sino* ,Geom* ,TomoInputs*);
 
 
 #ifdef __cplusplus

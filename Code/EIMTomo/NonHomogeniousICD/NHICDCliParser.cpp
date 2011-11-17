@@ -47,7 +47,7 @@ char* NHICDCliParser::copyFilenameToNewCharBuffer(const std::string &fname)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int NHICDCliParser::parseCLIArguments(int argc,char *argv[], CommandLineInputs* Input)
+int NHICDCliParser::parseCLIArguments(int argc,char *argv[], TomoInputs* Input)
 {
   if ( NULL == Input)
   {

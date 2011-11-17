@@ -22,10 +22,11 @@
 //#define RAW_PTR  data
 #endif
 
+#ifdef EIMTOMO_USE_BOOST
 //-- Boost Includes
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
-
+#endif
 
 #define SHARED_IS_NULL(ptr)\
   (  (ptr).get() == NULL )

@@ -15,7 +15,7 @@
 namespace ScaleOffsetCorrection
 {
 
-  const std::string OutputDirectory("ScaleOffsetCorrection_Output");
+//  const std::string OutputDirectory("ScaleOffsetCorrection_Output");
   const std::string DetectorResponseFile("DetectorResponse.bin");
   const std::string CostFunctionFile("CostFunc.bin");
   const std::string FinalGainParametersFile("FinalGainParameters.bin");
@@ -25,6 +25,11 @@ namespace ScaleOffsetCorrection
   const std::string VoxelProfileFile("VoxelProfile.bin");
   const std::string ForwardProjectedObjectFile("ForwardProjectedObject.bin");
   const std::string CostFunctionCoefficientsFile("CostFunctionCoefficients.bin");
+
+  namespace VTK
+  {
+    const std::string TomoVoxelScalarName("TomoVoxel");
+  }
 
 }
 

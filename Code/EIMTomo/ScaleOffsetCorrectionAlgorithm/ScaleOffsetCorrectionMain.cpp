@@ -1,4 +1,3 @@
-
 // C Includes
 #include <stdlib.h>
 #include <stdio.h>
@@ -9,16 +8,18 @@
 #include <string>
 #include <iostream>
 
-
 // EIMTomo Includes
 #include "EIMTomo/EIMTomo.h"
 #include "EIMTomo/common/EIMTime.h"
 #include "EIMTomo/common/allocate.h"
 
+#include "EIMTomo/IO/VTKFileWriters.hpp"
+#include "EIMTomo/IO/RawGeometryWriter.h"
+
 // MXA Includes
 #include "MXA/Utilities/MXADir.h"
 #include "ScaleOffsetCorrectionConstants.h"
-#include "ScaleOffsetCorrectionInputs.h"
+#include "ScaleOffsetCorrectionParser.h"
 #include "ScaleOffsetCorrectionEngine.h"
 
 #define START startm = EIMTOMO_getMilliSeconds();
@@ -40,71 +41,150 @@
     if (Fp == NULL) { std::cout << "Error Opening Output file " << filepath << std::endl; err = 1; }\
     }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+typedef struct
+{
+    int xpoints;
+    int ypoints;
+    int zpoints;
+    float resx;
+    float resy;
+    float resz;
+}  DimsAndRes;
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+
+class TomoOutputScalarWriter : public VtkScalarWriter
+{
+  public:
+  TomoOutputScalarWriter(Geom* r) : r(r) {}
+  virtual ~TomoOutputScalarWriter(){}
+
+  int writeScalars(FILE* f)
+  {
+    int err = 0;
+    std::string file;
+    if (m_WriteBinaryFiles == true) {
+      WRITE_VTK_TOMOVOXEL_BINARY(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName, double);
+    }
+    else
+    {
+ //     WRITE_VTK_TOMOVOXEL_ASCII(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName)
+    }
+    return err;
+  }
+
+  private:
+    Geom* r;
+    TomoOutputScalarWriter(const TomoOutputScalarWriter&); // Copy Constructor Not Implemented
+    void operator=(const TomoOutputScalarWriter&); // Operator '=' Not Implemented
+};
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 int main(int argc, char** argv)
 {
-  int16_t error, i, j, k;
-  FILE* Fp = NULL;
-  CommandLineInputs ParsedInput;
-  Sino Sinogram;
-  Geom Geometry;
-  DATA_TYPE* buffer = (DATA_TYPE*)get_spc(1, sizeof(DATA_TYPE));
+  int32_t error;
+  //FILE* Fp = NULL;
+  TomoInputs inputs;
+  Sino sinogram;
+  Geom geometry;
   uint64_t startm;
   uint64_t stopm;
 
   START;
 
   error = -1;
-  ScaleOffsetCorrectionInputs soci;
+  ScaleOffsetCorrectionParser soci;
 
-  error = soci.CI_ParseInput(argc, argv, &ParsedInput);
+  error = soci.parseArguments(argc, argv, &inputs);
   if(error != -1)
   {
-    printf("%s \n%s \n%s \n%s\n", ParsedInput.ParamFile, ParsedInput.SinoFile, ParsedInput.InitialRecon, ParsedInput.OutputFile);
-    //Read the paramters into the structures
-    Fp = fopen(ParsedInput.ParamFile, "r");
-    if (errno)
+    printf("***************\nParameter File: %s\nSinogram File: %s\nInitial Reconstruction File: %s\nOutput Directory: %s\nOutput File: %s\n***************\n",
+           inputs.ParamFile.c_str(),
+           inputs.SinoFile.c_str(),
+           inputs.InitialRecon.c_str(),
+           inputs.outputDir.c_str(),
+           inputs.OutputFile.c_str());
+
+    // Make sure the output directory is created if it does not exist
+    if(MXADir::exists(inputs.outputDir) == false)
     {
-    std::cout << "Error Opening File: " << errno << std::endl;
-    return EXIT_FAILURE;
+      std::cout << "Output Directory '" << inputs.outputDir << "' does NOT exist. Attempting to create it." << std::endl;
+      if(MXADir::mkdir(inputs.outputDir, true) == false)
+      {
+        std::cout << "Error creating the output directory '" << inputs.outputDir << "'\n   Exiting Now." << std::endl;
+        return EXIT_FAILURE;
+      }
+      std::cout << "Output Directory Created." << std::endl;
     }
 
-    soci.CI_ReadParameterFile(Fp, &ParsedInput, &Sinogram, &Geometry);
-    fclose(Fp);
+
+    error = soci.readParameterFile(inputs.ParamFile, &inputs, &sinogram, &geometry);
+    if (error < 0)
+    {
+      std::cout << "Error Opening Parameter file and parsing the data within." << std::endl;
+      return EXIT_FAILURE;
+    }
     //Based on the inputs , calculate the "other" variables in the structure definition
-    soci.CI_InitializeSinoParameters(&Sinogram, &ParsedInput);
+    soci.initializeSinoParameters(&sinogram, &inputs);
     //CI_MaskSinogram(&OriginalSinogram,&MaskedSinogram);
-    soci.CI_InitializeGeomParameters(&Sinogram, &Geometry, &ParsedInput);
+    soci.initializeGeomParameters(&sinogram, &geometry, &inputs);
   }
 
-  // Make sure the output directory is created if it does not exist
- if ( MXADir::exists(ScaleOffsetCorrection::OutputDirectory) == false)
- {
-   if (MXADir::mkdir(ScaleOffsetCorrection::OutputDirectory, true) == false)
-   {
-     std::cout << "Error creating the output directory '" << ScaleOffsetCorrection::OutputDirectory << "'\n   Exiting Now."  << std::endl;
-     return EXIT_FAILURE;
-   }
- }
-
-  SOCEngine soce;
-  error = soce.CE_MAPICDReconstruct(&Sinogram, &Geometry, &ParsedInput);
-  Fp = fopen(ParsedInput.OutputFile, "w");
-
-  printf("Main\n");
-  printf("Final Dimensions of Object Nz=%d Nx=%d Ny=%d\n", Geometry.N_z, Geometry.N_x, Geometry.N_y);
-
-  for (i = 0; i < Geometry.N_y; i++)
+  // Run the reconstruction
+  SOCEngine soce(&sinogram, &geometry, &inputs);
+  error = soce.mapicdReconstruct();
+  if(error < 0)
   {
-    for (j = 0; j < Geometry.N_x; j++)
-      for (k = 0; k < Geometry.N_z; k++)
-      {
-        buffer = &Geometry.Object[k][j][i];
-        fwrite(buffer, sizeof(DATA_TYPE), 1, Fp);
-      }
-    printf("%d\n", i);
+    std::cout << "Error (" << error << ") During Reconstruction" << std::endl;
+    return EXIT_FAILURE;
   }
 
-  fclose(Fp);
+  std::cout << "Final Dimensions of Object: " << std::endl;
+  std::cout << "  Nx = " << geometry.N_x << std::endl;
+  std::cout << "  Ny = " << geometry.N_y << std::endl;
+  std::cout << "  Nz = " << geometry.N_z << std::endl;
+
+  // Write the vtk output file
+  VTKRectilinearGridFileWriter vtkWriter;
+  vtkWriter.setWriteBinaryFiles(true);
+  DimsAndRes dimsAndRes;
+  dimsAndRes.xpoints = geometry.N_x;
+  dimsAndRes.ypoints = geometry.N_y;
+  dimsAndRes.zpoints = geometry.N_z;
+  dimsAndRes.resx = 1.0f;
+  dimsAndRes.resy = 1.0f;
+  dimsAndRes.resz = 1.0f;
+  std::string vtkFile(inputs.outputDir);
+  vtkFile = vtkFile.append(MXADir::getSeparator()).append("Output.vtk");
+
+  VtkScalarWriter* w0 = static_cast<VtkScalarWriter*>(new TomoOutputScalarWriter(&geometry));
+  std::vector<VtkScalarWriter*> scalarsToWrite;
+  w0->m_WriteBinaryFiles = true;
+  scalarsToWrite.push_back(w0);
+
+  error = vtkWriter.write<DimsAndRes>(vtkFile, &dimsAndRes, scalarsToWrite);
+  if (error < 0)
+  {
+    std::cout << "Error writing vtk file '" << vtkFile << "'" << std::endl;
+  }
+
+  // Write a raw binary output file
+  RawGeometryWriter binWriter(&geometry);
+  error = binWriter.writeFile(inputs.OutputFile);
+  if (error < 0)
+  {
+    std::cout << "Error writing Raw binary file '" << inputs.OutputFile << "'" << std::endl;
+  }
+
+
   STOP;
   PRINTTIME;
   // if(error < 0)
