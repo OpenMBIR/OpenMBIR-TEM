@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 // C++ Includes
 #include <limits>
@@ -364,8 +365,9 @@ void SOCEngine::initVariables()
     {\
     std::string filepath(outdir);\
     filepath = filepath.append(MXADir::getSeparator()).append(filename);\
+    errno = 0;\
     Fp = fopen(filepath.c_str(),"wb");\
-    if (Fp == NULL) { std::cout << "Error Opening Output file " << filepath << std::endl; err = 1; }\
+    if (Fp == NULL) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl; err = 1; }\
     }
 
 
