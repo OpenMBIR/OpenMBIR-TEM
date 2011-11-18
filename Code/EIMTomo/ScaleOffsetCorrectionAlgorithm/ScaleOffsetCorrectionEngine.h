@@ -81,9 +81,9 @@ class SOCEngine
     uint64_t startm;
     uint64_t stopm;
 
-    TomoInputs* m_CmdInputs;
-    Sino* m_Sinogram;
-    Geom* m_Geometry;
+    TomoInputs* m_CmdInputs;//Holds the inputs from the command line 
+    Sino* m_Sinogram;//hold the sinogram data
+    Geom* m_Geometry;//holds the geometry data and object to reconstruct
 
     /**
      * @brief

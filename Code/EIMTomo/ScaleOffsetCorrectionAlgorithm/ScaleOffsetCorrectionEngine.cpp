@@ -39,18 +39,18 @@
 #define BEAM_RESOLUTION 512
 #define AREA_WEIGHTED
 #define ROI //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
-#define STOPPING_THRESHOLD 0.0045
+#define STOPPING_THRESHOLD 0.009
 //#define SURROGATE_FUNCTION
 //#define QGGMRF
 //#define DISTANCE_DRIVEN
 //#define CORRECTION
-//#define STORE_A_MATRIX
 //#define WRITE_INTERMEDIATE_RESULTS
 #define COST_CALCULATE
 //#define BEAM_CALCULATION
 #define DETECTOR_RESPONSE_BINS 64
 #define JOINT_ESTIMATION
-#define NOISE_MODEL
+//#define GEOMETRIC_MEAN_CONSTRAINT
+//#define NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
 //#define CIRCULAR_BOUNDARY_CONDITION
 //#define DEBUG_CONSTRAINT_OPT
@@ -1280,7 +1280,7 @@ int SOCEngine::mapicdReconstruct()
 		if(AverageMagnitudeOfRecon > 0)
 		{
 			printf("%d,%lf\n",Iter+1,AverageUpdate/AverageMagnitudeOfRecon);
-		if((AverageUpdate/AverageMagnitudeOfRecon) < STOPPING_THRESHOLD)
+		if((AverageUpdate/AverageMagnitudeOfRecon) < m_CmdInputs->StopThreshold)
 		{
 			printf("This is the terminating point %d\n",Iter);
 			break;
@@ -1615,6 +1615,8 @@ int SOCEngine::mapicdReconstruct()
 		cost_counter++;
 
 #endif
+		printf("Lagrange Multiplier = %lf\n",LagrangeMultiplier);
+		
 		printf("Offsets\n");
 		for(i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 		{
@@ -1625,6 +1627,7 @@ int SOCEngine::mapicdReconstruct()
 		{
 			printf("%lf\n",NuisanceParams.I_0[i_theta]);
 		}
+		
 
 #ifdef NOISE_MODEL
 		//Updating the Weights
