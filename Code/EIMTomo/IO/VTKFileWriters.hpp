@@ -43,7 +43,8 @@
 #include "MXA/Common/MXAEndian.h"
 #include "MXA/Common/MXASetGetMacros.h"
 #include "VTKWriterMacros.h"
-
+#include "EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetStructures.h"
+#include "EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionConstants.h"
 
 
 /**
@@ -74,35 +75,48 @@ class VtkScalarWriter
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-#if 0
-template<typename T>
-class VoxelGrainIdScalarWriter : public VtkScalarWriter
+typedef struct
+{
+    int xpoints;
+    int ypoints;
+    int zpoints;
+    float resx;
+    float resy;
+    float resz;
+}  DimsAndRes;
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+
+class TomoOutputScalarWriter : public VtkScalarWriter
 {
   public:
-  VoxelGrainIdScalarWriter(T* r) : r(r) {}
-  virtual ~VoxelGrainIdScalarWriter(){}
+  TomoOutputScalarWriter(Geom* r) : r(r) {}
+  virtual ~TomoOutputScalarWriter(){}
 
   int writeScalars(FILE* f)
   {
     int err = 0;
     std::string file;
-    size_t total = r->xpoints * r->ypoints * r->zpoints;
     if (m_WriteBinaryFiles == true) {
-      WRITE_VTK_GRAIN_IDS_BINARY(r, DREAM3D::VTK::GrainIdScalarName);
+      WRITE_VTK_FLOAT_VOXEL_BINARY(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName, double);
     }
     else
     {
-      WRITE_VTK_GRAIN_IDS_ASCII(r, DREAM3D::VTK::GrainIdScalarName)
+      WRITE_VTK_FLOAT_VOXEL_ASCII(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName)
     }
     return err;
   }
 
   private:
-    T* r;
-    VoxelGrainIdScalarWriter(const VoxelGrainIdScalarWriter&); // Copy Constructor Not Implemented
-    void operator=(const VoxelGrainIdScalarWriter&); // Operator '=' Not Implemented
+    Geom* r;
+    TomoOutputScalarWriter(const TomoOutputScalarWriter&); // Copy Constructor Not Implemented
+    void operator=(const TomoOutputScalarWriter&); // Operator '=' Not Implemented
 };
-#endif
+
+
+
 /**
  * @brief This macro can help you define the class needed to write a "Scalar" array
  * to the VTK file. This class is specifically setup for writing voxel based
@@ -156,113 +170,6 @@ class name : public VtkScalarWriter\
     void operator=(const name&);\
 };
 
-
-#if 0
-VtkSCALARWRITER_CLASS_DEF(VoxelPhaseIdScalarWriter, r, DREAM3D::VTK::PhaseIdScalarName, int, phases, "%d ")
-VtkSCALARWRITER_CLASS_DEF(VoxelGoodVoxelScalarWriter, r, DREAM3D::VTK::GoodVoxelScalarName, int, goodVoxels, "%d ")
-// VtkSCALARWRITER_CLASS_DEF(VoxelEuclideanScalarWriter, r, AIM::VTK::EuclideanScalarName, float, nearestneighbordistances[0], "%f ")
-//VtkSCALARWRITER_CLASS_DEF(VoxelImageQualityScalarWriter, r, AIM::VTK::ImageQualityScalarName, float, imagequalities, "%f ")
-VtkSCALARWRITER_CLASS_DEF(VoxelKAMScalarWriter, r, DREAM3D::VTK::KAMScalarName, float, kernelmisorientations, "%f ")
-VtkSCALARWRITER_CLASS_DEF_CHAR(VoxelSurfaceVoxelScalarWriter, r, DREAM3D::VTK::SurfaceVoxelScalarName, char, surfacevoxels, "%d ")
-#endif
-
-/**
- * @brief This class will write the IPF colors to a Scalar array in the VTK file
- */
-#if 0
-template<typename T>
-class VoxelIPFColorScalarWriter : public VtkScalarWriter
-{
-  public:
-  VoxelIPFColorScalarWriter(T* r) : r(r) {}
-  virtual ~VoxelIPFColorScalarWriter(){}
-
-  int writeScalars(FILE* f)
-  {
-      int err = 0;
-      size_t total = r->xpoints * r->ypoints * r->zpoints;
-      unsigned char hkl[3] =
-      { 0, 0, 0 };
-      VTK_IPF_COLOR_REFDIRECTION(RefDirection)
-      int phase;
-      unsigned char* rgba = NULL;
-      float red, green, blue;
-      size_t index = 0;
-      if (m_WriteBinaryFiles == true)
-      {
-        fprintf(f, "COLOR_SCALARS IPF_Colors 4\n");
-        rgba = new unsigned char[total * 4]; // We need the whole array because we build it and write it all at the end
-      }
-      else
-      {
-        fprintf(f, "COLOR_SCALARS IPF_Colors 3\n");
-        rgba = new unsigned char[4]; // We just need 4 bytes for ASCII writing
-      }
-
-      // Write the IPF Coloring Cell Data
-      for (size_t i = 0; i < total; i++)
-      {
-        phase = r->phases[i];
-        if (true == m_WriteBinaryFiles)
-        {
-          index = i * 4;
-        }
-        else
-        {
-          index = 0;
-        }
-    if (phase > 0)
-    {
-      if (r->crystruct[phase] == Ebsd::Cubic)
-      {
-        EbsdColoring::GenerateIPFColor(r->euler1s[i], r->euler2s[i], r->euler3s[i], RefDirection[0], RefDirection[1], RefDirection[2], &rgba[index], hkl);
-      }
-      else if (r->crystruct[phase] == Ebsd::Hexagonal)
-      {
-        EbsdColoring::CalculateHexIPFColor(r->euler1s[i], r->euler2s[i], r->euler3s[i], RefDirection[0], RefDirection[1], RefDirection[2], &rgba[index]);
-      }
-    }
-    else if (phase <= 0)
-    {
-      rgba[index] = 0.0;
-      rgba[index+1] = 0.0;
-      rgba[index+2] = 0.0;
-    }
-        if (true == m_WriteBinaryFiles)
-        {
-          rgba[index + 3] = 255;
-        }
-        else
-        {
-          red = static_cast<float>(float(rgba[index]) / 255.0);green = static_cast<float> (float(rgba[index + 1]) / 255.0);
-          blue = static_cast<float> (float(rgba[index + 2]) / 255.0);
-          fprintf(f, "%f %f %f\n", red, green, blue);
-        }
-      }
-
-      if (true == m_WriteBinaryFiles)
-      {
-        size_t totalWritten = fwrite(rgba, sizeof(char), total * 4, f);
-        if (totalWritten != total * 4)
-        {
-          std::cout << "Error Writing Binary Data for IPF Colors to file " << std::endl;
-          fclose( f);
-          return -1;
-        }
-      }
-      // Clean up the allocated memory
-      delete[] rgba;
-
-      return err;
-    }
-
-  private:
-    T* r;
-    VoxelIPFColorScalarWriter(const VoxelIPFColorScalarWriter&); // Copy Constructor Not Implemented
-    void operator=(const VoxelIPFColorScalarWriter&); // Operator '=' Not Implemented
-};
-
-#endif
 
 /**
  * @class VTKRectilinearGridFileWriter VTKRectilinearGridFileWriter.h DREAM3D/Common/VTKUtils/VTKRectilinearGridFileWriter.h

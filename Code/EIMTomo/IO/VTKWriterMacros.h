@@ -92,22 +92,35 @@
   }\
   }
 
-#define WRITE_VTK_TOMOVOXEL_BINARY(ptr, ScalarName, type)  \
-  fprintf(f, "SCALARS %s %s 1\n", ScalarName.c_str(), #type);\
+#define WRITE_VTK_FLOAT_VOXEL_BINARY(ptr, ScalarName, type)  \
+  fprintf(f, "SCALARS %s float 1\n", ScalarName.c_str() );\
   fprintf(f, "LOOKUP_TABLE default\n"); \
   { \
-    type t;\
+    float t;\
     for (int i = 0; i < ptr->N_y; i++) {\
       for (int j = 0; j < ptr->N_x; j++) {\
         for (int k = 0; k < ptr->N_z; k++) {\
-          t = ptr->Object[k][j][i];\
-          MXA::Endian::FromSystemToBig::convert<type>(t); \
-          fwrite(&t, sizeof(type), 1, f);\
+          t = static_cast<float>(ptr->Object[k][j][i]);\
+          MXA::Endian::FromSystemToBig::convert<float>(t); \
+          fwrite(&t, sizeof(float), 1, f);\
         }\
       }\
     }\
   }
 
+#define WRITE_VTK_FLOAT_VOXEL_ASCII(ptr, ScalarName)  \
+  fprintf(f, "SCALARS %s float 1\n", ScalarName.c_str() );\
+  fprintf(f, "LOOKUP_TABLE default\n"); \
+  { \
+    for (int i = 0; i < ptr->N_y; i++) {\
+      for (int j = 0; j < ptr->N_x; j++) {\
+        for (int k = 0; k < ptr->N_z; k++) {\
+          fprintf(f, "%0.6f ", ptr->Object[k][j][i]);\
+        }\
+        fprintf(f, "\n");\
+      }\
+    }\
+  }
 
 #define WRITE_VTK_SCALARS_FROM_VOXEL_ASCII(ptr, name, type, var, FORMAT)\
   fprintf(f, "SCALARS %s %s 1\n", name.c_str(), #type);\

@@ -49,49 +49,6 @@
     if (Fp == NULL) { std::cout << "Error Opening Output file " << filepath << std::endl; err = 1; }\
     }
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-typedef struct
-{
-    int xpoints;
-    int ypoints;
-    int zpoints;
-    float resx;
-    float resy;
-    float resz;
-}  DimsAndRes;
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-
-class TomoOutputScalarWriter : public VtkScalarWriter
-{
-  public:
-  TomoOutputScalarWriter(Geom* r) : r(r) {}
-  virtual ~TomoOutputScalarWriter(){}
-
-  int writeScalars(FILE* f)
-  {
-    int err = 0;
-    std::string file;
-    if (m_WriteBinaryFiles == true) {
-      WRITE_VTK_TOMOVOXEL_BINARY(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName, double);
-    }
-    else
-    {
- //     WRITE_VTK_TOMOVOXEL_ASCII(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName)
-    }
-    return err;
-  }
-
-  private:
-    Geom* r;
-    TomoOutputScalarWriter(const TomoOutputScalarWriter&); // Copy Constructor Not Implemented
-    void operator=(const TomoOutputScalarWriter&); // Operator '=' Not Implemented
-};
-
 
 // -----------------------------------------------------------------------------
 //
