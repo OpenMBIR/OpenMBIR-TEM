@@ -39,7 +39,7 @@
 #define BEAM_RESOLUTION 512
 #define AREA_WEIGHTED
 #define ROI //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
-#define STOPPING_THRESHOLD 0.0045
+#define STOPPING_THRESHOLD 0.009
 //#define SURROGATE_FUNCTION
 //#define QGGMRF
 //#define DISTANCE_DRIVEN
@@ -50,7 +50,7 @@
 #define DETECTOR_RESPONSE_BINS 64
 #define JOINT_ESTIMATION
 //#define GEOMETRIC_MEAN_CONSTRAINT
-#define NOISE_MODEL
+//#define NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
 //#define CIRCULAR_BOUNDARY_CONDITION
 //#define DEBUG_CONSTRAINT_OPT
@@ -1280,7 +1280,7 @@ int SOCEngine::mapicdReconstruct()
 		if(AverageMagnitudeOfRecon > 0)
 		{
 			printf("%d,%lf\n",Iter+1,AverageUpdate/AverageMagnitudeOfRecon);
-		if((AverageUpdate/AverageMagnitudeOfRecon) < STOPPING_THRESHOLD)
+		if((AverageUpdate/AverageMagnitudeOfRecon) < m_CmdInputs->StopThreshold)
 		{
 			printf("This is the terminating point %d\n",Iter);
 			break;

@@ -106,6 +106,8 @@ int ScaleOffsetCorrectionParser::parseArguments(int argc,char **argv,TomoInputs*
   TCLAP::ValueArg<std::string> in_outputDir("", "outdir", "The Output dir", true, ".", ".");
   cmd.add(in_outputDir);
 
+	TCLAP::ValueArg<double> in_stopThreshold("T","stopThreshold","Stopping Threshold for inner loop",false,.009,"");
+	cmd.add(in_stopThreshold);
 
 
   TCLAP::ValueArg<int> in_numIter("n", "numIter", "Number of Iterations", true, 0, "0");
@@ -145,6 +147,7 @@ int ScaleOffsetCorrectionParser::parseArguments(int argc,char **argv,TomoInputs*
     Input->p = in_markov.getValue();
     Input->InitialParameters = InitialParameters.getValue();
     Input->NumOuterIter = NumOuterIter.getValue();
+	Input->StopThreshold = in_stopThreshold.getValue();
   }
   catch (TCLAP::ArgException &e)
   {
