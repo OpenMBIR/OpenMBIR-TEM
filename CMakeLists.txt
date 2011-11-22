@@ -162,4 +162,4 @@ Add_Algorithm(ScaleOffsetCorrectionAlgorithm)
 Add_Algorithm(ScaleOffsetMotionCorrectionAlgorithm)
 
 
-
+add_subdirectory(${PROJECT_CODE_DIR}/EIMTomo/Test ${PROJECT_BINARY_DIR}/Test)

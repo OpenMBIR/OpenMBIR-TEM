@@ -6,11 +6,15 @@
 #--////////////////////////////////////////////////////////////////////////////
 set (EIMTomo_IO_SRCS
     ${PROJECT_CODE_DIR}/EIMTomo/IO/RawGeometryWriter.cpp
+    ${PROJECT_CODE_DIR}/EIMTomo/IO/MRCReader.cpp
 )
 
 set (EIMTomo_IO_HDRS
     ${PROJECT_CODE_DIR}/EIMTomo/IO/VTKFileWriters.hpp
     ${PROJECT_CODE_DIR}/EIMTomo/IO/VTKWriterMacros.h
     ${PROJECT_CODE_DIR}/EIMTomo/IO/RawGeometryWriter.h
+    ${PROJECT_CODE_DIR}/EIMTomo/IO/MRCReader.h
+    ${PROJECT_CODE_DIR}/EIMTomo/IO/MRCHeader.h
 )
 cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/IO" "${EIMTomo_IO_HDRS}" "${EIMTomo_IO_SRCS}" "${CMP_INSTALL_FILES}")
+
