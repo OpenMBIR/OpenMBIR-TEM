@@ -28,8 +28,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#ifndef SCALEOFFSETSTRUCTURES_H_
-#define SCALEOFFSETSTRUCTURES_H_
+#ifndef SCALEOFFSETMOTIONSTRUCTURES_H_
+#define SCALEOFFSETMOTIONSTRUCTURES_H_
 
 #include <string>
 
@@ -131,4 +131,4 @@ typedef double DATA_TYPE;
 
 
 
-#endif /* SCALEOFFSETSTRUCTURES_H_ */
+#endif /* SCALEOFFSETMOTIONSTRUCTURES_H_ */

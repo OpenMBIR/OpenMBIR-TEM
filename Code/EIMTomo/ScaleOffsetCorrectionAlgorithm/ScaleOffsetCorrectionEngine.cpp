@@ -627,12 +627,17 @@ int SOCEngine::mapicdReconstruct()
 	{
 		//fread(&buffer, 1, sizeof(double), Fp6);
 		NuisanceParams.I_0[k]= m_Sinogram->InitialGain[k];//;
+#ifdef GEOMETRIC_MEAN_CONSTRAINT
 		sum+=log(NuisanceParams.I_0[k]);
+#else
+		sum+=NuisanceParams.I_0[k];
+#endif
 	}
 	sum/=m_Sinogram->N_theta;
-	sum=exp(sum);
+#ifdef GEOMETRIC_MEAN_CONSTRAINT
+	sum=exp(sum);	
 	printf("The geometric mean of the gains is %lf\n",sum);
-
+	
 	//Checking if the input parameters satisfy the target geometric mean
 	if(fabs(sum - m_Sinogram->TargetGain) > 1e-5)
 	{
@@ -642,6 +647,17 @@ int SOCEngine::mapicdReconstruct()
 			NuisanceParams.I_0[k]=m_Sinogram->InitialGain[k]*temp;
 		}
 	}
+#else
+	printf("The Arithmetic mean of the constraint is %lf\n",sum);
+	if(sum - m_Sinogram->TargetGain > 1e-5)
+	{		
+		printf("Arithmetic Mean Constraint not met..renormalizing\n");
+		temp = m_Sinogram->TargetGain/sum;
+		for (k = 0 ; k < m_Sinogram->N_theta; k++) {
+			NuisanceParams.I_0[k]=m_Sinogram->InitialGain[k]*temp;
+		}
+	}
+#endif
 
 
 	for(k=0 ; k < m_Sinogram->N_theta;k++)
@@ -1199,7 +1215,7 @@ int SOCEngine::mapicdReconstruct()
 						{
 
 							AverageUpdate+=fabs(m_Geometry->Object[j_new][k_new][i]-V);
-							AverageMagnitudeOfRecon+=m_Geometry->Object[j_new][k_new][i];
+							AverageMagnitudeOfRecon+=fabs(m_Geometry->Object[j_new][k_new][i]);
 						}
 #endif
 
