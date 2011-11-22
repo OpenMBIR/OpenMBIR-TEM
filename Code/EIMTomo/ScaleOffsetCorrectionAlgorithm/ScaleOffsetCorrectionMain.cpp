@@ -126,7 +126,8 @@ int main(int argc, char** argv)
   std::cout << "  Nz = " << geometry.N_z << std::endl;
 
   // Write the vtk output file
-  VTKRectilinearGridFileWriter vtkWriter;
+//  VTKRectilinearGridFileWriter vtkWriter;
+	VTKStructuredPointsFileWriter vtkWriter;
   vtkWriter.setWriteBinaryFiles(true);
   DimsAndRes dimsAndRes;
   dimsAndRes.xpoints = geometry.N_x;
