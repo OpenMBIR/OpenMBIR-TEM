@@ -74,6 +74,7 @@ typedef double DATA_TYPE;
     uint16_t N_tStart,N_tEnd,N_rStart,N_rEnd;//Which region of the sinogram to keep in the r and t directions
     DATA_TYPE *InitialGain;//Reads in the initial value for the gain for each view
     DATA_TYPE *InitialOffset;
+	
   } Sino;
 
 
