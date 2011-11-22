@@ -18,12 +18,12 @@
 /**
  *
  */
-class SOCEngine
+class SOMCEngine
 {
 
   public:
-    SOCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs);
-    virtual ~SOCEngine();
+    SOMCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs);
+    virtual ~SOMCEngine();
 
     /**
      * @brief
@@ -40,7 +40,7 @@ class SOCEngine
 #endif//qggmrf
   protected:
     // Protect this constructor because we want to force the use of the other
-    SOCEngine();
+    SOMCEngine();
     void initVariables();
 
   private:
@@ -219,8 +219,8 @@ class SOCEngine
       }
     }
 
-    SOCEngine(const SOCEngine&); // Copy Constructor Not Implemented
-    void operator=(const SOCEngine&); // Operator '=' Not Implemented
+    SOMCEngine(const SOMCEngine&); // Copy Constructor Not Implemented
+    void operator=(const SOMCEngine&); // Operator '=' Not Implemented
 };
 
 #endif //CompEngine

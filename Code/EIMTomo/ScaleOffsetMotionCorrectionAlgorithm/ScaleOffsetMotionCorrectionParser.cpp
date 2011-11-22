@@ -54,7 +54,7 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ScaleOffsetCorrectionParser::ScaleOffsetCorrectionParser()
+ScaleOffsetMotionCorrectionParser::ScaleOffsetMotionCorrectionParser()
 {
 
 }
@@ -62,7 +62,7 @@ ScaleOffsetCorrectionParser::ScaleOffsetCorrectionParser()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ScaleOffsetCorrectionParser::~ScaleOffsetCorrectionParser()
+ScaleOffsetMotionCorrectionParser::~ScaleOffsetMotionCorrectionParser()
 {
 
 }
@@ -70,7 +70,7 @@ ScaleOffsetCorrectionParser::~ScaleOffsetCorrectionParser()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-char* ScaleOffsetCorrectionParser::copyFilenameToNewCharBuffer(const std::string &fname)
+char* ScaleOffsetMotionCorrectionParser::copyFilenameToNewCharBuffer(const std::string &fname)
 {
   std::string::size_type size = fname.size() + 1;
   char* buf = NULL;
@@ -85,7 +85,7 @@ char* ScaleOffsetCorrectionParser::copyFilenameToNewCharBuffer(const std::string
 
 
 
-int ScaleOffsetCorrectionParser::parseArguments(int argc,char **argv,TomoInputs* Input)
+int ScaleOffsetMotionCorrectionParser::parseArguments(int argc,char **argv,TomoInputs* Input)
 {
   if ( NULL == Input)
   {
@@ -161,7 +161,7 @@ int ScaleOffsetCorrectionParser::parseArguments(int argc,char **argv,TomoInputs*
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int ScaleOffsetCorrectionParser::readParameterFile(const std::string &filepath,TomoInputs* inputs,Sino* Sinogram,Geom* Geometry)
+int ScaleOffsetMotionCorrectionParser::readParameterFile(const std::string &filepath,TomoInputs* inputs,Sino* Sinogram,Geom* Geometry)
 {
 
   FILE* Fp = NULL;
@@ -352,7 +352,7 @@ int ScaleOffsetCorrectionParser::readParameterFile(const std::string &filepath,T
 				 Sinogram->ShiftX[i]*=Sinogram->delta_r;
 				 printf("%lf\n",Sinogram->ShiftX[i]);
 			 }
-			 
+
 		 }
 		 else if (strcmp("ShiftY",temp) == 0)
 		 {
@@ -378,7 +378,7 @@ int ScaleOffsetCorrectionParser::readParameterFile(const std::string &filepath,T
   return err;
 }
 
-void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoInputs* ParsedInput)
+void ScaleOffsetMotionCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoInputs* ParsedInput)
 {
   int16_t i,j,k;
 	uint16_t view_count=0,TotalNumMaskedViews;
@@ -386,26 +386,19 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
   double *buffer=(double*)get_spc(1,sizeof(double));
   DATA_TYPE sum=0;
 
-	for(i=0; i < Sinogram->N_theta;i++)
-		if(Sinogram->ViewMask[i] == 1)
+	for(i=0; i < Sinogram->N_theta;i++) {
+		if(Sinogram->ViewMask[i] == 1) {
 			view_count++;
+		}
+	}
 	TotalNumMaskedViews=view_count;
 
   //Allocate a 3-D matrix to store the singoram in the form of a N_y X N_theta X N_x  matrix
-//  Sinogram->counts=(DATA_TYPE***)get_3D(Sinogram->N_t,Sinogram->N_theta,Sinogram->N_r, sizeof(DATA_TYPE));
-	 Sinogram->counts=(DATA_TYPE***)get_3D(TotalNumMaskedViews,Sinogram->N_rEnd-Sinogram->N_rStart+1,Sinogram->N_tEnd-Sinogram->N_rStart+1, sizeof(DATA_TYPE));
+	 Sinogram->counts =
+      (DATA_TYPE***)get_3D(TotalNumMaskedViews, Sinogram->N_rEnd - Sinogram->N_rStart + 1, Sinogram->N_tEnd - Sinogram->N_rStart + 1, sizeof(DATA_TYPE));
   //Read data into this matrix
   //TODO: clarify this ! Super important !
  Fp=fopen(ParsedInput->SinoFile.c_str(),"r");
-	/*
-  for(i=0;i<Sinogram->N_t;i++)
-    for(j=0;j<Sinogram->N_r;j++)
-      for(k=0;k<Sinogram->N_theta;k++)
-  {
-    fread (buffer,sizeof(DATA_TYPE),1,Fp);
-    Sinogram->counts[i][k][j]=*buffer;
-  }
-*/
 
 	for(i=0;i<Sinogram->N_t;i++)
 		for(j=0;j<Sinogram->N_r;j++)
@@ -425,7 +418,7 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
 	//The normalization and offset parameters for the views
 	Sinogram->InitialGain=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
 	Sinogram->InitialOffset=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
-	
+
 	Fp=fopen(ParsedInput->InitialParameters.c_str(),"r");//This file contains the Initial unscatterd counts and background scatter for each view
 
 	view_count=0;
@@ -521,7 +514,7 @@ void CI_MaskSinogram(Sino* OriginalSinogram,Sino* NewSinogram)
 }
 	 */
 
-void ScaleOffsetCorrectionParser::initializeGeomParameters(Sino* Sinogram,Geom* Geometry,TomoInputs* ParsedInput)
+void ScaleOffsetMotionCorrectionParser::initializeGeomParameters(Sino* Sinogram,Geom* Geometry,TomoInputs* ParsedInput)
 {
   FILE* Fp;
   uint16_t i,j,k;
@@ -612,7 +605,7 @@ void ScaleOffsetCorrectionParser::initializeGeomParameters(Sino* Sinogram,Geom* 
 }
 
 //Finds the maximum of absolute value elements in an array
-DATA_TYPE ScaleOffsetCorrectionParser::absMaxArray(DATA_TYPE* Array ,uint16_t NumElts)
+DATA_TYPE ScaleOffsetMotionCorrectionParser::absMaxArray(DATA_TYPE* Array ,uint16_t NumElts)
 {
 	uint16_t i;
 	DATA_TYPE max;

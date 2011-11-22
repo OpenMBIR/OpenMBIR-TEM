@@ -13,7 +13,7 @@
 #include "EIMTomo/IO/MRCReader.h"
 #include "EIMTomo/IO/MRCHeader.h"
 
-const std::string filepath("/Users/Shared/Data/TomographyData/TiO2Ps100kRun3/Run3TiO2PS100k.mrc");
+const std::string filepath("/Users/Shared/Data/TomographyData/TiO2Ps100kRun3/Run3TiO2PS100k_2.ali");
 
 int main(int argc, char **argv)
 {
@@ -32,6 +32,7 @@ int main(int argc, char **argv)
 
   free(data);
 
+  std::cout << "Done Reading File" << std::endl;
   return EXIT_SUCCESS;
 }
 

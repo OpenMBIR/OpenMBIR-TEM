@@ -52,8 +52,37 @@ MRCReader::~MRCReader()
     if (NULL != m_UInt16Data) { free(m_UInt16Data); }
     if (NULL != m_FloatData) { free(m_FloatData); }
   }
+  delete m_Header;
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+int MRCReader::readHeader(const std::string &filepath, MRCHeader* header)
+{
+  MXAFileReader64 reader(filepath);
+   bool success = reader.initReader();
+   if (false == success)
+   {
+     return -1;
+   }
+
+   ::memset(header, 0, 1024); // Splat zeros across the entire structure
+   success = reader.rawRead(reinterpret_cast<char*>(header), 1024);
+   if (false == success)
+   {
+     return -2;
+   }
+
+   // Now read the extended header
+   std::vector<uint8_t> extended_header(header->next, 0);
+   success = reader.readArray( &(extended_header.front()), header->next);
+   if (false == success)
+   {
+     return -3;
+   }
+   return 1;
+}
 
 // -----------------------------------------------------------------------------
 //
@@ -161,3 +190,13 @@ void* MRCReader::getDataPointer()
   }
   return NULL;
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+MRCHeader* MRCReader::getHeader()
+{
+  return m_Header;
+}
+
+

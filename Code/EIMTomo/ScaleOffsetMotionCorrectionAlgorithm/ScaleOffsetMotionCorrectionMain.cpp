@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 	START;
 	
 	error = -1;
-	ScaleOffsetCorrectionParser soci;
+	ScaleOffsetMotionCorrectionParser soci;
 	
 	error = soci.parseArguments(argc, argv, &inputs);
 	if(error != -1)
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
 	}
 	
 	// Run the reconstruction
-	SOCEngine soce(&sinogram, &geometry, &inputs);
+	SOMCEngine soce(&sinogram, &geometry, &inputs);
 	error = soce.mapicdReconstruct();
 	if(error < 0)
 	{

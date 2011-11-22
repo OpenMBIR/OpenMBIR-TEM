@@ -47,12 +47,41 @@
 class MRCReader
 {
   public:
+    /**
+     * @brief Constructur
+     * @param deleteMemory Should this class delete the memory allocated to hold
+     * the voxel data.
+     */
     explicit MRCReader(bool deleteMemory = true);
     virtual ~MRCReader();
 
+    /**
+     * @brief This method ONLY reads the header section of the file
+     * @param filepath The path to the input file
+     * @param header Pointer to an MRCHeader structure where the header values will
+     * be stored.
+     * @return Negative on Error.
+     */
+    int readHeader(const std::string &filepath, MRCHeader* header);
+
+    /**
+     * @brief Reads the entire file into memory
+     * @param filepath The path to the input file.
+     * @return Negative on Error.
+     */
     int read(const std::string &filepath);
 
+    /**
+     * @brief Returns the pointer to the data from the file.
+     */
     void* getDataPointer();
+
+    /**
+     * @brief Returns the header structure. Note that this pointer is owned by
+     * this class and will be deleted when this class is destroyed.
+     * @return
+     */
+    MRCHeader* getHeader();
 
   protected:
     MRCReader();
