@@ -159,6 +159,7 @@ Add_Algorithm(JointEstimationAlgorithm)
 Add_Algorithm(NonHomogeniousICD)
 Add_Algorithm(BasicReconstructionAlgorithm)
 Add_Algorithm(ScaleOffsetCorrectionAlgorithm)
+Add_Algorithm(ScaleOffsetMotionCorrectionAlgorithm)
 
 
 
