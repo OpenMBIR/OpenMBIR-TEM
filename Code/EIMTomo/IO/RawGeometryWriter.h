@@ -31,7 +31,7 @@
 #define RAWGEOMETRYWRITER_H_
 
 
-#include "EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetStructures.h"
+#include "EIMTomo/ScaleOffsetMotionCorrectionAlgorithm/ScaleOffsetMotionStructures.h"
 
 
 /**

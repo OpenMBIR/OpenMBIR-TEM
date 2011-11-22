@@ -43,8 +43,8 @@
 #include "MXA/Common/MXAEndian.h"
 #include "MXA/Common/MXASetGetMacros.h"
 #include "VTKWriterMacros.h"
-#include "EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetStructures.h"
-#include "EIMTomo/ScaleOffsetCorrectionAlgorithm/ScaleOffsetCorrectionConstants.h"
+#include "EIMTomo/ScaleOffsetMotionCorrectionAlgorithm/ScaleOffsetMotionStructures.h"
+#include "EIMTomo/ScaleOffsetMotionCorrectionAlgorithm/ScaleOffsetMotionCorrectionConstants.h"
 
 
 /**
@@ -100,11 +100,11 @@ class TomoOutputScalarWriter : public VtkScalarWriter
     int err = 0;
     std::string file;
     if (m_WriteBinaryFiles == true) {
-      WRITE_VTK_FLOAT_VOXEL_BINARY(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName, double);
+      WRITE_VTK_FLOAT_VOXEL_BINARY(r, ScaleOffsetMotionCorrection::VTK::TomoVoxelScalarName, double);
     }
     else
     {
-      WRITE_VTK_FLOAT_VOXEL_ASCII(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName)
+      WRITE_VTK_FLOAT_VOXEL_ASCII(r, ScaleOffsetMotionCorrection::VTK::TomoVoxelScalarName)
     }
     return err;
   }
