@@ -38,7 +38,7 @@
 //
 // -----------------------------------------------------------------------------
 RawGeometryWriter::RawGeometryWriter(Geom* g) :
-m_Geometry(g)
+    m_Geometry(g)
 {
 
 }
@@ -58,21 +58,18 @@ int RawGeometryWriter::writeFile(const std::string &filepath)
 {
   int err = 0;
   FILE* Fp = fopen(filepath.c_str(), "wb");
-  if (NULL == Fp )
+  if(NULL == Fp)
   {
     std::cout << "Fp: " << Fp << " errno: " << errno << std::endl;
     return -1;
   }
-	//std::cout << "------------" << std::endl;
   DATA_TYPE buffer;
-	for (int k = m_Geometry->N_z-1; k >= 0; --k)
-	{
-	//	std::cout << k << std::endl;
-  for (int i = 0; i < m_Geometry->N_y; ++i)
+  for (int k = m_Geometry->N_z - 1; k >= 0; --k)
   {
-    for (int j = 0; j < m_Geometry->N_x; ++j)
+    for (int i = 0; i < m_Geometry->N_y; ++i)
     {
-    
+      for (int j = 0; j < m_Geometry->N_x; ++j)
+      {
         buffer = m_Geometry->Object[k][j][i];
         fwrite(&buffer, sizeof(DATA_TYPE), 1, Fp);
       }
