@@ -9,7 +9,7 @@
 
 #include "MXA/MXA.h"
 #include "MXA/Common/MXAEndian.h"
-#include "MXA/Common/IO/MXAFileReader64.h"
+
 
 
 // -----------------------------------------------------------------------------
@@ -37,7 +37,7 @@ m_UInt16Data(NULL),
 m_FloatData(NULL),
 m_DeleteMemory(true)
 {
-  m_Header = new MRCHeader;
+
 }
 
 
@@ -55,6 +55,7 @@ MRCReader::~MRCReader()
   delete m_Header;
 }
 
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -66,7 +67,7 @@ int MRCReader::readHeader(const std::string &filepath, MRCHeader* header)
    {
      return -1;
    }
-
+   header->feiHeaders = NULL;
    ::memset(header, 0, 1024); // Splat zeros across the entire structure
    success = reader.rawRead(reinterpret_cast<char*>(header), 1024);
    if (false == success)
@@ -81,15 +82,44 @@ int MRCReader::readHeader(const std::string &filepath, MRCHeader* header)
    {
      return -3;
    }
+
+   // If we have an FEI header then parse the extended header information
+   std::string feiLabel(header->labels[0], 80);
+   if (feiLabel.find_first_of("Fei Company") != std::string::npos)
+   {
+     // Allocate and copy in the data
+     header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * header->nz));
+     ::memcpy(header->feiHeaders, &(extended_header.front()), sizeof(FEIHeader) * header->nz);
+   }
+
+
    return 1;
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int MRCReader::read(const std::string &filepath)
+std::string MRCReader::getLabelField(int index)
 {
+  if (m_Header == NULL)
+  {
+    return std::string();
+  }
+  if (index > 9)
+  {
+    return std::string();
+  }
 
+  std::string label(m_Header->labels[index], 80);
+  return label;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+int MRCReader::read(const std::string &filepath, int* voxelMin, int* voxelMax)
+{
+  bool readSubVolume = false;
   MXAFileReader64 reader(filepath);
   bool success = reader.initReader();
   if (false == success)
@@ -97,6 +127,7 @@ int MRCReader::read(const std::string &filepath)
     return -1;
   }
 
+  m_Header = new MRCHeader;
   ::memset(m_Header, 0, 1024); // Splat zeros across the entire structure
   success = reader.rawRead(reinterpret_cast<char*>(m_Header), 1024);
   if (false == success)
@@ -112,7 +143,24 @@ int MRCReader::read(const std::string &filepath)
     return -3;
   }
 
+  // If we have an FEI header then parse the extended header information
+  std::string feiLabel(m_Header->labels[0], 80);
+  if (feiLabel.find_first_of("Fei Company") != std::string::npos)
+  {
+    // Allocate and copy in the data
+    m_Header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * m_Header->nz));
+    ::memcpy(m_Header->feiHeaders, &(extended_header.front()), sizeof(FEIHeader) * m_Header->nz);
+  }
+
+
+
   size_t nVoxels = m_Header->nx * m_Header->ny * m_Header->nz;
+  if ( NULL != voxelMin && NULL != voxelMax)
+  {
+    // The user is requesting a sub-volume so calculate the number of voxels to be read
+    nVoxels = (voxelMax[0] - voxelMin[0] + 1) * (voxelMax[1] - voxelMin[1] + 1) * (voxelMax[2] - voxelMin[2] + 1);
+    readSubVolume = true;
+  }
   size_t typeSize = 0;
   void* dataPtr = NULL;
   switch(m_Header->mode)
@@ -145,11 +193,19 @@ int MRCReader::read(const std::string &filepath)
       break;
   }
 
-  if (typeSize > 0 && dataPtr != NULL) {
-    success = reader.rawRead(reinterpret_cast<char*>(dataPtr), typeSize * nVoxels);
-    if(false == success)
+  if (typeSize > 0 && dataPtr != NULL )
+  {
+    if (false == readSubVolume) {
+      success = reader.rawRead(reinterpret_cast<char*>(dataPtr), typeSize * nVoxels);
+      if(false == success)
+      {
+        return -4;
+      }
+    }
+    else
     {
-      return -4;
+      // Read a subvolume.
+      success = readPartialVolume(reader, reinterpret_cast<char*>(dataPtr), typeSize, nVoxels, voxelMin, voxelMax);
     }
   }
   else
@@ -163,10 +219,45 @@ int MRCReader::read(const std::string &filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+bool MRCReader::readPartialVolume(MXAFileReader64 &reader, char* dataPtr,
+                              size_t typeSize, size_t nVoxels,
+                              int* voxelMin, int* voxelMax)
+{
+  int64_t fileStartPos = reader.getFilePointer64();
+  int64_t offset = 0;
+  std::streamsize numBytes = 0;
+  bool success = false;
+  for (int z = voxelMin[2]; z <= voxelMax[2]; ++z)
+  {
+
+    for (int y = voxelMin[1]; y <= voxelMax[1]; ++y)
+    {
+
+      offset = (m_Header->nx * m_Header->ny * z) + (m_Header->nx * y) + voxelMin[0];
+      offset = offset * typeSize; // This gives number of bytes to the start of this set of data
+    //  std::cout << "File Offset: " << offset << std::endl;
+      numBytes = (voxelMax[0] - voxelMin[0] + 1) * typeSize; // This gives number of bytes to read
+      reader.setFilePointer64(fileStartPos + offset);
+      success = reader.rawRead(dataPtr, numBytes);
+      if (false == success)
+      {
+        return false;
+      }
+      dataPtr = dataPtr + numBytes; // Move the pointer forward the number of bytes that was read
+    }
+  }
+  return true;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void* MRCReader::getDataPointer()
 {
-  void* dataPtr = NULL;
-  size_t typeSize = 0;
+  if (NULL == m_Header)
+  {
+    return NULL;
+  }
   switch(m_Header->mode)
   {
     case 0:

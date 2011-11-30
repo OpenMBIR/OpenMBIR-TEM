@@ -30,11 +30,36 @@
 
 #ifndef MRCHEADER_H_
 #define MRCHEADER_H_
+
+/**
+ * @brief this was take from http://www.biochem.mpg.de/doc_tom/index.html using the
+ * tom_mrcfeistack2emseries code.
+ */
+typedef struct
+{
+    float a_tilt;  // float: 4 bytes
+    float b_tilt;  // float: 4 bytes
+    float x_stage; // float: 4 bytes
+    float y_stage;  // float: 4 bytes
+    float z_stage;  // float: 4 bytes
+    float x_shift;  // float: 4 bytes
+    float y_shift;  // float: 4 bytes
+    float defocus;  // float: 4 bytes
+    float exp_time; // float: 4 bytes
+    float mean_int; // float: 4 bytes
+    float tiltaxis; // float: 4 bytes
+    float pixelsize;  // float: 4 bytes
+    float magnification;    // float: 4 bytes
+    float voltage; // float 4 bytes
+    unsigned char unused[72]; // 72 bytes not used.
+} FEIHeader;
+
+
+
 /**
  * @brief This spec was taken from http://bio3d.colorado.edu/imod/doc/mrc_format.txt
  * and we are going to assume an IMOD version of 2.6.20 and above:
  */
-
 typedef struct
 {
 /*    The MRC header. length 1024 bytes
@@ -159,7 +184,17 @@ typedef struct
 
 Offsets are given as bytes in decimal and octal.
 Total size of header is 1024 bytes plus the size of the extended header.
+*/
 
+/**
+ * @brief Looks like on FEI instruments there are values that can be parsed
+ * from the extended header. The number of entries depends on the number of tilts
+ * that were saved to the file (nz).
+ */
+
+  FEIHeader*   feiHeaders;
+
+/*
 Image data follows with the origin in the lower left corner,
 looking down on the volume.
 
@@ -167,6 +202,7 @@ The size of the image is nx * ny * nz * (mode data size).
 */
 
 } MRCHeader;
+
 
 
 #endif /* MRCHEADER_H_ */

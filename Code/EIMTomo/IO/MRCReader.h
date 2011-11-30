@@ -33,6 +33,8 @@
 
 #include <string>
 
+#include "MXA/Common/IO/MXAFileReader64.h"
+
 #include "MRCHeader.h"
 
 
@@ -65,11 +67,34 @@ class MRCReader
     int readHeader(const std::string &filepath, MRCHeader* header);
 
     /**
-     * @brief Reads the entire file into memory
+     * @brief Reads the entire file or a subpart of the file into memory. If a
+     * subpart of the file is to be read then the voxelMin and voxelMax pointers
+     * should be non-null and point to 3 element arrays describing the minimum and
+     * maximum voxel indices along each axis that should be read. For example if
+     * the dimensions of the volume are 10 x 20 x 30 (columns, rows, sections) and you want to read
+     * a subvolume of (5,8) along x, (12, 15) along y and (23, 30) along z then
+     * the programmer would pass in arrays of the following values:
+     * @code
+     * int min[3] = {5, 12, 23};
+     * int max[3] = {8, 15, 30};
+     * MRCReader reader;
+     * reader.read(aFilePath, min, max);
+     * @endcode
+     *  Note that the ranges are INCLUSIVE of the max value, ie, if the number of columns
+     *  has 20 voxels and you want to read all the voxels then the range is 0-19.
+     *
+     *  If the entire volume is requested then simply pass in NULL for the pointers.
+     *
      * @param filepath The path to the input file.
+     * @param voxelMin The minimum index value for the voxels [ x, y, z ]
+     * @param voxelMax The maximun index value for the voxels [ x, y, z ]
      * @return Negative on Error.
      */
-    int read(const std::string &filepath);
+    int read(const std::string &filepath, int* voxelMin = NULL, int* voxelMax = NULL);
+
+    bool readPartialVolume(MXAFileReader64 &reader, char* dataPtr,
+                       size_t typeSize, size_t nVoxels,
+                       int* voxelMin, int* voxelMax);
 
     /**
      * @brief Returns the pointer to the data from the file.
@@ -83,17 +108,20 @@ class MRCReader
      */
     MRCHeader* getHeader();
 
+    std::string getLabelField(int index);
+
   protected:
     MRCReader();
 
   private:
     MRCHeader* m_Header;
 
-    uint8_t*  m_UInt8Data;
-    int16_t*  m_Int16Data;
+    uint8_t*   m_UInt8Data;
+    int16_t*   m_Int16Data;
     uint16_t*  m_UInt16Data;
-    float*    m_FloatData;
-    bool      m_DeleteMemory;
+    float*     m_FloatData;
+    bool       m_DeleteMemory;
+
 
     MRCReader(const MRCReader&); // Copy Constructor Not Implemented
     void operator=(const MRCReader&); // Operator '=' Not Implemented
