@@ -54,7 +54,7 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ScaleOffsetMotionCorrectionParser::ScaleOffsetMotionCorrectionParser()
+ScaleOffsetCorrectionParser::ScaleOffsetCorrectionParser()
 {
 
 }
@@ -62,7 +62,7 @@ ScaleOffsetMotionCorrectionParser::ScaleOffsetMotionCorrectionParser()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ScaleOffsetMotionCorrectionParser::~ScaleOffsetMotionCorrectionParser()
+ScaleOffsetCorrectionParser::~ScaleOffsetCorrectionParser()
 {
 
 }
@@ -70,7 +70,7 @@ ScaleOffsetMotionCorrectionParser::~ScaleOffsetMotionCorrectionParser()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-char* ScaleOffsetMotionCorrectionParser::copyFilenameToNewCharBuffer(const std::string &fname)
+char* ScaleOffsetCorrectionParser::copyFilenameToNewCharBuffer(const std::string &fname)
 {
   std::string::size_type size = fname.size() + 1;
   char* buf = NULL;
@@ -85,7 +85,7 @@ char* ScaleOffsetMotionCorrectionParser::copyFilenameToNewCharBuffer(const std::
 
 
 
-int ScaleOffsetMotionCorrectionParser::parseArguments(int argc,char **argv,TomoInputs* Input)
+int ScaleOffsetCorrectionParser::parseArguments(int argc,char **argv,TomoInputs* Input)
 {
   if ( NULL == Input)
   {
@@ -161,7 +161,7 @@ int ScaleOffsetMotionCorrectionParser::parseArguments(int argc,char **argv,TomoI
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int ScaleOffsetMotionCorrectionParser::readParameterFile(const std::string &filepath,TomoInputs* inputs,Sino* Sinogram,Geom* Geometry)
+int ScaleOffsetCorrectionParser::readParameterFile(const std::string &filepath,TomoInputs* inputs,Sino* Sinogram,Geom* Geometry)
 {
 
   FILE* Fp = NULL;
@@ -347,7 +347,7 @@ int ScaleOffsetMotionCorrectionParser::readParameterFile(const std::string &file
   return err;
 }
 
-void ScaleOffsetMotionCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoInputs* ParsedInput)
+void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoInputs* ParsedInput)
 {
   int16_t i,j,k;
 	uint16_t view_count=0,TotalNumMaskedViews;
@@ -490,7 +490,7 @@ void CI_MaskSinogram(Sino* OriginalSinogram,Sino* NewSinogram)
 }
 	 */
 
-void ScaleOffsetMotionCorrectionParser::initializeGeomParameters(Sino* Sinogram,Geom* Geometry,TomoInputs* ParsedInput)
+void ScaleOffsetCorrectionParser::initializeGeomParameters(Sino* Sinogram,Geom* Geometry,TomoInputs* ParsedInput)
 {
   FILE* Fp;
   uint16_t i,j,k;
@@ -581,7 +581,7 @@ void ScaleOffsetMotionCorrectionParser::initializeGeomParameters(Sino* Sinogram,
 }
 
 //Finds the maximum of absolute value elements in an array
-DATA_TYPE ScaleOffsetMotionCorrectionParser::absMaxArray(DATA_TYPE* Array ,uint16_t NumElts)
+DATA_TYPE ScaleOffsetCorrectionParser::absMaxArray(DATA_TYPE* Array ,uint16_t NumElts)
 {
 	uint16_t i;
 	DATA_TYPE max;

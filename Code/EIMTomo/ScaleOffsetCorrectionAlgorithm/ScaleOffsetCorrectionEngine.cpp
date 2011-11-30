@@ -304,7 +304,7 @@ class DerivOfCostFunc
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-SOMCEngine::SOMCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs) :
+SOCEngine::SOCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs) :
     m_Cancel(false),
 m_CmdInputs(inputs),
 m_Sinogram(sinogram),
@@ -316,7 +316,7 @@ m_Geometry(geometry)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-SOMCEngine::SOMCEngine() :
+SOCEngine::SOCEngine() :
     m_Cancel(false),
     m_CmdInputs(NULL),
     m_Sinogram(NULL),
@@ -329,7 +329,7 @@ SOMCEngine::SOMCEngine() :
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-SOMCEngine::~SOMCEngine()
+SOCEngine::~SOCEngine()
 {
 
 }
@@ -337,7 +337,7 @@ SOMCEngine::~SOMCEngine()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOMCEngine::initVariables()
+void SOCEngine::initVariables()
 {
 
         FILTER[0][0][0] = 0.0302; FILTER[0][0][1] = 0.0370; FILTER[0][0][2] = 0.0302;
@@ -374,7 +374,7 @@ void SOMCEngine::initVariables()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int SOMCEngine::mapicdReconstruct()
+int SOCEngine::mapicdReconstruct()
 {
   if (m_Sinogram == NULL || m_Geometry == NULL || m_CmdInputs == NULL)
   {
@@ -635,9 +635,9 @@ int SOMCEngine::mapicdReconstruct()
 	}
 	sum/=m_Sinogram->N_theta;
 #ifdef GEOMETRIC_MEAN_CONSTRAINT
-	sum=exp(sum);	
+	sum=exp(sum);
 	printf("The geometric mean of the gains is %lf\n",sum);
-	
+
 	//Checking if the input parameters satisfy the target geometric mean
 	if(fabs(sum - m_Sinogram->TargetGain) > 1e-5)
 	{
@@ -650,7 +650,7 @@ int SOMCEngine::mapicdReconstruct()
 #else
 	printf("The Arithmetic mean of the constraint is %lf\n",sum);
 	if(sum - m_Sinogram->TargetGain > 1e-5)
-	{		
+	{
 		printf("Arithmetic Mean Constraint not met..renormalizing\n");
 		temp = m_Sinogram->TargetGain/sum;
 		for (k = 0 ; k < m_Sinogram->N_theta; k++) {
@@ -1632,7 +1632,7 @@ int SOMCEngine::mapicdReconstruct()
 
 #endif
 		printf("Lagrange Multiplier = %lf\n",LagrangeMultiplier);
-		
+
 		printf("Offsets\n");
 		for(i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 		{
@@ -1643,7 +1643,7 @@ int SOMCEngine::mapicdReconstruct()
 		{
 			printf("%lf\n",NuisanceParams.I_0[i_theta]);
 		}
-		
+
 
 #ifdef NOISE_MODEL
 		//Updating the Weights
@@ -1757,7 +1757,7 @@ int SOMCEngine::mapicdReconstruct()
  //Finds the min and max of the neighborhood . This is required prior to calling
  solve()
  *****************************************************************************/
-void SOMCEngine::minMax(DATA_TYPE *low,DATA_TYPE *high)
+void SOCEngine::minMax(DATA_TYPE *low,DATA_TYPE *high)
 {
 	uint8_t i,j,k;
 	*low=NEIGHBORHOOD[0][0][0];
@@ -1791,7 +1791,7 @@ void SOMCEngine::minMax(DATA_TYPE *low,DATA_TYPE *high)
 
 
 
-void* SOMCEngine::calculateVoxelProfile()
+void* SOCEngine::calculateVoxelProfile()
 {
 	DATA_TYPE angle,MaxValLineIntegral;
 	DATA_TYPE temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
@@ -1858,7 +1858,7 @@ void* SOMCEngine::calculateVoxelProfile()
 /*******************************************************************
  Forwards Projects the Object and stores it in a 3-D matrix
  ********************************************************************/
-DATA_TYPE*** SOMCEngine::forwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE*** H_t)
+DATA_TYPE*** SOCEngine::forwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE*** H_t)
 {
 	DATA_TYPE x,z,y;
 	DATA_TYPE r,rmin,rmax,t,tmin,tmax;
@@ -1962,7 +1962,7 @@ DATA_TYPE*** SOMCEngine::forwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE*
 	return Y_Est;
 }
 
-void* SOMCEngine::calculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice,
+void* SOCEngine::calculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice,
                                            DATA_TYPE** VoxelProfile)
 {
 	int32_t i,j,k,sliceidx;
@@ -2320,7 +2320,7 @@ void* SOMCEngine::calculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t sli
 
 /* Initializes the global variables cosine and sine to speed up computation
  */
-void SOMCEngine::calculateSinCos()
+void SOCEngine::calculateSinCos()
 {
 	uint16_t i;
 	cosine=(DATA_TYPE*)get_spc(m_Sinogram->N_theta,sizeof(DATA_TYPE));
@@ -2333,7 +2333,7 @@ void SOMCEngine::calculateSinCos()
 	}
 }
 
-void SOMCEngine::initializeBeamProfile()
+void SOCEngine::initializeBeamProfile()
 {
 	uint16_t i;
 	DATA_TYPE sum=0,W;
@@ -2362,7 +2362,7 @@ void SOMCEngine::initializeBeamProfile()
 
 
 #if 0
-double SOMCEngine::CE_DerivOfCostFunc(double u)
+double SOCEngine::CE_DerivOfCostFunc(double u)
 {
 	double temp=0;
 	double value=0;
@@ -2393,7 +2393,7 @@ double SOMCEngine::CE_DerivOfCostFunc(double u)
 
 
 
-DATA_TYPE SOMCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
+DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 {
 	DATA_TYPE cost=0,temp=0,delta;
 	int16_t i,j,k,p,q,r;
@@ -2592,7 +2592,7 @@ DATA_TYPE SOMCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 	return cost;
 }
 
-void* SOMCEngine::detectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelProfile)
+void* SOCEngine::detectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelProfile)
 {
 
   FILE* Fp = NULL;
@@ -2826,7 +2826,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col,Sino* Sinogram,
 }
 */
 
-void* SOMCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, DATA_TYPE*** DetectorResponse)
+void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, DATA_TYPE*** DetectorResponse)
 {
 	int32_t i,j,k,sliceidx;
 	DATA_TYPE x,z,y;
@@ -2999,7 +2999,7 @@ void* SOMCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint1
 
 #endif
 
-double SOMCEngine::surrogateFunctionBasedMin()
+double SOCEngine::surrogateFunctionBasedMin()
 {
 	double numerator_sum=0;
 	double denominator_sum=0;
@@ -3042,7 +3042,7 @@ double SOMCEngine::surrogateFunctionBasedMin()
 }
 #ifdef QGGMRF
 //Function to compute parameters of thesurrogate function
-void SOMCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
+void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
 {
 	DATA_TYPE Delta0,DeltaMin,DeltaMax,T,a,b,c;
 	uint8_t i,j,k,count=0;
@@ -3072,7 +3072,7 @@ void SOMCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
 
 }
 
-DATA_TYPE SOMCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
+DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
 {
 	DATA_TYPE u,temp1,temp2;
 	uint8_t i,j,k,count=0;
@@ -3095,12 +3095,12 @@ DATA_TYPE SOMCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
 
 
 
-DATA_TYPE SOMCEngine::CE_QGGMRF_Value(DATA_TYPE delta)
+DATA_TYPE SOCEngine::CE_QGGMRF_Value(DATA_TYPE delta)
 {
 	return (pow(fabs(delta),MRF_P))/(1 + pow(fabs(delta/MRF_C),MRF_Q));
 }
 
-DATA_TYPE SOMCEngine::CE_QGGMRF_Derivative(DATA_TYPE delta)
+DATA_TYPE SOCEngine::CE_QGGMRF_Derivative(DATA_TYPE delta)
 {
 	DATA_TYPE temp=0,temp1,temp2;
 	temp1=pow(fabs(delta/MRF_C),MRF_P-MRF_Q);
@@ -3111,7 +3111,7 @@ DATA_TYPE SOMCEngine::CE_QGGMRF_Derivative(DATA_TYPE delta)
 		return ((temp2/(1+temp1))*(MRF_P - ((MRF_P-MRF_Q)*temp1)/(1+temp1)));
 	}
 }
-DATA_TYPE SOMCEngine::CE_QGGMRF_SecondDerivative(DATA_TYPE delta)
+DATA_TYPE SOCEngine::CE_QGGMRF_SecondDerivative(DATA_TYPE delta)
 {
 	DATA_TYPE temp=2;
 	return temp;

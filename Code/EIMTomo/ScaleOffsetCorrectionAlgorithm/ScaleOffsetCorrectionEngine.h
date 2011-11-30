@@ -18,12 +18,12 @@
 /**
  *
  */
-class SOMCEngine
+class SOCEngine
 {
 
   public:
-    SOMCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs);
-    virtual ~SOMCEngine();
+    SOCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs);
+    virtual ~SOCEngine();
 
     /**
      * @brief
@@ -40,7 +40,7 @@ class SOMCEngine
 #endif//qggmrf
   protected:
     // Protect this constructor because we want to force the use of the other
-    SOMCEngine();
+    SOCEngine();
     void initVariables();
 
   private:
@@ -81,7 +81,7 @@ class SOMCEngine
     uint64_t startm;
     uint64_t stopm;
 
-    TomoInputs* m_CmdInputs;//Holds the inputs from the command line 
+    TomoInputs* m_CmdInputs;//Holds the inputs from the command line
     Sino* m_Sinogram;//hold the sinogram data
     Geom* m_Geometry;//holds the geometry data and object to reconstruct
 
@@ -219,8 +219,8 @@ class SOMCEngine
       }
     }
 
-    SOMCEngine(const SOMCEngine&); // Copy Constructor Not Implemented
-    void operator=(const SOMCEngine&); // Operator '=' Not Implemented
+    SOCEngine(const SOCEngine&); // Copy Constructor Not Implemented
+    void operator=(const SOCEngine&); // Operator '=' Not Implemented
 };
 
 #endif //CompEngine
