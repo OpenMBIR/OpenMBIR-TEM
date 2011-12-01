@@ -55,6 +55,7 @@
 //#define CIRCULAR_BOUNDARY_CONDITION
 //#define DEBUG_CONSTRAINT_OPT
 #define RANDOM_ORDER_UPDATES
+//#define BRIGHT_FIELD
 
 //#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
 
@@ -618,6 +619,15 @@ int SOCEngine::mapicdReconstruct()
 
 #endif
 
+#ifdef BRIGHT_FIELD //Take log of the data and subtract log(Dosage) from it
+	
+	for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
+		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
+			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
+			{
+				m_Sinogram->counts[i_theta][i_r][i_t] = log(m_Sinogram->counts[i_theta][i_r][i_t])-log(m_Sinogram->TargetGain);
+			}
+#endif//Bright Field
 
 	//Scale and Offset Parameters Initialization
 
@@ -933,7 +943,13 @@ int SOCEngine::mapicdReconstruct()
 		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
 			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
 				if(sum != 0)
+				{
+#ifdef BRIGHT_FIELD
+					Weight[i_theta][i_r][i_t] = sum;
+#else
 					Weight[i_theta][i_r][i_t]=1.0/sum;//The variance for each view ~=averagecounts in that view
+#endif
+				}
 	}
 #endif//Noise model
 
@@ -952,10 +968,16 @@ int SOCEngine::mapicdReconstruct()
 
 #ifndef NOISE_MODEL
 				if(m_Sinogram->counts[i_theta][i_r][i_t] != 0)
+				{
+#ifdef BRIGHT_FIELD
+					Weight[i_theta][i_r][i_t] = m_Sinogram->counts[i_theta][i_r][i_t];
+#else
 					Weight[i_theta][i_r][i_t]=1.0/m_Sinogram->counts[i_theta][i_r][i_t];
+#endif //bright field check
+				}
 				else
 					Weight[i_theta][i_r][i_t]=0;
-#endif
+#endif//Noise model
 
 //#ifdef DEBUG
 				//writing the error sinogram
