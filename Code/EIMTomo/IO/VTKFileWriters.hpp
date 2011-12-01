@@ -266,11 +266,11 @@ class VTKRectilinearGridFileWriter
       // Write the correct header
       if (m_WriteBinaryFiles == true)
       {
-        WRITE_RECTILINEAR_GRID_HEADER("BINARY", r, r->xpoints + 1, r->ypoints+1, r->zpoints+1)
+        WRITE_RECTILINEAR_GRID_HEADER("BINARY", r, r->xpoints, r->ypoints, r->zpoints)
       }
       else
       {
-        WRITE_RECTILINEAR_GRID_HEADER("ASCII", r, r->xpoints + 1, r->ypoints+1, r->zpoints+1)
+        WRITE_RECTILINEAR_GRID_HEADER("ASCII", r, r->xpoints, r->ypoints, r->zpoints)
       }
 
       // Write the XCoords
@@ -308,8 +308,7 @@ class VTKRectilinearGridFileWriter
 class VTKStructuredPointsFileWriter
 {
   public:
-    //   MXA_SHARED_POINTERS(VTKStructuredPointsFileWriter);
-    //   MXA_STATIC_NEW_MACRO(VTKStructuredPointsFileWriter);
+    VTKStructuredPointsFileWriter() {}
     MXA_TYPE_MACRO(VTKStructuredPointsFileWriter);
 
     virtual ~VTKStructuredPointsFileWriter(){}
@@ -336,7 +335,7 @@ class VTKStructuredPointsFileWriter
         WRITE_STRUCTURED_POINTS_HEADER("ASCII", r)
       }
 
-      size_t total = r->xpoints * r->ypoints * r->zpoints;
+      //size_t total = r->xpoints * r->ypoints * r->zpoints;
       // Now loop on all of our Scalars and write those arrays as CELL_DATA
       for (typename std::vector<VtkScalarWriter*>::iterator iter = scalars.begin(); iter != scalars.end(); ++iter )
       {
@@ -351,7 +350,7 @@ class VTKStructuredPointsFileWriter
       return err;
     }
   protected:
-    VTKStructuredPointsFileWriter() {}
+
 
   private:
     VTKStructuredPointsFileWriter(const VTKStructuredPointsFileWriter&); // Copy Constructor Not Implemented

@@ -645,9 +645,9 @@ int SOCEngine::mapicdReconstruct()
 	}
 	sum/=m_Sinogram->N_theta;
 #ifdef GEOMETRIC_MEAN_CONSTRAINT
-	sum=exp(sum);	
+	sum=exp(sum);
 	printf("The geometric mean of the gains is %lf\n",sum);
-	
+
 	//Checking if the input parameters satisfy the target geometric mean
 	if(fabs(sum - m_Sinogram->TargetGain) > 1e-5)
 	{
@@ -660,7 +660,7 @@ int SOCEngine::mapicdReconstruct()
 #else
 	printf("The Arithmetic mean of the constraint is %lf\n",sum);
 	if(sum - m_Sinogram->TargetGain > 1e-5)
-	{		
+	{
 		printf("Arithmetic Mean Constraint not met..renormalizing\n");
 		temp = m_Sinogram->TargetGain/sum;
 		for (k = 0 ; k < m_Sinogram->N_theta; k++) {
@@ -1654,7 +1654,7 @@ int SOCEngine::mapicdReconstruct()
 
 #endif
 		printf("Lagrange Multiplier = %lf\n",LagrangeMultiplier);
-		
+
 		printf("Offsets\n");
 		for(i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 		{
@@ -1665,7 +1665,7 @@ int SOCEngine::mapicdReconstruct()
 		{
 			printf("%lf\n",NuisanceParams.I_0[i_theta]);
 		}
-		
+
 
 #ifdef NOISE_MODEL
 		//Updating the Weights

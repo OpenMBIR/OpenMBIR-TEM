@@ -43,11 +43,11 @@
  * @date Nov 16, 2011
  * @version 1.0
  */
-class ScaleOffsetCorrectionParser
+class ScaleOffsetMotionCorrectionParser
 {
   public:
-    ScaleOffsetCorrectionParser();
-    virtual ~ScaleOffsetCorrectionParser();
+    ScaleOffsetMotionCorrectionParser();
+    virtual ~ScaleOffsetMotionCorrectionParser();
 
     int parseArguments(int argc, char **argv, TomoInputs* Input);
     int readParameterFile(const std::string &filepath,TomoInputs* ParsedInput,Sino* Sinogram,Geom* Geometry);
@@ -67,8 +67,8 @@ class ScaleOffsetCorrectionParser
     uint64_t startm;
     uint64_t stopm;
 
-    ScaleOffsetCorrectionParser(const ScaleOffsetCorrectionParser&); // Copy Constructor Not Implemented
-    void operator=(const ScaleOffsetCorrectionParser&); // Operator '=' Not Implemented
+    ScaleOffsetMotionCorrectionParser(const ScaleOffsetMotionCorrectionParser&); // Copy Constructor Not Implemented
+    void operator=(const ScaleOffsetMotionCorrectionParser&); // Operator '=' Not Implemented
 
 };
 

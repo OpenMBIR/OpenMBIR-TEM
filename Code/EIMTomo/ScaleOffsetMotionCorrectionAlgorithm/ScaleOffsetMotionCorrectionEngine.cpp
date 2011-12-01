@@ -303,7 +303,7 @@ class DerivOfCostFunc
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-SOCEngine::SOCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs) :
+SOMCEngine::SOMCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs) :
     m_Cancel(false),
 m_CmdInputs(inputs),
 m_Sinogram(sinogram),
@@ -315,7 +315,7 @@ m_Geometry(geometry)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-SOCEngine::SOCEngine() :
+SOMCEngine::SOMCEngine() :
     m_Cancel(false),
     m_CmdInputs(NULL),
     m_Sinogram(NULL),
@@ -328,7 +328,7 @@ SOCEngine::SOCEngine() :
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-SOCEngine::~SOCEngine()
+SOMCEngine::~SOMCEngine()
 {
 
 }
@@ -336,7 +336,7 @@ SOCEngine::~SOCEngine()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::initVariables()
+void SOMCEngine::initVariables()
 {
 
         FILTER[0][0][0] = 0.0302; FILTER[0][0][1] = 0.0370; FILTER[0][0][2] = 0.0302;
@@ -373,7 +373,7 @@ void SOCEngine::initVariables()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int SOCEngine::mapicdReconstruct()
+int SOMCEngine::mapicdReconstruct()
 {
   if (m_Sinogram == NULL || m_Geometry == NULL || m_CmdInputs == NULL)
   {
@@ -1774,7 +1774,7 @@ int SOCEngine::mapicdReconstruct()
  //Finds the min and max of the neighborhood . This is required prior to calling
  solve()
  *****************************************************************************/
-void SOCEngine::minMax(DATA_TYPE *low,DATA_TYPE *high)
+void SOMCEngine::minMax(DATA_TYPE *low,DATA_TYPE *high)
 {
 	uint8_t i,j,k;
 	*low=NEIGHBORHOOD[0][0][0];
@@ -1808,7 +1808,7 @@ void SOCEngine::minMax(DATA_TYPE *low,DATA_TYPE *high)
 
 
 
-void* SOCEngine::calculateVoxelProfile()
+void* SOMCEngine::calculateVoxelProfile()
 {
 	DATA_TYPE angle,MaxValLineIntegral;
 	DATA_TYPE temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
@@ -1875,7 +1875,7 @@ void* SOCEngine::calculateVoxelProfile()
 /*******************************************************************
  Forwards Projects the Object and stores it in a 3-D matrix
  ********************************************************************/
-DATA_TYPE*** SOCEngine::forwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE*** H_t)
+DATA_TYPE*** SOMCEngine::forwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE*** H_t)
 {
 	DATA_TYPE x,z,y;
 	DATA_TYPE r,rmin,rmax,t,tmin,tmax;
@@ -1979,7 +1979,7 @@ DATA_TYPE*** SOCEngine::forwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE**
 	return Y_Est;
 }
 
-void* SOCEngine::calculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice,
+void* SOMCEngine::calculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice,
                                            DATA_TYPE** VoxelProfile)
 {
 	int32_t i,j,k,sliceidx;
@@ -2337,7 +2337,7 @@ void* SOCEngine::calculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slic
 
 /* Initializes the global variables cosine and sine to speed up computation
  */
-void SOCEngine::calculateSinCos()
+void SOMCEngine::calculateSinCos()
 {
 	uint16_t i;
 	cosine=(DATA_TYPE*)get_spc(m_Sinogram->N_theta,sizeof(DATA_TYPE));
@@ -2350,7 +2350,7 @@ void SOCEngine::calculateSinCos()
 	}
 }
 
-void SOCEngine::initializeBeamProfile()
+void SOMCEngine::initializeBeamProfile()
 {
 	uint16_t i;
 	DATA_TYPE sum=0,W;
@@ -2379,7 +2379,7 @@ void SOCEngine::initializeBeamProfile()
 
 
 #if 0
-double SOCEngine::CE_DerivOfCostFunc(double u)
+double SOMCEngine::CE_DerivOfCostFunc(double u)
 {
 	double temp=0;
 	double value=0;
@@ -2410,7 +2410,7 @@ double SOCEngine::CE_DerivOfCostFunc(double u)
 
 
 
-DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
+DATA_TYPE SOMCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 {
 	DATA_TYPE cost=0,temp=0,delta;
 	int16_t i,j,k,p,q,r;
@@ -2609,7 +2609,7 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 	return cost;
 }
 
-void* SOCEngine::detectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelProfile)
+void* SOMCEngine::detectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelProfile)
 {
 
   FILE* Fp = NULL;
@@ -2843,7 +2843,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col,Sino* Sinogram,
 }
 */
 
-void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, DATA_TYPE*** DetectorResponse)
+void* SOMCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, DATA_TYPE*** DetectorResponse)
 {
 	int32_t i,j,k,sliceidx;
 	DATA_TYPE x,z,y;
@@ -3016,7 +3016,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
 
 #endif
 
-double SOCEngine::surrogateFunctionBasedMin()
+double SOMCEngine::surrogateFunctionBasedMin()
 {
 	double numerator_sum=0;
 	double denominator_sum=0;
@@ -3059,7 +3059,7 @@ double SOCEngine::surrogateFunctionBasedMin()
 }
 #ifdef QGGMRF
 //Function to compute parameters of thesurrogate function
-void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
+void SOMCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
 {
 	DATA_TYPE Delta0,DeltaMin,DeltaMax,T,a,b,c;
 	uint8_t i,j,k,count=0;
@@ -3089,7 +3089,7 @@ void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
 
 }
 
-DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
+DATA_TYPE SOMCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
 {
 	DATA_TYPE u,temp1,temp2;
 	uint8_t i,j,k,count=0;
@@ -3112,12 +3112,12 @@ DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
 
 
 
-DATA_TYPE SOCEngine::CE_QGGMRF_Value(DATA_TYPE delta)
+DATA_TYPE SOMCEngine::CE_QGGMRF_Value(DATA_TYPE delta)
 {
 	return (pow(fabs(delta),MRF_P))/(1 + pow(fabs(delta/MRF_C),MRF_Q));
 }
 
-DATA_TYPE SOCEngine::CE_QGGMRF_Derivative(DATA_TYPE delta)
+DATA_TYPE SOMCEngine::CE_QGGMRF_Derivative(DATA_TYPE delta)
 {
 	DATA_TYPE temp=0,temp1,temp2;
 	temp1=pow(fabs(delta/MRF_C),MRF_P-MRF_Q);
@@ -3128,7 +3128,7 @@ DATA_TYPE SOCEngine::CE_QGGMRF_Derivative(DATA_TYPE delta)
 		return ((temp2/(1+temp1))*(MRF_P - ((MRF_P-MRF_Q)*temp1)/(1+temp1)));
 	}
 }
-DATA_TYPE SOCEngine::CE_QGGMRF_SecondDerivative(DATA_TYPE delta)
+DATA_TYPE SOMCEngine::CE_QGGMRF_SecondDerivative(DATA_TYPE delta)
 {
 	DATA_TYPE temp=2;
 	return temp;
