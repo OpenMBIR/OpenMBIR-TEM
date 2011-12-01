@@ -56,7 +56,6 @@
 //#define DEBUG_CONSTRAINT_OPT
 #define RANDOM_ORDER_UPDATES
 
-//#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
 
 #define START startm = EIMTOMO_getMilliSeconds();
 #define STOP stopm = EIMTOMO_getMilliSeconds();
@@ -674,10 +673,10 @@ int SOCEngine::mapicdReconstruct()
 	
 	//fclose(Fp6);
 
-	for(k = 0 ; k < m_Sinogram->N_theta;k++)
+/*	for(k = 0 ; k < m_Sinogram->N_theta;k++)
 	{
 		printf("%lf\n",NuisanceParams.ShiftX[k]);
-	}
+	}*/
 
 
 
@@ -741,12 +740,18 @@ int SOCEngine::mapicdReconstruct()
 //	AMatrixCol* Aj;
 	AMatrixCol* TempMemBlock;
 	//T-direction response
-	AMatrixCol* VoxelLineResponse=(AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));
+	AMatrixCol** VoxelLineResponse=(AMatrixCol**)get_img(m_Geometry->N_y, m_Sinogram->N_theta, sizeof(AMatrixCol));
+	//multialloc(sizeof(AMatrixCol),2,m_Sinogram->N_theta,m_Geometry->N_y);//Need to change to 2-D array Vox[i_theta][i_t]
+	
 	MaxNumberOfDetectorElts = (uint16_t)((m_Geometry->delta_xy/m_Sinogram->delta_t)+2);
-    for (i=0; i < m_Geometry->N_y; i++) {
-		VoxelLineResponse[i].count=0;
-		VoxelLineResponse[i].values=(DATA_TYPE*)get_spc(MaxNumberOfDetectorElts, sizeof(DATA_TYPE));
-		VoxelLineResponse[i].index=(uint32_t*)get_spc(MaxNumberOfDetectorElts, sizeof(uint32_t));
+    for(i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
+	{
+	for (i=0; i < m_Geometry->N_y; i++) 
+	{
+		VoxelLineResponse[i_theta][i].count=0;
+		VoxelLineResponse[i_theta][i].values=(DATA_TYPE*)get_spc(MaxNumberOfDetectorElts, sizeof(DATA_TYPE));
+		VoxelLineResponse[i_theta][i].index=(uint32_t*)get_spc(MaxNumberOfDetectorElts, sizeof(uint32_t));
+	}
 	}
 #endif
 
@@ -786,10 +791,13 @@ int SOCEngine::mapicdReconstruct()
 
 	//Storing the response along t-direction for each voxel line
 
+	for(i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
+	{
 	for (i =0; i < m_Geometry->N_y; i++)
 	{
 		y = ((DATA_TYPE)i+0.5)*m_Geometry->delta_xy + m_Geometry->y0;
-		t = y;
+		t = y + m_Sinogram->ShiftY[i_theta];
+		
 		tmin = (t - m_Geometry->delta_xy/2) > m_Sinogram->T0 ? t-m_Geometry->delta_xy/2 : m_Sinogram->T0;
 		tmax = (t + m_Geometry->delta_xy/2) <= m_Sinogram->TMax? t + m_Geometry->delta_xy/2 : m_Sinogram->TMax;
 
@@ -822,13 +830,14 @@ int SOCEngine::mapicdReconstruct()
 
 			if(ProfileThickness != 0)//Store the response of this slice
 			{
-				printf("%d %lf\n",i_t,ProfileThickness);
-				VoxelLineResponse[i].values[VoxelLineResponse[i].count]=ProfileThickness;
-				VoxelLineResponse[i].index[VoxelLineResponse[i].count++]=i_t;
+				printf("%d %d %lf\n",i_theta,i_t,ProfileThickness);
+				VoxelLineResponse[i_theta][i].values[VoxelLineResponse[i_theta][i].count]=ProfileThickness;//VoxelLineResponse[i_theta][i].values=...
+				VoxelLineResponse[i_theta][i].index[VoxelLineResponse[i_theta][i].count++]=i_t;
 			}
 
 		}
 
+	}
 	}
 
 
@@ -887,9 +896,8 @@ int SOCEngine::mapicdReconstruct()
 
 					i_theta = int16_t(floor(static_cast<float>(TempCol[j][k]->index[q]/(m_Sinogram->N_r))));
 					i_r =  (TempCol[j][k]->index[q]%(m_Sinogram->N_r));
-
 					VoxelLineAccessCounter=0;
-					for(i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)//CHANGED from <= to <
+					for(i_t = VoxelLineResponse[i_theta][i].index[0]; i_t < VoxelLineResponse[i_theta][i].index[0]+VoxelLineResponse[i_theta][i].count; i_t++)//CHANGED from <= to <
 					{
 						/*center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
 						delta_t = fabs(center_t - t);
@@ -904,7 +912,7 @@ int SOCEngine::mapicdReconstruct()
 						{
 							ProfileThickness=0;
 						}*/
-						Y_Est[i_theta][i_r][i_t] += (NuisanceParams.I_0[i_theta]*(TempCol[j][k]->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter++]* m_Geometry->Object[j][k][i]));
+						Y_Est[i_theta][i_r][i_t] += (NuisanceParams.I_0[i_theta]*(TempCol[j][k]->values[q] *VoxelLineResponse[i_theta][i].values[VoxelLineAccessCounter++]* m_Geometry->Object[j][k][i]));
 
 				    }
 				}
@@ -1141,7 +1149,7 @@ int SOCEngine::mapicdReconstruct()
 							i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(m_Sinogram->N_r)));
 							i_r =  (TempMemBlock->index[q]%(m_Sinogram->N_r));
 							VoxelLineAccessCounter=0;
-							for(i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
+							for(i_t = VoxelLineResponse[i_theta][i].index[0]; i_t < VoxelLineResponse[i_theta][i].index[0]+VoxelLineResponse[i_theta][i].count; i_t++)
 							// for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 							 {
 								/* center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
@@ -1160,8 +1168,8 @@ int SOCEngine::mapicdReconstruct()
 									 ProfileThickness=0;
 								 }*/
 
-								 THETA2 += ((NuisanceParams.I_0[i_theta]*NuisanceParams.I_0[i_theta])*(VoxelLineResponse[i].values[VoxelLineAccessCounter]*VoxelLineResponse[i].values[VoxelLineAccessCounter])*(TempMemBlock->values[q])*(TempMemBlock->values[q])*Weight[i_theta][i_r][i_t]);
-								 THETA1 += NuisanceParams.I_0[i_theta]*ErrorSino[i_theta][i_r][i_t]*(TempMemBlock->values[q])*(VoxelLineResponse[i].values[VoxelLineAccessCounter])*Weight[i_theta][i_r][i_t];
+								 THETA2 += ((NuisanceParams.I_0[i_theta]*NuisanceParams.I_0[i_theta])*(VoxelLineResponse[i_theta][i].values[VoxelLineAccessCounter]*VoxelLineResponse[i_theta][i].values[VoxelLineAccessCounter])*(TempMemBlock->values[q])*(TempMemBlock->values[q])*Weight[i_theta][i_r][i_t]);
+								 THETA1 += NuisanceParams.I_0[i_theta]*ErrorSino[i_theta][i_r][i_t]*(TempMemBlock->values[q])*(VoxelLineResponse[i_theta][i].values[VoxelLineAccessCounter])*Weight[i_theta][i_r][i_t];
 								 VoxelLineAccessCounter++;
 							 }
 						}
@@ -1238,7 +1246,7 @@ int SOCEngine::mapicdReconstruct()
 					i_theta = floor(static_cast<float>(TempMemBlock->index[q]/(m_Sinogram->N_r)));
 					i_r =  (TempMemBlock->index[q]%(m_Sinogram->N_r));
 					VoxelLineAccessCounter=0;
-					for(i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
+					for(i_t = VoxelLineResponse[i_theta][i].index[0]; i_t < VoxelLineResponse[i_theta][i].index[0]+VoxelLineResponse[i_theta][i].count; i_t++)
 					//for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
 					/*	center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
@@ -1257,7 +1265,7 @@ int SOCEngine::mapicdReconstruct()
 							ProfileThickness=0;
 						}*/
 
-							ErrorSino[i_theta][i_r][i_t] -=(NuisanceParams.I_0[i_theta]*(TempMemBlock->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter]* (m_Geometry->Object[j_new][k_new][i] - V)));
+							ErrorSino[i_theta][i_r][i_t] -=(NuisanceParams.I_0[i_theta]*(TempMemBlock->values[q] *VoxelLineResponse[i_theta][i].values[VoxelLineAccessCounter]* (m_Geometry->Object[j_new][k_new][i] - V)));
 						    VoxelLineAccessCounter++;
 					}
 					}
@@ -1374,9 +1382,9 @@ int SOCEngine::mapicdReconstruct()
 							i_r =  (TempCol[j][k]->index[q]%(m_Sinogram->N_r));
 
 							VoxelLineAccessCounter=0;
-							for(i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0]+VoxelLineResponse[i].count; i_t++)
+							for(i_t = VoxelLineResponse[i_theta][i].index[0]; i_t < VoxelLineResponse[i_theta][i].index[0]+VoxelLineResponse[i_theta][i].count; i_t++)
 							{
-								Y_Est[i_theta][i_r][i_t] += ((TempCol[j][k]->values[q] *VoxelLineResponse[i].values[VoxelLineAccessCounter++]* m_Geometry->Object[j][k][i]));
+								Y_Est[i_theta][i_r][i_t] += ((TempCol[j][k]->values[q] *VoxelLineResponse[i_theta][i].values[VoxelLineAccessCounter++]* m_Geometry->Object[j][k][i]));
 							}
 						}
 
@@ -2880,7 +2888,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
 	for(i=0;i<m_Sinogram->N_theta;i++)
 	{
 
-		r = x*cosine[i] - z*sine[i];
+		r = x*cosine[i] - z*sine[i] + m_Sinogram->ShiftX[i];
 		t = y;
 
 		rmin = r - m_Geometry->delta_xz;

@@ -45,6 +45,7 @@
 #include "EIMTomo/common/allocate.h"
 #include "EIMTomo/EIMTomoVersion.h"
 
+//#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
 #define EXTEND_OBJECT
 
 #define X_STRETCH 1
@@ -381,7 +382,7 @@ int ScaleOffsetCorrectionParser::readParameterFile(const std::string &filepath,T
 void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoInputs* ParsedInput)
 {
   int16_t i,j,k;
-	uint16_t view_count=0,TotalNumMaskedViews;
+  uint16_t view_count=0,TotalNumMaskedViews;
   FILE* Fp;
   double *buffer=(double*)get_spc(1,sizeof(double));
   DATA_TYPE sum=0;
@@ -442,8 +443,6 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
 		if(Sinogram->ViewMask[i] == 1)
 			Sinogram->InitialOffset[view_count++]=(DATA_TYPE)(*buffer);
 	}
-
-
 
 
 	Sinogram->N_theta = TotalNumMaskedViews;
