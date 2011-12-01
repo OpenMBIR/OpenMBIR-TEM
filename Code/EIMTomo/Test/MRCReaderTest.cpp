@@ -160,6 +160,10 @@ int main(int argc, char **argv)
     std::cout << "Error reading header from file" << std::endl;
     return EXIT_FAILURE;
   }
+
+  reader.printHeader(&header, std::cout);
+
+#if 0
   std::cout << "Num Cols:  " << header.nx << std::endl;
   std::cout << "Num Rows:  " << header.ny << std::endl;
   std::cout << "Num Sects: " << header.nz << std::endl;
@@ -204,8 +208,7 @@ int main(int argc, char **argv)
         << fei->pixelsize << "'\t'" << fei->magnification << "'\t'"
         << fei->voltage << "'\t'" << std::endl;
   }
-
-
+#endif
 
 
   int voxelMin[3] = {0,0,0};
@@ -233,7 +236,7 @@ int main(int argc, char **argv)
   }
 
   std::string path = MXAFileInfo::parentPath(filepath);
-  path = path + "/Section_Images";
+  path = path + MXADir::getSeparator() + MXAFileInfo::fileNameWithOutExtension(filepath) + "_Extracted_Images";
   MXADir::mkdir(path, true);
 
   // Read each slice

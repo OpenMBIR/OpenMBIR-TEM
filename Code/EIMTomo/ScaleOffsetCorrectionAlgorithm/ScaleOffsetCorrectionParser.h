@@ -60,7 +60,7 @@ class ScaleOffsetCorrectionParser
      * the programmer will need to free when they are finished with it.
      * @param fname The filename to copy
      */
-    char* copyFilenameToNewCharBuffer( const std::string &fname);
+//    char* copyFilenameToNewCharBuffer( const std::string &fname);
 
 
   private:

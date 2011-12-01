@@ -70,18 +70,18 @@ ScaleOffsetCorrectionParser::~ScaleOffsetCorrectionParser()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-char* ScaleOffsetCorrectionParser::copyFilenameToNewCharBuffer(const std::string &fname)
-{
-  std::string::size_type size = fname.size() + 1;
-  char* buf = NULL;
-  if (size > 1)
-  {
-    buf = (char*)malloc(size);
-    ::memset(buf, 0, size);
-    strncpy(buf, fname.c_str(), size - 1);
-  }
-  return buf;
-}
+//char* ScaleOffsetCorrectionParser::copyFilenameToNewCharBuffer(const std::string &fname)
+//{
+//  std::string::size_type size = fname.size() + 1;
+//  char* buf = NULL;
+//  if (size > 1)
+//  {
+//    buf = (char*)malloc(size);
+//    ::memset(buf, 0, size);
+//    strncpy(buf, fname.c_str(), size - 1);
+//  }
+//  return buf;
+//}
 
 
 
@@ -147,7 +147,7 @@ int ScaleOffsetCorrectionParser::parseArguments(int argc,char **argv,TomoInputs*
     Input->p = in_markov.getValue();
     Input->InitialParameters = InitialParameters.getValue();
     Input->NumOuterIter = NumOuterIter.getValue();
-	Input->StopThreshold = in_stopThreshold.getValue();
+    Input->StopThreshold = in_stopThreshold.getValue();
   }
   catch (TCLAP::ArgException &e)
   {

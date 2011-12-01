@@ -6,6 +6,8 @@
  */
 
 #include "MRCReader.h"
+#include <stdio.h>
+#include <iomanip>
 
 #include "MXA/MXA.h"
 #include "MXA/Common/MXAEndian.h"
@@ -145,6 +147,7 @@ int MRCReader::read(const std::string &filepath, int* voxelMin, int* voxelMax)
 
   // If we have an FEI header then parse the extended header information
   std::string feiLabel(m_Header->labels[0], 80);
+  m_Header->feiHeaders = NULL;
   if (feiLabel.find_first_of("Fei Company") != std::string::npos)
   {
     // Allocate and copy in the data
@@ -235,7 +238,7 @@ bool MRCReader::readPartialVolume(MXAFileReader64 &reader, char* dataPtr,
 
       offset = (m_Header->nx * m_Header->ny * z) + (m_Header->nx * y) + voxelMin[0];
       offset = offset * typeSize; // This gives number of bytes to the start of this set of data
-    //  std::cout << "File Offset: " << offset << std::endl;
+    //  std::cout << "File Offset: " << offset )
       numBytes = (voxelMax[0] - voxelMin[0] + 1) * typeSize; // This gives number of bytes to read
       reader.setFilePointer64(fileStartPos + offset);
       success = reader.rawRead(dataPtr, numBytes);
@@ -290,4 +293,112 @@ MRCHeader* MRCReader::getHeader()
   return m_Header;
 }
 
+#define PRINT_VARIABLE(out, desc, var)\
+  out << desc << "  " << var << std::endl;
 
+#define FW 14
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void MRCReader::printHeader(MRCHeader* h, std::ostream &out)
+{
+  out << "MRC Header ----------------------------------" << std::endl;
+  PRINT_VARIABLE (out, "nx:" , h->nx )
+  PRINT_VARIABLE (out, "ny:" , h->ny )
+  PRINT_VARIABLE (out, "nz:" , h->nz )
+  PRINT_VARIABLE (out, "mode:" , h->mode )
+  PRINT_VARIABLE (out, "nxstart:" , h->nxstart )
+  PRINT_VARIABLE (out, "nystart:" , h->nystart )
+  PRINT_VARIABLE (out, "nzstart:" , h->nzstart )
+  PRINT_VARIABLE (out, "mx:" , h->mx )
+  PRINT_VARIABLE (out, "my:" , h->my )
+  PRINT_VARIABLE (out, "mz:" , h->mz )
+  PRINT_VARIABLE (out, "xlen:" , h->xlen )
+  PRINT_VARIABLE (out, "ylen:" , h->ylen )
+  PRINT_VARIABLE (out, "zlen:" , h->zlen )
+  PRINT_VARIABLE (out, "alpha:" , h->alpha )
+  PRINT_VARIABLE (out, "beta:" , h->beta )
+  PRINT_VARIABLE (out, "gamma:" , h->gamma )
+  PRINT_VARIABLE (out, "mapc:" , h->mapc )
+  PRINT_VARIABLE (out, "mapr:" , h->mapr )
+  PRINT_VARIABLE (out, "maps" , h->maps )
+  PRINT_VARIABLE (out, "amin:" , h->amin )
+  PRINT_VARIABLE (out, "amax:" , h->amax )
+  PRINT_VARIABLE (out, "amean:" , h->amean )
+  PRINT_VARIABLE (out, "ispg:" , h->ispg )
+  PRINT_VARIABLE (out, "nsymbt:" , h->nsymbt )
+  PRINT_VARIABLE (out, "next:" , h->next )
+  PRINT_VARIABLE (out, "creatid:" , h->creatid )
+  PRINT_VARIABLE (out, "extra_data:" , h->extra_data ) // print hex
+  PRINT_VARIABLE (out, "nreal:" , h->nreal )
+  PRINT_VARIABLE (out, "extra_data_2:" , h->extra_data_2 )
+  PRINT_VARIABLE (out, "imodStamp:" , h->imodStamp )
+  PRINT_VARIABLE (out, "imodFlags:" , h->imodFlags )
+  PRINT_VARIABLE (out, "idtype:" , h->idtype )
+  PRINT_VARIABLE (out, "lens:" , h->lens )
+  PRINT_VARIABLE (out, "nd1:" , h->nd1 )
+  PRINT_VARIABLE (out, "nd2:" , h->nd2 )
+  PRINT_VARIABLE (out, "vd1:" , h->vd1 )
+  PRINT_VARIABLE (out, "vd2:" , h->vd2 )
+  PRINT_VARIABLE (out, "tiltangles:" , h->tiltangles[0] << h->tiltangles[1] << h->tiltangles[2] << h->tiltangles[3] << h->tiltangles[4] << h->tiltangles[5]   )
+  PRINT_VARIABLE (out, "xorg:" , h->xorg )
+  PRINT_VARIABLE (out, "yorg:" , h->yorg )
+  PRINT_VARIABLE (out, "zorg:" , h->zorg )
+  PRINT_VARIABLE (out, "cmap:" , h->cmap[0] << h->cmap[1] << h->cmap[2] << h->cmap[3]  )
+  PRINT_VARIABLE (out, "stamp:" , h->stamp[0] << h->stamp[1] << h->stamp[2] << h->stamp[3]  )
+  PRINT_VARIABLE (out, "rms:" , h->rms )
+  PRINT_VARIABLE (out, "nLabels" , h->nLabels )
+
+  for(int i = 0; i < h->nLabels; ++i) {
+    PRINT_VARIABLE (out, "  Labels: " << i , h->labels[i] )
+  }
+
+
+  if (h->feiHeaders != NULL)
+  {
+    char buf[FW + 1];
+    buf[FW] = 0;
+    std::vector<std::string> strings;
+    strings.push_back("a_tilt");
+    strings.push_back("b_tilt");
+    strings.push_back("x_stage");
+    strings.push_back("y_stage");
+    strings.push_back("z_stage");
+    strings.push_back("x_shift");
+    strings.push_back("y_shift");
+    strings.push_back("defocus");
+    strings.push_back("exp_time");
+    strings.push_back("mean_int");
+    strings.push_back("tiltaxis");
+    strings.push_back("pixelsize");
+    strings.push_back("magnification");
+    strings.push_back("voltage");
+    for(size_t i = 0; i < strings.size(); ++i)
+    {
+      ::memset(buf, 32, FW);
+      snprintf(buf, FW, "%s", strings[i].c_str());
+      buf[strings[i].length()] = 32;
+      out << buf << "\t";
+    }
+    out << std::endl;
+
+
+   // std::cout << "a_tilt \t b_tilt \t x_stage \t y_stage \t z_stage \t x_shift \t y_shift \t defocus \t exp_time \t mean_int \t tiltaxis \t pixelsize \t magnification \t voltage" << std::endl;
+    FEIHeader* fei = NULL;
+    for (int i = 0; i < h->nz; ++i)
+    {
+      fei = &(h->feiHeaders[i]);
+      out.setf(std::ios::left);
+      out << std::setw(FW) << fei->a_tilt << "\t" << std::setw(FW) << fei->b_tilt << "\t"
+          << std::setw(FW) << fei->x_stage << "\t" << std::setw(FW) << fei->y_stage << "\t" << std::setw(FW) << fei->z_stage << "\t"
+          << std::setw(FW) << fei->x_shift << "\t" << std::setw(FW) << fei->y_shift << "\t"
+          << std::setw(FW) << fei->defocus << "\t" << std::setw(FW) << fei->exp_time << "\t"
+          << std::setw(FW) << fei->mean_int << "\t" << std::setw(FW) << fei->tiltaxis << "\t"
+          << std::setw(FW) << fei->pixelsize << "\t" << std::setw(FW) << fei->magnification << "\t"
+          << std::setw(FW) << fei->voltage << "\t" << std::endl;
+    }
+  }
+
+  out << "---------------------------------------" << std::endl;
+}
