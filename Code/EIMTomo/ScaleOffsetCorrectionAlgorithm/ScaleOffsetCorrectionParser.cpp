@@ -43,6 +43,8 @@
 #include "EIMTomo/common/EIMTime.h"
 #include "EIMTomo/common/EIMMath.h"
 #include "EIMTomo/common/allocate.h"
+#include "EIMTomo/IO/MRCReader.h"
+#include "EIMTomo/IO/MRCHeader.h"
 #include "EIMTomo/EIMTomoVersion.h"
 
 #define EXTEND_OBJECT
@@ -365,7 +367,7 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
 	 Sinogram->counts=(DATA_TYPE***)get_3D(TotalNumMaskedViews,Sinogram->N_rEnd-Sinogram->N_rStart+1,Sinogram->N_tEnd-Sinogram->N_rStart+1, sizeof(DATA_TYPE));
   //Read data into this matrix
   //TODO: clarify this ! Super important !
- Fp=fopen(ParsedInput->SinoFile.c_str(),"r");
+ //Fp=fopen(ParsedInput->SinoFile.c_str(),"r");
 	/*
   for(i=0;i<Sinogram->N_t;i++)
     for(j=0;j<Sinogram->N_r;j++)
@@ -375,21 +377,46 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
     Sinogram->counts[i][k][j]=*buffer;
   }
 */
-
+	MRCReader reader(true);
+	MRCHeader header;  
+	int err = reader.readHeader(ParsedInput->SinoFile, &header);
+	if (err < 0)
+	{
+	}
+	
+	if (header.mode != 1)
+	{
+		std::cout << "16 bit integers are only supported. Error at line  " << __LINE__ << " in file " << __FILE__ << std::endl;
+		return;
+	}
+	
+	
+	int voxelMin[3] = {Sinogram->N_rStart, Sinogram->N_tStart, 0};
+	int voxelMax[3] = {Sinogram->N_rEnd, Sinogram->N_tEnd, header.nz-1};
+	err = reader.read(ParsedInput->SinoFile, voxelMin, voxelMax);
+	if (err < 0)
+    {
+		std::cout << "Error Code from Reading: " << err << std::endl;
+		return ;
+    }
+    int16_t* data = reinterpret_cast<int16_t*>(reader.getDataPointer());
+	
+	
+	
 	for(i=0;i<Sinogram->N_t;i++)
 		for(j=0;j<Sinogram->N_r;j++)
 		{
 			view_count=0;
 			for(k=0;k<Sinogram->N_theta;k++)
 			{
-				fread (buffer,sizeof(double), 1, Fp);
+				//fread (buffer,sizeof(double), 1, Fp);
 				if(Sinogram->ViewMask[k] == 1 && j >= Sinogram->N_rStart && j <= Sinogram->N_rEnd && i >= Sinogram->N_tStart && i <= Sinogram->N_tEnd)
 				Sinogram->counts[view_count++][j-Sinogram->N_rStart][i-Sinogram->N_tStart] = (DATA_TYPE)(*buffer);
 			}
 
 
 		}
-	fclose(Fp);
+//	fclose(Fp);
 
 	//The normalization and offset parameters for the views
 	Sinogram->InitialGain=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));

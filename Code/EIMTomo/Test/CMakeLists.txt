@@ -1,5 +1,5 @@
 
-option (EIMTomo_USE_TIFF "Use libTiff for some image output" OFF)
+option (EIMTomo_USE_TIFF "Use libTiff for some image output" ON)
 if (EIMTomo_USE_TIFF)
  # Prepend our own "FindTiff" code in front of what CMake itself provides
     set(CMAKE_MODULE_PATH ${CMP_MODULES_SOURCE_DIR} ${CMAKE_MODULE_PATH} )

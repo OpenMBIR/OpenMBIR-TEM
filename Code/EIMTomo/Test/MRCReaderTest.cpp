@@ -145,11 +145,13 @@ void getColorCorrespondingTovalue(int16_t val,
 
 
 
-const std::string filepath("/Users/Shared/Data/TomographyData/TiO2Ps100kRun3/Run3TiO2PS100k_2.ali");
+//const std::string filepath("/Users/Shared/Data/TomographyData/TiO2Ps100kRun3/Run3TiO2PS100k_2.ali");
 //const std::string filepath("/Users/Shared/Data/TomographyData/TiO2Ps100kRun3/Run3TiO2PS100k.mrc");
 
 int main(int argc, char **argv)
 {
+	if (argc != 2) { return 1;}
+	std::string filepath(argv[1]);
   std::cout << "Testing file \n  " << filepath << std::endl;
 
   MRCReader reader(true); // We are going to manage the data ourselves
@@ -162,54 +164,6 @@ int main(int argc, char **argv)
   }
 
   reader.printHeader(&header, std::cout);
-
-#if 0
-  std::cout << "Num Cols:  " << header.nx << std::endl;
-  std::cout << "Num Rows:  " << header.ny << std::endl;
-  std::cout << "Num Sects: " << header.nz << std::endl;
-  std::cout << "Pixel Type: " << header.mode << std::endl;
-
-  switch(header.mode)
-    {
-      case 0:
-        std::cout << "  Pixel Type:  Char" << std::endl;
-        break;
-      case 1:
-        std::cout << "  Pixel Type: Signed Short" << std::endl;
-        break;
-      case 2:
-        std::cout << "  Pixel Type: Float" << std::endl;
-        break;
-      case 3:
-        break;
-      case 4:
-        break;
-      case 6:
-        break;
-      case 16:
-        break;
-      default:
-        std::cout << "  Unknown Pixel Type" << std::endl;
-        break;
-    }
-  std::cout << "Min Pixel Value: " << header.amin << std::endl;
-  std::cout << "Max Pixel Value: " << header.amax << std::endl;
-
-  std::cout << "a_tilt \t b_tilt \t x_stage \t y_stage \t z_stage \t x_shift \t y_shift \t defocus \t exp_time \t mean_int \t tiltaxis \t pixelsize \t magnification \t voltage" << std::endl;
-  FEIHeader* fei = NULL;
-  for (int i = 0; i < header.nz; ++i)
-  {
-    fei = &(header.feiHeaders[i]);
-    std::cout << fei->a_tilt << "'\t'" << fei->b_tilt << "'\t'"
-        << fei->x_stage << "'\t'" << fei->y_stage << "'\t'" << fei->z_stage << "'\t'"
-        << fei->x_shift << "'\t'" << fei->y_shift << "'\t'"
-        << fei->defocus << "'\t'" << fei->exp_time << "'\t'"
-        << fei->mean_int << "'\t'" << fei->tiltaxis << "'\t'"
-        << fei->pixelsize << "'\t'" << fei->magnification << "'\t'"
-        << fei->voltage << "'\t'" << std::endl;
-  }
-#endif
-
 
   int voxelMin[3] = {0,0,0};
   int voxelMax[3] = {header.nx-1, header.ny-1, 0};
@@ -280,7 +234,6 @@ int main(int argc, char **argv)
     }
 
   }
-
 
 
 
