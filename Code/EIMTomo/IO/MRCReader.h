@@ -110,6 +110,8 @@ class MRCReader
 
     std::string getLabelField(int index);
 
+    void printHeader(MRCHeader* header, std::ostream &out);
+
   protected:
     MRCReader();
 
