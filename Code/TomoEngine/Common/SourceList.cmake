@@ -10,6 +10,7 @@ set (TomoEngine_Common_SRCS
     ${TomoEngine_SOURCE_DIR}/Common/AbstractPipeline.cpp
     ${TomoEngine_SOURCE_DIR}/Common/Observer.cpp
     ${TomoEngine_SOURCE_DIR}/Common/Observable.cpp    
+    ${TomoEngine_SOURCE_DIR}/Common/ComputeGainsOffsets.cpp
 )
 
 set (TomoEngine_Common_HDRS
@@ -20,6 +21,7 @@ set (TomoEngine_Common_HDRS
     ${TomoEngine_SOURCE_DIR}/Common/EIMMath.h
     ${TomoEngine_SOURCE_DIR}/Common/AbstractPipeline.h
     ${TomoEngine_SOURCE_DIR}/Common/Observer.h
-    ${TomoEngine_SOURCE_DIR}/Common/Observable.h    
+    ${TomoEngine_SOURCE_DIR}/Common/Observable.h 
+    ${TomoEngine_SOURCE_DIR}/Common/ComputeGainsOffsets.h   
 )
 cmp_IDE_SOURCE_PROPERTIES( "Common" "${TomoEngine_Common_HDRS}" "${TomoEngine_Common_SRCS}" "${CMP_INSTALL_FILES}")
