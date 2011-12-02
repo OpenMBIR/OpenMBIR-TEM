@@ -39,13 +39,13 @@
 
 #include "MXA/Utilities/MXADir.h"
 
-#include "EIMTomo/EIMTomo.h"
-#include "EIMTomo/common/EIMTime.h"
-#include "EIMTomo/common/EIMMath.h"
-#include "EIMTomo/common/allocate.h"
-#include "EIMTomo/IO/MRCReader.h"
-#include "EIMTomo/IO/MRCHeader.h"
-#include "EIMTomo/EIMTomoVersion.h"
+#include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/EIMTime.h"
+#include "TomoEngine/Common/EIMMath.h"
+#include "TomoEngine/Common/allocate.h"
+#include "TomoEngine/IO/MRCReader.h"
+#include "TomoEngine/IO/MRCHeader.h"
+#include "TomoEngine/TomoEngineVersion.h"
 
 #define EXTEND_OBJECT
 
@@ -95,7 +95,7 @@ int ScaleOffsetCorrectionParser::parseArguments(int argc,char **argv,TomoInputs*
     return -1;
   }
 
-  TCLAP::CmdLine cmd("", ' ', EIMTomo::Version::Complete);
+  TCLAP::CmdLine cmd("", ' ', TomoEngine::Version::Complete);
   TCLAP::ValueArg<std::string> in_paramFile("p", "paramfile", "The Parameter File", true, "", "");
   cmd.add(in_paramFile);
   TCLAP::ValueArg<std::string> in_sinoFile("s", "sinofile", "The Sinogram File", true, "", "");
@@ -368,7 +368,7 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
   //TODO: clarify this ! Super important !
   // Fp=fopen(ParsedInput->SinoFile.c_str(),"r");
 
-	/*	
+	/*
 	 for(i=0;i<Sinogram->N_t;i++)
 	 for(j=0;j<Sinogram->N_r;j++)
 	 {
@@ -379,28 +379,28 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
 	 if(Sinogram->ViewMask[k] == 1 && j >= Sinogram->N_rStart && j <= Sinogram->N_rEnd && i >= Sinogram->N_tStart && i <= Sinogram->N_tEnd)
 	 Sinogram->counts[view_count++][j-Sinogram->N_rStart][i-Sinogram->N_tStart] = (DATA_TYPE)(*buffer);
 	 }
-	 
-	 
+
+
 	 }
-	 
+
 	 */
-	
+
 	//Reading the MRC file
-	
+
 	MRCReader reader(true);
-	MRCHeader header;  
+	MRCHeader header;
 	int err = reader.readHeader(ParsedInput->SinoFile, &header);
 	if (err < 0)
 	{
 	}
-	
+
 	if (header.mode != 1)
 	{
 		std::cout << "16 bit integers are only supported. Error at line  " << __LINE__ << " in file " << __FILE__ << std::endl;
 		return;
 	}
-	
-	
+
+
 	int voxelMin[3] = {Sinogram->N_rStart, Sinogram->N_tStart, 0};
 	int voxelMax[3] = {Sinogram->N_rEnd, Sinogram->N_tEnd, header.nz-1};
 	err = reader.read(ParsedInput->SinoFile, voxelMin, voxelMax);
@@ -410,21 +410,22 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
 		return ;
     }
     int16_t* data = reinterpret_cast<int16_t*>(reader.getDataPointer());
-	
+
 	reader.printHeader(&header, std::cout);
-	//End of MRC Read 
+	//End of MRC Read
 	Sinogram->counts=(DATA_TYPE***)get_3D(TotalNumMaskedViews,Sinogram->N_rEnd-Sinogram->N_rStart+1,Sinogram->N_tEnd-Sinogram->N_rStart+1, sizeof(DATA_TYPE));
 
 	Sinogram->N_r = (Sinogram->N_rEnd-Sinogram->N_rStart+1);
 	Sinogram->N_t = (Sinogram->N_tEnd-Sinogram->N_tStart+1);
-	
+
 	view_count=0;
 	for(k=0;k<Sinogram->N_theta;k++)
 	{
 	for(i=0;i<Sinogram->N_t;i++)
 		for(j=0;j<Sinogram->N_r;j++)
-		{		
+		{
 			//std::cout<<i<<","<<j<<","<<k<<std::endl;
+
 			if(Sinogram->ViewMask[k] == 1)
 				Sinogram->counts[view_count][j][i] = data[k*Sinogram->N_r*Sinogram->N_t + i*Sinogram->N_r +j];
 			
@@ -433,7 +434,7 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
 		if(Sinogram->ViewMask[k] == 1)
 		 view_count++;
 	}
-	
+
 //	fclose(Fp);
 
 	//The normalization and offset parameters for the views
@@ -470,7 +471,7 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
 
 
 	printf("Size of the Masked Sinogram N_r =%d N_t = %d N_theta=%d\n",Sinogram->N_r,Sinogram->N_t,Sinogram->N_theta);
- 
+
 
       //check sum calculation
   for(i=0;i<Sinogram->N_theta;i++)

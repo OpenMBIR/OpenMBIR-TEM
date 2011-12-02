@@ -1,10 +1,32 @@
-/*
- * MRCReaderTest.cpp
+/* ============================================================================
+ * Copyright (c) 2011, Michael A. Jackson (BlueQuartz Software)
+ * All rights reserved.
  *
- *  Created on: Nov 22, 2011
- *      Author: mjackson
- */
-
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright notice, this
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
+ *
+ * Neither the name of Michael A. Jackson nor the names of its contributors may
+ * be used to endorse or promote products derived from this software without
+ * specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include <stdlib.h>
 
 #include <string>
@@ -12,9 +34,9 @@
 #include <vector>
 
 
-#include "EIMTomo/EIMTomoVersion.h"
-#include "EIMTomo/IO/MRCReader.h"
-#include "EIMTomo/IO/MRCHeader.h"
+#include "TomoEngine/TomoEngineVersion.h"
+#include "TomoEngine/IO/MRCReader.h"
+#include "TomoEngine/IO/MRCHeader.h"
 
 #include "MXA/Utilities/MXAFileInfo.h"
 #include "MXA/Utilities/MXADir.h"
@@ -81,7 +103,7 @@ int writeColorTiff(const std::string filename, std::vector<uint8_t> image, int w
 
 
    memset(software, 0, 1024);
-   snprintf(software, 1024, "%s using libTif", EIMTomo_PACKAGE_COMPLETE);
+   snprintf(software, 1024, "%s using libTif", TomoEngine_PACKAGE_COMPLETE);
 
    err = TIFFSetField(out, TIFFTAG_SOFTWARE, software);
 
@@ -154,16 +176,16 @@ int main(int argc, char **argv)
 	std::string filepath(argv[1]);
   std::cout << "Testing file \n  " << filepath << std::endl;
 
-  MRCReader reader(true); // We are going to manage the data ourselves
+  MRCReader::Pointer reader = MRCReader::New(true);
   MRCHeader header;
-  int err = reader.readHeader(filepath, &header);
+  int err = reader->readHeader(filepath, &header);
   if (err < 0)
   {
     std::cout << "Error reading header from file" << std::endl;
     return EXIT_FAILURE;
   }
 
-  reader.printHeader(&header, std::cout);
+  reader->printHeader(&header, std::cout);
 
   int voxelMin[3] = {0,0,0};
   int voxelMax[3] = {header.nx-1, header.ny-1, 0};
@@ -196,18 +218,18 @@ int main(int argc, char **argv)
   // Read each slice
   for (int z = 0; z < header.nz; ++z)
   {
-    MRCReader r(true);
+    MRCReader::Pointer r = MRCReader::New(true);
     std::cout << "Reading Section " << z << " out of " << header.nz << std::endl;
     voxelMin[2] = z;
     voxelMax[2] = z;
-    err = r.read(filepath, voxelMin, voxelMax);
+    err = r->read(filepath, voxelMin, voxelMax);
 
     if (err < 0)
     {
       std::cout << "Error Code from Reading: " << err << std::endl;
       return EXIT_FAILURE;
     }
-    int16_t* data = reinterpret_cast<int16_t*>(r.getDataPointer());
+    int16_t* data = reinterpret_cast<int16_t*>(r->getDataPointer());
     // Create an RGB Image
     std::vector<unsigned char> image(header.nx * header.ny * 3);
 

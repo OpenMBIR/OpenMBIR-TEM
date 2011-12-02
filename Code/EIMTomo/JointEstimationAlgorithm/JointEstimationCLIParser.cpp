@@ -11,7 +11,7 @@
 
 #include <tclap/CmdLine.h>
 #include <tclap/ValueArg.h>
-#include "EIMTomo/EIMTomoVersion.h"
+#include "TomoEngine/TomoEngineVersion.h"
 
 JointEstimationCLIParser::JointEstimationCLIParser()
 {
@@ -51,7 +51,7 @@ int JointEstimationCLIParser::parseCLIArguments(int argc,char *argv[], TomoInput
     return -1;
   }
 
-  TCLAP::CmdLine cmd("", ' ', EIMTomo::Version::Complete);
+  TCLAP::CmdLine cmd("", ' ', TomoEngine::Version::Complete);
 
   TCLAP::ValueArg<std::string> in_inputFile("i", "inputfile", "Input Data File", true, "", "");
   cmd.add(in_inputFile);

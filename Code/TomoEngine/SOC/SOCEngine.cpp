@@ -7,7 +7,7 @@
  *
  */
 
-#include "ScaleOffsetCorrectionEngine.h"
+#include "SOCEngine.h"
 
 // C Includes
 #include <stdlib.h>
@@ -19,17 +19,22 @@
 #include <limits>
 #include <iostream>
 
+// MXA includes
+#include "MXA/Utilities/MXADir.h"
+
 // Our own includes
 #include "TomoEngine/Common/EIMMath.h"
 #include "TomoEngine/Common/allocate.h"
 #include "TomoEngine/Common/EIMTime.h"
 #include "TomoEngine/mt/mt19937ar.h"
-#include "ScaleOffsetCorrectionConstants.h"
+#include "TomoEngine/IO/MRCHeader.h"
+#include "TomoEngine/IO/MRCReader.h"
+#include "TomoEngine/SOC/SOCConstants.h"
 
+#define EXTEND_OBJECT
 
-// MXA includes
-#include "MXA/Utilities/MXADir.h"
-
+#define X_STRETCH 1
+#define Z_STRETCH 2
 
 //#define DEBUG ,
 #define PROFILE_RESOLUTION 1536
@@ -305,26 +310,12 @@ class DerivOfCostFunc
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-SOCEngine::SOCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs) :
-    m_Cancel(false),
-m_Inputs(inputs),
-m_Sinogram(sinogram),
-m_Geometry(geometry)
-{
-  initVariables();
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 SOCEngine::SOCEngine() :
-    m_Cancel(false),
     m_Inputs(NULL),
     m_Sinogram(NULL),
     m_Geometry(NULL)
 {
   initVariables();
-
 }
 
 // -----------------------------------------------------------------------------
@@ -332,6 +323,14 @@ SOCEngine::SOCEngine() :
 // -----------------------------------------------------------------------------
 SOCEngine::~SOCEngine()
 {
+//  if (m_Sinogram != NULL)
+//  {
+//    delete m_Sinogram;
+//  }
+//  if(m_Geometry != NULL)
+//  {
+//    delete m_Geometry;
+//  }
 
 }
 
@@ -341,17 +340,22 @@ SOCEngine::~SOCEngine()
 void SOCEngine::initVariables()
 {
 
-        FILTER[0][0][0] = 0.0302; FILTER[0][0][1] = 0.0370; FILTER[0][0][2] = 0.0302;
-        FILTER[0][1][0] = 0.0370; FILTER[0][1][1] = 0.0523; FILTER[0][1][2] = 0.0370;
-        FILTER[0][2][0] = 0.0302; FILTER[0][2][1] = 0.0370; FILTER[0][2][2] = 0.0302;
 
-        FILTER[1][0][0] = 0.0370; FILTER[1][0][1] = 0.0523; FILTER[1][0][2] = 0.0370;
-        FILTER[1][1][0] = 0.0523; FILTER[1][1][1] = 0.0000; FILTER[1][1][2] = 0.0523;
-        FILTER[1][2][0] = 0.0370; FILTER[1][2][1] = 0.0523; FILTER[1][2][2] = 0.0370;
+  m_Inputs = NULL;
+  m_Sinogram = NULL;
+  m_Geometry = NULL;
 
-        FILTER[2][0][0] = 0.0302; FILTER[2][0][1] = 0.0370; FILTER[2][0][2] = 0.0302;
-        FILTER[2][1][0] = 0.0370; FILTER[2][1][1] = 0.0523; FILTER[2][1][2] = 0.0370;
-        FILTER[2][2][0] = 0.0302; FILTER[2][2][1] = 0.0370; FILTER[2][2][2] = 0.0302;
+  FILTER[0][0][0] = 0.0302; FILTER[0][0][1] = 0.0370; FILTER[0][0][2] = 0.0302;
+  FILTER[0][1][0] = 0.0370; FILTER[0][1][1] = 0.0523; FILTER[0][1][2] = 0.0370;
+  FILTER[0][2][0] = 0.0302; FILTER[0][2][1] = 0.0370; FILTER[0][2][2] = 0.0302;
+
+  FILTER[1][0][0] = 0.0370; FILTER[1][0][1] = 0.0523; FILTER[1][0][2] = 0.0370;
+  FILTER[1][1][0] = 0.0523; FILTER[1][1][1] = 0.0000; FILTER[1][1][2] = 0.0523;
+  FILTER[1][2][0] = 0.0370; FILTER[1][2][1] = 0.0523; FILTER[1][2][2] = 0.0370;
+
+  FILTER[2][0][0] = 0.0302; FILTER[2][0][1] = 0.0370; FILTER[2][0][2] = 0.0302;
+  FILTER[2][1][0] = 0.0370; FILTER[2][1][1] = 0.0523; FILTER[2][1][2] = 0.0370;
+  FILTER[2][2][0] = 0.0302; FILTER[2][2][1] = 0.0370; FILTER[2][2][2] = 0.0302;
 }
 
 // void CE_cancel()
@@ -375,12 +379,9 @@ void SOCEngine::initVariables()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int SOCEngine::mapicdReconstruct()
+void SOCEngine::execute()
 {
-  if (m_Sinogram == NULL || m_Geometry == NULL || m_Inputs == NULL)
-  {
-    return -1;
-  }
+
 	uint8_t err = 0;
 	int16_t Iter,OuterIter;
 	int16_t i,j,k,r,row,col,slice,RowIndex,ColIndex,SliceIndex,Idx,i_r,i_theta,i_t;
@@ -429,6 +430,36 @@ int SOCEngine::mapicdReconstruct()
 	FILE* Fp8 = NULL;
 
 	int fileError = 0;
+
+	// Initialize the Sinogram
+	if (m_Inputs == NULL)
+	{
+	  setErrorCondition(-1);
+	  updateProgressAndMessage("Error: The TomoInput Structure was NULL", 100);
+	  return;
+	}
+  //Based on the inputs , calculate the "other" variables in the structure definition
+	if (m_Sinogram == NULL)
+	{
+	  m_Sinogram = new Sinogram;
+	}
+	if (m_Geometry == NULL)
+	{
+	  m_Geometry = new Geometry;
+	}
+  initializeSinoParameters();
+  if (getErrorCondition() < 0)
+  {
+    return;
+  }
+  initializeGeomParameters();
+  if (getErrorCondition() < 0)
+  {
+    return;
+  }
+
+
+
 
 	MAKE_OUTPUT_FILE(Fp1, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::ReconstructedSinogramFile);
 	if (fileError == 1)
@@ -531,8 +562,8 @@ int SOCEngine::mapicdReconstruct()
 
 	//Setting the value of all the global variables
 
-	OffsetR = ((m_Geometry->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
-	OffsetT = ((m_Geometry->delta_xz/2) + m_Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
+	OffsetR = ((m_Inputs->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+	OffsetT = ((m_Inputs->delta_xz/2) + m_Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 
 #ifdef BEAM_CALCULATION
 	BEAM_WIDTH = (0.5)*m_Sinogram->delta_r;
@@ -581,7 +612,8 @@ int SOCEngine::mapicdReconstruct()
 	if (NULL == DetectorResponse)
 	{
 	  std::cout << "Error Calling function detectorResponse in file " << __FILE__ << "(" << __LINE__ << ")" << std::endl;
-	  return 0;
+	  setErrorCondition(-2);
+	  return;
 	}
 
 
@@ -597,14 +629,14 @@ int SOCEngine::mapicdReconstruct()
 	#ifdef ROI
 	Mask = (uint8_t **)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
 	EllipseA = m_Geometry->LengthX/2;
-	EllipseB = m_Geometry->LengthZ/2;
+	EllipseB = m_Inputs->LengthZ/2;
 	for (i = 0; i < m_Geometry->N_z ; i++)
 	{
 		for (j=0; j< m_Geometry->N_x; j++)
 		{
-			x = m_Geometry->x0 + ((DATA_TYPE)j + 0.5)*m_Geometry->delta_xz;
-			z = m_Geometry->z0 + ((DATA_TYPE)i + 0.5)*m_Geometry->delta_xz;
-			if (x >= -(m_Sinogram->N_r*m_Sinogram->delta_r)/2 && x <= (m_Sinogram->N_r*m_Sinogram->delta_r)/2 && z>= -m_Geometry->LengthZ/2 && z <= m_Geometry->LengthZ/2)
+			x = m_Geometry->x0 + ((DATA_TYPE)j + 0.5)*m_Inputs->delta_xz;
+			z = m_Geometry->z0 + ((DATA_TYPE)i + 0.5)*m_Inputs->delta_xz;
+			if (x >= -(m_Sinogram->N_r*m_Sinogram->delta_r)/2 && x <= (m_Sinogram->N_r*m_Sinogram->delta_r)/2 && z>= -m_Inputs->LengthZ/2 && z <= m_Inputs->LengthZ/2)
 			{
 				Mask[i][j] = 1;
 			}
@@ -620,7 +652,7 @@ int SOCEngine::mapicdReconstruct()
 #endif
 
 #ifdef BRIGHT_FIELD //Take log of the data and subtract log(Dosage) from it
-	
+
 	for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
 		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
 			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
@@ -687,22 +719,22 @@ int SOCEngine::mapicdReconstruct()
 		for (i = 0; i < DETECTOR_RESPONSE_BINS; i++)
 		{
 			ProfileCenterT = i*OffsetT;
-			if(m_Geometry->delta_xy >= m_Sinogram->delta_t)
+			if(m_Inputs->delta_xy >= m_Sinogram->delta_t)
 			{
-				if(ProfileCenterT <= ((m_Geometry->delta_xy/2) - (m_Sinogram->delta_t/2)))
+				if(ProfileCenterT <= ((m_Inputs->delta_xy/2) - (m_Sinogram->delta_t/2)))
 					H_t[0][k][i] = m_Sinogram->delta_t;
 				else {
-					H_t[0][k][i] = -1*ProfileCenterT + (m_Geometry->delta_xy/2) + m_Sinogram->delta_t/2;
+					H_t[0][k][i] = -1*ProfileCenterT + (m_Inputs->delta_xy/2) + m_Sinogram->delta_t/2;
 				}
 				if(H_t[0][k][i] < 0)
 					H_t[0][k][i] =0;
 
 			}
 			else {
-				if(ProfileCenterT <= m_Sinogram->delta_t/2 - m_Geometry->delta_xy/2)
-					H_t[0][k][i] = m_Geometry->delta_xy;
+				if(ProfileCenterT <= m_Sinogram->delta_t/2 - m_Inputs->delta_xy/2)
+					H_t[0][k][i] = m_Inputs->delta_xy;
 				else {
-					H_t[0][k][i] = -ProfileCenterT + (m_Geometry->delta_xy/2) + m_Sinogram->delta_t/2;
+					H_t[0][k][i] = -ProfileCenterT + (m_Inputs->delta_xy/2) + m_Sinogram->delta_t/2;
 				}
 
 				if(H_t[0][k][i] < 0)
@@ -743,7 +775,7 @@ int SOCEngine::mapicdReconstruct()
 	AMatrixCol* TempMemBlock;
 	//T-direction response
 	AMatrixCol* VoxelLineResponse=(AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));
-	MaxNumberOfDetectorElts = (uint16_t)((m_Geometry->delta_xy/m_Sinogram->delta_t)+2);
+	MaxNumberOfDetectorElts = (uint16_t)((m_Inputs->delta_xy/m_Sinogram->delta_t)+2);
     for (i=0; i < m_Geometry->N_y; i++) {
 		VoxelLineResponse[i].count=0;
 		VoxelLineResponse[i].values=(DATA_TYPE*)get_spc(MaxNumberOfDetectorElts, sizeof(DATA_TYPE));
@@ -789,10 +821,10 @@ int SOCEngine::mapicdReconstruct()
 
 	for (i =0; i < m_Geometry->N_y; i++)
 	{
-		y = ((DATA_TYPE)i+0.5)*m_Geometry->delta_xy + m_Geometry->y0;
+		y = ((DATA_TYPE)i+0.5)*m_Inputs->delta_xy + m_Geometry->y0;
 		t = y;
-		tmin = (t - m_Geometry->delta_xy/2) > m_Sinogram->T0 ? t-m_Geometry->delta_xy/2 : m_Sinogram->T0;
-		tmax = (t + m_Geometry->delta_xy/2) <= m_Sinogram->TMax? t + m_Geometry->delta_xy/2 : m_Sinogram->TMax;
+		tmin = (t - m_Inputs->delta_xy/2) > m_Sinogram->T0 ? t-m_Inputs->delta_xy/2 : m_Sinogram->T0;
+		tmax = (t + m_Inputs->delta_xy/2) <= m_Sinogram->TMax? t + m_Inputs->delta_xy/2 : m_Sinogram->TMax;
 
 		slice_index_min = floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t);
 		slice_index_max = floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t);
@@ -1326,9 +1358,10 @@ int SOCEngine::mapicdReconstruct()
 		}
 #endif//ROI end
 
-		if (m_Cancel == true)
+		if (getCancel() == true)
 		{
-			return err;
+		  setErrorCondition(err);
+			return;
 		}
 
 
@@ -1771,7 +1804,8 @@ int SOCEngine::mapicdReconstruct()
 	//free_3D(neighborhood);
 	// Get values from ComputationInputs and perform calculation
 	// Return any error code
-	return err;
+	setErrorCondition(err);
+	return;
 }
 
 
@@ -1840,11 +1874,11 @@ void* SOCEngine::calculateVoxelProfile()
 
 		if(angle <= M_PI_4)
 		{
-			MaxValLineIntegral = m_Geometry->delta_xz/cos(angle);
+			MaxValLineIntegral = m_Inputs->delta_xz/cos(angle);
 		}
 		else
 		{
-			MaxValLineIntegral = m_Geometry->delta_xz/cos(M_PI_2-angle);
+			MaxValLineIntegral = m_Inputs->delta_xz/cos(M_PI_2-angle);
 		}
 		temp=cos(M_PI_4);
 		dist1 = temp * cos((M_PI_4 - angle));
@@ -1896,16 +1930,16 @@ DATA_TYPE*** SOCEngine::forwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE**
 	{
 		for (k=0; k < m_Geometry->N_x; k++)
 		{
-			x = m_Geometry->x0 + ((DATA_TYPE)k+0.5)*m_Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-			z = m_Geometry->z0 + ((DATA_TYPE)j+0.5)*m_Geometry->delta_xz;//0.5 is for center of voxel. z_0 is the left corner
+			x = m_Geometry->x0 + ((DATA_TYPE)k+0.5)*m_Inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+			z = m_Geometry->z0 + ((DATA_TYPE)j+0.5)*m_Inputs->delta_xz;//0.5 is for center of voxel. z_0 is the left corner
 
 			for (i = 0; i < m_Geometry->N_y ; i++)
 			{
 				for(i_theta = 0;i_theta < m_Sinogram->N_theta;i_theta++)
 				{
 					r = x*cosine[i_theta] - z*sine[i_theta];
-					rmin = r - m_Geometry->delta_xz;
-					rmax = r + m_Geometry->delta_xz;
+					rmin = r - m_Inputs->delta_xz;
+					rmax = r + m_Inputs->delta_xz;
 
 					if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax)
 						continue;
@@ -1919,12 +1953,12 @@ DATA_TYPE*** SOCEngine::forwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE**
 					if(index_min < 0)
 						index_min = 0;
 
-					y = m_Geometry->y0 + ((double)i+ 0.5)*m_Geometry->delta_xy;
+					y = m_Geometry->y0 + ((double)i+ 0.5)*m_Inputs->delta_xy;
 					t = y;
 
 
-					tmin = (t - m_Geometry->delta_xy/2) > m_Sinogram->T0 ? t-m_Geometry->delta_xy/2 : m_Sinogram->T0;
-					tmax = (t + m_Geometry->delta_xy/2) <= m_Sinogram->TMax? t + m_Geometry->delta_xy/2 : m_Sinogram->TMax;
+					tmin = (t - m_Inputs->delta_xy/2) > m_Sinogram->T0 ? t-m_Inputs->delta_xy/2 : m_Sinogram->T0;
+					tmax = (t + m_Inputs->delta_xy/2) <= m_Sinogram->TMax? t + m_Inputs->delta_xy/2 : m_Sinogram->TMax;
 
 					slice_index_min = floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t);
 					slice_index_max = floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t);
@@ -2016,18 +2050,18 @@ void* SOCEngine::calculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slic
 	//Temp->index = (uint32_t*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(uint32_t));
 	//Temp->values = (DATA_TYPE*)multialloc(sizeof(DATA_TYPE),1,Sinogram->N_r*Sinogram->N_theta);//makes the values =0
 
-	x = m_Geometry->x0 + ((DATA_TYPE)col+0.5)*m_Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-	z = m_Geometry->z0 + ((DATA_TYPE)row+0.5)*m_Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-	y = m_Geometry->y0 + ((DATA_TYPE)slice + 0.5)*m_Geometry->delta_xy;
+	x = m_Geometry->x0 + ((DATA_TYPE)col+0.5)*m_Inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+	z = m_Geometry->z0 + ((DATA_TYPE)row+0.5)*m_Inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+	y = m_Geometry->y0 + ((DATA_TYPE)slice + 0.5)*m_Inputs->delta_xy;
 
-	TempConst=(PROFILE_RESOLUTION)/(2*m_Geometry->delta_xz);
+	TempConst=(PROFILE_RESOLUTION)/(2*m_Inputs->delta_xz);
 
 
 	//	Temp->values = (DATA_TYPE*)calloc(Sinogram->N_t*Sinogram->N_r*Sinogram->N_theta,sizeof(DATA_TYPE));//(DATA_TYPE*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(DATA_TYPE));//makes the values =0
 
 	//alternately over estimate the maximum size require for a single AMatrix column
-	AvgNumXElements = ceil(3*m_Geometry->delta_xz/m_Sinogram->delta_r);
-	AvgNumYElements = ceil(3*m_Geometry->delta_xy/m_Sinogram->delta_t);
+	AvgNumXElements = ceil(3*m_Inputs->delta_xz/m_Sinogram->delta_r);
+	AvgNumYElements = ceil(3*m_Inputs->delta_xy/m_Sinogram->delta_t);
 	MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*m_Sinogram->N_theta;
 
 	Temp->values = (DATA_TYPE*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(DATA_TYPE));
@@ -2042,11 +2076,11 @@ void* SOCEngine::calculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slic
 		r = x*cosine[i] - z*sine[i];
 		t = y;
 
-		rmin = r - m_Geometry->delta_xz;
-		rmax = r + m_Geometry->delta_xz;
+		rmin = r - m_Inputs->delta_xz;
+		rmax = r + m_Inputs->delta_xz;
 
-		tmin = (t - m_Geometry->delta_xy/2) > m_Sinogram->T0 ? t-m_Geometry->delta_xy/2 : m_Sinogram->T0;
-		tmax = (t + m_Geometry->delta_xy/2) <= m_Sinogram->TMax ? t + m_Geometry->delta_xy/2 : m_Sinogram->TMax;
+		tmin = (t - m_Inputs->delta_xy/2) > m_Sinogram->T0 ? t-m_Inputs->delta_xy/2 : m_Sinogram->T0;
+		tmax = (t + m_Inputs->delta_xy/2) <= m_Sinogram->TMax ? t + m_Inputs->delta_xy/2 : m_Sinogram->TMax;
 
 		if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax)
 			continue;
@@ -2190,20 +2224,20 @@ void* SOCEngine::calculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slic
 		r = x*cosine[i] - z*sine[i];
 		t = y;
 
-		tmin = (t - m_Geometry->delta_xy/2) > -m_Geometry->LengthY/2 ? t-m_Geometry->delta_xy/2 : -m_Geometry->LengthY/2;
-		tmax = (t + m_Geometry->delta_xy/2) <= m_Geometry->LengthY/2 ? t + m_Geometry->delta_xy/2 : m_Geometry->LengthY/2;
+		tmin = (t - m_Inputs->delta_xy/2) > -m_Geometry->LengthY/2 ? t-m_Inputs->delta_xy/2 : -m_Geometry->LengthY/2;
+		tmax = (t + m_Inputs->delta_xy/2) <= m_Geometry->LengthY/2 ? t + m_Inputs->delta_xy/2 : m_Geometry->LengthY/2;
 
 
 		if(m_Sinogram->angles[i]*(180/PI) >= -45 && m_Sinogram->angles[i]*(180/PI) <= 45)
 		{
-			rmin = r - (m_Geometry->delta_xz/2)*(cosine[i]);
-			rmax = r + (m_Geometry->delta_xz/2)*(cosine[i]);
+			rmin = r - (m_Inputs->delta_xz/2)*(cosine[i]);
+			rmax = r + (m_Inputs->delta_xz/2)*(cosine[i]);
 		}
 
 		else
 		{
-			rmin = r - (m_Geometry->delta_xz/2)*fabs(sine[i]);
-			rmax = r + (m_Geometry->delta_xz/2)*fabs(sine[i]);
+			rmin = r - (m_Inputs->delta_xz/2)*fabs(sine[i]);
+			rmax = r + (m_Inputs->delta_xz/2)*fabs(sine[i]);
 		}
 
 
@@ -2414,7 +2448,9 @@ double SOCEngine::CE_DerivOfCostFunc(double u)
 
 
 
-
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 {
 	DATA_TYPE cost=0,temp=0,delta;
@@ -2636,18 +2672,18 @@ void* SOCEngine::detectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelPr
 	int16_t i,j,k,p,l,NumOfDisplacements,ProfileIndex;
 	//NumOfDisplacements=32;
 	H = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//change from 1 to DETECTOR_RESPONSE_BINS
-	TempConst=(PROFILE_RESOLUTION)/(2*m_Geometry->delta_xz);
+	TempConst=(PROFILE_RESOLUTION)/(2*m_Inputs->delta_xz);
 
 	for(k = 0 ; k < m_Sinogram->N_theta; k++)
 	{
 		for (i = 0; i < DETECTOR_RESPONSE_BINS; i++) //displacement along r
 		{
 			ProfileCenterR = i*OffsetR;
-			rmin = ProfileCenterR - m_Geometry->delta_xz;
+			rmin = ProfileCenterR - m_Inputs->delta_xz;
 			for (j = 0 ; j < 1; j++)//displacement along t ;change to DETECTOR_RESPONSE_BINS later
 			{
 				ProfileCenterT = j*OffsetT;
-				tmin = ProfileCenterT - m_Geometry->delta_xy/2;
+				tmin = ProfileCenterT - m_Inputs->delta_xy/2;
 				sum = 0;
 				for (p=0; p < BEAM_RESOLUTION; p++)
 				{
@@ -2874,15 +2910,15 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
 	AMatrixCol* Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
 	AMatrixCol* Temp = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));//This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
 
-	x = m_Geometry->x0 + ((DATA_TYPE)col+0.5)*m_Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-	z = m_Geometry->z0 + ((DATA_TYPE)row+0.5)*m_Geometry->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-	y = m_Geometry->y0 + ((DATA_TYPE)slice + 0.5)*m_Geometry->delta_xy;
+	x = m_Geometry->x0 + ((DATA_TYPE)col+0.5)*m_Inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+	z = m_Geometry->z0 + ((DATA_TYPE)row+0.5)*m_Inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+	y = m_Geometry->y0 + ((DATA_TYPE)slice + 0.5)*m_Inputs->delta_xy;
 
-	TempConst=(PROFILE_RESOLUTION)/(2*m_Geometry->delta_xz);
+	TempConst=(PROFILE_RESOLUTION)/(2*m_Inputs->delta_xz);
 
 	//alternately over estimate the maximum size require for a single AMatrix column
-	AvgNumXElements = ceil(3*m_Geometry->delta_xz/m_Sinogram->delta_r);
-	AvgNumYElements = ceil(3*m_Geometry->delta_xy/m_Sinogram->delta_t);
+	AvgNumXElements = ceil(3*m_Inputs->delta_xz/m_Sinogram->delta_r);
+	AvgNumYElements = ceil(3*m_Inputs->delta_xy/m_Sinogram->delta_t);
 	MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*m_Sinogram->N_theta;
 
 	Temp->values = (DATA_TYPE*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(DATA_TYPE));
@@ -2896,11 +2932,11 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
 		r = x*cosine[i] - z*sine[i];
 		t = y;
 
-		rmin = r - m_Geometry->delta_xz;
-		rmax = r + m_Geometry->delta_xz;
+		rmin = r - m_Inputs->delta_xz;
+		rmax = r + m_Inputs->delta_xz;
 
-		tmin = (t - m_Geometry->delta_xy/2) > m_Sinogram->T0 ? t-m_Geometry->delta_xy/2 : m_Sinogram->T0;
-		tmax = (t + m_Geometry->delta_xy/2) <= m_Sinogram->TMax ? t + m_Geometry->delta_xy/2 : m_Sinogram->TMax;
+		tmin = (t - m_Inputs->delta_xy/2) > m_Sinogram->T0 ? t-m_Inputs->delta_xy/2 : m_Sinogram->T0;
+		tmax = (t + m_Inputs->delta_xy/2) <= m_Sinogram->TMax ? t + m_Inputs->delta_xy/2 : m_Sinogram->TMax;
 
 		if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax)
 			continue;
@@ -3021,6 +3057,9 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
 
 #endif
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 double SOCEngine::surrogateFunctionBasedMin()
 {
 	double numerator_sum=0;
@@ -3062,83 +3101,289 @@ double SOCEngine::surrogateFunctionBasedMin()
 	return update;
 
 }
-#ifdef QGGMRF
-//Function to compute parameters of thesurrogate function
-void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::initializeSinoParameters()
 {
-	DATA_TYPE Delta0,DeltaMin,DeltaMax,T,a,b,c;
-	uint8_t i,j,k,count=0;
-	for(i=0;i<3;i++)
-		for (j=0; j < 3; j++)
-			for(k=0; k < 3;k++)
-				if(i != 1 || j !=1 || k != 1)
-				{
-					Delta0 = V - NEIGHBORHOOD[i][j][k];
-					DeltaMin = umin - NEIGHBORHOOD[i][j][k];
-					DeltaMax = umax - NEIGHBORHOOD[i][j][k];
-					if(fabs(Delta0) <= Minimum(fabs(DeltaMin),fabs(DeltaMax)))
-						T = -Delta0;
-					else if(fabs(DeltaMin) <= Minimum(fabs(Delta0),fabs(DeltaMax)))
-						T = DeltaMin;
-					else if(fabs(DeltaMax) <= Minimum(fabs(DeltaMin),fabs(Delta0)))
-						T = DeltaMax;
-					if(Delta0 != 0)
-						QGGMRF_Params[count][0] = (CE_QGGMRF_Value(T) - CE_QGGMRF_Value(Delta0))/((T-Delta0)*(T - Delta0)) - CE_QGGMRF_Derivative(Delta0)/(T-Delta0);
-					else {
-						QGGMRF_Params[count][0] = CE_QGGMRF_SecondDerivative(0)/2;
-					}
-					QGGMRF_Params[count][1] = CE_QGGMRF_Derivative(Delta0) - 2*QGGMRF_Params[count][0]*V;
-					QGGMRF_Params[count][2] = CE_QGGMRF_Value(Delta0) - QGGMRF_Params[count][0]*V*V - QGGMRF_Params[count][1]*V;
-					count++;
-				}
+  Sinogram* sinogram = getSinogram();
+  TomoInputs* input = getInputs();
+  int16_t i,j,k;
+  uint16_t view_count=0,TotalNumMaskedViews;
+  FILE* Fp;
+  double *buffer=(double*)get_spc(1,sizeof(double));
+  DATA_TYPE sum=0;
 
-}
+  MRCReader::Pointer reader = MRCReader::New(true);
+  MRCHeader header;
+  int err = reader->readHeader(input->SinoFile, &header);
+  if (err < 0)
+  {
+  }
 
-DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
-{
-	DATA_TYPE u,temp1,temp2;
-	uint8_t i,j,k,count=0;
-	CE_ComputeQGGMRFParameters(umin, umax);
-	for(i=0;i<3;i++)
-		for (j=0; j < 3; j++)
-			for(k=0; k < 3;k++)
-				if(i != 1 || j !=1 || k != 1)
-				{
-					temp1+=NEIGHBORHOOD[i][j][k]*QGGMRF_Params[count][1];
-					temp2+=NEIGHBORHOOD[i][j][k]*QGGMRF_Params[count][0];
-					count++;
-				}
-	u=(-temp1+THETA2*V +THETA1)/(2*temp2 + THETA2);
+  if (header.mode != 1)
+  {
+    std::cout << "16 bit integers are only supported. Error at line  " << __LINE__ << " in file " << __FILE__ << std::endl;
+    return;
+  }
 
-	return Clip(V + MRF_ALPHA*(u-V),umin , umax);
+  int voxelMin[3] = {0, 0, 0};
+  int voxelMax[3] = {header.nx, header.ny, header.nz-1};
+  if (m_Inputs->useSubvolume == true)
+  {
+     voxelMin[0] = input->xStart;
+     voxelMin[1] = input->yStart;
+     voxelMin[2] = input->zStart;
 
-}
+     voxelMax[0] = input->xEnd;
+     voxelMax[1] = input->yEnd;
+     voxelMax[2] = input->zEnd;
+  }
 
 
+  sinogram->N_r = voxelMax[0] - voxelMin[0] + 1;
+  sinogram->N_t = voxelMax[1] - voxelMin[1] + 1;
 
 
-DATA_TYPE SOCEngine::CE_QGGMRF_Value(DATA_TYPE delta)
-{
-	return (pow(fabs(delta),MRF_P))/(1 + pow(fabs(delta/MRF_C),MRF_Q));
-}
+  sinogram->delta_r = 1.0;
+  sinogram->delta_t = 1.0;
+  FEIHeader* feiHeaders = header.feiHeaders;
+  if (feiHeaders != NULL)
+  {
+    sinogram->delta_r = feiHeaders[0].pixelsize * 10e9;
+    sinogram->delta_t = feiHeaders[0].pixelsize * 10e9;
+  }
 
-DATA_TYPE SOCEngine::CE_QGGMRF_Derivative(DATA_TYPE delta)
-{
-	DATA_TYPE temp=0,temp1,temp2;
-	temp1=pow(fabs(delta/MRF_C),MRF_P-MRF_Q);
-	temp2=pow(fabs(delta),MRF_P-1);
-	if(delta < 0)
-		return ((-1*temp2/(1+temp1))*(MRF_P - ((MRF_P-MRF_Q)*temp1)/(1+temp1)));
-	else {
-		return ((temp2/(1+temp1))*(MRF_P - ((MRF_P-MRF_Q)*temp1)/(1+temp1)));
+  std::vector<bool> goodViews(header.nz, 1);
+  // Lay down the mask for the views that will be excluded.
+  for(int i = 0; i < m_Inputs->ViewMask.size(); ++i)
+  {
+    goodViews[m_Inputs->ViewMask[i]] = 0;
+  }
+  int numBadViews = 0;
+  for (int i = voxelMin[2]; i <= voxelMax[2]; ++i)
+  {
+    if(goodViews[i] == 0)
+    {
+      numBadViews++;
+    }
+  }
+
+
+  TotalNumMaskedViews = header.nz - numBadViews;
+  sinogram->N_theta = TotalNumMaskedViews;
+
+  err = reader->read(input->SinoFile, voxelMin, voxelMax);
+  if (err < 0)
+  {
+  std::cout << "Error Code from Reading: " << err << std::endl;
+  return ;
+  }
+  int16_t* data = reinterpret_cast<int16_t*>(reader->getDataPointer());
+
+
+
+  //Allocate a 3-D matrix to store the singoram in the form of a N_y X N_theta X N_x  matrix
+  sinogram->counts=(DATA_TYPE***)get_3D(TotalNumMaskedViews,
+                                        input->xEnd - input->xStart+1,
+                                        input->yEnd - input->yStart+1,
+                                        sizeof(DATA_TYPE));
+
+  for (k = 0; k < sinogram->N_theta; k++)
+  {
+    view_count = 0;
+
+    for (i = 0; i < sinogram->N_t; i++)
+    {
+      for (j = 0; j < sinogram->N_r; j++)
+      {
+        //std::cout<<i<<","<<j<<","<<k<<std::endl;
+        //if(Sinogram->ViewMask[k] == 1)
+        sinogram->counts[k][j][i] = data[k * sinogram->N_r * sinogram->N_t + i * sinogram->N_r + j];
+      }
+    }
+    view_count++;
+  }
+
+  // Clean up all the memory associated with the MRC Reader
+  reader->setDeleteMemory(true);
+  reader = MRCReader::NullPointer();
+
+  //The normalization and offset parameters for the views
+  sinogram->InitialGain=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
+  sinogram->InitialOffset=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
+
+  //----------------------------------------------------
+  //TODO: This next Section needs fixing.....
+	
+	if (input->InitialParameters.empty() == true)
+	{
+		// Calculate teh initial Gains and Offsets
+		//TODO:  Venkat to implement
 	}
+	else
+	{
+
+  Fp=fopen(input->InitialParameters.c_str(),"r");//This file contains the Initial unscatterd counts and background scatter for each view
+
+  view_count=0;
+  for( i = 0; i < sinogram->N_theta; i++)
+  {
+    fread(buffer, sizeof(double), 1, Fp);
+    if(input->ViewMask[i] == 1)
+      sinogram->InitialGain[view_count++]=(DATA_TYPE)(*buffer);
+  }
+  view_count=0;
+  for( i = 0; i < sinogram->N_theta; i++)
+  {
+    fread(buffer, sizeof(double), 1, Fp);
+    if(input->ViewMask[i] == 1)
+      sinogram->InitialOffset[view_count++]=(DATA_TYPE)(*buffer);
+  }
+  }
+
+//----------------------------------------------------
+
+
+//  sinogram->N_theta = TotalNumMaskedViews;
+//  sinogram->N_r = (input->xEnd - input->xStart+1);
+//  sinogram->N_t = (input->yEnd - input->yStart+1);
+  sinogram->R0 = -(sinogram->N_r*sinogram->delta_r)/2;
+  sinogram->RMax = (sinogram->N_r*sinogram->delta_r)/2;
+  sinogram->T0 =  -(sinogram->N_t*sinogram->delta_t)/2;
+  sinogram->TMax = (sinogram->N_t*sinogram->delta_t)/2;
+
+
+  printf("Size of the Masked Sinogram N_r =%d N_t = %d N_theta=%d\n",sinogram->N_r,sinogram->N_t,sinogram->N_theta);
+
+      //check sum calculation
+  for(i=0;i<sinogram->N_theta;i++)
+  {
+    sum=0;
+    for(j=0;j<sinogram->N_r;j++)
+      for(k=0;k<sinogram->N_t;k++)
+       sum+=sinogram->counts[i][j][k];
+    printf("Sinogram Checksum %f\n",sum);
+  }
+  //end ofcheck sum
+
+
+
+
+  fclose(Fp);
+
 }
-DATA_TYPE SOCEngine::CE_QGGMRF_SecondDerivative(DATA_TYPE delta)
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::initializeGeomParameters()
 {
-	DATA_TYPE temp=2;
-	return temp;
+  Sinogram* sinogram = getSinogram();
+  TomoInputs* input = getInputs();
+  Geometry* geometry = getGeometry();
+
+  FILE* Fp;
+  uint16_t i,j,k;
+  double *buffer = (double*)get_spc(1,sizeof(double));
+  DATA_TYPE sum=0,max;
+
+  //Find the maximum absolute tilt angle
+  max= absMaxArray(sinogram->angles, sinogram->N_theta);
+
+#ifndef FORWARD_PROJECT_MODE
+  input->LengthZ *= Z_STRETCH;
+
+#ifdef EXTEND_OBJECT
+  geometry->LengthX = ((sinogram->N_r * sinogram->delta_r)/cos(max*M_PI/180)) + input->LengthZ*tan(max*M_PI/180) ;
+#else
+  Geometry->LengthX = ((sinogram->N_r * sinogram->delta_r));
+#endif //Extend object endif
+
+#else
+  Geometry->LengthX = ((Sinogram->N_r * Sinogram->delta_r));
+#endif//Forward projector mode end if
+
+//  Geometry->LengthY = (Geometry->EndSlice- Geometry->StartSlice)*Geometry->delta_xy;
+  geometry->LengthY = (input->yEnd-input->yStart + 1)*sinogram->delta_t;
+
+  geometry->N_x = ceil(geometry->LengthX/input->delta_xz);//Number of voxels in x direction
+  geometry->N_z = ceil(input->LengthZ/input->delta_xz);//Number of voxels in z direction
+  geometry->N_y = floor(geometry->LengthY/input->delta_xy);//Number of measurements in y direction
+
+  printf("Geometry->Nz=%d\n",geometry->N_z);
+  printf("Geometry->Nx=%d\n",geometry->N_x);
+  printf("Geometry->Ny=%d\n",geometry->N_y);
+
+//  Geometry->Object = (DATA_TYPE ***)get_3D(Geometry->N_y,Geometry->N_z,Geometry->N_x,sizeof(DATA_TYPE));//Allocate space for the 3-D object
+  geometry->Object = (DATA_TYPE ***)get_3D(geometry->N_z,geometry->N_x,geometry->N_y,sizeof(DATA_TYPE));//Allocate space for the 3-D object
+//Coordinates of the left corner of the x-z object
+  geometry->x0 = -geometry->LengthX/2;
+  geometry->z0 = -input->LengthZ/2;
+ // Geometry->y0 = -(sinogram->N_t * sinogram->delta_t)/2 + Geometry->StartSlice*Geometry->delta_xy;
+  geometry->y0 = -(geometry->LengthY)/2 ;
+
+  //Read the Initial Reconstruction data into a 3-D matrix
+  Fp=fopen(input->InitialRecon.c_str(),"r");
+/*  for(i=0;i<Geometry->N_y;i++)
+    for(j=0;j<Geometry->N_x;j++)
+      for(k=0;k<Geometry->N_z;k++)
+  {
+    fread (buffer,sizeof(DATA_TYPE),1,Fp);
+    Geometry->Object[i][k][j]=*buffer;
+//  printf("%f\n",Geometry->Object[i][j][k]);
+  }*/
+
+  for (i = 0; i < geometry->N_y; i++)
+  {
+    for (j = 0; j < geometry->N_x; j++)
+    {
+      for (k = 0; k < geometry->N_z; k++)
+      {
+        if(Fp == NULL)//If no input file has been specified or if the file does not exist just set the default values to be zero
+        {
+        geometry->Object[k][j][i] = 0;
+        }
+        else//If the iput file exists read the values
+        {
+        fread(buffer, sizeof(double), 1, Fp);
+          geometry->Object[k][j][i] = (DATA_TYPE)(*buffer);
+        }
+      }
+    }
+  }
+
+      //Doing a check sum to verify with matlab
+
+  for(i=0;i<geometry->N_y;i++)
+  {
+    sum=0;
+    for(j=0;j<geometry->N_x;j++)
+      for(k=0;k<geometry->N_z;k++)
+    {
+      sum+=geometry->Object[k][j][i];
+    }
+    printf("Geometry check sum %f\n",sum);
+  }
+      //End of check sum
+
+  fclose(Fp);
+
 }
 
-#endif
+// -----------------------------------------------------------------------------
+//Finds the maximum of absolute value elements in an array
+// -----------------------------------------------------------------------------
+DATA_TYPE SOCEngine::absMaxArray(std::vector<DATA_TYPE> &Array, uint16_t NumElts)
+{
+  uint16_t i;
+  DATA_TYPE max;
+  max = fabs(Array[0]);
+  for(i =1; i < NumElts;i++)
+    if(fabs(Array[i]) > max)
+      max=fabs(Array[i]);
+  return max;
 
-
+}

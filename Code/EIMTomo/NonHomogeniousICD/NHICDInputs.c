@@ -6,9 +6,9 @@
 #include <string.h>
 
 
-#include "EIMTomo/common/allocate.h"
-#include "EIMTomo/common/EIMTime.h"
-#include "EIMTomo/common/EIMMath.h"
+#include "TomoEngine/Common/allocate.h"
+#include "TomoEngine/Common/EIMTime.h"
+#include "TomoEngine/Common/EIMMath.h"
 
 #include "NHICDInputs.h"
 

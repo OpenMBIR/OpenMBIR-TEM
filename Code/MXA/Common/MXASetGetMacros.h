@@ -22,11 +22,11 @@
 //#define RAW_PTR  data
 #endif
 
-#ifdef EIMTOMO_USE_BOOST
+
 //-- Boost Includes
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
-#endif
+
 
 #define SHARED_IS_NULL(ptr)\
   (  (ptr).get() == NULL )
@@ -105,6 +105,7 @@ static Pointer New(void) \
   Pointer sharedPtr (new thisClass); \
   return sharedPtr; \
 }
+
 
 #define MXA_STATIC_NEW_MACRO_WITH_ARGS(thisClass, args) \
 static Pointer New args \

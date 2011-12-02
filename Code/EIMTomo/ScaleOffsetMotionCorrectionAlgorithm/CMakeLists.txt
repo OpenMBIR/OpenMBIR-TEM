@@ -27,9 +27,9 @@ set(ScaleOffsetMotionCorrectionAlgorithm_SRCS
 cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/ScaleOffsetMotionCorrectionAlgorithm" "${ScaleOffsetMotionCorrectionAlgorithm_HDRS}" "${ScaleOffsetMotionCorrectionAlgorithm_SRCS}" "${CMP_INSTALL_FILES}")
 
 # Include the source files for Common source files and the Mersenne Twister RNG
-include (${PROJECT_CODE_DIR}/EIMTomo/common/SourceList.cmake)
-include (${PROJECT_CODE_DIR}/EIMTomo/mt/SourceList.cmake)
-include (${PROJECT_CODE_DIR}/EIMTomo/IO/SourceList.cmake)
+#include (${PROJECT_CODE_DIR}/EIMTomo/common/SourceList.cmake)
+#include (${PROJECT_CODE_DIR}/EIMTomo/mt/SourceList.cmake)
+#include (${PROJECT_CODE_DIR}/EIMTomo/IO/SourceList.cmake)
 
 set(GENERATED_HDRS
     ${CMP_HEADER_DIR}/${CMP_EXTRA_CONFIGURATION_FILE}
@@ -43,20 +43,12 @@ cmp_IDE_GENERATED_PROPERTIES("${Project_Name}/Generated" "${GENERATED_HDRS}" "")
 set(ScaleOffsetMotionCorrectionAlgorithm_PROJECT_FILES
   ${ScaleOffsetMotionCorrectionAlgorithm_HDRS}
   ${ScaleOffsetMotionCorrectionAlgorithm_SRCS}
-  ${EIMTomo_Common_SRCS}
-  ${EIMTomo_Common_HDRS}
-  ${EIMTomo_IO_SRCS}
-  ${EIMTomo_IO_HDRS}
-  ${Mersenne_Twister_SRCS}
-  ${Mersenne_Twister_HDRS}
   ${GENERATED_HDRS}
 )
 
 if ( ${EIMTomo_USE_MERSENNE_TWISTER} )
     set(ScaleOffsetMotionCorrectionAlgorithm_PROJECT_FILES
       ${ScaleOffsetMotionCorrectionAlgorithm_PROJECT_FILES}
-      ${Mersenne_Twister_SRCS}
-      ${Mersenne_Twister_HDRS}
     )
 endif()
 
@@ -64,7 +56,7 @@ endif()
 include_directories(${PROJECT_CODE_DIR})
 
 add_executable(ScaleOffsetMotionCorrectionAlgorithm ${ScaleOffsetMotionCorrectionAlgorithm_PROJECT_FILES} )
-target_link_libraries(ScaleOffsetMotionCorrectionAlgorithm MXA)
+target_link_libraries(ScaleOffsetMotionCorrectionAlgorithm MXA TomoEngine)
 
 configure_file(${EIMTomo_SOURCE_DIR}/Resources/InputFiles/RunningTheCode.sh.in
                ${EIMTomo_BINARY_DIR}/ScaleOffsetMotionCorrectionAlgorithm.sh)

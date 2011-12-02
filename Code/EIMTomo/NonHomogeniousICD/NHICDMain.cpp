@@ -6,9 +6,9 @@
 
 #include <iostream>
 
-#include "EIMTomo/EIMTomo.h"
-#include "EIMTomo/common/allocate.h"
-#include "EIMTomo/common/EIMTime.h"
+#include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/allocate.h"
+#include "TomoEngine/Common/EIMTime.h"
 #include "NHICDInputs.h"
 #include "NHICDCliParser.h"
 #include "NHICDEngine.h"

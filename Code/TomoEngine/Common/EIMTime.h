@@ -9,7 +9,7 @@
 #ifndef _EIMTime_h_
 #define _EIMTime_h_
 
-#include "EIMTomo/EIMTomoTypes.h"
+#include "TomoEngine/TomoEngine.h"
 #if CMP_HAVE_TIME_H
 #include <time.h>
 #endif

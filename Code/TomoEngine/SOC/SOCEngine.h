@@ -11,44 +11,57 @@
 #define COMPUTATIONENGINE_H_
 
 #include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/AbstractPipeline.h"
+#include "TomoEngine/Common/Observer.h"
 
-#include "ScaleOffsetMotionStructures.h"
-#include "ScaleOffsetMotionCorrectionParser.h"
+#include "TomoEngine/SOC/SOCStructures.h"
 
 /**
  *
  */
-class SOMCEngine
+class SOCEngine : public AbstractPipeline, public Observer
 {
 
   public:
-    SOMCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs);
-    virtual ~SOMCEngine();
+    MXA_SHARED_POINTERS(SOCEngine);
+    MXA_TYPE_MACRO(SOCEngine);
+    MXA_STATIC_NEW_MACRO(SOCEngine);
+
+    MXA_INSTANCE_PROPERTY(TomoInputs*, Inputs);
+    MXA_INSTANCE_PROPERTY(Sinogram*, Sinogram);
+    MXA_INSTANCE_PROPERTY(Geometry*, Geometry);
+
+
+    virtual ~SOCEngine();
 
     /**
-     * @brief
+     * @brief overload from super class
      * @return
      */
-    int mapicdReconstruct();
+    void execute();
 
-#ifdef QGGMRF
-    DATA_TYPE CE_QGGMRF_Value(DATA_TYPE );
-    DATA_TYPE CE_QGGMRF_Derivative(DATA_TYPE);
-    DATA_TYPE CE_QGGMRF_SecondDerivative(DATA_TYPE);
-    void CE_ComputeQGGMRFParameters(DATA_TYPE ,DATA_TYPE);
-    DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE ,DATA_TYPE );
-#endif//qggmrf
+
+
+    DATA_TYPE absMaxArray(std::vector<DATA_TYPE> &Array, uint16_t NumElts);
+
+
+
   protected:
     // Protect this constructor because we want to force the use of the other
-    SOMCEngine();
+    SOCEngine();
+
     void initVariables();
+
+    void initializeSinoParameters();
+
+    void initializeGeomParameters();
+
 
   private:
 
-    bool m_Cancel;
     uint8_t BOUNDARYFLAG[3][3][3]; //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
     //Markov Random Field Prior parameters - Globals DATA_TYPE
-    DATA_TYPE FILTER[3][3][3];//weighting filter for prior
+    DATA_TYPE FILTER[3][3][3];
     DATA_TYPE THETA1;
     DATA_TYPE THETA2;
     DATA_TYPE NEIGHBORHOOD[3][3][3];
@@ -80,10 +93,6 @@ class SOMCEngine
 
     uint64_t startm;
     uint64_t stopm;
-
-    TomoInputs* m_CmdInputs;//Holds the inputs from the command line 
-    Sino* m_Sinogram;//hold the sinogram data
-    Geom* m_Geometry;//holds the geometry data and object to reconstruct
 
     /**
      * @brief
@@ -219,8 +228,8 @@ class SOMCEngine
       }
     }
 
-    SOMCEngine(const SOMCEngine&); // Copy Constructor Not Implemented
-    void operator=(const SOMCEngine&); // Operator '=' Not Implemented
+    SOCEngine(const SOCEngine&); // Copy Constructor Not Implemented
+    void operator=(const SOCEngine&); // Operator '=' Not Implemented
 };
 
 #endif //CompEngine

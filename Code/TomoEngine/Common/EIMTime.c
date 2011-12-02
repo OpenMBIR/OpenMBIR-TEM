@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "EIMTomo/common/EIMTime.h"
-#include "EIMTomo/common/MSVCDefines.h"
+#include "TomoEngine/Common/EIMTime.h"
+#include "TomoEngine/Common/MSVCDefines.h"
 
 static char em_log_time[128];
 static char em_tif_time[128];

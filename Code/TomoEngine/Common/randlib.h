@@ -3,7 +3,7 @@
 
 #if 1
 
-#include "EIMTomo/mt/mt19937ar.h"
+#include "TomoEngine/mt/mt19937ar.h"
 
 #else
 #error DO NOT USE THIS FILE. Use the Mersenne Twister code instead.
