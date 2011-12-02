@@ -3168,18 +3168,18 @@ void SOCEngine::initializeSinoParameters()
 
 
 
-  for(i=0;i<sinogram->N_t;i++)
-    for(j=0;j<sinogram->N_r;j++)
+    for(k=0;k<sinogram->N_theta;k++)
     {
-      view_count=0;
-      for(k=0;k<sinogram->N_theta;k++)
+    view_count=0;
+
+    for(i=0;i<sinogram->N_t;i++)
+      for(j=0;j<sinogram->N_r;j++)
       {
-        //fread (buffer,sizeof(double), 1, Fp);
-        if(input->ViewMask[k] == 1 && j >= input->xStart && j <= input->xEnd && i >= input->yStart && i <= input->yEnd)
-        sinogram->counts[view_count++][j-input->xStart][i-input->yStart] = (DATA_TYPE)(*buffer);
+        //std::cout<<i<<","<<j<<","<<k<<std::endl;
+        //if(Sinogram->ViewMask[k] == 1)
+        sinogram->counts[k][j][i] = data[k*sinogram->N_r*sinogram->N_t + i*sinogram->N_r +j];
       }
-
-
+      view_count++;
     }
 //  fclose(Fp);
 
