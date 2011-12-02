@@ -42,7 +42,7 @@ class SOCEngine : public AbstractPipeline, public Observer
 
 
 
-    DATA_TYPE absMaxArray(std::vector<DATA_TYPE> &Array, uint16_t NumElts);
+    DATA_TYPE absMaxArray(std::vector<DATA_TYPE> &Array);
 
 
 

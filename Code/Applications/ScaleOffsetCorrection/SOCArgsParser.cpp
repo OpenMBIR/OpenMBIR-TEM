@@ -209,7 +209,6 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
     Input->NumIter = in_numIter.getValue();
     Input->SigmaX = in_sigmaX.getValue();
     Input->p = in_markov.getValue();
-    Input->InitialParameters = InitialParameters.getValue();
     Input->NumOuterIter = NumOuterIter.getValue();
     Input->StopThreshold = in_stopThreshold.getValue();
 

@@ -3111,7 +3111,7 @@ void SOCEngine::initializeSinoParameters()
   TomoInputs* input = getInputs();
   int16_t i,j,k;
   uint16_t view_count=0,TotalNumMaskedViews;
-  FILE* Fp;
+  FILE* Fp = NULL;
   double *buffer=(double*)get_spc(1,sizeof(double));
   DATA_TYPE sum=0;
 
@@ -3151,8 +3151,9 @@ void SOCEngine::initializeSinoParameters()
   FEIHeader* feiHeaders = header.feiHeaders;
   if (feiHeaders != NULL)
   {
-    sinogram->delta_r = feiHeaders[0].pixelsize * 10e9;
-    sinogram->delta_t = feiHeaders[0].pixelsize * 10e9;
+    sinogram->delta_r = feiHeaders[0].pixelsize * 1.0e9;
+    sinogram->delta_t = feiHeaders[0].pixelsize * 1.0e9;
+
   }
 
   std::vector<bool> goodViews(header.nz, 1);
@@ -3167,6 +3168,10 @@ void SOCEngine::initializeSinoParameters()
     if(goodViews[i] == 0)
     {
       numBadViews++;
+    }
+    if (feiHeaders != NULL)
+    {
+    	sinogram->angles.push_back(-feiHeaders[i].a_tilt);
     }
   }
 
@@ -3214,34 +3219,34 @@ void SOCEngine::initializeSinoParameters()
   sinogram->InitialGain=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
   sinogram->InitialOffset=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
 
+
+
   //----------------------------------------------------
   //TODO: This next Section needs fixing.....
 	
-	if (input->InitialParameters.empty() == true)
+	if (input->GainsOffsetsFile.empty() == true)
 	{
 		// Calculate teh initial Gains and Offsets
 		//TODO:  Venkat to implement
 	}
-	else
-	{
+	else {
 
-  Fp=fopen(input->InitialParameters.c_str(),"r");//This file contains the Initial unscatterd counts and background scatter for each view
+		Fp = fopen(input->GainsOffsetsFile.c_str(), "r"); //This file contains the Initial unscatterd counts and background scatter for each view
 
-  view_count=0;
-  for( i = 0; i < sinogram->N_theta; i++)
-  {
-    fread(buffer, sizeof(double), 1, Fp);
-    if(input->ViewMask[i] == 1)
-      sinogram->InitialGain[view_count++]=(DATA_TYPE)(*buffer);
-  }
-  view_count=0;
-  for( i = 0; i < sinogram->N_theta; i++)
-  {
-    fread(buffer, sizeof(double), 1, Fp);
-    if(input->ViewMask[i] == 1)
-      sinogram->InitialOffset[view_count++]=(DATA_TYPE)(*buffer);
-  }
-  }
+		view_count = 0;
+		for (i = 0; i < sinogram->N_theta; i++) {
+			fread(buffer, sizeof(double), 1, Fp);
+			if (input->ViewMask[i] == 1)
+				sinogram->InitialGain[view_count++] = (DATA_TYPE) (*buffer);
+		}
+		view_count = 0;
+		for (i = 0; i < sinogram->N_theta; i++) {
+			fread(buffer, sizeof(double), 1, Fp);
+			if (input->ViewMask[i] == 1)
+				sinogram->InitialOffset[view_count++] = (DATA_TYPE) (*buffer);
+		}
+		fclose(Fp);
+	}
 
 //----------------------------------------------------
 
@@ -3269,10 +3274,6 @@ void SOCEngine::initializeSinoParameters()
   //end ofcheck sum
 
 
-
-
-  fclose(Fp);
-
 }
 
 
@@ -3291,7 +3292,7 @@ void SOCEngine::initializeGeomParameters()
   DATA_TYPE sum=0,max;
 
   //Find the maximum absolute tilt angle
-  max= absMaxArray(sinogram->angles, sinogram->N_theta);
+  max= absMaxArray(sinogram->angles);
 
 #ifndef FORWARD_PROJECT_MODE
   input->LengthZ *= Z_STRETCH;
@@ -3326,7 +3327,7 @@ void SOCEngine::initializeGeomParameters()
   geometry->y0 = -(geometry->LengthY)/2 ;
 
   //Read the Initial Reconstruction data into a 3-D matrix
-  Fp=fopen(input->InitialRecon.c_str(),"r");
+  Fp=fopen(input->InitialReconFile.c_str(),"r");
 /*  for(i=0;i<Geometry->N_y;i++)
     for(j=0;j<Geometry->N_x;j++)
       for(k=0;k<Geometry->N_z;k++)
@@ -3376,12 +3377,12 @@ void SOCEngine::initializeGeomParameters()
 // -----------------------------------------------------------------------------
 //Finds the maximum of absolute value elements in an array
 // -----------------------------------------------------------------------------
-DATA_TYPE SOCEngine::absMaxArray(std::vector<DATA_TYPE> &Array, uint16_t NumElts)
+DATA_TYPE SOCEngine::absMaxArray(std::vector<DATA_TYPE> &Array)
 {
   uint16_t i;
   DATA_TYPE max;
   max = fabs(Array[0]);
-  for(i =1; i < NumElts;i++)
+  for(i =1; i < Array.size();i++)
     if(fabs(Array[i]) > max)
       max=fabs(Array[i]);
   return max;

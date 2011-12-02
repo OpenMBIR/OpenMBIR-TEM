@@ -28,14 +28,23 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+#include "TomoEngine/TomoEngine.h"
+
 #include <stdlib.h>
 
 #include <string>
 #include <iostream>
+#ifdef CMP_HAVE_SYS_PARAM_H
+#include <sys/param.h>  // MAXPATHLEN definition
+#else
+#error sys/paramh is needed for this code and was not found on your system
+#endif
+
+// MXA Includes
+#include "MXA/Utilities/MXADir.h"
 
 
 
-#include "TomoEngine/TomoEngine.h"
 #include "TomoEngine/TomoEngineVersion.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 #include "TomoEngine/SOC/SOCEngine.h"
@@ -55,6 +64,25 @@ int main(int argc, char **argv)
     std::cout << "Error Parsing the arguments." << std::endl;
     return EXIT_FAILURE;
   }
+  char path1[MAXPATHLEN];  // This is a buffer for the text
+  ::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
+  getcwd(path1, MAXPATHLEN);
+  std::cout << "Current Working Directory: " << path1 << std::endl;
+
+  // Make sure the output directory is created if it does not exist
+     if(MXADir::exists(inputs.outputDir) == false)
+     {
+       std::cout << "Output Directory '" << inputs.outputDir << "' does NOT exist. Attempting to create it." << std::endl;
+       if(MXADir::mkdir(inputs.outputDir, true) == false)
+       {
+         std::cout << "Error creating the output directory '" << inputs.outputDir << "'\n   Exiting Now." << std::endl;
+         return EXIT_FAILURE;
+       }
+       std::cout << "Output Directory Created." << std::endl;
+     }
+     ::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
+     getcwd(path1, MAXPATHLEN);
+     std::cout << "Current Working Directory: " << path1 << std::endl;
 
   // Create these variables so we
   Sinogram sinogram;
