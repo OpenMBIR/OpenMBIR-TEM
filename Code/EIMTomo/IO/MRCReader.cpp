@@ -351,7 +351,7 @@ void MRCReader::printHeader(MRCHeader* h, std::ostream &out)
   PRINT_VARIABLE (out, "nLabels" , h->nLabels )
 
   for(int i = 0; i < h->nLabels; ++i) {
-    PRINT_VARIABLE (out, "  Labels: " << i , h->labels[i] )
+    PRINT_VARIABLE (out, "  Label: " << i , h->labels[i] )
   }
 
 
