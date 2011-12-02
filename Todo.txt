@@ -7,16 +7,19 @@ SinoN_r  -= Number of voxels in x1025
 SinoN_t  = Number of voxels in Y
 1025  
 
+SinoN_theta - Number of tilts from mrc file
+SinoDelta_r/t - From FEI header PixelSize in NANOMETERS!!!! Do the conversion
+SinoAngles - From .mrc file->Fei Headers
+
+
+----
+
 From User which defines a sub volume
 N_tStart
 N_tEnd
 N_rStart
 N_rEnd
 
-SinoN_theta - Number of tilts from mrc file
-SinoDelta_r/t - From FEI header PixelSize in NANOMETERS!!!! Do the conversion
-
-SinoAngles - From .mrc file->Fei Headers
 View Mask indices from User (optional)
 
 From User - Size in nm of output pixel

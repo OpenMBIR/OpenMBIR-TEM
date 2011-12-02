@@ -50,18 +50,6 @@ class SOCArgsParser
     virtual ~SOCArgsParser();
 
     int parseArguments(int argc, char **argv, TomoInputs* Input);
-    int readParameterFile(const std::string &filepath,TomoInputs* ParsedInput,Sinogram* Sinogram,Geometry* Geometry);
-    void initializeSinoParameters(Sinogram* Sinogram,TomoInputs* ParsedInput);
-    void initializeGeomParameters(Sinogram* Sinogram,Geometry* Geometry,TomoInputs* ParsedInput);
-    DATA_TYPE absMaxArray(DATA_TYPE* Array, uint16_t NumElts);
-
-    /**
-     * @brief Copys the std::string contents into a newly malloc'ed char array which
-     * the programmer will need to free when they are finished with it.
-     * @param fname The filename to copy
-     */
-//    char* copyFilenameToNewCharBuffer( const std::string &fname);
-
 
   private:
     uint64_t startm;

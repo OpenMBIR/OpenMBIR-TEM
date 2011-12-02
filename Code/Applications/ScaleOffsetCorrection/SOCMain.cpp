@@ -37,12 +37,46 @@
 
 #include "TomoEngine/TomoEngine.h"
 #include "TomoEngine/TomoEngineVersion.h"
+#include "TomoEngine/SOC/SOCStructures.h"
+#include "TomoEngine/SOC/SOCEngine.h"
+#include "SOCArgsParser.h"
 
 
 
 int main(int argc, char **argv)
 {
   std::cout << "Starting ScaleOffsetCorrection Version " << TomoEngine::Version::Complete << std::endl;
+
+  TomoInputs inputs;
+  SOCArgsParser argParser;
+  int err = argParser.parseArguments(argc, argv, &inputs);
+  if (err < 0)
+  {
+    std::cout << "Error Parsing the arguments." << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  // Create these variables so we
+  Sinogram sinogram;
+  Geometry geometry;
+
+  SOCEngine::Pointer engine = SOCEngine::New();
+  engine->setInputs(&inputs);
+  engine->setSinogram(&sinogram);
+  engine->setGeometry(&geometry);
+
+  // Run the reconstruction
+  engine->run();
+  if (engine->getErrorCondition() < 0)
+  {
+    std::cout << "Error Reconstructing the Data" << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  // Write the output files
+
+
+
 
 
   return EXIT_SUCCESS;

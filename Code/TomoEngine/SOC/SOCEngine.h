@@ -41,11 +41,21 @@ class SOCEngine : public AbstractPipeline, public Observer
     void execute();
 
 
+
+    DATA_TYPE absMaxArray(std::vector<DATA_TYPE> &Array, uint16_t NumElts);
+
+
+
   protected:
     // Protect this constructor because we want to force the use of the other
     SOCEngine();
 
     void initVariables();
+
+    void initializeSinoParameters();
+
+    void initializeGeomParameters();
+
 
   private:
 
