@@ -141,8 +141,7 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
 
   TCLAP::ValueArg<std::string> in_sinoFile("s", "sinofile", "The Sinogram File", true, "", "");
   cmd.add(in_sinoFile);
-  TCLAP::ValueArg<std::string> in_inputFile("i", "inputfile", "Input Data File", false, "", "");
-  cmd.add(in_inputFile);
+
   TCLAP::ValueArg<std::string> in_outputFile("o", "outputfile", "The Output File", true, "", "");
   cmd.add(in_outputFile);
 
@@ -165,10 +164,10 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
 
   TCLAP::ValueArg<double> in_markov("m", "mrf", "Markov Random Field Parameter", true, 0.0, "0.0");
   cmd.add(in_markov);
-  TCLAP::ValueArg<std::string> InitialParameters("g", "initp", "InitialParameters", true, "", "");
+  TCLAP::ValueArg<std::string> InitialParameters("g", "initp", "InitialParameters", false, "", "");
   cmd.add(InitialParameters);
 
-  TCLAP::ValueArg<int> NumOuterIter("O", "", "NumOuterIter", true, 0, "0");
+  TCLAP::ValueArg<int> NumOuterIter("O", "", "NumOuterIter", true, 1, "1");
   cmd.add(NumOuterIter);
 
   TCLAP::ValueArg<DATA_TYPE> xz_size("", "xz_size", "Size in nm of output pixel xz plane", true, 1, "1");
@@ -196,7 +195,6 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
   try
   {
     cmd.parse(argc, argv);
-    Input->InitialRecon = in_inputFile.getValue();
     Input->OutputFile = in_outputDir.getValue() + MXADir::getSeparator() + in_outputFile.getValue();
     Input->SinoFile = in_sinoFile.getValue();
     Input->outputDir = in_outputDir.getValue();
@@ -209,19 +207,20 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
 
     int subvolumeValues[6];
     Input->useSubvolume = false;
-    if(subvolume.getValue().length() != 0){
-      if (parseValues(subvolume.getValue(), "%d", subvolumeValues) < 0)
-      {
-        std::cout << "Error Parsing the Subvolume Dimensions. They should be entered as --voxels 64,128,256" << std::endl;
-        return -1;
-      }
-      Input->useSubvolume = true;
+
+    if (subvolume.getValue().length() != 0
+         && parseValues(subvolume.getValue(), "%d", subvolumeValues) < 0)
+    {
+      std::cout << "Error Parsing the Subvolume Dimensions. They should be entered as --subvolume 64,128,256,80,150,280" << std::endl;
+      return -1;
     }
+    Input->useSubvolume = true;
+
     Input->xStart = subvolumeValues[0];
-    Input->xEnd = subvolumeValues[1];
-    Input->yStart = subvolumeValues[2];
-    Input->yEnd = subvolumeValues[3];
-    Input->zStart = subvolumeValues[4];
+    Input->xEnd = subvolumeValues[3];
+    Input->yStart = subvolumeValues[1];
+    Input->yEnd = subvolumeValues[4];
+    Input->zStart = subvolumeValues[2];
     Input->zEnd = subvolumeValues[5];
 
     Input->delta_xz = xz_size.getValue();
@@ -229,9 +228,11 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
     Input->LengthZ = thickness.getValue();
 
     std::vector<uint8_t> viewMasks;
-    if( parseUnknownArray(viewMask.getValue(), "%d", viewMasks) < 0)
+
+    if( viewMask.getValue().length() != 0
+         && parseUnknownArray(viewMask.getValue(), "%d", viewMasks) < 0)
     {
-      std::cout << "Error Parsing the Subvolume Dimensions. They should be entered as --voxels 64,128,256" << std::endl;
+      std::cout << "Error Parsing the Tilt Mask Values. They should be entered as 4,7,12,34,67" << std::endl;
       return -1;
     }
     Input->ViewMask = viewMasks;

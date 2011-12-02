@@ -176,16 +176,16 @@ int main(int argc, char **argv)
 	std::string filepath(argv[1]);
   std::cout << "Testing file \n  " << filepath << std::endl;
 
-  MRCReader reader(true); // We are going to manage the data ourselves
+  MRCReader::Pointer reader = MRCReader::New(true);
   MRCHeader header;
-  int err = reader.readHeader(filepath, &header);
+  int err = reader->readHeader(filepath, &header);
   if (err < 0)
   {
     std::cout << "Error reading header from file" << std::endl;
     return EXIT_FAILURE;
   }
 
-  reader.printHeader(&header, std::cout);
+  reader->printHeader(&header, std::cout);
 
   int voxelMin[3] = {0,0,0};
   int voxelMax[3] = {header.nx-1, header.ny-1, 0};
@@ -218,18 +218,18 @@ int main(int argc, char **argv)
   // Read each slice
   for (int z = 0; z < header.nz; ++z)
   {
-    MRCReader r(true);
+    MRCReader::Pointer r = MRCReader::New(true);
     std::cout << "Reading Section " << z << " out of " << header.nz << std::endl;
     voxelMin[2] = z;
     voxelMax[2] = z;
-    err = r.read(filepath, voxelMin, voxelMax);
+    err = r->read(filepath, voxelMin, voxelMax);
 
     if (err < 0)
     {
       std::cout << "Error Code from Reading: " << err << std::endl;
       return EXIT_FAILURE;
     }
-    int16_t* data = reinterpret_cast<int16_t*>(r.getDataPointer());
+    int16_t* data = reinterpret_cast<int16_t*>(r->getDataPointer());
     // Create an RGB Image
     std::vector<unsigned char> image(header.nx * header.ny * 3);
 

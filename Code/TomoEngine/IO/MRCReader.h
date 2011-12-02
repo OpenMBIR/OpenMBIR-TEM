@@ -33,6 +33,8 @@
 
 #include <string>
 
+#include "MXA/MXA.h"
+#include "MXA/Common/MXASetGetMacros.h"
 #include "MXA/Common/IO/MXAFileReader64.h"
 
 #include "MRCHeader.h"
@@ -49,13 +51,21 @@
 class MRCReader
 {
   public:
-    /**
-     * @brief Constructur
-     * @param deleteMemory Should this class delete the memory allocated to hold
-     * the voxel data.
-     */
-    explicit MRCReader(bool deleteMemory = true);
+
+    MXA_SHARED_POINTERS(MRCReader);
+    static Pointer New(bool deleteMemory = true)
+    {
+      Pointer sharedPtr (new MRCReader(deleteMemory));
+      return sharedPtr;
+    }
+
+    MXA_TYPE_MACRO(MRCReader)
+
+
+
     virtual ~MRCReader();
+
+    MXA_INSTANCE_PROPERTY(bool, DeleteMemory);
 
     /**
      * @brief This method ONLY reads the header section of the file
@@ -114,6 +124,12 @@ class MRCReader
 
   protected:
     MRCReader();
+    /**
+     * @brief Constructur
+     * @param deleteMemory Should this class delete the memory allocated to hold
+     * the voxel data.
+     */
+    explicit MRCReader(bool deleteMemory = true);
 
   private:
     MRCHeader* m_Header;
@@ -122,7 +138,7 @@ class MRCReader
     int16_t*   m_Int16Data;
     uint16_t*  m_UInt16Data;
     float*     m_FloatData;
-    bool       m_DeleteMemory;
+
 
 
     MRCReader(const MRCReader&); // Copy Constructor Not Implemented

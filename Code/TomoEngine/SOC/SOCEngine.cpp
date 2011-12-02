@@ -323,14 +323,14 @@ SOCEngine::SOCEngine() :
 // -----------------------------------------------------------------------------
 SOCEngine::~SOCEngine()
 {
-  if (m_Sinogram != NULL)
-  {
-    delete m_Sinogram;
-  }
-  if(m_Geometry != NULL)
-  {
-    delete m_Geometry;
-  }
+//  if (m_Sinogram != NULL)
+//  {
+//    delete m_Sinogram;
+//  }
+//  if(m_Geometry != NULL)
+//  {
+//    delete m_Geometry;
+//  }
 
 }
 
@@ -381,11 +381,7 @@ void SOCEngine::initVariables()
 // -----------------------------------------------------------------------------
 void SOCEngine::execute()
 {
-  if (m_Sinogram == NULL || m_Geometry == NULL || m_Inputs == NULL)
-  {
-    setErrorCondition(-1);
-    return;
-  }
+
 	uint8_t err = 0;
 	int16_t Iter,OuterIter;
 	int16_t i,j,k,r,row,col,slice,RowIndex,ColIndex,SliceIndex,Idx,i_r,i_theta,i_t;
@@ -3119,32 +3115,9 @@ void SOCEngine::initializeSinoParameters()
   double *buffer=(double*)get_spc(1,sizeof(double));
   DATA_TYPE sum=0;
 
-  for(i=0; i < sinogram->N_theta;i++)
-    if(input->ViewMask[i] == 1)
-      view_count++;
-  TotalNumMaskedViews=view_count;
-
-  //Allocate a 3-D matrix to store the singoram in the form of a N_y X N_theta X N_x  matrix
-//  Sinogram->counts=(DATA_TYPE***)get_3D(Sinogram->N_t,Sinogram->N_theta,Sinogram->N_r, sizeof(DATA_TYPE));
-   sinogram->counts=(DATA_TYPE***)get_3D(TotalNumMaskedViews,
-                                         input->xEnd - input->xStart+1,
-                                         input->yEnd - input->yStart+1,
-                                         sizeof(DATA_TYPE));
-  //Read data into this matrix
-  //TODO: clarify this ! Super important !
- //Fp=fopen(ParsedInput->SinoFile.c_str(),"r");
-  /*
-  for(i=0;i<Sinogram->N_t;i++)
-    for(j=0;j<Sinogram->N_r;j++)
-      for(k=0;k<Sinogram->N_theta;k++)
-  {
-    fread (buffer,sizeof(DATA_TYPE),1,Fp);
-    Sinogram->counts[i][k][j]=*buffer;
-  }
-*/
-  MRCReader reader(true);
+  MRCReader::Pointer reader = MRCReader::New(true);
   MRCHeader header;
-  int err = reader.readHeader(input->SinoFile, &header);
+  int err = reader->readHeader(input->SinoFile, &header);
   if (err < 0)
   {
   }
@@ -3155,33 +3128,83 @@ void SOCEngine::initializeSinoParameters()
     return;
   }
 
+  int voxelMin[3] = {0, 0, 0};
+  int voxelMax[3] = {header.nx, header.ny, header.nz-1};
+  if (m_Inputs->useSubvolume == true)
+  {
+     voxelMin[0] = input->xStart;
+     voxelMin[1] = input->yStart;
+     voxelMin[2] = input->zStart;
 
-  int voxelMin[3] = {input->xStart, input->yStart, 0};
-  int voxelMax[3] = {input->xEnd, input->yEnd, header.nz-1};
-  err = reader.read(input->SinoFile, voxelMin, voxelMax);
+     voxelMax[0] = input->xEnd;
+     voxelMax[1] = input->yEnd;
+     voxelMax[2] = input->zEnd;
+  }
+
+
+  sinogram->N_r = voxelMax[0] - voxelMin[0] + 1;
+  sinogram->N_t = voxelMax[1] - voxelMin[1] + 1;
+  sinogram->N_theta = voxelMax[2] - voxelMin[2] + 1;
+
+  sinogram->delta_r = 1.0;
+  sinogram->delta_t = 1.0;
+  FEIHeader* feiHeaders = header.feiHeaders;
+  if (feiHeaders != NULL)
+  {
+    sinogram->delta_r = feiHeaders[0].pixelsize * 10e9;
+    sinogram->delta_t = feiHeaders[0].pixelsize * 10e9;
+  }
+
+  err = reader->read(input->SinoFile, voxelMin, voxelMax);
   if (err < 0)
+  {
+  std::cout << "Error Code from Reading: " << err << std::endl;
+  return ;
+  }
+  int16_t* data = reinterpret_cast<int16_t*>(reader->getDataPointer());
+
+  //  for(i=0; i < sinogram->N_theta;i++)
+  //    if(input->ViewMask[i] == 1)
+  //      view_count++;
+  std::vector<bool> goodViews(header.nz, 1);
+  // Lay down the mask for the views that will be excluded.
+  for(int i = 0; i < m_Inputs->ViewMask.size(); ++i)
+  {
+    goodViews[m_Inputs->ViewMask[i]] = 0;
+  }
+  int numBadViews = 0;
+  for (int i = voxelMin[2]; i <= voxelMax[2]; ++i)
+  {
+    if(goodViews[i] == 0)
     {
-    std::cout << "Error Code from Reading: " << err << std::endl;
-    return ;
+      numBadViews++;
     }
-    int16_t* data = reinterpret_cast<int16_t*>(reader.getDataPointer());
+  }
 
 
+  TotalNumMaskedViews = header.nz - numBadViews;
+  //Allocate a 3-D matrix to store the singoram in the form of a N_y X N_theta X N_x  matrix
+  sinogram->counts=(DATA_TYPE***)get_3D(TotalNumMaskedViews,
+                                        input->xEnd - input->xStart+1,
+                                        input->yEnd - input->yStart+1,
+                                        sizeof(DATA_TYPE));
 
-    for(k=0;k<sinogram->N_theta;k++)
+  for (k = 0; k < sinogram->N_theta; k++)
+  {
+    view_count = 0;
+
+    for (i = 0; i < sinogram->N_t; i++)
     {
-    view_count=0;
-
-    for(i=0;i<sinogram->N_t;i++)
-      for(j=0;j<sinogram->N_r;j++)
+      for (j = 0; j < sinogram->N_r; j++)
       {
         //std::cout<<i<<","<<j<<","<<k<<std::endl;
         //if(Sinogram->ViewMask[k] == 1)
-        sinogram->counts[k][j][i] = data[k*sinogram->N_r*sinogram->N_t + i*sinogram->N_r +j];
+        sinogram->counts[k][j][i] = data[k * sinogram->N_r * sinogram->N_t + i * sinogram->N_r + j];
       }
-      view_count++;
     }
-//  fclose(Fp);
+    view_count++;
+  }
+  reader = MRCReader::NullPointer();
 
   //The normalization and offset parameters for the views
   sinogram->InitialGain=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
