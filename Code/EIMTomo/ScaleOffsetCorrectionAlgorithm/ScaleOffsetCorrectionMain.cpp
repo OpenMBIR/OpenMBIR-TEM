@@ -1,5 +1,5 @@
 
-#include "EIMTomo/EIMTomoConfiguration.h"
+#include "TomoEngine/TomoEngineConfiguration.h"
 
 
 // C Includes
@@ -17,12 +17,12 @@
 #include <iostream>
 
 // EIMTomo Includes
-#include "EIMTomo/EIMTomo.h"
-#include "EIMTomo/common/EIMTime.h"
-#include "EIMTomo/common/allocate.h"
+#include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/EIMTime.h"
+#include "TomoEngine/Common/allocate.h"
 
-#include "EIMTomo/IO/VTKFileWriters.hpp"
-#include "EIMTomo/IO/RawGeometryWriter.h"
+#include "TomoEngine/IO/VTKFileWriters.hpp"
+#include "TomoEngine/IO/RawGeometryWriter.h"
 
 // MXA Includes
 #include "MXA/Utilities/MXADir.h"

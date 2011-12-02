@@ -10,7 +10,7 @@
 #ifndef NHICD_COMPUTATIONENGINE_H_
 #define NHICD_COMPUTATIONENGINE_H_
 
-#include "EIMTomo/EIMTomo.h"
+#include "TomoEngine/TomoEngine.h"
 #include "NHICDInputs.h"
 
 

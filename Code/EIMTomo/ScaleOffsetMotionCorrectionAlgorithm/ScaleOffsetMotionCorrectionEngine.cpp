@@ -20,10 +20,10 @@
 #include <iostream>
 
 // Our own includes
-#include "EIMTomo/common/EIMMath.h"
-#include "EIMTomo/common/allocate.h"
-#include "EIMTomo/common/EIMTime.h"
-#include "EIMTomo/mt/mt19937ar.h"
+#include "TomoEngine/Common/EIMMath.h"
+#include "TomoEngine/Common/allocate.h"
+#include "TomoEngine/Common/EIMTime.h"
+#include "TomoEngine/mt/mt19937ar.h"
 #include "ScaleOffsetMotionCorrectionConstants.h"
 
 

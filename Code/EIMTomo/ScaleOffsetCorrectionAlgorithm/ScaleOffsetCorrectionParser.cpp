@@ -39,13 +39,13 @@
 
 #include "MXA/Utilities/MXADir.h"
 
-#include "EIMTomo/EIMTomo.h"
-#include "EIMTomo/common/EIMTime.h"
-#include "EIMTomo/common/EIMMath.h"
-#include "EIMTomo/common/allocate.h"
-#include "EIMTomo/IO/MRCReader.h"
-#include "EIMTomo/IO/MRCHeader.h"
-#include "EIMTomo/EIMTomoVersion.h"
+#include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/EIMTime.h"
+#include "TomoEngine/Common/EIMMath.h"
+#include "TomoEngine/Common/allocate.h"
+#include "TomoEngine/IO/MRCReader.h"
+#include "TomoEngine/IO/MRCHeader.h"
+#include "TomoEngine/TomoEngineVersion.h"
 
 #define EXTEND_OBJECT
 
@@ -95,7 +95,7 @@ int ScaleOffsetCorrectionParser::parseArguments(int argc,char **argv,TomoInputs*
     return -1;
   }
 
-  TCLAP::CmdLine cmd("", ' ', EIMTomo::Version::Complete);
+  TCLAP::CmdLine cmd("", ' ', TomoEngine::Version::Complete);
   TCLAP::ValueArg<std::string> in_paramFile("p", "paramfile", "The Parameter File", true, "", "");
   cmd.add(in_paramFile);
   TCLAP::ValueArg<std::string> in_sinoFile("s", "sinofile", "The Sinogram File", true, "", "");
@@ -378,19 +378,19 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
   }
 */
 	MRCReader reader(true);
-	MRCHeader header;  
+	MRCHeader header;
 	int err = reader.readHeader(ParsedInput->SinoFile, &header);
 	if (err < 0)
 	{
 	}
-	
+
 	if (header.mode != 1)
 	{
 		std::cout << "16 bit integers are only supported. Error at line  " << __LINE__ << " in file " << __FILE__ << std::endl;
 		return;
 	}
-	
-	
+
+
 	int voxelMin[3] = {Sinogram->N_rStart, Sinogram->N_tStart, 0};
 	int voxelMax[3] = {Sinogram->N_rEnd, Sinogram->N_tEnd, header.nz-1};
 	err = reader.read(ParsedInput->SinoFile, voxelMin, voxelMax);
@@ -400,9 +400,9 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
 		return ;
     }
     int16_t* data = reinterpret_cast<int16_t*>(reader.getDataPointer());
-	
-	
-	
+
+
+
 	for(i=0;i<Sinogram->N_t;i++)
 		for(j=0;j<Sinogram->N_r;j++)
 		{

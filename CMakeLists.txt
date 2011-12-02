@@ -51,18 +51,18 @@ SET (PROJECT_INSTALL_EXECUTABLES "1")
 # Include the cmp project to perform all the basic configuration tests for the 
 # project.
 #------------------------------------------------------------------------------- 
-set (CMP_HEADER_DIR ${EIMTomo_BINARY_DIR}/EIMTomo)
-set (CMP_CONFIGURATION_FILE_NAME "EIMTomoConfiguration.h")
-set (CMP_TYPES_FILE_NAME "EIMTomoTypes.h")
-set (CMP_VERSION_HEADER_FILE_NAME "EIMTomoVersion.h")
-set (CMP_TOP_HEADER_FILE "EIMTomo.h")
-set (CMP_PROJECT_NAMESPACE "${PROJECT_NAME}")
-set (CMP_PROJECT_NAME "${PROJECT_NAME}")
-set (CMP_ENABLE_PLUGINS "0")
-set (CMP_LIB_SEARCH_DIRS "")
-set (CMP_GENERATE_VERSION_STRING 1)
+set (CMP_HEADER_DIR ${EIMTomo_BINARY_DIR}/DONOTUSE)
+#set (CMP_CONFIGURATION_FILE_NAME "EIMTomoConfiguration.h")
+#set (CMP_TYPES_FILE_NAME "EIMTomoTypes.h")
+#set (CMP_VERSION_HEADER_FILE_NAME "EIMTomoVersion.h")
+#set (CMP_TOP_HEADER_FILE "EIMTomo.h")
+#set (CMP_PROJECT_NAMESPACE "${PROJECT_NAME}")
+#set (CMP_PROJECT_NAME "${PROJECT_NAME}")
+#set (CMP_ENABLE_PLUGINS "0")
+#set (CMP_LIB_SEARCH_DIRS "")
+#set (CMP_GENERATE_VERSION_STRING 1)
 set (CMP_INSTALL_FILES 1)
-INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
+#INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
 
 # We need to add the binary directory to our list of include directories so the source files
 # can find the generated header files
@@ -92,6 +92,19 @@ OPTION (EIMTomo_TIFF_SUPPORT "Add libTiff Support" ON)
 OPTION (EIMTomo_HDF5_SUPPORT "Add HDF5 Support" OFF)
 OPTION (EIMTomo_USE_MERSENNE_TWISTER "Use the Mersenne Twister RNG" ON)
 
+# ---------- Find Boost Headers/Libraries -----------------------
+#SET (Boost_FIND_REQUIRED FALSE)
+SET (Boost_DEBUG FALSE)
+set (Boost_USE_MULTITHREADED TRUE)
+set (Boost_USE_STATIC_LIBS TRUE)
+SET (Boost_ADDITIONAL_VERSIONS "1.47.0" "1.46.0" "1.44.0" "1.44" "1.41" "1.41.0" "1.39" "1.39.0")
+set (Boost_FIND_COMPONENTS "")
+set (Boost_NO_BOOST_CMAKE 1)
+FIND_PACKAGE(Boost)
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
+LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
+
+
 # --------------------------------------------------------------------
 # Should we use Intel Threading Building Blocks
 # --------------------------------------------------------------------
@@ -113,8 +126,8 @@ endif()
 
 # --------------------------------------------------------------------
 # Now configure this extra file with some additional definitions
-configure_file(${EIMTomo_SOURCE_DIR}/Resources/EIMTomo/EIMTomoConfiguration.h.in
-               ${EIMTomo_BINARY_DIR}/EIMTomo/${CMP_TOP_HEADER_FILE})
+#configure_file(${EIMTomo_SOURCE_DIR}/Resources/EIMTomo/EIMTomoConfiguration.h.in
+#               ${EIMTomo_BINARY_DIR}/EIMTomo/${CMP_TOP_HEADER_FILE})
                
 # --------------------------------------------------------------------
 # Add in some compiler definitions
@@ -143,6 +156,8 @@ endif()
 # Add the MXA as a library project
 add_subdirectory( ${PROJECT_CODE_DIR}/MXA ${PROJECT_BINARY_DIR}/MXA)
 
+add_subdirectory( ${PROJECT_CODE_DIR}/TomoEngine ${PROJECT_BINARY_DIR}/TomoEngine)
+
 # --------------------------------------------------------------------
 # Macro that takes a subdirectory and creates a cmake option variable
 # which allows developers to turn off those sub projects if needed.
@@ -162,4 +177,4 @@ Add_Algorithm(ScaleOffsetCorrectionAlgorithm)
 Add_Algorithm(ScaleOffsetMotionCorrectionAlgorithm)
 
 
-add_subdirectory(${PROJECT_CODE_DIR}/EIMTomo/Test ${PROJECT_BINARY_DIR}/Test)
+add_subdirectory(${PROJECT_CODE_DIR}/Test ${PROJECT_BINARY_DIR}/Test)

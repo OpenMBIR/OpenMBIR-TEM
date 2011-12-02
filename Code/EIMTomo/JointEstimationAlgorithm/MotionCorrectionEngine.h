@@ -10,8 +10,8 @@
 #ifndef MOTION_CORRECTION_COMPUTATIONENGINE_H_
 #define MOTION_CORRECTION_COMPUTATIONENGINE_H_
 
-#include "EIMTomo/EIMTomo.h"
-#include "EIMTomo/common/EIMMath.h"
+#include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/EIMMath.h"
 #include "MotionCorrectionInputs.h"
 
 

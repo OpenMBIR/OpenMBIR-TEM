@@ -10,7 +10,7 @@
 #ifndef COMPUTATIONENGINE_H_
 #define COMPUTATIONENGINE_H_
 
-#include "EIMTomo/EIMTomo.h"
+#include "TomoEngine/TomoEngine.h"
 
 #include "ScaleOffsetMotionStructures.h"
 #include "ScaleOffsetMotionCorrectionParser.h"

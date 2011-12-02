@@ -1,5 +1,5 @@
 #include "ComputationInputs.h"
-#include "EIMTomo/common/allocate.h"
+#include "TomoEngine/Common/allocate.h"
 
 #include <stdlib.h>
 #include <stdio.h>

@@ -39,11 +39,11 @@
 
 #include "MXA/Utilities/MXADir.h"
 
-#include "EIMTomo/EIMTomo.h"
-#include "EIMTomo/common/EIMTime.h"
-#include "EIMTomo/common/EIMMath.h"
-#include "EIMTomo/common/allocate.h"
-#include "EIMTomo/EIMTomoVersion.h"
+#include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/EIMTime.h"
+#include "TomoEngine/Common/EIMMath.h"
+#include "TomoEngine/Common/allocate.h"
+#include "TomoEngine/TomoEngineVersion.h"
 
 //#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
 #define EXTEND_OBJECT
@@ -94,7 +94,7 @@ int ScaleOffsetMotionCorrectionParser::parseArguments(int argc,char **argv,TomoI
     return -1;
   }
 
-  TCLAP::CmdLine cmd("", ' ', EIMTomo::Version::Complete);
+  TCLAP::CmdLine cmd("", ' ', TomoEngine::Version::Complete);
   TCLAP::ValueArg<std::string> in_paramFile("p", "paramfile", "The Parameter File", true, "", "");
   cmd.add(in_paramFile);
   TCLAP::ValueArg<std::string> in_sinoFile("s", "sinofile", "The Sinogram File", true, "", "");

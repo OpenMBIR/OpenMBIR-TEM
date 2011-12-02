@@ -3,7 +3,7 @@
 
 #include <stdio.h> //For all other declarations int,FILE etc
 
-#include "EIMTomo/EIMTomo.h"
+#include "TomoEngine/TomoEngine.h"
 
 
 #ifdef __cplusplus

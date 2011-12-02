@@ -27,8 +27,8 @@ set(NonHomogeniousICD_SRCS
 cmp_IDE_SOURCE_PROPERTIES( "EIMTomo/NHICD" "${NonHomogeniousICD_HDRS}" "${NonHomogeniousICD_SRCS}" "${CMP_INSTALL_FILES}")
 
 # Include the source files for Common source files and the Mersenne Twister RNG
-include (${PROJECT_CODE_DIR}/EIMTomo/common/SourceList.cmake)
-include (${PROJECT_CODE_DIR}/EIMTomo/mt/SourceList.cmake)
+#include (${PROJECT_CODE_DIR}/EIMTomo/common/SourceList.cmake)
+#include (${PROJECT_CODE_DIR}/EIMTomo/mt/SourceList.cmake)
 
 set(GENERATED_HDRS
     ${CMP_HEADER_DIR}/${CMP_EXTRA_CONFIGURATION_FILE}
@@ -42,10 +42,7 @@ cmp_IDE_GENERATED_PROPERTIES("${Project_Name}/Generated" "${GENERATED_HDRS}" "")
 set(NonHomogeniousICD_PROJECT_FILES
   ${NonHomogeniousICD_HDRS}
   ${NonHomogeniousICD_SRCS}
-  ${EIMTomo_Common_SRCS}
-  ${EIMTomo_Common_HDRS}
-  ${Mersenne_Twister_SRCS}
-  ${Mersenne_Twister_HDRS}
+
   ${GENERATED_HDRS}
 )
 
@@ -53,4 +50,4 @@ set(NonHomogeniousICD_PROJECT_FILES
 include_directories(${PROJECT_CODE_DIR})
 
 add_executable(NHICD ${NonHomogeniousICD_PROJECT_FILES} )
-
+target_link_libraries(NHICD MXA TomoEngine)

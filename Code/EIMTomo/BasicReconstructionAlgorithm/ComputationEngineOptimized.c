@@ -9,8 +9,8 @@
 
 #include "ComputationEngineOptimized.h"
 
-#include "EIMTomo/common/allocate.h"
-#include "EIMTomo/mt/mt19937ar.h"
+#include "TomoEngine/Common/allocate.h"
+#include "TomoEngine/mt/mt19937ar.h"
 #include <stdlib.h>
 #include <stdio.h>
 

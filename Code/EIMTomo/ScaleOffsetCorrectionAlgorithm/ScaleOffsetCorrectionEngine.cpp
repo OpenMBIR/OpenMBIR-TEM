@@ -20,10 +20,10 @@
 #include <iostream>
 
 // Our own includes
-#include "EIMTomo/common/EIMMath.h"
-#include "EIMTomo/common/allocate.h"
-#include "EIMTomo/common/EIMTime.h"
-#include "EIMTomo/mt/mt19937ar.h"
+#include "TomoEngine/Common/EIMMath.h"
+#include "TomoEngine/Common/allocate.h"
+#include "TomoEngine/Common/EIMTime.h"
+#include "TomoEngine/mt/mt19937ar.h"
 #include "ScaleOffsetCorrectionConstants.h"
 
 
@@ -307,7 +307,7 @@ class DerivOfCostFunc
 // -----------------------------------------------------------------------------
 SOCEngine::SOCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs) :
     m_Cancel(false),
-m_CmdInputs(inputs),
+m_Inputs(inputs),
 m_Sinogram(sinogram),
 m_Geometry(geometry)
 {
@@ -319,7 +319,7 @@ m_Geometry(geometry)
 // -----------------------------------------------------------------------------
 SOCEngine::SOCEngine() :
     m_Cancel(false),
-    m_CmdInputs(NULL),
+    m_Inputs(NULL),
     m_Sinogram(NULL),
     m_Geometry(NULL)
 {
@@ -377,7 +377,7 @@ void SOCEngine::initVariables()
 // -----------------------------------------------------------------------------
 int SOCEngine::mapicdReconstruct()
 {
-  if (m_Sinogram == NULL || m_Geometry == NULL || m_CmdInputs == NULL)
+  if (m_Sinogram == NULL || m_Geometry == NULL || m_Inputs == NULL)
   {
     return -1;
   }
@@ -430,40 +430,40 @@ int SOCEngine::mapicdReconstruct()
 
 	int fileError = 0;
 
-	MAKE_OUTPUT_FILE(Fp1, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::ReconstructedSinogramFile);
+	MAKE_OUTPUT_FILE(Fp1, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::ReconstructedSinogramFile);
 	if (fileError == 1)
 	{
 
 	}
 
-	MAKE_OUTPUT_FILE(Fp4, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::FinalGainParametersFile);
+	MAKE_OUTPUT_FILE(Fp4, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::FinalGainParametersFile);
 	if (fileError == 1)
 	{
 
 	}
 
-  MAKE_OUTPUT_FILE(Fp5, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::FinalOffsetParametersFile);
+  MAKE_OUTPUT_FILE(Fp5, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::FinalOffsetParametersFile);
   if (fileError == 1)
   {
 
   }
 
 #ifdef FORWARD_PROJECT_MODE
-  MAKE_OUTPUT_FILE(Fp6, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::ForwardProjectedObjectFile);
+  MAKE_OUTPUT_FILE(Fp6, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::ForwardProjectedObjectFile);
   if (fileError == 1)
   {
 
   }
 #endif
 
-  MAKE_OUTPUT_FILE(Fp7, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::FinalVariancesFile);
+  MAKE_OUTPUT_FILE(Fp7, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::FinalVariancesFile);
   if (fileError == 1)
   {
 
   }
 #ifdef DEBUG_CONSTRAINT_OPT
 	FILE *Fp8 = fopen("CostFunctionCoefficients.bin","w");
-  MAKE_OUTPUT_FILE(Fp8, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::CostFunctionCoefficientsFile);
+  MAKE_OUTPUT_FILE(Fp8, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::CostFunctionCoefficientsFile);
   if (fileError == 1)
   {
 
@@ -507,7 +507,7 @@ int SOCEngine::mapicdReconstruct()
 
 #ifdef WRITE_INTERMEDIATE_RESULTS
 	DATA_TYPE Fraction = 0.1;//write this fraction of the iterations
-	int16_t NumOfWrites = floor((DATA_TYPE)(m_CmdInputs->NumIter)*Fraction);
+	int16_t NumOfWrites = floor((DATA_TYPE)(m_Inputs->NumIter)*Fraction);
 	int16_t WriteCount = 0;
 	char Filename[100];
 	char buffer[20];
@@ -521,7 +521,7 @@ int SOCEngine::mapicdReconstruct()
 #endif
 
 #ifdef COST_CALCULATE
-	cost=(DATA_TYPE*)get_spc((m_CmdInputs->NumIter+1)*m_CmdInputs->NumOuterIter*3,sizeof(DATA_TYPE));//the factor 3 is in there to ensure we can store 3 costs per iteration one after update x, then mu and then I
+	cost=(DATA_TYPE*)get_spc((m_Inputs->NumIter+1)*m_Inputs->NumOuterIter*3,sizeof(DATA_TYPE));//the factor 3 is in there to ensure we can store 3 costs per iteration one after update x, then mu and then I
 #endif
 
 	Y_Est=(DATA_TYPE ***)get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
@@ -541,14 +541,14 @@ int SOCEngine::mapicdReconstruct()
 #endif
 
 #ifndef QGGMRF
-	MRF_P = m_CmdInputs->p;
-	SIGMA_X_P = pow(m_CmdInputs->SigmaX,MRF_P);
+	MRF_P = m_Inputs->p;
+	SIGMA_X_P = pow(m_Inputs->SigmaX,MRF_P);
 #else
 	MRF_P=2;
 	MRF_Q=1.2;
 	MRF_C=30;
 	MRF_ALPHA=1.5;
-	SIGMA_X_P = pow(m_CmdInputs->SigmaX,MRF_P);
+	SIGMA_X_P = pow(m_Inputs->SigmaX,MRF_P);
 	for(i=0;i < 3;i++)
 		for(j=0; j < 3;j++)
 			for(k=0; k < 3;k++)
@@ -1008,7 +1008,7 @@ int SOCEngine::mapicdReconstruct()
 
 #ifdef COST_CALCULATE
 	fileError = 0;
-  MAKE_OUTPUT_FILE(Fp2, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::CostFunctionFile);
+  MAKE_OUTPUT_FILE(Fp2, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::CostFunctionFile);
   if (fileError == 1)
   {
 
@@ -1030,9 +1030,9 @@ int SOCEngine::mapicdReconstruct()
 
 	//Loop through every voxel updating it by solving a cost function
 
-	for(OuterIter = 0; OuterIter < m_CmdInputs->NumOuterIter; OuterIter++)
+	for(OuterIter = 0; OuterIter < m_Inputs->NumOuterIter; OuterIter++)
 	{
-	for(Iter = 0;Iter < m_CmdInputs->NumIter;Iter++)
+	for(Iter = 0;Iter < m_Inputs->NumIter;Iter++)
 	{
 
 		//printf("Iter %d\n",Iter);
@@ -1318,7 +1318,7 @@ int SOCEngine::mapicdReconstruct()
 		if(AverageMagnitudeOfRecon > 0)
 		{
 			printf("%d,%lf\n",Iter+1,AverageUpdate/AverageMagnitudeOfRecon);
-		if((AverageUpdate/AverageMagnitudeOfRecon) < m_CmdInputs->StopThreshold)
+		if((AverageUpdate/AverageMagnitudeOfRecon) < m_Inputs->StopThreshold)
 		{
 			printf("This is the terminating point %d\n",Iter);
 			break;
@@ -1822,7 +1822,7 @@ void* SOCEngine::calculateVoxelProfile()
 	uint16_t i,j;
 	FILE* Fp = NULL;
 	int fileError = 0;
-  MAKE_OUTPUT_FILE(Fp, fileError, m_CmdInputs->outputDir, ScaleOffsetCorrection::VoxelProfileFile);
+  MAKE_OUTPUT_FILE(Fp, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::VoxelProfileFile);
   if (fileError == 1)
   {
 
@@ -2619,7 +2619,7 @@ void* SOCEngine::detectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelPr
 
   FILE* Fp = NULL;
   int err = 0;
-  MAKE_OUTPUT_FILE(Fp, err, m_CmdInputs->outputDir, ScaleOffsetCorrection::DetectorResponseFile)
+  MAKE_OUTPUT_FILE(Fp, err, m_Inputs->outputDir, ScaleOffsetCorrection::DetectorResponseFile)
   if (err == 1)
   {
     std::cout << "Error creating output file for Detector Response." << std::endl;
