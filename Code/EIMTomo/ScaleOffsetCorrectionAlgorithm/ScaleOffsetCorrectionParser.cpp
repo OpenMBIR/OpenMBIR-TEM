@@ -351,7 +351,7 @@ int ScaleOffsetCorrectionParser::readParameterFile(const std::string &filepath,T
 
 void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoInputs* ParsedInput)
 {
-  int16_t i,j,k;
+  int16_t i,j,k,N_rTemp,N_tTemp;
 	uint16_t view_count=0,TotalNumMaskedViews;
   FILE* Fp;
   double *buffer=(double*)get_spc(1,sizeof(double));
@@ -364,19 +364,29 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
 
   //Allocate a 3-D matrix to store the singoram in the form of a N_y X N_theta X N_x  matrix
 //  Sinogram->counts=(DATA_TYPE***)get_3D(Sinogram->N_t,Sinogram->N_theta,Sinogram->N_r, sizeof(DATA_TYPE));
-	 Sinogram->counts=(DATA_TYPE***)get_3D(TotalNumMaskedViews,Sinogram->N_rEnd-Sinogram->N_rStart+1,Sinogram->N_tEnd-Sinogram->N_rStart+1, sizeof(DATA_TYPE));
   //Read data into this matrix
   //TODO: clarify this ! Super important !
- //Fp=fopen(ParsedInput->SinoFile.c_str(),"r");
-	/*
-  for(i=0;i<Sinogram->N_t;i++)
-    for(j=0;j<Sinogram->N_r;j++)
-      for(k=0;k<Sinogram->N_theta;k++)
-  {
-    fread (buffer,sizeof(DATA_TYPE),1,Fp);
-    Sinogram->counts[i][k][j]=*buffer;
-  }
-*/
+  // Fp=fopen(ParsedInput->SinoFile.c_str(),"r");
+
+	/*	
+	 for(i=0;i<Sinogram->N_t;i++)
+	 for(j=0;j<Sinogram->N_r;j++)
+	 {
+	 view_count=0;
+	 for(k=0;k<Sinogram->N_theta;k++)
+	 {
+	 //				fread (buffer,sizeof(double), 1, Fp);
+	 if(Sinogram->ViewMask[k] == 1 && j >= Sinogram->N_rStart && j <= Sinogram->N_rEnd && i >= Sinogram->N_tStart && i <= Sinogram->N_tEnd)
+	 Sinogram->counts[view_count++][j-Sinogram->N_rStart][i-Sinogram->N_tStart] = (DATA_TYPE)(*buffer);
+	 }
+	 
+	 
+	 }
+	 
+	 */
+	
+	//Reading the MRC file
+	
 	MRCReader reader(true);
 	MRCHeader header;  
 	int err = reader.readHeader(ParsedInput->SinoFile, &header);
@@ -401,21 +411,28 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
     }
     int16_t* data = reinterpret_cast<int16_t*>(reader.getDataPointer());
 	
+	reader.printHeader(&header, std::cout);
+	//End of MRC Read 
+	Sinogram->counts=(DATA_TYPE***)get_3D(TotalNumMaskedViews,Sinogram->N_rEnd-Sinogram->N_rStart+1,Sinogram->N_tEnd-Sinogram->N_rStart+1, sizeof(DATA_TYPE));
+
+	Sinogram->N_r = (Sinogram->N_rEnd-Sinogram->N_rStart+1);
+	Sinogram->N_t = (Sinogram->N_tEnd-Sinogram->N_tStart+1);
 	
-	
+	for(k=0;k<Sinogram->N_theta;k++)
+	{
+	view_count=0;
 	for(i=0;i<Sinogram->N_t;i++)
 		for(j=0;j<Sinogram->N_r;j++)
-		{
-			view_count=0;
-			for(k=0;k<Sinogram->N_theta;k++)
-			{
-				//fread (buffer,sizeof(double), 1, Fp);
-				if(Sinogram->ViewMask[k] == 1 && j >= Sinogram->N_rStart && j <= Sinogram->N_rEnd && i >= Sinogram->N_tStart && i <= Sinogram->N_tEnd)
-				Sinogram->counts[view_count++][j-Sinogram->N_rStart][i-Sinogram->N_tStart] = (DATA_TYPE)(*buffer);
-			}
-
-
+		{		
+			//std::cout<<i<<","<<j<<","<<k<<std::endl;
+			//if(Sinogram->ViewMask[k] == 1)
+				Sinogram->counts[k][j][i] = data[k*Sinogram->N_r*Sinogram->N_t + i*Sinogram->N_r +j];
+			
+									
 		}
+		view_count++;
+	}
+	
 //	fclose(Fp);
 
 	//The normalization and offset parameters for the views
@@ -452,6 +469,7 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
 
 
 	printf("Size of the Masked Sinogram N_r =%d N_t = %d N_theta=%d\n",Sinogram->N_r,Sinogram->N_t,Sinogram->N_theta);
+ 
 
       //check sum calculation
   for(i=0;i<Sinogram->N_theta;i++)
