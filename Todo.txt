@@ -27,8 +27,6 @@ From User -
 GeomLengthZ - Thickness of sample in nm
 
 
-
-
 ****** Venkat ********
 
 Calculated from Input Data
