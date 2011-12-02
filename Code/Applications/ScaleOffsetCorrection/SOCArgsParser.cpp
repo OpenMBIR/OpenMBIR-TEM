@@ -235,7 +235,7 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
       std::cout << "Error Parsing the Tilt Mask Values. They should be entered as 4,7,12,34,67" << std::endl;
       return -1;
     }
-    Input->ViewMask = viewMasks;
+    Input->excludedViews = viewMasks;
 
   }
   catch (TCLAP::ArgException &e)

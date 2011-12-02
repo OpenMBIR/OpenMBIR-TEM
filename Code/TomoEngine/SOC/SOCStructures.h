@@ -110,7 +110,8 @@ typedef double DATA_TYPE;
     DATA_TYPE p;
     DATA_TYPE StopThreshold;
 
-    std::vector<uint8_t> ViewMask;//Which views to keep and which to reject
+    std::vector<uint8_t> excludedViews;//Which views to keep and which to reject
+    std::vector<uint8_t> ViewMask;
 
     bool useSubvolume;
     uint16_t xStart;

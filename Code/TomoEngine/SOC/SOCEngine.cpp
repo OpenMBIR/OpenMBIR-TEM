@@ -3214,7 +3214,7 @@ void SOCEngine::initializeSinoParameters()
   sinogram->InitialGain=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
   sinogram->InitialOffset=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
 
-
+  //----------------------------------------------------
   //TODO: This next Section needs fixing.....
 
 
