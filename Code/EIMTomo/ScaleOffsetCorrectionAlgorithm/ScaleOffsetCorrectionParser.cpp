@@ -418,19 +418,20 @@ void ScaleOffsetCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoIn
 	Sinogram->N_r = (Sinogram->N_rEnd-Sinogram->N_rStart+1);
 	Sinogram->N_t = (Sinogram->N_tEnd-Sinogram->N_tStart+1);
 	
+	view_count=0;
 	for(k=0;k<Sinogram->N_theta;k++)
 	{
-	view_count=0;
 	for(i=0;i<Sinogram->N_t;i++)
 		for(j=0;j<Sinogram->N_r;j++)
 		{		
 			//std::cout<<i<<","<<j<<","<<k<<std::endl;
-			//if(Sinogram->ViewMask[k] == 1)
-				Sinogram->counts[k][j][i] = data[k*Sinogram->N_r*Sinogram->N_t + i*Sinogram->N_r +j];
+			if(Sinogram->ViewMask[k] == 1)
+				Sinogram->counts[view_count][j][i] = data[k*Sinogram->N_r*Sinogram->N_t + i*Sinogram->N_r +j];
 			
 									
 		}
-		view_count++;
+		if(Sinogram->ViewMask[k] == 1)
+		 view_count++;
 	}
 	
 //	fclose(Fp);
