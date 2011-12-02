@@ -3144,7 +3144,7 @@ void SOCEngine::initializeSinoParameters()
 
   sinogram->N_r = voxelMax[0] - voxelMin[0] + 1;
   sinogram->N_t = voxelMax[1] - voxelMin[1] + 1;
-  sinogram->N_theta = voxelMax[2] - voxelMin[2] + 1;
+
 
   sinogram->delta_r = 1.0;
   sinogram->delta_t = 1.0;
@@ -3155,17 +3155,6 @@ void SOCEngine::initializeSinoParameters()
     sinogram->delta_t = feiHeaders[0].pixelsize * 10e9;
   }
 
-  err = reader->read(input->SinoFile, voxelMin, voxelMax);
-  if (err < 0)
-  {
-  std::cout << "Error Code from Reading: " << err << std::endl;
-  return ;
-  }
-  int16_t* data = reinterpret_cast<int16_t*>(reader->getDataPointer());
-
-  //  for(i=0; i < sinogram->N_theta;i++)
-  //    if(input->ViewMask[i] == 1)
-  //      view_count++;
   std::vector<bool> goodViews(header.nz, 1);
   // Lay down the mask for the views that will be excluded.
   for(int i = 0; i < m_Inputs->ViewMask.size(); ++i)
@@ -3183,6 +3172,18 @@ void SOCEngine::initializeSinoParameters()
 
 
   TotalNumMaskedViews = header.nz - numBadViews;
+  sinogram->N_theta = TotalNumMaskedViews;
+
+  err = reader->read(input->SinoFile, voxelMin, voxelMax);
+  if (err < 0)
+  {
+  std::cout << "Error Code from Reading: " << err << std::endl;
+  return ;
+  }
+  int16_t* data = reinterpret_cast<int16_t*>(reader->getDataPointer());
+
+
+
   //Allocate a 3-D matrix to store the singoram in the form of a N_y X N_theta X N_x  matrix
   sinogram->counts=(DATA_TYPE***)get_3D(TotalNumMaskedViews,
                                         input->xEnd - input->xStart+1,
@@ -3204,11 +3205,18 @@ void SOCEngine::initializeSinoParameters()
     }
     view_count++;
   }
+
+  // Clean up all the memory associated with the MRC Reader
+  reader->setDeleteMemory(true);
   reader = MRCReader::NullPointer();
 
   //The normalization and offset parameters for the views
   sinogram->InitialGain=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
   sinogram->InitialOffset=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
+
+
+  //TODO: This next Section needs fixing.....
+
 
   Fp=fopen(input->InitialParameters.c_str(),"r");//This file contains the Initial unscatterd counts and background scatter for each view
 
@@ -3227,12 +3235,12 @@ void SOCEngine::initializeSinoParameters()
       sinogram->InitialOffset[view_count++]=(DATA_TYPE)(*buffer);
   }
 
+//----------------------------------------------------
 
 
-
-  sinogram->N_theta = TotalNumMaskedViews;
-  sinogram->N_r = (input->xEnd - input->xStart+1);
-  sinogram->N_t = (input->yEnd - input->yStart+1);
+//  sinogram->N_theta = TotalNumMaskedViews;
+//  sinogram->N_r = (input->xEnd - input->xStart+1);
+//  sinogram->N_t = (input->yEnd - input->yStart+1);
   sinogram->R0 = -(sinogram->N_r*sinogram->delta_r)/2;
   sinogram->RMax = (sinogram->N_r*sinogram->delta_r)/2;
   sinogram->T0 =  -(sinogram->N_t*sinogram->delta_t)/2;
