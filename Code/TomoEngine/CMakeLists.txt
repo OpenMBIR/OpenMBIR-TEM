@@ -33,11 +33,13 @@ set (CMP_PROJECT_NAMESPACE "TomoEngine")
 set (CMP_PROJECT_NAME "TomoEngine")
 set (CMP_ENABLE_PLUGINS "0")
 set (CMP_LIB_SEARCH_DIRS "")
+set (CMP_GENERATE_VERSION_STRING 1)
 INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
 
 # --------------------------------------------------------------------
 # Generate a Header file with Compile Version variables
 # --------------------------------------------------------------------
+if (0)
 set (VERSION_GEN_NAME "TomoEngine")
 set (VERSION_GEN_NAMESPACE "TomoEngine")
 set (PROJECT_PREFIX "TomoEngine")
@@ -48,6 +50,8 @@ set (VERSION_GEN_VER_PATCH "0")
 
 configure_file(${CMP_CONFIGURED_FILES_SOURCE_DIR}/cmpVersion.h.in   
                ${TomoEngine_BINARY_DIR}/TomoEngineVersion.h  )
+endif()
+
 
 configure_file(${TomoEngine_SOURCE_DIR}/TomoEngineConfiguration.h.in
                ${TomoEngine_BINARY_DIR}/${CMP_TOP_HEADER_FILE})   

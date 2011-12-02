@@ -67,6 +67,7 @@ set (CMP_INSTALL_FILES 1)
 # We need to add the binary directory to our list of include directories so the source files
 # can find the generated header files
 include_directories(${EIMTomo_BINARY_DIR})
+include_directories(${PROJECT_CODE_DIR})
 
 # --------------------------------------------------------------------
 # Generate our ReadMe and License Files
@@ -158,6 +159,8 @@ add_subdirectory( ${PROJECT_CODE_DIR}/MXA ${PROJECT_BINARY_DIR}/MXA)
 
 add_subdirectory( ${PROJECT_CODE_DIR}/TomoEngine ${PROJECT_BINARY_DIR}/TomoEngine)
 
+add_subdirectory( ${PROJECT_CODE_DIR}/Applications/ScaleOffsetCorrection ${PROJECT_BINARY_DIR}/Applications/ScaleOffsetCorrection)
+
 # --------------------------------------------------------------------
 # Macro that takes a subdirectory and creates a cmake option variable
 # which allows developers to turn off those sub projects if needed.
@@ -173,7 +176,7 @@ endmacro()
 Add_Algorithm(JointEstimationAlgorithm)
 Add_Algorithm(NonHomogeniousICD)
 Add_Algorithm(BasicReconstructionAlgorithm)
-Add_Algorithm(ScaleOffsetCorrectionAlgorithm)
+#Add_Algorithm(ScaleOffsetCorrectionAlgorithm)
 Add_Algorithm(ScaleOffsetMotionCorrectionAlgorithm)
 
 
