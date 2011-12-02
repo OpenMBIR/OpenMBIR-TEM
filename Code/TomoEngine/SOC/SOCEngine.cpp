@@ -3157,16 +3157,17 @@ void SOCEngine::initializeSinoParameters()
 
   }
 
-  std::vector<bool> goodViews(header.nz, 1);
+
+  m_Inputs->ViewMask.resize(voxelMax[2] - voxelMin[2] + 1, 1);
   // Lay down the mask for the views that will be excluded.
-  for (int i = 0; i < m_Inputs->ViewMask.size(); ++i)
+  for (size_t i = 0; i < m_Inputs->excludedViews.size(); ++i)
   {
-    goodViews[m_Inputs->ViewMask[i]] = 0;
+    m_Inputs->ViewMask[m_Inputs->excludedViews[i]] = 0;
   }
   int numBadViews = 0;
   for (int i = voxelMin[2]; i <= voxelMax[2]; ++i)
   {
-    if(goodViews[i] == 0)
+    if(m_Inputs->ViewMask[i] == 0)
     {
       numBadViews++;
     }
@@ -3222,7 +3223,7 @@ void SOCEngine::initializeSinoParameters()
     // Calculate teh initial Gains and Offsets
     //TODO:  Venkat to implement
     ComputeGainsOffsets::Pointer compute = ComputeGainsOffsets::New();
-    err = compute->execute();
+    err = compute->execute(m_Inputs, sinogram);
     if (err < 0)
     {
       setErrorCondition(err);

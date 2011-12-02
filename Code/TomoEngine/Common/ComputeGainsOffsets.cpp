@@ -27,7 +27,7 @@ ComputeGainsOffsets::~ComputeGainsOffsets()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int ComputeGainsOffsets::execute()
+int ComputeGainsOffsets::execute(TomoInputs* inputs, Sinogram* sinogram)
 {
   int err = 0;
 

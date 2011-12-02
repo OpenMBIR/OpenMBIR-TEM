@@ -12,6 +12,9 @@
 #include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
 
+#include "TomoEngine/SOC/SOCStructures.h"
+
+
 /*
  *
  */
@@ -24,7 +27,7 @@ class ComputeGainsOffsets
 
     virtual ~ComputeGainsOffsets();
 
-    int execute();
+    int execute(TomoInputs* inputs, Sinogram* sinogram);
 
 
   protected:
