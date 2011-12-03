@@ -651,6 +651,7 @@ void SOCEngine::execute()
 
 
 #endif
+	m_Sinogram->TargetGain=20000;
 
 #ifdef BRIGHT_FIELD //Take log of the data and subtract log(Dosage) from it
 

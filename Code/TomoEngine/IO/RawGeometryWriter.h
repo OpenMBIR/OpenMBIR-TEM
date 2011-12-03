@@ -31,8 +31,8 @@
 #define RAWGEOMETRYWRITER_H_
 
 
+//#include "TomoEngine/SOC/SOCStructures.h"
 #include "EIMTomo/ScaleOffsetMotionCorrectionAlgorithm/ScaleOffsetMotionStructures.h"
-
 
 /**
  * @class
