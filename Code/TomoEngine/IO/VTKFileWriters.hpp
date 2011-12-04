@@ -43,8 +43,12 @@
 #include "MXA/Common/MXAEndian.h"
 #include "MXA/Common/MXASetGetMacros.h"
 #include "VTKWriterMacros.h"
+
 #include "EIMTomo/ScaleOffsetMotionCorrectionAlgorithm/ScaleOffsetMotionStructures.h"
 #include "EIMTomo/ScaleOffsetMotionCorrectionAlgorithm/ScaleOffsetMotionCorrectionConstants.h"
+
+//#include "TomoEngine/SOC/SOCStructures.h"
+//#include "TomoEngine/SOC/SOCConstants.h"
 
 
 /**

@@ -31,6 +31,7 @@
 #include "TomoEngine/IO/MRCReader.h"
 #include "TomoEngine/SOC/SOCConstants.h"
 #include "TomoEngine/Common/ComputeGainsOffsets.h"
+#include "TomoEngine/IO/RawGeometryWriter.h"
 
 #define EXTEND_OBJECT
 
