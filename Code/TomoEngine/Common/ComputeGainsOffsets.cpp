@@ -1,40 +1,37 @@
 /*
- * GainsOffsetsGenerator.cpp
+ * ComputeGainsOffets.cpp
  *
- *  Created on: Dec 5, 2011
+ *  Created on: Dec 2, 2011
  *      Author: mjackson
  */
 
-#include "GainsOffsetsGenerator.h"
-
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-GainsOffsetsGenerator::GainsOffsetsGenerator()
-{
-
-}
-
+#include "ComputeGainsOffsets.h"
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-GainsOffsetsGenerator::~GainsOffsetsGenerator()
+ComputeGainsOffsets::ComputeGainsOffsets()
 {
+  // TODO Auto-generated constructor stub
+
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void GainsOffsetsGenerator::execute()
+ComputeGainsOffsets::~ComputeGainsOffsets()
 {
+  // TODO Auto-generated destructor stub
+}
 
-
-
-
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ComputeGainsOffsets::execute()
+{
   setErrorCondition(0);
   setErrorMessage("");
-  notify("Done Generating the Gains and Offsets Data", 0, UpdateProgressMessage);
+  notify("Done ComputeGainsOffsets", 0, UpdateProgressMessage);
+
 
 }

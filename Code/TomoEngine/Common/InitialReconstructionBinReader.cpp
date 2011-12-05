@@ -140,9 +140,6 @@ void InitialReconstructionBinReader::execute()
   fclose(Fp);
 
 
-
-
-
   setErrorCondition(0);
   setErrorMessage("");
   notify("Done Reading the Initial Reconstruction file", 0, UpdateProgressMessage);

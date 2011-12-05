@@ -170,8 +170,9 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
 
   TCLAP::ValueArg<double> in_markov("m", "mrf", "Markov Random Field Parameter", true, 0.0, "0.0");
   cmd.add(in_markov);
-  TCLAP::ValueArg<std::string> InitialParameters("g", "initp", "InitialParameters", false, "", "");
-  cmd.add(InitialParameters);
+  
+	//TCLAP::ValueArg<std::string> InitialParameters("g", "initp", "InitialParameters", false, "", "");
+ // cmd.add(InitialParameters);
 
   TCLAP::ValueArg<int> NumOuterIter("O", "", "NumOuterIter", true, 1, "1");
   cmd.add(NumOuterIter);

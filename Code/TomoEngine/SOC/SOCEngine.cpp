@@ -30,12 +30,13 @@
 #include "TomoEngine/Common/MRCSinogramInitializer.h"
 #include "TomoEngine/Common/RawSinogramInitializer.h"
 #include "TomoEngine/Common/GainsOffsetsReader.h"
-#include "TomoEngine/Common/GainsOffsetsGenerator.h"
+#include "TomoEngine/Common/ComputeGainsOffsets.h"
 #include "TomoEngine/Common/InitialReconstructionBinReader.h"
 #include "TomoEngine/mt/mt19937ar.h"
 #include "TomoEngine/IO/MRCHeader.h"
 #include "TomoEngine/IO/MRCReader.h"
 #include "TomoEngine/SOC/SOCConstants.h"
+#include "TomoEngine/Common/ComputeGainsOffsets.h"
 
 
 #define START startm = EIMTOMO_getMilliSeconds();
@@ -470,7 +471,7 @@ void SOCEngine::execute()
     if(m_Inputs->GainsOffsetsFile.empty() == true)
     {
       // Calculate the initial Gains and Offsets
-      GainsOffsetsGenerator::Pointer gainsOffsetsGen = GainsOffsetsGenerator::New();
+      ComputeGainsOffsets::Pointer gainsOffsetsGen = ComputeGainsOffsets::New();
       gainsOffsetsGen->setSinogram(m_Sinogram);
       gainsOffsetsGen->setInputs(m_Inputs);
       gainsOffsetsGen->addObserver(this);
@@ -710,6 +711,7 @@ void SOCEngine::execute()
 
 
 #endif
+	m_Sinogram->TargetGain=20000;
 
 #ifdef BRIGHT_FIELD //Take log of the data and subtract log(Dosage) from it
 
@@ -2500,6 +2502,7 @@ double SOCEngine::surrogateFunctionBasedMin()
 	return update;
 
 }
+
 
 // -----------------------------------------------------------------------------
 //Finds the maximum of absolute value elements in an array

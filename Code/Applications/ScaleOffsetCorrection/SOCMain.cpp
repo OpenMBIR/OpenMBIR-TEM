@@ -31,6 +31,7 @@
 #include "TomoEngine/TomoEngine.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <string>
 #include <iostream>
@@ -43,14 +44,10 @@
 // MXA Includes
 #include "MXA/Utilities/MXADir.h"
 
-
-
 #include "TomoEngine/TomoEngineVersion.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 #include "TomoEngine/SOC/SOCEngine.h"
 #include "SOCArgsParser.h"
-
-
 
 int main(int argc, char **argv)
 {
@@ -59,30 +56,30 @@ int main(int argc, char **argv)
   TomoInputs inputs;
   SOCArgsParser argParser;
   int err = argParser.parseArguments(argc, argv, &inputs);
-  if (err < 0)
+  if(err < 0)
   {
     std::cout << "Error Parsing the arguments." << std::endl;
     return EXIT_FAILURE;
   }
-  char path1[MAXPATHLEN];  // This is a buffer for the text
+  char path1[MAXPATHLEN]; // This is a buffer for the text
   ::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
   getcwd(path1, MAXPATHLEN);
   std::cout << "Current Working Directory: " << path1 << std::endl;
 
   // Make sure the output directory is created if it does not exist
-     if(MXADir::exists(inputs.outputDir) == false)
-     {
-       std::cout << "Output Directory '" << inputs.outputDir << "' does NOT exist. Attempting to create it." << std::endl;
-       if(MXADir::mkdir(inputs.outputDir, true) == false)
-       {
-         std::cout << "Error creating the output directory '" << inputs.outputDir << "'\n   Exiting Now." << std::endl;
-         return EXIT_FAILURE;
-       }
-       std::cout << "Output Directory Created." << std::endl;
-     }
-     ::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
-     getcwd(path1, MAXPATHLEN);
-     std::cout << "Current Working Directory: " << path1 << std::endl;
+  if(MXADir::exists(inputs.outputDir) == false)
+  {
+    std::cout << "Output Directory '" << inputs.outputDir << "' does NOT exist. Attempting to create it." << std::endl;
+    if(MXADir::mkdir(inputs.outputDir, true) == false)
+    {
+      std::cout << "Error creating the output directory '" << inputs.outputDir << "'\n   Exiting Now." << std::endl;
+      return EXIT_FAILURE;
+    }
+    std::cout << "Output Directory Created." << std::endl;
+  }
+  ::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
+  getcwd(path1, MAXPATHLEN);
+  std::cout << "Current Working Directory: " << path1 << std::endl;
 
   // Create these variables so we
   Sinogram sinogram;
@@ -95,7 +92,7 @@ int main(int argc, char **argv)
 
   // Run the reconstruction
   engine->run();
-  if (engine->getErrorCondition() < 0)
+  if(engine->getErrorCondition() < 0)
   {
     std::cout << "Error Reconstructing the Data" << std::endl;
     return EXIT_FAILURE;
@@ -103,11 +100,35 @@ int main(int argc, char **argv)
 
   // Write the output files
 
-
-
-
+	// Write a raw binary output file
+	
+	
+	FILE* Fp=NULL;
+	double buffer;
+	Fp=fopen("ReconstructedObject.bin","wb");
+	for (int i = 0; i < geometry.N_y; ++i)
+	{
+		for (int j = 0; j < geometry.N_x; ++j)
+		{
+			for (int k = 0; k < geometry.N_z; k++)
+			{
+				//	std::cout << k << std::endl;
+				
+				buffer = geometry.Object[k][j][i];
+				fwrite(&buffer, sizeof(DATA_TYPE), 1, Fp);
+			}
+		}
+	}
+	
+	fclose(Fp);
+	
+	std::cout << "Final Dimensions of Object: " << std::endl;
+	std::cout << "  Nx = " << geometry.N_x << std::endl;
+	std::cout << "  Ny = " << geometry.N_y << std::endl;
+	std::cout << "  Nz = " << geometry.N_z << std::endl;
+	
+	
 
   return EXIT_SUCCESS;
 }
-
 
