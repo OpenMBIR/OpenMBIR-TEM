@@ -33,6 +33,38 @@
 
 #include <string>
 
+#define EXTEND_OBJECT
+
+#define X_STRETCH 1
+#define Z_STRETCH 2
+
+//#define DEBUG ,
+#define PROFILE_RESOLUTION 1536
+//#define PI 4*atan(1)//3.14159265
+//Beam Parameters - This is set to some number <<< Sinogram->delta_r.
+//#define BEAM_WIDTH 0.050000
+#define BEAM_RESOLUTION 512
+#define AREA_WEIGHTED
+#define ROI //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
+#define STOPPING_THRESHOLD 0.009
+//#define SURROGATE_FUNCTION
+//#define QGGMRF
+//#define DISTANCE_DRIVEN
+//#define CORRECTION
+//#define WRITE_INTERMEDIATE_RESULTS
+#define COST_CALCULATE
+//#define BEAM_CALCULATION
+#define DETECTOR_RESPONSE_BINS 64
+#define JOINT_ESTIMATION
+//#define GEOMETRIC_MEAN_CONSTRAINT
+//#define NOISE_MODEL
+#define POSITIVITY_CONSTRAINT
+//#define CIRCULAR_BOUNDARY_CONDITION
+//#define DEBUG_CONSTRAINT_OPT
+#define RANDOM_ORDER_UPDATES
+//#define BRIGHT_FIELD
+
+//#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
 
 
 namespace ScaleOffsetCorrection
