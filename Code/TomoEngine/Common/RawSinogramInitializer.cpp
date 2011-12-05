@@ -36,6 +36,6 @@ void RawSinogramInitializer::execute()
 
   setErrorCondition(0);
   setErrorMessage("");
-  notify("Done Reading the MRC Input file", 0, UpdateProgressMessage);
+  notify("Done Reading the Raw Input file", 0, UpdateProgressMessage);
 
 }

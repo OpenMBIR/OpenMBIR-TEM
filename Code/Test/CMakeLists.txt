@@ -17,3 +17,8 @@ target_link_libraries(mrctest MXA ${TIFF_LIBRARIES})
 
 endif()
 
+
+# --------------------------------------------------------------------
+# 
+# --------------------------------------------------------------------
+add_executable(WrappedArrayTest WrappedArrayTest.cpp)

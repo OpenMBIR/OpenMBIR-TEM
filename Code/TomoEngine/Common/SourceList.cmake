@@ -16,6 +16,7 @@ set (TomoEngine_Common_SRCS
     ${TomoEngine_SOURCE_DIR}/Common/RawSinogramInitializer.cpp
     ${TomoEngine_SOURCE_DIR}/Common/GainsOffsetsReader.cpp
     ${TomoEngine_SOURCE_DIR}/Common/GainsOffsetsGenerator.cpp
+    ${TomoEngine_SOURCE_DIR}/Common/InitialReconstructionBinReader.cpp
     )
 
 set (TomoEngine_Common_HDRS
@@ -33,5 +34,6 @@ set (TomoEngine_Common_HDRS
     ${TomoEngine_SOURCE_DIR}/Common/RawSinogramInitializer.h
     ${TomoEngine_SOURCE_DIR}/Common/GainsOffsetsReader.h
     ${TomoEngine_SOURCE_DIR}/Common/GainsOffsetsGenerator.h
+    ${TomoEngine_SOURCE_DIR}/Common/InitialReconstructionBinReader.h
 )
 cmp_IDE_SOURCE_PROPERTIES( "Common" "${TomoEngine_Common_HDRS}" "${TomoEngine_Common_SRCS}" "${CMP_INSTALL_FILES}")

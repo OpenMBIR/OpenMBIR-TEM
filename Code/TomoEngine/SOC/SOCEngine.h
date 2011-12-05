@@ -54,9 +54,6 @@ class SOCEngine : public AbstractPipeline, public Observer
 
     void initVariables();
 
-
-    void initializeGeomParameters();
-
     void calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams);
 
 

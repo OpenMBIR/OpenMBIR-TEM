@@ -104,7 +104,7 @@ void *multialloc(size_t s, int d, ...)
         /*
          * r is now set to point to the beginning of each array so that we can
          * use it to scan down each array rather than having to go across and
-         * then down 
+         * then down
          */
         r = (char **) tree;     /* back to the beginning of list of arrays */
         q = d1;                 /* back to the first dimension */
@@ -134,7 +134,7 @@ void *multialloc(size_t s, int d, ...)
                                    * last pointer array */
 
         /* same as previous loop, but different size factor */
-        for (j = 1, s1 = r + 1, t = r[0]; j < max; j++) 
+        for (j = 1, s1 = r + 1, t = r[0]; j < max; j++)
           *s1++ = (t += s * *(q + 1));
 
         va_end(ap);
@@ -146,19 +146,22 @@ void *multialloc(size_t s, int d, ...)
 
 /*
  * multifree releases all memory that we have already declared analogous to
- * free() when using malloc() 
+ * free() when using malloc()
  */
 void multifree(void *r,int d)
 {
-        void **p;
-        void *next=NULL;
-        int i;
+  void **p;
+  void *next = NULL;
+  int i;
 
-        for (p = (void **)r, i = 0; i < d; p = (void **) next,i++)
-          if (p != NULL) {
-            next = *p;
-            free((void *)p);
-            }
+  for (p = (void **)r, i = 0; i < d; p = (void **)next, i++)
+  {
+    if(p != NULL)
+    {
+      next = *p;
+      free((void *)p);
+    }
+  }
 }
 
 

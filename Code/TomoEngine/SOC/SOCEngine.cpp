@@ -31,6 +31,7 @@
 #include "TomoEngine/Common/RawSinogramInitializer.h"
 #include "TomoEngine/Common/GainsOffsetsReader.h"
 #include "TomoEngine/Common/GainsOffsetsGenerator.h"
+#include "TomoEngine/Common/InitialReconstructionBinReader.h"
 #include "TomoEngine/mt/mt19937ar.h"
 #include "TomoEngine/IO/MRCHeader.h"
 #include "TomoEngine/IO/MRCReader.h"
@@ -501,12 +502,20 @@ void SOCEngine::execute()
 
 
   // Initialize the Geometry data
-  initializeGeomParameters();
-  if (getErrorCondition() < 0)
   {
-    return;
+    InitialReconstructionBinReader::Pointer reconReader = InitialReconstructionBinReader::New();
+    reconReader->setSinogram(m_Sinogram);
+    reconReader->setInputs(m_Inputs);
+    reconReader->setGeometry(m_Geometry);
+    reconReader->addObserver(this);
+    reconReader->execute();
+    if(reconReader->getErrorCondition() < 0)
+    {
+      updateProgressAndMessage("Error reading Initial Reconstruction Data from File", 100);
+      setErrorCondition(reconReader->getErrorCondition());
+      return;
+    }
   }
-
 
 
 
@@ -1119,7 +1128,8 @@ void SOCEngine::execute()
           Index = (genrand_int31(RandomNumber)) % ArraySize;
           k_new = Counter[Index] % m_Geometry->N_x;
           j_new = Counter[Index] / m_Geometry->N_x;
-          //memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));//TODO: Instead just swap the value in Index with the one in ArraySize
+          //memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
+          //TODO: Instead just swap the value in Index with the one in ArraySize
           Counter[Index] = Counter[ArraySize - 1];
           VisitCount[j_new][k_new] = 1;
           ArraySize--;
@@ -2488,104 +2498,6 @@ double SOCEngine::surrogateFunctionBasedMin()
 		printf("%lf\n",update);
 
 	return update;
-
-}
-
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void SOCEngine::initializeGeomParameters()
-{
-  Sinogram* sinogram = getSinogram();
-  TomoInputs* input = getInputs();
-  Geometry* geometry = getGeometry();
-
-  FILE* Fp;
-  uint16_t i,j,k;
-  double *buffer = (double*)get_spc(1,sizeof(double));
-  DATA_TYPE sum=0,max;
-
-  //Find the maximum absolute tilt angle
-  max= absMaxArray(sinogram->angles);
-
-#ifndef FORWARD_PROJECT_MODE
-  input->LengthZ *= Z_STRETCH;
-
-#ifdef EXTEND_OBJECT
-  geometry->LengthX = ((sinogram->N_r * sinogram->delta_r)/cos(max*M_PI/180)) + input->LengthZ*tan(max*M_PI/180) ;
-#else
-  Geometry->LengthX = ((sinogram->N_r * sinogram->delta_r));
-#endif //Extend object endif
-
-#else
-  Geometry->LengthX = ((Sinogram->N_r * Sinogram->delta_r));
-#endif//Forward projector mode end if
-
-//  Geometry->LengthY = (Geometry->EndSlice- Geometry->StartSlice)*Geometry->delta_xy;
-  geometry->LengthY = (input->yEnd-input->yStart + 1)*sinogram->delta_t;
-
-  geometry->N_x = ceil(geometry->LengthX/input->delta_xz);//Number of voxels in x direction
-  geometry->N_z = ceil(input->LengthZ/input->delta_xz);//Number of voxels in z direction
-  geometry->N_y = floor(geometry->LengthY/input->delta_xy);//Number of measurements in y direction
-
-  printf("Geometry->Nz=%d\n",geometry->N_z);
-  printf("Geometry->Nx=%d\n",geometry->N_x);
-  printf("Geometry->Ny=%d\n",geometry->N_y);
-
-//  Geometry->Object = (DATA_TYPE ***)get_3D(Geometry->N_y,Geometry->N_z,Geometry->N_x,sizeof(DATA_TYPE));//Allocate space for the 3-D object
-  geometry->Object = (DATA_TYPE ***)get_3D(geometry->N_z,geometry->N_x,geometry->N_y,sizeof(DATA_TYPE));//Allocate space for the 3-D object
-//Coordinates of the left corner of the x-z object
-  geometry->x0 = -geometry->LengthX/2;
-  geometry->z0 = -input->LengthZ/2;
- // Geometry->y0 = -(sinogram->N_t * sinogram->delta_t)/2 + Geometry->StartSlice*Geometry->delta_xy;
-  geometry->y0 = -(geometry->LengthY)/2 ;
-
-  //Read the Initial Reconstruction data into a 3-D matrix
-  Fp=fopen(input->InitialReconFile.c_str(),"r");
-/*  for(i=0;i<Geometry->N_y;i++)
-    for(j=0;j<Geometry->N_x;j++)
-      for(k=0;k<Geometry->N_z;k++)
-  {
-    fread (buffer,sizeof(DATA_TYPE),1,Fp);
-    Geometry->Object[i][k][j]=*buffer;
-//  printf("%f\n",Geometry->Object[i][j][k]);
-  }*/
-
-  for (i = 0; i < geometry->N_y; i++)
-  {
-    for (j = 0; j < geometry->N_x; j++)
-    {
-      for (k = 0; k < geometry->N_z; k++)
-      {
-        if(Fp == NULL)//If no input file has been specified or if the file does not exist just set the default values to be zero
-        {
-        geometry->Object[k][j][i] = 0;
-        }
-        else//If the iput file exists read the values
-        {
-        fread(buffer, sizeof(double), 1, Fp);
-          geometry->Object[k][j][i] = (DATA_TYPE)(*buffer);
-        }
-      }
-    }
-  }
-
-      //Doing a check sum to verify with matlab
-
-  for(i=0;i<geometry->N_y;i++)
-  {
-    sum=0;
-    for(j=0;j<geometry->N_x;j++)
-      for(k=0;k<geometry->N_z;k++)
-    {
-      sum+=geometry->Object[k][j][i];
-    }
-    printf("Geometry check sum %f\n",sum);
-  }
-      //End of check sum
-
-  fclose(Fp);
 
 }
 
