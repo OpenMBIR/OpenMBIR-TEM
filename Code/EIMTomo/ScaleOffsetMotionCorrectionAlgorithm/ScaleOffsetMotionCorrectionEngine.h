@@ -22,7 +22,7 @@ class SOMCEngine
 {
 
   public:
-    SOMCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs);
+    SOMCEngine(Sinogram* sinogram, Geometry* geometry, TomoInputs* inputs);
     virtual ~SOMCEngine();
 
     /**
@@ -82,8 +82,8 @@ class SOMCEngine
     uint64_t stopm;
 
     TomoInputs* m_CmdInputs;//Holds the inputs from the command line 
-    Sino* m_Sinogram;//hold the sinogram data
-    Geom* m_Geometry;//holds the geometry data and object to reconstruct
+    Sinogram* m_Sinogram;//hold the sinogram data
+    Geometry* m_Geometry;//holds the geometry data and object to reconstruct
 
     /**
      * @brief

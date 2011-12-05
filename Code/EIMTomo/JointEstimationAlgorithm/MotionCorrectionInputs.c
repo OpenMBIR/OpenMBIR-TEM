@@ -14,7 +14,7 @@ extern int optind;
 extern char *optarg;
 
 
-	void readParameterFile(FILE *Fp,TomoInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
+	void readParameterFile(FILE *Fp,TomoInputs* ParsedInput,Sinogram* Sinogram,Geometry* Geometry)
 	{
 		char temp[20];
 		int16_t i;
@@ -135,7 +135,7 @@ extern char *optarg;
 
 	}
 
-	void initializeSinoParameters(Sino* Sinogram,TomoInputs* ParsedInput)
+	void initializeSinoParameters(Sinogram* Sinogram,TomoInputs* ParsedInput)
 	{
 		int16_t i,j,k;
 		FILE* Fp;
@@ -180,7 +180,7 @@ extern char *optarg;
 		
 	}
 
-	void initializeGeomParameters(Sino* Sinogram,Geom* Geometry,TomoInputs* ParsedInput)
+	void initializeGeomParameters(Sinogram* Sinogram,Geometry* Geometry,TomoInputs* ParsedInput)
 	{
 		FILE* Fp;
 		uint16_t i,j,k;

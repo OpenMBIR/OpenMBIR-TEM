@@ -44,7 +44,7 @@
 class RawGeometryWriter
 {
   public:
-    RawGeometryWriter(Geom* g);
+    RawGeometryWriter(Geometry* g);
     virtual ~RawGeometryWriter();
 
     /**
@@ -55,7 +55,7 @@ class RawGeometryWriter
     int writeFile(const std::string &filepath);
 
   private:
-    Geom* m_Geometry;
+    Geometry* m_Geometry;
 
 
     RawGeometryWriter(const RawGeometryWriter&); // Copy Constructor Not Implemented

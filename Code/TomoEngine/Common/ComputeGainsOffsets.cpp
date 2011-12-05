@@ -12,8 +12,6 @@
 // -----------------------------------------------------------------------------
 ComputeGainsOffsets::ComputeGainsOffsets()
 {
-  // TODO Auto-generated constructor stub
-
 }
 
 // -----------------------------------------------------------------------------
@@ -21,7 +19,6 @@ ComputeGainsOffsets::ComputeGainsOffsets()
 // -----------------------------------------------------------------------------
 ComputeGainsOffsets::~ComputeGainsOffsets()
 {
-  // TODO Auto-generated destructor stub
 }
 
 // -----------------------------------------------------------------------------

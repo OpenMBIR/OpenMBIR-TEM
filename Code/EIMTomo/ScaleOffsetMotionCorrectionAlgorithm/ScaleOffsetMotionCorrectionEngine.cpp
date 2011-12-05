@@ -303,7 +303,7 @@ class DerivOfCostFunc
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-SOMCEngine::SOMCEngine(Sino* sinogram, Geom* geometry, TomoInputs* inputs) :
+SOMCEngine::SOMCEngine(Sinogram* sinogram, Geometry* geometry, TomoInputs* inputs) :
     m_Cancel(false),
 m_CmdInputs(inputs),
 m_Sinogram(sinogram),

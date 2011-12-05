@@ -62,7 +62,7 @@ static char CE_Cancel = 0;
 //
 // -----------------------------------------------------------------------------
 
-int CE_MAPICDReconstruct(Sino* Sinogram, Geom* Geometry,TomoInputs* CmdInputs)
+int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdInputs)
 {
 
 	uint8_t err = 0;
@@ -1413,7 +1413,7 @@ void CE_MinMax(double *low,double *high)
 
 
 
-void* CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
+void* CE_CalculateVoxelProfile(Sinogram *Sinogram,Geometry *Geometry)
 {
 	double angle,MaxValLineIntegral;
 	double temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
@@ -1474,12 +1474,12 @@ void* CE_CalculateVoxelProfile(Sino *Sinogram,Geom *Geometry)
 /*******************************************************************
  Find each column of the Forward Projection Matrix A
  ********************************************************************/
-void ForwardProject(Sino *Sinogram,Geom* Geom)
+void ForwardProject(Sinogram *Sinogram,Geometry* Geom)
 {
 
 }
 
-void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
+void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sinogram* Sinogram,Geometry* Geometry,double** VoxelProfile)
 {
 	int32_t i,j,k,sliceidx;
 	double x,z,y;
@@ -1836,7 +1836,7 @@ void* CE_CalculateAMatrixColumn(uint16_t row,uint16_t col, uint16_t slice, Sino*
 
 /* Initializes the global variables cosine and sine to speed up computation
  */
-void CE_CalculateSinCos(Sino* Sinogram)
+void CE_CalculateSinCos(Sinogram* Sinogram)
 {
 	uint16_t i;
 	cosine=(double*)get_spc(Sinogram->N_theta,sizeof(double));
@@ -1849,7 +1849,7 @@ void CE_CalculateSinCos(Sino* Sinogram)
 	}
 }
 
-void CE_InitializeBeamProfile(Sino* Sinogram)
+void CE_InitializeBeamProfile(Sinogram* Sinogram)
 {
 	uint16_t i;
 	double sum=0,W;
@@ -1946,7 +1946,7 @@ double  solve(
 	}
 }
 
-double CE_ComputeCost(double*** ErrorSino,double*** Weight,Sino* Sinogram,Geom* Geometry)
+double CE_ComputeCost(double*** ErrorSino,double*** Weight,Sinogram* Sinogram,Geometry* Geometry)
 {
 	double cost=0,temp=0;
 	int16_t i,j,k,p,q,r;
@@ -1977,7 +1977,7 @@ double CE_ComputeCost(double*** ErrorSino,double*** Weight,Sino* Sinogram,Geom* 
 	return cost;
 }
 
-void* CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometry,double** VoxelProfile)
+void* CE_DetectorResponse(uint16_t row,uint16_t col,Sinogram* Sinogram,Geometry* Geometry,double** VoxelProfile)
 {
 	FILE* Fp = fopen("DetectorResponse.bin","w");
 	double Offset,Temp,r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,t,tmin;
@@ -2234,7 +2234,7 @@ void* CE_DetectorResponse(uint16_t row,uint16_t col,Sino* Sinogram,Geom* Geometr
  }
  */
 
-void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, Sino* Sinogram,Geom* Geometry,double*** DetectorResponse)
+void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, Sinogram* Sinogram,Geometry* Geometry,double*** DetectorResponse)
 {
 	int32_t i,j,k,sliceidx;
 	double x,z,y;

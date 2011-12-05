@@ -36,7 +36,7 @@ int parseArguments(int argc,char **argv,TomoInputs* Input)
 	return error;
 }
 
-void readParameterFile(FILE *Fp,TomoInputs* ParsedInput,Sino* Sinogram,Geom* Geometry)
+void readParameterFile(FILE *Fp,TomoInputs* ParsedInput,Sinogram* Sinogram,Geometry* Geometry)
 {
 	char temp[20];
 	int16_t i;
@@ -126,7 +126,7 @@ void readParameterFile(FILE *Fp,TomoInputs* ParsedInput,Sino* Sinogram,Geom* Geo
 
 }
 
-void initializeSinoParameters(Sino* Sinogram,TomoInputs* ParsedInput)
+void initializeSinoParameters(Sinogram* Sinogram,TomoInputs* ParsedInput)
 {
   int16_t i,j,k;
   FILE* Fp;
@@ -170,7 +170,7 @@ void initializeSinoParameters(Sino* Sinogram,TomoInputs* ParsedInput)
 
 }
 
-void initializeGeomParameters(Sino* Sinogram,Geom* Geometry,TomoInputs* ParsedInput)
+void initializeGeomParameters(Sinogram* Sinogram,Geometry* Geometry,TomoInputs* ParsedInput)
 {
   FILE* Fp;
   uint16_t i,j,k;

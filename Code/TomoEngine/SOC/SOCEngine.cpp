@@ -32,6 +32,7 @@
 #include "TomoEngine/Common/GainsOffsetsReader.h"
 #include "TomoEngine/Common/ComputeGainsOffsets.h"
 #include "TomoEngine/Common/InitialReconstructionBinReader.h"
+#include "TomoEngine/IO/RawGeometryWriter.h"
 #include "TomoEngine/mt/mt19937ar.h"
 #include "TomoEngine/IO/MRCHeader.h"
 #include "TomoEngine/IO/MRCReader.h"
@@ -1730,6 +1731,15 @@ void SOCEngine::execute()
       }
     }
   }
+
+	RawGeometryWriter writer(m_Geometry);
+	int error = writer.writeFile(m_Inputs->OutputFile);
+	if (error < 0)
+	{
+	  setErrorCondition(error);
+	  updateProgressAndMessage("Error Writing the Raw Geometry", 100);
+	}
+
 
 	free_img((void**)VoxelProfile);
 	//free(AMatrix);

@@ -37,7 +37,7 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-RawGeometryWriter::RawGeometryWriter(Geom* g) :
+RawGeometryWriter::RawGeometryWriter(Geometry* g) :
     m_Geometry(g)
 {
 
