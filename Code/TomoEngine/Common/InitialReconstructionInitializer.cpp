@@ -75,8 +75,6 @@ void InitialReconstructionInitializer::execute()
 
   DATA_TYPE sum=0,max;
 
-
-
   //Find the maximum absolute tilt angle
   max= absMaxArray(sinogram->angles);
 
@@ -132,6 +130,9 @@ void InitialReconstructionInitializer::execute()
   //End of check sum
 
 
-
-
+  setErrorCondition(0);
+  setErrorMessage("");
+  std::string msg("Done with ");
+  msg = msg.append(getNameOfClass());
+  notify(msg.c_str(), 0, UpdateProgressMessage);
 }

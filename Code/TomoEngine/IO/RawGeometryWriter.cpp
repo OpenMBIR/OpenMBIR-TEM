@@ -37,10 +37,8 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-RawGeometryWriter::RawGeometryWriter(Geometry* g) :
-    m_Geometry(g)
+RawGeometryWriter::RawGeometryWriter()
 {
-
 }
 
 // -----------------------------------------------------------------------------
@@ -48,39 +46,50 @@ RawGeometryWriter::RawGeometryWriter(Geometry* g) :
 // -----------------------------------------------------------------------------
 RawGeometryWriter::~RawGeometryWriter()
 {
-
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int RawGeometryWriter::writeFile(const std::string &filepath)
+void RawGeometryWriter::execute()
 {
-  int err = 0;
-  FILE* Fp = fopen(filepath.c_str(), "wb");
-//	FILE* Fp = fopen("FinalObject.bin", "w");
+  notify("Starting RawGeometryWriter", 0, UpdateProgressMessage);
+//  Sinogram* sinogram = getSinogram();
+ // TomoInputs* input = getInputs();
+  Geometry* geometry = getGeometry();
+
+  FILE* Fp = fopen(getFilePath().c_str(), "wb");
   if(NULL == Fp)
   {
     std::cout << "Fp: " << Fp << " errno: " << errno << std::endl;
-    return -1;
+    setErrorCondition(-1);
+    setErrorMessage("Could not open output file for writing");
+    notify(getErrorMessage().c_str(), 100, UpdateErrorMessage);
+    return;
   }
   DATA_TYPE buffer;
 
-	
-  for (int i = 0; i < m_Geometry->N_y; ++i)
+  for (uint16_t i = 0; i < geometry->N_y; ++i)
   {
-	     for (int j = 0; j < m_Geometry->N_x; ++j)
-		 {
-		for (int k = 0; k < m_Geometry->N_z; k++)
-		{
-				std::cout << k << std::endl;
-   
-        buffer = m_Geometry->Object[k][j][i];
+    for (uint16_t j = 0; j < geometry->N_x; ++j)
+    {
+      for (uint16_t k = 0; k < geometry->N_z; k++)
+      {
+        std::cout << k << std::endl;
+
+        buffer = geometry->Object[k][j][i];
         fwrite(&buffer, sizeof(DATA_TYPE), 1, Fp);
       }
     }
   }
 
   fclose(Fp);
-  return err;
+
+  setErrorCondition(0);
+  setErrorMessage("");
+  std::string msg("Done with ");
+  msg = msg.append(getNameOfClass());
+  notify(msg.c_str(), 0, UpdateProgressMessage);
+
+  return;
 }

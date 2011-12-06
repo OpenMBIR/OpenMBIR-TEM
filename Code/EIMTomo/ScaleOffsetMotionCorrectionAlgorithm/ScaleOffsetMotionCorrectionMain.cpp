@@ -38,7 +38,7 @@
  CE => Computation Engine
  CI => Computation Inputs
  N_ => Number of ..
- 
+
  */
 #define MAKE_OUTPUT_FILE(Fp, err, outdir, filename)\
 {\
@@ -62,12 +62,12 @@ int main(int argc, char** argv)
 	Geometry geometry;
 	uint64_t startm;
 	uint64_t stopm;
-	
+
 	START;
-	
+
 	error = -1;
 	ScaleOffsetMotionCorrectionParser soci;
-	
+
 	error = soci.parseArguments(argc, argv, &inputs);
 	if(error != -1)
 	{
@@ -77,13 +77,13 @@ int main(int argc, char** argv)
 			   inputs.InitialRecon.c_str(),
 			   inputs.outputDir.c_str(),
 			   inputs.OutputFile.c_str());
-		
+
 		char path1[MAXPATHLEN];  // This is a buffer for the text
 		::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
 		getcwd(path1, MAXPATHLEN);
 		std::cout << "Current Working Directory: " << path1 << std::endl;
-		
-		
+
+
 		// Make sure the output directory is created if it does not exist
 		if(MXADir::exists(inputs.outputDir) == false)
 		{
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 		::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
 		getcwd(path1, MAXPATHLEN);
 		std::cout << "Current Working Directory: " << path1 << std::endl;
-		
+
 		error = soci.readParameterFile(inputs.ParamFile, &inputs, &sinogram, &geometry);
 		if (error < 0)
 		{
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 		//CI_MaskSinogram(&OriginalSinogram,&MaskedSinogram);
 		soci.initializeGeomParameters(&sinogram, &geometry, &inputs);
 	}
-	
+
 	// Run the reconstruction
 	SOMCEngine soce(&sinogram, &geometry, &inputs);
 	error = soce.mapicdReconstruct();
@@ -119,12 +119,12 @@ int main(int argc, char** argv)
 		std::cout << "Error (" << error << ") During Reconstruction" << std::endl;
 		return EXIT_FAILURE;
 	}
-	
+
 	std::cout << "Final Dimensions of Object: " << std::endl;
 	std::cout << "  Nx = " << geometry.N_x << std::endl;
 	std::cout << "  Ny = " << geometry.N_y << std::endl;
 	std::cout << "  Nz = " << geometry.N_z << std::endl;
-	
+
 	// Write the vtk output file
 	VTKRectilinearGridFileWriter vtkWriter;
 	vtkWriter.setWriteBinaryFiles(true);
@@ -137,27 +137,30 @@ int main(int argc, char** argv)
 	dimsAndRes.resz = 1.0f;
 	std::string vtkFile(inputs.outputDir);
 	vtkFile = vtkFile.append(MXADir::getSeparator()).append("Output.vtk");
-	
+
 	VtkScalarWriter* w0 = static_cast<VtkScalarWriter*>(new TomoOutputScalarWriter(&geometry));
 	std::vector<VtkScalarWriter*> scalarsToWrite;
 	w0->m_WriteBinaryFiles = true;
 	scalarsToWrite.push_back(w0);
-	
+
 	error = vtkWriter.write<DimsAndRes>(vtkFile, &dimsAndRes, scalarsToWrite);
 	if (error < 0)
 	{
 		std::cout << "Error writing vtk file '" << vtkFile << "'" << std::endl;
 	}
-	
+
 	// Write a raw binary output file
-	RawGeometryWriter binWriter(&geometry);
-	error = binWriter.writeFile(inputs.OutputFile);
-	if (error < 0)
-	{
-		std::cout << "Error writing Raw binary file '" << inputs.OutputFile << "'" << std::endl;
-	}
-	
-	
+  RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
+  writer->setGeometry(&geometry);
+  writer->setFilePath(inputs.OutputFile);
+
+  writer->execute();
+  if (writer->getErrorCondition() < 0)
+  {
+    std::cout << "Error Code from Writing File" << writer->getErrorCondition() << std::endl;
+    return -1;
+  }
+
 	STOP;
 	PRINTTIME;
 	// if(error < 0)

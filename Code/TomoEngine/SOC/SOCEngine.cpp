@@ -1731,11 +1731,13 @@ void SOCEngine::execute()
     }
   }
 
-	RawGeometryWriter writer(m_Geometry);
-	int error = writer.writeFile(m_Inputs->OutputFile);
-	if (error < 0)
+	RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
+	writer->setGeometry(m_Geometry);
+	writer->setFilePath(m_Inputs->OutputFile);
+	writer->execute();
+	if (writer->getErrorCondition() < 0)
 	{
-	  setErrorCondition(error);
+	  setErrorCondition(writer->getErrorCondition());
 	  updateProgressAndMessage("Error Writing the Raw Geometry", 100);
 	}
 

@@ -30,9 +30,11 @@
 #ifndef RAWGEOMETRYWRITER_H_
 #define RAWGEOMETRYWRITER_H_
 
-#include "EIMTomo/ScaleOffsetMotionCorrectionAlgorithm/ScaleOffsetMotionStructures.h"
 
-//#include "TomoEngine/SOC/SOCStructures.h"
+#include "MXA/Common/MXASetGetMacros.h"
+#include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/TomoFilter.h"
+#include "TomoEngine/SOC/SOCStructures.h"
 
 /**
  * @class
@@ -41,26 +43,28 @@
  * @date
  * @version
  */
-class RawGeometryWriter
+class RawGeometryWriter : public TomoFilter
 {
   public:
+    MXA_SHARED_POINTERS(RawGeometryWriter)
+    MXA_STATIC_NEW_MACRO(RawGeometryWriter);
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, RawGeometryWriter);
+    MXA_TYPE_MACRO_SUPER(RawGeometryWriter, TomoFilter)
 
-    RawGeometryWriter(Geometry* g);
     virtual ~RawGeometryWriter();
 
+    MXA_INSTANCE_STRING_PROPERTY(FilePath);
 
     /**
      * @brief
      * @param filepath
      * @return
      */
-    int writeFile(const std::string &filepath);
+    void execute();
+  protected:
+    RawGeometryWriter();
 
   private:
-
-    Geometry* m_Geometry;
-
-
     RawGeometryWriter(const RawGeometryWriter&); // Copy Constructor Not Implemented
     void operator=(const RawGeometryWriter&); // Operator '=' Not Implemented
 };
