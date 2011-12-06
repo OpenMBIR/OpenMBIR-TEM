@@ -30,9 +30,9 @@
 #ifndef RAWGEOMETRYWRITER_H_
 #define RAWGEOMETRYWRITER_H_
 
+#include "EIMTomo/ScaleOffsetMotionCorrectionAlgorithm/ScaleOffsetMotionStructures.h"
 
 //#include "TomoEngine/SOC/SOCStructures.h"
-#include "EIMTomo/ScaleOffsetMotionCorrectionAlgorithm/ScaleOffsetMotionStructures.h"
 
 /**
  * @class
@@ -44,8 +44,10 @@
 class RawGeometryWriter
 {
   public:
+
     RawGeometryWriter(Geometry* g);
     virtual ~RawGeometryWriter();
+
 
     /**
      * @brief
@@ -55,6 +57,7 @@ class RawGeometryWriter
     int writeFile(const std::string &filepath);
 
   private:
+
     Geometry* m_Geometry;
 
 

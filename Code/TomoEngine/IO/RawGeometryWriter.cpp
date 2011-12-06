@@ -58,6 +58,7 @@ int RawGeometryWriter::writeFile(const std::string &filepath)
 {
   int err = 0;
   FILE* Fp = fopen(filepath.c_str(), "wb");
+//	FILE* Fp = fopen("FinalObject.bin", "w");
   if(NULL == Fp)
   {
     std::cout << "Fp: " << Fp << " errno: " << errno << std::endl;
@@ -72,7 +73,7 @@ int RawGeometryWriter::writeFile(const std::string &filepath)
 		 {
 		for (int k = 0; k < m_Geometry->N_z; k++)
 		{
-			//	std::cout << k << std::endl;
+				std::cout << k << std::endl;
    
         buffer = m_Geometry->Object[k][j][i];
         fwrite(&buffer, sizeof(DATA_TYPE), 1, Fp);

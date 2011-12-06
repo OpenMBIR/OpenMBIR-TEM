@@ -38,6 +38,7 @@
 #include "TomoEngine/IO/MRCReader.h"
 #include "TomoEngine/SOC/SOCConstants.h"
 #include "TomoEngine/Common/ComputeGainsOffsets.h"
+#include "TomoEngine/IO/RawGeometryWriter.h"
 
 
 #define START startm = EIMTOMO_getMilliSeconds();
@@ -469,8 +470,10 @@ void SOCEngine::execute()
   // Now read or generate the Gains and Offsets data. We are scoping this section
   // so the reader automactically gets cleaned up at this point.
   {
+
     if(m_Inputs->GainsOffsetsFile.empty() == true)
     {
+
       // Calculate the initial Gains and Offsets
       ComputeGainsOffsets::Pointer gainsOffsetsGen = ComputeGainsOffsets::New();
       gainsOffsetsGen->setSinogram(m_Sinogram);
@@ -487,21 +490,30 @@ void SOCEngine::execute()
     }
     else
     {
+
       GainsOffsetsReader::Pointer gainsOffsetsReader = GainsOffsetsReader::New();
       gainsOffsetsReader->setSinogram(m_Sinogram);
       gainsOffsetsReader->setInputs(m_Inputs);
       gainsOffsetsReader->addObserver(this);
-      gainsOffsetsReader->execute();
+
+		gainsOffsetsReader->execute();
+		std::cout<<"hi"<<std::endl;
+
       if(gainsOffsetsReader->getErrorCondition() < 0)
       {
         updateProgressAndMessage("Error reading Input Gains and Offsets Data file", 100);
         setErrorCondition(gainsOffsetsReader->getErrorCondition());
         return;
       }
+		std::cout<<"hi2"<<std::endl;
+
     }
+	  std::cout<<"hi3"<<std::endl;
+
+
   }
 
-
+	std::cout<<"hi3"<<std::endl;
 
   // Initialize the Geometry data
   {
@@ -511,12 +523,18 @@ void SOCEngine::execute()
     }
     else
     {
+      std::cout<<"hi1"<<std::endl;
       InitialReconstructionBinReader::Pointer reconReader = InitialReconstructionBinReader::New();
       reconReader->setSinogram(m_Sinogram);
+      std::cout<<"hi1"<<std::endl;
       reconReader->setInputs(m_Inputs);
+      std::cout<<"hi1"<<std::endl;
       reconReader->setGeometry(m_Geometry);
+      std::cout<<"hi2"<<std::endl;
       reconReader->addObserver(this);
+      std::cout<<"hi3"<<std::endl;
       reconReader->execute();
+      std::cout<<"hi4"<<std::endl;
       if(reconReader->getErrorCondition() < 0)
       {
         updateProgressAndMessage("Error reading Initial Reconstruction Data from File", 100);
@@ -600,6 +618,9 @@ void SOCEngine::execute()
 
 	NuisanceParams.I_0 = (DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
 	NuisanceParams.mu = (DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
+#ifdef NOISE_MODEL
+	NuisanceParams.alpha=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
+#endif
 
   // initialize variables
   Idx = 0;
@@ -1020,13 +1041,7 @@ void SOCEngine::execute()
 #ifdef NOISE_MODEL
 	for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
 	{
-		sum=0;
-		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
-			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
-				sum+=(m_Sinogram->counts[i_theta][i_r][i_t]);
-
-		sum/=(m_Sinogram->N_r*m_Sinogram->N_t);
-
+		NuisanceParams.alpha[i_theta]=1;//Initialize the refinement parameters to 1
 		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
 			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
 				if(sum != 0)
@@ -1034,7 +1049,7 @@ void SOCEngine::execute()
 #ifdef BRIGHT_FIELD
 					Weight[i_theta][i_r][i_t] = sum;
 #else
-					Weight[i_theta][i_r][i_t]=1.0/sum;//The variance for each view ~=averagecounts in that view
+					Weight[i_theta][i_r][i_t]=1.0/(m_Sinogram->counts[i_theta][i_r][i_t]*NuisanceParams.alpha[i_theta]);//The variance for each view ~=averagecounts in that view
 #endif
 				}
 	}
@@ -1076,8 +1091,9 @@ void SOCEngine::execute()
 #endif
         checksum += Weight[i_theta][i_r][i_t];
       }
-      printf("Check sum of Diagonal Covariance Matrix= %lf\n", checksum);
     }
+		printf("Check sum of Diagonal Covariance Matrix= %lf\n", checksum);
+
   }
 
 
@@ -1664,13 +1680,15 @@ void SOCEngine::execute()
       sum=0;
       for(i_r=0; i_r < m_Sinogram->N_r; i_r++)
       for(i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-      sum+=(ErrorSino[i_theta][i_r][i_t]*ErrorSino[i_theta][i_r][i_t]);
+      sum+=(ErrorSino[i_theta][i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
       sum/=(m_Sinogram->N_r*m_Sinogram->N_t);
+
+		NuisanceParams.alpha[i_theta]=sum;
 
       for(i_r=0; i_r < m_Sinogram->N_r; i_r++)
       for(i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       if(sum != 0)
-      Weight[i_theta][i_r][i_t]=1.0/sum;
+		  Weight[i_theta][i_r][i_t]/=NuisanceParams.alpha[i_theta];
 
     }
 
@@ -1711,11 +1729,11 @@ void SOCEngine::execute()
 		printf("%lf\n",cost[i]);
 	}
 
-	printf("Variance\n");
+	printf("Variance parameter\n");
 	for(uint16_t i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 	{
-		printf("%lf\n",Weight[i_theta][0][0]);
-		fwrite(&(Weight[i_theta][0][0]),sizeof(DATA_TYPE),1,Fp7);
+		printf("%lf\n",NuisanceParams.alpha[i_theta]);
+		fwrite(&(NuisanceParams.alpha[i_theta]),sizeof(DATA_TYPE),1,Fp7);
 	}
 
 

@@ -39,3 +39,12 @@ InitialOffset
 9180.3
 
 Read data from file and copy into Sinogram->counts in proper orientation
+
+**Notes on code bugs 12/5/2011****
+1) ViewMask Is not being initialized anywhere. Earlier this was set to 1 if a view from the original sinogram was selected or not 
+
+2) GainsOffset File is not being read in correctly . the string containing the file name seems to be buggy. 
+
+3) Output is not being written correctly
+
+
