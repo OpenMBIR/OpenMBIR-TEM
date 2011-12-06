@@ -61,6 +61,10 @@ int main(int argc, char **argv)
     std::cout << "Error Parsing the arguments." << std::endl;
     return EXIT_FAILURE;
   }
+
+  argParser.printArgs(std::cout, &inputs);
+
+
   char path1[MAXPATHLEN]; // This is a buffer for the text
   ::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
   getcwd(path1, MAXPATHLEN);
@@ -101,8 +105,8 @@ int main(int argc, char **argv)
   // Write the output files
 
 	// Write a raw binary output file
-	
-	
+
+
 	FILE* Fp=NULL;
 	double buffer;
 	Fp=fopen("ReconstructedObject.bin","wb");
@@ -113,21 +117,21 @@ int main(int argc, char **argv)
 			for (int k = 0; k < geometry.N_z; k++)
 			{
 				//	std::cout << k << std::endl;
-				
+
 				buffer = geometry.Object[k][j][i];
 				fwrite(&buffer, sizeof(DATA_TYPE), 1, Fp);
 			}
 		}
 	}
-	
+
 	fclose(Fp);
-	
+
 	std::cout << "Final Dimensions of Object: " << std::endl;
 	std::cout << "  Nx = " << geometry.N_x << std::endl;
 	std::cout << "  Ny = " << geometry.N_y << std::endl;
 	std::cout << "  Nz = " << geometry.N_z << std::endl;
-	
-	
+
+
 
   return EXIT_SUCCESS;
 }

@@ -170,7 +170,7 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
 
   TCLAP::ValueArg<double> in_markov("m", "mrf", "Markov Random Field Parameter", true, 0.0, "0.0");
   cmd.add(in_markov);
-  
+
 	//TCLAP::ValueArg<std::string> InitialParameters("g", "initp", "InitialParameters", false, "", "");
  // cmd.add(InitialParameters);
 
@@ -255,3 +255,34 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
   return 0;
 }
 
+
+#define PRINT_INPUT_VAR(input, var)\
+  std::cout << #var << ": " << input->var << std::endl;
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCArgsParser::printArgs(std::ostream &out, TomoInputs* Input)
+{
+  out << "SOC Inputs ------------------------" << std::endl;
+  PRINT_INPUT_VAR(Input, SinoFile)
+  PRINT_INPUT_VAR(Input, InitialReconFile)
+  PRINT_INPUT_VAR(Input, GainsOffsetsFile)
+  PRINT_INPUT_VAR(Input, OutputFile)
+  PRINT_INPUT_VAR(Input, outputDir)
+  PRINT_INPUT_VAR(Input, NumIter)
+  PRINT_INPUT_VAR(Input, NumOuterIter)
+  PRINT_INPUT_VAR(Input, SigmaX)
+  PRINT_INPUT_VAR(Input, p)
+  PRINT_INPUT_VAR(Input, StopThreshold)
+  PRINT_INPUT_VAR(Input, useSubvolume)
+  PRINT_INPUT_VAR(Input, xStart)
+  PRINT_INPUT_VAR(Input, xEnd)
+  PRINT_INPUT_VAR(Input, yStart)
+  PRINT_INPUT_VAR(Input, yEnd)
+  PRINT_INPUT_VAR(Input, zStart)
+  PRINT_INPUT_VAR(Input, zEnd)
+  PRINT_INPUT_VAR(Input, LengthZ)
+  PRINT_INPUT_VAR(Input, delta_xz)
+  PRINT_INPUT_VAR(Input, delta_xy)
+
+}

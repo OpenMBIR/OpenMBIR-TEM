@@ -51,6 +51,8 @@ class SOCArgsParser
 
     int parseArguments(int argc, char **argv, TomoInputs* Input);
 
+    void printArgs(std::ostream &out, TomoInputs* Input);
+
   private:
     uint64_t startm;
     uint64_t stopm;

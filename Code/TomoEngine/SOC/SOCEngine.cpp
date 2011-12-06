@@ -431,10 +431,10 @@ void SOCEngine::execute()
 	// Read the Input data from the supplied data file
 	// We are scoping here so the various readers are automatically cleaned up before
 	// the code goes any farther
-	AbstractFilter::Pointer initializer = AbstractFilter::NullPointer();
 	{
+	  AbstractFilter::Pointer initializer = AbstractFilter::NullPointer();
     std::string extension = MXAFileInfo::extension(m_Inputs->SinoFile);
-    if (extension.compare("mrc") == 0 || extension.compare("ali"))
+    if (extension.compare("mrc") == 0 || extension.compare("ali") == 0)
     {
       initializer = MRCSinogramInitializer::New();
       MRCSinogramInitializer* sInit = MRCSinogramInitializer::polymorphic_downcast<MRCSinogramInitializer, AbstractFilter>(initializer.get());
@@ -505,17 +505,24 @@ void SOCEngine::execute()
 
   // Initialize the Geometry data
   {
-    InitialReconstructionBinReader::Pointer reconReader = InitialReconstructionBinReader::New();
-    reconReader->setSinogram(m_Sinogram);
-    reconReader->setInputs(m_Inputs);
-    reconReader->setGeometry(m_Geometry);
-    reconReader->addObserver(this);
-    reconReader->execute();
-    if(reconReader->getErrorCondition() < 0)
+    if (m_Inputs->InitialReconFile.empty() == true)
     {
-      updateProgressAndMessage("Error reading Initial Reconstruction Data from File", 100);
-      setErrorCondition(reconReader->getErrorCondition());
-      return;
+
+    }
+    else
+    {
+      InitialReconstructionBinReader::Pointer reconReader = InitialReconstructionBinReader::New();
+      reconReader->setSinogram(m_Sinogram);
+      reconReader->setInputs(m_Inputs);
+      reconReader->setGeometry(m_Geometry);
+      reconReader->addObserver(this);
+      reconReader->execute();
+      if(reconReader->getErrorCondition() < 0)
+      {
+        updateProgressAndMessage("Error reading Initial Reconstruction Data from File", 100);
+        setErrorCondition(reconReader->getErrorCondition());
+        return;
+      }
     }
   }
 
@@ -1759,6 +1766,7 @@ void SOCEngine::execute()
 	fclose(Fp5);
 	//fclose(Fp6);
 	fclose(Fp7);
+	free_3D((void***)m_Geometry->Object);
 	//free_3D(neighborhood);
 	// Get values from ComputationInputs and perform calculation
 	// Return any error code
