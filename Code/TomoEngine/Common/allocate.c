@@ -159,7 +159,8 @@ void multifree(void *r,int d)
     if(p != NULL)
     {
       next = *p;
-      free((void *)p);
+      free((void*)p);
+      p = NULL;
     }
   }
 }

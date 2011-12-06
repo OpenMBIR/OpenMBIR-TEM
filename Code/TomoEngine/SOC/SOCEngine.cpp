@@ -348,8 +348,9 @@ void SOCEngine::initVariables()
     std::string filepath(outdir);\
     filepath = filepath.append(MXADir::getSeparator()).append(filename);\
     errno = 0;\
+    err = 0;\
     Fp = fopen(filepath.c_str(),"wb");\
-    if (Fp == NULL) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl; err = 1; }\
+    if (Fp == NULL) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl; err = -1; }\
     }
 
 
@@ -546,11 +547,7 @@ void SOCEngine::execute()
   }
 #endif
 
-  MAKE_OUTPUT_FILE(Fp7, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::FinalVariancesFile);
-  if (fileError == 1)
-  {
 
-  }
 #ifdef DEBUG_CONSTRAINT_OPT
 	FILE *Fp8 = fopen("CostFunctionCoefficients.bin","w");
   MAKE_OUTPUT_FILE(Fp8, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::CostFunctionCoefficientsFile);
@@ -574,6 +571,10 @@ void SOCEngine::execute()
 
 	//Scale and Offset Parameter Structures
 	ScaleOffsetParams NuisanceParams;
+	NuisanceParams.I_0 = NULL;
+	NuisanceParams.mu = NULL;
+	NuisanceParams.alpha = NULL;
+
 	DATA_TYPE numerator_sum =0;
 	DATA_TYPE denominator_sum = 0;
 	DATA_TYPE x,z;
@@ -1703,19 +1704,29 @@ void SOCEngine::execute()
 		printf("%lf\n",cost[i]);
 	}
 
-	printf("Variance parameter\n");
-	for(uint16_t i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
-	{
-		printf("%lf\n",NuisanceParams.alpha[i_theta]);
-		fwrite(&(NuisanceParams.alpha[i_theta]),sizeof(DATA_TYPE),1,Fp7);
-	}
+	if(NuisanceParams.alpha != NULL)
+  {
+    MAKE_OUTPUT_FILE(Fp7, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::FinalVariancesFile);
+    if(fileError >= 0)
+    {
+      updateProgressAndMessage("NuisanceParams ", 50);
+      for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+      {
+        printf("%lf\n", NuisanceParams.alpha[i_theta]);
+        fwrite(&(NuisanceParams.alpha[i_theta]), sizeof(DATA_TYPE), 1, Fp7);
+      }
+      fclose(Fp7);
+    }
+  }
 
 
-    START;
+  START;
 	//calculates Ax and returns a pointer to the memory block
 	Final_Sinogram=forwardProject(DetectorResponse, H_t);
 	STOP;
 	PRINTTIME;
+
+  updateProgressAndMessage("Writing Final Sinogram", 50);
 
 	//Writing the final sinogram
 	for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
@@ -1730,6 +1741,7 @@ void SOCEngine::execute()
       }
     }
   }
+	fclose(Fp1);
 
 	RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
 	writer->setGeometry(m_Geometry);
@@ -1741,6 +1753,11 @@ void SOCEngine::execute()
 	  updateProgressAndMessage("Error Writing the Raw Geometry", 100);
 	}
 
+  std::cout << "Final Dimensions of Object: " << std::endl;
+  std::cout << "  Nx = " << m_Geometry->N_x << std::endl;
+  std::cout << "  Ny = " << m_Geometry->N_y << std::endl;
+  std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
+
 
 	free_img((void**)VoxelProfile);
 	//free(AMatrix);
@@ -1751,7 +1768,7 @@ void SOCEngine::execute()
 #endif
 	free_3D((void***)ErrorSino);
 	free_3D((void***)Weight);
-	fclose(Fp1);
+
 #ifdef COST_CALCULATE
 	fclose(Fp2);// writing cost function
 #endif
@@ -1759,7 +1776,7 @@ void SOCEngine::execute()
 	fclose(Fp4);
 	fclose(Fp5);
 	//fclose(Fp6);
-	fclose(Fp7);
+
 	free_3D((void***)m_Geometry->Object);
 	//free_3D(neighborhood);
 	// Get values from ComputationInputs and perform calculation
@@ -1876,6 +1893,8 @@ void* SOCEngine::calculateVoxelProfile()
  ********************************************************************/
 DATA_TYPE*** SOCEngine::forwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE*** H_t)
 {
+  updateProgressAndMessage("Executing Forward Projection", 50);
+
 	DATA_TYPE x,z,y;
 	DATA_TYPE r,rmin,rmax,t,tmin,tmax;
 	DATA_TYPE w1,w2,f1,f2;

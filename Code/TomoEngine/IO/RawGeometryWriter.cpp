@@ -75,8 +75,7 @@ void RawGeometryWriter::execute()
     {
       for (uint16_t k = 0; k < geometry->N_z; k++)
       {
-        std::cout << k << std::endl;
-
+      //  std::cout << k << std::endl;
         buffer = geometry->Object[k][j][i];
         fwrite(&buffer, sizeof(DATA_TYPE), 1, Fp);
       }
