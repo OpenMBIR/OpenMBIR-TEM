@@ -113,7 +113,6 @@ void InitialReconstructionBinReader::execute()
 		  
         if(Fp == NULL)//If no input file has been specified or if the file does not exist just set the default values to be zero
         {
-			std::cout<<"Reading Geom"<<std::endl;
           geometry->Object[k][j][i] = 0;
         }
         else//If the iput file exists read the values
