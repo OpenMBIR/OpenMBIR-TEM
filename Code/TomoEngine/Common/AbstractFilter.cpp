@@ -27,42 +27,33 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-#ifndef RAWGEOMETRYWRITER_H_
-#define RAWGEOMETRYWRITER_H_
 
-#include "EIMTomo/ScaleOffsetMotionCorrectionAlgorithm/ScaleOffsetMotionStructures.h"
+#include "AbstractFilter.h"
 
-//#include "TomoEngine/SOC/SOCStructures.h"
-
-/**
- * @class
- * @brief
- * @author
- * @date
- * @version
- */
-class RawGeometryWriter
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+AbstractFilter::AbstractFilter() :
+m_ErrorCondition(0),
+m_ErrorMessage("")
 {
-  public:
 
-    RawGeometryWriter(Geometry* g);
-    virtual ~RawGeometryWriter();
+}
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+AbstractFilter::~AbstractFilter()
+{
 
-    /**
-     * @brief
-     * @param filepath
-     * @return
-     */
-    int writeFile(const std::string &filepath);
+}
 
-  private:
-
-    Geometry* m_Geometry;
-
-
-    RawGeometryWriter(const RawGeometryWriter&); // Copy Constructor Not Implemented
-    void operator=(const RawGeometryWriter&); // Operator '=' Not Implemented
-};
-
-#endif /* RAWGEOMETRYWRITER_H_ */
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void AbstractFilter::execute()
+{
+  setErrorCondition(-1);
+  setErrorMessage("AbstractFilter does not implement an execute method. Please use a subclass instead.");
+  notify(getErrorMessage().c_str(), 0, Observable::UpdateErrorMessage);
+}

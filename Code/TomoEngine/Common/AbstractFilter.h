@@ -27,42 +27,55 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-#ifndef RAWGEOMETRYWRITER_H_
-#define RAWGEOMETRYWRITER_H_
+#ifndef _AbstractFilter_H_
+#define _AbstractFilter_H_
 
-#include "EIMTomo/ScaleOffsetMotionCorrectionAlgorithm/ScaleOffsetMotionStructures.h"
 
-//#include "TomoEngine/SOC/SOCStructures.h"
+#include "MXA/MXA.h"
+#include "MXA/Common/MXASetGetMacros.h"
+#include "TomoEngine/Common/Observable.h"
+
 
 /**
- * @class
- * @brief
- * @author
- * @date
- * @version
+ * @class AbstractFilter AbstractFilter.h MXA/Common/AbstractFilter.h
+ * @brief This class is the basic class to subclass when creating a new Filter for
+ * DREAM.3D. The subclass must implement at least the  execute method. If an
+ * error occurs during the execution of the filter set the errorCondition to
+ * a non zero value and optionally use the setErrorMessage() method to explain what the
+ * error was. This class also inherits from Observable so that the filter can
+ * provide updates to the user interface during execution.
+ * @author Michael A. Jackson for BlueQuartz Software
+ * @date Nov 28, 2011
+ * @version 1.0
  */
-class RawGeometryWriter
+class MXA_EXPORT AbstractFilter : public Observable
 {
   public:
+    MXA_SHARED_POINTERS(AbstractFilter)
+    MXA_STATIC_NEW_MACRO(AbstractFilter)
+    MXA_TYPE_MACRO_SUPER(AbstractFilter, Observable)
 
-    RawGeometryWriter(Geometry* g);
-    virtual ~RawGeometryWriter();
+    virtual ~AbstractFilter();
 
+
+    MXA_INSTANCE_PROPERTY(int, ErrorCondition);
+
+    MXA_INSTANCE_STRING_PROPERTY(ErrorMessage);
 
     /**
-     * @brief
-     * @param filepath
-     * @return
+     * @brief This method should be fully implemented in subclasses.
      */
-    int writeFile(const std::string &filepath);
+    virtual void execute();
+
+  protected:
+    AbstractFilter();
 
   private:
-
-    Geometry* m_Geometry;
-
-
-    RawGeometryWriter(const RawGeometryWriter&); // Copy Constructor Not Implemented
-    void operator=(const RawGeometryWriter&); // Operator '=' Not Implemented
+    AbstractFilter(const AbstractFilter&); // Copy Constructor Not Implemented
+    void operator=(const AbstractFilter&); // Operator '=' Not Implemented
 };
 
-#endif /* RAWGEOMETRYWRITER_H_ */
+
+
+
+#endif /* _AbstractFilter_H_  */

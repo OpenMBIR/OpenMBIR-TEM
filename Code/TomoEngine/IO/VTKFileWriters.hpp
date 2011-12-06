@@ -96,7 +96,7 @@ typedef struct
 class TomoOutputScalarWriter : public VtkScalarWriter
 {
   public:
-  TomoOutputScalarWriter(Geom* r) : r(r) {}
+  TomoOutputScalarWriter(Geometry* r) : r(r) {}
   virtual ~TomoOutputScalarWriter(){}
 
   int writeScalars(FILE* f)
@@ -114,7 +114,7 @@ class TomoOutputScalarWriter : public VtkScalarWriter
   }
 
   private:
-    Geom* r;
+    Geometry* r;
     TomoOutputScalarWriter(const TomoOutputScalarWriter&); // Copy Constructor Not Implemented
     void operator=(const TomoOutputScalarWriter&); // Operator '=' Not Implemented
 };

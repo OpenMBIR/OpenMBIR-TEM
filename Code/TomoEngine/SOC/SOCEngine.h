@@ -10,6 +10,8 @@
 #ifndef COMPUTATIONENGINE_H_
 #define COMPUTATIONENGINE_H_
 
+#include "MXA/Common/MXASetGetMacros.h"
+
 #include "TomoEngine/TomoEngine.h"
 #include "TomoEngine/Common/AbstractPipeline.h"
 #include "TomoEngine/Common/Observer.h"
@@ -52,9 +54,7 @@ class SOCEngine : public AbstractPipeline, public Observer
 
     void initVariables();
 
-    void initializeSinoParameters();
-
-    void initializeGeomParameters();
+    void calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams);
 
 
   private:
@@ -131,7 +131,7 @@ class SOCEngine : public AbstractPipeline, public Observer
      * @param slice
      * @param VoxelProfile
      */
-    void* calculateAMatrixColumn(uint16_t row, uint16_t col, uint16_t slice, DATA_TYPE** VoxelProfile);
+   // void* calculateAMatrixColumn(uint16_t row, uint16_t col, uint16_t slice, DATA_TYPE** VoxelProfile);
 
     /**
      * @brief

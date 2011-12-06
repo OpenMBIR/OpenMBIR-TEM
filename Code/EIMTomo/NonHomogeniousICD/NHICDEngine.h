@@ -35,17 +35,17 @@
     extern "C" {
 #endif
 
-	void CE_CalculateSinCos(Sino*);
-	void CE_InitializeBeamProfile(Sino*);
+	void CE_CalculateSinCos(Sinogram*);
+	void CE_InitializeBeamProfile(Sinogram*);
 	void CE_MinMax(double*,double*);
-	void* CE_CalculateVoxelProfile(Sino*,Geom*);
-	int CE_MAPICDReconstruct(Sino*,Geom*,TomoInputs*);
-	void* CE_CalculateAMatrixColumn(uint16_t ,uint16_t , uint16_t ,Sino* ,Geom* ,double**);
+	void* CE_CalculateVoxelProfile(Sinogram*,Geometry*);
+	int CE_MAPICDReconstruct(Sinogram*,Geometry*,TomoInputs*);
+	void* CE_CalculateAMatrixColumn(uint16_t ,uint16_t , uint16_t ,Sinogram* ,Geometry* ,double**);
 	double CE_DerivOfCostFunc(double);
-	double CE_ComputeCost(double***  ,double***  ,Sino* ,Geom* );
-	void* CE_CalculateAMatrixColumnPartial(uint16_t,uint16_t,uint16_t,Sino*,Geom*,double***);
+	double CE_ComputeCost(double***  ,double***  ,Sinogram* ,Geometry* );
+	void* CE_CalculateAMatrixColumnPartial(uint16_t,uint16_t,uint16_t,Sinogram*,Geometry*,double***);
 //	void* CE_CalculateAMatrixColumnPartial(uint16_t,uint16_t,Sino*,Geom*,double**);
-	void* CE_DetectorResponse(uint16_t ,uint16_t ,Sino* ,Geom* ,double**);
+	void* CE_DetectorResponse(uint16_t ,uint16_t ,Sinogram* ,Geometry* ,double**);
 	double  solve(
 				  double (*f)(), /* pointer to function to be solved */
 				  double a,      /* minimum value of solution */

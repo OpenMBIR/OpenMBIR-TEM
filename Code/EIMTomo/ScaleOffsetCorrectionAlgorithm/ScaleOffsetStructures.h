@@ -75,7 +75,7 @@ typedef double DATA_TYPE;
     DATA_TYPE* InitialGain;//Reads in the initial value for the gain for each view
     DATA_TYPE* InitialOffset;
 
-  } Sino;
+  } Sinogram;
 
 
 
@@ -96,7 +96,7 @@ typedef double DATA_TYPE;
     DATA_TYPE x0;// -LengthX/2
     DATA_TYPE z0;// -LengthZ/2
     DATA_TYPE y0;//-LengthY/2
-  } Geom;
+  } Geometry;
 
 
   typedef struct

@@ -50,9 +50,9 @@ class ScaleOffsetCorrectionParser
     virtual ~ScaleOffsetCorrectionParser();
 
     int parseArguments(int argc, char **argv, TomoInputs* Input);
-    int readParameterFile(const std::string &filepath,TomoInputs* ParsedInput,Sino* Sinogram,Geom* Geometry);
-    void initializeSinoParameters(Sino* Sinogram,TomoInputs* ParsedInput);
-    void initializeGeomParameters(Sino* Sinogram,Geom* Geometry,TomoInputs* ParsedInput);
+    int readParameterFile(const std::string &filepath,TomoInputs* ParsedInput,Sinogram* Sinogram,Geometry* Geometry);
+    void initializeSinoParameters(Sinogram* Sinogram,TomoInputs* ParsedInput);
+    void initializeGeomParameters(Sinogram* Sinogram,Geometry* Geometry,TomoInputs* ParsedInput);
     DATA_TYPE absMaxArray(DATA_TYPE* Array, uint16_t NumElts);
 
     /**

@@ -58,8 +58,8 @@ int main(int argc, char** argv)
   int32_t error;
   //FILE* Fp = NULL;
   TomoInputs inputs;
-  Sino sinogram;
-  Geom geometry;
+  Sinogram sinogram;
+  Geometry geometry;
   uint64_t startm;
   uint64_t stopm;
 

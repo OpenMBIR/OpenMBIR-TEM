@@ -18,12 +18,12 @@
 //
 // -----------------------------------------------------------------------------
 MRCReader::MRCReader(bool deleteMemory) :
+m_DeleteMemory(deleteMemory),
 m_Header(NULL),
 m_UInt8Data(NULL),
 m_Int16Data(NULL),
 m_UInt16Data(NULL),
-m_FloatData(NULL),
-m_DeleteMemory(deleteMemory)
+m_FloatData(NULL)
 {
   m_Header = new MRCHeader;
 }
@@ -32,12 +32,12 @@ m_DeleteMemory(deleteMemory)
 //
 // -----------------------------------------------------------------------------
 MRCReader::MRCReader() :
+m_DeleteMemory(true),
 m_Header(NULL),
 m_UInt8Data(NULL),
 m_Int16Data(NULL),
 m_UInt16Data(NULL),
-m_FloatData(NULL),
-m_DeleteMemory(true)
+m_FloatData(NULL)
 {
 
 }

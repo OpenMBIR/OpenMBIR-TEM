@@ -77,7 +77,7 @@ typedef double DATA_TYPE;
 	DATA_TYPE *ShiftX;//Initial Estimates For Shift Along X
 	DATA_TYPE *ShiftY;//Initial Estimates For Shift Along Y
 	DATA_TYPE RotAngle;//Initial Estimate for rotation angle
-  } Sino;
+  } Sinogram;
 
 
 
@@ -98,7 +98,7 @@ typedef double DATA_TYPE;
     DATA_TYPE x0;// -LengthX/2
     DATA_TYPE z0;// -LengthZ/2
     DATA_TYPE y0;//-LengthY/2
-  } Geom;
+  } Geometry;
 
 
   typedef struct

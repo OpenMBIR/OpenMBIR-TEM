@@ -162,7 +162,7 @@ int ScaleOffsetMotionCorrectionParser::parseArguments(int argc,char **argv,TomoI
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int ScaleOffsetMotionCorrectionParser::readParameterFile(const std::string &filepath,TomoInputs* inputs,Sino* Sinogram,Geom* Geometry)
+int ScaleOffsetMotionCorrectionParser::readParameterFile(const std::string &filepath,TomoInputs* inputs,Sinogram* Sinogram,Geometry* Geometry)
 {
 
   FILE* Fp = NULL;
@@ -379,7 +379,7 @@ int ScaleOffsetMotionCorrectionParser::readParameterFile(const std::string &file
   return err;
 }
 
-void ScaleOffsetMotionCorrectionParser::initializeSinoParameters(Sino* Sinogram,TomoInputs* ParsedInput)
+void ScaleOffsetMotionCorrectionParser::initializeSinoParameters(Sinogram* Sinogram,TomoInputs* ParsedInput)
 {
   int16_t i,j,k;
   uint16_t view_count=0,TotalNumMaskedViews;
@@ -513,7 +513,7 @@ void CI_MaskSinogram(Sino* OriginalSinogram,Sino* NewSinogram)
 }
 	 */
 
-void ScaleOffsetMotionCorrectionParser::initializeGeomParameters(Sino* Sinogram,Geom* Geometry,TomoInputs* ParsedInput)
+void ScaleOffsetMotionCorrectionParser::initializeGeomParameters(Sinogram* Sinogram,Geometry* Geometry,TomoInputs* ParsedInput)
 {
   FILE* Fp;
   uint16_t i,j,k;

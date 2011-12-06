@@ -43,7 +43,7 @@ extern "C" {
 
 	};
 
-	typedef struct _sinogram Sino;
+	typedef struct _sinogram Sinogram;
 
 	struct _geometry
 	{
@@ -66,7 +66,7 @@ extern "C" {
 
 	};
 
-	typedef struct _geometry Geom;
+	typedef struct _geometry Geometry;
 
 	struct _command_line_inputs
 	{
@@ -82,9 +82,9 @@ extern "C" {
 	typedef struct _command_line_inputs TomoInputs;
 
 
-	void readParameterFile(FILE* ,TomoInputs* ,Sino* ,Geom*);
-	void initializeSinoParameters(Sino *,TomoInputs*);
-	void initializeGeomParameters(Sino* ,Geom* ,TomoInputs*);
+	void readParameterFile(FILE* ,TomoInputs* ,Sinogram* ,Geometry*);
+	void initializeSinoParameters(Sinogram *,TomoInputs*);
+	void initializeGeomParameters(Sinogram* ,Geometry* ,TomoInputs*);
 
 
 #ifdef __cplusplus

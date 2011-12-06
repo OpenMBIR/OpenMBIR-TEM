@@ -70,7 +70,7 @@
 
 
 #define MXA_STATIC_NEW_SUPERCLASS(superclass, theclass)\
-  static superclass::Pointer New()\
+  static superclass::Pointer New##superclass()\
   {\
     theclass* ptr = new theclass();\
     superclass::Pointer shared_ptr (dynamic_cast<superclass*>(ptr) );\
@@ -117,8 +117,53 @@ static Pointer New args \
 /** Macro used to add standard methods to all classes, mainly type
  * information. */
 #define MXA_TYPE_MACRO(thisClass) \
-    virtual const char* getNameOfClass() const \
-        {return #thisClass;}
+  public: \
+  virtual const char* getNameOfClass() const  {return #thisClass;}\
+  static int IsTypeOf(const char *type) \
+  { \
+    if ( !strcmp(#thisClass,type) ) \
+      { \
+      return 1; \
+      } \
+    return 0; \
+  } \
+  virtual int IsA(const char *type) \
+  { \
+    return this->thisClass::IsTypeOf(type); \
+  } \
+  template <class Target, class Source>\
+  inline Target polymorphic_downcast(Source* x) { \
+      if( dynamic_cast<Target>(x) != x ) { \
+        return NULL;\
+      }\
+      return static_cast<Target>(x);\
+  }
+
+
+#define MXA_TYPE_MACRO_SUPER(thisClass,superclass) \
+  public: \
+  virtual const char* getNameOfClass() const  {return #thisClass;}\
+  static int IsTypeOf(const char *type) \
+  { \
+    if ( !strcmp(#thisClass,type) ) \
+      { \
+      return 1; \
+      } \
+    return superclass::IsTypeOf(type); \
+  } \
+  virtual int IsA(const char *type) \
+  { \
+    return this->thisClass::IsTypeOf(type); \
+  } \
+  template <class Target, class Source>\
+  static Target* polymorphic_downcast(Source* x) { \
+      if( dynamic_cast<Target*>(x) != x ) { \
+        return NULL;\
+      }\
+      return static_cast<Target*>(x);\
+  }
+
+
 
 //------------------------------------------------------------------------------
 // Macros for Properties
@@ -159,6 +204,13 @@ static Pointer New args \
     MXA_SET_PROPERTY(type, prpty)\
     MXA_GET_PROPERTY(type, prpty)
 
+
+#define MXA_INSTANCE_PROPERTY_OLD(type, prpty, var)\
+  private:\
+      type   var;\
+  public:\
+    type get##prpty() { return var; }\
+    void set##prpty(type value) { this->var = value; }\
 
 
 #define MXA_SET_2DVECTOR_PROPERTY(type, prpty, varname)\

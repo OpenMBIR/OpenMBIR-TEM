@@ -1,36 +1,44 @@
 /*
- * ComputeGainsOffets.cpp
+ * RawSinogramInitializer.cpp
  *
- *  Created on: Dec 2, 2011
+ *  Created on: Dec 5, 2011
  *      Author: mjackson
  */
 
-#include "ComputeGainsOffsets.h"
+#include "RawSinogramInitializer.h"
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ComputeGainsOffsets::ComputeGainsOffsets()
+RawSinogramInitializer::RawSinogramInitializer() :
+m_Inputs(NULL),
+m_Sinogram(NULL)
+{
+
+}
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+RawSinogramInitializer::~RawSinogramInitializer()
 {
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ComputeGainsOffsets::~ComputeGainsOffsets()
-{
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void ComputeGainsOffsets::execute()
+void RawSinogramInitializer::execute()
 {
   // If an error occurs, clean up any memory, call "setErrorCondition(-1)" and
   // also setErrorMessage("Something went wrong"); and then return
 
 
+
+
+
   setErrorCondition(0);
   setErrorMessage("");
-  notify("Done ComputeGainsOffsets", 0, UpdateProgressMessage);
+  notify("Done Reading the Raw Input file", 0, UpdateProgressMessage);
+
 }

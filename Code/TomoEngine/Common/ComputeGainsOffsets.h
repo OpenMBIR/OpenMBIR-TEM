@@ -11,14 +11,14 @@
 
 #include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
-
+#include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/AbstractFilter.h"
 #include "TomoEngine/SOC/SOCStructures.h"
-
 
 /*
  *
  */
-class ComputeGainsOffsets
+class ComputeGainsOffsets : public AbstractFilter
 {
   public:
     MXA_SHARED_POINTERS(ComputeGainsOffsets)
@@ -27,7 +27,11 @@ class ComputeGainsOffsets
 
     virtual ~ComputeGainsOffsets();
 
-    int execute(TomoInputs* inputs, Sinogram* sinogram);
+    MXA_INSTANCE_PROPERTY(TomoInputs*, Inputs);
+    MXA_INSTANCE_PROPERTY(Sinogram*, Sinogram);
+    MXA_INSTANCE_PROPERTY(Geometry*, Geometry);
+
+    virtual void execute();
 
 
   protected:
