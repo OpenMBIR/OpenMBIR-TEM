@@ -14,9 +14,7 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-CalculateAMatrixColumn::CalculateAMatrixColumn() :
-m_Inputs(NULL),
-m_Sinogram(NULL)
+CalculateAMatrixColumn::CalculateAMatrixColumn()
 {
 }
 
@@ -48,11 +46,14 @@ void CalculateAMatrixColumn::execute()
   int32_t BaseIndex,FinalIndex,ProfileIndex=0;
   uint32_t count = 0;
 
+  Sinogram* sinogram = getSinogram();
+  Geometry* geometry = getGeometry();
+  TomoInputs* inputs = getInputs();
 
 #ifdef BEAM_CALCULATION
-  BEAM_WIDTH = (0.5)*m_Sinogram->delta_r;
+  BEAM_WIDTH = (0.5)*sinogram->delta_r;
 #else
-  BEAM_WIDTH = m_Sinogram->delta_r;
+  BEAM_WIDTH = sinogram->delta_r;
 #endif
 
 #ifdef DISTANCE_DRIVEN
@@ -67,19 +68,19 @@ void CalculateAMatrixColumn::execute()
   //Temp->index = (uint32_t*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(uint32_t));
   //Temp->values = (DATA_TYPE*)multialloc(sizeof(DATA_TYPE),1,Sinogram->N_r*Sinogram->N_theta);//makes the values =0
 
-  x = m_Geometry->x0 + ((DATA_TYPE)col+0.5)*m_Inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-  z = m_Geometry->z0 + ((DATA_TYPE)row+0.5)*m_Inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-  y = m_Geometry->y0 + ((DATA_TYPE)slice + 0.5)*m_Inputs->delta_xy;
+  x = geometry->x0 + ((DATA_TYPE)col+0.5)*inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+  z = geometry->z0 + ((DATA_TYPE)row+0.5)*inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+  y = geometry->y0 + ((DATA_TYPE)slice + 0.5)*inputs->delta_xy;
 
-  TempConst=(PROFILE_RESOLUTION)/(2*m_Inputs->delta_xz);
+  TempConst=(PROFILE_RESOLUTION)/(2*inputs->delta_xz);
 
 
   //  Temp->values = (DATA_TYPE*)calloc(Sinogram->N_t*Sinogram->N_r*Sinogram->N_theta,sizeof(DATA_TYPE));//(DATA_TYPE*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(DATA_TYPE));//makes the values =0
 
   //alternately over estimate the maximum size require for a single AMatrix column
-  AvgNumXElements = ceil(3*m_Inputs->delta_xz/m_Sinogram->delta_r);
-  AvgNumYElements = ceil(3*m_Inputs->delta_xy/m_Sinogram->delta_t);
-  MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*m_Sinogram->N_theta;
+  AvgNumXElements = ceil(3*inputs->delta_xz/sinogram->delta_r);
+  AvgNumYElements = ceil(3*inputs->delta_xy/sinogram->delta_t);
+  MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*sinogram->N_theta;
 
   Temp->values = (DATA_TYPE*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(DATA_TYPE));
   Temp->index  = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(uint32_t));
@@ -87,41 +88,41 @@ void CalculateAMatrixColumn::execute()
   //printf("%lf",Temp->values[10]);
 
 #ifdef AREA_WEIGHTED
-  for(uint32_t i=0;i<m_Sinogram->N_theta;i++)
+  for(uint32_t i=0;i<sinogram->N_theta;i++)
   {
 
     r = x*cosine[i] - z*sine[i];
     t = y;
 
-    rmin = r - m_Inputs->delta_xz;
-    rmax = r + m_Inputs->delta_xz;
+    rmin = r - inputs->delta_xz;
+    rmax = r + inputs->delta_xz;
 
-    tmin = (t - m_Inputs->delta_xy/2) > m_Sinogram->T0 ? t-m_Inputs->delta_xy/2 : m_Sinogram->T0;
-    tmax = (t + m_Inputs->delta_xy/2) <= m_Sinogram->TMax ? t + m_Inputs->delta_xy/2 : m_Sinogram->TMax;
+    tmin = (t - inputs->delta_xy/2) > sinogram->T0 ? t-inputs->delta_xy/2 : sinogram->T0;
+    tmax = (t + inputs->delta_xy/2) <= sinogram->TMax ? t + inputs->delta_xy/2 : sinogram->TMax;
 
-    if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax)
+    if(rmax < sinogram->R0 || rmin > sinogram->RMax)
       continue;
 
 
 
-    index_min = floor(((rmin - m_Sinogram->R0)/m_Sinogram->delta_r));
-    index_max = floor((rmax - m_Sinogram->R0)/m_Sinogram->delta_r);
+    index_min = floor(((rmin - sinogram->R0)/sinogram->delta_r));
+    index_max = floor((rmax - sinogram->R0)/sinogram->delta_r);
 
-    if(index_max >= m_Sinogram->N_r)
-      index_max = m_Sinogram->N_r - 1;
+    if(index_max >= sinogram->N_r)
+      index_max = sinogram->N_r - 1;
 
     if(index_min < 0)
       index_min = 0;
 
-    slice_index_min = floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t);
-    slice_index_max = floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t);
+    slice_index_min = floor((tmin - sinogram->T0)/sinogram->delta_t);
+    slice_index_max = floor((tmax - sinogram->T0)/sinogram->delta_t);
 
     if(slice_index_min < 0)
       slice_index_min = 0;
-    if(slice_index_max >= m_Sinogram->N_t)
-      slice_index_max = m_Sinogram->N_t -1;
+    if(slice_index_max >= sinogram->N_t)
+      slice_index_max = sinogram->N_t -1;
 
-    BaseIndex = i*m_Sinogram->N_r*m_Sinogram->N_t;
+    BaseIndex = i*sinogram->N_r*sinogram->N_t;
 
     // if(row == 63 && col == 63)
     //    printf("%d %d\n",index_min,index_max);
@@ -137,7 +138,7 @@ void CalculateAMatrixColumn::execute()
       Integral = 0.0;
 
       //Accounting for Beam width
-      RTemp = (m_Sinogram->R0 + (((DATA_TYPE)j) + 0.5) *(m_Sinogram->delta_r));//the 0.5 is to get to the center of the detector
+      RTemp = (sinogram->R0 + (((DATA_TYPE)j) + 0.5) *(sinogram->delta_r));//the 0.5 is to get to the center of the detector
 
       LeftEndOfBeam = RTemp - (BEAM_WIDTH/2);//Consider pre storing the divide by 2
 
@@ -181,23 +182,23 @@ void CalculateAMatrixColumn::execute()
         for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++)
         {
           if(sliceidx == slice_index_min)
-            ProfileThickness = (((sliceidx+1)*m_Sinogram->delta_t + m_Sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
+            ProfileThickness = (((sliceidx+1)*sinogram->delta_t + sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
           else
           {
             if (sliceidx == slice_index_max)
             {
-              ProfileThickness = (tmax - ((sliceidx)*m_Sinogram->delta_t + m_Sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t
+              ProfileThickness = (tmax - ((sliceidx)*sinogram->delta_t + sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t
             }
             else
             {
-              ProfileThickness = m_Sinogram->delta_t;//Sinogram->delta_t;
+              ProfileThickness = sinogram->delta_t;//Sinogram->delta_t;
             }
 
           }
           if(ProfileThickness > 0)
           {
 
-            FinalIndex = BaseIndex + (int32_t)j + (int32_t)sliceidx * m_Sinogram->N_r;
+            FinalIndex = BaseIndex + (int32_t)j + (int32_t)sliceidx * sinogram->N_r;
             Temp->values[count] = Integral*ProfileThickness;
             Temp->index[count] = FinalIndex;//can instead store a triple (row,col,slice) for the sinogram
             //printf("Done\n");
@@ -235,51 +236,51 @@ void CalculateAMatrixColumn::execute()
 
 #ifdef DISTANCE_DRIVEN
 
-  for(uint16_t i=0;i<m_Sinogram->N_theta;i++)
+  for(uint16_t i=0;i<sinogram->N_theta;i++)
   {
 
     r = x*cosine[i] - z*sine[i];
     t = y;
 
-    tmin = (t - m_Inputs->delta_xy/2) > -m_Geometry->LengthY/2 ? t-m_Inputs->delta_xy/2 : -m_Geometry->LengthY/2;
-    tmax = (t + m_Inputs->delta_xy/2) <= m_Geometry->LengthY/2 ? t + m_Inputs->delta_xy/2 : m_Geometry->LengthY/2;
+    tmin = (t - inputs->delta_xy/2) > -geometry->LengthY/2 ? t-inputs->delta_xy/2 : -geometry->LengthY/2;
+    tmax = (t + inputs->delta_xy/2) <= geometry->LengthY/2 ? t + inputs->delta_xy/2 : geometry->LengthY/2;
 
 
-    if(m_Sinogram->angles[i]*(180/M_PI) >= -45 && m_Sinogram->angles[i]*(180/M_PI) <= 45)
+    if(sinogram->angles[i]*(180/M_PI) >= -45 && sinogram->angles[i]*(180/M_PI) <= 45)
     {
-      rmin = r - (m_Inputs->delta_xz/2)*(cosine[i]);
-      rmax = r + (m_Inputs->delta_xz/2)*(cosine[i]);
+      rmin = r - (inputs->delta_xz/2)*(cosine[i]);
+      rmax = r + (inputs->delta_xz/2)*(cosine[i]);
     }
 
     else
     {
-      rmin = r - (m_Inputs->delta_xz/2)*fabs(sine[i]);
-      rmax = r + (m_Inputs->delta_xz/2)*fabs(sine[i]);
+      rmin = r - (inputs->delta_xz/2)*fabs(sine[i]);
+      rmax = r + (inputs->delta_xz/2)*fabs(sine[i]);
     }
 
 
-    if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->R0 + m_Sinogram->N_r*m_Sinogram->delta_r)
+    if(rmax < sinogram->R0 || rmin > sinogram->R0 + sinogram->N_r*sinogram->delta_r)
       continue;
 
-    index_min = floor(((rmin-m_Sinogram->R0)/m_Sinogram->delta_r));
-    index_max = floor((rmax-m_Sinogram->R0)/m_Sinogram->delta_r);
+    index_min = floor(((rmin-sinogram->R0)/sinogram->delta_r));
+    index_max = floor((rmax-sinogram->R0)/sinogram->delta_r);
 
-    slice_index_min = floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t);
-    slice_index_max = floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t);
+    slice_index_min = floor((tmin - sinogram->T0)/sinogram->delta_t);
+    slice_index_max = floor((tmax - sinogram->T0)/sinogram->delta_t);
 
     if(slice_index_min < 0)
       slice_index_min = 0;
-    if(slice_index_max >= m_Sinogram->N_t)
-      slice_index_max = m_Sinogram->N_t -1;
+    if(slice_index_max >= sinogram->N_t)
+      slice_index_max = sinogram->N_t -1;
 
 
-    if(index_max >= m_Sinogram->N_r)
-      index_max = m_Sinogram->N_r-1;
+    if(index_max >= sinogram->N_r)
+      index_max = sinogram->N_r-1;
 
     if(index_min < 0)
       index_min = 0;
 
-    BaseIndex = i*m_Sinogram->N_r*m_Sinogram->N_t;
+    BaseIndex = i*sinogram->N_r*sinogram->N_t;
 
     // if(row == 63 && col == 63)
     //    printf("%d %d\n",index_min,index_max);
@@ -291,8 +292,8 @@ void CalculateAMatrixColumn::execute()
 
     for(j = index_min;j <= index_max; j++)//Check
     {
-      d1  = ((DATA_TYPE)j)*m_Sinogram->delta_r + m_Sinogram->R0;
-      d2 =  d1 + m_Sinogram->delta_r;
+      d1  = ((DATA_TYPE)j)*sinogram->delta_r + sinogram->R0;
+      d2 =  d1 + sinogram->delta_r;
 
       if(rmax < d1)
       {
@@ -302,15 +303,15 @@ void CalculateAMatrixColumn::execute()
       {
         if(rmin > d1 && rmin < d2 && rmax > d2)
         {
-          Integral = (d2 - rmin)/m_Sinogram->delta_r;
+          Integral = (d2 - rmin)/sinogram->delta_r;
         }
         else
         {
           if(rmin >= d1 && rmin <= d2 && rmax >= d1 && rmax <= d2)
-            Integral= (rmax - rmin)/m_Sinogram->delta_r;
+            Integral= (rmax - rmin)/sinogram->delta_r;
           else
             if(rmax > d1 && rmax < d2 && rmin < d1)
-              Integral = (rmax - d1)/m_Sinogram->delta_r;
+              Integral = (rmax - d1)/sinogram->delta_r;
             else
               if( rmin < d1 && rmax > d2)
                 Integral = 1;
@@ -326,20 +327,20 @@ void CalculateAMatrixColumn::execute()
         for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++)
         {
           if(sliceidx == slice_index_min)
-            ProfileThickness = (((sliceidx+1)*m_Sinogram->delta_t + m_Sinogram->T0) - tmin)*m_Sinogram->delta_t;
+            ProfileThickness = (((sliceidx+1)*sinogram->delta_t + sinogram->T0) - tmin)*sinogram->delta_t;
           else {
             if (sliceidx == slice_index_max)
             {
-              ProfileThickness = (tmax - ((sliceidx)*m_Sinogram->delta_t + m_Sinogram->T0))*m_Sinogram->delta_t;
+              ProfileThickness = (tmax - ((sliceidx)*sinogram->delta_t + sinogram->T0))*sinogram->delta_t;
             }
             else {
-              ProfileThickness = m_Sinogram->delta_t;
+              ProfileThickness = sinogram->delta_t;
             }
 
           }
           if (ProfileThickness > 0)
           {
-            FinalIndex = BaseIndex + (uint32_t)j + (int32_t)sliceidx * m_Sinogram->N_r;
+            FinalIndex = BaseIndex + (uint32_t)j + (int32_t)sliceidx * sinogram->N_r;
 
             Temp->values[count] = Integral*ProfileThickness;
             Temp->index[count] = FinalIndex;

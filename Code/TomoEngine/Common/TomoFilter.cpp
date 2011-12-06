@@ -1,42 +1,35 @@
 /*
- * RawSinogramInitializer.cpp
+ * TomoFilter.cpp
  *
- *  Created on: Dec 5, 2011
+ *  Created on: Dec 6, 2011
  *      Author: mjackson
  */
 
-#include "RawSinogramInitializer.h"
+#include "TomoFilter.h"
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-RawSinogramInitializer::RawSinogramInitializer()
-{
-
-}
-
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-RawSinogramInitializer::~RawSinogramInitializer()
+TomoFilter::TomoFilter() :
+m_Inputs(NULL),
+m_Sinogram(NULL),
+m_Geometry(NULL)
 {
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void RawSinogramInitializer::execute()
+TomoFilter::~TomoFilter()
 {
-  // If an error occurs, clean up any memory, call "setErrorCondition(-1)" and
-  // also setErrorMessage("Something went wrong"); and then return
+}
 
-
-
-
-
-  setErrorCondition(0);
-  setErrorMessage("");
-  notify("Done Reading the Raw Input file", 0, UpdateProgressMessage);
-
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoFilter::execute()
+{
+  setErrorCondition(-1);
+  setErrorMessage("TomoFilter must be subclassed to be usable");
+  notify(getErrorMessage().c_str(), 100, UpdateProgressMessage);
 }

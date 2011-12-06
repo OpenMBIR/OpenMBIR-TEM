@@ -1,0 +1,137 @@
+/*
+ * InitialReconstructionInitializer.cpp
+ *
+ *  Created on: Dec 6, 2011
+ *      Author: mjackson
+ */
+
+#include "InitialReconstructionInitializer.h"
+
+
+#include "TomoEngine/SOC/SOCConstants.h"
+#include "TomoEngine/Common/EIMMath.h"
+#include "TomoEngine/Common/allocate.h"
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+InitialReconstructionInitializer::InitialReconstructionInitializer()
+{
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+InitialReconstructionInitializer::~InitialReconstructionInitializer()
+{
+}
+
+// -----------------------------------------------------------------------------
+//Finds the maximum of absolute value elements in an array
+// -----------------------------------------------------------------------------
+DATA_TYPE InitialReconstructionInitializer::absMaxArray(std::vector<DATA_TYPE> &Array)
+{
+  uint16_t i;
+  DATA_TYPE max;
+  max = fabs(Array[0]);
+  for(i =1; i < Array.size();i++)
+    if(fabs(Array[i]) > max)
+      max=fabs(Array[i]);
+  return max;
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void InitialReconstructionInitializer::initializeData()
+{
+  Geometry* geometry = getGeometry();
+
+  for (uint16_t i = 0; i < geometry->N_y; i++)
+  {
+    for (uint16_t j = 0; j < geometry->N_x; j++)
+    {
+      for (uint16_t k = 0; k < geometry->N_z; k++)
+      {
+        geometry->Object[k][j][i] = 0;
+      }
+    }
+  }
+}
+
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void InitialReconstructionInitializer::execute()
+{
+
+  Sinogram* sinogram = getSinogram();
+  TomoInputs* input = getInputs();
+  Geometry* geometry = getGeometry();
+
+
+  DATA_TYPE sum=0,max;
+
+
+
+  //Find the maximum absolute tilt angle
+  max= absMaxArray(sinogram->angles);
+
+#ifndef FORWARD_PROJECT_MODE
+  input->LengthZ *= Z_STRETCH;
+
+#ifdef EXTEND_OBJECT
+  geometry->LengthX = ((sinogram->N_r * sinogram->delta_r)/cos(max*M_PI/180)) + input->LengthZ*tan(max*M_PI/180) ;
+#else
+  geometry->LengthX = ((sinogram->N_r * sinogram->delta_r));
+#endif //Extend object endif
+
+#else
+  Geometry->LengthX = ((Sinogram->N_r * Sinogram->delta_r));
+#endif//Forward projector mode end if
+
+//  Geometry->LengthY = (Geometry->EndSlice- Geometry->StartSlice)*Geometry->delta_xy;
+  geometry->LengthY = (input->yEnd-input->yStart + 1)*sinogram->delta_t;
+
+  geometry->N_x = ceil(geometry->LengthX/input->delta_xz);//Number of voxels in x direction
+  geometry->N_z = ceil(input->LengthZ/input->delta_xz);//Number of voxels in z direction
+  geometry->N_y = floor(geometry->LengthY/input->delta_xy);//Number of measurements in y direction
+
+  printf("Geometry->Nz=%d\n",geometry->N_z);
+  printf("Geometry->Nx=%d\n",geometry->N_x);
+  printf("Geometry->Ny=%d\n",geometry->N_y);
+
+  geometry->Object = (DATA_TYPE ***)get_3D(geometry->N_z, geometry->N_x, geometry->N_y, sizeof(DATA_TYPE));//Allocate space for the 3-D object
+//Coordinates of the left corner of the x-z object
+  geometry->x0 = -geometry->LengthX/2;
+  geometry->z0 = -input->LengthZ/2;
+ // Geometry->y0 = -(sinogram->N_t * sinogram->delta_t)/2 + Geometry->StartSlice*Geometry->delta_xy;
+  geometry->y0 = -(geometry->LengthY)/2 ;
+
+
+  // Now we actually initialize the data to something. If a subclass is involved
+  // then the subclasses version of initializeData() will be used instead
+  initializeData();
+
+  //Doing a check sum to verify with matlab
+  for(uint16_t i=0;i<geometry->N_y;i++)
+  {
+    sum = 0;
+    for (uint16_t j = 0; j < geometry->N_x; j++)
+    {
+      for (uint16_t k = 0; k < geometry->N_z; k++)
+      {
+        sum += geometry->Object[k][j][i];
+      }
+    }
+    std::cout << "Geometry check sum Y:" << i << " Value:" << sum << std::endl;
+  }
+  //End of check sum
+
+
+
+
+}

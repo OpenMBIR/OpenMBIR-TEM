@@ -11,25 +11,22 @@
 #include "MXA/Common/MXASetGetMacros.h"
 
 #include "TomoEngine/TomoEngine.h"
-#include "TomoEngine/Common/AbstractFilter.h"
+#include "TomoEngine/Common/TomoFilter.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 
 /*
  *
  */
-class CalculateAMatrixColumn : public AbstractFilter
+class CalculateAMatrixColumn : public TomoFilter
 {
   public:
-
-    MXA_SHARED_POINTERS(CalculateAMatrixColumn);
+    MXA_SHARED_POINTERS(CalculateAMatrixColumn)
     MXA_STATIC_NEW_MACRO(CalculateAMatrixColumn);
-    MXA_TYPE_MACRO_SUPER(CalculateAMatrixColumn, AbstractFilter);
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, CalculateAMatrixColumn);
+    MXA_TYPE_MACRO_SUPER(CalculateAMatrixColumn, TomoFilter)
 
     virtual ~CalculateAMatrixColumn();
 
-    MXA_INSTANCE_PROPERTY(TomoInputs*, Inputs);
-    MXA_INSTANCE_PROPERTY(Sinogram*, Sinogram);
-    MXA_INSTANCE_PROPERTY(Geometry*, Geometry);
 
     MXA_INSTANCE_PROPERTY_OLD(DATA_TYPE*, Cosine, cosine);
     MXA_INSTANCE_PROPERTY_OLD(DATA_TYPE*, Sine, sine);

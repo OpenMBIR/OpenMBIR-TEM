@@ -15,9 +15,7 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-MRCSinogramInitializer::MRCSinogramInitializer() :
-m_Inputs(NULL),
-m_Sinogram(NULL)
+MRCSinogramInitializer::MRCSinogramInitializer()
 {
 
 }
@@ -36,7 +34,7 @@ void MRCSinogramInitializer::execute()
 {
 
   Sinogram* sinogram = getSinogram();
-  TomoInputs* input = getInputs();
+  TomoInputs* inputs = getInputs();
   int16_t i,j,k;
   uint16_t TotalNumMaskedViews;
 
@@ -44,7 +42,7 @@ void MRCSinogramInitializer::execute()
 
   MRCReader::Pointer reader = MRCReader::New(true);
   MRCHeader header;
-  int err = reader->readHeader(input->SinoFile, &header);
+  int err = reader->readHeader(inputs->SinoFile, &header);
   reader->printHeader(&header, std::cout);
 	if (err < 0)
   {
@@ -58,15 +56,15 @@ void MRCSinogramInitializer::execute()
 
   int voxelMin[3] = {0, 0, 0};
   int voxelMax[3] = {header.nx, header.ny, header.nz-1};
-  if (m_Inputs->useSubvolume == true)
+  if (inputs->useSubvolume == true)
   {
-     voxelMin[0] = input->xStart;
-     voxelMin[1] = input->yStart;
-     voxelMin[2] = input->zStart;
+     voxelMin[0] = inputs->xStart;
+     voxelMin[1] = inputs->yStart;
+     voxelMin[2] = inputs->zStart;
 
-     voxelMax[0] = input->xEnd;
-     voxelMax[1] = input->yEnd;
-     voxelMax[2] = input->zEnd;
+     voxelMax[0] = inputs->xEnd;
+     voxelMax[1] = inputs->yEnd;
+     voxelMax[2] = inputs->zEnd;
   }
 
 
@@ -86,9 +84,9 @@ void MRCSinogramInitializer::execute()
 
   std::vector<bool> goodViews(header.nz, 1);
   // Lay down the mask for the views that will be excluded.
-  for(std::vector<uint8_t>::size_type i = 0; i < m_Inputs->ViewMask.size(); ++i)
+  for(std::vector<uint8_t>::size_type i = 0; i < inputs->ViewMask.size(); ++i)
   {
-    goodViews[m_Inputs->ViewMask[i]] = 0;
+    goodViews[inputs->ViewMask[i]] = 0;
   }
   int numBadViews = 0;
   for (int i = voxelMin[2]; i <= voxelMax[2]; ++i)
@@ -107,7 +105,7 @@ void MRCSinogramInitializer::execute()
   TotalNumMaskedViews = header.nz - numBadViews;
   sinogram->N_theta = TotalNumMaskedViews;
 
-  err = reader->read(input->SinoFile, voxelMin, voxelMax);
+  err = reader->read(inputs->SinoFile, voxelMin, voxelMax);
   if (err < 0)
   {
   std::cout << "Error Code from Reading: " << err << std::endl;
@@ -119,8 +117,8 @@ void MRCSinogramInitializer::execute()
 
   //Allocate a 3-D matrix to store the singoram in the form of a N_y X N_theta X N_x  matrix
   sinogram->counts=(DATA_TYPE***)get_3D(TotalNumMaskedViews,
-                                        input->xEnd - input->xStart+1,
-                                        input->yEnd - input->yStart+1,
+                                        inputs->xEnd - inputs->xStart+1,
+                                        inputs->yEnd - inputs->yStart+1,
                                         sizeof(DATA_TYPE));
 
   for (k = 0; k < sinogram->N_theta; k++)
@@ -143,9 +141,6 @@ void MRCSinogramInitializer::execute()
   reader->setDeleteMemory(true);
   reader = MRCReader::NullPointer();
 
-  //The normalization and offset parameters for the views
-  sinogram->InitialGain=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
-  sinogram->InitialOffset=(DATA_TYPE*)get_spc(TotalNumMaskedViews, sizeof(DATA_TYPE));
 
 
 //  sinogram->N_theta = TotalNumMaskedViews;
@@ -163,10 +158,10 @@ void MRCSinogramInitializer::execute()
   for(i=0;i<sinogram->N_theta;i++)
   {
     sum=0;
-    for(j=0;j<sinogram->N_r;j++)
-      for(k=0;k<sinogram->N_t;k++)
-       sum+=sinogram->counts[i][j][k];
-    printf("Sinogram Checksum %f\n",sum);
+    for(j=0;j<sinogram->N_r;j++){
+      for(k=0;k<sinogram->N_t;k++){
+       sum+=sinogram->counts[i][j][k];}}
+    printf("Sinogram Checksum %d: %f\n",i, sum);
   }
   //end ofcheck sum
 

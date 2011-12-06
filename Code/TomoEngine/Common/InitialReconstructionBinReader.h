@@ -11,32 +11,28 @@
 #include "MXA/Common/MXASetGetMacros.h"
 
 #include "TomoEngine/TomoEngine.h"
-#include "TomoEngine/Common/AbstractFilter.h"
+#include "TomoEngine/Common/InitialReconstructionInitializer.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 
 
 /*
  *
  */
-class InitialReconstructionBinReader : public AbstractFilter
+class InitialReconstructionBinReader : public InitialReconstructionInitializer
 {
   public:
     MXA_SHARED_POINTERS(InitialReconstructionBinReader)
     MXA_STATIC_NEW_MACRO(InitialReconstructionBinReader);
-    MXA_STATIC_NEW_SUPERCLASS(AbstractFilter, InitialReconstructionBinReader);
-    MXA_TYPE_MACRO_SUPER(InitialReconstructionBinReader, AbstractFilter)
+    MXA_STATIC_NEW_SUPERCLASS(InitialReconstructionInitializer, InitialReconstructionBinReader);
+    MXA_TYPE_MACRO_SUPER(InitialReconstructionBinReader, InitialReconstructionInitializer)
 
     virtual ~InitialReconstructionBinReader();
 
-    MXA_INSTANCE_PROPERTY(TomoInputs*, Inputs);
-    MXA_INSTANCE_PROPERTY(Sinogram*, Sinogram);
-    MXA_INSTANCE_PROPERTY(Geometry*, Geometry);
-
-
-    DATA_TYPE absMaxArray(std::vector<DATA_TYPE> &Array);
 
 
     virtual void execute();
+
+    virtual void initializeData();
 
   protected:
     InitialReconstructionBinReader();

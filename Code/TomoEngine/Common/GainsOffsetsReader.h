@@ -11,29 +11,24 @@
 #include "MXA/Common/MXASetGetMacros.h"
 
 #include "TomoEngine/TomoEngine.h"
-#include "TomoEngine/Common/AbstractFilter.h"
+#include "TomoEngine/Common/TomoFilter.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 
 
 /*
  *
  */
-class GainsOffsetsReader : public AbstractFilter
+class GainsOffsetsReader : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(GainsOffsetsReader)
     MXA_STATIC_NEW_MACRO(GainsOffsetsReader);
-    MXA_STATIC_NEW_SUPERCLASS(AbstractFilter, GainsOffsetsReader);
-    MXA_TYPE_MACRO_SUPER(GainsOffsetsReader, AbstractFilter)
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, GainsOffsetsReader);
+    MXA_TYPE_MACRO_SUPER(GainsOffsetsReader, TomoFilter)
 
     virtual ~GainsOffsetsReader();
 
-    MXA_INSTANCE_PROPERTY(TomoInputs*, Inputs);
-    MXA_INSTANCE_PROPERTY(Sinogram*, Sinogram);
-
-
-
-    virtual void execute();
+     virtual void execute();
 
   protected:
     GainsOffsetsReader();

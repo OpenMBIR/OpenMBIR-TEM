@@ -27,10 +27,12 @@
 #include "TomoEngine/Common/EIMMath.h"
 #include "TomoEngine/Common/allocate.h"
 #include "TomoEngine/Common/EIMTime.h"
+#include "TomoEngine/Common/TomoFilter.h"
 #include "TomoEngine/Common/MRCSinogramInitializer.h"
 #include "TomoEngine/Common/RawSinogramInitializer.h"
 #include "TomoEngine/Common/GainsOffsetsReader.h"
 #include "TomoEngine/Common/ComputeGainsOffsets.h"
+#include "TomoEngine/Common/InitialReconstructionInitializer.h"
 #include "TomoEngine/Common/InitialReconstructionBinReader.h"
 #include "TomoEngine/IO/RawGeometryWriter.h"
 #include "TomoEngine/mt/mt19937ar.h"
@@ -433,21 +435,15 @@ void SOCEngine::execute()
 	// We are scoping here so the various readers are automatically cleaned up before
 	// the code goes any farther
 	{
-	  AbstractFilter::Pointer initializer = AbstractFilter::NullPointer();
+	  TomoFilter::Pointer initializer = TomoFilter::NullPointer();
     std::string extension = MXAFileInfo::extension(m_Inputs->SinoFile);
     if (extension.compare("mrc") == 0 || extension.compare("ali") == 0)
     {
-      initializer = MRCSinogramInitializer::New();
-      MRCSinogramInitializer* sInit = MRCSinogramInitializer::polymorphic_downcast<MRCSinogramInitializer, AbstractFilter>(initializer.get());
-      sInit->setInputs(m_Inputs);
-      sInit->setSinogram(m_Sinogram);
+      initializer = MRCSinogramInitializer::NewTomoFilter();
     }
     else if (extension.compare("bin") == 0 )
     {
-      initializer = RawSinogramInitializer::New();
-      RawSinogramInitializer* sInit = RawSinogramInitializer::polymorphic_downcast<RawSinogramInitializer, AbstractFilter>(initializer.get());
-      sInit->setInputs(m_Inputs);
-      sInit->setSinogram(m_Sinogram);
+      initializer = RawSinogramInitializer::NewTomoFilter();
     }
     else
     {
@@ -455,7 +451,8 @@ void SOCEngine::execute()
       updateProgressAndMessage("A supported file reader for the input file was not found." , 100);
       return;
     }
-
+    initializer->setInputs(m_Inputs);
+    initializer->setSinogram(m_Sinogram);
     initializer->addObserver(this);
     initializer->execute();
     if (initializer->getErrorCondition() < 0)
@@ -470,81 +467,58 @@ void SOCEngine::execute()
   // Now read or generate the Gains and Offsets data. We are scoping this section
   // so the reader automactically gets cleaned up at this point.
   {
-
+    TomoFilter::Pointer initializer = TomoFilter::NullPointer();
     if(m_Inputs->GainsOffsetsFile.empty() == true)
     {
-
       // Calculate the initial Gains and Offsets
-      ComputeGainsOffsets::Pointer gainsOffsetsGen = ComputeGainsOffsets::New();
-      gainsOffsetsGen->setSinogram(m_Sinogram);
-      gainsOffsetsGen->setInputs(m_Inputs);
-      gainsOffsetsGen->addObserver(this);
-      gainsOffsetsGen->execute();
-      if(gainsOffsetsGen->getErrorCondition() < 0)
-      {
-        updateProgressAndMessage("Error Generating the Gains and offsets", 100);
-        setErrorCondition(gainsOffsetsGen->getErrorCondition());
-        return;
-      }
-
+      initializer = ComputeGainsOffsets::NewTomoFilter();
     }
     else
     {
-
-      GainsOffsetsReader::Pointer gainsOffsetsReader = GainsOffsetsReader::New();
-      gainsOffsetsReader->setSinogram(m_Sinogram);
-      gainsOffsetsReader->setInputs(m_Inputs);
-      gainsOffsetsReader->addObserver(this);
-
-		gainsOffsetsReader->execute();
-		std::cout<<"hi"<<std::endl;
-
-      if(gainsOffsetsReader->getErrorCondition() < 0)
-      {
-        updateProgressAndMessage("Error reading Input Gains and Offsets Data file", 100);
-        setErrorCondition(gainsOffsetsReader->getErrorCondition());
-        return;
-      }
-		std::cout<<"hi2"<<std::endl;
-
+      initializer = GainsOffsetsReader::NewTomoFilter();
     }
-	  std::cout<<"hi3"<<std::endl;
 
+    initializer->setSinogram(m_Sinogram);
+    initializer->setInputs(m_Inputs);
+    initializer->addObserver(this);
+    initializer->execute();
+ //   std::cout << "hi" << std::endl;
 
+    if(initializer->getErrorCondition() < 0)
+    {
+     updateProgressAndMessage("Error initializing Input Gains and Offsets Data file", 100);
+     setErrorCondition(initializer->getErrorCondition());
+     return;
+    }
   }
 
-	std::cout<<"hi3"<<std::endl;
-
-  // Initialize the Geometry data
+  // Initialize the Geometry data from a rough reconstruction
   {
+    InitialReconstructionInitializer::Pointer initializer = InitialReconstructionInitializer::NullPointer();
+    std::string extension = MXAFileInfo::extension(m_Inputs->InitialReconFile);
     if (m_Inputs->InitialReconFile.empty() == true)
     {
-
+      // This will just initialize all the values to Zero (0)
+      initializer = InitialReconstructionInitializer::New();
     }
-    else
+    else if (extension.compare("bin") == 0 )
     {
-      std::cout<<"hi1"<<std::endl;
-      InitialReconstructionBinReader::Pointer reconReader = InitialReconstructionBinReader::New();
-      reconReader->setSinogram(m_Sinogram);
-      std::cout<<"hi1"<<std::endl;
-      reconReader->setInputs(m_Inputs);
-      std::cout<<"hi1"<<std::endl;
-      reconReader->setGeometry(m_Geometry);
-      std::cout<<"hi2"<<std::endl;
-      reconReader->addObserver(this);
-      std::cout<<"hi3"<<std::endl;
-      reconReader->execute();
-      std::cout<<"hi4"<<std::endl;
-      if(reconReader->getErrorCondition() < 0)
-      {
-        updateProgressAndMessage("Error reading Initial Reconstruction Data from File", 100);
-        setErrorCondition(reconReader->getErrorCondition());
-        return;
-      }
+      // This will read the values from a binary file
+      initializer = InitialReconstructionBinReader::NewInitialReconstructionInitializer();
+    }
+    initializer->setSinogram(m_Sinogram);
+    initializer->setInputs(m_Inputs);
+    initializer->setGeometry(m_Geometry);
+    initializer->addObserver(this);
+    initializer->execute();
+
+    if(initializer->getErrorCondition() < 0)
+    {
+      updateProgressAndMessage("Error reading Initial Reconstruction Data from File", 100);
+      setErrorCondition(initializer->getErrorCondition());
+      return;
     }
   }
-
-
 
 	MAKE_OUTPUT_FILE(Fp1, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::ReconstructedSinogramFile);
 	if (fileError == 1)

@@ -87,6 +87,7 @@ int main(int argc, char **argv)
 
   // Create these variables so we
   Sinogram sinogram;
+  ::memset(&sinogram, 0, sizeof(Sinogram));
   Geometry geometry;
 
   SOCEngine::Pointer engine = SOCEngine::New();

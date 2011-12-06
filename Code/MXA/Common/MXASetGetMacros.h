@@ -142,6 +142,7 @@ static Pointer New args \
 
 #define MXA_TYPE_MACRO_SUPER(thisClass,superclass) \
   public: \
+  typedef superclass SuperClass;\
   virtual const char* getNameOfClass() const  {return #thisClass;}\
   static int IsTypeOf(const char *type) \
   { \
