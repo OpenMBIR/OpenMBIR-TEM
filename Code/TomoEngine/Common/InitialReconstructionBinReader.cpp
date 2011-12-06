@@ -102,6 +102,7 @@ void InitialReconstructionBinReader::execute()
     Geometry->Object[i][k][j]=*buffer;
 //  printf("%f\n",Geometry->Object[i][j][k]);
   }*/
+	std::cout<<"Reading Geom"<<std::endl;
 
   for (i = 0; i < geometry->N_y; i++)
   {
@@ -109,8 +110,10 @@ void InitialReconstructionBinReader::execute()
     {
       for (k = 0; k < geometry->N_z; k++)
       {
+		  
         if(Fp == NULL)//If no input file has been specified or if the file does not exist just set the default values to be zero
         {
+			std::cout<<"Reading Geom"<<std::endl;
           geometry->Object[k][j][i] = 0;
         }
         else//If the iput file exists read the values
@@ -123,6 +126,7 @@ void InitialReconstructionBinReader::execute()
     }
   }
 
+	std::cout<<"Reading Geom"<<std::endl;
       //Doing a check sum to verify with matlab
 
   for(i=0;i<geometry->N_y;i++)
