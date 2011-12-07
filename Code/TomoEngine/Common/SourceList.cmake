@@ -40,7 +40,10 @@ set (TomoEngine_Common_HDRS
     ${TomoEngine_SOURCE_DIR}/Common/InitialReconstructionInitializer.h
     ${TomoEngine_SOURCE_DIR}/Common/InitialReconstructionBinReader.h
     ${TomoEngine_SOURCE_DIR}/Common/TomoFilter.h
-    ${TomoEngine_SOURCE_DIR}/Common/ComputeGainsOffsets.h   
+    ${TomoEngine_SOURCE_DIR}/Common/ComputeGainsOffsets.h 
+    ${TomoEngine_SOURCE_DIR}/Common/CE_ConstraintEquation.hpp
+    ${TomoEngine_SOURCE_DIR}/Common/DerivOfCostFunc.hpp
+    ${TomoEngine_SOURCE_DIR}/Common/TomoArray.hpp  
 
 )
 cmp_IDE_SOURCE_PROPERTIES( "Common" "${TomoEngine_Common_HDRS}" "${TomoEngine_Common_SRCS}" "${CMP_INSTALL_FILES}")
