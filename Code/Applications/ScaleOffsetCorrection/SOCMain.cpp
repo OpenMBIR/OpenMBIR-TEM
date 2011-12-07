@@ -103,34 +103,8 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  // Write the output files
-
-	// Write a raw binary output file
 
 
-	FILE* Fp=NULL;
-	double buffer;
-	Fp=fopen("ReconstructedObject.bin","wb");
-	for (int i = 0; i < geometry.N_y; ++i)
-	{
-		for (int j = 0; j < geometry.N_x; ++j)
-		{
-			for (int k = 0; k < geometry.N_z; k++)
-			{
-				//	std::cout << k << std::endl;
-
-				buffer = geometry.Object[k][j][i];
-				fwrite(&buffer, sizeof(DATA_TYPE), 1, Fp);
-			}
-		}
-	}
-
-	fclose(Fp);
-
-	std::cout << "Final Dimensions of Object: " << std::endl;
-	std::cout << "  Nx = " << geometry.N_x << std::endl;
-	std::cout << "  Ny = " << geometry.N_y << std::endl;
-	std::cout << "  Nz = " << geometry.N_z << std::endl;
 
 
 
