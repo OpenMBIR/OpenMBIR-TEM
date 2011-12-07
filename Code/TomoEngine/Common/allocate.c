@@ -95,12 +95,13 @@ void *multialloc(size_t s, int d, ...)
                                                  * but the last */
           max *= (*q);
           r[0]=(char *)mget_spc(max,sizeof(char **));
+       //   printf("max: %d   sizeof(char **): %d  r: %p r[0]: 0x%08x \n", max , sizeof(char **), r, r[0]);
           r = (char **) r[0];     /* step through to beginning of next
                                    * dimension array */
         }
         max *= s * (*q);        /* grab actual array memory */
         r[0] = (char *)mget_spc(max,sizeof(char));
-
+       // printf("max: %d   sizeof(char): %d  r: %p r[0]: 0x%08x \n", max , sizeof(char), r, r[0]);
         /*
          * r is now set to point to the beginning of each array so that we can
          * use it to scan down each array rather than having to go across and
@@ -148,19 +149,19 @@ void *multialloc(size_t s, int d, ...)
  * multifree releases all memory that we have already declared analogous to
  * free() when using malloc()
  */
-void multifree(void *r,int d)
+void multifree(void* r, int d)
 {
-  void **p;
-  void *next = NULL;
+  void** p;
+  void* next = NULL;
   int i;
 
-  for (p = (void **)r, i = 0; i < d; p = (void **)next, i++)
+  for (p = (void**)r, i = 0; i < d; p = (void**)next, i++)
   {
     if(p != NULL)
     {
       next = *p;
+      printf("p: %p  Value of P: 0x%08x  i:  %d   Value of Next: 0x%08x \n", p, *p, i, next);
       free((void*)p);
-      p = NULL;
     }
   }
 }

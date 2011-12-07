@@ -32,6 +32,7 @@ class SOCEngine : public AbstractPipeline, public Observer
     MXA_INSTANCE_PROPERTY(TomoInputs*, Inputs);
     MXA_INSTANCE_PROPERTY(Sinogram*, Sinogram);
     MXA_INSTANCE_PROPERTY(Geometry*, Geometry);
+    MXA_INSTANCE_PROPERTY(ScaleOffsetParams*, NuisanceParams);
 
 
     virtual ~SOCEngine();
@@ -56,6 +57,7 @@ class SOCEngine : public AbstractPipeline, public Observer
 
     void calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams);
 
+    void cleanupMemory();
 
   private:
 

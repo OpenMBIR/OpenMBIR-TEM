@@ -290,7 +290,8 @@ class DerivOfCostFunc
 SOCEngine::SOCEngine() :
     m_Inputs(NULL),
     m_Sinogram(NULL),
-    m_Geometry(NULL)
+    m_Geometry(NULL),
+    m_NuisanceParams(NULL)
 {
   initVariables();
 }
@@ -300,15 +301,7 @@ SOCEngine::SOCEngine() :
 // -----------------------------------------------------------------------------
 SOCEngine::~SOCEngine()
 {
-//  if (m_Sinogram != NULL)
-//  {
-//    delete m_Sinogram;
-//  }
-//  if(m_Geometry != NULL)
-//  {
-//    delete m_Geometry;
-//  }
-
+  cleanupMemory();
 }
 
 // -----------------------------------------------------------------------------
@@ -321,6 +314,7 @@ void SOCEngine::initVariables()
   m_Inputs = NULL;
   m_Sinogram = NULL;
   m_Geometry = NULL;
+  m_NuisanceParams = NULL;
 
   FILTER[0][0][0] = 0.0302; FILTER[0][0][1] = 0.0370; FILTER[0][0][2] = 0.0302;
   FILTER[0][1][0] = 0.0370; FILTER[0][1][1] = 0.0523; FILTER[0][1][2] = 0.0370;
@@ -403,12 +397,12 @@ void SOCEngine::execute()
 	RNGVars* RandomNumber;
 
 	//File variables
-	FILE* Fp1 = NULL;
-	FILE* Fp2 = NULL;
-	FILE* Fp4 = NULL;
-	FILE* Fp5 = NULL;
+//	FILE* Fp1 = NULL;
+//	FILE* Fp2 = NULL;
+//	FILE* Fp4 = NULL;
+//	FILE* Fp5 = NULL;
 //	FILE* Fp6 = NULL;
-	FILE* Fp7 = NULL;
+//	FILE* Fp7 = NULL;
 //	FILE* Fp8 = NULL;
 
 	int fileError = 0;
@@ -521,41 +515,7 @@ void SOCEngine::execute()
     }
   }
 
-	MAKE_OUTPUT_FILE(Fp1, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::ReconstructedSinogramFile);
-	if (fileError == 1)
-	{
 
-	}
-
-	MAKE_OUTPUT_FILE(Fp4, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::FinalGainParametersFile);
-	if (fileError == 1)
-	{
-
-	}
-
-  MAKE_OUTPUT_FILE(Fp5, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::FinalOffsetParametersFile);
-  if (fileError == 1)
-  {
-
-  }
-
-#ifdef FORWARD_PROJECT_MODE
-  MAKE_OUTPUT_FILE(Fp6, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::ForwardProjectedObjectFile);
-  if (fileError == 1)
-  {
-
-  }
-#endif
-
-
-#ifdef DEBUG_CONSTRAINT_OPT
-	FILE *Fp8 = fopen("CostFunctionCoefficients.bin","w");
-  MAKE_OUTPUT_FILE(Fp8, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::CostFunctionCoefficientsFile);
-  if (fileError == 1)
-  {
-
-  }
-#endif
 //	DATA_TYPE buffer;
 	//Optimization variables
 	DATA_TYPE low,high;
@@ -1078,6 +1038,7 @@ void SOCEngine::execute()
 
 #ifdef COST_CALCULATE
 	fileError = 0;
+	FILE* Fp2 = NULL;
   MAKE_OUTPUT_FILE(Fp2, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::CostFunctionFile);
   if (fileError == 1)
   {
@@ -1685,18 +1646,51 @@ void SOCEngine::execute()
     printf("Outer Iter %d\n", OuterIter + 1);
   }
 
-	printf("Offsets\n");
-	for(uint16_t i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
-	{
-		printf("%lf\n",NuisanceParams.mu[i_theta]);
-		fwrite(&NuisanceParams.mu[i_theta],sizeof(DATA_TYPE),1,Fp5);
-	}
+	FILE* Fp5 = NULL;
+  MAKE_OUTPUT_FILE(Fp5, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::FinalOffsetParametersFile);
+  if (fileError >= 0)
+  {
+    printf("Offsets\n");
+    for(uint16_t i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
+    {
+      printf("%lf\n",NuisanceParams.mu[i_theta]);
+      fwrite(&NuisanceParams.mu[i_theta],sizeof(DATA_TYPE),1,Fp5);
+    }
+    fclose(Fp5);
+  }
+
+
+#ifdef FORWARD_PROJECT_MODE
+  MAKE_OUTPUT_FILE(Fp6, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::ForwardProjectedObjectFile);
+  if (fileError == 1)
+  {
+
+  }
+#endif
+
+
+#ifdef DEBUG_CONSTRAINT_OPT
+  FILE *Fp8 = NULL;
+  MAKE_OUTPUT_FILE(Fp8, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::CostFunctionCoefficientsFile);
+  if (fileError >= 0)
+  {
+    // Write the output File
+  }
+#endif
+
+  FILE* Fp4 = NULL;
+  MAKE_OUTPUT_FILE(Fp4, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::FinalGainParametersFile);
+  if (fileError == 1)
+  {
+
+  }
 	printf("Gain\n");
 	for(uint16_t i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 	{
 		printf("%lf\n",NuisanceParams.I_0[i_theta]);
 		fwrite(&NuisanceParams.I_0[i_theta],sizeof(DATA_TYPE),1,Fp4);
 	}
+	fclose(Fp4);
 	printf("Number of costs recorded %d\n",cost_counter);
 	printf("Final Cost\n");
 	for(i = 0 ; i < cost_counter; i++)
@@ -1704,8 +1698,11 @@ void SOCEngine::execute()
 		printf("%lf\n",cost[i]);
 	}
 
+
+
 	if(NuisanceParams.alpha != NULL)
   {
+	  FILE* Fp7 = NULL;
     MAKE_OUTPUT_FILE(Fp7, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::FinalVariancesFile);
     if(fileError >= 0)
     {
@@ -1728,6 +1725,12 @@ void SOCEngine::execute()
 
   updateProgressAndMessage("Writing Final Sinogram", 50);
 
+  FILE* Fp1 = NULL;
+  MAKE_OUTPUT_FILE(Fp1, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::ReconstructedSinogramFile);
+  if (fileError == 1)
+  {
+
+  }
 	//Writing the final sinogram
 	for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
@@ -1766,23 +1769,39 @@ void SOCEngine::execute()
 	//#else
 	//	free((void*)TempCol);
 #endif
+
 	free_3D((void***)ErrorSino);
 	free_3D((void***)Weight);
 
 #ifdef COST_CALCULATE
 	fclose(Fp2);// writing cost function
 #endif
-	//fclose(Fp3);
-	fclose(Fp4);
-	fclose(Fp5);
-	//fclose(Fp6);
 
-	free_3D((void***)m_Geometry->Object);
+
+
 	//free_3D(neighborhood);
 	// Get values from ComputationInputs and perform calculation
 	// Return any error code
-	setErrorCondition(err);
+	updateProgressAndMessage("Deallocating Memory", 100);
+	cleanupMemory();
+
+
+	setErrorCondition(0);
 	return;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::cleanupMemory()
+{
+  free_3D((void***)(m_Geometry->Object));
+  free_3D((void***)(m_Sinogram->counts));
+  if (m_Sinogram->InitialGain != NULL) free(m_Sinogram->InitialGain);
+  if (m_Sinogram->InitialOffset != NULL) free(m_Sinogram->InitialOffset);
+  if (m_NuisanceParams->I_0 != NULL) free(m_NuisanceParams->I_0);
+  if (m_NuisanceParams->mu != NULL) free(m_NuisanceParams->mu);
+  if (m_NuisanceParams->alpha != NULL) free(m_NuisanceParams->alpha);
 }
 
 

@@ -21,11 +21,12 @@
 #include "TomoEngine/Common/EIMTime.h"
 #include "TomoEngine/Common/allocate.h"
 
-#include "TomoEngine/IO/VTKFileWriters.hpp"
-#include "TomoEngine/IO/RawGeometryWriter.h"
+//#include "TomoEngine/IO/VTKFileWriters.hpp"
+//#include "TomoEngine/IO/RawGeometryWriter.h"
 
 // MXA Includes
 #include "MXA/Utilities/MXADir.h"
+#include "ScaleOffsetMotionStructures.h"
 #include "ScaleOffsetMotionCorrectionConstants.h"
 #include "ScaleOffsetMotionCorrectionParser.h"
 #include "ScaleOffsetMotionCorrectionEngine.h"
@@ -125,6 +126,7 @@ int main(int argc, char** argv)
 	std::cout << "  Ny = " << geometry.N_y << std::endl;
 	std::cout << "  Nz = " << geometry.N_z << std::endl;
 
+#if 0
 	// Write the vtk output file
 	VTKRectilinearGridFileWriter vtkWriter;
 	vtkWriter.setWriteBinaryFiles(true);
@@ -148,17 +150,28 @@ int main(int argc, char** argv)
 	{
 		std::cout << "Error writing vtk file '" << vtkFile << "'" << std::endl;
 	}
+#endif
 
 	// Write a raw binary output file
-  RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
-  writer->setGeometry(&geometry);
-  writer->setFilePath(inputs.OutputFile);
-
-  writer->execute();
-  if (writer->getErrorCondition() < 0)
+  FILE* Fp = fopen(inputs.OutputFile.c_str(), "wb");
+  if(NULL == Fp)
   {
-    std::cout << "Error Code from Writing File" << writer->getErrorCondition() << std::endl;
-    return -1;
+    std::cout << "Fp: " << Fp << " errno: " << errno << std::endl;
+    return EXIT_FAILURE;
+  }
+  DATA_TYPE buffer;
+
+  for (uint16_t i = 0; i < geometry.N_y; ++i)
+  {
+    for (uint16_t j = 0; j < geometry.N_x; ++j)
+    {
+      for (uint16_t k = 0; k < geometry.N_z; k++)
+      {
+      //  std::cout << k << std::endl;
+        buffer = geometry.Object[k][j][i];
+        fwrite(&buffer, sizeof(DATA_TYPE), 1, Fp);
+      }
+    }
   }
 
 	STOP;

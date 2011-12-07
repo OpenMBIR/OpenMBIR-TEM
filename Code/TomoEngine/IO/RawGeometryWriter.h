@@ -55,12 +55,9 @@ class RawGeometryWriter : public TomoFilter
 
     MXA_INSTANCE_STRING_PROPERTY(FilePath);
 
-    /**
-     * @brief
-     * @param filepath
-     * @return
-     */
     void execute();
+
+
   protected:
     RawGeometryWriter();
 
