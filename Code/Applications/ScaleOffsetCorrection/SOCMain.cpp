@@ -106,6 +106,7 @@ int main(int argc, char **argv)
     std::cout << "Error Reconstructing the Data" << std::endl;
     return EXIT_FAILURE;
   }
+  std::cout << "Completed SOC Run" << std::endl;
 
   return EXIT_SUCCESS;
 }

@@ -32,6 +32,9 @@
 
 
 #include <stdio.h>
+#include <iostream>
+#include <string>
+
 #include <boost/shared_ptr.hpp>
 
 
@@ -57,32 +60,37 @@ class TomoArray
 
     virtual ~TomoArray()
     {
+      if (m_Name.empty() == false)
+      {
+        std::cout << "Deallocating TomoArray " << m_Name << std::endl;
+      }
       if (size == 1)
       {
-        free(ptr);
+        free(d);
       }
       else {
-        deallocate((T*)ptr,size);
+        deallocate((T*)d,size);
       }
     }
 
-    Ptr getPointer() { return ptr; }
+    void setName(const std::string &name) { m_Name = name;}
+    Ptr getPointer() { return d; }
     int* getDims() {return m_Dims; }
     int getNDims() { return m_NDims; }
 
-    Ptr ptr;
+    Ptr d;
 
   protected:
     TomoArray(int* dims) :
       m_Dims(dims)
     {
-      ptr = reinterpret_cast<Ptr>(allocate(sizeof(T), size, m_Dims));
+      d = reinterpret_cast<Ptr>(allocate(sizeof(T), size, m_Dims));
     }
 
   private:
     int* m_Dims;
     int  m_NDims;
-
+    std::string m_Name;
 
 
     T* allocate(size_t s, int d, int* d1)

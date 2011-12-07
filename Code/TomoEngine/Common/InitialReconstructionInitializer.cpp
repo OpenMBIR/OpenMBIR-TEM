@@ -54,7 +54,7 @@ void InitialReconstructionInitializer::initializeData()
     {
       for (uint16_t k = 0; k < geometry->N_z; k++)
       {
-        geometry->Object[k][j][i] = 0;
+        geometry->Object->d[k][j][i] = 0;
       }
     }
   }
@@ -102,7 +102,10 @@ void InitialReconstructionInitializer::execute()
   printf("Geometry->Nx=%d\n",geometry->N_x);
   printf("Geometry->Ny=%d\n",geometry->N_y);
 
-  geometry->Object = (DATA_TYPE ***)get_3D(geometry->N_z, geometry->N_x, geometry->N_y, sizeof(DATA_TYPE));//Allocate space for the 3-D object
+  int dims[3] = {geometry->N_z, geometry->N_x, geometry->N_y};
+  geometry->Object  = RealVolumeType::New(dims);
+  geometry->Object->setName("Geometry.Object");
+ // geometry->Object = (DATA_TYPE ***)get_3D(geometry->N_z, geometry->N_x, geometry->N_y, sizeof(DATA_TYPE));//Allocate space for the 3-D object
 //Coordinates of the left corner of the x-z object
   geometry->x0 = -geometry->LengthX/2;
   geometry->z0 = -input->LengthZ/2;
@@ -122,7 +125,7 @@ void InitialReconstructionInitializer::execute()
     {
       for (uint16_t k = 0; k < geometry->N_z; k++)
       {
-        sum += geometry->Object[k][j][i];
+        sum += geometry->Object->d[k][j][i];
       }
     }
     std::cout << "Geometry check sum Y:" << i << " Value:" << sum << std::endl;

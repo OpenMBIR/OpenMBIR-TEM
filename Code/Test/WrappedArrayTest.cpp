@@ -30,12 +30,12 @@ int main(int argc, char **argv)
   {
     Int32VolumeType::Pointer object = Int32VolumeType::New(dims);
 
-    int32_t*** data = object->ptr;
+    int32_t*** data = object->d;
 
     printf("Array to Hold Pointers to start of Slice: Address=%p  Num Elements:%d \n Values:", data, z);
     for(int i = 0; i < z; ++i)
     {
-      printf("| 0x%08x ", object->ptr[i]);
+      printf("| 0x%08x ", object->d[i]);
     }
     printf("|\n");
     printf("-------------------------- \n");
@@ -43,20 +43,20 @@ int main(int argc, char **argv)
     printf("Array to Hold Pointers to start of each Row: Address=%p  Num Elements:%d \n Values:", &(data[0][0]), z*y);
     for(int i =0; i < y*z; ++i)
     {
-      printf("| 0x%08x ", object->ptr[0][i]);
+      printf("| 0x%08x ", object->d[0][i]);
     }
     printf("|\n");
     printf("-------------------------- \n");
 
     for(int k = 0; k < z; ++k)
       {
-        printf("Slice %d  Ptr: %p   Value: 0x%08x \n", k, object->ptr[k], *object->ptr[k]);
+        printf("Slice %d  Ptr: %p   Value: 0x%08x \n", k, object->d[k], *object->d[k]);
         for(int j = 0; j < y; ++j)
         {
-          printf("Row %d %p [%d][%d][0] | ", j, object->ptr[k][j], k, j);
+          printf("Row %d %p [%d][%d][0] | ", j, object->d[k][j], k, j);
           for(int i=0; i < x; ++i)
           {
-            object->ptr[k][j][i] = i*10 + j*100 + k*1000;
+            object->d[k][j][i] = i*10 + j*100 + k*1000;
             printf(" %04d |", data[k][j][i]);
           }
           printf("\n");

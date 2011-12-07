@@ -56,7 +56,7 @@ void InitialReconstructionBinReader::initializeData()
         {
           DATA_TYPE buffer;
           fread((unsigned char*)(&buffer), sizeof(DATA_TYPE), 1, Fp);
-          geometry->Object[k][j][i] = buffer;
+          geometry->Object->d[k][j][i] = buffer;
         }
       }
     }

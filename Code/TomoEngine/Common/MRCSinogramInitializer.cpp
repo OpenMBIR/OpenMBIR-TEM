@@ -124,10 +124,17 @@ void MRCSinogramInitializer::execute()
   // Here in the actual data, Z is the slowest, then X, then Y (The Fastest) so we
   // will need to "rotate" the data in the XY plane when copying from the MRC read data into our
   // own array.
-  sinogram->counts=(DATA_TYPE***)get_3D(sinogram->N_theta,
-                                        inputs->xEnd - inputs->xStart+1,
-                                        inputs->yEnd - inputs->yStart+1,
-                                        sizeof(DATA_TYPE));
+//  sinogram->counts=(DATA_TYPE***)get_3D(sinogram->N_theta,
+//                                        inputs->xEnd - inputs->xStart+1,
+//                                        inputs->yEnd - inputs->yStart+1,
+//                                        sizeof(DATA_TYPE));
+  int dims[3] = {sinogram->N_theta,
+      inputs->xEnd - inputs->xStart+1,
+      inputs->yEnd - inputs->yStart+1};
+  sinogram->counts = RealVolumeType::New(dims);
+  sinogram->counts->setName("Sinogram.counts");
+
+
   sinogram->angles.resize(sinogram->N_theta);
   FEIHeader* fei = NULL;
   for (uint16_t z = 0; z < sinogram->N_theta; z++)
@@ -145,7 +152,7 @@ void MRCSinogramInitializer::execute()
       for (uint16_t x = 0; x < sinogram->N_r; x++)
       {
         size_t index = (dataZOffset * sinogram->N_r * sinogram->N_t) + (y * sinogram->N_r) + x;
-        sinogram->counts[z][x][y] = data[index];
+        sinogram->counts->d[z][x][y] = data[index];
       }
     }
   }
@@ -175,7 +182,7 @@ void MRCSinogramInitializer::execute()
     {
       for (uint16_t k = 0; k < sinogram->N_t; k++)
       {
-        sum += sinogram->counts[i][j][k];
+        sum += sinogram->counts->d[i][j][k];
       }
     }
     printf("Sinogram Checksum %d: %f\n", i, sum);

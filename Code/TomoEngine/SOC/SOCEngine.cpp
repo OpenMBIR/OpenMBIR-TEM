@@ -143,7 +143,7 @@ void SOCEngine::initVariables()
 // -----------------------------------------------------------------------------
 void SOCEngine::execute()
 {
-
+  uint64_t totalTime = EIMTOMO_getMilliSeconds();
 	uint8_t err = 0;
 	int16_t Iter,OuterIter;
 	int16_t i,j,k,r,Idx;
@@ -321,9 +321,9 @@ void SOCEngine::execute()
 
 	//Scale and Offset Parameter Structures
 	ScaleOffsetParams NuisanceParams;
-	NuisanceParams.I_0 = NULL;
-	NuisanceParams.mu = NULL;
-	NuisanceParams.alpha = NULL;
+	NuisanceParams.I_0 = RealArrayType::NullPointer();
+	NuisanceParams.mu = RealArrayType::NullPointer();
+	NuisanceParams.alpha = RealArrayType::NullPointer();
 
 	DATA_TYPE numerator_sum =0;
 	DATA_TYPE denominator_sum = 0;
@@ -337,14 +337,23 @@ void SOCEngine::execute()
 	DATA_TYPE a,b,c,d,e;
 //	DATA_TYPE determinant;
 	DATA_TYPE LagrangeMultiplier;
-
+	int arrayDims[3] = {0,0,0};
 
 	MicroscopeImage = (DATA_TYPE**)get_img(m_Sinogram->N_t, m_Sinogram->N_r, sizeof(DATA_TYPE));
 
-	NuisanceParams.I_0 = (DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
-	NuisanceParams.mu = (DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
+
+	arrayDims[0] = m_Sinogram->N_theta;
+	NuisanceParams.I_0 = RealArrayType::New(arrayDims);
+	NuisanceParams.I_0->setName("NuisanceParams.I_0");
+	NuisanceParams.mu = RealArrayType::New(arrayDims);
+	NuisanceParams.mu->setName("NuisanceParams.mu");
+
+//	NuisanceParams.I_0 = (DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
+//	NuisanceParams.mu = (DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
 #ifdef NOISE_MODEL
-	NuisanceParams.alpha=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
+//	NuisanceParams.alpha=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
+	NuisanceParams.alpha = RealArrayType::New(arrayDims);
+	NuisanceParams.alpha->setName("NuisanceParams.mu");
 #endif
 
   // initialize variables
@@ -469,7 +478,7 @@ void SOCEngine::execute()
 		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
 			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
 			{
-				m_Sinogram->counts[i_theta][i_r][i_t] = log(m_Sinogram->counts[i_theta][i_r][i_t])-log(m_Sinogram->TargetGain);
+				m_Sinogram->counts->d[i_theta][i_r][i_t] = log(m_Sinogram->counts->d[i_theta][i_r][i_t])-log(m_Sinogram->TargetGain);
 			}
 #endif//Bright Field
 
@@ -480,11 +489,11 @@ void SOCEngine::execute()
 	for(k=0 ; k < m_Sinogram->N_theta;k++)
 	{
 		//fread(&buffer, 1, sizeof(double), Fp6);
-		NuisanceParams.I_0[k]= m_Sinogram->InitialGain[k];//;
+		NuisanceParams.I_0->d[k] = m_Sinogram->InitialGain[k];//;
 #ifdef GEOMETRIC_MEAN_CONSTRAINT
-		sum+=log(NuisanceParams.I_0[k]);
+		sum+=log(NuisanceParams.I_0->d[k]);
 #else
-		sum+=NuisanceParams.I_0[k];
+		sum+=NuisanceParams.I_0->d[k];
 #endif
 	}
 	sum/=m_Sinogram->N_theta;
@@ -498,7 +507,7 @@ void SOCEngine::execute()
 		printf("The input paramters dont meet the constraint..Renormalizing\n");
         temp = exp(log(m_Sinogram->TargetGain) - log(sum));
 		for (k = 0 ; k < m_Sinogram->N_theta; k++) {
-			NuisanceParams.I_0[k]=m_Sinogram->InitialGain[k]*temp;
+			NuisanceParams.I_0->d[k]=m_Sinogram->InitialGain[k]*temp;
 		}
 	}
 #else
@@ -508,7 +517,7 @@ void SOCEngine::execute()
 		printf("Arithmetic Mean Constraint not met..renormalizing\n");
 		temp = m_Sinogram->TargetGain/sum;
 		for (k = 0 ; k < m_Sinogram->N_theta; k++) {
-			NuisanceParams.I_0[k]=m_Sinogram->InitialGain[k]*temp;
+			NuisanceParams.I_0->d[k]=m_Sinogram->InitialGain[k]*temp;
 		}
 	}
 #endif
@@ -517,7 +526,7 @@ void SOCEngine::execute()
 	for(k=0 ; k < m_Sinogram->N_theta;k++)
 	{
 		//fread(&buffer, 1, sizeof(double), Fp6);
-		NuisanceParams.mu[k] = m_Sinogram->InitialOffset[k];
+		NuisanceParams.mu->d[k] = m_Sinogram->InitialOffset[k];
 	}
 
 	for(k = 0 ; k <m_Sinogram->N_theta; k++)
@@ -735,8 +744,8 @@ void SOCEngine::execute()
                {
                ProfileThickness=0;
                }*/
-              Y_Est[i_theta][i_r][i_t] += (NuisanceParams.I_0[i_theta]
-                  * (TempCol[j][k]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object[j][k][i]));
+              Y_Est[i_theta][i_r][i_t] += (NuisanceParams.I_0->d[i_theta]
+                  * (TempCol[j][k]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object->d[j][k][i]));
 
             }
           }
@@ -762,7 +771,7 @@ void SOCEngine::execute()
 #ifdef NOISE_MODEL
 	for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
 	{
-		NuisanceParams.alpha[i_theta]=1;//Initialize the refinement parameters to 1
+		NuisanceParams.alpha->d[i_theta]=1;//Initialize the refinement parameters to 1
 		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
 			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
 				if(sum != 0)
@@ -770,7 +779,7 @@ void SOCEngine::execute()
 #ifdef BRIGHT_FIELD
 					Weight[i_theta][i_r][i_t] = sum;
 #else
-					Weight[i_theta][i_r][i_t]=1.0/(m_Sinogram->counts[i_theta][i_r][i_t]*NuisanceParams.alpha[i_theta]);//The variance for each view ~=averagecounts in that view
+					Weight[i_theta][i_r][i_t]=1.0/(m_Sinogram->counts->d[i_theta][i_r][i_t]*NuisanceParams.alpha->d[i_theta]);//The variance for each view ~=averagecounts in that view
 #endif
 				}
 	}
@@ -786,17 +795,17 @@ void SOCEngine::execute()
       {
 
         // checksum+=Y_Est[i][j][k];
-        ErrorSino[i_theta][i_r][i_t] = m_Sinogram->counts[i_theta][i_r][i_t] - Y_Est[i_theta][i_r][i_t] - NuisanceParams.mu[i_theta];
+        ErrorSino[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - Y_Est[i_theta][i_r][i_t] - NuisanceParams.mu->d[i_theta];
         //	if(fabs(ErrorSino[i_theta][i_r][i_t]) > 20000)
         //		printf("%d %d %d %lf %lf %lf\n",i_theta,i_r,i_t,ErrorSino[i_theta][i_r][i_t],Weight[i_theta][i_r][i_t],Y_Est[i_theta][i_r][i_t]);
 
 #ifndef NOISE_MODEL
-        if(m_Sinogram->counts[i_theta][i_r][i_t] != 0)
+        if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
         {
 #ifdef BRIGHT_FIELD
-          Weight[i_theta][i_r][i_t] = m_Sinogram->counts[i_theta][i_r][i_t];
+          Weight[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
 #else
-          Weight[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts[i_theta][i_r][i_t];
+          Weight[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
 #endif //bright field check
         }
         else Weight[i_theta][i_r][i_t] = 0;
@@ -807,7 +816,7 @@ void SOCEngine::execute()
         //	fwrite(&ErrorSino[i_theta][i_r][i_t],sizeof(DATA_TYPE),1,Fp1);
 //#endif
 #ifdef FORWARD_PROJECT_MODE
-        temp=Y_Est[i_theta][i_r][i_t]/NuisanceParams.I_0[i_theta];
+        temp=Y_Est[i_theta][i_r][i_t]/NuisanceParams.I_0->d[i_theta];
         fwrite(&temp,sizeof(DATA_TYPE),1,Fp6);
 #endif
         checksum += Weight[i_theta][i_r][i_t];
@@ -914,7 +923,7 @@ void SOCEngine::execute()
                     if(i + p >= 0 && i + p < m_Geometry->N_y) if(j_new + q >= 0 && j_new + q < m_Geometry->N_z) if(k_new + r >= 0
                         && k_new + r < m_Geometry->N_x)
                     {
-                      NEIGHBORHOOD[p + 1][q + 1][r + 1] = m_Geometry->Object[q + j_new][r + k_new][p + i];
+                      NEIGHBORHOOD[p + 1][q + 1][r + 1] = m_Geometry->Object->d[q + j_new][r + k_new][p + i];
                       BOUNDARYFLAG[p + 1][q + 1][r + 1] = 1;
                     }
                     else
@@ -933,7 +942,7 @@ void SOCEngine::execute()
                 tempindex_x = mod(r+k_new,m_Geometry->N_x);
                 tempindex_y =mod(p+i,m_Geometry->N_y);
                 tempindex_z = mod(q+j_new,m_Geometry->N_z);
-                NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object[tempindex_z][tempindex_x][tempindex_y];
+                NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object->d[tempindex_z][tempindex_x][tempindex_y];
                 BOUNDARYFLAG[p+1][q+1][r+1]=1;
               }
 
@@ -944,7 +953,7 @@ void SOCEngine::execute()
               if(i == 0 && j == 31 && k == 31)
               {
                 printf("***************************\n");
-                printf("Geom %lf\n", m_Geometry->Object[i][31][31]);
+                printf("Geom %lf\n", m_Geometry->Object->d[i][31][31]);
                 for (int p = 0; p <= 2; p++)
                 {
                   for (int q = 0; q <= 2; q++)
@@ -959,7 +968,7 @@ void SOCEngine::execute()
 #endif
               //Compute theta1 and theta2
 
-              V = m_Geometry->Object[j_new][k_new][i]; //Store the present value of the voxel
+              V = m_Geometry->Object->d[j_new][k_new][i]; //Store the present value of the voxel
               THETA1 = 0.0;
               THETA2 = 0.0;
 
@@ -1002,10 +1011,10 @@ void SOCEngine::execute()
                    ProfileThickness=0;
                    }*/
 
-                  THETA2 += ((NuisanceParams.I_0[i_theta] * NuisanceParams.I_0[i_theta])
+                  THETA2 += ((NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta])
                       * (VoxelLineResponse[i].values[VoxelLineAccessCounter] * VoxelLineResponse[i].values[VoxelLineAccessCounter]) * (TempMemBlock->values[q])
                       * (TempMemBlock->values[q]) * Weight[i_theta][i_r][i_t]);
-                  THETA1 += NuisanceParams.I_0[i_theta] * ErrorSino[i_theta][i_r][i_t] * (TempMemBlock->values[q])
+                  THETA1 += NuisanceParams.I_0->d[i_theta] * ErrorSino[i_theta][i_r][i_t] * (TempMemBlock->values[q])
                       * (VoxelLineResponse[i].values[VoxelLineAccessCounter]) * Weight[i_theta][i_r][i_t];
                   VoxelLineAccessCounter++;
                 }
@@ -1059,14 +1068,14 @@ void SOCEngine::execute()
               }
 
               //TODO Print appropriate error messages for other values of error code
-              m_Geometry->Object[j_new][k_new][i] = UpdatedVoxelValue;
+              m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
 
 #ifdef ROI
               if(Mask[j_new][k_new] == 1)
               {
 
-                AverageUpdate += fabs(m_Geometry->Object[j_new][k_new][i] - V);
-                AverageMagnitudeOfRecon += fabs(m_Geometry->Object[j_new][k_new][i]);
+                AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+                AverageMagnitudeOfRecon += fabs(m_Geometry->Object->d[j_new][k_new][i]);
               }
 #endif
 
@@ -1097,8 +1106,8 @@ void SOCEngine::execute()
                    ProfileThickness=0;
                    }*/
 
-                  ErrorSino[i_theta][i_r][i_t] -= (NuisanceParams.I_0[i_theta]
-                      * (TempMemBlock->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object[j_new][k_new][i] - V)));
+                  ErrorSino[i_theta][i_r][i_t] -= (NuisanceParams.I_0->d[i_theta]
+                      * (TempMemBlock->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
                   VoxelLineAccessCounter++;
                 }
               }
@@ -1171,7 +1180,7 @@ void SOCEngine::execute()
         //		for (j=0; j < Geometry->N_z; j++)
         //			for (k=0; k < Geometry->N_x; k++)
         TempPointer = m_Geometry->Object;
-        NumOfBytesWritten=fwrite(&(m_Geometry->Object[0][0][0]), sizeof(DATA_TYPE),m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z, Fp3);
+        NumOfBytesWritten=fwrite(&(m_Geometry->Object->d[0][0][0]), sizeof(DATA_TYPE),m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z, Fp3);
         printf("%d\n",NumOfBytesWritten);
 
         fclose(Fp3);
@@ -1217,7 +1226,7 @@ void SOCEngine::execute()
               VoxelLineAccessCounter = 0;
               for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
               {
-                Y_Est[i_theta][i_r][i_t] += ((TempCol[j][k]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object[j][k][i]));
+                Y_Est[i_theta][i_r][i_t] += ((TempCol[j][k]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object->d[j][k][i]));
               }
             }
 
@@ -1243,12 +1252,12 @@ void SOCEngine::execute()
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
 
-          numerator_sum += (m_Sinogram->counts[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
+          numerator_sum += (m_Sinogram->counts->d[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
           denominator_sum += (Weight[i_theta][i_r][i_t]);
 
           a += (Y_Est[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
-          b += (Y_Est[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t] * m_Sinogram->counts[i_theta][i_r][i_t]);
-          c += (m_Sinogram->counts[i_theta][i_r][i_t] * m_Sinogram->counts[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
+          b += (Y_Est[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t] * m_Sinogram->counts->d[i_theta][i_r][i_t]);
+          c += (m_Sinogram->counts->d[i_theta][i_r][i_t] * m_Sinogram->counts->d[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
           d += (Y_Est[i_theta][i_r][i_t] * Y_Est[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
 
         }
@@ -1270,7 +1279,7 @@ void SOCEngine::execute()
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
           a += ((Y_Est[i_theta][i_r][i_t] - d2[i_theta]) * Weight[i_theta][i_r][i_t] * Y_Est[i_theta][i_r][i_t]);
-          b -= ((m_Sinogram->counts[i_theta][i_r][i_t] - d1[i_theta]) * Weight[i_theta][i_r][i_t] * Y_Est[i_theta][i_r][i_t]);
+          b -= ((m_Sinogram->counts->d[i_theta][i_r][i_t] - d1[i_theta]) * Weight[i_theta][i_r][i_t] * Y_Est[i_theta][i_r][i_t]);
         }
       }
       QuadraticParameters[i_theta][0] = a;
@@ -1287,10 +1296,10 @@ void SOCEngine::execute()
     sum = 0;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      sum += (Qk_cost[i_theta][0] * NuisanceParams.I_0[i_theta] * NuisanceParams.I_0[i_theta]
-          + 2 * Qk_cost[i_theta][1] * NuisanceParams.I_0[i_theta] * NuisanceParams.mu[i_theta]
-          + NuisanceParams.mu[i_theta] * NuisanceParams.mu[i_theta] * Qk_cost[i_theta][2]
-          - 2 * (bk_cost[i_theta][0] * NuisanceParams.I_0[i_theta] + NuisanceParams.mu[i_theta] * bk_cost[i_theta][1]) + ck_cost[i_theta]); //evaluating the cost function
+      sum += (Qk_cost[i_theta][0] * NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta]
+          + 2 * Qk_cost[i_theta][1] * NuisanceParams.I_0->d[i_theta] * NuisanceParams.mu->d[i_theta]
+          + NuisanceParams.mu->d[i_theta] * NuisanceParams.mu->d[i_theta] * Qk_cost[i_theta][2]
+          - 2 * (bk_cost[i_theta][0] * NuisanceParams.I_0->d[i_theta] + NuisanceParams.mu->d[i_theta] * bk_cost[i_theta][1]) + ck_cost[i_theta]); //evaluating the cost function
     }
     sum /= 2;
     printf("The value of the data match error prior to updating the I and mu =%lf\n", sum);
@@ -1311,9 +1320,9 @@ void SOCEngine::execute()
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
 
-      NuisanceParams.I_0[i_theta] = (-1 * LagrangeMultiplier - Qk_cost[i_theta][1] * d1[i_theta] + bk_cost[i_theta][0])
+      NuisanceParams.I_0->d[i_theta] = (-1 * LagrangeMultiplier - Qk_cost[i_theta][1] * d1[i_theta] + bk_cost[i_theta][0])
           / (Qk_cost[i_theta][0] - Qk_cost[i_theta][1] * d2[i_theta]);
-      NuisanceParams.mu[i_theta] = d1[i_theta] - d2[i_theta] * NuisanceParams.I_0[i_theta]; //some function of I_0[i_theta]
+      NuisanceParams.mu->d[i_theta] = d1[i_theta] - d2[i_theta] * NuisanceParams.I_0->d[i_theta]; //some function of I_0[i_theta]
     }
 
 #endif //Type of constraing Geometric or arithmetic
@@ -1321,7 +1330,7 @@ void SOCEngine::execute()
 
     /*sum=0;
      for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
-     sum+=(log(NuisanceParams.I_0[i_theta]));
+     sum+=(log(NuisanceParams.I_0->d[i_theta]));
      sum/=Sinogram->N_theta;
      temp=exp(sum) - Sinogram->TargetGain;
 
@@ -1332,10 +1341,10 @@ void SOCEngine::execute()
     sum = 0;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      sum += (Qk_cost[i_theta][0] * NuisanceParams.I_0[i_theta] * NuisanceParams.I_0[i_theta]
-          + 2 * Qk_cost[i_theta][1] * NuisanceParams.I_0[i_theta] * NuisanceParams.mu[i_theta]
-          + NuisanceParams.mu[i_theta] * NuisanceParams.mu[i_theta] * Qk_cost[i_theta][2]
-          - 2 * (bk_cost[i_theta][0] * NuisanceParams.I_0[i_theta] + NuisanceParams.mu[i_theta] * bk_cost[i_theta][1]) + ck_cost[i_theta]); //evaluating the cost function
+      sum += (Qk_cost[i_theta][0] * NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta]
+          + 2 * Qk_cost[i_theta][1] * NuisanceParams.I_0->d[i_theta] * NuisanceParams.mu->d[i_theta]
+          + NuisanceParams.mu->d[i_theta] * NuisanceParams.mu->d[i_theta] * Qk_cost[i_theta][2]
+          - 2 * (bk_cost[i_theta][0] * NuisanceParams.I_0->d[i_theta] + NuisanceParams.mu->d[i_theta] * bk_cost[i_theta][1]) + ck_cost[i_theta]); //evaluating the cost function
     }
     sum /= 2;
 
@@ -1350,8 +1359,8 @@ void SOCEngine::execute()
       {
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
-          ErrorSino[i_theta][i_r][i_t] = m_Sinogram->counts[i_theta][i_r][i_t] - NuisanceParams.mu[i_theta]
-              - (NuisanceParams.I_0[i_theta] * Y_Est[i_theta][i_r][i_t]);
+          ErrorSino[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - NuisanceParams.mu->d[i_theta]
+              - (NuisanceParams.I_0->d[i_theta] * Y_Est[i_theta][i_r][i_t]);
         }
       }
     }
@@ -1361,12 +1370,12 @@ void SOCEngine::execute()
      printf("Offsets\n");
      for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
      {
-     printf("%lf\n",NuisanceParams.mu[i_theta]);
+     printf("%lf\n",NuisanceParams.mu->d[i_theta]);
      }
      printf("Gain\n");
      for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
      {
-     printf("%lf\n",NuisanceParams.I_0[i_theta]);
+     printf("%lf\n",NuisanceParams.I_0->d[i_theta]);
      }*/
 
 #ifdef COST_CALCULATE
@@ -1387,12 +1396,12 @@ void SOCEngine::execute()
     printf("Offsets\n");
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      printf("%lf\n", NuisanceParams.mu[i_theta]);
+      printf("%lf\n", NuisanceParams.mu->d[i_theta]);
     }
     printf("Gain\n");
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      printf("%lf\n", NuisanceParams.I_0[i_theta]);
+      printf("%lf\n", NuisanceParams.I_0->d[i_theta]);
     }
 
 #ifdef NOISE_MODEL
@@ -1405,12 +1414,12 @@ void SOCEngine::execute()
       sum+=(ErrorSino[i_theta][i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
       sum/=(m_Sinogram->N_r*m_Sinogram->N_t);
 
-		NuisanceParams.alpha[i_theta]=sum;
+		NuisanceParams.alpha->d[i_theta]=sum;
 
       for(i_r=0; i_r < m_Sinogram->N_r; i_r++)
       for(i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       if(sum != 0)
-		  Weight[i_theta][i_r][i_t]/=NuisanceParams.alpha[i_theta];
+		  Weight[i_theta][i_r][i_t]/=NuisanceParams.alpha->d[i_theta];
 
     }
 
@@ -1439,8 +1448,8 @@ void SOCEngine::execute()
     printf("Offsets\n");
     for(uint16_t i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      printf("%lf\n",NuisanceParams.mu[i_theta]);
-      fwrite(&NuisanceParams.mu[i_theta],sizeof(DATA_TYPE),1,Fp5);
+      printf("%lf\n",NuisanceParams.mu->d[i_theta]);
+      fwrite(&NuisanceParams.mu->d[i_theta],sizeof(DATA_TYPE),1,Fp5);
     }
     fclose(Fp5);
   }
@@ -1473,8 +1482,8 @@ void SOCEngine::execute()
 	printf("Gain\n");
 	for(uint16_t i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
 	{
-		printf("%lf\n",NuisanceParams.I_0[i_theta]);
-		fwrite(&NuisanceParams.I_0[i_theta],sizeof(DATA_TYPE),1,Fp4);
+		printf("%lf\n",NuisanceParams.I_0->d[i_theta]);
+		fwrite(&NuisanceParams.I_0->d[i_theta],sizeof(DATA_TYPE),1,Fp4);
 	}
 	fclose(Fp4);
 	printf("Number of costs recorded %d\n",cost_counter);
@@ -1495,8 +1504,8 @@ void SOCEngine::execute()
       updateProgressAndMessage("NuisanceParams ", 50);
       for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
       {
-        printf("%lf\n", NuisanceParams.alpha[i_theta]);
-        fwrite(&(NuisanceParams.alpha[i_theta]), sizeof(DATA_TYPE), 1, Fp7);
+        printf("%lf\n", NuisanceParams.alpha->d[i_theta]);
+        fwrite(&(NuisanceParams.alpha->d[i_theta]), sizeof(DATA_TYPE), 1, Fp7);
       }
       fclose(Fp7);
     }
@@ -1524,8 +1533,8 @@ void SOCEngine::execute()
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-        Final_Sinogram[i_theta][i_r][i_t] *= NuisanceParams.I_0[i_theta];
-        Final_Sinogram[i_theta][i_r][i_t] += NuisanceParams.mu[i_theta];
+        Final_Sinogram[i_theta][i_r][i_t] *= NuisanceParams.I_0->d[i_theta];
+        Final_Sinogram[i_theta][i_r][i_t] += NuisanceParams.mu->d[i_theta];
         fwrite(&Final_Sinogram[i_theta][i_r][i_t], sizeof(DATA_TYPE), 1, Fp1);
       }
     }
@@ -1590,6 +1599,7 @@ void SOCEngine::execute()
 
 
 	setErrorCondition(0);
+	std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds()-totalTime)/1000 << std::endl;
 	return;
 }
 
@@ -1598,8 +1608,8 @@ void SOCEngine::execute()
 // -----------------------------------------------------------------------------
 void SOCEngine::cleanupMemory()
 {
-  if (NULL != m_Geometry->Object) {free_3D((void***)(m_Geometry->Object)); m_Geometry->Object = NULL;}
-  if (NULL != m_Sinogram->counts) {free_3D((void***)(m_Sinogram->counts)); m_Sinogram->counts = NULL;}
+//  if (NULL != m_Geometry->Object) {free_3D((void***)(m_Geometry->Object)); m_Geometry->Object = NULL;}
+//  if (NULL != m_Sinogram->counts) {free_3D((void***)(m_Sinogram->counts)); m_Sinogram->counts = NULL;}
   if (NULL != cosine) {free((void*)(cosine)); cosine = NULL;}
   if (NULL != sine) {free((void*)(sine)); sine = NULL;}
   if (NULL != QuadraticParameters) {free_img((void**)(QuadraticParameters)); QuadraticParameters = NULL;}
@@ -1612,9 +1622,9 @@ void SOCEngine::cleanupMemory()
 
   if (m_Sinogram->InitialGain != NULL) {free(m_Sinogram->InitialGain); m_Sinogram->InitialGain = NULL;}
   if (m_Sinogram->InitialOffset != NULL) {free(m_Sinogram->InitialOffset); m_Sinogram->InitialOffset = NULL;}
-  if (m_NuisanceParams->I_0 != NULL) {free(m_NuisanceParams->I_0); m_NuisanceParams->I_0 = NULL;}
-  if (m_NuisanceParams->mu != NULL) {free(m_NuisanceParams->mu); m_NuisanceParams->mu = NULL;}
-  if (m_NuisanceParams->alpha != NULL) {free(m_NuisanceParams->alpha); m_NuisanceParams->alpha = NULL;}
+//  if (m_NuisanceParams->I_0 != NULL) {free(m_NuisanceParams->I_0); m_NuisanceParams->I_0 = NULL;}
+//  if (m_NuisanceParams->mu != NULL) {free(m_NuisanceParams->mu); m_NuisanceParams->mu = NULL;}
+//  if (m_NuisanceParams->alpha != NULL) {free(m_NuisanceParams->alpha); m_NuisanceParams->alpha = NULL;}
 }
 
 
@@ -1815,7 +1825,7 @@ DATA_TYPE*** SOCEngine::forwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE**
 								f2 = 0;
 							}
 
-							Y_Est[i_theta][i_r][i_t]+=(f1*f2*m_Geometry->Object[j][k][i]);
+							Y_Est[i_theta][i_r][i_t]+=(f1*f2*m_Geometry->Object->d[j][k][i]);
 
 						}
 					}
@@ -1903,20 +1913,20 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 			{
 
 				if(k+1 <  m_Geometry->N_y)
-					temp += FILTER[2][1][1]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j][k+1]),MRF_P);
+					temp += FILTER[2][1][1]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j][k+1]),MRF_P);
 
 
 				if(j+1 < m_Geometry->N_x)
 				{
 					if(k-1 >= 0)
-						temp += FILTER[0][1][2]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j+1][k-1]),MRF_P);
+						temp += FILTER[0][1][2]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k-1]),MRF_P);
 
 
-					temp += FILTER[1][1][2]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j+1][k]),MRF_P);
+					temp += FILTER[1][1][2]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k]),MRF_P);
 
 
 					if(k+1 < m_Geometry->N_y)
-						temp += FILTER[2][1][2]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j+1][k+1]),MRF_P);
+						temp += FILTER[2][1][2]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k+1]),MRF_P);
 
 				}
 
@@ -1924,38 +1934,38 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 				{
 
 					if(j-1 >= 0)
-						temp += FILTER[1][2][0]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j-1][k]),MRF_P);
+						temp += FILTER[1][2][0]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k]),MRF_P);
 
-					temp += FILTER[1][2][1]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j][k]),MRF_P);
+					temp += FILTER[1][2][1]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k]),MRF_P);
 
 					if(j+1 < m_Geometry->N_x)
-						temp += FILTER[1][2][2]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j+1][k]),MRF_P);
+						temp += FILTER[1][2][2]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k]),MRF_P);
 
 
 					if(j-1 >= 0)
 					{
 						if(k-1 >= 0)
-							temp += FILTER[0][2][0]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j-1][k-1]),MRF_P);
+							temp += FILTER[0][2][0]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k-1]),MRF_P);
 
 						if(k+1 < m_Geometry->N_y)
-							temp += FILTER[2][2][0]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j-1][k+1]),MRF_P);
+							temp += FILTER[2][2][0]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k+1]),MRF_P);
 
 					}
 
 					if(k-1 >= 0)
-						temp += FILTER[0][2][1]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j][k-1]),MRF_P);
+						temp += FILTER[0][2][1]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k-1]),MRF_P);
 
 					if(j+1 < m_Geometry->N_x)
 					{
 						if(k-1 >= 0)
-							temp += FILTER[0][2][2]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j+1][k-1]),MRF_P);
+							temp += FILTER[0][2][2]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k-1]),MRF_P);
 
 						if(k+1 < m_Geometry->N_y)
-							temp+= FILTER[2][2][2]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j+1][k+1]),MRF_P);
+							temp+= FILTER[2][2][2]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k+1]),MRF_P);
 					}
 
 					if(k+1 < m_Geometry->N_y)
-						temp+= FILTER[2][2][1]*pow(fabs(m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j][k+1]),MRF_P);
+						temp+= FILTER[2][2][1]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k+1]),MRF_P);
 				}
 			}
 		cost+=(temp/(MRF_P*SIGMA_X_P));
@@ -1967,7 +1977,7 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 
 				if(k+1 <  m_Geometry->N_y)
 				{
-					delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j][k+1];
+					delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j][k+1];
 					temp += FILTER[2][1][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 				}
 
@@ -1977,17 +1987,17 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 				{
 					if(k-1 >= 0)
 					{
-						delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j+1][k-1];
+						delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k-1];
 						temp += FILTER[0][1][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 					}
 
-					delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j+1][k];
+					delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k];
 					temp += FILTER[1][1][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 
 
 					if(k+1 < m_Geometry->N_y)
 					{
-						delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i][j+1][k+1];
+						delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k+1];
 						temp += FILTER[2][1][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 					}
 
@@ -1998,16 +2008,16 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 
 					if(j-1 >= 0)
 					{
-						delta = m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j-1][k];
+						delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k];
 						temp += FILTER[1][2][0]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 					}
 
-					delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j][k];
+					delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k];
 					temp += FILTER[1][2][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 
 					if(j+1 < m_Geometry->N_x)
 					{
-						delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j+1][k];
+						delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k];
 						temp += FILTER[1][2][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 					}
 
@@ -2016,13 +2026,13 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 					{
 						if(k-1 >= 0)
 						{
-							delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j-1][k-1];
+							delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k-1];
 							temp += FILTER[0][2][0]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 						}
 
 						if(k+1 < m_Geometry->N_y)
 						{
-							delta=m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j-1][k+1];
+							delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k+1];
 							temp += FILTER[2][2][0]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 						}
 
@@ -2030,7 +2040,7 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 
 					if(k-1 >= 0)
 					{
-						delta = m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j][k-1];
+						delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k-1];
 						temp += FILTER[0][2][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 					}
 
@@ -2038,20 +2048,20 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 					{
 						if(k-1 >= 0)
 						{
-							delta = m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j+1][k-1];
+							delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k-1];
 							temp += FILTER[0][2][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 						}
 
 						if(k+1 < m_Geometry->N_y)
 						{
-							delta = m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j+1][k+1];
+							delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k+1];
 							temp+= FILTER[2][2][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 						}
 					}
 
 					if(k+1 < m_Geometry->N_y)
 					{
-						delta = m_Geometry->Object[i][j][k]-m_Geometry->Object[i+1][j][k+1];
+						delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k+1];
 						temp+= FILTER[2][2][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
 					}
 				}
@@ -2485,14 +2495,14 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
        }
 
        if(a == Minimum(a, b))
-       NuisanceParams->I_0[i_theta] = root[0];
+       NuisanceParams->I_0->d[i_theta] = root[0];
        else
        {
-         NuisanceParams->I_0[i_theta] = root[1];
+         NuisanceParams->I_0->d[i_theta] = root[1];
        }
 
        free(root); //freeing the memory holding the roots of the quadratic equation
 
-       NuisanceParams->mu[i_theta] = d1[i_theta] - d2[i_theta]*NuisanceParams->I_0[i_theta];//some function of I_0[i_theta]
+       NuisanceParams->mu->d[i_theta] = d1[i_theta] - d2[i_theta]*NuisanceParams->I_0->d[i_theta];//some function of I_0[i_theta]
      }
 }

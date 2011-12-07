@@ -75,7 +75,7 @@ typedef TomoArray<DATA_TYPE, DATA_TYPE*, 1> RealArrayType;
     uint16_t N_theta;//Number of angles
     DATA_TYPE delta_r;//Distance between successive measurements along x
     DATA_TYPE delta_t;//Distance between successive measurements along y
-    DATA_TYPE*** counts;//The measured images should be stored in this once read from the input file. It will be a Ny X (Nz X Nx)
+    RealVolumeType::Pointer counts;//The measured images should be stored in this once read from the input file. It will be a Ny X (Nz X Nx)
     std::vector<DATA_TYPE> angles;//Holds the angles through which the object is tilted
     DATA_TYPE R0,RMax;
     DATA_TYPE T0,TMax;
@@ -90,7 +90,7 @@ typedef TomoArray<DATA_TYPE, DATA_TYPE*, 1> RealArrayType;
 
   typedef struct
   {
-    DATA_TYPE*** Object;//Holds the volume to be reconstructed
+    RealVolumeType::Pointer Object;//Holds the volume to be reconstructed
     //Computed From User Input
     DATA_TYPE LengthX;//sinogram.N_x * delta_r;
     DATA_TYPE LengthY;//sinogram.N_y * delta_t
@@ -153,9 +153,9 @@ typedef TomoArray<DATA_TYPE, DATA_TYPE*, 1> RealArrayType;
 
   typedef struct
   {
-      DATA_TYPE* I_0; //Scale
-      DATA_TYPE* mu; //Offset
-      DATA_TYPE* alpha;//Noise variance refinement factor
+    RealArrayType::Pointer I_0; //Scale
+    RealArrayType::Pointer mu; //Offset
+    RealArrayType::Pointer alpha;//Noise variance refinement factor
   } ScaleOffsetParams;
 
 
