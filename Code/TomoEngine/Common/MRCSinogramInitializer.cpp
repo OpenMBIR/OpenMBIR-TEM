@@ -35,8 +35,8 @@ void MRCSinogramInitializer::execute()
 
   Sinogram* sinogram = getSinogram();
   TomoInputs* inputs = getInputs();
-  int16_t i,j,k;
-  uint16_t TotalNumMaskedViews;
+ // int16_t i,j,k;
+ // uint16_t TotalNumMaskedViews;
 
   DATA_TYPE sum=0;
 
@@ -56,6 +56,9 @@ void MRCSinogramInitializer::execute()
 
   int voxelMin[3] = {0, 0, 0};
   int voxelMax[3] = {header.nx, header.ny, header.nz-1};
+  inputs->fileXSize = header.nx;
+  inputs->fileYSize = header.ny;
+  inputs->fileZSize = header.nz;
   if (inputs->useSubvolume == true)
   {
      voxelMin[0] = inputs->xStart;
@@ -66,75 +69,85 @@ void MRCSinogramInitializer::execute()
      voxelMax[1] = inputs->yEnd;
      voxelMax[2] = inputs->zEnd;
   }
-
-
   sinogram->N_r = voxelMax[0] - voxelMin[0] + 1;
   sinogram->N_t = voxelMax[1] - voxelMin[1] + 1;
 
-
   sinogram->delta_r = 1.0;
   sinogram->delta_t = 1.0;
+
   FEIHeader* feiHeaders = header.feiHeaders;
   if (feiHeaders != NULL)
   {
     sinogram->delta_r = feiHeaders[0].pixelsize * 1.0e9;
     sinogram->delta_t = feiHeaders[0].pixelsize * 1.0e9;
-
   }
 
-  std::vector<bool> goodViews(header.nz, 1);
-  // Lay down the mask for the views that will be excluded.
-  for(std::vector<uint8_t>::size_type i = 0; i < inputs->ViewMask.size(); ++i)
+  // Clear out the vector as we are going to build it up
+  inputs->goodViews.resize(0,0);
+  int jStart = 0;
+  bool addToGoodView = false;
+  for (int i = voxelMin[2]; i <= voxelMax[2]; ++i )
   {
-    goodViews[inputs->ViewMask[i]] = 0;
-  }
-  int numBadViews = 0;
-  for (int i = voxelMin[2]; i <= voxelMax[2]; ++i)
-  {
-    if(goodViews[i] == 0)
+    addToGoodView = true;
+    for(size_t j = jStart; j < inputs->excludedViews.size(); ++j)
     {
-      numBadViews++;
+      if (inputs->excludedViews[j] == i)
+      {
+        addToGoodView = false;
+      }
     }
-    if (feiHeaders != NULL)
+    if (addToGoodView == true)
     {
-      sinogram->angles.push_back(-feiHeaders[i].a_tilt);
+     // std::cout << "Adding View Index: " << i << " To goodViews vector" << std::endl;
+      inputs->goodViews.push_back(i);
     }
   }
 
+  // The number of views is the size of the vector
+  sinogram->N_theta = inputs->goodViews.size();
 
-  TotalNumMaskedViews = header.nz - numBadViews;
-  sinogram->N_theta = TotalNumMaskedViews;
-
+  // Read the subvolume of the MRC file which may contain extra views
   err = reader->read(inputs->SinoFile, voxelMin, voxelMax);
   if (err < 0)
   {
-  std::cout << "Error Code from Reading: " << err << std::endl;
-  return ;
+    setErrorMessage("Error Code from Reading MRC File");
+    setErrorCondition(err);
+    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+    return;
   }
+  // This data is read as a Z,Y,X array where X is the fastest moving variable and Z is the slowest
   int16_t* data = reinterpret_cast<int16_t*>(reader->getDataPointer());
 
 
 
   //Allocate a 3-D matrix to store the singoram in the form of a N_y X N_theta X N_x  matrix
-  sinogram->counts=(DATA_TYPE***)get_3D(TotalNumMaskedViews,
+  // Here in the actual data, Z is the slowest, then X, then Y (The Fastest) so we
+  // will need to "rotate" the data in the XY plane when copying from the MRC read data into our
+  // own array.
+  sinogram->counts=(DATA_TYPE***)get_3D(sinogram->N_theta,
                                         inputs->xEnd - inputs->xStart+1,
                                         inputs->yEnd - inputs->yStart+1,
                                         sizeof(DATA_TYPE));
-
-  for (k = 0; k < sinogram->N_theta; k++)
+  sinogram->angles.resize(sinogram->N_theta);
+  FEIHeader* fei = NULL;
+  for (uint16_t z = 0; z < sinogram->N_theta; z++)
   {
-    unsigned int view_count = 0;
-
-    for (i = 0; i < sinogram->N_t; i++)
+    int dataZOffset = inputs->goodViews[z] - voxelMin[2];
+    // Copy the value of the tilt angle into the inputs->angles vector
+    if (NULL != header.feiHeaders) {
+      int offset = inputs->goodViews[z];
+      fei = &(header.feiHeaders[offset]);
+      sinogram->angles[z] = fei->a_tilt;
+    }
+   // std::cout << "data_z_index: " << inputs->goodViews[z] << "  dataZOffset: " << dataZOffset << "   counts offset: " << z << std::endl;
+    for (uint16_t y = 0; y < sinogram->N_t; y++)
     {
-      for (j = 0; j < sinogram->N_r; j++)
+      for (uint16_t x = 0; x < sinogram->N_r; x++)
       {
-        //std::cout<<i<<","<<j<<","<<k<<std::endl;
-        //if(Sinogram->ViewMask[k] == 1)
-        sinogram->counts[k][j][i] = data[k * sinogram->N_r * sinogram->N_t + i * sinogram->N_r + j];
+        size_t index = (dataZOffset * sinogram->N_r * sinogram->N_t) + (y * sinogram->N_r) + x;
+        sinogram->counts[z][x][y] = data[index];
       }
     }
-    view_count++;
   }
 
   // Clean up all the memory associated with the MRC Reader
@@ -155,13 +168,17 @@ void MRCSinogramInitializer::execute()
   printf("Size of the Masked Sinogram N_r =%d N_t = %d N_theta=%d\n",sinogram->N_r,sinogram->N_t,sinogram->N_theta);
 
       //check sum calculation
-  for(i=0;i<sinogram->N_theta;i++)
+  for(uint16_t i=0;i<sinogram->N_theta;i++)
   {
-    sum=0;
-    for(j=0;j<sinogram->N_r;j++){
-      for(k=0;k<sinogram->N_t;k++){
-       sum+=sinogram->counts[i][j][k];}}
-    printf("Sinogram Checksum %d: %f\n",i, sum);
+    sum = 0;
+    for (uint16_t j = 0; j < sinogram->N_r; j++)
+    {
+      for (uint16_t k = 0; k < sinogram->N_t; k++)
+      {
+        sum += sinogram->counts[i][j][k];
+      }
+    }
+    printf("Sinogram Checksum %d: %f\n", i, sum);
   }
   //end ofcheck sum
 

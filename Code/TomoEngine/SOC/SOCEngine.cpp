@@ -220,15 +220,15 @@ void SOCEngine::execute()
 	// We are scoping here so the various readers are automatically cleaned up before
 	// the code goes any farther
 	{
-	  TomoFilter::Pointer initializer = TomoFilter::NullPointer();
+	  TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
     std::string extension = MXAFileInfo::extension(m_Inputs->SinoFile);
     if (extension.compare("mrc") == 0 || extension.compare("ali") == 0)
     {
-      initializer = MRCSinogramInitializer::NewTomoFilter();
+      dataReader = MRCSinogramInitializer::NewTomoFilter();
     }
     else if (extension.compare("bin") == 0 )
     {
-      initializer = RawSinogramInitializer::NewTomoFilter();
+      dataReader = RawSinogramInitializer::NewTomoFilter();
     }
     else
     {
@@ -236,14 +236,14 @@ void SOCEngine::execute()
       updateProgressAndMessage("A supported file reader for the input file was not found." , 100);
       return;
     }
-    initializer->setInputs(m_Inputs);
-    initializer->setSinogram(m_Sinogram);
-    initializer->addObserver(this);
-    initializer->execute();
-    if (initializer->getErrorCondition() < 0)
+    dataReader->setInputs(m_Inputs);
+    dataReader->setSinogram(m_Sinogram);
+    dataReader->addObserver(this);
+    dataReader->execute();
+    if (dataReader->getErrorCondition() < 0)
     {
       updateProgressAndMessage("Error reading Input Sinogram Data file", 100);
-      setErrorCondition(initializer->getErrorCondition());
+      setErrorCondition(dataReader->getErrorCondition());
       return;
     }
 	}
@@ -252,55 +252,55 @@ void SOCEngine::execute()
   // Now read or generate the Gains and Offsets data. We are scoping this section
   // so the reader automactically gets cleaned up at this point.
   {
-    TomoFilter::Pointer initializer = TomoFilter::NullPointer();
+    TomoFilter::Pointer gainsOffsetsInitializer = TomoFilter::NullPointer();
     if(m_Inputs->GainsOffsetsFile.empty() == true)
     {
       // Calculate the initial Gains and Offsets
-      initializer = ComputeGainsOffsets::NewTomoFilter();
+      gainsOffsetsInitializer = ComputeGainsOffsets::NewTomoFilter();
     }
     else
     {
-      initializer = GainsOffsetsReader::NewTomoFilter();
+      gainsOffsetsInitializer = GainsOffsetsReader::NewTomoFilter();
     }
 
-    initializer->setSinogram(m_Sinogram);
-    initializer->setInputs(m_Inputs);
-    initializer->addObserver(this);
-    initializer->execute();
+    gainsOffsetsInitializer->setSinogram(m_Sinogram);
+    gainsOffsetsInitializer->setInputs(m_Inputs);
+    gainsOffsetsInitializer->addObserver(this);
+    gainsOffsetsInitializer->execute();
  //   std::cout << "hi" << std::endl;
 
-    if(initializer->getErrorCondition() < 0)
+    if(gainsOffsetsInitializer->getErrorCondition() < 0)
     {
      updateProgressAndMessage("Error initializing Input Gains and Offsets Data file", 100);
-     setErrorCondition(initializer->getErrorCondition());
+     setErrorCondition(gainsOffsetsInitializer->getErrorCondition());
      return;
     }
   }
 
   // Initialize the Geometry data from a rough reconstruction
   {
-    InitialReconstructionInitializer::Pointer initializer = InitialReconstructionInitializer::NullPointer();
+    InitialReconstructionInitializer::Pointer geomInitializer = InitialReconstructionInitializer::NullPointer();
     std::string extension = MXAFileInfo::extension(m_Inputs->InitialReconFile);
     if (m_Inputs->InitialReconFile.empty() == true)
     {
       // This will just initialize all the values to Zero (0)
-      initializer = InitialReconstructionInitializer::New();
+      geomInitializer = InitialReconstructionInitializer::New();
     }
     else if (extension.compare("bin") == 0 )
     {
       // This will read the values from a binary file
-      initializer = InitialReconstructionBinReader::NewInitialReconstructionInitializer();
+      geomInitializer = InitialReconstructionBinReader::NewInitialReconstructionInitializer();
     }
-    initializer->setSinogram(m_Sinogram);
-    initializer->setInputs(m_Inputs);
-    initializer->setGeometry(m_Geometry);
-    initializer->addObserver(this);
-    initializer->execute();
+    geomInitializer->setSinogram(m_Sinogram);
+    geomInitializer->setInputs(m_Inputs);
+    geomInitializer->setGeometry(m_Geometry);
+    geomInitializer->addObserver(this);
+    geomInitializer->execute();
 
-    if(initializer->getErrorCondition() < 0)
+    if(geomInitializer->getErrorCondition() < 0)
     {
       updateProgressAndMessage("Error reading Initial Reconstruction Data from File", 100);
-      setErrorCondition(initializer->getErrorCondition());
+      setErrorCondition(geomInitializer->getErrorCondition());
       return;
     }
   }
@@ -411,10 +411,6 @@ void SOCEngine::execute()
 	d1=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
 	d2=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
 
-
-
-
-
 	//calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram Structure are converted to radians
 	VoxelProfile = (DATA_TYPE**)calculateVoxelProfile(); //Verified with ML
 	//Pre compute sine and cos theta to speed up computations
@@ -441,7 +437,7 @@ void SOCEngine::execute()
 			VisitCount[i][j]=0;
 #endif//Random update
 
-	#ifdef ROI
+#ifdef ROI
 	Mask = (uint8_t **)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
 	EllipseA = m_Geometry->LengthX/2;
 	EllipseB = m_Inputs->LengthZ/2;
@@ -1552,19 +1548,36 @@ void SOCEngine::execute()
   std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
 
 
-	free_img((void**)VoxelProfile);
+
 	//free(AMatrix);
 #ifdef STORE_A_MATRIX
 	multifree(AMatrix,2);
 	//#else
 	//	free((void*)TempCol);
 #endif
+#ifdef RANDOM_ORDER_UPDATES
+	free_img((void**)VisitCount);
+#endif
 
+#ifdef ROI
+	free_img((void**)Mask);
+#endif
+
+	free_img((void**)VoxelProfile);
+	free_3D((void***)DetectorResponse);
+	free_3D((void***)H_t);
+
+	free_3D((void***)Y_Est);
+	free_3D((void***)Final_Sinogram);
 	free_3D((void***)ErrorSino);
 	free_3D((void***)Weight);
 
+	free(Counter);
+	free_img((void**)MicroscopeImage);
+
 #ifdef COST_CALCULATE
 	fclose(Fp2);// writing cost function
+	free(cost);
 #endif
 
 
@@ -1585,13 +1598,23 @@ void SOCEngine::execute()
 // -----------------------------------------------------------------------------
 void SOCEngine::cleanupMemory()
 {
-  free_3D((void***)(m_Geometry->Object));
-  free_3D((void***)(m_Sinogram->counts));
-  if (m_Sinogram->InitialGain != NULL) free(m_Sinogram->InitialGain);
-  if (m_Sinogram->InitialOffset != NULL) free(m_Sinogram->InitialOffset);
-  if (m_NuisanceParams->I_0 != NULL) free(m_NuisanceParams->I_0);
-  if (m_NuisanceParams->mu != NULL) free(m_NuisanceParams->mu);
-  if (m_NuisanceParams->alpha != NULL) free(m_NuisanceParams->alpha);
+  if (NULL != m_Geometry->Object) {free_3D((void***)(m_Geometry->Object)); m_Geometry->Object = NULL;}
+  if (NULL != m_Sinogram->counts) {free_3D((void***)(m_Sinogram->counts)); m_Sinogram->counts = NULL;}
+  if (NULL != cosine) {free((void*)(cosine)); cosine = NULL;}
+  if (NULL != sine) {free((void*)(sine)); sine = NULL;}
+  if (NULL != QuadraticParameters) {free_img((void**)(QuadraticParameters)); QuadraticParameters = NULL;}
+  if (NULL != Qk_cost) {free_img((void**)(Qk_cost)); Qk_cost = NULL;}
+  if (NULL != Qk_cost) {free_img((void**)(Qk_cost)); Qk_cost = NULL;}
+
+  if (NULL != ck_cost) {free((void*)(ck_cost)); ck_cost = NULL;}
+  if (NULL != d1) {free((void*)(d1)); d1 = NULL;}
+  if (NULL != d2) {free((void*)(d2)); d2 = NULL;}
+
+  if (m_Sinogram->InitialGain != NULL) {free(m_Sinogram->InitialGain); m_Sinogram->InitialGain = NULL;}
+  if (m_Sinogram->InitialOffset != NULL) {free(m_Sinogram->InitialOffset); m_Sinogram->InitialOffset = NULL;}
+  if (m_NuisanceParams->I_0 != NULL) {free(m_NuisanceParams->I_0); m_NuisanceParams->I_0 = NULL;}
+  if (m_NuisanceParams->mu != NULL) {free(m_NuisanceParams->mu); m_NuisanceParams->mu = NULL;}
+  if (m_NuisanceParams->alpha != NULL) {free(m_NuisanceParams->alpha); m_NuisanceParams->alpha = NULL;}
 }
 
 

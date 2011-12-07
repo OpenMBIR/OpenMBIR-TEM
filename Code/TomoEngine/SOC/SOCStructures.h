@@ -112,7 +112,7 @@ typedef double DATA_TYPE;
     DATA_TYPE StopThreshold;
 
     std::vector<uint8_t> excludedViews;// Indices of views to exclude from reconstruction
-    std::vector<uint8_t> ViewMask; // Mask of views where 1 means use the view, zero means exclude it
+    std::vector<int> goodViews; // Contains the indices of the views to use for reconstruction
 
     bool useSubvolume;
     uint16_t xStart;
@@ -123,6 +123,10 @@ typedef double DATA_TYPE;
 
     uint16_t zStart;
     uint16_t zEnd;
+
+    uint16_t fileXSize; // Size in voxels of the complete width of the image from the file
+    uint16_t fileYSize; // Size in voxels of the complete height of the image from the file
+    uint16_t fileZSize; // Number of tilts in the series from the file.
 
     DATA_TYPE LengthZ;//This is the sample thickness
     DATA_TYPE delta_xz;//Voxel size in the x-z plane (assuming square shaped voxels in the x-z plane)

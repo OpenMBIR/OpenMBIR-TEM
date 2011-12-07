@@ -160,7 +160,7 @@ void multifree(void* r, int d)
     if(p != NULL)
     {
       next = *p;
-      printf("p: %p  Value of P: 0x%08x  i:  %d   Value of Next: 0x%08x \n", p, *p, i, next);
+     // printf("p: %p  Value of P: 0x%08x  i:  %d   Value of Next: 0x%08x \n", p, *p, i, next);
       free((void*)p);
     }
   }
