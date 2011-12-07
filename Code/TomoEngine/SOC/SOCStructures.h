@@ -37,6 +37,15 @@
 typedef double DATA_TYPE;
 
 #include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/TomoArray.hpp"
+
+typedef TomoArray<int32_t, int32_t***, 3> Int32VolumeType;
+typedef TomoArray<int32_t, int32_t**, 2> Int32ImageType;
+typedef TomoArray<int32_t, int32_t*, 1> Int32ArrayType;
+
+typedef TomoArray<DATA_TYPE, DATA_TYPE***, 3> RealVolumeType;
+typedef TomoArray<DATA_TYPE, DATA_TYPE**, 2> RealImageType;
+typedef TomoArray<DATA_TYPE, DATA_TYPE*, 1> RealArrayType;
 
 
 
@@ -144,9 +153,9 @@ typedef double DATA_TYPE;
 
   typedef struct
   {
-    DATA_TYPE* I_0; //Scale
-    DATA_TYPE* mu; //Offset
-	  DATA_TYPE* alpha;//Noise variance refinement factor
+      DATA_TYPE* I_0; //Scale
+      DATA_TYPE* mu; //Offset
+      DATA_TYPE* alpha;//Noise variance refinement factor
   } ScaleOffsetParams;
 
 
