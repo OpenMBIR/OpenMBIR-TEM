@@ -142,7 +142,7 @@ typedef double DATA_TYPE;
   {
     DATA_TYPE* I_0; //Scale
     DATA_TYPE* mu; //Offset
-	  DATA_TYPE* alpha;//Noise variance refinement factor
+	DATA_TYPE* alpha;//Noise variance refinement factor
   } ScaleOffsetParams;
 
 

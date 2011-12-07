@@ -82,7 +82,7 @@ void InitialReconstructionInitializer::execute()
   input->LengthZ *= Z_STRETCH;
 
 #ifdef EXTEND_OBJECT
-  geometry->LengthX = ((sinogram->N_r * sinogram->delta_r)/cos(max*M_PI/180)) + input->LengthZ*tan(max*M_PI/180) ;
+  geometry->LengthX = 0.6*((sinogram->N_r * sinogram->delta_r)/cos(max*M_PI/180)) + input->LengthZ*tan(max*M_PI/180) ;
 #else
   geometry->LengthX = ((sinogram->N_r * sinogram->delta_r));
 #endif //Extend object endif

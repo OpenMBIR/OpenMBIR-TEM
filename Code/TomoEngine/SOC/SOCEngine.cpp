@@ -1014,11 +1014,11 @@ void SOCEngine::execute()
 	//Also compute weights of the diagonal covariance matrix
 
 #ifdef NOISE_MODEL
-	for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
+	for (int16_t i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
 	{
 		NuisanceParams.alpha[i_theta]=1;//Initialize the refinement parameters to 1
-		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
-			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
+		for(int16_t i_r = 0; i_r < m_Sinogram->N_r;i_r++)
+			for(int16_t i_t = 0;i_t < m_Sinogram->N_t;i_t++)
 				if(sum != 0)
 				{
 #ifdef BRIGHT_FIELD
@@ -1319,7 +1319,7 @@ void SOCEngine::execute()
               {
 
                 AverageUpdate += fabs(m_Geometry->Object[j_new][k_new][i] - V);
-                AverageMagnitudeOfRecon += fabs(m_Geometry->Object[j_new][k_new][i]);
+                AverageMagnitudeOfRecon += fabs(V);//computing the percentage update =(Change in mag/Initial magnitude)
               }
 #endif
 
@@ -1400,7 +1400,8 @@ void SOCEngine::execute()
         if((AverageUpdate / AverageMagnitudeOfRecon) < m_Inputs->StopThreshold)
         {
           printf("This is the terminating point %d\n", Iter);
-          break;
+			m_Inputs->StopThreshold*=THRESHOLD_REDUCTION_FACTOR;//Reducing the thresold for subsequent iterations
+			break;
         }
       }
 #endif//ROI end
@@ -1650,19 +1651,19 @@ void SOCEngine::execute()
 
 #ifdef NOISE_MODEL
     //Updating the Weights
-    for( i_theta=0;i_theta < m_Sinogram->N_theta;i_theta++)
+    for(uint16_t i_theta=0;i_theta < m_Sinogram->N_theta;i_theta++)
     {
       sum=0;
-      for(i_r=0; i_r < m_Sinogram->N_r; i_r++)
-      for(i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      for(uint16_t i_r=0; i_r < m_Sinogram->N_r; i_r++)
+      for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       sum+=(ErrorSino[i_theta][i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
       sum/=(m_Sinogram->N_r*m_Sinogram->N_t);
 
 		NuisanceParams.alpha[i_theta]=sum;
 
-      for(i_r=0; i_r < m_Sinogram->N_r; i_r++)
-      for(i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-      if(sum != 0)
+      for(uint16_t i_r=0; i_r < m_Sinogram->N_r; i_r++)
+      for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      if(NuisanceParams.alpha[i_theta] != 0)
 		  Weight[i_theta][i_r][i_t]/=NuisanceParams.alpha[i_theta];
 
     }

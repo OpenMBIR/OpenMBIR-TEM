@@ -33,7 +33,7 @@
 
 #include <string>
 
-#define EXTEND_OBJECT
+//#define EXTEND_OBJECT
 
 #define X_STRETCH 1
 #define Z_STRETCH 2
@@ -47,6 +47,7 @@
 #define AREA_WEIGHTED
 #define ROI //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
 #define STOPPING_THRESHOLD 0.009
+#define THRESHOLD_REDUCTION_FACTOR .5 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
 //#define SURROGATE_FUNCTION
 //#define QGGMRF
 //#define DISTANCE_DRIVEN
@@ -57,7 +58,7 @@
 #define DETECTOR_RESPONSE_BINS 64
 #define JOINT_ESTIMATION
 //#define GEOMETRIC_MEAN_CONSTRAINT
-//#define NOISE_MODEL
+#define NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
 //#define CIRCULAR_BOUNDARY_CONDITION
 //#define DEBUG_CONSTRAINT_OPT
