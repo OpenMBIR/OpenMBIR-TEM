@@ -102,7 +102,7 @@ class SOCEngine : public AbstractPipeline, public Observer
      * @param H_t
      * @return
      */
-    DATA_TYPE*** forwardProject(DATA_TYPE*** DetectorResponse, DATA_TYPE*** H_t);
+    DATA_TYPE*** forwardProject(RealVolumeType::Pointer DetectorResponse, DATA_TYPE*** H_t);
 
     /**
      * @brief
@@ -124,7 +124,7 @@ class SOCEngine : public AbstractPipeline, public Observer
     /**
      * @brief
      */
-    void* calculateVoxelProfile();
+    RealImageType::Pointer calculateVoxelProfile();
 
     /**
      * @brief
@@ -150,7 +150,7 @@ class SOCEngine : public AbstractPipeline, public Observer
      * @param slice
      * @param DetectorResponse
      */
-    void* calculateAMatrixColumnPartial(uint16_t row, uint16_t col, uint16_t slice, DATA_TYPE*** DetectorResponse);
+    void* calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, RealVolumeType::Pointer DetectorResponse);
 
     /**
      * @brief
@@ -158,7 +158,7 @@ class SOCEngine : public AbstractPipeline, public Observer
      * @param col
      * @param VoxelProfile
      */
-    void* detectorResponse(uint16_t row, uint16_t col, DATA_TYPE** VoxelProfile);
+    RealVolumeType::Pointer detectorResponse(uint16_t row, uint16_t col, RealImageType::Pointer VoxelProfile);
 
     /**
      * @brief

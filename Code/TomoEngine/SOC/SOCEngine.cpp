@@ -169,8 +169,8 @@ void SOCEngine::execute()
 	DATA_TYPE checksum = 0,temp;
 	DATA_TYPE sum1,sum2;
 	DATA_TYPE* cost;
-	DATA_TYPE** VoxelProfile;
-	DATA_TYPE*** DetectorResponse;
+	RealImageType::Pointer VoxelProfile;
+	RealVolumeType::Pointer DetectorResponse;
 	DATA_TYPE*** H_t;
 	DATA_TYPE ProfileCenterT;
 
@@ -421,14 +421,14 @@ void SOCEngine::execute()
 	d2=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
 
 	//calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram Structure are converted to radians
-	VoxelProfile = (DATA_TYPE**)calculateVoxelProfile(); //Verified with ML
+	VoxelProfile = calculateVoxelProfile(); //Verified with ML
 	//Pre compute sine and cos theta to speed up computations
 	calculateSinCos();
 	//Initialize the e-beam
 	initializeBeamProfile(); //verified with ML
 
 	//calculate sine and cosine of all angles and store in the global arrays sine and cosine
-	DetectorResponse = (DATA_TYPE***)detectorResponse(0,0,VoxelProfile);//System response
+	DetectorResponse = detectorResponse(0,0,VoxelProfile);//System response
 	if (NULL == DetectorResponse)
 	{
 	  std::cout << "Error Calling function detectorResponse in file " << __FILE__ << "(" << __LINE__ << ")" << std::endl;
@@ -1572,8 +1572,8 @@ void SOCEngine::execute()
 	free_img((void**)Mask);
 #endif
 
-	free_img((void**)VoxelProfile);
-	free_3D((void***)DetectorResponse);
+//	free_img((void**)VoxelProfile);
+//	free_3D((void***)DetectorResponse);
 	free_3D((void***)H_t);
 
 	free_3D((void***)Y_Est);
@@ -1665,12 +1665,18 @@ void SOCEngine::minMax(DATA_TYPE *low,DATA_TYPE *high)
 }
 
 
-
-void* SOCEngine::calculateVoxelProfile()
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+RealImageType::Pointer SOCEngine::calculateVoxelProfile()
 {
 	DATA_TYPE angle,MaxValLineIntegral;
 	DATA_TYPE temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
-	DATA_TYPE** VoxProfile = (DATA_TYPE**)multialloc(sizeof(DATA_TYPE),2,m_Sinogram->N_theta,PROFILE_RESOLUTION);
+//	DATA_TYPE** VoxProfile = (DATA_TYPE**)multialloc(sizeof(DATA_TYPE),2,m_Sinogram->N_theta,PROFILE_RESOLUTION);
+	int dims[2] = {m_Sinogram->N_theta,PROFILE_RESOLUTION};
+	RealImageType::Pointer VoxProfile = RealImageType::New(dims);
+	VoxProfile->setName("VoxelProfile");
+
 	DATA_TYPE checksum=0;
 	uint16_t i,j;
 	FILE* Fp = NULL;
@@ -1711,16 +1717,16 @@ void* SOCEngine::calculateVoxelProfile()
 		{
 			t = 2.0*j / PROFILE_RESOLUTION;//2 is the normalized length of the profile (basically equl to 2*delta_xz)
 			if(t <= LeftCorner || t >= RightCorner)
-				VoxProfile[i][j] = 0;
+				VoxProfile->d[i][j] = 0;
 			else if(t > RightNear)
-				VoxProfile[i][j] = MaxValLineIntegral*(RightCorner-t)/(RightCorner-RightNear);
+				VoxProfile->d[i][j] = MaxValLineIntegral*(RightCorner-t)/(RightCorner-RightNear);
 			else if(t >= LeftNear)
-				VoxProfile[i][j] = MaxValLineIntegral;
+				VoxProfile->d[i][j] = MaxValLineIntegral;
 			else
-				VoxProfile[i][j] = MaxValLineIntegral*(t-LeftCorner)/(LeftNear-LeftCorner);
+				VoxProfile->d[i][j] = MaxValLineIntegral*(t-LeftCorner)/(LeftNear-LeftCorner);
 
-			fwrite(&VoxProfile[i][j],sizeof(DATA_TYPE),1,Fp);
-			checksum+=VoxProfile[i][j];
+			fwrite(&(VoxProfile->d[i][j]),sizeof(DATA_TYPE),1,Fp);
+			checksum+=VoxProfile->d[i][j];
 		}
 
 	}
@@ -1733,7 +1739,7 @@ void* SOCEngine::calculateVoxelProfile()
 /*******************************************************************
  Forwards Projects the Object and stores it in a 3-D matrix
  ********************************************************************/
-DATA_TYPE*** SOCEngine::forwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE*** H_t)
+DATA_TYPE*** SOCEngine::forwardProject(RealVolumeType::Pointer DetectorResponse, DATA_TYPE*** H_t)
 {
   updateProgressAndMessage("Executing Forward Projection", 50);
 
@@ -1799,7 +1805,7 @@ DATA_TYPE*** SOCEngine::forwardProject(DATA_TYPE*** DetectorResponse,DATA_TYPE**
 						{
 							w1 = delta_r - index_delta_r*OffsetR;
 							w2 = (index_delta_r+1)*OffsetR - delta_r;
-							f1 = (w2/OffsetR)*DetectorResponse[0][i_theta][index_delta_r] + (w1/OffsetR)*DetectorResponse[0][i_theta][index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
+							f1 = (w2/OffsetR)*DetectorResponse->d[0][i_theta][index_delta_r] + (w1/OffsetR)*DetectorResponse->d[0][i_theta][index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
 						}
 						else
 						{
@@ -2086,7 +2092,10 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 	return cost;
 }
 
-void* SOCEngine::detectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelProfile)
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+RealVolumeType::Pointer SOCEngine::detectorResponse(uint16_t row,uint16_t col, RealImageType::Pointer VoxelProfile)
 {
 
   FILE* Fp = NULL;
@@ -2095,14 +2104,14 @@ void* SOCEngine::detectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelPr
   if (err == 1)
   {
     std::cout << "Error creating output file for Detector Response." << std::endl;
-    return NULL;
+    return RealVolumeType::NullPointer();
   }
 
 
 	DATA_TYPE r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,tmin;
 //	DATA_TYPE t;
 	//DATA_TYPE OffsetR,OffsetT,Left;
-	DATA_TYPE ***H;
+	//DATA_TYPE ***H;
 	DATA_TYPE r0 = -(BEAM_WIDTH)/2;
 //	DATA_TYPE t0 = -(BEAM_WIDTH)/2;
 	DATA_TYPE StepSize = BEAM_WIDTH/BEAM_RESOLUTION;
@@ -2110,7 +2119,11 @@ void* SOCEngine::detectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelPr
 //	int16_t l,NumOfDisplacements;
 
 	//NumOfDisplacements=32;
-	H = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//change from 1 to DETECTOR_RESPONSE_BINS
+	int dims[3] = {1, m_Sinogram->N_theta,DETECTOR_RESPONSE_BINS};
+	RealVolumeType::Pointer H = RealVolumeType::New(dims);
+	H->setName("DetectorResponse");
+
+	//H = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//change from 1 to DETECTOR_RESPONSE_BINS
 	TempConst=(PROFILE_RESOLUTION)/(2*m_Inputs->delta_xz);
 
 	for(k = 0 ; k < m_Sinogram->N_theta; k++)
@@ -2141,22 +2154,24 @@ void* SOCEngine::detectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelPr
 					//t = t0 + l*StepSize;
 					//if( t < tmin)
 					//   continue;
-					sum += (VoxelProfile[k][ProfileIndex] * BeamProfile[p]);//;*BeamProfile[l]);
+					sum += (VoxelProfile->d[k][ProfileIndex] * BeamProfile[p]);//;*BeamProfile[l]);
 					//}
 
 				}
-				H[j][k][i] = sum;
+				H->d[j][k][i] = sum;
 
 			}
 		}
 	}
 	printf("Detector Done\n");
-	fwrite(&H[0][0][0], sizeof(DATA_TYPE),m_Sinogram->N_theta*DETECTOR_RESPONSE_BINS, Fp);
+	//TODO: This should be broken out into its own class
+	fwrite(&(H->d[0][0][0]), sizeof(DATA_TYPE),m_Sinogram->N_theta*DETECTOR_RESPONSE_BINS, Fp);
 	fclose(Fp);
 	return H;
 }
 
-void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, DATA_TYPE*** DetectorResponse)
+void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice,
+                                               RealVolumeType::Pointer DetectorResponse)
 {
 	int32_t j,k,sliceidx;
 	DATA_TYPE x,z,y;
@@ -2271,7 +2286,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
 						w4 = (index_delta_r+1)*OffsetT - delta_t;
 
 
-						f1 = (w2/OffsetR)*DetectorResponse[index_delta_t][i][index_delta_r] + (w1/OffsetR)*DetectorResponse[index_delta_t][i][index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
+						f1 = (w2/OffsetR)*DetectorResponse->d[index_delta_t][i][index_delta_r] + (w1/OffsetR)*DetectorResponse->d[index_delta_t][i][index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
 						//	f2 = (w2/OffsetR)*DetectorResponse[index_delta_t+1 < DETECTOR_RESPONSE_BINS ?index_delta_t+1 : DETECTOR_RESPONSE_BINS-1][i][index_delta_r] + (w1/OffsetR)*DetectorResponse[index_delta_t+1 < DETECTOR_RESPONSE_BINS? index_delta_t+1:DETECTOR_RESPONSE_BINS][i][index_delta_r+1 < DETECTOR_RESPONSE_BINS? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
 
 						if(sliceidx == slice_index_min)

@@ -620,7 +620,7 @@ int SOCEngine::mapicdReconstruct()
 #endif
 
 #ifdef BRIGHT_FIELD //Take log of the data and subtract log(Dosage) from it
-	
+
 	for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
 		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
 			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
@@ -2614,7 +2614,7 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 	return cost;
 }
 
-void* SOCEngine::detectorResponse(uint16_t row,uint16_t col, DATA_TYPE** VoxelProfile)
+void* SOCEngine::detectorResponse(uint16_t row,uint16_t col, RealImageType::Pointer)
 {
 
   FILE* Fp = NULL;
