@@ -379,8 +379,8 @@ void SOCEngine::execute()
 	DATA_TYPE LagrangeMultiplier;
 	size_t arrayDims[3] = {0,0,0};
 	//This is used to store the projection of the object for each view
-	dims[0] = m_Sinogram->N_t;
-	dims[1] = m_Sinogram->N_r;
+	dims[1] = m_Sinogram->N_t;
+	dims[0] = m_Sinogram->N_r;
 	RealImageType::Pointer MicroscopeImage = RealImageType::New(dims);
 
 
@@ -460,8 +460,8 @@ void SOCEngine::execute()
 #endif //QGGMRF
 
 	//globals assosiated with finding the optimal gain and offset parameters
-	dims[0] = 3;
-	dims[1] = m_Sinogram->N_theta;
+	dims[1] = 3;
+	dims[0] = m_Sinogram->N_theta;
 	dims[2] = 0;
 	QuadraticParameters = RealImageType::New(dims);
 	QuadraticParameters->setName("QuadraticParameters");
@@ -470,7 +470,7 @@ void SOCEngine::execute()
   Qk_cost->setName("Qk_cost");
 //	Qk_cost=(DATA_TYPE**)get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE));
 //	bk_cost=(DATA_TYPE**)get_img(2, m_Sinogram->N_theta, sizeof(DATA_TYPE));
-  dims[0] = 2;
+  dims[1] = 2;
 	bk_cost = RealImageType::New(dims);
 	bk_cost->setName("bk_cost");
 
@@ -2440,7 +2440,7 @@ RealImageType::Pointer SOCEngine::calculateVoxelProfile()
 	DATA_TYPE angle,MaxValLineIntegral;
 	DATA_TYPE temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
 //	DATA_TYPE** VoxProfile = (DATA_TYPE**)multialloc(sizeof(DATA_TYPE),2,m_Sinogram->N_theta,PROFILE_RESOLUTION);
-	size_t dims[2] = {m_Sinogram->N_theta,PROFILE_RESOLUTION};
+	size_t dims[2] = {PROFILE_RESOLUTION,m_Sinogram->N_theta};
 	RealImageType::Pointer VoxProfile = RealImageType::New(dims);
 	VoxProfile->setName("VoxelProfile");
 
