@@ -174,6 +174,7 @@ void SOCEngine::execute()
 	uint8_t err = 0;
 	int16_t Iter,OuterIter;
 	int16_t i,j,k,r,Idx;
+	size_t dims[3];
 //	int16_t RowIndex,ColIndex,SliceIndex,row,col,slice;
 //	int16_t NumOfXPixels;
 //	int16_t q,p;
@@ -198,7 +199,7 @@ void SOCEngine::execute()
 	DATA_TYPE* cost;
 	RealImageType::Pointer VoxelProfile;
 	RealVolumeType::Pointer detectorResponse;
-	DATA_TYPE*** H_t;
+	RealVolumeType::Pointer H_t;
 	DATA_TYPE ProfileCenterT;
 
 #ifdef ROI
@@ -207,10 +208,10 @@ void SOCEngine::execute()
 	DATA_TYPE AverageMagnitudeOfRecon;
 #endif
 
-	DATA_TYPE ***Y_Est;//Estimated Sinogram
-	DATA_TYPE ***Final_Sinogram;//To store and write the final sinogram resulting from our reconstruction
-	DATA_TYPE ***ErrorSino;//Error Sinogram
-	DATA_TYPE ***Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
+	RealVolumeType::Pointer Y_Est;//Estimated Sinogram
+	RealVolumeType::Pointer Final_Sinogram;//To store and write the final sinogram resulting from our reconstruction
+	RealVolumeType::Pointer ErrorSino;//Error Sinogram
+	RealVolumeType::Pointer Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
 	RNGVars* RandomNumber;
 
 	//File variables
@@ -355,7 +356,7 @@ void SOCEngine::execute()
 	DATA_TYPE numerator_sum =0;
 	DATA_TYPE denominator_sum = 0;
 	DATA_TYPE x,z;
-	DATA_TYPE **MicroscopeImage; //This is used to store the projection of the object for each view
+
 //	DATA_TYPE rmin,rmax; //min and max indices of a projection on the detector along the r-direction
 //	DATA_TYPE w1,w2,f1,f2;
 //    DATA_TYPE k1,k2,k3;//Quadratic equation coefficients
@@ -365,8 +366,10 @@ void SOCEngine::execute()
 //	DATA_TYPE determinant;
 	DATA_TYPE LagrangeMultiplier;
 	size_t arrayDims[3] = {0,0,0};
-
-	MicroscopeImage = (DATA_TYPE**)get_img(m_Sinogram->N_t, m_Sinogram->N_r, sizeof(DATA_TYPE));
+	//This is used to store the projection of the object for each view
+	dims[0] = m_Sinogram->N_t;
+	dims[1] = m_Sinogram->N_r;
+	RealImageType::Pointer MicroscopeImage = RealImageType::New(dims);
 
 
 	arrayDims[0] = m_Sinogram->N_theta;
@@ -374,11 +377,7 @@ void SOCEngine::execute()
 	NuisanceParams.I_0->setName("NuisanceParams.I_0");
 	NuisanceParams.mu = RealArrayType::New(arrayDims);
 	NuisanceParams.mu->setName("NuisanceParams.mu");
-
-//	NuisanceParams.I_0 = (DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
-//	NuisanceParams.mu = (DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
 #ifdef NOISE_MODEL
-//	NuisanceParams.alpha=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
 	NuisanceParams.alpha = RealArrayType::New(arrayDims);
 	NuisanceParams.alpha->setName("NuisanceParams.mu");
 #endif
@@ -406,10 +405,21 @@ void SOCEngine::execute()
 	cost=(DATA_TYPE*)get_spc((m_Inputs->NumIter+1)*m_Inputs->NumOuterIter*3,sizeof(DATA_TYPE));//the factor 3 is in there to ensure we can store 3 costs per iteration one after update x, then mu and then I
 #endif
 
-	Y_Est=(DATA_TYPE ***)get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
-	ErrorSino=(DATA_TYPE ***)get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
-	Weight=(DATA_TYPE ***)get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
+	dims[0] = m_Sinogram->N_theta;
+	dims[1] = m_Sinogram->N_r;
+	dims[2] = m_Sinogram->N_t;
 
+	Y_Est = RealVolumeType::New(dims);
+	Y_Est->setName("Y_Est");
+	ErrorSino = RealVolumeType::New(dims);
+	ErrorSino->setName("ErrorSino");
+	Weight = RealVolumeType::New(dims);
+	Weight->setName("Weight");
+
+//	Y_Est=(RealVolumeType::Pointer )get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
+//	ErrorSino=(RealVolumeType::Pointer )get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
+//	Weight=(RealVolumeType::Pointer )get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
+//
 
 	//Setting the value of all the global variables
 
@@ -438,7 +448,9 @@ void SOCEngine::execute()
 #endif //QGGMRF
 
 	//globals assosiated with finding the optimal gain and offset parameters
-	size_t dims[3] = {3, m_Sinogram->N_theta, 0};
+	dims[0] = 3;
+	dims[1] = m_Sinogram->N_theta;
+	dims[2] = 0;
 	QuadraticParameters = RealImageType::New(dims);
 	QuadraticParameters->setName("QuadraticParameters");
 //	QuadraticParameters = (DATA_TYPE**)(get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE)));//Hold the coefficients of a quadratic equation
@@ -492,10 +504,21 @@ void SOCEngine::execute()
 	responseWriter->setInputs(m_Inputs);
 	responseWriter->setSinogram(m_Sinogram);
 	responseWriter->setResponse(detectorResponse);
+	responseWriter->execute();
+  if (responseWriter->getErrorCondition() < 0)
+  {
+    std::cout << "Error writing detector response to file." << __FILE__ << "(" << __LINE__ << ")" << std::endl;
+    setErrorCondition(-2);
+    updateProgressAndMessage("Error Encountered During Reconstruction", 100);
+    return;
+  }
 
+	dims[0] = 1;
+	dims[1] = m_Sinogram->N_theta;
+	dims[2] = DETECTOR_RESPONSE_BINS;
 
-
-	H_t = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta, DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//detector response along t
+	H_t = RealVolumeType::New(dims);
+	H_t->setName("H_t");
 
 #ifdef RANDOM_ORDER_UPDATES
 	VisitCount=(uint8_t **)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
@@ -593,23 +616,23 @@ void SOCEngine::execute()
 			if(m_Inputs->delta_xy >= m_Sinogram->delta_t)
 			{
 				if(ProfileCenterT <= ((m_Inputs->delta_xy/2) - (m_Sinogram->delta_t/2)))
-					H_t[0][k][i] = m_Sinogram->delta_t;
+					H_t->d[0][k][i] = m_Sinogram->delta_t;
 				else {
-					H_t[0][k][i] = -1*ProfileCenterT + (m_Inputs->delta_xy/2) + m_Sinogram->delta_t/2;
+					H_t->d[0][k][i] = -1*ProfileCenterT + (m_Inputs->delta_xy/2) + m_Sinogram->delta_t/2;
 				}
-				if(H_t[0][k][i] < 0)
-					{H_t[0][k][i] =0;}
+				if(H_t->d[0][k][i] < 0)
+					{H_t->d[0][k][i] =0;}
 
 			}
 			else {
 				if(ProfileCenterT <= m_Sinogram->delta_t/2 - m_Inputs->delta_xy/2)
-					{H_t[0][k][i] = m_Inputs->delta_xy;}
+					{H_t->d[0][k][i] = m_Inputs->delta_xy;}
 				else {
-					H_t[0][k][i] = -ProfileCenterT + (m_Inputs->delta_xy/2) + m_Sinogram->delta_t/2;
+					H_t->d[0][k][i] = -ProfileCenterT + (m_Inputs->delta_xy/2) + m_Sinogram->delta_t/2;
 				}
 
-				if(H_t[0][k][i] < 0) {
-					H_t[0][k][i] =0;
+				if(H_t->d[0][k][i] < 0) {
+					H_t->d[0][k][i] =0;
 				}
 
 			}
@@ -711,8 +734,8 @@ void SOCEngine::execute()
       {
         w3 = delta_t - (DATA_TYPE)(index_delta_t) * OffsetT;
         w4 = ((DATA_TYPE)index_delta_t + 1) * OffsetT - delta_t;
-        ProfileThickness = (w4 / OffsetT) * H_t[0][0][index_delta_t]
-            + (w3 / OffsetT) * H_t[0][0][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
+        ProfileThickness = (w4 / OffsetT) * H_t->d[0][0][index_delta_t]
+            + (w3 / OffsetT) * H_t->d[0][0][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
       }
       else
       {
@@ -741,7 +764,7 @@ void SOCEngine::execute()
     {
       for (k = 0; k < m_Sinogram->N_t; k++)
       {
-        Y_Est[i][j][k] = 0.0;
+        Y_Est->d[i][j][k] = 0.0;
       }
     }
   }
@@ -803,13 +826,13 @@ void SOCEngine::execute()
                {
                w3 = delta_t - (DATA_TYPE)(index_delta_t)*OffsetT;
                w4 = ((DATA_TYPE)index_delta_t+1)*OffsetT - delta_t;
-               ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
+               ProfileThickness =(w4/OffsetT)*H_t->d[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t->d[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
                }
                else
                {
                ProfileThickness=0;
                }*/
-              Y_Est[i_theta][i_r][i_t] += (NuisanceParams.I_0->d[i_theta]
+              Y_Est->d[i_theta][i_r][i_t] += (NuisanceParams.I_0->d[i_theta]
                   * (TempCol[j][k]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object->d[j][k][i]));
 
             }
@@ -842,9 +865,9 @@ void SOCEngine::execute()
 				if(sum != 0)
 				{
 #ifdef BRIGHT_FIELD
-					Weight[i_theta][i_r][i_t] = sum;
+					Weight->d[i_theta][i_r][i_t] = sum;
 #else
-					Weight[i_theta][i_r][i_t]=1.0/(m_Sinogram->counts->d[i_theta][i_r][i_t]*NuisanceParams.alpha->d[i_theta]);//The variance for each view ~=averagecounts in that view
+					Weight->d[i_theta][i_r][i_t]=1.0/(m_Sinogram->counts->d[i_theta][i_r][i_t]*NuisanceParams.alpha->d[i_theta]);//The variance for each view ~=averagecounts in that view
 #endif
 				}
 	}
@@ -859,32 +882,32 @@ void SOCEngine::execute()
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
 
-        // checksum+=Y_Est[i][j][k];
-        ErrorSino[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - Y_Est[i_theta][i_r][i_t] - NuisanceParams.mu->d[i_theta];
-        //	if(fabs(ErrorSino[i_theta][i_r][i_t]) > 20000)
-        //		printf("%d %d %d %lf %lf %lf\n",i_theta,i_r,i_t,ErrorSino[i_theta][i_r][i_t],Weight[i_theta][i_r][i_t],Y_Est[i_theta][i_r][i_t]);
+        // checksum+=Y_Est->d[i][j][k];
+        ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - Y_Est->d[i_theta][i_r][i_t] - NuisanceParams.mu->d[i_theta];
+        //	if(fabs(ErrorSino->d[i_theta][i_r][i_t]) > 20000)
+        //		printf("%d %d %d %lf %lf %lf\n",i_theta,i_r,i_t,ErrorSino->d[i_theta][i_r][i_t],Weight->d[i_theta][i_r][i_t],Y_Est->d[i_theta][i_r][i_t]);
 
 #ifndef NOISE_MODEL
         if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
         {
 #ifdef BRIGHT_FIELD
-          Weight[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
+          Weight->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
 #else
-          Weight[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
+          Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
 #endif //bright field check
         }
-        else Weight[i_theta][i_r][i_t] = 0;
+        else Weight->d[i_theta][i_r][i_t] = 0;
 #endif//Noise model
 //#ifdef DEBUG
         //writing the error sinogram
         //	if(i_t == 0)
-        //	fwrite(&ErrorSino[i_theta][i_r][i_t],sizeof(DATA_TYPE),1,Fp1);
+        //	fwrite(&ErrorSino->d[i_theta][i_r][i_t],sizeof(DATA_TYPE),1,Fp1);
 //#endif
 #ifdef FORWARD_PROJECT_MODE
-        temp=Y_Est[i_theta][i_r][i_t]/NuisanceParams.I_0->d[i_theta];
+        temp=Y_Est->d[i_theta][i_r][i_t]/NuisanceParams.I_0->d[i_theta];
         fwrite(&temp,sizeof(DATA_TYPE),1,Fp6);
 #endif
-        checksum += Weight[i_theta][i_r][i_t];
+        checksum += Weight->d[i_theta][i_r][i_t];
       }
     }
 		printf("Check sum of Diagonal Covariance Matrix= %lf\n", checksum);
@@ -1053,9 +1076,9 @@ void SOCEngine::execute()
                 {
                   THETA2 += ((NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta])
                       * (VoxelLineResponse[i].values[VoxelLineAccessCounter] * VoxelLineResponse[i].values[VoxelLineAccessCounter]) * (TempMemBlock->values[q])
-                      * (TempMemBlock->values[q]) * Weight[i_theta][i_r][i_t]);
-                  THETA1 += NuisanceParams.I_0->d[i_theta] * ErrorSino[i_theta][i_r][i_t] * (TempMemBlock->values[q])
-                      * (VoxelLineResponse[i].values[VoxelLineAccessCounter]) * Weight[i_theta][i_r][i_t];
+                      * (TempMemBlock->values[q]) * Weight->d[i_theta][i_r][i_t]);
+                  THETA1 += NuisanceParams.I_0->d[i_theta] * ErrorSino->d[i_theta][i_r][i_t] * (TempMemBlock->values[q])
+                      * (VoxelLineResponse[i].values[VoxelLineAccessCounter]) * Weight->d[i_theta][i_r][i_t];
                   VoxelLineAccessCounter++;
                 }
               }
@@ -1138,14 +1161,14 @@ void SOCEngine::execute()
                    w3 = delta_t - index_delta_t*OffsetT;
                    w4 = (index_delta_t+1)*OffsetT - delta_t;
                    //TODO: interpolation
-                   ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
+                   ProfileThickness =(w4/OffsetT)*H_t->d[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t->d[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
                    }
                    else
                    {
                    ProfileThickness=0;
                    }*/
 
-                  ErrorSino[i_theta][i_r][i_t] -= (NuisanceParams.I_0->d[i_theta]
+                  ErrorSino->d[i_theta][i_r][i_t] -= (NuisanceParams.I_0->d[i_theta]
                       * (TempMemBlock->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
                   VoxelLineAccessCounter++;
                 }
@@ -1242,7 +1265,7 @@ void SOCEngine::execute()
       {
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
-          Y_Est[i_theta][i_r][i_t] = 0.0;
+          Y_Est->d[i_theta][i_r][i_t] = 0.0;
         }
       }
     }
@@ -1266,7 +1289,7 @@ void SOCEngine::execute()
               VoxelLineAccessCounter = 0;
               for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
               {
-                Y_Est[i_theta][i_r][i_t] += ((TempCol[j][k]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object->d[j][k][i]));
+                Y_Est->d[i_theta][i_r][i_t] += ((TempCol[j][k]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object->d[j][k][i]));
               }
             }
 
@@ -1292,13 +1315,13 @@ void SOCEngine::execute()
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
 
-          numerator_sum += (m_Sinogram->counts->d[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
-          denominator_sum += (Weight[i_theta][i_r][i_t]);
+          numerator_sum += (m_Sinogram->counts->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
+          denominator_sum += (Weight->d[i_theta][i_r][i_t]);
 
-          a += (Y_Est[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
-          b += (Y_Est[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t] * m_Sinogram->counts->d[i_theta][i_r][i_t]);
-          c += (m_Sinogram->counts->d[i_theta][i_r][i_t] * m_Sinogram->counts->d[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
-          d += (Y_Est[i_theta][i_r][i_t] * Y_Est[i_theta][i_r][i_t] * Weight[i_theta][i_r][i_t]);
+          a += (Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
+          b += (Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t] * m_Sinogram->counts->d[i_theta][i_r][i_t]);
+          c += (m_Sinogram->counts->d[i_theta][i_r][i_t] * m_Sinogram->counts->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
+          d += (Y_Est->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
 
         }
       }
@@ -1318,8 +1341,8 @@ void SOCEngine::execute()
       for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++) {
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
-          a += ((Y_Est[i_theta][i_r][i_t] - d2->d[i_theta]) * Weight[i_theta][i_r][i_t] * Y_Est[i_theta][i_r][i_t]);
-          b -= ((m_Sinogram->counts->d[i_theta][i_r][i_t] - d1->d[i_theta]) * Weight[i_theta][i_r][i_t] * Y_Est[i_theta][i_r][i_t]);
+          a += ((Y_Est->d[i_theta][i_r][i_t] - d2->d[i_theta]) * Weight->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t]);
+          b -= ((m_Sinogram->counts->d[i_theta][i_r][i_t] - d1->d[i_theta]) * Weight->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t]);
         }
       }
       QuadraticParameters->d[i_theta][0] = a;
@@ -1399,8 +1422,8 @@ void SOCEngine::execute()
       {
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
-          ErrorSino[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - NuisanceParams.mu->d[i_theta]
-              - (NuisanceParams.I_0->d[i_theta] * Y_Est[i_theta][i_r][i_t]);
+          ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - NuisanceParams.mu->d[i_theta]
+              - (NuisanceParams.I_0->d[i_theta] * Y_Est->d[i_theta][i_r][i_t]);
         }
       }
     }
@@ -1451,7 +1474,7 @@ void SOCEngine::execute()
       sum=0;
       for(i_r=0; i_r < m_Sinogram->N_r; i_r++)
       for(i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-      sum+=(ErrorSino[i_theta][i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
+      sum+=(ErrorSino->d[i_theta][i_r][i_t]*ErrorSino->d[i_theta][i_r][i_t]*Weight->d[i_theta][i_r][i_t]);
       sum/=(m_Sinogram->N_r*m_Sinogram->N_t);
 
       NuisanceParams.alpha->d[i_theta]=sum;
@@ -1459,7 +1482,7 @@ void SOCEngine::execute()
       for(i_r=0; i_r < m_Sinogram->N_r; i_r++)
       for(i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       if(sum != 0)
-		  Weight[i_theta][i_r][i_t]/=NuisanceParams.alpha->d[i_theta];
+		  Weight->d[i_theta][i_r][i_t]/=NuisanceParams.alpha->d[i_theta];
 
     }
 
@@ -1573,9 +1596,9 @@ void SOCEngine::execute()
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-        Final_Sinogram[i_theta][i_r][i_t] *= NuisanceParams.I_0->d[i_theta];
-        Final_Sinogram[i_theta][i_r][i_t] += NuisanceParams.mu->d[i_theta];
-        fwrite(&Final_Sinogram[i_theta][i_r][i_t], sizeof(DATA_TYPE), 1, Fp1);
+        Final_Sinogram->d[i_theta][i_r][i_t] *= NuisanceParams.I_0->d[i_theta];
+        Final_Sinogram->d[i_theta][i_r][i_t] += NuisanceParams.mu->d[i_theta];
+        fwrite(&Final_Sinogram->d[i_theta][i_r][i_t], sizeof(DATA_TYPE), 1, Fp1);
       }
     }
   }
@@ -1614,15 +1637,15 @@ void SOCEngine::execute()
 
 //	free_img((void**)VoxelProfile);
 //	free_3D((void***)DetectorResponse);
-	free_3D((void***)H_t);
-
-	free_3D((void***)Y_Est);
-	free_3D((void***)Final_Sinogram);
-	free_3D((void***)ErrorSino);
-	free_3D((void***)Weight);
+//	free_3D((void***)H_t);
+//
+//	free_3D((void***)Y_Est);
+//	free_3D((void***)Final_Sinogram);
+//	free_3D((void***)ErrorSino);
+//	free_3D((void***)Weight);
 
 	free(Counter);
-	free_img((void**)MicroscopeImage);
+//	free_img((void**)MicroscopeImage);
 
 #ifdef COST_CALCULATE
 	fclose(Fp2);// writing cost function
@@ -1779,7 +1802,7 @@ RealImageType::Pointer SOCEngine::calculateVoxelProfile()
 /*******************************************************************
  Forwards Projects the Object and stores it in a 3-D matrix
  ********************************************************************/
-DATA_TYPE*** SOCEngine::forwardProject(RealVolumeType::Pointer DetectorResponse, DATA_TYPE*** H_t)
+RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer DetectorResponse, RealVolumeType::Pointer H_t)
 {
   updateProgressAndMessage("Executing Forward Projection", 50);
 
@@ -1790,8 +1813,12 @@ DATA_TYPE*** SOCEngine::forwardProject(RealVolumeType::Pointer DetectorResponse,
 	int16_t index_min,index_max,slice_index_min,slice_index_max,i_r,i_t,i_theta;
 	int16_t i,j,k;
 	int16_t index_delta_t,index_delta_r;
-	DATA_TYPE*** Y_Est;
-	Y_Est=(DATA_TYPE ***)get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
+	RealVolumeType::Pointer Y_Est;
+	size_t dims[3] =
+  { m_Sinogram->N_theta, m_Sinogram->N_r, m_Sinogram->N_t };
+	Y_Est = RealVolumeType::New(dims);
+	Y_Est->setName("Y_Est");
+//	Y_Est=(RealVolumeType::Pointer )get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
 
 	for (j = 0; j < m_Geometry->N_z; j++)
 	{
@@ -1864,14 +1891,14 @@ DATA_TYPE*** SOCEngine::forwardProject(RealVolumeType::Pointer DetectorResponse,
 							{
 								w1 = delta_t - index_delta_t*OffsetT;
 								w2 = (index_delta_t+1)*OffsetT - delta_t;
-								f2 = (w2/OffsetT)*H_t[0][i_theta][index_delta_t] + (w1/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
+								f2 = (w2/OffsetT)*H_t->d[0][i_theta][index_delta_t] + (w1/OffsetT)*H_t->d[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 							}
 							else
 							{
 								f2 = 0;
 							}
 
-							Y_Est[i_theta][i_r][i_t]+=(f1*f2*m_Geometry->Object->d[j][k][i]);
+							Y_Est->d[i_theta][i_r][i_t]+=(f1*f2*m_Geometry->Object->d[j][k][i]);
 
 						}
 					}
@@ -1937,7 +1964,7 @@ void SOCEngine::initializeBeamProfile()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
+DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::Pointer Weight)
 {
 	DATA_TYPE cost=0,temp=0;
 //	DATA_TYPE delta;
@@ -1951,7 +1978,7 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
     {
       for (k = 0; k < m_Sinogram->N_t; k++)
       {
-        cost += (ErrorSino[i][j][k] * ErrorSino[i][j][k] * Weight[i][j][k]);
+        cost += (ErrorSino->d[i][j][k] * ErrorSino->d[i][j][k] * Weight->d[i][j][k]);
       }
     }
   }
@@ -2131,8 +2158,8 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 #ifdef NOISE_MODEL
 	temp=0;
 	for(i=0;i< m_Sinogram->N_theta;i++)
-		if(Weight[i][0][0] != 0)
-		temp += log(2*M_PI*(1.0/Weight[i][0][0]));//2*pi*sigma_k^{2}
+		if(Weight->d[i][0][0] != 0)
+		temp += log(2*M_PI*(1.0/Weight->d[i][0][0]));//2*pi*sigma_k^{2}
 
 	temp*=((m_Sinogram->N_r*m_Sinogram->N_t)/2);
 

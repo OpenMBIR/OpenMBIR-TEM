@@ -135,7 +135,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
      * @param H_t
      * @return
      */
-    DATA_TYPE*** forwardProject(RealVolumeType::Pointer DetectorResponse, DATA_TYPE*** H_t);
+    RealVolumeType::Pointer forwardProject(RealVolumeType::Pointer DetectorResponse, RealVolumeType::Pointer H_t);
 
     /**
      * @brief
@@ -174,7 +174,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
      * @param Weight
      * @return
      */
-    DATA_TYPE computeCost(DATA_TYPE*** ErrorSino, DATA_TYPE*** Weight);
+    DATA_TYPE computeCost(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight);
 
     /**
      * @brief
