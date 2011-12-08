@@ -39,6 +39,8 @@
 
 #include "MRCHeader.h"
 
+#include "TomoEngine/TomoEngine.h"
+
 
 
 /**
@@ -48,7 +50,7 @@
  * @date Nov 22, 2011
  * @version 1.0
  */
-class MRCReader
+class TomoEngine_EXPORT MRCReader
 {
   public:
 
@@ -129,7 +131,7 @@ class MRCReader
      * @param deleteMemory Should this class delete the memory allocated to hold
      * the voxel data.
      */
-    explicit MRCReader(bool deleteMemory = true);
+    explicit MRCReader(bool deleteMemory);
 
   private:
     MRCHeader* m_Header;

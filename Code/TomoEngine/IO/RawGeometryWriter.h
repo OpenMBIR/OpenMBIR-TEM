@@ -33,7 +33,7 @@
 
 #include "MXA/Common/MXASetGetMacros.h"
 #include "TomoEngine/TomoEngine.h"
-#include "TomoEngine/Common/TomoFilter.h"
+#include "TomoEngine/Filters/TomoFilter.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 
 /**
@@ -43,7 +43,7 @@
  * @date
  * @version
  */
-class RawGeometryWriter : public TomoFilter
+class TomoEngine_EXPORT RawGeometryWriter : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(RawGeometryWriter)
@@ -55,12 +55,9 @@ class RawGeometryWriter : public TomoFilter
 
     MXA_INSTANCE_STRING_PROPERTY(FilePath);
 
-    /**
-     * @brief
-     * @param filepath
-     * @return
-     */
     void execute();
+
+
   protected:
     RawGeometryWriter();
 

@@ -75,9 +75,10 @@ configure_file(${MXA_SOURCE_DIR}/MXAConfiguration.h.in
                
 # add_definitions(-DQT_CORE_LIB)
 
-add_library(${PROJECT_NAME} STATIC  ${Project_SRCS})
+add_library(${PROJECT_NAME} ${LIB_TYPE}  ${Project_SRCS})
 target_link_libraries(${PROJECT_NAME} ${HDF5_LIBRARIES} MXA)
 LibraryProperties( ${PROJECT_NAME} ${EXE_DEBUG_EXTENSION})
+
 
 set(install_dir "tools")
 set(lib_install_dir "lib")

@@ -22,3 +22,4 @@ endif()
 # 
 # --------------------------------------------------------------------
 add_executable(WrappedArrayTest WrappedArrayTest.cpp)
+target_link_libraries(WrappedArrayTest MXA TomoEngine)

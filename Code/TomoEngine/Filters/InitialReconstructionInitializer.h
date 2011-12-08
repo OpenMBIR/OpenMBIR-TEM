@@ -34,19 +34,42 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#ifndef SOCINPUTS_H_
-#define SOCINPUTS_H_
+#ifndef INITIALRECONSTRUCTIONINITIALIZER_H_
+#define INITIALRECONSTRUCTIONINITIALIZER_H_
+
+#include "MXA/Common/MXASetGetMacros.h"
 
 #include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Filters/TomoFilter.h"
+#include "TomoEngine/SOC/SOCStructures.h"
+
 
 /*
  *
  */
-class TomoEngine_EXPORT SOCInputs
+class TomoEngine_EXPORT InitialReconstructionInitializer : public TomoFilter
 {
   public:
-    SOCInputs();
-    virtual ~SOCInputs();
+    MXA_SHARED_POINTERS(InitialReconstructionInitializer)
+    MXA_STATIC_NEW_MACRO(InitialReconstructionInitializer);
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, InitialReconstructionInitializer);
+    MXA_TYPE_MACRO_SUPER(InitialReconstructionInitializer, TomoFilter)
+
+    virtual ~InitialReconstructionInitializer();
+
+    DATA_TYPE absMaxArray(std::vector<DATA_TYPE> &Array);
+
+    virtual void execute();
+
+    virtual void initializeData();
+
+  protected:
+    InitialReconstructionInitializer();
+
+  private:
+    InitialReconstructionInitializer(const InitialReconstructionInitializer&); // Copy Constructor Not Implemented
+    void operator=(const InitialReconstructionInitializer&); // Operator '=' Not Implemented
 };
 
-#endif /* SOCINPUTS_H_ */
+
+#endif /* INITIALRECONSTRUCTIONINITIALIZER_H_ */

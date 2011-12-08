@@ -35,11 +35,7 @@
 
 #include <string>
 #include <iostream>
-#ifdef CMP_HAVE_SYS_PARAM_H
-#include <sys/param.h>  // MAXPATHLEN definition
-#else
-#error sys/paramh is needed for this code and was not found on your system
-#endif
+
 
 // MXA Includes
 #include "MXA/Utilities/MXADir.h"
@@ -64,12 +60,12 @@ int main(int argc, char **argv)
 
   argParser.printArgs(std::cout, &inputs);
 
-
+#if 0
   char path1[MAXPATHLEN]; // This is a buffer for the text
   ::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
   getcwd(path1, MAXPATHLEN);
   std::cout << "Current Working Directory: " << path1 << std::endl;
-
+#endif
   // Make sure the output directory is created if it does not exist
   if(MXADir::exists(inputs.outputDir) == false)
   {
@@ -81,19 +77,25 @@ int main(int argc, char **argv)
     }
     std::cout << "Output Directory Created." << std::endl;
   }
+#if 0
   ::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
   getcwd(path1, MAXPATHLEN);
   std::cout << "Current Working Directory: " << path1 << std::endl;
+#endif
 
   // Create these variables so we
   Sinogram sinogram;
   ::memset(&sinogram, 0, sizeof(Sinogram));
   Geometry geometry;
+  ::memset(&geometry, 0, sizeof(Geometry));
+  ScaleOffsetParams nuisanceParams;
+  ::memset(&nuisanceParams, 0, sizeof(ScaleOffsetParams));
 
   SOCEngine::Pointer engine = SOCEngine::New();
   engine->setInputs(&inputs);
   engine->setSinogram(&sinogram);
   engine->setGeometry(&geometry);
+  engine->setNuisanceParams(&nuisanceParams);
 
   // Run the reconstruction
   engine->run();
@@ -102,11 +104,7 @@ int main(int argc, char **argv)
     std::cout << "Error Reconstructing the Data" << std::endl;
     return EXIT_FAILURE;
   }
-
-
-
-
-
+  std::cout << "Completed SOC Run" << std::endl;
 
   return EXIT_SUCCESS;
 }

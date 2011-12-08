@@ -34,19 +34,37 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#ifndef SOCINPUTS_H_
-#define SOCINPUTS_H_
+#ifndef MRCSINOGRAMINITIALIZER_H_
+#define MRCSINOGRAMINITIALIZER_H_
+
+#include "MXA/Common/MXASetGetMacros.h"
 
 #include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Filters/TomoFilter.h"
+#include "TomoEngine/SOC/SOCStructures.h"
+
 
 /*
  *
  */
-class TomoEngine_EXPORT SOCInputs
+class TomoEngine_EXPORT MRCSinogramInitializer : public TomoFilter
 {
   public:
-    SOCInputs();
-    virtual ~SOCInputs();
+    MXA_SHARED_POINTERS(MRCSinogramInitializer)
+    MXA_STATIC_NEW_MACRO(MRCSinogramInitializer);
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, MRCSinogramInitializer);
+    MXA_TYPE_MACRO_SUPER(MRCSinogramInitializer, TomoFilter)
+
+    virtual ~MRCSinogramInitializer();
+
+    virtual void execute();
+
+  protected:
+    MRCSinogramInitializer();
+
+  private:
+    MRCSinogramInitializer(const MRCSinogramInitializer&); // Copy Constructor Not Implemented
+    void operator=(const MRCSinogramInitializer&); // Operator '=' Not Implemented
 };
 
-#endif /* SOCINPUTS_H_ */
+#endif /* MRCSINOGRAMINITIALIZER_H_ */

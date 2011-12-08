@@ -115,7 +115,7 @@ typedef double DATA_TYPE;
     uint16_t NumOuterIter;
     DATA_TYPE SigmaX;
     DATA_TYPE p;
-	DATA_TYPE StopThreshold;
+    DATA_TYPE StopThreshold;
   } TomoInputs;
 
   //Structure to store a single column(A_i) of the A-matrix

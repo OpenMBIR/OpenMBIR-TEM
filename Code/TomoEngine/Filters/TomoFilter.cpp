@@ -34,19 +34,31 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#ifndef SOCINPUTS_H_
-#define SOCINPUTS_H_
+#include "TomoFilter.h"
 
-#include "TomoEngine/TomoEngine.h"
-
-/*
- *
- */
-class TomoEngine_EXPORT SOCInputs
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+TomoFilter::TomoFilter() :
+m_Inputs(NULL),
+m_Sinogram(NULL),
+m_Geometry(NULL)
 {
-  public:
-    SOCInputs();
-    virtual ~SOCInputs();
-};
+}
 
-#endif /* SOCINPUTS_H_ */
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+TomoFilter::~TomoFilter()
+{
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoFilter::execute()
+{
+  setErrorCondition(-1);
+  setErrorMessage("TomoFilter must be subclassed to be usable");
+  notify(getErrorMessage().c_str(), 100, UpdateProgressMessage);
+}

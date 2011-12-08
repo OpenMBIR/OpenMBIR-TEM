@@ -43,53 +43,34 @@
   #pragma warning(disable: 4548)
 #endif
 
-/* Cmake will define TomoLib_EXPORTS on Windows when it
+/* Cmake will define TomoEngine_EXPORTS on Windows when it
 configures to build a shared library. If you are going to use
 another build system on windows or create the visual studio
-projects by hand you need to define TomoLib_EXPORTS when
+projects by hand you need to define TomoEngine_EXPORTS when
 building the TomoLib DLL on windows.
 */
 
-#if defined (TomoLib_BUILT_AS_DYNAMIC_LIB)
+#if defined (TomoEngine_BUILT_AS_DYNAMIC_LIB)
 
-  #if defined (EIMTomoLib_EXPORTS)  /* Compiling the MXA DLL/Dylib */
+  #if defined (TomoEngine_EXPORTS)  /* Compiling the MXA DLL/Dylib */
     #if defined (_MSC_VER)  /* MSVC Compiler Case */
-      #define  TomoLib_EXPORT __declspec(dllexport)
+      #define  TomoEngine_EXPORT __declspec(dllexport)
     #elif (__GNUC__ >= 4)  /* GCC 4.x has support for visibility options */
-      #define TomoLib_EXPORT __attribute__ ((visibility("default")))
+      #define TomoEngine_EXPORT __attribute__ ((visibility("default")))
     #endif
   #else  /* Importing the DLL into another project */
     #if defined (_MSC_VER)  /* MSVC Compiler Case */
-      #define  TomoLib_EXPORT __declspec(dllimport)
+      #define  TomoEngine_EXPORT __declspec(dllimport)
     #elif (__GNUC__ >= 4)  /* GCC 4.x has support for visibility options */
-      #define TomoLib_EXPORT __attribute__ ((visibility("default")))
+      #define TomoEngine_EXPORT __attribute__ ((visibility("default")))
     #endif
   #endif
 #endif
 
-/* If TomoLib_EXPORT was never defined, define it here */
-#ifndef TomoLib_EXPORT
-  #define TomoLib_EXPORT
+/* If TomoEngine_EXPORT was never defined, define it here */
+#ifndef TomoEngine_EXPORT
+  #define TomoEngine_EXPORT
 #endif
 
-#if 0
-#if defined (_WIN32) || defined __CYGWIN__
-
-  #if defined (TomoLib_BUILT_AS_DYNAMIC_LIB)
-    #if defined(EIMTomoLib_EXPORTS)
-      #define  TomoLib_EXPORT __declspec(dllexport)
-    #else
-      #define  TomoLib_EXPORT __declspec(dllimport)
-    #endif /* EIMTomoLib_EXPORTS */
-  #else
-    #define TomoLib_EXPORT
-  #endif
-#elif __GNUC__ >= 4
- #define FLOW_DLL __attribute__ ((visibility("default")))
- #define DLL_LOCAL  __attribute__ ((visibility("hidden")
-#else /* defined (_WIN32) && defined (TomoLib_BUILD_SHARED_LIBS)  */
- #define TomoLib_EXPORT
-#endif
-#endif
 
 #endif /* _TomoLib_DLL_EXPORT_H_ */

@@ -1,3 +1,39 @@
+/* ============================================================================
+ * Copyright (c) 2011 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2011 Singanallur Venkatakrishnan (Purdue University)
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright notice, this
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
+ *
+ * Neither the name of Singanallur Venkatakrishnan, Michael A. Jackson, the Pudue
+ * Univeristy, BlueQuartz Software nor the names of its contributors may be used
+ * to endorse or promote products derived from this software without specific
+ * prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *  This code was written under United States Air Force Contract number
+ *                           FA8650-07-D-5800
+ *
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
 #include <stdlib.h>
 #include <stdio.h>//
 #include <string.h>
@@ -95,12 +131,13 @@ void *multialloc(size_t s, int d, ...)
                                                  * but the last */
           max *= (*q);
           r[0]=(char *)mget_spc(max,sizeof(char **));
+       //   printf("max: %d   sizeof(char **): %d  r: %p r[0]: 0x%08x \n", max , sizeof(char **), r, r[0]);
           r = (char **) r[0];     /* step through to beginning of next
                                    * dimension array */
         }
         max *= s * (*q);        /* grab actual array memory */
         r[0] = (char *)mget_spc(max,sizeof(char));
-
+       // printf("max: %d   sizeof(char): %d  r: %p r[0]: 0x%08x \n", max , sizeof(char), r, r[0]);
         /*
          * r is now set to point to the beginning of each array so that we can
          * use it to scan down each array rather than having to go across and
@@ -148,19 +185,19 @@ void *multialloc(size_t s, int d, ...)
  * multifree releases all memory that we have already declared analogous to
  * free() when using malloc()
  */
-void multifree(void *r,int d)
+void multifree(void* r, int d)
 {
-  void **p;
-  void *next = NULL;
+  void** p;
+  void* next = NULL;
   int i;
 
-  for (p = (void **)r, i = 0; i < d; p = (void **)next, i++)
+  for (p = (void**)r, i = 0; i < d; p = (void**)next, i++)
   {
     if(p != NULL)
     {
       next = *p;
+     // printf("p: %p  Value of P: 0x%08x  i:  %d   Value of Next: 0x%08x \n", p, *p, i, next);
       free((void*)p);
-      p = NULL;
     }
   }
 }

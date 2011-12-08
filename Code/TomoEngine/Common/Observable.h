@@ -36,7 +36,7 @@
 
 #include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
-#include "TomoEngine/Common/EIMTomoDLLExport.h"
+#include "TomoEngine/TomoEngine.h"
 
 class Observer;
 
@@ -54,7 +54,7 @@ class Observer;
  * @date Sep 22, 2011
  * @version 1.0
  */
-class TomoLib_EXPORT Observable
+class TomoEngine_EXPORT Observable
 {
   public:
     Observable();

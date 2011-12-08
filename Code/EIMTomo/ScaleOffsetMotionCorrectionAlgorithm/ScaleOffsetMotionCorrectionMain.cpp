@@ -7,11 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#ifdef CMP_HAVE_SYS_PARAM_H
-#include <sys/param.h>  // MAXPATHLEN definition
-#else
-#error sys/paramh is needed for this code and was not found on your system
-#endif
+
 // C++ includes
 #include <string>
 #include <iostream>
@@ -21,11 +17,12 @@
 #include "TomoEngine/Common/EIMTime.h"
 #include "TomoEngine/Common/allocate.h"
 
-#include "TomoEngine/IO/VTKFileWriters.hpp"
-#include "TomoEngine/IO/RawGeometryWriter.h"
+//#include "TomoEngine/IO/VTKFileWriters.hpp"
+//#include "TomoEngine/IO/RawGeometryWriter.h"
 
 // MXA Includes
 #include "MXA/Utilities/MXADir.h"
+#include "ScaleOffsetMotionStructures.h"
 #include "ScaleOffsetMotionCorrectionConstants.h"
 #include "ScaleOffsetMotionCorrectionParser.h"
 #include "ScaleOffsetMotionCorrectionEngine.h"
@@ -78,10 +75,12 @@ int main(int argc, char** argv)
 			   inputs.outputDir.c_str(),
 			   inputs.OutputFile.c_str());
 
+#if 0
 		char path1[MAXPATHLEN];  // This is a buffer for the text
 		::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
 		getcwd(path1, MAXPATHLEN);
 		std::cout << "Current Working Directory: " << path1 << std::endl;
+#endif
 
 
 		// Make sure the output directory is created if it does not exist
@@ -95,10 +94,11 @@ int main(int argc, char** argv)
 			}
 			std::cout << "Output Directory Created." << std::endl;
 		}
+#if 0
 		::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
 		getcwd(path1, MAXPATHLEN);
 		std::cout << "Current Working Directory: " << path1 << std::endl;
-
+#endif
 		error = soci.readParameterFile(inputs.ParamFile, &inputs, &sinogram, &geometry);
 		if (error < 0)
 		{
@@ -125,6 +125,7 @@ int main(int argc, char** argv)
 	std::cout << "  Ny = " << geometry.N_y << std::endl;
 	std::cout << "  Nz = " << geometry.N_z << std::endl;
 
+#if 0
 	// Write the vtk output file
 	VTKRectilinearGridFileWriter vtkWriter;
 	vtkWriter.setWriteBinaryFiles(true);
@@ -148,17 +149,28 @@ int main(int argc, char** argv)
 	{
 		std::cout << "Error writing vtk file '" << vtkFile << "'" << std::endl;
 	}
+#endif
 
 	// Write a raw binary output file
-  RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
-  writer->setGeometry(&geometry);
-  writer->setFilePath(inputs.OutputFile);
-
-  writer->execute();
-  if (writer->getErrorCondition() < 0)
+  FILE* Fp = fopen(inputs.OutputFile.c_str(), "wb");
+  if(NULL == Fp)
   {
-    std::cout << "Error Code from Writing File" << writer->getErrorCondition() << std::endl;
-    return -1;
+    std::cout << "Fp: " << Fp << " errno: " << errno << std::endl;
+    return EXIT_FAILURE;
+  }
+  DATA_TYPE buffer;
+
+  for (uint16_t i = 0; i < geometry.N_y; ++i)
+  {
+    for (uint16_t j = 0; j < geometry.N_x; ++j)
+    {
+      for (uint16_t k = 0; k < geometry.N_z; k++)
+      {
+      //  std::cout << k << std::endl;
+        buffer = geometry.Object[k][j][i];
+        fwrite(&buffer, sizeof(DATA_TYPE), 1, Fp);
+      }
+    }
   }
 
 	STOP;

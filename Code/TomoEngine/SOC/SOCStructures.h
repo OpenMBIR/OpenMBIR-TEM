@@ -1,5 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2011, Singanallur Venkatakrishnan <svenkata@purdue.edu>
+ * Copyright (c) 2011 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2011 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -12,9 +13,10 @@
  * list of conditions and the following disclaimer in the documentation and/or
  * other materials provided with the distribution.
  *
- * Neither the name of Singanallur Venkatakrishnan , Purdue University nor the
- * names of its contributors may be used to endorse or promote products derived
- * from this software without specific prior written permission.
+ * Neither the name of Singanallur Venkatakrishnan, Michael A. Jackson, the Pudue
+ * Univeristy, BlueQuartz Software nor the names of its contributors may be used
+ * to endorse or promote products derived from this software without specific
+ * prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -26,6 +28,10 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *  This code was written under United States Air Force Contract number
+ *                           FA8650-07-D-5800
+ *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 #ifndef SCALEOFFSETMOTIONSTRUCTURES_H_
@@ -37,6 +43,15 @@
 typedef double DATA_TYPE;
 
 #include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/TomoArray.hpp"
+
+typedef TomoArray<int32_t, int32_t***, 3> Int32VolumeType;
+typedef TomoArray<int32_t, int32_t**, 2> Int32ImageType;
+typedef TomoArray<int32_t, int32_t*, 1> Int32ArrayType;
+
+typedef TomoArray<DATA_TYPE, DATA_TYPE***, 3> RealVolumeType;
+typedef TomoArray<DATA_TYPE, DATA_TYPE**, 2> RealImageType;
+typedef TomoArray<DATA_TYPE, DATA_TYPE*, 1> RealArrayType;
 
 
 
@@ -66,14 +81,14 @@ typedef double DATA_TYPE;
     uint16_t N_theta;//Number of angles
     DATA_TYPE delta_r;//Distance between successive measurements along x
     DATA_TYPE delta_t;//Distance between successive measurements along y
-    DATA_TYPE*** counts;//The measured images should be stored in this once read from the input file. It will be a Ny X (Nz X Nx)
+    RealVolumeType::Pointer counts;//The measured images should be stored in this once read from the input file. It will be a Ny X (Nz X Nx)
     std::vector<DATA_TYPE> angles;//Holds the angles through which the object is tilted
     DATA_TYPE R0,RMax;
     DATA_TYPE T0,TMax;
     DATA_TYPE TargetGain;//,InitialOffset;//Initial scale and offset of the sinogram data
 
-    DATA_TYPE* InitialGain;//Reads in the initial value for the gain for each view
-    DATA_TYPE* InitialOffset;
+    RealArrayType::Pointer InitialGain;//Reads in the initial value for the gain for each view
+    RealArrayType::Pointer InitialOffset;
 
   } Sinogram;
 
@@ -81,7 +96,7 @@ typedef double DATA_TYPE;
 
   typedef struct
   {
-    DATA_TYPE*** Object;//Holds the volume to be reconstructed
+    RealVolumeType::Pointer Object;//Holds the volume to be reconstructed
     //Computed From User Input
     DATA_TYPE LengthX;//sinogram.N_x * delta_r;
     DATA_TYPE LengthY;//sinogram.N_y * delta_t
@@ -111,8 +126,8 @@ typedef double DATA_TYPE;
     DATA_TYPE p;
     DATA_TYPE StopThreshold;
 
-    std::vector<uint8_t> excludedViews;//Which views to keep and which to reject
-    std::vector<uint8_t> ViewMask;
+    std::vector<uint8_t> excludedViews;// Indices of views to exclude from reconstruction
+    std::vector<int> goodViews; // Contains the indices of the views to use for reconstruction
 
     bool useSubvolume;
     uint16_t xStart;
@@ -123,6 +138,10 @@ typedef double DATA_TYPE;
 
     uint16_t zStart;
     uint16_t zEnd;
+
+    uint16_t fileXSize; // Size in voxels of the complete width of the image from the file
+    uint16_t fileYSize; // Size in voxels of the complete height of the image from the file
+    uint16_t fileZSize; // Number of tilts in the series from the file.
 
     DATA_TYPE LengthZ;//This is the sample thickness
     DATA_TYPE delta_xz;//Voxel size in the x-z plane (assuming square shaped voxels in the x-z plane)
@@ -140,9 +159,15 @@ typedef double DATA_TYPE;
 
   typedef struct
   {
+<<<<<<< HEAD
     DATA_TYPE* I_0; //Scale
     DATA_TYPE* mu; //Offset
 	DATA_TYPE* alpha;//Noise variance refinement factor
+=======
+    RealArrayType::Pointer I_0; //Scale
+    RealArrayType::Pointer mu; //Offset
+    RealArrayType::Pointer alpha;//Noise variance refinement factor
+>>>>>>> 08e4f1a824014db424b4c3aaa8f5381d8a1c4267
   } ScaleOffsetParams;
 
 

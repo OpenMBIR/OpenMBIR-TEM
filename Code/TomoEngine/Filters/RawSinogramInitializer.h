@@ -33,20 +33,40 @@
  *                           FA8650-07-D-5800
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+#ifndef RAWSINOGRAMINITIALIZER_H_
+#define RAWSINOGRAMINITIALIZER_H_
 
-#ifndef SOCINPUTS_H_
-#define SOCINPUTS_H_
+
+#include "MXA/Common/MXASetGetMacros.h"
 
 #include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Filters/TomoFilter.h"
+#include "TomoEngine/SOC/SOCStructures.h"
+
 
 /*
  *
  */
-class TomoEngine_EXPORT SOCInputs
+class TomoEngine_EXPORT RawSinogramInitializer : public TomoFilter
 {
   public:
-    SOCInputs();
-    virtual ~SOCInputs();
+    MXA_SHARED_POINTERS(RawSinogramInitializer)
+    MXA_STATIC_NEW_MACRO(RawSinogramInitializer);
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, RawSinogramInitializer);
+    MXA_TYPE_MACRO_SUPER(RawSinogramInitializer, TomoFilter)
+
+    virtual ~RawSinogramInitializer();
+
+    virtual void execute();
+
+  protected:
+    RawSinogramInitializer();
+
+  private:
+    RawSinogramInitializer(const RawSinogramInitializer&); // Copy Constructor Not Implemented
+    void operator=(const RawSinogramInitializer&); // Operator '=' Not Implemented
 };
 
-#endif /* SOCINPUTS_H_ */
+
+
+#endif /* RAWSINOGRAMINITIALIZER_H_ */
