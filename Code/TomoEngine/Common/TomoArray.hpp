@@ -38,23 +38,23 @@
 #include <boost/shared_ptr.hpp>
 
 
-template<typename T, typename Ptr, int size>
+template<typename T, typename Ptr, int SIZE>
 class TomoArray
 {
   public:
-    typedef TomoArray<T, Ptr, size> Self;
+    typedef TomoArray<T, Ptr, SIZE> Self;
     typedef boost::shared_ptr<Self> Pointer;
     typedef boost::shared_ptr<const Self> ConstPointer;
-    typedef boost::weak_ptr<TomoArray<T, Ptr, size> > WeakPointer;
-    typedef boost::weak_ptr<TomoArray<T, Ptr, size> > ConstWeakPointer;
+    typedef boost::weak_ptr<TomoArray<T, Ptr, SIZE> > WeakPointer;
+    typedef boost::weak_ptr<TomoArray<T, Ptr, SIZE> > ConstWeakPointer;
     static Pointer NullPointer(void)
     {
-      return Pointer(static_cast<TomoArray<T, Ptr, size>*>(0));
+      return Pointer(static_cast<TomoArray<T, Ptr, SIZE>*>(0));
     }
 
     static Pointer New(size_t* dims)
     {
-      Pointer sharedPtr(new TomoArray<T, Ptr, size>(dims));
+      Pointer sharedPtr(new TomoArray<T, Ptr, SIZE>(dims));
       return sharedPtr;
     }
 
@@ -64,12 +64,12 @@ class TomoArray
       {
         std::cout << "Deallocating TomoArray " << m_Name << std::endl;
       }
-      if (size == 1)
+      if (SIZE == 1)
       {
         free(d);
       }
       else {
-        deallocate((T*)d,size);
+        deallocate((T*)d,SIZE);
       }
     }
 
@@ -85,7 +85,14 @@ class TomoArray
     TomoArray(size_t* dims) :
       m_Dims(dims)
     {
-      d = reinterpret_cast<Ptr>(allocate(sizeof(T), size, m_Dims));
+      if (SIZE == 1)
+      {
+        d = reinterpret_cast<Ptr>(malloc(sizeof(T) * m_Dims[0]));
+      }
+      else {
+        d = reinterpret_cast<Ptr>(allocate(sizeof(T), SIZE, m_Dims));
+      }
+      m_NDims = SIZE;
     }
 
   private:
