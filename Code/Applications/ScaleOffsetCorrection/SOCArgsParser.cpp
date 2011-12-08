@@ -216,13 +216,17 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
     int subvolumeValues[6];
     Input->useSubvolume = false;
 
-    if (subvolume.getValue().length() != 0
-         && parseValues(subvolume.getValue(), "%d", subvolumeValues) < 0)
+    if(subvolume.getValue().length() != 0)
     {
-      std::cout << "Error Parsing the Subvolume Dimensions. They should be entered as --subvolume 64,128,256,80,150,280" << std::endl;
-      return -1;
+      int err = parseValues(subvolume.getValue(), "%d", subvolumeValues);
+      if(err < 0)
+      {
+        std::cout << "Error Parsing the Subvolume Dimensions. They should be entered as --subvolume 64,128,256,80,150,280" << std::endl;
+        return -1;
+      }
+      Input->useSubvolume = true;
     }
-    Input->useSubvolume = true;
+
 
     Input->xStart = subvolumeValues[0];
     Input->xEnd = subvolumeValues[3];

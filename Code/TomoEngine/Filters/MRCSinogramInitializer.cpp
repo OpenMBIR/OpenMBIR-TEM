@@ -84,7 +84,7 @@ void MRCSinogramInitializer::execute()
   }
 
   int voxelMin[3] = {0, 0, 0};
-  int voxelMax[3] = {header.nx, header.ny, header.nz-1};
+  int voxelMax[3] = {header.nx-1, header.ny-1, header.nz-1};
   inputs->fileXSize = header.nx;
   inputs->fileYSize = header.ny;
   inputs->fileZSize = header.nz;
@@ -173,7 +173,7 @@ void MRCSinogramInitializer::execute()
     if (NULL != header.feiHeaders) {
       int offset = inputs->goodViews[z];
       fei = &(header.feiHeaders[offset]);
-      sinogram->angles[z] = fei->a_tilt;
+      sinogram->angles[z] = -fei->a_tilt;
     }
    // std::cout << "data_z_index: " << inputs->goodViews[z] << "  dataZOffset: " << dataZOffset << "   counts offset: " << z << std::endl;
     for (uint16_t y = 0; y < sinogram->N_t; y++)
