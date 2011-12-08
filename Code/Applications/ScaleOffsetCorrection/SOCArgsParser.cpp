@@ -214,6 +214,7 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
     Input->StopThreshold = in_stopThreshold.getValue();
 
     int subvolumeValues[6];
+    ::memset(subvolumeValues, 0, 6 * sizeof(int));
     Input->useSubvolume = false;
 
     if(subvolume.getValue().length() != 0)
@@ -225,15 +226,13 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
         return -1;
       }
       Input->useSubvolume = true;
+      Input->xStart = subvolumeValues[0];
+      Input->xEnd = subvolumeValues[3];
+      Input->yStart = subvolumeValues[1];
+      Input->yEnd = subvolumeValues[4];
+      Input->zStart = subvolumeValues[2];
+      Input->zEnd = subvolumeValues[5];
     }
-
-
-    Input->xStart = subvolumeValues[0];
-    Input->xEnd = subvolumeValues[3];
-    Input->yStart = subvolumeValues[1];
-    Input->yEnd = subvolumeValues[4];
-    Input->zStart = subvolumeValues[2];
-    Input->zEnd = subvolumeValues[5];
 
     Input->delta_xz = xz_size.getValue();
     Input->delta_xy = xy_size.getValue();

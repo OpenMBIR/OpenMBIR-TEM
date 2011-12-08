@@ -98,6 +98,17 @@ void MRCSinogramInitializer::execute()
      voxelMax[1] = inputs->yEnd;
      voxelMax[2] = inputs->zEnd;
   }
+  else
+  {
+    inputs->xStart = 0;
+    inputs->yStart = 0;
+    inputs->zStart = 0;
+
+    inputs->xEnd = header.nx - 1;
+    inputs->yEnd = header.ny - 1;
+    inputs->zEnd = header.nz - 1;
+  }
+
   sinogram->N_r = voxelMax[0] - voxelMin[0] + 1;
   sinogram->N_t = voxelMax[1] - voxelMin[1] + 1;
 
