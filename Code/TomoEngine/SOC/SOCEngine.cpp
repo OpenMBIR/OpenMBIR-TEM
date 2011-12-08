@@ -463,12 +463,13 @@ void SOCEngine::execute()
 	dims[1] = 3;
 	dims[0] = m_Sinogram->N_theta;
 	dims[2] = 0;
+	//Hold the coefficients of a quadratic equation
+	//  QuadraticParameters = (DATA_TYPE**)(get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE)));
 	QuadraticParameters = RealImageType::New(dims);
 	QuadraticParameters->setName("QuadraticParameters");
-//	QuadraticParameters = (DATA_TYPE**)(get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE)));//Hold the coefficients of a quadratic equation
+	//  Qk_cost=(DATA_TYPE**)get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE));
 	Qk_cost = RealImageType::New(dims);
   Qk_cost->setName("Qk_cost");
-//	Qk_cost=(DATA_TYPE**)get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE));
 //	bk_cost=(DATA_TYPE**)get_img(2, m_Sinogram->N_theta, sizeof(DATA_TYPE));
   dims[1] = 2;
 	bk_cost = RealImageType::New(dims);
@@ -1821,11 +1822,11 @@ void SOCEngine::execute()
 
 							//TODO Print appropriate error messages for other values of error code
 							m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
-							
+
 #ifdef ROI
 							if(Mask[j_new][k_new] == 1)
 							{
-								
+
 
 								AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
 								AverageMagnitudeOfRecon += fabs(V);//computing the percentage update =(Change in mag/Initial magnitude)
@@ -2440,7 +2441,7 @@ RealImageType::Pointer SOCEngine::calculateVoxelProfile()
 	DATA_TYPE angle,MaxValLineIntegral;
 	DATA_TYPE temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
 //	DATA_TYPE** VoxProfile = (DATA_TYPE**)multialloc(sizeof(DATA_TYPE),2,m_Sinogram->N_theta,PROFILE_RESOLUTION);
-	size_t dims[2] = {PROFILE_RESOLUTION,m_Sinogram->N_theta};
+	size_t dims[2] = {m_Sinogram->N_theta,PROFILE_RESOLUTION};
 	RealImageType::Pointer VoxProfile = RealImageType::New(dims);
 	VoxProfile->setName("VoxelProfile");
 
