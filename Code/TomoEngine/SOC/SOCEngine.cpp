@@ -291,7 +291,14 @@ void SOCEngine::execute()
       gainsOffsetsInitializer = GainsOffsetsReader::NewTomoFilter();
     }
 
-
+	  
+	  /********************REMOVE************************/
+	  std::cout<<"HARD WIRED TARGET GAIN"<<std::endl;
+	  
+	  m_Sinogram->TargetGain=TARGET_GAIN;
+	  std::cout<<"Target Gain"<<m_Sinogram->TargetGain<<std::endl;
+	  
+	  /*************************************************/
 
     gainsOffsetsInitializer->setSinogram(m_Sinogram);
     gainsOffsetsInitializer->setInputs(m_Inputs);
@@ -300,13 +307,6 @@ void SOCEngine::execute()
 
 
 
-	  /********************REMOVE************************/
-	  std::cout<<"HARD WIRED TARGET GAIN TO 20K"<<std::endl;
-
-	  m_Sinogram->TargetGain=20000;
-	  std::cout<<"Target Gain"<<m_Sinogram->TargetGain<<std::endl;
-
-	  /*************************************************/
 
 
     if(gainsOffsetsInitializer->getErrorCondition() < 0)
