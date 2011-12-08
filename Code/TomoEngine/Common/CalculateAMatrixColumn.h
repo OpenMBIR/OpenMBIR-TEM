@@ -17,7 +17,7 @@
 /*
  *
  */
-class CalculateAMatrixColumn : public TomoFilter
+class TomoEngine_EXPORT CalculateAMatrixColumn : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(CalculateAMatrixColumn)

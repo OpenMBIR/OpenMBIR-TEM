@@ -48,7 +48,7 @@
  * @date Nov 28, 2011
  * @version 1.0
  */
-class MXA_EXPORT AbstractFilter : public Observable
+class TomoEngine_EXPORT  AbstractFilter : public Observable
 {
   public:
     MXA_SHARED_POINTERS(AbstractFilter)

@@ -18,7 +18,7 @@
 /*
  *
  */
-class InitialReconstructionInitializer : public TomoFilter
+class TomoEngine_EXPORT InitialReconstructionInitializer : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(InitialReconstructionInitializer)

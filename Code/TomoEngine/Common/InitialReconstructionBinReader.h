@@ -18,7 +18,7 @@
 /*
  *
  */
-class InitialReconstructionBinReader : public InitialReconstructionInitializer
+class TomoEngine_EXPORT InitialReconstructionBinReader : public InitialReconstructionInitializer
 {
   public:
     MXA_SHARED_POINTERS(InitialReconstructionBinReader)

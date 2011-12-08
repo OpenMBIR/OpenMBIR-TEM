@@ -35,7 +35,7 @@
 #include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
 
-#include "TomoEngine/Common/EIMTomoDLLExport.h"
+#include "TomoEngine/TomoEngine.h"
 /**
  * @class Observer Observer.h DREAM3D/Common/Observer.h
  * @brief This class implmements the <b>Observer</b> pattern from the <b>Gang of
@@ -45,7 +45,7 @@
  * @date Sep 22, 2011
  * @version 1.0
  */
-class TomoLib_EXPORT Observer
+class TomoEngine_EXPORT Observer
 {
   public:
     Observer();

@@ -77,6 +77,7 @@ class TomoArray
     Ptr getPointer() { return d; }
     int* getDims() {return m_Dims; }
     int getNDims() { return m_NDims; }
+    int getTypeSize() { return sizeof(T); }
 
     Ptr d;
 

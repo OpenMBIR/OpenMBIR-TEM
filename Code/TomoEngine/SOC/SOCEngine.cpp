@@ -43,6 +43,8 @@
 #include "TomoEngine/IO/RawGeometryWriter.h"
 #include "TomoEngine/Common/DerivOfCostFunc.hpp"
 #include "TomoEngine/Common/CE_ConstraintEquation.hpp"
+#include "TomoEngine/Common/DetectorResponse.h"
+#include "TomoEngine/Common/DetectorResponseWriter.h"
 
 
 #define START startm = EIMTOMO_getMilliSeconds();
@@ -170,7 +172,7 @@ void SOCEngine::execute()
 	DATA_TYPE sum1,sum2;
 	DATA_TYPE* cost;
 	RealImageType::Pointer VoxelProfile;
-	RealVolumeType::Pointer DetectorResponse;
+	RealVolumeType::Pointer detectorResponse;
 	DATA_TYPE*** H_t;
 	DATA_TYPE ProfileCenterT;
 
@@ -428,26 +430,42 @@ void SOCEngine::execute()
 	initializeBeamProfile(); //verified with ML
 
 	//calculate sine and cosine of all angles and store in the global arrays sine and cosine
-	DetectorResponse = detectorResponse(0,0,VoxelProfile);//System response
-	if (NULL == DetectorResponse)
-	{
-	  std::cout << "Error Calling function detectorResponse in file " << __FILE__ << "(" << __LINE__ << ")" << std::endl;
-	  setErrorCondition(-2);
-	  return;
-	}
+	DetectorResponse::Pointer dResponseFilter = DetectorResponse::New();
+	dResponseFilter->setInputs(m_Inputs);
+	dResponseFilter->setBeamWidth(BEAM_WIDTH);
+	dResponseFilter->setOffsetR(OffsetR);
+	dResponseFilter->setOffsetT(OffsetT);
+	dResponseFilter->setVoxelProfile(VoxelProfile);
+	dResponseFilter->setBeamProfile(BeamProfile);
+	dResponseFilter->addObserver(this);
+	dResponseFilter->execute();
+	if (dResponseFilter->getErrorCondition() < 0)
+  {
+    std::cout << "Error Calling function detectorResponse in file " << __FILE__ << "(" << __LINE__ << ")" << std::endl;
+    setErrorCondition(-2);
+    return;
+  }
+	detectorResponse = dResponseFilter->getResponse();
+	// Writer the Detector Response to an output file
+	DetectorResponseWriter::Pointer responseWriter = DetectorResponseWriter::New();
+	responseWriter->setInputs(m_Inputs);
+	responseWriter->setSinogram(m_Sinogram);
+	responseWriter->setResponse(detectorResponse);
+
 
 
 	H_t = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta, DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//detector response along t
 
 #ifdef RANDOM_ORDER_UPDATES
 	VisitCount=(uint8_t **)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
-	for(i=0;i<m_Geometry->N_z;i++)
-		for(j=0;j < m_Geometry->N_x;j++)
+	for(i=0;i<m_Geometry->N_z;i++) {
+		for(j=0;j < m_Geometry->N_x;j++) {
 			VisitCount[i][j]=0;
+		}}
 #endif//Random update
 
 #ifdef ROI
-	Mask = (uint8_t **)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
+	Mask = (uint8_t**)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
 	EllipseA = m_Geometry->LengthX/2;
 	EllipseB = m_Inputs->LengthZ/2;
 	for (i = 0; i < m_Geometry->N_z ; i++)
@@ -464,22 +482,19 @@ void SOCEngine::execute()
 			{
 				Mask[i][j] =0;
 			}
-
 		}
 	}
-
-
 #endif
 	m_Sinogram->TargetGain=20000;
 
 #ifdef BRIGHT_FIELD //Take log of the data and subtract log(Dosage) from it
 
-	for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
-		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
+	for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++) {//slice index
+		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++) {
 			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
 			{
 				m_Sinogram->counts->d[i_theta][i_r][i_t] = log(m_Sinogram->counts->d[i_theta][i_r][i_t])-log(m_Sinogram->TargetGain);
-			}
+			}}}
 #endif//Bright Field
 
 	//Scale and Offset Parameters Initialization
@@ -505,7 +520,7 @@ void SOCEngine::execute()
 	if(fabs(sum - m_Sinogram->TargetGain) > 1e-5)
 	{
 		printf("The input paramters dont meet the constraint..Renormalizing\n");
-        temp = exp(log(m_Sinogram->TargetGain) - log(sum));
+    temp = exp(log(m_Sinogram->TargetGain) - log(sum));
 		for (k = 0 ; k < m_Sinogram->N_theta; k++) {
 			NuisanceParams.I_0->d[k]=m_Sinogram->InitialGain[k]*temp;
 		}
@@ -584,7 +599,7 @@ void SOCEngine::execute()
 	//T-direction response
 	AMatrixCol* VoxelLineResponse=(AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));
 	MaxNumberOfDetectorElts = (uint16_t)((m_Inputs->delta_xy/m_Sinogram->delta_t)+2);
-    for (i=0; i < m_Geometry->N_y; i++) {
+  for (i=0; i < m_Geometry->N_y; i++) {
 		VoxelLineResponse[i].count=0;
 		VoxelLineResponse[i].values=(DATA_TYPE*)get_spc(MaxNumberOfDetectorElts, sizeof(DATA_TYPE));
 		VoxelLineResponse[i].index=(uint32_t*)get_spc(MaxNumberOfDetectorElts, sizeof(uint32_t));
@@ -600,75 +615,77 @@ void SOCEngine::execute()
 	//q = 0;
 
 #ifdef STORE_A_MATRIX
-	for(i = 0;i < m_Geometry->N_y; i++)
-		for(j = 0;j < m_Geometry->N_z; j++)
+	for(i = 0;i < m_Geometry->N_y; i++){
+		for(j = 0;j < m_Geometry->N_z; j++){
 			for (k = 0; k < m_Geometry->N_x; k++)
 			{
 				//  AMatrix[q++]=CE_CalculateAMatrixColumn(i,j,Sinogram,Geometry,VoxelProfile);
 				AMatrix[i][j][k]=calculateAMatrixColumn(j,k,i,m_Sinogram,m_Geometry,VoxelProfile);//row,col,slice
 
-				for(p = 0; p < AMatrix[i][j][k]->count; p++)
-					checksum += AMatrix[i][j][k]->values[p];
+				for(p = 0; p < AMatrix[i][j][k]->count; p++) {
+					checksum += AMatrix[i][j][k]->values[p];}
 				//   printf("(%d,%d,%d) %lf \n",i,j,k,AMatrix[i][j][k]->values);
 				checksum = 0;
-			}
+			}}}
 	printf("Stored A matrix\n");
 #else
 	temp=0;
-    for(j=0; j < m_Geometry->N_z; j++)
+    for(j=0; j < m_Geometry->N_z; j++){
     for(k=0; k < m_Geometry->N_x; k++)
     {
-      TempCol[j][k] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, DetectorResponse);
+      TempCol[j][k] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
       temp += TempCol[j][k]->count;
-    }
+    }}
 #endif
 
 	//Storing the response along t-direction for each voxel line
 
 	for (i =0; i < m_Geometry->N_y; i++)
 	{
-		y = ((DATA_TYPE)i+0.5)*m_Inputs->delta_xy + m_Geometry->y0;
-		t = y;
-		tmin = (t - m_Inputs->delta_xy/2) > m_Sinogram->T0 ? t-m_Inputs->delta_xy/2 : m_Sinogram->T0;
-		tmax = (t + m_Inputs->delta_xy/2) <= m_Sinogram->TMax? t + m_Inputs->delta_xy/2 : m_Sinogram->TMax;
+    y = ((DATA_TYPE)i + 0.5) * m_Inputs->delta_xy + m_Geometry->y0;
+    t = y;
+    tmin = (t - m_Inputs->delta_xy / 2) > m_Sinogram->T0 ? t - m_Inputs->delta_xy / 2 : m_Sinogram->T0;
+    tmax = (t + m_Inputs->delta_xy / 2) <= m_Sinogram->TMax ? t + m_Inputs->delta_xy / 2 : m_Sinogram->TMax;
 
-		slice_index_min = floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t);
-		slice_index_max = floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t);
+    slice_index_min = floor((tmin - m_Sinogram->T0) / m_Sinogram->delta_t);
+    slice_index_max = floor((tmax - m_Sinogram->T0) / m_Sinogram->delta_t);
 
-		if(slice_index_min < 0)
-			{slice_index_min = 0;}
-		if(slice_index_max >= m_Sinogram->N_t)
-			{slice_index_max = m_Sinogram->N_t-1;}
+    if(slice_index_min < 0)
+    {
+      slice_index_min = 0;
+    }
+    if(slice_index_max >= m_Sinogram->N_t)
+    {
+      slice_index_max = m_Sinogram->N_t - 1;
+    }
 
+    //printf("%d %d\n",slice_index_min,slice_index_max);
 
-		//printf("%d %d\n",slice_index_min,slice_index_max);
+    for (int i_t = slice_index_min; i_t <= slice_index_max; i_t++)
+    {
+      center_t = ((DATA_TYPE)i_t + 0.5) * m_Sinogram->delta_t + m_Sinogram->T0;
+      delta_t = fabs(center_t - t);
+      index_delta_t = floor(delta_t / OffsetT);
+      if(index_delta_t < DETECTOR_RESPONSE_BINS)
+      {
+        w3 = delta_t - (DATA_TYPE)(index_delta_t) * OffsetT;
+        w4 = ((DATA_TYPE)index_delta_t + 1) * OffsetT - delta_t;
+        ProfileThickness = (w4 / OffsetT) * H_t[0][0][index_delta_t]
+            + (w3 / OffsetT) * H_t[0][0][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
+      }
+      else
+      {
+        ProfileThickness = 0;
+      }
 
-		for(int i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
-		{
-			center_t = ((DATA_TYPE)i_t + 0.5)*m_Sinogram->delta_t + m_Sinogram->T0;
-			delta_t = fabs(center_t - t);
-			index_delta_t = floor(delta_t/OffsetT);
-			if(index_delta_t < DETECTOR_RESPONSE_BINS)
-			{
-				w3 = delta_t - (DATA_TYPE)(index_delta_t)*OffsetT;
-				w4 = ((DATA_TYPE)index_delta_t+1)*OffsetT - delta_t;
-				ProfileThickness =(w4/OffsetT)*H_t[0][0][index_delta_t] + (w3/OffsetT)*H_t[0][0][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
-			}
-			else
-			{
-				ProfileThickness=0;
-			}
-
-			if(ProfileThickness != 0)//Store the response of this slice
-			{
-				printf("%d %lf\n",i_t,ProfileThickness);
-				VoxelLineResponse[i].values[VoxelLineResponse[i].count]=ProfileThickness;
-				VoxelLineResponse[i].index[VoxelLineResponse[i].count++]=i_t;
-			}
-
-		}
-
-	}
+      if(ProfileThickness != 0) //Store the response of this slice
+      {
+        printf("%d %lf\n", i_t, ProfileThickness);
+        VoxelLineResponse[i].values[VoxelLineResponse[i].count] = ProfileThickness;
+        VoxelLineResponse[i].index[VoxelLineResponse[i].count++] = i_t;
+      }
+    }
+  }
 
 
 	printf("Number of non zero entries of the forward projector is %lf\n",temp);
@@ -677,10 +694,16 @@ void SOCEngine::execute()
 
 	//Forward Project Geometry->Object one slice at a time and compute the  Sinogram for each slice
 	//is Y_Est initailized to zero?
-	for(i = 0; i < m_Sinogram->N_theta; i++)
-	 for(j = 0; j < m_Sinogram->N_r; j++)
-	 for(k = 0;k < m_Sinogram->N_t; k++)
-	 Y_Est[i][j][k]=0.0;
+	for (i = 0; i < m_Sinogram->N_theta; i++)
+  {
+    for (j = 0; j < m_Sinogram->N_r; j++)
+    {
+      for (k = 0; k < m_Sinogram->N_t; k++)
+      {
+        Y_Est[i][j][k] = 0.0;
+      }
+    }
+  }
 
 
 	RandomNumber=init_genrand(1ul);
@@ -691,8 +714,9 @@ void SOCEngine::execute()
 	Counter = (int32_t*)malloc(ArraySize*sizeof(int32_t));
 	//CounterK = (int*)malloc(ArraySizeK*sizeof(int));
 
-	for(j_new = 0;j_new < ArraySize; j_new++)
+	for(j_new = 0;j_new < ArraySize; j_new++) {
 		Counter[j_new]=j_new;
+	}
 
 
 	START;
@@ -869,15 +893,22 @@ void SOCEngine::execute()
 #ifdef RANDOM_ORDER_UPDATES
       ArraySize = m_Geometry->N_x * m_Geometry->N_z;
       for (j_new = 0; j_new < ArraySize; j_new++)
+      {
         Counter[j_new] = j_new;
+      }
 
       for (j = 0; j < m_Geometry->N_z; j++)
+      {
         for (k = 0; k < m_Geometry->N_x; k++)
+        {
           VisitCount[j][k] = 0;
+        }
+      }
 #endif
 
       START;
       for (j = 0; j < m_Geometry->N_z; j++) //Row index
+      {
         for (k = 0; k < m_Geometry->N_x; k++) //Column index
         {
 #ifdef RANDOM_ORDER_UPDATES
@@ -911,8 +942,18 @@ void SOCEngine::execute()
                   }
                 }
               }
-#ifndef CIRCULAR_BOUNDARY_CONDITION
-
+#ifdef CIRCULAR_BOUNDARY_CONDITION
+              for(p = -1; p <=1; p++)
+              for(q = -1; q <= 1; q++)
+              for(r = -1; r <= 1;r++)
+              {
+                tempindex_x = mod(r+k_new,m_Geometry->N_x);
+                tempindex_y =mod(p+i,m_Geometry->N_y);
+                tempindex_z = mod(q+j_new,m_Geometry->N_z);
+                NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object->d[tempindex_z][tempindex_x][tempindex_y];
+                BOUNDARYFLAG[p+1][q+1][r+1]=1;
+              }
+#else
               //For a given (i,j,k) store its 26 point neighborhood
               for (int32_t p = -1; p <= 1; p++)
               {
@@ -934,22 +975,10 @@ void SOCEngine::execute()
                   }
                 }
               }
-#else
-              for(p = -1; p <=1; p++)
-              for(q = -1; q <= 1; q++)
-              for(r = -1; r <= 1;r++)
-              {
-                tempindex_x = mod(r+k_new,m_Geometry->N_x);
-                tempindex_y =mod(p+i,m_Geometry->N_y);
-                tempindex_z = mod(q+j_new,m_Geometry->N_z);
-                NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object->d[tempindex_z][tempindex_x][tempindex_y];
-                BOUNDARYFLAG[p+1][q+1][r+1]=1;
-              }
-
 #endif//circular boundary condition check
               NEIGHBORHOOD[1][1][1] = 0.0;
 
-#ifdef DEBUG
+#ifndef NDEBUG
               if(i == 0 && j == 31 && k == 31)
               {
                 printf("***************************\n");
@@ -967,23 +996,10 @@ void SOCEngine::execute()
               }
 #endif
               //Compute theta1 and theta2
-
               V = m_Geometry->Object->d[j_new][k_new][i]; //Store the present value of the voxel
               THETA1 = 0.0;
               THETA2 = 0.0;
 
-              /*		y = ((DATA_TYPE)i+0.5)*Geometry->delta_xy + Geometry->y0;
-               t = y;
-               tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-               tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax? t + Geometry->delta_xy/2 : Sinogram->TMax;
-
-               slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
-               slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
-
-               if(slice_index_min < 0)
-               slice_index_min = 0;
-               if(slice_index_max >= Sinogram->N_t)
-               slice_index_max = Sinogram->N_t-1;*/
 
               //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
               for (uint32_t q = 0; q < TempMemBlock->count; q++)
@@ -993,24 +1009,7 @@ void SOCEngine::execute()
                 uint16_t i_r = (TempMemBlock->index[q] % (m_Sinogram->N_r));
                 VoxelLineAccessCounter = 0;
                 for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
-                // for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
                 {
-                  /* center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
-                   delta_t = fabs(center_t - t);
-                   index_delta_t = floor(delta_t/OffsetT);
-
-                   if(index_delta_t < DETECTOR_RESPONSE_BINS)
-                   {
-                   w3 = delta_t - index_delta_t*OffsetT;
-                   w4 = (index_delta_t+1)*OffsetT - delta_t;
-                   //TODO: interpolation
-                   ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
-                   }
-                   else
-                   {
-                   ProfileThickness=0;
-                   }*/
-
                   THETA2 += ((NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta])
                       * (VoxelLineResponse[i].values[VoxelLineAccessCounter] * VoxelLineResponse[i].values[VoxelLineAccessCounter]) * (TempMemBlock->values[q])
                       * (TempMemBlock->values[q]) * Weight[i_theta][i_r][i_t]);
@@ -1053,8 +1052,8 @@ void SOCEngine::execute()
                 //    printf("(%lf,%lf,%lf)\n",low,high,UpdatedVoxelValue);
                 //	printf("Updated %lf\n",UpdatedVoxelValue);
 #ifdef POSITIVITY_CONSTRAINT
-                if(UpdatedVoxelValue < 0.0) //Enforcing positivity constraints
-                UpdatedVoxelValue = 0.0;
+                if(UpdatedVoxelValue < 0.0) { //Enforcing positivity constraints
+                UpdatedVoxelValue = 0.0;}
 #endif
               }
               else
@@ -1073,7 +1072,6 @@ void SOCEngine::execute()
 #ifdef ROI
               if(Mask[j_new][k_new] == 1)
               {
-
                 AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
                 AverageMagnitudeOfRecon += fabs(m_Geometry->Object->d[j_new][k_new][i]);
               }
@@ -1121,6 +1119,7 @@ void SOCEngine::execute()
           }
 
         }
+      }
       STOP;
       PRINTTIME;
 
@@ -1414,7 +1413,7 @@ void SOCEngine::execute()
       sum+=(ErrorSino[i_theta][i_r][i_t]*ErrorSino[i_theta][i_r][i_t]*Weight[i_theta][i_r][i_t]);
       sum/=(m_Sinogram->N_r*m_Sinogram->N_t);
 
-		NuisanceParams.alpha->d[i_theta]=sum;
+      NuisanceParams.alpha->d[i_theta]=sum;
 
       for(i_r=0; i_r < m_Sinogram->N_r; i_r++)
       for(i_t = 0; i_t < m_Sinogram->N_t; i_t++)
@@ -1514,7 +1513,7 @@ void SOCEngine::execute()
 
   START;
 	//calculates Ax and returns a pointer to the memory block
-	Final_Sinogram=forwardProject(DetectorResponse, H_t);
+	Final_Sinogram=forwardProject(detectorResponse, H_t);
 	STOP;
 	PRINTTIME;
 
@@ -1864,13 +1863,15 @@ void SOCEngine::initializeBeamProfile()
 {
 	uint16_t i;
 	DATA_TYPE sum=0,W;
-	BeamProfile=(DATA_TYPE*)get_spc(BEAM_RESOLUTION,sizeof(DATA_TYPE));
+//	BeamProfile=(DATA_TYPE*)get_spc(BEAM_RESOLUTION,sizeof(DATA_TYPE));
+	int dims[1] = { BEAM_RESOLUTION };
+	BeamProfile = RealArrayType::New(dims);
 	W=BEAM_WIDTH/2;
 	for (i=0; i < BEAM_RESOLUTION ;i++)
 	{
-		//BeamProfile[i] = (1.0/(BEAM_WIDTH)) * ( 1 + cos ((PI/W)*fabs(-W + i*(BEAM_WIDTH/BEAM_RESOLUTION))));
-		BeamProfile[i] = 0.54 - 0.46*cos((2*M_PI/BEAM_RESOLUTION)*i);
-		sum=sum+BeamProfile[i];
+		//BeamProfile->d[i] = (1.0/(BEAM_WIDTH)) * ( 1 + cos ((PI/W)*fabs(-W + i*(BEAM_WIDTH/BEAM_RESOLUTION))));
+		BeamProfile->d[i] = 0.54 - 0.46*cos((2*M_PI/BEAM_RESOLUTION)*i);
+		sum=sum+BeamProfile->d[i];
 	}
 
 	//Normalize the beam to have an area of 1
@@ -1878,9 +1879,9 @@ void SOCEngine::initializeBeamProfile()
 	for (i=0; i < BEAM_RESOLUTION ;i++)
 	{
 
-		BeamProfile[i]/=sum;
-		BeamProfile[i]/=m_Sinogram->delta_t;
-		// printf("%lf\n",BeamProfile[i]);
+		BeamProfile->d[i]/=sum;
+		BeamProfile->d[i]/=m_Sinogram->delta_t;
+		// printf("%lf\n",BeamProfile->d[i]);
 	}
 
 
@@ -1900,14 +1901,17 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 
 //Data Mismatch Error
 	for (i = 0; i < m_Sinogram->N_theta; i++)
-		for (j = 0; j < m_Sinogram->N_r; j++)
-			for( k = 0; k < m_Sinogram->N_t; k++)
-			{
-				cost+=(ErrorSino[i][j][k] * ErrorSino[i][j][k] * Weight[i][j][k]);
+  {
+    for (j = 0; j < m_Sinogram->N_r; j++)
+    {
+      for (k = 0; k < m_Sinogram->N_t; k++)
+      {
+        cost += (ErrorSino[i][j][k] * ErrorSino[i][j][k] * Weight[i][j][k]);
+      }
+    }
+  }
 
-			}
-
-	cost/=2;
+  cost /= 2;
 
 	printf("Data mismatch term =%lf\n",cost);
 
@@ -2095,81 +2099,6 @@ DATA_TYPE SOCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-RealVolumeType::Pointer SOCEngine::detectorResponse(uint16_t row,uint16_t col, RealImageType::Pointer VoxelProfile)
-{
-
-  FILE* Fp = NULL;
-  int err = 0;
-  MAKE_OUTPUT_FILE(Fp, err, m_Inputs->outputDir, ScaleOffsetCorrection::DetectorResponseFile)
-  if (err == 1)
-  {
-    std::cout << "Error creating output file for Detector Response." << std::endl;
-    return RealVolumeType::NullPointer();
-  }
-
-
-	DATA_TYPE r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,tmin;
-//	DATA_TYPE t;
-	//DATA_TYPE OffsetR,OffsetT,Left;
-	//DATA_TYPE ***H;
-	DATA_TYPE r0 = -(BEAM_WIDTH)/2;
-//	DATA_TYPE t0 = -(BEAM_WIDTH)/2;
-	DATA_TYPE StepSize = BEAM_WIDTH/BEAM_RESOLUTION;
-	int16_t i,j,k,p,ProfileIndex;
-//	int16_t l,NumOfDisplacements;
-
-	//NumOfDisplacements=32;
-	int dims[3] = {1, m_Sinogram->N_theta,DETECTOR_RESPONSE_BINS};
-	RealVolumeType::Pointer H = RealVolumeType::New(dims);
-	H->setName("DetectorResponse");
-
-	//H = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//change from 1 to DETECTOR_RESPONSE_BINS
-	TempConst=(PROFILE_RESOLUTION)/(2*m_Inputs->delta_xz);
-
-	for(k = 0 ; k < m_Sinogram->N_theta; k++)
-	{
-		for (i = 0; i < DETECTOR_RESPONSE_BINS; i++) //displacement along r
-		{
-			ProfileCenterR = i*OffsetR;
-			rmin = ProfileCenterR - m_Inputs->delta_xz;
-			for (j = 0 ; j < 1; j++)//displacement along t ;change to DETECTOR_RESPONSE_BINS later
-			{
-				ProfileCenterT = j*OffsetT;
-				tmin = ProfileCenterT - m_Inputs->delta_xy/2;
-				sum = 0;
-				for (p=0; p < BEAM_RESOLUTION; p++)
-				{
-					r = r0 + p*StepSize;
-					if(r < rmin)
-						continue;
-
-					ProfileIndex = (int32_t)floor((r-rmin)*TempConst);
-					if(ProfileIndex < 0)
-						ProfileIndex = 0;
-					if(ProfileIndex >= PROFILE_RESOLUTION)
-						ProfileIndex = PROFILE_RESOLUTION-1;
-
-					//for (l =0; l < BEAM_RESOLUTION; l++)
-					//{
-					//t = t0 + l*StepSize;
-					//if( t < tmin)
-					//   continue;
-					sum += (VoxelProfile->d[k][ProfileIndex] * BeamProfile[p]);//;*BeamProfile[l]);
-					//}
-
-				}
-				H->d[j][k][i] = sum;
-
-			}
-		}
-	}
-	printf("Detector Done\n");
-	//TODO: This should be broken out into its own class
-	fwrite(&(H->d[0][0][0]), sizeof(DATA_TYPE),m_Sinogram->N_theta*DETECTOR_RESPONSE_BINS, Fp);
-	fclose(Fp);
-	return H;
-}
-
 void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice,
                                                RealVolumeType::Pointer DetectorResponse)
 {

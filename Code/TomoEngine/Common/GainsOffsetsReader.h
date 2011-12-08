@@ -18,7 +18,7 @@
 /*
  *
  */
-class GainsOffsetsReader : public TomoFilter
+class TomoEngine_EXPORT GainsOffsetsReader : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(GainsOffsetsReader)

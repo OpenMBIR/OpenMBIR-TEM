@@ -8,10 +8,12 @@
 #ifndef SOCINPUTS_H_
 #define SOCINPUTS_H_
 
+#include "TomoEngine/TomoEngine.h"
+
 /*
  *
  */
-class SOCInputs
+class TomoEngine_EXPORT SOCInputs
 {
   public:
     SOCInputs();

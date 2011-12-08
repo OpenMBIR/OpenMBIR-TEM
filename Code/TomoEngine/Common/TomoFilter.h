@@ -18,7 +18,7 @@
 /*
  *
  */
-class TomoFilter : public AbstractFilter
+class TomoEngine_EXPORT TomoFilter : public AbstractFilter
 {
   public:
     MXA_SHARED_POINTERS(TomoFilter)

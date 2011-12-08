@@ -19,7 +19,7 @@
 /*
  *
  */
-class RawSinogramInitializer : public TomoFilter
+class TomoEngine_EXPORT RawSinogramInitializer : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(RawSinogramInitializer)

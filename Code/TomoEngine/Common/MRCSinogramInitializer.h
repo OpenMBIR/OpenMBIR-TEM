@@ -18,7 +18,7 @@
 /*
  *
  */
-class MRCSinogramInitializer : public TomoFilter
+class TomoEngine_EXPORT MRCSinogramInitializer : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(MRCSinogramInitializer)

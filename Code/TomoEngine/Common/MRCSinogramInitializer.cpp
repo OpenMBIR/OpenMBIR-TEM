@@ -193,5 +193,4 @@ void MRCSinogramInitializer::execute()
   setErrorCondition(0);
   setErrorMessage("");
   notify("Done Reading the MRC Input file", 0, UpdateProgressMessage);
-
 }

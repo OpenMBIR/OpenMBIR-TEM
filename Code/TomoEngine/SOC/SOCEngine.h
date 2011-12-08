@@ -21,7 +21,7 @@
 /**
  *
  */
-class SOCEngine : public AbstractPipeline, public Observer
+class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
 {
 
   public:
@@ -79,7 +79,7 @@ class SOCEngine : public AbstractPipeline, public Observer
 
     DATA_TYPE* cosine;
     DATA_TYPE* sine; //used to store cosine and sine of all angles through which sample is tilted
-    DATA_TYPE* BeamProfile; //used to store the shape of the e-beam
+    RealArrayType::Pointer BeamProfile; //used to store the shape of the e-beam
     DATA_TYPE BEAM_WIDTH;
     DATA_TYPE OffsetR;
     DATA_TYPE OffsetT;
@@ -151,14 +151,6 @@ class SOCEngine : public AbstractPipeline, public Observer
      * @param DetectorResponse
      */
     void* calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, RealVolumeType::Pointer DetectorResponse);
-
-    /**
-     * @brief
-     * @param row
-     * @param col
-     * @param VoxelProfile
-     */
-    RealVolumeType::Pointer detectorResponse(uint16_t row, uint16_t col, RealImageType::Pointer VoxelProfile);
 
     /**
      * @brief

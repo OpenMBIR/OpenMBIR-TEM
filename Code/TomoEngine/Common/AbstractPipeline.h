@@ -58,7 +58,7 @@
  * @date Jun 1, 2011
  * @version 1.0
  */
-class TomoLib_EXPORT AbstractPipeline
+class TomoEngine_EXPORT AbstractPipeline
 {
   public:
     AbstractPipeline();

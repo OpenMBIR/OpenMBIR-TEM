@@ -45,7 +45,10 @@
 //#define BEAM_WIDTH 0.050000
 #define BEAM_RESOLUTION 512
 #define AREA_WEIGHTED
-#define ROI //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
+
+//Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
+#define ROI 1
+
 #define STOPPING_THRESHOLD 0.009
 //#define SURROGATE_FUNCTION
 //#define QGGMRF

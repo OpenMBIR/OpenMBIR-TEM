@@ -39,6 +39,8 @@
 
 #include "MRCHeader.h"
 
+#include "TomoEngine/TomoEngine.h"
+
 
 
 /**
@@ -48,7 +50,7 @@
  * @date Nov 22, 2011
  * @version 1.0
  */
-class MRCReader
+class TomoEngine_EXPORT MRCReader
 {
   public:
 

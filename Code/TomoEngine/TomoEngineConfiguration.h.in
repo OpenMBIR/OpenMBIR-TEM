@@ -22,7 +22,7 @@
 #include "@PROJECT_NAME@/@CMP_TYPES_FILE_NAME@"
 
 /* Include the DLL export preprocessor defines */
-#include "TomoEngine/Common/EIMTomoDLLExport.h"
+#include "TomoEngine/Common/TomoEngineDLLExport.h"
 
 
 #endif

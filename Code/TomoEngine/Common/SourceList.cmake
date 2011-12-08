@@ -20,11 +20,13 @@ set (TomoEngine_Common_SRCS
     ${TomoEngine_SOURCE_DIR}/Common/InitialReconstructionBinReader.cpp
     ${TomoEngine_SOURCE_DIR}/Common/TomoFilter.cpp
     ${TomoEngine_SOURCE_DIR}/Common/ComputeGainsOffsets.cpp
+    ${TomoEngine_SOURCE_DIR}/Common/DetectorResponse.cpp
+    ${TomoEngine_SOURCE_DIR}/Common/DetectorResponseWriter.cpp
 )
 
 set (TomoEngine_Common_HDRS
     ${TomoEngine_SOURCE_DIR}/Common/allocate.h
-    ${TomoEngine_SOURCE_DIR}/Common/EIMTomoDLLExport.h
+    ${TomoEngine_SOURCE_DIR}/Common/TomoEngineDLLExport.h
     ${TomoEngine_SOURCE_DIR}/Common/MSVCDefines.h
     ${TomoEngine_SOURCE_DIR}/Common/EIMTime.h
     ${TomoEngine_SOURCE_DIR}/Common/EIMMath.h
@@ -43,7 +45,9 @@ set (TomoEngine_Common_HDRS
     ${TomoEngine_SOURCE_DIR}/Common/ComputeGainsOffsets.h 
     ${TomoEngine_SOURCE_DIR}/Common/CE_ConstraintEquation.hpp
     ${TomoEngine_SOURCE_DIR}/Common/DerivOfCostFunc.hpp
-    ${TomoEngine_SOURCE_DIR}/Common/TomoArray.hpp  
-
+    ${TomoEngine_SOURCE_DIR}/Common/TomoArray.hpp
+    ${TomoEngine_SOURCE_DIR}/Common/DetectorResponse.h
+    ${TomoEngine_SOURCE_DIR}/Common/DetectorResponseWriter.h
 )
+
 cmp_IDE_SOURCE_PROPERTIES( "Common" "${TomoEngine_Common_HDRS}" "${TomoEngine_Common_SRCS}" "${CMP_INSTALL_FILES}")

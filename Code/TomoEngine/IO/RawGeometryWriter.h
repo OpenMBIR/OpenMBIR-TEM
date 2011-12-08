@@ -43,7 +43,7 @@
  * @date
  * @version
  */
-class RawGeometryWriter : public TomoFilter
+class TomoEngine_EXPORT RawGeometryWriter : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(RawGeometryWriter)
