@@ -95,8 +95,9 @@ void GainsOffsetsReader::execute()
     fclose(Fp);
     // Allocate the proper amount of memory for the gains and offsets
     //The normalization and offset parameters for the views
-    sinogram->InitialGain=(DATA_TYPE*)get_spc(sinogram->N_theta, sizeof(DATA_TYPE));
-    sinogram->InitialOffset=(DATA_TYPE*)get_spc(sinogram->N_theta, sizeof(DATA_TYPE));
+    size_t dims[1] = {sinogram->N_theta};
+    sinogram->InitialGain = RealArrayType::New(dims);
+    sinogram->InitialOffset = RealArrayType::New(dims);
 
     // Copy just the values of the gains and offsets we need from the data read
     // from the file. The indices into the fileGains/fileOffsets array are stored
@@ -105,8 +106,8 @@ void GainsOffsetsReader::execute()
     {
 //      std::cout << "Gains/Offsets Index to Copy: " << inputs->goodViews[i]
 //      << " Into Index: " << i << std::endl;
-      sinogram->InitialGain[i] = fileGains[inputs->goodViews[i]];
-      sinogram->InitialOffset[i] = fileOffsets[inputs->goodViews[i]];
+      sinogram->InitialGain->d[i] = fileGains[inputs->goodViews[i]];
+      sinogram->InitialOffset->d[i] = fileOffsets[inputs->goodViews[i]];
     }
 
     setErrorCondition(0);

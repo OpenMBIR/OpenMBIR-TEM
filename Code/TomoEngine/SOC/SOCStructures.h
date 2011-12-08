@@ -87,8 +87,8 @@ typedef TomoArray<DATA_TYPE, DATA_TYPE*, 1> RealArrayType;
     DATA_TYPE T0,TMax;
     DATA_TYPE TargetGain;//,InitialOffset;//Initial scale and offset of the sinogram data
 
-    DATA_TYPE* InitialGain;//Reads in the initial value for the gain for each view
-    DATA_TYPE* InitialOffset;
+    RealArrayType::Pointer InitialGain;//Reads in the initial value for the gain for each view
+    RealArrayType::Pointer InitialOffset;
 
   } Sinogram;
 

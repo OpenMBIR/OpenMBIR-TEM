@@ -529,7 +529,7 @@ void SOCEngine::execute()
 	for(k=0 ; k < m_Sinogram->N_theta;k++)
 	{
 		//fread(&buffer, 1, sizeof(double), Fp6);
-		NuisanceParams.I_0->d[k] = m_Sinogram->InitialGain[k];//;
+		NuisanceParams.I_0->d[k] = m_Sinogram->InitialGain->d[k];//;
 #ifdef GEOMETRIC_MEAN_CONSTRAINT
 		sum+=log(NuisanceParams.I_0->d[k]);
 #else
@@ -547,7 +547,7 @@ void SOCEngine::execute()
 		printf("The input paramters dont meet the constraint..Renormalizing\n");
     temp = exp(log(m_Sinogram->TargetGain) - log(sum));
 		for (k = 0 ; k < m_Sinogram->N_theta; k++) {
-			NuisanceParams.I_0->d[k]=m_Sinogram->InitialGain[k]*temp;
+			NuisanceParams.I_0->d[k]=m_Sinogram->InitialGain->d[k]*temp;
 		}
 	}
 #else
@@ -557,7 +557,7 @@ void SOCEngine::execute()
 		printf("Arithmetic Mean Constraint not met..renormalizing\n");
 		temp = m_Sinogram->TargetGain/sum;
 		for (k = 0 ; k < m_Sinogram->N_theta; k++) {
-			NuisanceParams.I_0->d[k]=m_Sinogram->InitialGain[k]*temp;
+			NuisanceParams.I_0->d[k]=m_Sinogram->InitialGain->d[k]*temp;
 		}
 	}
 #endif
@@ -566,7 +566,7 @@ void SOCEngine::execute()
 	for(k=0 ; k < m_Sinogram->N_theta;k++)
 	{
 		//fread(&buffer, 1, sizeof(double), Fp6);
-		NuisanceParams.mu->d[k] = m_Sinogram->InitialOffset[k];
+		NuisanceParams.mu->d[k] = m_Sinogram->InitialOffset->d[k];
 	}
 
 	for(k = 0 ; k <m_Sinogram->N_theta; k++)
@@ -1644,8 +1644,8 @@ void SOCEngine::cleanupMemory()
   if (NULL != d1) {free((void*)(d1)); d1 = NULL;}
   if (NULL != d2) {free((void*)(d2)); d2 = NULL;}
 
-  if (m_Sinogram->InitialGain != NULL) {free(m_Sinogram->InitialGain); m_Sinogram->InitialGain = NULL;}
-  if (m_Sinogram->InitialOffset != NULL) {free(m_Sinogram->InitialOffset); m_Sinogram->InitialOffset = NULL;}
+//  if (m_Sinogram->InitialGain != NULL) {free(m_Sinogram->InitialGain); m_Sinogram->InitialGain = NULL;}
+//  if (m_Sinogram->InitialOffset != NULL) {free(m_Sinogram->InitialOffset); m_Sinogram->InitialOffset = NULL;}
 //  if (m_NuisanceParams->I_0 != NULL) {free(m_NuisanceParams->I_0); m_NuisanceParams->I_0 = NULL;}
 //  if (m_NuisanceParams->mu != NULL) {free(m_NuisanceParams->mu); m_NuisanceParams->mu = NULL;}
 //  if (m_NuisanceParams->alpha != NULL) {free(m_NuisanceParams->alpha); m_NuisanceParams->alpha = NULL;}
