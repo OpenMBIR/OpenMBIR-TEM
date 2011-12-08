@@ -290,11 +290,14 @@ void SOCEngine::execute()
       gainsOffsetsInitializer = GainsOffsetsReader::NewTomoFilter();
     }
 
-<<<<<<< HEAD
-    initializer->setSinogram(m_Sinogram);
-    initializer->setInputs(m_Inputs);
-    initializer->addObserver(this);
-    initializer->execute();
+
+	  
+    gainsOffsetsInitializer->setSinogram(m_Sinogram);
+    gainsOffsetsInitializer->setInputs(m_Inputs);
+    gainsOffsetsInitializer->addObserver(this);
+    gainsOffsetsInitializer->execute();
+	  
+	  
 	  
 	  /********************REMOVE************************/
 	  std::cout<<"HARD WIRED TARGET GAIN TO 20K"<<std::endl;
@@ -303,14 +306,7 @@ void SOCEngine::execute()
 	  std::cout<<"Target Gain"<<m_Sinogram->TargetGain<<std::endl;
 	  
 	  /*************************************************/
-	  
-=======
-    gainsOffsetsInitializer->setSinogram(m_Sinogram);
-    gainsOffsetsInitializer->setInputs(m_Inputs);
-    gainsOffsetsInitializer->addObserver(this);
-    gainsOffsetsInitializer->execute();
- //   std::cout << "hi" << std::endl;
->>>>>>> 08e4f1a824014db424b4c3aaa8f5381d8a1c4267
+	
 
     if(gainsOffsetsInitializer->getErrorCondition() < 0)
     {
@@ -550,13 +546,10 @@ void SOCEngine::execute()
 		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++) {
 			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
 			{
-<<<<<<< HEAD
-				m_Sinogram->counts[i_theta][i_r][i_t] = log(m_Sinogram->counts[i_theta][i_r][i_t])-log(m_Sinogram->InitialGain[i_theta]);
-			}
-=======
-				m_Sinogram->counts->d[i_theta][i_r][i_t] = log(m_Sinogram->counts->d[i_theta][i_r][i_t])-log(m_Sinogram->TargetGain);
+
+				m_Sinogram->counts->d[i_theta][i_r][i_t] = log(m_Sinogram->counts->d[i_theta][i_r][i_t])-log(m_Sinogram->InitialGain[i_theta]);
 			}}}
->>>>>>> 08e4f1a824014db424b4c3aaa8f5381d8a1c4267
+
 #endif//Bright Field
 
 	//Scale and Offset Parameters Initialization
@@ -857,15 +850,10 @@ void SOCEngine::execute()
 #ifdef NOISE_MODEL
 	for (int16_t i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
 	{
-<<<<<<< HEAD
-		NuisanceParams.alpha[i_theta]=1;//Initialize the refinement parameters to 1
-		for(int16_t i_r = 0; i_r < m_Sinogram->N_r;i_r++)
-			for(int16_t i_t = 0;i_t < m_Sinogram->N_t;i_t++)
-=======
+
 		NuisanceParams.alpha->d[i_theta]=1;//Initialize the refinement parameters to 1
 		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
 			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
->>>>>>> 08e4f1a824014db424b4c3aaa8f5381d8a1c4267
 				if(sum != 0)
 				{
 #ifdef BRIGHT_FIELD
@@ -1143,14 +1131,9 @@ void SOCEngine::execute()
 #ifdef ROI
               if(Mask[j_new][k_new] == 1)
               {
-<<<<<<< HEAD
 
-                AverageUpdate += fabs(m_Geometry->Object[j_new][k_new][i] - V);
-                AverageMagnitudeOfRecon += fabs(V);//computing the percentage update =(Change in mag/Initial magnitude)
-=======
                 AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
-                AverageMagnitudeOfRecon += fabs(m_Geometry->Object->d[j_new][k_new][i]);
->>>>>>> 08e4f1a824014db424b4c3aaa8f5381d8a1c4267
+                AverageMagnitudeOfRecon += fabs(V);
               }
 #endif
 
@@ -2156,17 +2139,11 @@ void SOCEngine::execute()
 
       NuisanceParams.alpha->d[i_theta]=sum;
 
-<<<<<<< HEAD
-      for(uint16_t i_r=0; i_r < m_Sinogram->N_r; i_r++)
-      for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-      if(NuisanceParams.alpha[i_theta] != 0)
-		  Weight[i_theta][i_r][i_t]/=NuisanceParams.alpha[i_theta];
-=======
+
       for(i_r=0; i_r < m_Sinogram->N_r; i_r++)
       for(i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-      if(sum != 0)
+      if(NuisanceParams.alpha[i_theta] != 0)
 		  Weight[i_theta][i_r][i_t]/=NuisanceParams.alpha->d[i_theta];
->>>>>>> 08e4f1a824014db424b4c3aaa8f5381d8a1c4267
 
     }
 
@@ -2239,14 +2216,9 @@ void SOCEngine::execute()
 	{
 		printf("%lf\n",cost[i]);
 	}
-<<<<<<< HEAD
 	
 #ifdef NOISE_MODEL
-=======
 
-
-
->>>>>>> 08e4f1a824014db424b4c3aaa8f5381d8a1c4267
 	if(NuisanceParams.alpha != NULL)
   {
 	  FILE* Fp7 = NULL;
