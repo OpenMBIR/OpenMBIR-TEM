@@ -120,9 +120,9 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
     RealImageType::Pointer QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
     RealImageType::Pointer Qk_cost;
     RealImageType::Pointer bk_cost;
-    DATA_TYPE* ck_cost; //these are the terms of the quadratic cost function
-    DATA_TYPE* d1;
-    DATA_TYPE* d2; //hold the intermediate values needed to compute optimal mu_k
+    RealArrayType::Pointer ck_cost; //these are the terms of the quadratic cost function
+    RealArrayType::Pointer d1;
+    RealArrayType::Pointer d2; //hold the intermediate values needed to compute optimal mu_k
     uint16_t NumOfViews; //this is kind of redundant but in order to avoid repeatedly send this info to the rooting function we save number of views
     DATA_TYPE LogGain; //again these information  are available but to prevent repeatedly sending it to the rooting functions we store it in a variable
 
