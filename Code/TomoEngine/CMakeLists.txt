@@ -71,6 +71,7 @@ endMacro()
 
 
 D3DCompileDir(Common)
+D3DCompileDir(Filters)
 D3DCompileDir(IO)
 D3DCompileDir(mt)
 D3DCompileDir(SOC)

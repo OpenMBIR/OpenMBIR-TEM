@@ -11,7 +11,7 @@
 #include "MXA/Common/MXASetGetMacros.h"
 
 #include "TomoEngine/TomoEngine.h"
-#include "TomoEngine/Common/InitialReconstructionInitializer.h"
+#include "TomoEngine/Filters/InitialReconstructionInitializer.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 
 

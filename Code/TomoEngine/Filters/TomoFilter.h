@@ -11,7 +11,7 @@
 #include "MXA/Common/MXASetGetMacros.h"
 
 #include "TomoEngine/TomoEngine.h"
-#include "TomoEngine/Common/AbstractFilter.h"
+#include "TomoEngine/Filters/AbstractFilter.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 
 
