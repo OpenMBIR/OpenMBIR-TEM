@@ -159,6 +159,7 @@ typedef TomoArray<DATA_TYPE, DATA_TYPE*, 1> RealArrayType;
 
   typedef struct
   {
+
     RealArrayType::Pointer I_0; //Scale
     RealArrayType::Pointer mu; //Offset
     RealArrayType::Pointer alpha;//Noise variance refinement factor
