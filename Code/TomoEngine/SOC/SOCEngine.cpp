@@ -874,6 +874,7 @@ void SOCEngine::execute()
 	//Also compute weights of the diagonal covariance matrix
 
 #ifdef NOISE_MODEL
+
   for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
   {
     NuisanceParams.alpha->d[i_theta] = 1; //Initialize the refinement parameters to 1
@@ -1761,6 +1762,7 @@ void SOCEngine::execute()
 									 ProfileThickness=0;
 									 }*/
 
+
 									THETA2 += ((NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta])
 											   * (VoxelLineResponse[i].values[VoxelLineAccessCounter] * VoxelLineResponse[i].values[VoxelLineAccessCounter]) * (TempMemBlock->values[q])
 											   * (TempMemBlock->values[q]) * Weight->d[i_theta][i_r][i_t]);
@@ -1819,10 +1821,11 @@ void SOCEngine::execute()
 
 							//TODO Print appropriate error messages for other values of error code
 							m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
-
+							
 #ifdef ROI
 							if(Mask[j_new][k_new] == 1)
 							{
+								
 
 								AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
 								AverageMagnitudeOfRecon += fabs(V);//computing the percentage update =(Change in mag/Initial magnitude)
@@ -1855,6 +1858,7 @@ void SOCEngine::execute()
 									 {
 									 ProfileThickness=0;
 									 }*/
+
 
 									ErrorSino->d[i_theta][i_r][i_t] -= (NuisanceParams.I_0->d[i_theta]
 																	 * (TempMemBlock->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
@@ -2168,6 +2172,7 @@ void SOCEngine::execute()
       sum/=(m_Sinogram->N_r*m_Sinogram->N_t);
 
       NuisanceParams.alpha->d[i_theta]=sum;
+
 
 
       for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)

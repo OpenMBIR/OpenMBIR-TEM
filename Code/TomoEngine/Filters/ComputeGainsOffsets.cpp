@@ -35,6 +35,7 @@ void ComputeGainsOffsets::execute()
 //	TomoInputs* inputs = getInputs();//This gets the input files
 
 	//The normalization and offset parameters for the views
+
 	size_t dims[3] = {sinogram->N_theta, 0, 0};
 	sinogram->InitialGain = RealArrayType::New(dims);
 	sinogram->InitialGain->setName("sinogram->InitialGain");
