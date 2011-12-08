@@ -50,10 +50,10 @@ class CE_ConstraintEquation
 {
   public:
     CE_ConstraintEquation(uint16_t NumOfViews,
-                          DATA_TYPE** QuadraticParameters,
+                          RealImageType::Pointer QuadraticParameters,
                           DATA_TYPE* d1, DATA_TYPE* d2,
-                          DATA_TYPE** Qk_cost,
-                          DATA_TYPE** bk_cost,
+                          RealImageType::Pointer  Qk_cost,
+                          RealImageType::Pointer  bk_cost,
                           DATA_TYPE* ck_cost,
                           DATA_TYPE LogGain) :
         NumOfViews(NumOfViews),
@@ -116,16 +116,16 @@ class CE_ConstraintEquation
 
       for (i_theta = 0; i_theta < NumOfViews; i_theta++)
       {
-        //temp=((QuadraticParameters[i_theta][1]*QuadraticParameters[i_theta][1])-4*QuadraticParameters[i_theta][0]*lambda);
-        root = CE_RootsOfQuadraticFunction(QuadraticParameters[i_theta][0], QuadraticParameters[i_theta][1], lambda);
+        //temp=((QuadraticParameters->d[i_theta][1]*QuadraticParameters->d[i_theta][1])-4*QuadraticParameters->d[i_theta][0]*lambda);
+        root = CE_RootsOfQuadraticFunction(QuadraticParameters->d[i_theta][0], QuadraticParameters->d[i_theta][1], lambda);
         //Evaluate which root results in a lower cost function
         for (i = 0; i < 2; i++)
         {
           if(root[i] > 0) // If the value of I0[k] is positive
           {
             temp_mu = d1[i_theta] - root[i] * d2[i_theta]; //for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-            temp_cost = (Qk_cost[i_theta][0] * root[i] * root[i] + 2 * Qk_cost[i_theta][1] * root[i] * temp_mu + temp_mu * temp_mu * Qk_cost[i_theta][2]
-                - 2 * (bk_cost[i_theta][0] * root[i] + temp_mu * bk_cost[i_theta][1]) + ck_cost[i_theta]); //evaluating the cost function
+            temp_cost = (Qk_cost->d[i_theta][0] * root[i] * root[i] + 2 * Qk_cost->d[i_theta][1] * root[i] * temp_mu + temp_mu * temp_mu * Qk_cost->d[i_theta][2]
+                - 2 * (bk_cost->d[i_theta][0] * root[i] + temp_mu * bk_cost->d[i_theta][1]) + ck_cost[i_theta]); //evaluating the cost function
             if(temp_cost < min)
             {
               min = temp_cost;
@@ -155,11 +155,11 @@ class CE_ConstraintEquation
 
   private:
     uint16_t NumOfViews;
-    DATA_TYPE** QuadraticParameters;
+    RealImageType::Pointer  QuadraticParameters;
     DATA_TYPE* d1;
     DATA_TYPE* d2; //hold the intermediate values needed to compute optimal mu_k
-    DATA_TYPE** Qk_cost;
-    DATA_TYPE** bk_cost;
+    RealImageType::Pointer  Qk_cost;
+    RealImageType::Pointer  bk_cost;
     DATA_TYPE* ck_cost; //these are the terms of the quadratic cost function
     DATA_TYPE LogGain;
     CE_ConstraintEquation(const CE_ConstraintEquation&); // Copy Constructor Not Implemented

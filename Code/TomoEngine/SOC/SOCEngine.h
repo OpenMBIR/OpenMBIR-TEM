@@ -117,9 +117,9 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
     DATA_TYPE OffsetR;
     DATA_TYPE OffsetT;
 
-    DATA_TYPE** QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
-    DATA_TYPE** Qk_cost;
-    DATA_TYPE** bk_cost;
+    RealImageType::Pointer QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
+    RealImageType::Pointer Qk_cost;
+    RealImageType::Pointer bk_cost;
     DATA_TYPE* ck_cost; //these are the terms of the quadratic cost function
     DATA_TYPE* d1;
     DATA_TYPE* d2; //hold the intermediate values needed to compute optimal mu_k

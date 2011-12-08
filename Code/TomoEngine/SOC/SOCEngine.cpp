@@ -438,9 +438,18 @@ void SOCEngine::execute()
 #endif //QGGMRF
 
 	//globals assosiated with finding the optimal gain and offset parameters
-	QuadraticParameters = (DATA_TYPE**)(get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE)));//Hold the coefficients of a quadratic equation
-	Qk_cost=(DATA_TYPE**)get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE));
-	bk_cost=(DATA_TYPE**)get_img(2, m_Sinogram->N_theta, sizeof(DATA_TYPE));
+	size_t dims[3] = {3, m_Sinogram->N_theta, 0};
+	QuadraticParameters = RealImageType::New(dims);
+	QuadraticParameters->setName("QuadraticParameters");
+//	QuadraticParameters = (DATA_TYPE**)(get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE)));//Hold the coefficients of a quadratic equation
+	Qk_cost = RealImageType::New(dims);
+  Qk_cost->setName("Qk_cost");
+//	Qk_cost=(DATA_TYPE**)get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE));
+//	bk_cost=(DATA_TYPE**)get_img(2, m_Sinogram->N_theta, sizeof(DATA_TYPE));
+	bk_cost = RealImageType::New(dims);
+	bk_cost->setName("bk_cost");
+
+
 	ck_cost=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
 	NumOfViews = m_Sinogram->N_theta;
 	LogGain = m_Sinogram->N_theta*log(m_Sinogram->TargetGain);
@@ -1287,12 +1296,12 @@ void SOCEngine::execute()
         }
       }
 
-      bk_cost[i_theta][1] = numerator_sum; //yt*\lambda*1
-      bk_cost[i_theta][0] = b; //yt*\lambda*(Ax)
+      bk_cost->d[i_theta][1] = numerator_sum; //yt*\lambda*1
+      bk_cost->d[i_theta][0] = b; //yt*\lambda*(Ax)
       ck_cost[i_theta] = c; //yt*\lambda*y
-      Qk_cost[i_theta][2] = denominator_sum;
-      Qk_cost[i_theta][1] = a;
-      Qk_cost[i_theta][0] = d;
+      Qk_cost->d[i_theta][2] = denominator_sum;
+      Qk_cost->d[i_theta][1] = a;
+      Qk_cost->d[i_theta][0] = d;
 
       d1[i_theta] = numerator_sum / denominator_sum;
       d2[i_theta] = a / denominator_sum;
@@ -1306,10 +1315,10 @@ void SOCEngine::execute()
           b -= ((m_Sinogram->counts->d[i_theta][i_r][i_t] - d1[i_theta]) * Weight[i_theta][i_r][i_t] * Y_Est[i_theta][i_r][i_t]);
         }
       }
-      QuadraticParameters[i_theta][0] = a;
-      QuadraticParameters[i_theta][1] = b;
+      QuadraticParameters->d[i_theta][0] = a;
+      QuadraticParameters->d[i_theta][1] = b;
 
-      temp = (QuadraticParameters[i_theta][1] * QuadraticParameters[i_theta][1]) / (4 * QuadraticParameters[i_theta][0]);
+      temp = (QuadraticParameters->d[i_theta][1] * QuadraticParameters->d[i_theta][1]) / (4 * QuadraticParameters->d[i_theta][0]);
 
       if(temp > 0 && temp < high) high = temp; //high holds the maximum value for the rooting operation. beyond this value discriminants become negative. Basically high = min{b^2/4*a}
       else if(temp < 0 && temp > low) low = temp;
@@ -1320,10 +1329,10 @@ void SOCEngine::execute()
     sum = 0;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      sum += (Qk_cost[i_theta][0] * NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta]
-          + 2 * Qk_cost[i_theta][1] * NuisanceParams.I_0->d[i_theta] * NuisanceParams.mu->d[i_theta]
-          + NuisanceParams.mu->d[i_theta] * NuisanceParams.mu->d[i_theta] * Qk_cost[i_theta][2]
-          - 2 * (bk_cost[i_theta][0] * NuisanceParams.I_0->d[i_theta] + NuisanceParams.mu->d[i_theta] * bk_cost[i_theta][1]) + ck_cost[i_theta]); //evaluating the cost function
+      sum += (Qk_cost->d[i_theta][0] * NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta]
+          + 2 * Qk_cost->d[i_theta][1] * NuisanceParams.I_0->d[i_theta] * NuisanceParams.mu->d[i_theta]
+          + NuisanceParams.mu->d[i_theta] * NuisanceParams.mu->d[i_theta] * Qk_cost->d[i_theta][2]
+          - 2 * (bk_cost->d[i_theta][0] * NuisanceParams.I_0->d[i_theta] + NuisanceParams.mu->d[i_theta] * bk_cost->d[i_theta][1]) + ck_cost[i_theta]); //evaluating the cost function
     }
     sum /= 2;
     printf("The value of the data match error prior to updating the I and mu =%lf\n", sum);
@@ -1337,15 +1346,15 @@ void SOCEngine::execute()
     sum2 = 0;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      sum1 += (1.0 / (Qk_cost[i_theta][0] - Qk_cost[i_theta][1] * d2[i_theta]));
-      sum2 += ((bk_cost[i_theta][0] - Qk_cost[i_theta][1] * d1[i_theta]) / (Qk_cost[i_theta][0] - Qk_cost[i_theta][1] * d2[i_theta]));
+      sum1 += (1.0 / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2[i_theta]));
+      sum2 += ((bk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d1[i_theta]) / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2[i_theta]));
     }
     LagrangeMultiplier = (-m_Sinogram->N_theta * m_Sinogram->TargetGain + sum2) / sum1;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
 
-      NuisanceParams.I_0->d[i_theta] = (-1 * LagrangeMultiplier - Qk_cost[i_theta][1] * d1[i_theta] + bk_cost[i_theta][0])
-          / (Qk_cost[i_theta][0] - Qk_cost[i_theta][1] * d2[i_theta]);
+      NuisanceParams.I_0->d[i_theta] = (-1 * LagrangeMultiplier - Qk_cost->d[i_theta][1] * d1[i_theta] + bk_cost->d[i_theta][0])
+          / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2[i_theta]);
       NuisanceParams.mu->d[i_theta] = d1[i_theta] - d2[i_theta] * NuisanceParams.I_0->d[i_theta]; //some function of I_0[i_theta]
     }
 
@@ -1365,10 +1374,10 @@ void SOCEngine::execute()
     sum = 0;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      sum += (Qk_cost[i_theta][0] * NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta]
-          + 2 * Qk_cost[i_theta][1] * NuisanceParams.I_0->d[i_theta] * NuisanceParams.mu->d[i_theta]
-          + NuisanceParams.mu->d[i_theta] * NuisanceParams.mu->d[i_theta] * Qk_cost[i_theta][2]
-          - 2 * (bk_cost[i_theta][0] * NuisanceParams.I_0->d[i_theta] + NuisanceParams.mu->d[i_theta] * bk_cost[i_theta][1]) + ck_cost[i_theta]); //evaluating the cost function
+      sum += (Qk_cost->d[i_theta][0] * NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta]
+          + 2 * Qk_cost->d[i_theta][1] * NuisanceParams.I_0->d[i_theta] * NuisanceParams.mu->d[i_theta]
+          + NuisanceParams.mu->d[i_theta] * NuisanceParams.mu->d[i_theta] * Qk_cost->d[i_theta][2]
+          - 2 * (bk_cost->d[i_theta][0] * NuisanceParams.I_0->d[i_theta] + NuisanceParams.mu->d[i_theta] * bk_cost->d[i_theta][1]) + ck_cost[i_theta]); //evaluating the cost function
     }
     sum /= 2;
 
@@ -1636,9 +1645,9 @@ void SOCEngine::cleanupMemory()
 //  if (NULL != m_Sinogram->counts) {free_3D((void***)(m_Sinogram->counts)); m_Sinogram->counts = NULL;}
 //  if (NULL != cosine) {free((void*)(cosine)); cosine = NULL;}
 //  if (NULL != sine) {free((void*)(sine)); sine = NULL;}
-  if (NULL != QuadraticParameters) {free_img((void**)(QuadraticParameters)); QuadraticParameters = NULL;}
-  if (NULL != Qk_cost) {free_img((void**)(Qk_cost)); Qk_cost = NULL;}
-  if (NULL != Qk_cost) {free_img((void**)(Qk_cost)); Qk_cost = NULL;}
+//  if (NULL != QuadraticParameters) {free_img((void**)(QuadraticParameters)); QuadraticParameters = NULL;}
+//  if (NULL != Qk_cost) {free_img((void**)(Qk_cost)); Qk_cost = NULL;}
+//  if (NULL != Qk_cost) {free_img((void**)(Qk_cost)); Qk_cost = NULL;}
 
   if (NULL != ck_cost) {free((void*)(ck_cost)); ck_cost = NULL;}
   if (NULL != d1) {free((void*)(d1)); d1 = NULL;}
@@ -2435,17 +2444,17 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
        printf("Quadratic Parameters\n");
        for(int i_theta =0; i_theta < m_Sinogram->N_theta;i_theta++)
        {
-         printf("%lf %lf %lf\n",QuadraticParameters[i_theta][0],QuadraticParameters[i_theta][1],QuadraticParameters[i_theta][2]);
+         printf("%lf %lf %lf\n",QuadraticParameters->d[i_theta][0],QuadraticParameters->d[i_theta][1],QuadraticParameters->d[i_theta][2]);
        }
  #ifdef DEBUG_CONSTRAINT_OPT
 
        //for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
        //{
-       fwrite(&Qk_cost[0][0], sizeof(DATA_TYPE), m_Sinogram->N_theta*3, Fp8);
+       fwrite(&Qk_cost->d[0][0], sizeof(DATA_TYPE), m_Sinogram->N_theta*3, Fp8);
        //}
        //for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
        //{
-       fwrite(&bk_cost[0][0], sizeof(DATA_TYPE), m_Sinogram->N_theta*2, Fp8);
+       fwrite(&bk_cost->d[0][0], sizeof(DATA_TYPE), m_Sinogram->N_theta*2, Fp8);
        //}
        fwrite(&ck_cost[0], sizeof(DATA_TYPE), m_Sinogram->N_theta, Fp8);
  #endif
@@ -2459,16 +2468,16 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
      for (int i_theta =0; i_theta < m_Sinogram->N_theta; i_theta++)
      {
 
-       root = conEqn.CE_RootsOfQuadraticFunction(QuadraticParameters[i_theta][0],QuadraticParameters[i_theta][1],LagrangeMultiplier); //returns the 2 roots of the quadratic parameterized by a,b,c
+       root = conEqn.CE_RootsOfQuadraticFunction(QuadraticParameters->d[i_theta][0],QuadraticParameters->d[i_theta][1],LagrangeMultiplier); //returns the 2 roots of the quadratic parameterized by a,b,c
        a=root[0];
        b=root[0];
        if(root[0] >= 0 && root[1] >= 0)
        {
          temp_mu = d1[i_theta] - root[0]*d2[i_theta]; //for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-         a = (Qk_cost[i_theta][0]*root[0]*root[0] + 2*Qk_cost[i_theta][1]*root[0]*temp_mu + temp_mu*temp_mu*Qk_cost[i_theta][2] - 2*(bk_cost[i_theta][0]*root[0] + temp_mu*bk_cost[i_theta][1]) + ck_cost[i_theta]);//evaluating the cost function
+         a = (Qk_cost->d[i_theta][0]*root[0]*root[0] + 2*Qk_cost->d[i_theta][1]*root[0]*temp_mu + temp_mu*temp_mu*Qk_cost->d[i_theta][2] - 2*(bk_cost->d[i_theta][0]*root[0] + temp_mu*bk_cost->d[i_theta][1]) + ck_cost[i_theta]);//evaluating the cost function
 
          temp_mu = d1[i_theta] - root[1]*d2[i_theta];//for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-         b = (Qk_cost[i_theta][0]*root[1]*root[1] + 2*Qk_cost[i_theta][1]*root[1]*temp_mu + temp_mu*temp_mu*Qk_cost[i_theta][2] - 2*(bk_cost[i_theta][0]*root[1] + temp_mu*bk_cost[i_theta][1]) + ck_cost[i_theta]);//evaluating the cost function
+         b = (Qk_cost->d[i_theta][0]*root[1]*root[1] + 2*Qk_cost->d[i_theta][1]*root[1]*temp_mu + temp_mu*temp_mu*Qk_cost->d[i_theta][2] - 2*(bk_cost->d[i_theta][0]*root[1] + temp_mu*bk_cost->d[i_theta][1]) + ck_cost[i_theta]);//evaluating the cost function
        }
 
        if(a == Minimum(a, b))
