@@ -111,7 +111,7 @@ void InitialReconstructionInitializer::execute()
   input->LengthZ *= Z_STRETCH;
 
 #ifdef EXTEND_OBJECT
-  geometry->LengthX = 0.6*((sinogram->N_r * sinogram->delta_r)/cos(max*M_PI/180)) + input->LengthZ*tan(max*M_PI/180) ;
+  geometry->LengthX = X_SHRINK_FACTOR*((sinogram->N_r * sinogram->delta_r)/cos(max*M_PI/180)) + input->LengthZ*tan(max*M_PI/180) ;
 #else
   geometry->LengthX = ((sinogram->N_r * sinogram->delta_r));
 #endif //Extend object endif
@@ -125,7 +125,7 @@ void InitialReconstructionInitializer::execute()
 
   geometry->N_x = ceil(geometry->LengthX/input->delta_xz);//Number of voxels in x direction
   geometry->N_z = ceil(input->LengthZ/input->delta_xz);//Number of voxels in z direction
-  geometry->N_y = ceil(geometry->LengthY/input->delta_xy);//Number of measurements in y direction
+  geometry->N_y = floor(geometry->LengthY/input->delta_xy);//Number of measurements in y direction
 
   printf("Geometry->Nz=%d\n",geometry->N_z);
   printf("Geometry->Nx=%d\n",geometry->N_x);

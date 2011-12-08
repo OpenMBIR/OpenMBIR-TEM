@@ -41,7 +41,7 @@
 
 #include <string>
 
-//#define EXTEND_OBJECT
+#define EXTEND_OBJECT
 
 #define X_STRETCH 1
 #define Z_STRETCH 2
@@ -76,6 +76,7 @@
 #define RANDOM_ORDER_UPDATES
 //#define BRIGHT_FIELD
 //#define NHICD
+#define X_SHRINK_FACTOR 0.6
 
 //#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
 

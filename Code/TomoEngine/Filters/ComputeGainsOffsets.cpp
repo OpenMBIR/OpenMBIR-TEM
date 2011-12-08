@@ -127,7 +127,7 @@ void ComputeGainsOffsets::execute()
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	{
 		sinogram->InitialGain->d[i_theta] = sinogram->TargetGain;
-		std::cout << "Tilt: " << i_theta<< "  Gain: "<< sinogram->TargetGain << std::endl;
+		std::cout << "Tilt: " << i_theta<< "  Gain: "<< sinogram->InitialGain->d[i_theta]<< std::endl;
 	}
 	std::cout << "------------Initial Offsets-----------" << std::endl;
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
