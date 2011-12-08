@@ -33,7 +33,7 @@
 
 #include <string>
 
-//#define EXTEND_OBJECT
+#define EXTEND_OBJECT
 
 #define X_STRETCH 1
 #define Z_STRETCH 2
