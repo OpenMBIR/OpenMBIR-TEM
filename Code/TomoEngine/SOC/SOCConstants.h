@@ -33,7 +33,7 @@
 
 #include <string>
 
-#define EXTEND_OBJECT
+//#define EXTEND_OBJECT
 
 #define X_STRETCH 1
 #define Z_STRETCH 2
@@ -58,12 +58,13 @@
 #define DETECTOR_RESPONSE_BINS 64
 #define JOINT_ESTIMATION
 //#define GEOMETRIC_MEAN_CONSTRAINT
-//#define NOISE_MODEL
+#define NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
 //#define CIRCULAR_BOUNDARY_CONDITION
 //#define DEBUG_CONSTRAINT_OPT
 #define RANDOM_ORDER_UPDATES
 //#define BRIGHT_FIELD
+//#define NHICD
 
 //#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
 

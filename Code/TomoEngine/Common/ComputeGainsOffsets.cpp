@@ -73,10 +73,7 @@ void ComputeGainsOffsets::execute()
 	DATA_TYPE max_elt=*max_element(AverageGain.begin(), AverageGain.end());
 	DATA_TYPE min_elt=*min_element(AverageGain.begin(), AverageGain.end());
 	
-	std::cout<<max_elt<<" "<<min_elt<<std::endl;
-	sinogram->TargetGain=max_elt-min_elt;
-	std::cout<<sinogram->TargetGain<<std::endl;
-	//Compute A^t * A
+		//Compute A^t * A
 	DATA_TYPE ProdMatrix[2][2];
 	
 	for(uint8_t i=0; i < 2;i++)
@@ -120,11 +117,13 @@ void ComputeGainsOffsets::execute()
 	 
 	}
 	
+	std::cout<<"Target Gain"<<sinogram->TargetGain<<std::endl;
+	//In this the Gains are all set to the target Gain
 	std::cout << "------------Initial Gains-----------" << std::endl;
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	{
-		sinogram->InitialGain[i_theta] = LS_Estimates[0];
-		std::cout << "Tilt: " << i_theta<< "  Gain: "<< sinogram->InitialGain[i_theta] << std::endl;
+		sinogram->InitialGain[i_theta] = sinogram->TargetGain;
+		std::cout << "Tilt: " << i_theta<< "  Gain: "<< sinogram->TargetGain << std::endl;
 	}
 	std::cout << "------------Initial Offsets-----------" << std::endl;
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)

@@ -53,7 +53,7 @@ void MRCSinogramInitializer::execute()
     std::cout << "16 bit integers are only supported. Error at line  " << __LINE__ << " in file " << __FILE__ << std::endl;
     return;
   }
-
+	sinogram->TargetGain=(header.amax-header.amin)*10;
   int voxelMin[3] = {0, 0, 0};
   int voxelMax[3] = {header.nx, header.ny, header.nz-1};
   if (inputs->useSubvolume == true)

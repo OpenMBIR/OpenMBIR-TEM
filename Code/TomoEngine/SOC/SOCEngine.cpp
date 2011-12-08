@@ -483,7 +483,15 @@ void SOCEngine::execute()
     initializer->setInputs(m_Inputs);
     initializer->addObserver(this);
     initializer->execute();
- //   std::cout << "hi" << std::endl;
+	  
+	  /********************REMOVE************************/
+	  std::cout<<"HARD WIRED TARGET GAIN TO 20K"<<std::endl;
+	  
+	  m_Sinogram->TargetGain=20000;
+	  std::cout<<"Target Gain"<<m_Sinogram->TargetGain<<std::endl;
+	  
+	  /*************************************************/
+	  
 
     if(initializer->getErrorCondition() < 0)
     {
@@ -715,7 +723,7 @@ void SOCEngine::execute()
 
 
 #endif
-	m_Sinogram->TargetGain=20000;
+	//m_Sinogram->TargetGain=20000;
 
 #ifdef BRIGHT_FIELD //Take log of the data and subtract log(Dosage) from it
 
@@ -723,7 +731,7 @@ void SOCEngine::execute()
 		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
 			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
 			{
-				m_Sinogram->counts[i_theta][i_r][i_t] = log(m_Sinogram->counts[i_theta][i_r][i_t])-log(m_Sinogram->TargetGain);
+				m_Sinogram->counts[i_theta][i_r][i_t] = log(m_Sinogram->counts[i_theta][i_r][i_t])-log(m_Sinogram->InitialGain[i_theta]);
 			}
 #endif//Bright Field
 

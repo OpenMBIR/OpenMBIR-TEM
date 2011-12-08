@@ -96,7 +96,7 @@ void InitialReconstructionInitializer::execute()
 
   geometry->N_x = ceil(geometry->LengthX/input->delta_xz);//Number of voxels in x direction
   geometry->N_z = ceil(input->LengthZ/input->delta_xz);//Number of voxels in z direction
-  geometry->N_y = floor(geometry->LengthY/input->delta_xy);//Number of measurements in y direction
+  geometry->N_y = ceil(geometry->LengthY/input->delta_xy);//Number of measurements in y direction
 
   printf("Geometry->Nz=%d\n",geometry->N_z);
   printf("Geometry->Nx=%d\n",geometry->N_x);
