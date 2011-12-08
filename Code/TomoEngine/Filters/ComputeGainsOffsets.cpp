@@ -35,8 +35,12 @@ void ComputeGainsOffsets::execute()
 	TomoInputs* inputs = getInputs();//This gets the input files
 	
 	//The normalization and offset parameters for the views
-	sinogram->InitialGain=(DATA_TYPE*)get_spc(sinogram->N_theta, sizeof(DATA_TYPE));
-	sinogram->InitialOffset=(DATA_TYPE*)get_spc(sinogram->N_theta, sizeof(DATA_TYPE));
+//	sinogram->InitialGain=(DATA_TYPE*)get_spc(sinogram->N_theta, sizeof(DATA_TYPE));
+//	sinogram->InitialOffset=(DATA_TYPE*)get_spc(sinogram->N_theta, sizeof(DATA_TYPE));
+	size_t dims[1]={sinogram->N_theta};
+	sinogram->InitialGain=RealArrayType::New(dims);
+	sinogram->InitialOffset=RealArrayType::New(dims);
+	
 	//Form the average Gain per view 
 	std::vector<DATA_TYPE> AverageGain(sinogram->N_theta,0);
 	std::vector<DATA_TYPE> TargetGain(sinogram->N_theta,0);
@@ -49,7 +53,7 @@ void ComputeGainsOffsets::execute()
 		DATA_TYPE sum=0;
 		for (uint16_t i_r=0; i_r < sinogram->N_r; i_r++) {
 			for(uint16_t i_t = 0; i_t <sinogram->N_t; i_t++)
-				sum += sinogram->counts[i_theta][i_r][i_t];
+				sum += sinogram->counts->d[i_theta][i_r][i_t];
 		}
 		sum/=(sinogram->N_r*sinogram->N_t);
 		AverageGain[i_theta] = sum;
@@ -122,14 +126,14 @@ void ComputeGainsOffsets::execute()
 	std::cout << "------------Initial Gains-----------" << std::endl;
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	{
-		sinogram->InitialGain[i_theta] = sinogram->TargetGain;
+		sinogram->InitialGain->d[i_theta] = sinogram->TargetGain;
 		std::cout << "Tilt: " << i_theta<< "  Gain: "<< sinogram->TargetGain << std::endl;
 	}
 	std::cout << "------------Initial Offsets-----------" << std::endl;
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	{
-		sinogram->InitialOffset[i_theta] = LS_Estimates[1];
-		std::cout << "Tilt: " << i_theta << "  Offset: "<< sinogram->InitialOffset[i_theta] << std::endl;
+		sinogram->InitialOffset->d[i_theta] = LS_Estimates[1];
+		std::cout << "Tilt: " << i_theta << "  Offset: "<< sinogram->InitialOffset->d[i_theta] << std::endl;
 	}
 		
   setErrorCondition(0);

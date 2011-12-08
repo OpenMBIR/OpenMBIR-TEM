@@ -848,12 +848,12 @@ void SOCEngine::execute()
 	//Also compute weights of the diagonal covariance matrix
 
 #ifdef NOISE_MODEL
-	for (int16_t i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
+	for (uint16_t i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
 	{
 
 		NuisanceParams.alpha->d[i_theta]=1;//Initialize the refinement parameters to 1
-		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
-			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
+		for(uint16_t i_r = 0; i_r < m_Sinogram->N_r;i_r++)
+			for(uint16_t i_t = 0;i_t < m_Sinogram->N_t;i_t++)
 				if(sum != 0)
 				{
 #ifdef BRIGHT_FIELD
@@ -1644,7 +1644,7 @@ void SOCEngine::execute()
 										if(i + p >= 0 && i + p < m_Geometry->N_y) if(j_new + q >= 0 && j_new + q < m_Geometry->N_z) if(k_new + r >= 0
 																																	   && k_new + r < m_Geometry->N_x)
 										{
-											NEIGHBORHOOD[p + 1][q + 1][r + 1] = m_Geometry->Object[q + j_new][r + k_new][p + i];
+											NEIGHBORHOOD[p + 1][q + 1][r + 1] = m_Geometry->Object->d[q + j_new][r + k_new][p + i];
 											BOUNDARYFLAG[p + 1][q + 1][r + 1] = 1;
 										}
 										else
@@ -1689,7 +1689,7 @@ void SOCEngine::execute()
 #endif
 							//Compute theta1 and theta2
 							
-							V = m_Geometry->Object[j_new][k_new][i]; //Store the present value of the voxel
+							V = m_Geometry->Object->d[j_new][k_new][i]; //Store the present value of the voxel
 							THETA1 = 0.0;
 							THETA2 = 0.0;
 							
@@ -1732,10 +1732,10 @@ void SOCEngine::execute()
 									 ProfileThickness=0;
 									 }*/
 									
-									THETA2 += ((NuisanceParams.I_0[i_theta] * NuisanceParams.I_0[i_theta])
+									THETA2 += ((NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta])
 											   * (VoxelLineResponse[i].values[VoxelLineAccessCounter] * VoxelLineResponse[i].values[VoxelLineAccessCounter]) * (TempMemBlock->values[q])
 											   * (TempMemBlock->values[q]) * Weight[i_theta][i_r][i_t]);
-									THETA1 += NuisanceParams.I_0[i_theta] * ErrorSino[i_theta][i_r][i_t] * (TempMemBlock->values[q])
+									THETA1 += NuisanceParams.I_0->d[i_theta] * ErrorSino[i_theta][i_r][i_t] * (TempMemBlock->values[q])
 									* (VoxelLineResponse[i].values[VoxelLineAccessCounter]) * Weight[i_theta][i_r][i_t];
 									VoxelLineAccessCounter++;
 								}
@@ -1789,13 +1789,13 @@ void SOCEngine::execute()
 							}
 							
 							//TODO Print appropriate error messages for other values of error code
-							m_Geometry->Object[j_new][k_new][i] = UpdatedVoxelValue;
+							m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
 							
 #ifdef ROI
 							if(Mask[j_new][k_new] == 1)
 							{
 								
-								AverageUpdate += fabs(m_Geometry->Object[j_new][k_new][i] - V);
+								AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
 								AverageMagnitudeOfRecon += fabs(V);//computing the percentage update =(Change in mag/Initial magnitude)
 							}
 #endif
@@ -1827,8 +1827,8 @@ void SOCEngine::execute()
 									 ProfileThickness=0;
 									 }*/
 									
-									ErrorSino[i_theta][i_r][i_t] -= (NuisanceParams.I_0[i_theta]
-																	 * (TempMemBlock->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object[j_new][k_new][i] - V)));
+									ErrorSino[i_theta][i_r][i_t] -= (NuisanceParams.I_0->d[i_theta]
+																	 * (TempMemBlock->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
 									VoxelLineAccessCounter++;
 								}
 							}
@@ -1902,7 +1902,7 @@ void SOCEngine::execute()
 				//		for (j=0; j < Geometry->N_z; j++)
 				//			for (k=0; k < Geometry->N_x; k++)
 				TempPointer = m_Geometry->Object;
-				NumOfBytesWritten=fwrite(&(m_Geometry->Object[0][0][0]), sizeof(DATA_TYPE),m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z, Fp3);
+				NumOfBytesWritten=fwrite(&(m_Geometry->Object->d[0][0][0]), sizeof(DATA_TYPE),m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z, Fp3);
 				printf("%d\n",NumOfBytesWritten);
 				
 				fclose(Fp3);
@@ -2140,9 +2140,9 @@ void SOCEngine::execute()
       NuisanceParams.alpha->d[i_theta]=sum;
 
 
-      for(i_r=0; i_r < m_Sinogram->N_r; i_r++)
-      for(i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-      if(NuisanceParams.alpha[i_theta] != 0)
+      for(uint16_t i_r=0; i_r < m_Sinogram->N_r; i_r++)
+      for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      if(NuisanceParams.alpha->d[i_theta] != 0)
 		  Weight[i_theta][i_r][i_t]/=NuisanceParams.alpha->d[i_theta];
 
     }

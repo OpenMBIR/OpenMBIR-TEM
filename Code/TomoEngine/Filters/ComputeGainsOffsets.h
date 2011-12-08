@@ -12,7 +12,7 @@
 #include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
 #include "TomoEngine/TomoEngine.h"
-#include "TomoEngine/Common/TomoFilter.h"
+#include "TomoEngine/Filters/TomoFilter.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 #include "TomoEngine/Common/allocate.h"
 #include "TomoEngine/Common/EIMMath.h"
