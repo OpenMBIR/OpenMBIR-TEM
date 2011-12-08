@@ -38,7 +38,7 @@ void GainsOffsetsReader::execute()
 
   FILE* Fp = NULL;
   size_t elementsRead = 0;
-  double buffer = 0;
+ // double buffer = 0;
   Fp = fopen(inputs->GainsOffsetsFile.c_str(), "r"); //This file contains the Initial unscatterd counts and background scatter for each view
   //Fp=fopen("/Users/singanallurvenkatakrishnan/Desktop/Work/Tomography/TomoSoftware/HAADFSTEM/C-Code/Data/ConvergedGainOffsetParamsOuter45_AMConstraint.bin", "r");
   if(Fp != NULL)

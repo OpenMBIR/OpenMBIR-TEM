@@ -94,7 +94,7 @@ class TomoArray
     std::string m_Name;
 
 
-    T* allocate(size_t s, int d, size_t* d1)
+    T* allocate(size_t s, unsigned int d, size_t* d1)
     {
      // va_list ap;             /* varargs list traverser */
       size_t max,                /* size of array to be declared */

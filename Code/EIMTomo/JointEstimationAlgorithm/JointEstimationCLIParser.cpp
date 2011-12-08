@@ -81,7 +81,7 @@ int JointEstimationCLIParser::parseCLIArguments(int argc,char *argv[], TomoInput
 
   try
   {
-    int error = 0;
+   // int error = 0;
     cmd.parse(argc, argv);
     Input->InitialRecon = copyFilenameToNewCharBuffer(in_inputFile.getValue());
     Input->OutputFile = copyFilenameToNewCharBuffer(in_outputFile.getValue());

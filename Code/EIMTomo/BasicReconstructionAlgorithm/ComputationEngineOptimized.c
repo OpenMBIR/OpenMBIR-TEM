@@ -21,7 +21,7 @@
 
 
 static char CE_Cancel = 0;
-//Markov Random Field Prior parameters - Globals -:( 
+//Markov Random Field Prior parameters - Globals -:(
 double FILTER[3][3][3]={{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}},
 	{{0.0370,0.0523,0.0370},{0.0523,0.0,0.0523},{0.0370,0.0523,  0.0370}},
 	{{0.0302,0.0370,0.0302},{0.0370,0.0523,0.0370},{0.0302,0.0370,0.0302}}};
@@ -68,10 +68,10 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 	double** VoxelProfile,***DetectorResponse;
 	double ***H_t;
 	double ProfileCenterT;
-	//variables used to stop the process 
+	//variables used to stop the process
 	double AverageUpdate;
 	double AverageMagnitudeOfRecon;
-	
+
 	double ***Y_Est;//Estimated Sinogram
 	double ***ErrorSino;//Error Sinogram
 	double ***Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
@@ -163,11 +163,11 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 	BEAM_WIDTH = Sinogram->delta_r;
 #endif
 
-	
+
 	MRF_P = CmdInputs->p;
 	SIGMA_X_P = pow(CmdInputs->SigmaX,MRF_P);
 
-	
+
 
 
 	for(k = 0 ; k <Sinogram->N_theta; k++)
@@ -184,7 +184,7 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 				}
 				if(H_t[0][k][i] < 0)
 					H_t[0][k][i] =0;
-				
+
 			}
 			else {
 				if(ProfileCenterT <= Sinogram->delta_t/2 - Geometry->delta_xy/2)
@@ -192,18 +192,18 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 				else {
 					H_t[0][k][i] = -ProfileCenterT + (Geometry->delta_xy/2) + Sinogram->delta_t/2;
 				}
-				
+
 				if(H_t[0][k][i] < 0)
 					H_t[0][k][i] =0;
-				
+
 			}
-			
-			
-			
-			
+
+
+
+
 		}
 	}
-	
+
 	/*for(i=0;i<Sinogram->N_theta;i++)
 		for(j=0;j< PROFILE_RESOLUTION;j++)
 			checksum+=VoxelProfile[i][j];
@@ -292,9 +292,9 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 
 		//  p=0;//This is used to access the A-Matrix column correspoding the (i,j,k)the voxel location
 
-	
-	
-	//Attempt to normalize measurement	
+
+
+	//Attempt to normalize measurement
 	/*for(i_theta = 0; i_theta < Sinogram->N_theta; i_theta++)
 		for(i_r = 0; i_r < Sinogram->N_r; i_r++)
 			for(i_t = 0; i_t < Sinogram->N_t; i_t++)
@@ -303,10 +303,10 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 				Sinogram->counts[i_theta][i_r][i_t]-=22.4524;
 			}
 	*/
-	
-	
+
+
 	RandomNumber=init_genrand(1);
-	srand(time(NULL));
+	//srand(time(NULL));
 	ArraySize= Geometry->N_z*Geometry->N_x;
 	//ArraySizeK = Geometry->N_x;
 
@@ -355,7 +355,7 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 				}
 				//  p++;
 #else
-					
+
                     y = ((double)i+0.5)*Geometry->delta_xy + Geometry->y0;
 					t = y;
 					tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
@@ -375,7 +375,7 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 
 					i_theta = floor(TempCol[j_new][k_new]->index[q]/(Sinogram->N_r));
 					i_r =  (TempCol[j_new][k_new]->index[q]%(Sinogram->N_r));
-					
+
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
 						center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
@@ -387,17 +387,17 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 							w4 = ((double)index_delta_t+1)*OffsetT - delta_t;
 							ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 						}
-						else 
+						else
 						{
 							ProfileThickness=0;
 						}
 						Y_Est[i_theta][i_r][i_t] += ((TempCol[j_new][k_new]->values[q] *ProfileThickness* Geometry->Object[j_new][k_new][i]));
-				
+
 				    }
 				}
 
 #endif
-			
+
 
 	       }
 			}
@@ -539,7 +539,7 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 
         AverageUpdate=0;
 		AverageMagnitudeOfRecon=0;
-		
+
 		for(j = 0; j < Geometry->N_z; j++)//Row index
 			for(k = 0; k < Geometry->N_x ; k++)//Column index
 			{
@@ -636,7 +636,7 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 								 center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
 								 delta_t = fabs(center_t - t);
 								 index_delta_t = floor(delta_t/OffsetT);
-								 
+
 								 if(index_delta_t < DETECTOR_RESPONSE_BINS)
 								 {
 									 w3 = delta_t - index_delta_t*OffsetT;
@@ -644,7 +644,7 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 									 //TODO: interpolation
 									 ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 								 }
-								 else 
+								 else
 								 {
 									 ProfileThickness=0;
 								 }
@@ -679,16 +679,16 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 
 						//TODO Print appropriate error messages for other values of error code
 						Geometry->Object[j_new][k_new][i] = UpdatedVoxelValue;
-						
+
 #ifdef ROI
 						if(Mask[j_new][k_new] == 1)
 						{
-							
+
 							AverageUpdate+=fabs(Geometry->Object[j_new][k_new][i]-V);
 							AverageMagnitudeOfRecon+=Geometry->Object[j_new][k_new][i];
 						}
 #endif
-						
+
 						//Update the ErrorSinogram
 
 #ifdef STORE_A_MATRIX
@@ -707,13 +707,13 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 
 					i_theta = floor(TempMemBlock->index[q]/(Sinogram->N_r));
 					i_r =  (TempMemBlock->index[q]%(Sinogram->N_r));
-					
+
 					for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 					{
 						center_t = ((double)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
 						delta_t = fabs(center_t - t);
 						index_delta_t = floor(delta_t/OffsetT);
-							
+
 						if(index_delta_t < DETECTOR_RESPONSE_BINS)
 						{
 							w3 = delta_t - index_delta_t*OffsetT;
@@ -721,7 +721,7 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 								//TODO: interpolation
 							ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
 						}
-						else 
+						else
 						{
 							ProfileThickness=0;
 						}
@@ -737,7 +737,7 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 
 
 			}
-		
+
 #ifdef ROI
 		if(AverageMagnitudeOfRecon > 0)
 		{
@@ -832,7 +832,7 @@ int CE_MAPICDReconstruct(Sinogram* Sinogram, Geometry* Geometry,TomoInputs* CmdI
 
 		if(cost[Iter+1]-cost[Iter] > 0)
 			printf("Cost just increased!\n");
-		
+
 		printf("%lf\n",cost[Iter+1]);
 
 		fwrite(&cost[Iter+1],sizeof(double),1,Fp2);
@@ -1726,7 +1726,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 	double MaximumSpacePerColumn;//we will use this to allocate space
 	double AvgNumXElements,AvgNumYElements;//This is a measure of the expected amount of space per Amatrixcolumn. We will make a overestimate to avoid seg faults
 	double ProfileThickness,stepsize;
-	
+
 	//interpolation variables
 	double w1,w2,w3,w4,f1,f2,InterpolatedValue,ContributionAlongT;
 	int32_t index_min,index_max,slice_index_min,slice_index_max,index_delta_r,index_delta_t;//stores the detector index in which the profile lies
@@ -1734,7 +1734,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 	int32_t NumOfDisplacements=32;
 	uint32_t count = 0;
 
-	
+
 	AMatrixCol* Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
 	AMatrixCol* Temp = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));//This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
 
@@ -1887,7 +1887,7 @@ void* CE_CalculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice
 
 #endif
 /*
-//Function to compute parameters of thesurrogate function 
+//Function to compute parameters of thesurrogate function
 void CE_ComputeParameters(double x_j,double x_k,double umin,double umax)
 {
 	double Delta0,DeltaMin,DeltaMax,T,a,b,c;
@@ -1903,11 +1903,11 @@ void CE_ComputeParameters(double x_j,double x_k,double umin,double umax)
 	if(Delta0 != 0)
 		a=
 		else {
-			a = 
+			a =
 		}
 	b = ;
 	c = ;
-   
+
 }
 
 double CE_FunctionalSubstitution(double x, int16_t j)
@@ -1920,8 +1920,8 @@ double CE_FunctionalSubstitution(double x, int16_t j)
 		for(j=-1;j<=1;j++)
 			for(k=-1; k <=1; k++)
 				ComputeParameters(x,, <#double umin#>, <#double umax#>)
-	
-	
+
+
 }
 
 */
