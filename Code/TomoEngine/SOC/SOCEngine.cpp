@@ -293,9 +293,9 @@ void SOCEngine::execute()
 
 	  
 	  /********************REMOVE************************/
-	  std::cout<<"HARD WIRED TARGET GAIN TO 20K"<<std::endl;
+	  std::cout<<"HARD WIRED TARGET GAIN"<<std::endl;
 	  
-	  m_Sinogram->TargetGain=20000;
+	  m_Sinogram->TargetGain=TARGET_GAIN;
 	  std::cout<<"Target Gain"<<m_Sinogram->TargetGain<<std::endl;
 	  
 	  /*************************************************/

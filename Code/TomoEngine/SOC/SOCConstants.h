@@ -77,6 +77,7 @@
 //#define BRIGHT_FIELD
 //#define NHICD
 #define X_SHRINK_FACTOR 0.6
+#define TARGET_GAIN 1
 
 //#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
 

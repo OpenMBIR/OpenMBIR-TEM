@@ -109,6 +109,17 @@ void GainsOffsetsReader::execute()
       sinogram->InitialGain->d[i] = fileGains[inputs->goodViews[i]];
       sinogram->InitialOffset->d[i] = fileOffsets[inputs->goodViews[i]];
     }
+	  
+	  std::cout << "------------Initial Gains-----------" << std::endl;
+	  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	  {
+		  std::cout << "Tilt: " << i_theta<< "  Gain: "<< sinogram->InitialGain->d[i_theta]<< std::endl;
+	  }
+	  std::cout << "------------Initial Offsets-----------" << std::endl;
+	  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	  {
+		  std::cout << "Tilt: " << i_theta << "  Offset: "<< sinogram->InitialOffset->d[i_theta] << std::endl;
+	  }
 
     setErrorCondition(0);
     setErrorMessage("");
