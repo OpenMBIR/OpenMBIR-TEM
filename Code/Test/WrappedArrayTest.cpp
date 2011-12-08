@@ -21,10 +21,10 @@ int main(int argc, char **argv)
 
 
 
-  int x = 3;
-  int y = 6;
-  int z = 2;
-  int dims[3] = { x, y, z};
+  size_t x = 3;
+  size_t y = 6;
+  size_t z = 2;
+  size_t dims[3] = { x, y, z};
   std::cout << "X, Y, Z: " << x << " " << y << " " << z << std::endl;
   std::cout << "-----------------Testing 3D Array------------------" << std::endl;
   {

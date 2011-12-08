@@ -339,7 +339,7 @@ void SOCEngine::execute()
 	DATA_TYPE a,b,c,d,e;
 //	DATA_TYPE determinant;
 	DATA_TYPE LagrangeMultiplier;
-	int arrayDims[3] = {0,0,0};
+	size_t arrayDims[3] = {0,0,0};
 
 	MicroscopeImage = (DATA_TYPE**)get_img(m_Sinogram->N_t, m_Sinogram->N_r, sizeof(DATA_TYPE));
 
@@ -1672,7 +1672,7 @@ RealImageType::Pointer SOCEngine::calculateVoxelProfile()
 	DATA_TYPE angle,MaxValLineIntegral;
 	DATA_TYPE temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
 //	DATA_TYPE** VoxProfile = (DATA_TYPE**)multialloc(sizeof(DATA_TYPE),2,m_Sinogram->N_theta,PROFILE_RESOLUTION);
-	int dims[2] = {m_Sinogram->N_theta,PROFILE_RESOLUTION};
+	size_t dims[2] = {m_Sinogram->N_theta,PROFILE_RESOLUTION};
 	RealImageType::Pointer VoxProfile = RealImageType::New(dims);
 	VoxProfile->setName("VoxelProfile");
 
@@ -1864,7 +1864,7 @@ void SOCEngine::initializeBeamProfile()
 	uint16_t i;
 	DATA_TYPE sum=0,W;
 //	BeamProfile=(DATA_TYPE*)get_spc(BEAM_RESOLUTION,sizeof(DATA_TYPE));
-	int dims[1] = { BEAM_RESOLUTION };
+	size_t dims[1] = { BEAM_RESOLUTION };
 	BeamProfile = RealArrayType::New(dims);
 	W=BEAM_WIDTH/2;
 	for (i=0; i < BEAM_RESOLUTION ;i++)
@@ -2352,8 +2352,12 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
   DATA_TYPE a,b;
   DATA_TYPE temp_mu;
 
+//TODO: Fix these initializations
+  high = 0;
+  low = 0;
+  dist = 0;
   //Root the expression using the derived quadratic parameters. Need to choose min and max values
-     printf("Rooting the equation to solve for the optimal lagrange multiplier\n");
+     printf("Rooting the equation to solve for the optimal Lagrange multiplier\n");
 
      if(high != (DATA_TYPE)INT64_MAX)
      {

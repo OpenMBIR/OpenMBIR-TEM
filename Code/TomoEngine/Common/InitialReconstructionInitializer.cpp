@@ -102,7 +102,7 @@ void InitialReconstructionInitializer::execute()
   printf("Geometry->Nx=%d\n",geometry->N_x);
   printf("Geometry->Ny=%d\n",geometry->N_y);
 
-  int dims[3] = {geometry->N_z, geometry->N_x, geometry->N_y};
+  size_t dims[3] = {geometry->N_z, geometry->N_x, geometry->N_y};
   geometry->Object  = RealVolumeType::New(dims);
   geometry->Object->setName("Geometry.Object");
  // geometry->Object = (DATA_TYPE ***)get_3D(geometry->N_z, geometry->N_x, geometry->N_y, sizeof(DATA_TYPE));//Allocate space for the 3-D object

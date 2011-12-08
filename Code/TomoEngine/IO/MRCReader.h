@@ -131,7 +131,7 @@ class TomoEngine_EXPORT MRCReader
      * @param deleteMemory Should this class delete the memory allocated to hold
      * the voxel data.
      */
-    explicit MRCReader(bool deleteMemory = true);
+    explicit MRCReader(bool deleteMemory);
 
   private:
     MRCHeader* m_Header;

@@ -128,7 +128,7 @@ void MRCSinogramInitializer::execute()
 //                                        inputs->xEnd - inputs->xStart+1,
 //                                        inputs->yEnd - inputs->yStart+1,
 //                                        sizeof(DATA_TYPE));
-  int dims[3] = {sinogram->N_theta,
+  size_t dims[3] = {sinogram->N_theta,
       inputs->xEnd - inputs->xStart+1,
       inputs->yEnd - inputs->yStart+1};
   sinogram->counts = RealVolumeType::New(dims);

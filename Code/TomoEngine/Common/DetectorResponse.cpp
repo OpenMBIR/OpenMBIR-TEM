@@ -40,7 +40,7 @@ void DetectorResponse::execute()
   Sinogram* sinogram = getSinogram();
   TomoInputs* inputs = getInputs();
 
-  int dims[3] = {1, sinogram->N_theta,DETECTOR_RESPONSE_BINS};
+  size_t dims[3] = {1, sinogram->N_theta,DETECTOR_RESPONSE_BINS};
   RealVolumeType::Pointer H = RealVolumeType::New(dims);
   H->setName("DetectorResponse");
 

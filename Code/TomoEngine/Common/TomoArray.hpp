@@ -52,7 +52,7 @@ class TomoArray
       return Pointer(static_cast<TomoArray<T, Ptr, size>*>(0));
     }
 
-    static Pointer New(int* dims)
+    static Pointer New(size_t* dims)
     {
       Pointer sharedPtr(new TomoArray<T, Ptr, size>(dims));
       return sharedPtr;
@@ -75,34 +75,34 @@ class TomoArray
 
     void setName(const std::string &name) { m_Name = name;}
     Ptr getPointer() { return d; }
-    int* getDims() {return m_Dims; }
+    size_t* getDims() {return m_Dims; }
     int getNDims() { return m_NDims; }
     int getTypeSize() { return sizeof(T); }
 
     Ptr d;
 
   protected:
-    TomoArray(int* dims) :
+    TomoArray(size_t* dims) :
       m_Dims(dims)
     {
       d = reinterpret_cast<Ptr>(allocate(sizeof(T), size, m_Dims));
     }
 
   private:
-    int* m_Dims;
+    size_t* m_Dims;
     int  m_NDims;
     std::string m_Name;
 
 
-    T* allocate(size_t s, int d, int* d1)
+    T* allocate(size_t s, int d, size_t* d1)
     {
      // va_list ap;             /* varargs list traverser */
-      int max,                /* size of array to be declared */
+      size_t max,                /* size of array to be declared */
       *q;                     /* pointer to dimension list */
       char **r,               /* pointer to beginning of the array of the
                                * pointers for a dimension */
       **s1, *t, *tree;        /* base pointer to beginning of first array */
-      int i, j;               /* loop counters */
+      size_t i, j;               /* loop counters */
      // int *d1;                /* dimension list */
 
      // va_start(ap,d);
