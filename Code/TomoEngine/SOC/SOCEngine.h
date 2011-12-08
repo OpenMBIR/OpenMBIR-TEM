@@ -48,7 +48,11 @@
 #include "TomoEngine/SOC/SOCStructures.h"
 
 /**
- *
+ * @class SOCEngine SOCEngine.h TomoEngine/SOC/SOCEngine.h
+ * @brief
+ * @author Michael A. Jackson for BlueQuartz Software
+ * @author Singanallur Venkatakrishnan (Purdue University)
+ * @version 1.0
  */
 class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
 {
@@ -105,9 +109,9 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
     DATA_TYPE QGGMRF_Params[26][3];
     DATA_TYPE MRF_ALPHA;
 #endif
-
-    DATA_TYPE* cosine;
-    DATA_TYPE* sine; //used to store cosine and sine of all angles through which sample is tilted
+    //used to store cosine and sine of all angles through which sample is tilted
+    RealArrayType::Pointer cosine;
+    RealArrayType::Pointer sine;
     RealArrayType::Pointer BeamProfile; //used to store the shape of the e-beam
     DATA_TYPE BEAM_WIDTH;
     DATA_TYPE OffsetR;

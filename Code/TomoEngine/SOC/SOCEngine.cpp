@@ -1634,8 +1634,8 @@ void SOCEngine::cleanupMemory()
 {
 //  if (NULL != m_Geometry->Object) {free_3D((void***)(m_Geometry->Object)); m_Geometry->Object = NULL;}
 //  if (NULL != m_Sinogram->counts) {free_3D((void***)(m_Sinogram->counts)); m_Sinogram->counts = NULL;}
-  if (NULL != cosine) {free((void*)(cosine)); cosine = NULL;}
-  if (NULL != sine) {free((void*)(sine)); sine = NULL;}
+//  if (NULL != cosine) {free((void*)(cosine)); cosine = NULL;}
+//  if (NULL != sine) {free((void*)(sine)); sine = NULL;}
   if (NULL != QuadraticParameters) {free_img((void**)(QuadraticParameters)); QuadraticParameters = NULL;}
   if (NULL != Qk_cost) {free_img((void**)(Qk_cost)); Qk_cost = NULL;}
   if (NULL != Qk_cost) {free_img((void**)(Qk_cost)); Qk_cost = NULL;}
@@ -1788,7 +1788,7 @@ DATA_TYPE*** SOCEngine::forwardProject(RealVolumeType::Pointer DetectorResponse,
 			{
 				for(i_theta = 0;i_theta < m_Sinogram->N_theta;i_theta++)
 				{
-					r = x*cosine[i_theta] - z*sine[i_theta];
+					r = x*cosine->d[i_theta] - z*sine->d[i_theta];
 					rmin = r - m_Inputs->delta_xz;
 					rmax = r + m_Inputs->delta_xz;
 
@@ -1875,12 +1875,16 @@ DATA_TYPE*** SOCEngine::forwardProject(RealVolumeType::Pointer DetectorResponse,
 void SOCEngine::calculateSinCos()
 {
 	uint16_t i;
-	cosine=(DATA_TYPE*)get_spc(m_Sinogram->N_theta,sizeof(DATA_TYPE));
-	sine=(DATA_TYPE*)get_spc(m_Sinogram->N_theta,sizeof(DATA_TYPE));
+	size_t dims[1] = { m_Sinogram->N_theta };
+	cosine = RealArrayType::New(dims);
+	cosine->setName("cosine");
+	sine = RealArrayType::New(dims);
+	sine->setName("sine");
+
 	for(i=0;i<m_Sinogram->N_theta;i++)
 	{
-		cosine[i]=cos(m_Sinogram->angles[i]);
-		sine[i]=sin(m_Sinogram->angles[i]);
+		cosine->d[i]=cos(m_Sinogram->angles[i]);
+		sine->d[i]=sin(m_Sinogram->angles[i]);
 	}
 }
 
@@ -2173,7 +2177,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
 	for(uint32_t i=0;i<m_Sinogram->N_theta;i++)
 	{
 
-		r = x*cosine[i] - z*sine[i];
+		r = x*cosine->d[i] - z*sine->d[i];
 		t = y;
 
 		rmin = r - m_Inputs->delta_xz;
