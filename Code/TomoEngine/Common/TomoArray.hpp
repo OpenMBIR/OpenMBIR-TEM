@@ -82,9 +82,11 @@ class TomoArray
     Ptr d;
 
   protected:
-    TomoArray(size_t* dims) :
-      m_Dims(dims)
+    TomoArray(size_t* dims)
     {
+      for(size_t i = 0; i < SIZE; ++i){
+        m_Dims[i] = dims[i];
+      }
       if (SIZE == 1)
       {
         d = reinterpret_cast<Ptr>(malloc(sizeof(T) * m_Dims[0]));
@@ -96,7 +98,7 @@ class TomoArray
     }
 
   private:
-    size_t* m_Dims;
+    size_t m_Dims[SIZE];
     int  m_NDims;
     std::string m_Name;
 

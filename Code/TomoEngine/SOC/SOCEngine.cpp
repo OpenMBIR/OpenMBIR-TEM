@@ -470,6 +470,7 @@ void SOCEngine::execute()
   Qk_cost->setName("Qk_cost");
 //	Qk_cost=(DATA_TYPE**)get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE));
 //	bk_cost=(DATA_TYPE**)get_img(2, m_Sinogram->N_theta, sizeof(DATA_TYPE));
+  dims[0] = 2;
 	bk_cost = RealImageType::New(dims);
 	bk_cost->setName("bk_cost");
 
@@ -480,6 +481,7 @@ void SOCEngine::execute()
 
 	NumOfViews = m_Sinogram->N_theta;
 	LogGain = m_Sinogram->N_theta*log(m_Sinogram->TargetGain);
+	dims[0] = m_Sinogram->N_theta;
 //	d1=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
 	d1 = RealArrayType::New(dims);
 	d1->setName("d1");
@@ -497,6 +499,7 @@ void SOCEngine::execute()
 	//calculate sine and cosine of all angles and store in the global arrays sine and cosine
 	DetectorResponse::Pointer dResponseFilter = DetectorResponse::New();
 	dResponseFilter->setInputs(m_Inputs);
+	dResponseFilter->setSinogram(m_Sinogram);
 	dResponseFilter->setBeamWidth(BEAM_WIDTH);
 	dResponseFilter->setOffsetR(OffsetR);
 	dResponseFilter->setOffsetT(OffsetT);
