@@ -105,26 +105,6 @@ FIND_PACKAGE(Boost)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
-
-# --------------------------------------------------------------------
-# Should we use Intel Threading Building Blocks
-# --------------------------------------------------------------------
-option(EIMTomo_USE_PARALLEL_ALGORITHMS "Use MultiThreaded Algorithms where possible" OFF)
-if (EIMTomo_USE_PARALLEL_ALGORITHMS)
-    find_package(TBB)
-    if (TBB_FOUND)
-        include_directories(${TBB_INCLUDE_DIRS} )
-        CMP_COPY_DEPENDENT_LIBRARIES("tbb;tbb_malloc")
-        # Append the locations of the TBB libraries to our Library Search Paths
-        list(APPEND CMP_LIB_SEARCH_DIRS ${TBB_BINARY_DIR} ${TBBG_LIBRARY_DIR} )
-        # Create an install rule to copy the dependent shared library over to the installed location
-        CMP_LIBRARIES_INSTALL_RULES("tbb;tbb_malloc" ".")
-    else()
-        message(FATAL_ERROR "The Intel Threading Building Blocks library is needed to enable the multithreaded algorithms. Please make sure it is installed properly")
-    endif()
-endif()
-
-
 # --------------------------------------------------------------------
 # Now configure this extra file with some additional definitions
 #configure_file(${EIMTomo_SOURCE_DIR}/Resources/EIMTomo/EIMTomoConfiguration.h.in

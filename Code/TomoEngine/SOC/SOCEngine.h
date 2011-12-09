@@ -39,11 +39,14 @@
 #ifndef COMPUTATIONENGINE_H_
 #define COMPUTATIONENGINE_H_
 
+#include <stdio.h>
+
 #include "MXA/Common/MXASetGetMacros.h"
 
 #include "TomoEngine/TomoEngine.h"
 #include "TomoEngine/Common/AbstractPipeline.h"
 #include "TomoEngine/Common/Observer.h"
+#include "TomoEngine/mt/mt19937ar.h"
 
 #include "TomoEngine/SOC/SOCStructures.h"
 
@@ -92,9 +95,14 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
 
     void cleanupMemory();
 
-  private:
+    /**
+     * @brief This is to be implemented at some point
+     */
+    void updateVoxelValues_NHICD();
 
-    uint8_t BOUNDARYFLAG[3][3][3]; //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
+  private:
+    //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
+    uint8_t BOUNDARYFLAG[3][3][3];
     //Markov Random Field Prior parameters - Globals DATA_TYPE
     DATA_TYPE FILTER[3][3][3];
     DATA_TYPE THETA1;
@@ -191,19 +199,6 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
      */
     double surrogateFunctionBasedMin();
 
-    /**
-     * @brief  Solves equation (*f)(x) = 0 on x in [a,b]. Uses half interval method.
-     * Requires that (*f)(a) and (*f)(b) have opposite signs.
-     * Returns code=0 if signs are opposite.
-     * Returns code=1 if signs are both positive.
-     * Returns code=-1 if signs are both negative.
-     * @param f  pointer to object that implements the function to be solved
-     * @param a minimum value of solution
-     * @param b maximum value of solution
-     * @param err accuarcy of solution
-     * @param code error code
-     * @return
-     */
     template<typename T>
     double solve(T* f, double a, double b, double err, int32_t *code)
 

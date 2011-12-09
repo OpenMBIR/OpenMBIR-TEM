@@ -45,6 +45,15 @@
 #include <limits>
 #include <iostream>
 
+#if TomoEngine_USE_PARALLEL_ALGORITHMS
+//#include <tbb/parallel_for.h>
+//#include <tbb/blocked_range.h>
+//#include <tbb/atomic.h>
+//#include <tbb/tick_count.h>
+#include <tbb/task_scheduler_init.h>
+#include <tbb/task_group.h>
+#endif
+
 // MXA includes
 #include "MXA/Utilities/MXADir.h"
 #include "MXA/Utilities/MXAFileInfo.h"
@@ -53,14 +62,15 @@
 #include "TomoEngine/Common/EIMMath.h"
 #include "TomoEngine/Common/allocate.h"
 #include "TomoEngine/Common/EIMTime.h"
-#include "TomoEngine/Common/DerivOfCostFunc.hpp"
 #include "TomoEngine/Common/CE_ConstraintEquation.hpp"
-#include "TomoEngine/mt/mt19937ar.h"
 #include "TomoEngine/IO/RawGeometryWriter.h"
 #include "TomoEngine/IO/MRCHeader.h"
 #include "TomoEngine/IO/MRCReader.h"
-#include "TomoEngine/SOC/SOCConstants.h"
 #include "TomoEngine/IO/RawGeometryWriter.h"
+#include "TomoEngine/IO/NuisanceParamWriter.h"
+#include "TomoEngine/IO/SinogramBinWriter.h"
+#include "TomoEngine/SOC/SOCConstants.h"
+#include "TomoEngine/SOC/VoxelUpdate.h"
 #include "TomoEngine/Filters/ComputeGainsOffsets.h"
 #include "TomoEngine/Filters/DetectorResponse.h"
 #include "TomoEngine/Filters/DetectorResponseWriter.h"
@@ -72,33 +82,67 @@
 #include "TomoEngine/Filters/InitialReconstructionInitializer.h"
 #include "TomoEngine/Filters/InitialReconstructionBinReader.h"
 
-#define START startm = EIMTOMO_getMilliSeconds();
-#define STOP stopm = EIMTOMO_getMilliSeconds();
-#define PRINTTIME printf( "%6.3f seconds used by the processor.\n", ((double)stopm-startm)/1000.0);
+#include "TomoEngine/Common/DerivOfCostFunc.hpp"
+#include "TomoEngine/mt/mt19937ar.h"
+
+#if TomoEngine_USE_PARALLEL_ALGORITHMS
+#include "TomoEngine/SOC/ForwardProject.h"
+#endif
 
 
+#define START_TIMER startm = EIMTOMO_getMilliSeconds();
+#define STOP_TIMER stopm = EIMTOMO_getMilliSeconds();
+#define PRINT_TIME printf( "%6.3f seconds\n", ((double)stopm-startm)/1000.0);
 
+#define MAKE_OUTPUT_FILE(Fp, err, outdir, filename)\
+    {\
+    std::string filepath(outdir);\
+    filepath = filepath.append(MXADir::getSeparator()).append(filename);\
+    errno = 0;\
+    err = 0;\
+    Fp = fopen(filepath.c_str(),"wb");\
+    if (Fp == NULL) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl; err = -1; }\
+    }
+
+#define COPY_333_ARRAY(i_max, j_max, k_max, src, dest)\
+for(int i = 0; i < i_max; ++i){\
+for(int j = 0; j < j_max; ++j){\
+for(int k = 0; k < k_max; ++k){\
+  dest[i][j][k] = src[i][j][k];\
+}}}
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 inline double Clip(double x, double a, double b)
 {
-	return (x < a) ? a : ((x > b) ? b:x);
+  return (x < a) ? a : ((x > b) ? b:x);
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 inline int16_t mod(int16_t a,int16_t b)
 {
-	int16_t temp;
-	temp=a%b;
-	if(temp < 0)
-		return temp + b;
-	else {
-		return temp;
-	}
+  int16_t temp;
+  temp=a%b;
+  if(temp < 0)
+    return temp + b;
+  else {
+    return temp;
+  }
 
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 inline double Minimum(double a, double b)
 {
-	return (a < b ? a: b);
+  return (a < b ? a: b);
 }
+
 
 
 // -----------------------------------------------------------------------------
@@ -146,25 +190,6 @@ void SOCEngine::initVariables()
   FILTER[2][2][0] = 0.0302; FILTER[2][2][1] = 0.0370; FILTER[2][2][2] = 0.0302;
 }
 
-// void CE_cancel()
-// {
-// CE_Cancel = 1;
-// }
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-
-#define MAKE_OUTPUT_FILE(Fp, err, outdir, filename)\
-    {\
-    std::string filepath(outdir);\
-    filepath = filepath.append(MXADir::getSeparator()).append(filename);\
-    errno = 0;\
-    err = 0;\
-    Fp = fopen(filepath.c_str(),"wb");\
-    if (Fp == NULL) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl; err = -1; }\
-    }
-
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -175,28 +200,20 @@ void SOCEngine::execute()
 	int16_t Iter,OuterIter;
 	int16_t i,j,k,r,Idx;
 	size_t dims[3];
-//	int16_t RowIndex,ColIndex,SliceIndex,row,col,slice;
-//	int16_t NumOfXPixels;
-//	int16_t q,p;
-//	int16_t tempindex_x,tempindex_y,tempindex_z;
 	int16_t index_delta_t;
-//	int16_t index_min,index_max,index_delta_r;
-	//Random Indexing Parameters
 	int32_t Index,ArraySize,j_new,k_new;
-//	int32_t temp_index;
-	int32_t* Counter;
-	uint8_t **VisitCount;
+  Int32ArrayType::Pointer Counter;
+  UInt8ImageType::Pointer VisitCount;
 
 	uint16_t cost_counter=0;
-    uint16_t VoxelLineAccessCounter;
+  uint16_t VoxelLineAccessCounter;
 	uint16_t MaxNumberOfDetectorElts;
 
 	DATA_TYPE center_t,delta_t;
-//	DATA_TYPE center_r,delta_r;
 	DATA_TYPE w3,w4;
 	DATA_TYPE checksum = 0,temp;
 	DATA_TYPE sum1,sum2;
-	DATA_TYPE* cost;
+	RealArrayType::Pointer cost;
 	RealImageType::Pointer VoxelProfile;
 	RealVolumeType::Pointer detectorResponse;
 	RealVolumeType::Pointer H_t;
@@ -214,33 +231,32 @@ void SOCEngine::execute()
 	RealVolumeType::Pointer Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
 	RNGVars* RandomNumber;
 
-	//File variables
-//	FILE* Fp1 = NULL;
-//	FILE* Fp2 = NULL;
-//	FILE* Fp4 = NULL;
-//	FILE* Fp5 = NULL;
-//	FILE* Fp6 = NULL;
-//	FILE* Fp7 = NULL;
-//	FILE* Fp8 = NULL;
+  int fileError = 0;
 
-	int fileError = 0;
+#if TomoEngine_USE_PARALLEL_ALGORITHMS
+  tbb::task_scheduler_init init;
+#endif
 
-	// Initialize the Sinogram
-	if (m_Inputs == NULL)
-	{
-	  setErrorCondition(-1);
-	  updateProgressAndMessage("Error: The TomoInput Structure was NULL", 100);
-	  return;
-	}
+  // Initialize the Sinogram
+  if (m_Inputs == NULL)
+  {
+    setErrorCondition(-1);
+    updateProgressAndMessage("Error: The TomoInput Structure was NULL. The proper API is to supply this class with that structure,", 100);
+    return;
+  }
   //Based on the inputs , calculate the "other" variables in the structure definition
-	if (m_Sinogram == NULL)
-	{
-	  m_Sinogram = new Sinogram;
-	}
-	if (m_Geometry == NULL)
-	{
-	  m_Geometry = new Geometry;
-	}
+  if (m_Sinogram == NULL)
+  {
+    setErrorCondition(-1);
+    updateProgressAndMessage("Error: The Sinogram Structure was NULL. The proper API is to supply this class with that structure,", 100);
+    return;
+  }
+  if (m_Geometry == NULL)
+  {
+    setErrorCondition(-1);
+    updateProgressAndMessage("Error: The Geometry Structure was NULL. The proper API is to supply this class with that structure,", 100);
+    return;
+  }
 
 
 
@@ -281,40 +297,30 @@ void SOCEngine::execute()
   // so the reader automactically gets cleaned up at this point.
   {
     TomoFilter::Pointer gainsOffsetsInitializer = TomoFilter::NullPointer();
-    if(m_Inputs->GainsOffsetsFile.empty() == true)
+    if(m_Inputs->GainsOffsetsFile.empty() == true)      // Calculate the initial Gains and Offsets
     {
-      // Calculate the initial Gains and Offsets
       gainsOffsetsInitializer = ComputeGainsOffsets::NewTomoFilter();
     }
     else
     {
       gainsOffsetsInitializer = GainsOffsetsReader::NewTomoFilter();
     }
-
-	  
-	  /********************REMOVE************************/
-	  std::cout<<"HARD WIRED TARGET GAIN"<<std::endl;
-	  
-	  m_Sinogram->TargetGain=TARGET_GAIN;
-	  std::cout<<"Target Gain"<<m_Sinogram->TargetGain<<std::endl;
-	  
-	  /*************************************************/
-
     gainsOffsetsInitializer->setSinogram(m_Sinogram);
     gainsOffsetsInitializer->setInputs(m_Inputs);
     gainsOffsetsInitializer->addObserver(this);
     gainsOffsetsInitializer->execute();
-
-
-
-
-
     if(gainsOffsetsInitializer->getErrorCondition() < 0)
     {
      updateProgressAndMessage("Error initializing Input Gains and Offsets Data file", 100);
      setErrorCondition(gainsOffsetsInitializer->getErrorCondition());
      return;
     }
+    /********************REMOVE************************/
+    std::cout<<"HARD WIRED TARGET GAIN"<<std::endl;
+
+    m_Sinogram->TargetGain = TARGET_GAIN;
+    std::cout << "Target Gain: " << m_Sinogram->TargetGain << std::endl;
+    /*************************************************/
   }
 
   // Initialize the Geometry data from a rough reconstruction
@@ -345,16 +351,9 @@ void SOCEngine::execute()
     }
   }
 
-
-//	DATA_TYPE buffer;
-	//Optimization variables
 	DATA_TYPE low,high;
-//	DATA_TYPE dist;
 	DATA_TYPE UpdatedVoxelValue;
-//	DATA_TYPE SurrogateUpdate;
 	DATA_TYPE accuracy =1e-7;//This is the rooting accuracy for x
-//	DATA_TYPE LambdaRootingAccuracy=1e-10;//accuracy for rooting Lambda
-//	DATA_TYPE perturbation=1e-30;//perturbs the rooting range
 	int32_t errorcode=-1;
 
 	//Pointer to  1-D minimization Function
@@ -368,31 +367,27 @@ void SOCEngine::execute()
 	DATA_TYPE numerator_sum =0;
 	DATA_TYPE denominator_sum = 0;
 	DATA_TYPE x,z;
-
-//	DATA_TYPE rmin,rmax; //min and max indices of a projection on the detector along the r-direction
-//	DATA_TYPE w1,w2,f1,f2;
-//    DATA_TYPE k1,k2,k3;//Quadratic equation coefficients
-//	DATA_TYPE product;
 	DATA_TYPE sum;
 	DATA_TYPE a,b,c,d,e;
 //	DATA_TYPE determinant;
 	DATA_TYPE LagrangeMultiplier;
 	size_t arrayDims[3] = {0,0,0};
-	//This is used to store the projection of the object for each view
-	dims[1] = m_Sinogram->N_t;
-	dims[0] = m_Sinogram->N_r;
-	RealImageType::Pointer MicroscopeImage = RealImageType::New(dims);
+  //This is used to store the projection of the object for each view
+  dims[1] = m_Sinogram->N_t;
+  dims[0] = m_Sinogram->N_r;
+  RealImageType::Pointer MicroscopeImage = RealImageType::New(dims);
 
 
-	arrayDims[0] = m_Sinogram->N_theta;
-	NuisanceParams.I_0 = RealArrayType::New(arrayDims);
-	NuisanceParams.I_0->setName("NuisanceParams.I_0");
-	NuisanceParams.mu = RealArrayType::New(arrayDims);
-	NuisanceParams.mu->setName("NuisanceParams.mu");
+  dims[0] = m_Sinogram->N_theta;
+  NuisanceParams.I_0 = RealArrayType::New(dims);
+  NuisanceParams.I_0->setName("NuisanceParams.I_0");
+  NuisanceParams.mu = RealArrayType::New(dims);
+  NuisanceParams.mu->setName("NuisanceParams.mu");
 #ifdef NOISE_MODEL
-	NuisanceParams.alpha = RealArrayType::New(arrayDims);
-	NuisanceParams.alpha->setName("NuisanceParams.mu");
+  NuisanceParams.alpha = RealArrayType::New(dims);
+  NuisanceParams.alpha->setName("NuisanceParams.mu");
 #endif
+
 
   // initialize variables
   Idx = 0;
@@ -409,34 +404,34 @@ void SOCEngine::execute()
 #endif
 
 #ifdef ROI
-	uint8_t** Mask;
+	UInt8ImageType::Pointer Mask;
 	DATA_TYPE EllipseA,EllipseB;
 #endif
 
 #ifdef COST_CALCULATE
-	cost=(DATA_TYPE*)get_spc((m_Inputs->NumIter+1)*m_Inputs->NumOuterIter*3,sizeof(DATA_TYPE));//the factor 3 is in there to ensure we can store 3 costs per iteration one after update x, then mu and then I
+  //cost=(DATA_TYPE*)get_spc((m_Inputs->NumIter+1)*m_Inputs->NumOuterIter*3,sizeof(DATA_TYPE));//the factor 3 is in there to ensure we can store 3 costs per iteration one after update x, then mu and then I
+  dims[0] = (m_Inputs->NumIter+1)*m_Inputs->NumOuterIter*3;
+  cost = RealArrayType::New(dims);
 #endif
 
 	dims[0] = m_Sinogram->N_theta;
 	dims[1] = m_Sinogram->N_r;
 	dims[2] = m_Sinogram->N_t;
 
-	Y_Est = RealVolumeType::New(dims);
-	Y_Est->setName("Y_Est");
-	ErrorSino = RealVolumeType::New(dims);
-	ErrorSino->setName("ErrorSino");
-	Weight = RealVolumeType::New(dims);
-	Weight->setName("Weight");
+  //  Y_Est=(RealVolumeType::Pointer )get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
+  //  ErrorSino=(RealVolumeType::Pointer )get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
+  //  Weight=(RealVolumeType::Pointer )get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
+  //
+  Y_Est = RealVolumeType::New(dims);
+  Y_Est->setName("Y_Est");
+  ErrorSino = RealVolumeType::New(dims);
+  ErrorSino->setName("ErrorSino");
+  Weight = RealVolumeType::New(dims);
+  Weight->setName("Weight");
 
-//	Y_Est=(RealVolumeType::Pointer )get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
-//	ErrorSino=(RealVolumeType::Pointer )get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
-//	Weight=(RealVolumeType::Pointer )get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
-//
-
-	//Setting the value of all the global variables
-
-	OffsetR = ((m_Inputs->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
-	OffsetT = ((m_Inputs->delta_xz/2) + m_Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
+  //Setting the value of all the global variables
+  OffsetR = ((m_Inputs->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
+  OffsetT = ((m_Inputs->delta_xz/2) + m_Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 
 #ifdef BEAM_CALCULATION
 	BEAM_WIDTH = (0.5)*m_Sinogram->delta_r;
@@ -519,6 +514,7 @@ void SOCEngine::execute()
 	DetectorResponseWriter::Pointer responseWriter = DetectorResponseWriter::New();
 	responseWriter->setInputs(m_Inputs);
 	responseWriter->setSinogram(m_Sinogram);
+	responseWriter->addObserver(this);
 	responseWriter->setResponse(detectorResponse);
 	responseWriter->execute();
   if (responseWriter->getErrorCondition() < 0)
@@ -537,38 +533,53 @@ void SOCEngine::execute()
 	H_t->setName("H_t");
 
 #ifdef RANDOM_ORDER_UPDATES
-	VisitCount=(uint8_t **)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
-	for(i=0;i<m_Geometry->N_z;i++) {
-		for(j=0;j < m_Geometry->N_x;j++) {
-			VisitCount[i][j]=0;
-		}}
+  //VisitCount=(uint8_t **)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
+  dims[0] = m_Geometry->N_z;
+  dims[1] = m_Geometry->N_x;
+  VisitCount = UInt8ImageType::New(dims);
+  VisitCount->setName("VisitCount");
+// Initialize the Array to zero
+  ::memset( VisitCount->d[0], 0, dims[0] * dims[1] * sizeof(uint8_t));
+//  for (i = 0; i < m_Geometry->N_z; i++)
+//  {
+//    for (j = 0; j < m_Geometry->N_x; j++)
+//    {
+//      VisitCount->d[i][j] = 0;
+//    }
+//  }
 #endif//Random update
 
 #ifdef ROI
-	Mask = (uint8_t**)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
-	EllipseA = m_Geometry->LengthX/2;
-	EllipseB = m_Inputs->LengthZ/2;
-	for (i = 0; i < m_Geometry->N_z ; i++)
-	{
-		for (j=0; j< m_Geometry->N_x; j++)
-		{
-			x = m_Geometry->x0 + ((DATA_TYPE)j + 0.5)*m_Inputs->delta_xz;
-			z = m_Geometry->z0 + ((DATA_TYPE)i + 0.5)*m_Inputs->delta_xz;
-			if (x >= -(m_Sinogram->N_r*m_Sinogram->delta_r)/2 && x <= (m_Sinogram->N_r*m_Sinogram->delta_r)/2 && z>= -m_Inputs->LengthZ/2 && z <= m_Inputs->LengthZ/2)
-			{
-				Mask[i][j] = 1;
-			}
-			else
-			{
-				Mask[i][j] =0;
-			}
-		}
-	}
+  //Mask = (uint8_t**)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
+  dims[0] = m_Geometry->N_z;
+  dims[1] = m_Geometry->N_x;
+  Mask = UInt8ImageType::New(dims);
+  Mask->setName("Mask");
+  EllipseA = m_Geometry->LengthX/2;
+  EllipseB = m_Inputs->LengthZ/2;
+  for (i = 0; i < m_Geometry->N_z ; i++)
+  {
+    for (j = 0; j < m_Geometry->N_x; j++)
+    {
+      x = m_Geometry->x0 + ((DATA_TYPE)j + 0.5)*m_Inputs->delta_xz;
+      z = m_Geometry->z0 + ((DATA_TYPE)i + 0.5)*m_Inputs->delta_xz;
+      if (x >= -(m_Sinogram->N_r*m_Sinogram->delta_r)/2
+          && x <= (m_Sinogram->N_r*m_Sinogram->delta_r)/2
+          && z >= -m_Inputs->LengthZ/2
+          && z <= m_Inputs->LengthZ/2)
+      {
+        Mask->d[i][j] = 1;
+      }
+      else
+      {
+        Mask->d[i][j] = 0;
+      }
+    }
+  }
 #endif
 	//m_Sinogram->TargetGain=20000;
 
 #ifdef BRIGHT_FIELD //Take log of the data and subtract log(Dosage) from it
-
 	for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++) {//slice index
 		for(i_r = 0; i_r < m_Sinogram->N_r;i_r++) {
 			for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
@@ -579,20 +590,21 @@ void SOCEngine::execute()
 
 #endif//Bright Field
 
-	//Scale and Offset Parameters Initialization
-
-	sum = 0;
-	temp = 0;
-	for(k=0 ; k < m_Sinogram->N_theta;k++)
-	{
-		//fread(&buffer, 1, sizeof(double), Fp6);
-		NuisanceParams.I_0->d[k] = m_Sinogram->InitialGain->d[k];//;
+  //Scale and Offset Parameters Initialization
+  sum = 0;
+  temp = 0;
+  for(k=0 ; k < m_Sinogram->N_theta;k++)
+  {
+    // Gains
+    NuisanceParams.I_0->d[k] = m_Sinogram->InitialGain->d[k];
+    // Offsets
+    NuisanceParams.mu->d[k] = m_Sinogram->InitialOffset->d[k];
 #ifdef GEOMETRIC_MEAN_CONSTRAINT
-		sum+=log(NuisanceParams.I_0->d[k]);
+    sum+=log(NuisanceParams.I_0->d[k]);
 #else
-		sum+=NuisanceParams.I_0->d[k];
+    sum+=NuisanceParams.I_0->d[k];
 #endif
-	}
+  }
 	sum/=m_Sinogram->N_theta;
 #ifdef GEOMETRIC_MEAN_CONSTRAINT
 	sum=exp(sum);
@@ -620,42 +632,43 @@ void SOCEngine::execute()
 #endif
 
 
-	for(k=0 ; k < m_Sinogram->N_theta;k++)
-	{
-		//fread(&buffer, 1, sizeof(double), Fp6);
-		NuisanceParams.mu->d[k] = m_Sinogram->InitialOffset->d[k];
-	}
+  for(k = 0 ; k <m_Sinogram->N_theta; k++)
+  {
+    for (i = 0; i < DETECTOR_RESPONSE_BINS; i++)
+    {
+      ProfileCenterT = i * OffsetT;
+      if(m_Inputs->delta_xy >= m_Sinogram->delta_t)
+      {
+        if(ProfileCenterT <= ((m_Inputs->delta_xy / 2) - (m_Sinogram->delta_t / 2))) H_t->d[0][k][i] = m_Sinogram->delta_t;
+        else
+        {
+          H_t->d[0][k][i] = -1 * ProfileCenterT + (m_Inputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
+        }
+        if(H_t->d[0][k][i] < 0)
+        {
+          H_t->d[0][k][i] = 0;
+        }
 
-	for(k = 0 ; k <m_Sinogram->N_theta; k++)
-	{
-		for (i = 0; i < DETECTOR_RESPONSE_BINS; i++)
-		{
-			ProfileCenterT = i*OffsetT;
-			if(m_Inputs->delta_xy >= m_Sinogram->delta_t)
-			{
-				if(ProfileCenterT <= ((m_Inputs->delta_xy/2) - (m_Sinogram->delta_t/2)))
-					H_t->d[0][k][i] = m_Sinogram->delta_t;
-				else {
-					H_t->d[0][k][i] = -1*ProfileCenterT + (m_Inputs->delta_xy/2) + m_Sinogram->delta_t/2;
-				}
-				if(H_t->d[0][k][i] < 0)
-					{H_t->d[0][k][i] =0;}
+      }
+      else
+      {
+        if(ProfileCenterT <= m_Sinogram->delta_t / 2 - m_Inputs->delta_xy / 2)
+        {
+          H_t->d[0][k][i] = m_Inputs->delta_xy;
+        }
+        else
+        {
+          H_t->d[0][k][i] = -ProfileCenterT + (m_Inputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
+        }
 
-			}
-			else {
-				if(ProfileCenterT <= m_Sinogram->delta_t/2 - m_Inputs->delta_xy/2)
-					{H_t->d[0][k][i] = m_Inputs->delta_xy;}
-				else {
-					H_t->d[0][k][i] = -ProfileCenterT + (m_Inputs->delta_xy/2) + m_Sinogram->delta_t/2;
-				}
+        if(H_t->d[0][k][i] < 0)
+        {
+          H_t->d[0][k][i] = 0;
+        }
 
-				if(H_t->d[0][k][i] < 0) {
-					H_t->d[0][k][i] =0;
-				}
-
-			}
-		}
-	}
+      }
+    }
+  }
 
 	/*for(i=0;i<Sinogram->N_theta;i++)
 		for(j=0;j< PROFILE_RESOLUTION;j++)
@@ -672,6 +685,8 @@ void SOCEngine::execute()
 
 	AMatrixCol**** AMatrix = (AMatrixCol ****)multialloc(sizeof(AMatrixCol*),3,m_Geometry->N_y,m_Geometry->N_z,m_Geometry->N_x);
 #else
+
+	//TODO: All this needs to be deallocated at some point
 	DATA_TYPE y;
 	DATA_TYPE t,tmin,tmax,ProfileThickness;
 	int16_t slice_index_min,slice_index_max;
@@ -711,17 +726,19 @@ void SOCEngine::execute()
 			}}}
 	printf("Stored A matrix\n");
 #else
-	temp=0;
-    for(j=0; j < m_Geometry->N_z; j++){
-    for(k=0; k < m_Geometry->N_x; k++)
+	temp = 0;
+  for (j = 0; j < m_Geometry->N_z; j++)
+  {
+    for (k = 0; k < m_Geometry->N_x; k++)
     {
       TempCol[j][k] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
       temp += TempCol[j][k]->count;
-    }}
+    }
+  }
 #endif
 
 	//Storing the response along t-direction for each voxel line
-
+  updateProgressAndMessage("Storing the response along Y-direction for each voxel line", 0);
 	for (i =0; i < m_Geometry->N_y; i++)
 	{
     y = ((DATA_TYPE)i + 0.5) * m_Inputs->delta_xy + m_Geometry->y0;
@@ -789,93 +806,79 @@ void SOCEngine::execute()
 
 
 	RandomNumber=init_genrand(1ul);
-//	srand(time(NULL));
+	//	srand(time(NULL));
 	ArraySize= m_Geometry->N_z*m_Geometry->N_x;
 	//ArraySizeK = Geometry->N_x;
 
-	Counter = (int32_t*)malloc(ArraySize*sizeof(int32_t));
-	//CounterK = (int*)malloc(ArraySizeK*sizeof(int));
+	//  Counter = (int32_t*)malloc(ArraySize*sizeof(int32_t));
+  dims[0] = ArraySize;
+  Counter = Int32ArrayType::New(dims);
+  //CounterK = (int*)malloc(ArraySizeK*sizeof(int));
 
-	for(j_new = 0;j_new < ArraySize; j_new++) {
-		Counter[j_new]=j_new;
-	}
+  for(int32_t j_new = 0;j_new < ArraySize; j_new++) {
+    Counter->d[j_new]=j_new;
+  }
 
 
-	START;
-//Forward Projection
-
-		for (j = 0; j < m_Geometry->N_z; j++)
+  updateProgressAndMessage("Starting Forward Projection", 10);
+  START_TIMER;
+#if TomoEngine_USE_PARALLEL_ALGORITHMS
+  tbb::task_group* g = new tbb::task_group;
+  std::cout << "Default Number of Threads to Use: " << init.default_num_threads() << std::endl;
+  std::cout << "Forward Projection Running in Parallel." << std::endl;
+  // Queue up a thread for each z layer of the Geometry. The threads will only be
+  // run as hardware resources open up so this will not just fire up a gazillion
+  // threads.
+  for (uint16_t t = 0; t < m_Geometry->N_z; t++)
   {
+    g->run(ForwardProject(m_Sinogram, m_Geometry, TempCol,VoxelLineResponse,Y_Est, &NuisanceParams, t));
+  }
+  g->wait(); // Wait for all the threads to complete before moving on.
+  delete g;
+
+#else
+//Forward Projection
+  std::cout << "Forward Projection Running in Serial." << std::endl;
+  for (j = 0; j < m_Geometry->N_z; j++)
+  {
+    std::stringstream s;
+    s << "Forward projecting Tilt " << j << "/" << m_Geometry->N_z;
+    updateProgressAndMessage(s.str().c_str(), 11);
     for (k = 0; k < m_Geometry->N_x; k++)
     {
-
       if(TempCol[j][k]->count > 0)
       {
         for (i = 0; i < m_Geometry->N_y; i++) //slice index
         {
-          /*  y = ((DATA_TYPE)i+0.5)*Geometry->delta_xy + Geometry->y0;
-           t = y;
-           tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-           tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax? t + Geometry->delta_xy/2 : Sinogram->TMax;
-
-           slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
-           slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
-
-           if(slice_index_min < 0)
-           slice_index_min = 0;
-           if(slice_index_max >= Sinogram->N_t)
-           slice_index_max = Sinogram->N_t-1;
-           */
-
           for (uint32_t q = 0; q < TempCol[j][k]->count; q++)
           {
             //calculating the footprint of the voxel in the t-direction
-
             int16_t i_theta = int16_t(floor(static_cast<float>(TempCol[j][k]->index[q] / (m_Sinogram->N_r))));
             int16_t i_r = (TempCol[j][k]->index[q] % (m_Sinogram->N_r));
 
             VoxelLineAccessCounter = 0;
             for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++) //CHANGED from <= to <
             {
-              /*center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
-               delta_t = fabs(center_t - t);
-               index_delta_t = floor(delta_t/OffsetT);
-               if(index_delta_t < DETECTOR_RESPONSE_BINS)
-               {
-               w3 = delta_t - (DATA_TYPE)(index_delta_t)*OffsetT;
-               w4 = ((DATA_TYPE)index_delta_t+1)*OffsetT - delta_t;
-               ProfileThickness =(w4/OffsetT)*H_t->d[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t->d[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
-               }
-               else
-               {
-               ProfileThickness=0;
-               }*/
-              Y_Est->d[i_theta][i_r][i_t] += (NuisanceParams.I_0->d[i_theta]
-                  * (TempCol[j][k]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object->d[j][k][i]));
+              Y_Est->d[i_theta][i_r][i_t] += (NuisanceParams.I_0->d[i_theta] * (TempCol[j][k]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object->d[j][k][i]));
 
             }
           }
-
         }
       }
-
     }
+
   }
-	STOP;
-	PRINTTIME;
+#endif
+  STOP_TIMER;
+  printf("Forward Project Time was ");
+  PRINT_TIME;
 
-	/*
-	START;
 
-	Y_Est=ForwardProject(Sinogram,Geometry,DetectorResponse,H_t);
-	STOP;
-	PRINTTIME;*/
-
-	//Calculate Error Sinogram - Can this be combined with previous loop?
-	//Also compute weights of the diagonal covariance matrix
-
+  //Calculate Error Sinogram - Can this be combined with previous loop?
+  //Also compute weights of the diagonal covariance matrix
 #ifdef NOISE_MODEL
-
+  START_TIMER;
+  //TODO: This can be parallelized  for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
   for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
   {
     NuisanceParams.alpha->d[i_theta] = 1; //Initialize the refinement parameters to 1
@@ -954,11 +957,11 @@ void SOCEngine::execute()
 	printf("Cost Function Calculation \n");
 	/*********************Initial Cost Calculation***************************************************/
 
-	cost[cost_counter] = computeCost(ErrorSino,Weight);
+	cost->d[cost_counter] = computeCost(ErrorSino,Weight);
 
-	printf("%lf\n",cost[cost_counter]);
+	printf("%lf\n",cost->d[cost_counter]);
 
-	fwrite(&cost[cost_counter],sizeof(DATA_TYPE),1,Fp2);
+	fwrite(&cost->d[cost_counter],sizeof(DATA_TYPE),1,Fp2);
 	cost_counter++;
 	/*******************************************************************************/
 #endif //Cost calculation endif
@@ -984,14 +987,14 @@ void SOCEngine::execute()
       ArraySize = m_Geometry->N_x * m_Geometry->N_z;
       for (j_new = 0; j_new < ArraySize; j_new++)
       {
-        Counter[j_new] = j_new;
+        Counter->d[j_new] = j_new;
       }
 
       for (j = 0; j < m_Geometry->N_z; j++)
       {
         for (k = 0; k < m_Geometry->N_x; k++)
         {
-          VisitCount[j][k] = 0;
+          VisitCount->d[j][k] = 0;
         }
       }
 #endif
@@ -1004,12 +1007,12 @@ void SOCEngine::execute()
 #ifdef RANDOM_ORDER_UPDATES
           //RandomNumber=init_genrand(Iter);
           Index = (genrand_int31(RandomNumber)) % ArraySize;
-          k_new = Counter[Index] % m_Geometry->N_x;
-          j_new = Counter[Index] / m_Geometry->N_x;
+          k_new = Counter->d[Index] % m_Geometry->N_x;
+          j_new = Counter->d[Index] / m_Geometry->N_x;
           //memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
           //TODO: Instead just swap the value in Index with the one in ArraySize
-          Counter[Index] = Counter[ArraySize - 1];
-          VisitCount[j_new][k_new] = 1;
+          Counter->d[Index] = Counter->d[ArraySize - 1];
+          VisitCount->d[j_new][k_new] = 1;
           ArraySize--;
 #else
           j_new=j;
@@ -1217,22 +1220,22 @@ void SOCEngine::execute()
 #ifdef RANDOM_ORDER_UPDATES
       for (j = 0; j < m_Geometry->N_z; j++) //Row index
         for (k = 0; k < m_Geometry->N_x; k++) //Column index
-          if(VisitCount[j][k] == 0) printf("Pixel (%d %d) not visited\n", j, k);
+          if(VisitCount->d[j][k] == 0) printf("Pixel (%d %d) not visited\n", j, k);
 #endif
 
 #ifdef COST_CALCULATE
       /*********************Cost Calculation***************************************************/
 
-      cost[cost_counter] = computeCost(ErrorSino, Weight);
-      printf("%lf\n", cost[cost_counter]);
+      cost->d[cost_counter] = computeCost(ErrorSino, Weight);
+      printf("%lf\n", cost->d[cost_counter]);
 
-      if(cost[cost_counter] - cost[cost_counter - 1] > 0)
+      if(cost->d[cost_counter] - cost->d[cost_counter - 1] > 0)
       {
         printf("Cost just increased!\n");
         break;
       }
 
-      fwrite(&cost[cost_counter], sizeof(DATA_TYPE), 1, Fp2);
+      fwrite(&cost->d[cost_counter], sizeof(DATA_TYPE), 1, Fp2);
       cost_counter++;
       /*******************************************************************************/
 #else
@@ -1290,11 +1293,11 @@ void SOCEngine::execute()
 #ifdef RANDOM_ORDER_UPDATES
 			ArraySize = m_Geometry->N_x * m_Geometry->N_z;
 			for (j_new = 0; j_new < ArraySize; j_new++)
-				Counter[j_new] = j_new;
+				Counter->d[j_new] = j_new;
 
 			for (j = 0; j < m_Geometry->N_z; j++)
 				for (k = 0; k < m_Geometry->N_x; k++)
-					VisitCount[j][k] = 0;
+					VisitCount->d[j][k] = 0;
 #endif
 
 			START;
@@ -1304,12 +1307,12 @@ void SOCEngine::execute()
 #ifdef RANDOM_ORDER_UPDATES
 					//RandomNumber=init_genrand(Iter);
 					Index = (genrand_int31(RandomNumber)) % ArraySize;
-					k_new = Counter[Index] % m_Geometry->N_x;
-					j_new = Counter[Index] / m_Geometry->N_x;
+					k_new = Counter->d[Index] % m_Geometry->N_x;
+					j_new = Counter->d[Index] / m_Geometry->N_x;
 					//memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
 					//TODO: Instead just swap the value in Index with the one in ArraySize
-					Counter[Index] = Counter[ArraySize - 1];
-					VisitCount[j_new][k_new] = 1;
+					Counter->d[Index] = Counter->d[ArraySize - 1];
+					VisitCount->d[j_new][k_new] = 1;
 					ArraySize--;
 #else
 					j_new=j;
@@ -1548,22 +1551,22 @@ void SOCEngine::execute()
 #ifdef RANDOM_ORDER_UPDATES
 			for (j = 0; j < m_Geometry->N_z; j++) //Row index
 				for (k = 0; k < m_Geometry->N_x; k++) //Column index
-					if(VisitCount[j][k] == 0) printf("Pixel (%d %d) not visited\n", j, k);
+					if(VisitCount->d[j][k] == 0) printf("Pixel (%d %d) not visited\n", j, k);
 #endif
 
 #ifdef COST_CALCULATE
 			/*********************Cost Calculation***************************************************/
 
-			cost[cost_counter] = computeCost(ErrorSino, Weight);
-			printf("%lf\n", cost[cost_counter]);
+			cost->d[cost_counter] = computeCost(ErrorSino, Weight);
+			printf("%lf\n", cost->d[cost_counter]);
 
-			if(cost[cost_counter] - cost[cost_counter - 1] > 0)
+			if(cost->d[cost_counter] - cost->d[cost_counter - 1] > 0)
 			{
 				printf("Cost just increased!\n");
 				break;
 			}
 
-			fwrite(&cost[cost_counter], sizeof(DATA_TYPE), 1, Fp2);
+			fwrite(&cost->d[cost_counter], sizeof(DATA_TYPE), 1, Fp2);
 			cost_counter++;
 			/*******************************************************************************/
 #else
@@ -1621,26 +1624,26 @@ void SOCEngine::execute()
 #ifdef RANDOM_ORDER_UPDATES
 			ArraySize = m_Geometry->N_x * m_Geometry->N_z;
 			for (j_new = 0; j_new < ArraySize; j_new++)
-				Counter[j_new] = j_new;
+				Counter->d[j_new] = j_new;
 
 			for (j = 0; j < m_Geometry->N_z; j++)
 				for (k = 0; k < m_Geometry->N_x; k++)
-					VisitCount[j][k] = 0;
+					VisitCount->d[j][k] = 0;
 #endif
 
-			START;
+			START_TIMER;
 			for (j = 0; j < m_Geometry->N_z; j++) //Row index
 				for (k = 0; k < m_Geometry->N_x; k++) //Column index
 				{
 #ifdef RANDOM_ORDER_UPDATES
 					//RandomNumber=init_genrand(Iter);
 					Index = (genrand_int31(RandomNumber)) % ArraySize;
-					k_new = Counter[Index] % m_Geometry->N_x;
-					j_new = Counter[Index] / m_Geometry->N_x;
+					k_new = Counter->d[Index] % m_Geometry->N_x;
+					j_new = Counter->d[Index] / m_Geometry->N_x;
 					//memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
 					//TODO: Instead just swap the value in Index with the one in ArraySize
-					Counter[Index] = Counter[ArraySize - 1];
-					VisitCount[j_new][k_new] = 1;
+					Counter->d[Index] = Counter->d[ArraySize - 1];
+					VisitCount->d[j_new][k_new] = 1;
 					ArraySize--;
 #else
 					j_new=j;
@@ -1824,7 +1827,7 @@ void SOCEngine::execute()
 							m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
 
 #ifdef ROI
-							if(Mask[j_new][k_new] == 1)
+							if(Mask->d[j_new][k_new] == 1)
 							{
 
 
@@ -1876,28 +1879,28 @@ void SOCEngine::execute()
 					}
 
 				}
-			STOP;
-			PRINTTIME;
+			STOP_TIMER;
+			PRINT_TIME;
 
 #ifdef RANDOM_ORDER_UPDATES
 			for (j = 0; j < m_Geometry->N_z; j++) //Row index
 				for (k = 0; k < m_Geometry->N_x; k++) //Column index
-					if(VisitCount[j][k] == 0) printf("Pixel (%d %d) not visited\n", j, k);
+					if(VisitCount->d[j][k] == 0) printf("Pixel (%d %d) not visited\n", j, k);
 #endif
 
 #ifdef COST_CALCULATE
 			/*********************Cost Calculation***************************************************/
 
-			cost[cost_counter] = computeCost(ErrorSino, Weight);
-			printf("%lf\n", cost[cost_counter]);
+			cost->d[cost_counter] = computeCost(ErrorSino, Weight);
+			printf("%lf\n", cost->d[cost_counter]);
 
-			if(cost[cost_counter] - cost[cost_counter - 1] > 0)
+			if(cost->d[cost_counter] - cost->d[cost_counter - 1] > 0)
 			{
 				printf("Cost just increased!\n");
 				break;
 			}
 
-			fwrite(&cost[cost_counter], sizeof(DATA_TYPE), 1, Fp2);
+			fwrite(&cost->d[cost_counter], sizeof(DATA_TYPE), 1, Fp2);
 			cost_counter++;
 			/*******************************************************************************/
 #else
@@ -2136,15 +2139,15 @@ void SOCEngine::execute()
      }*/
 
 #ifdef COST_CALCULATE
-    cost[cost_counter] = computeCost(ErrorSino, Weight);
-    printf("After Gain Update %lf\n", cost[cost_counter]);
+    cost->d[cost_counter] = computeCost(ErrorSino, Weight);
+    printf("After Gain Update %lf\n", cost->d[cost_counter]);
 
-    if(cost[cost_counter] - cost[cost_counter - 1] > 0)
+    if(cost->d[cost_counter] - cost->d[cost_counter - 1] > 0)
     {
       printf("Cost just increased!\n");
       break;
     }
-    fwrite(&cost[cost_counter], sizeof(DATA_TYPE), 1, Fp2);
+    fwrite(&cost->d[cost_counter], sizeof(DATA_TYPE), 1, Fp2);
     cost_counter++;
 
 #endif
@@ -2191,10 +2194,10 @@ void SOCEngine::execute()
     }
 
 #ifdef COST_CALCULATE
-    cost[cost_counter]=computeCost(ErrorSino,Weight);
-    printf("After Noise Variance Update %lf\n",cost[cost_counter]);
-    fwrite(&cost[cost_counter],sizeof(DATA_TYPE),1,Fp2);
-    if(cost[cost_counter]-cost[cost_counter-1] > 0)
+    cost->d[cost_counter]=computeCost(ErrorSino,Weight);
+    printf("After Noise Variance Update %lf\n",cost->d[cost_counter]);
+    fwrite(&cost->d[cost_counter],sizeof(DATA_TYPE),1,Fp2);
+    if(cost->d[cost_counter]-cost->d[cost_counter-1] > 0)
     {
       printf("Cost just increased!\n");
       break;
@@ -2208,17 +2211,11 @@ void SOCEngine::execute()
     printf("Outer Iter %d\n", OuterIter + 1);
   }
 
-	FILE* Fp5 = NULL;
-  MAKE_OUTPUT_FILE(Fp5, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::FinalOffsetParametersFile);
-  if (fileError >= 0)
+  printf("Number of costs recorded %d\n",cost_counter);
+  printf("Final Cost\n");
+  for(i = 0 ; i < cost_counter; i++)
   {
-    printf("Offsets\n");
-    for(uint16_t i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      printf("%lf\n",NuisanceParams.mu->d[i_theta]);
-      fwrite(&NuisanceParams.mu->d[i_theta],sizeof(DATA_TYPE),1,Fp5);
-    }
-    fclose(Fp5);
+    printf("%lf\n",cost->d[i]);
   }
 
 
@@ -2240,135 +2237,117 @@ void SOCEngine::execute()
   }
 #endif
 
-  FILE* Fp4 = NULL;
-  MAKE_OUTPUT_FILE(Fp4, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::FinalGainParametersFile);
-  if (fileError == 1)
+/* Write the Gains and Offsets to an output file */
+  NuisanceParamWriter::Pointer nuisanceBinWriter = NuisanceParamWriter::New();
+  nuisanceBinWriter->setSinogram(m_Sinogram);
+  nuisanceBinWriter->setInputs(m_Inputs);
+  nuisanceBinWriter->addObserver(this);
+  nuisanceBinWriter->setNuisanceParams(&NuisanceParams);
+  nuisanceBinWriter->setFileName(ScaleOffsetCorrection::FinalGainParametersFile);
+  nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_I_O);
+  nuisanceBinWriter->execute();
+  if (nuisanceBinWriter->getErrorCondition() < 0)
   {
-
+    setErrorCondition(-1);
+    updateProgressAndMessage(nuisanceBinWriter->getErrorMessage().c_str(), 100);
   }
-	printf("Gain\n");
-	for(uint16_t i_theta = 0 ; i_theta < m_Sinogram->N_theta; i_theta++)
-	{
-		printf("%lf\n",NuisanceParams.I_0->d[i_theta]);
-		fwrite(&NuisanceParams.I_0->d[i_theta],sizeof(DATA_TYPE),1,Fp4);
-	}
-	fclose(Fp4);
-	printf("Number of costs recorded %d\n",cost_counter);
-	printf("Final Cost\n");
-	for(i = 0 ; i < cost_counter; i++)
-	{
-		printf("%lf\n",cost[i]);
-	}
+
+  nuisanceBinWriter->setFileName(ScaleOffsetCorrection::FinalOffsetParametersFile);
+  nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_mu);
+  nuisanceBinWriter->execute();
+  if (nuisanceBinWriter->getErrorCondition() < 0)
+  {
+   setErrorCondition(-1);
+   updateProgressAndMessage(nuisanceBinWriter->getErrorMessage().c_str(), 100);
+  }
 
 #ifdef NOISE_MODEL
-
-	if(NuisanceParams.alpha != NULL)
+  nuisanceBinWriter->setFileName(ScaleOffsetCorrection::FinalVariancesFile);
+  nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_alpha);
+  nuisanceBinWriter->execute();
+  if (nuisanceBinWriter->getErrorCondition() < 0)
   {
-	  FILE* Fp7 = NULL;
-    MAKE_OUTPUT_FILE(Fp7, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::FinalVariancesFile);
-    if(fileError >= 0)
-    {
-      updateProgressAndMessage("NuisanceParams ", 50);
-      for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-      {
-        printf("%lf\n", NuisanceParams.alpha->d[i_theta]);
-        fwrite(&(NuisanceParams.alpha->d[i_theta]), sizeof(DATA_TYPE), 1, Fp7);
-      }
-      fclose(Fp7);
-    }
+    setErrorCondition(-1);
+    updateProgressAndMessage(nuisanceBinWriter->getErrorMessage().c_str(), 100);
   }
 #endif//Noise Model
 
 
-  START;
-	//calculates Ax and returns a pointer to the memory block
-	Final_Sinogram=forwardProject(detectorResponse, H_t);
-	STOP;
-	PRINTTIME;
+  START_TIMER;
+  //calculates Ax and returns a pointer to the memory block
+  Final_Sinogram=forwardProject(detectorResponse, H_t);
+  STOP_TIMER;
+  PRINT_TIME;
 
-  updateProgressAndMessage("Writing Final Sinogram", 50);
-
-  FILE* Fp1 = NULL;
-  MAKE_OUTPUT_FILE(Fp1, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::ReconstructedSinogramFile);
-  if (fileError == 1)
+  // Write the Sinogram out to a file
+  SinogramBinWriter::Pointer sinogramWriter = SinogramBinWriter::New();
+  sinogramWriter->setSinogram(m_Sinogram);
+  sinogramWriter->setInputs(m_Inputs);
+  sinogramWriter->addObserver(this);
+  sinogramWriter->setNuisanceParams(&NuisanceParams);
+  sinogramWriter->setData(Final_Sinogram);
+  sinogramWriter->execute();
+  if (sinogramWriter->getErrorCondition() < 0)
   {
-
+    setErrorCondition(-1);
+    updateProgressAndMessage(sinogramWriter->getErrorMessage().c_str(), 100);
   }
-	//Writing the final sinogram
-	for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+
+  // Write the Reconstruction out to a file
+  RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
+  writer->setGeometry(m_Geometry);
+  writer->setFilePath(m_Inputs->OutputFile);
+  writer->addObserver(this);
+  writer->execute();
+  if (writer->getErrorCondition() < 0)
   {
-    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-    {
-      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-      {
-        Final_Sinogram->d[i_theta][i_r][i_t] *= NuisanceParams.I_0->d[i_theta];
-        Final_Sinogram->d[i_theta][i_r][i_t] += NuisanceParams.mu->d[i_theta];
-        fwrite(&Final_Sinogram->d[i_theta][i_r][i_t], sizeof(DATA_TYPE), 1, Fp1);
-      }
-    }
+    setErrorCondition(writer->getErrorCondition());
+    updateProgressAndMessage("Error Writing the Raw Geometry", 100);
   }
-	fclose(Fp1);
-
-	RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
-	writer->setGeometry(m_Geometry);
-	writer->setFilePath(m_Inputs->OutputFile);
-	writer->execute();
-	if (writer->getErrorCondition() < 0)
-	{
-	  setErrorCondition(writer->getErrorCondition());
-	  updateProgressAndMessage("Error Writing the Raw Geometry", 100);
-	}
 
   std::cout << "Final Dimensions of Object: " << std::endl;
   std::cout << "  Nx = " << m_Geometry->N_x << std::endl;
   std::cout << "  Ny = " << m_Geometry->N_y << std::endl;
   std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
 
-
-
-	//free(AMatrix);
+  //free(AMatrix);
 #ifdef STORE_A_MATRIX
-	multifree(AMatrix,2);
-	//#else
-	//	free((void*)TempCol);
+  multifree(AMatrix,2);
+  //#else
+  //  free((void*)TempCol);
 #endif
 #ifdef RANDOM_ORDER_UPDATES
-	free_img((void**)VisitCount);
+  //free_img((void**)VisitCount);
 #endif
 
 #ifdef ROI
-	free_img((void**)Mask);
+  //free_img((void**)Mask);
 #endif
-
-//	free_img((void**)VoxelProfile);
-//	free_3D((void***)DetectorResponse);
-//	free_3D((void***)H_t);
+//  free_img((void**)VoxelProfile);
+//  free_3D((void***)DetectorResponse);
+//  free_3D((void***)H_t);
 //
-//	free_3D((void***)Y_Est);
-//	free_3D((void***)Final_Sinogram);
-//	free_3D((void***)ErrorSino);
-//	free_3D((void***)Weight);
-
-	free(Counter);
-//	free_img((void**)MicroscopeImage);
+//  free_3D((void***)Y_Est);
+//  free_3D((void***)Final_Sinogram);
+//  free_3D((void***)ErrorSino);
+//  free_3D((void***)Weight);
+//free(Counter);
+//  free_img((void**)MicroscopeImage);
 
 #ifdef COST_CALCULATE
-	fclose(Fp2);// writing cost function
-	free(cost);
+  fclose(Fp2);// writing cost function
+  //free(cost);
 #endif
+  //free_3D(neighborhood);
+  // Get values from ComputationInputs and perform calculation
+  // Return any error code
+  updateProgressAndMessage("Deallocating Memory", 100);
+  cleanupMemory();
 
 
-
-	//free_3D(neighborhood);
-	// Get values from ComputationInputs and perform calculation
-	// Return any error code
-	updateProgressAndMessage("Deallocating Memory", 100);
-	cleanupMemory();
-
-
-	setErrorCondition(0);
-	std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds()-totalTime)/1000 << std::endl;
-	return;
+  setErrorCondition(0);
+  std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds()-totalTime)/1000 << std::endl;
+  return;
 }
 
 // -----------------------------------------------------------------------------
