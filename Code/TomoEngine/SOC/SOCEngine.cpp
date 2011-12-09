@@ -70,7 +70,7 @@
 #include "TomoEngine/IO/NuisanceParamWriter.h"
 #include "TomoEngine/IO/SinogramBinWriter.h"
 #include "TomoEngine/SOC/SOCConstants.h"
-#include "TomoEngine/SOC/VoxelUpdate.h"
+//#include "TomoEngine/SOC/VoxelUpdate.h"
 #include "TomoEngine/Filters/ComputeGainsOffsets.h"
 #include "TomoEngine/Filters/DetectorResponse.h"
 #include "TomoEngine/Filters/DetectorResponseWriter.h"
