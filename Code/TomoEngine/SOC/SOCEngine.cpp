@@ -390,8 +390,9 @@ void SOCEngine::execute()
 	NuisanceParams.mu = RealArrayType::New(arrayDims);
 	NuisanceParams.mu->setName("NuisanceParams.mu");
 #ifdef NOISE_MODEL
+	//alpha is the noise variance adjustment factor
 	NuisanceParams.alpha = RealArrayType::New(arrayDims);
-	NuisanceParams.alpha->setName("NuisanceParams.mu");
+	NuisanceParams.alpha->setName("NuisanceParams.alpha");
 #endif
 
   // initialize variables
@@ -883,10 +884,10 @@ void SOCEngine::execute()
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-        if(sum != 0)
+        if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
         {
 #ifdef BRIGHT_FIELD
-          Weight->d[i_theta][i_r][i_t] = sum;
+          Weight->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
 #else
           Weight->d[i_theta][i_r][i_t] = 1.0 / (m_Sinogram->counts->d[i_theta][i_r][i_t] * NuisanceParams.alpha->d[i_theta]); //The variance for each view ~=averagecounts in that view
 #endif
@@ -921,11 +922,7 @@ void SOCEngine::execute()
         }
         else Weight->d[i_theta][i_r][i_t] = 0;
 #endif//Noise model
-//#ifdef DEBUG
-        //writing the error sinogram
-        //	if(i_t == 0)
-        //	fwrite(&ErrorSino->d[i_theta][i_r][i_t],sizeof(DATA_TYPE),1,Fp1);
-//#endif
+		  
 #ifdef FORWARD_PROJECT_MODE
         temp=Y_Est->d[i_theta][i_r][i_t]/NuisanceParams.I_0->d[i_theta];
         fwrite(&temp,sizeof(DATA_TYPE),1,Fp6);
