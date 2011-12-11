@@ -473,8 +473,9 @@ void SOCEngine::execute()
 #endif //QGGMRF
 
 	//globals assosiated with finding the optimal gain and offset parameters
-	dims[1] = 3;
+	
 	dims[0] = m_Sinogram->N_theta;
+	dims[1] = 3;
 	dims[2] = 0;
 	//Hold the coefficients of a quadratic equation
 	//  QuadraticParameters = (DATA_TYPE**)(get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE)));
@@ -484,7 +485,7 @@ void SOCEngine::execute()
 	Qk_cost = RealImageType::New(dims);
   Qk_cost->setName("Qk_cost");
 //	bk_cost=(DATA_TYPE**)get_img(2, m_Sinogram->N_theta, sizeof(DATA_TYPE));
-  dims[1] = 2;
+    dims[1] = 2;
 	bk_cost = RealImageType::New(dims);
 	bk_cost->setName("bk_cost");
 
@@ -561,18 +562,18 @@ void SOCEngine::execute()
 	
 #ifdef NHICD
 	RealImageType::Pointer MagnitudeUpdateMap;
-	dims[0]=m_Geometry->N_x;//width
-	dims[1]=m_Geometry->N_z;//height
+	dims[0]=m_Geometry->N_z;//height
+	dims[1]=m_Geometry->N_x;//width
 	dims[2]=0;
 	MagnitudeUpdateMap = RealImageType::New(dims);
 	MagnitudeUpdateMap->setName("Update Map for voxel lines");
 	
 	Uint8ImageType::Pointer MagnitudeUpdateMask;
-	dims[0]=m_Geometry->N_x;//width
-	dims[1]=m_Geometry->N_z;//height
+	dims[0]=m_Geometry->N_z;//height
+	dims[1]=m_Geometry->N_x;//width
 	dims[2]=0;
 	MagnitudeUpdateMask = Uint8ImageType::New(dims);
-	MagnitudeUpdateMask->setName("Update Map for voxel lines");
+	MagnitudeUpdateMask->setName("Update Mask for selecting voxel lines NHICD");
 	
 #endif
 	
@@ -3226,33 +3227,32 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
      }
 }
 
-RealImageType::Pointer SOCEngine::ComputeVSC(RealImageType::Pointer MagnitudeMap)
+RealImageType::Pointer SOCEngine::ComputeVSC(RealImageType::Pointer MagnitudeUpdateMap)
 {
-  size_t dims[3]={m_Geometry->N_z,m_Geometry->N_x,0};
+  size_t dims[2]={m_Geometry->N_z,m_Geometry->N_x};
   RealImageType::Pointer FiltMag;//Filtered Magnitude
   FiltMag=RealImageType::New(dims);
   DATA_TYPE filter_op=0;
 	
 	FILE *Fp=NULL;
 	Fp=fopen("MagnitudeMap.bin","wb");
-	
+	fwrite(&(MagnitudeUpdateMap->d[0][0]), m_Geometry->N_x*m_Geometry->N_z , sizeof(DATA_TYPE), Fp);
+	fclose(Fp);
  // std::cout<<"Starting to filter the magnitude"<<std::endl;  
  // std::cout<<m_Geometry->N_x<<" " <<m_Geometry->N_z<<std::endl;
   for(int16_t i=0; i < m_Geometry->N_z;i++)
     for(int16_t j=0;j < m_Geometry->N_x;j++)
       {
-	fwrite(&(MagnitudeMap->d[i][j]), 1, sizeof(DATA_TYPE), Fp);
 	filter_op=0;
 	//std::cout<<i<<" "<<j<<std::endl;
 	for(int16_t p=-2;p <= 2; p++)
 	  for(int16_t q=-2; q <= 2;q++)
-	    if(i+p >=0 && i+p < m_Geometry->N_x && j+q >= 0 && j+q < m_Geometry->N_x)
+	    if(i+p >=0 && i+p < m_Geometry->N_z && j+q >= 0 && j+q < m_Geometry->N_x)
 	      {
-	       filter_op+=HAMMING_WINDOW[p+2][q+2]*MagnitudeMap->d[i+p][j+q];
+	       filter_op+=HAMMING_WINDOW[p+2][q+2]*MagnitudeUpdateMap->d[i+p][j+q];
 	      }
 	FiltMag->d[i][j]=filter_op;
       }
-	fclose(Fp);
 	
 	Fp=fopen("FilteredMagMap.bin","wb");
 	fwrite(&(FiltMag->d[0][0]), m_Geometry->N_x*m_Geometry->N_z, sizeof(DATA_TYPE), Fp);
