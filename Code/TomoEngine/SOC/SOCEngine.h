@@ -77,7 +77,6 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
     void execute();
 
 
-
     DATA_TYPE absMaxArray(std::vector<DATA_TYPE> &Array);
 
 
@@ -97,7 +96,8 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
     uint8_t BOUNDARYFLAG[3][3][3]; //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
     //Markov Random Field Prior parameters - Globals DATA_TYPE
     DATA_TYPE FILTER[3][3][3];
-    DATA_TYPE THETA1;
+    DATA_TYPE HAMMING_WINDOW[5][5];  
+  DATA_TYPE THETA1;
     DATA_TYPE THETA2;
     DATA_TYPE NEIGHBORHOOD[3][3][3];
     DATA_TYPE V;
@@ -190,6 +190,21 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
      * @return
      */
     double surrogateFunctionBasedMin();
+	
+	//Updates a single line of voxels along y-axis
+	void UpdateVoxelLine(uint16_t j_new,uint16_t k_new);
+	
+    /**
+     * Code to take the magnitude map and filter it with a hamming window
+     * Returns the filtered magnitude map 
+     */
+    RealImageType::Pointer ComputeVSC(RealImageType::Pointer MagnitudeMap);
+
+    /**
+     *Code to return the threshold corresponding to the top T percentage of magnitude
+    */
+
+    DATA_TYPE ComputeThreshold(RealImageType::Pointer FilteredMagnitudeMap);
 
     /**
      * @brief  Solves equation (*f)(x) = 0 on x in [a,b]. Uses half interval method.

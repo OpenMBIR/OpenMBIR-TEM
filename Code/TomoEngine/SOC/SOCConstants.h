@@ -60,7 +60,7 @@
 #define ROI 1
 
 #define STOPPING_THRESHOLD 0.009
-#define THRESHOLD_REDUCTION_FACTOR .1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
+#define THRESHOLD_REDUCTION_FACTOR .5 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
 //#define SURROGATE_FUNCTION
 //#define QGGMRF
 //#define DISTANCE_DRIVEN
@@ -69,7 +69,7 @@
 #define COST_CALCULATE
 //#define BEAM_CALCULATION
 #define DETECTOR_RESPONSE_BINS 64
-#define JOINT_ESTIMATION
+//#define JOINT_ESTIMATION
 //#define GEOMETRIC_MEAN_CONSTRAINT
 #define NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
@@ -77,7 +77,8 @@
 //#define DEBUG_CONSTRAINT_OPT
 #define RANDOM_ORDER_UPDATES
 //#define BRIGHT_FIELD
-//#define NHICD
+#define NHICD 1
+#define NUM_NON_HOMOGENOUS_ITER 20
 
 
 //#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits

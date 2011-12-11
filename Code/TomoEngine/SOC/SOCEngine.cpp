@@ -144,6 +144,17 @@ void SOCEngine::initVariables()
   FILTER[2][0][0] = 0.0302; FILTER[2][0][1] = 0.0370; FILTER[2][0][2] = 0.0302;
   FILTER[2][1][0] = 0.0370; FILTER[2][1][1] = 0.0523; FILTER[2][1][2] = 0.0370;
   FILTER[2][2][0] = 0.0302; FILTER[2][2][1] = 0.0370; FILTER[2][2][2] = 0.0302;
+	
+  //Hamming Window here 
+  HAMMING_WINDOW[0][0]= 0.0013; HAMMING_WINDOW[0][1]=0.0086; HAMMING_WINDOW[0][2]=0.0159; HAMMING_WINDOW[0][3]=0.0086;HAMMING_WINDOW[0][4]=0.0013;
+  HAMMING_WINDOW[1][0]= 0.0086; HAMMING_WINDOW[1][1]=0.0581;HAMMING_WINDOW[1][2]=0.1076;HAMMING_WINDOW[1][3]=0.0581;HAMMING_WINDOW[1][4]=0.0086;
+  HAMMING_WINDOW[2][0]=0.0159;HAMMING_WINDOW[2][1]=0.1076;HAMMING_WINDOW[2][2]=0.1993;HAMMING_WINDOW[2][3]=0.1076;HAMMING_WINDOW[2][4]=0.0159;		
+  HAMMING_WINDOW[3][0]= 0.0013;HAMMING_WINDOW[3][1]=0.0086;HAMMING_WINDOW[3][2]=0.0159;HAMMING_WINDOW[3][3]=0.0086;HAMMING_WINDOW[3][4]=0.0013;
+  HAMMING_WINDOW[4][0]= 0.0086;HAMMING_WINDOW[4][1]=0.0581;HAMMING_WINDOW[4][2]=0.1076;HAMMING_WINDOW[4][3]=0.0581;HAMMING_WINDOW[4][4]=0.0086;
+
+
+
+	
 }
 
 // void CE_cancel()
@@ -170,7 +181,7 @@ void SOCEngine::initVariables()
 // -----------------------------------------------------------------------------
 void SOCEngine::execute()
 {
-  uint64_t totalTime = EIMTOMO_getMilliSeconds();
+   uint64_t totalTime = EIMTOMO_getMilliSeconds();
 	uint8_t err = 0;
 	int16_t Iter,OuterIter;
 	int16_t i,j,k,r,Idx;
@@ -213,6 +224,7 @@ void SOCEngine::execute()
 	RealVolumeType::Pointer ErrorSino;//Error Sinogram
 	RealVolumeType::Pointer Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
 	RNGVars* RandomNumber;
+	
 
 	//File variables
 //	FILE* Fp1 = NULL;
@@ -542,8 +554,28 @@ void SOCEngine::execute()
 	for(i=0;i<m_Geometry->N_z;i++) {
 		for(j=0;j < m_Geometry->N_x;j++) {
 			VisitCount[i][j]=0;
-		}}
+		}
+	}
 #endif//Random update
+	
+	
+#ifdef NHICD
+	RealImageType::Pointer MagnitudeUpdateMap;
+	dims[0]=m_Geometry->N_x;//width
+	dims[1]=m_Geometry->N_z;//height
+	dims[2]=0;
+	MagnitudeUpdateMap = RealImageType::New(dims);
+	MagnitudeUpdateMap->setName("Update Map for voxel lines");
+	
+	Uint8ImageType::Pointer MagnitudeUpdateMask;
+	dims[0]=m_Geometry->N_x;//width
+	dims[1]=m_Geometry->N_z;//height
+	dims[2]=0;
+	MagnitudeUpdateMask = Uint8ImageType::New(dims);
+	MagnitudeUpdateMask->setName("Update Map for voxel lines");
+	
+#endif
+	
 
 #ifdef ROI
 	Mask = (uint8_t**)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
@@ -814,19 +846,7 @@ void SOCEngine::execute()
       {
         for (i = 0; i < m_Geometry->N_y; i++) //slice index
         {
-          /*  y = ((DATA_TYPE)i+0.5)*Geometry->delta_xy + Geometry->y0;
-           t = y;
-           tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-           tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax? t + Geometry->delta_xy/2 : Sinogram->TMax;
-
-           slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
-           slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
-
-           if(slice_index_min < 0)
-           slice_index_min = 0;
-           if(slice_index_max >= Sinogram->N_t)
-           slice_index_max = Sinogram->N_t-1;
-           */
+        
 
           for (uint32_t q = 0; q < TempCol[j][k]->count; q++)
           {
@@ -838,19 +858,7 @@ void SOCEngine::execute()
             VoxelLineAccessCounter = 0;
             for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++) //CHANGED from <= to <
             {
-              /*center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
-               delta_t = fabs(center_t - t);
-               index_delta_t = floor(delta_t/OffsetT);
-               if(index_delta_t < DETECTOR_RESPONSE_BINS)
-               {
-               w3 = delta_t - (DATA_TYPE)(index_delta_t)*OffsetT;
-               w4 = ((DATA_TYPE)index_delta_t+1)*OffsetT - delta_t;
-               ProfileThickness =(w4/OffsetT)*H_t->d[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t->d[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
-               }
-               else
-               {
-               ProfileThickness=0;
-               }*/
+            
               Y_Est->d[i_theta][i_r][i_t] += (NuisanceParams.I_0->d[i_theta]
                   * (TempCol[j][k]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object->d[j][k][i]));
 
@@ -970,7 +978,6 @@ void SOCEngine::execute()
 #ifdef NHICD
 		if(0 == Iter%2) //During the even iterations just update all voxels
 		{
-
       //printf("Iter %d\n",Iter);
 #ifdef ROI
       AverageUpdate = 0;
@@ -988,6 +995,7 @@ void SOCEngine::execute()
       {
         for (k = 0; k < m_Geometry->N_x; k++)
         {
+		  MagnitudeUpdateMap->d[j][k]=0;
           VisitCount[j][k] = 0;
         }
       }
@@ -1155,6 +1163,9 @@ void SOCEngine::execute()
 
               //TODO Print appropriate error messages for other values of error code
               m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
+			  
+				MagnitudeUpdateMap->d[j_new][k_new]+=fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+			  
 
 #ifdef ROI
               if(Mask[j_new][k_new] == 1)
@@ -1242,7 +1253,7 @@ void SOCEngine::execute()
         printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);
         if((AverageUpdate / AverageMagnitudeOfRecon) < m_Inputs->StopThreshold)
         {
-          printf("This is the terminating point %d\n", Iter);
+          printf("This is the terminating point for NHICD%d\n", Iter);
 			m_Inputs->StopThreshold*=THRESHOLD_REDUCTION_FACTOR;//Reducing the thresold for subsequent iterations
 			break;
         }
@@ -1274,10 +1285,28 @@ void SOCEngine::execute()
         fclose(Fp3);
       }
 #endif
-    }
+    
+		}
 		else//Update the voxels in most need for a update
 		{
+		 
+			for (uint16_t NH_Iter=0; NH_Iter < NUM_NON_HOMOGENOUS_ITER; NH_Iter++) 
+			{
 
+			//Compute VSC and create a map of pixels that are above the threshold value
+			
+			RealImageType::Pointer FiltMag;//Filtered Magnitude
+			FiltMag = ComputeVSC(MagnitudeUpdateMap);
+			
+			//Use  it to find MagnitudeUpdateMask
+			size_t dims[3]={m_Geometry->N_z,m_Geometry->N_x,0};
+			Uint8ImageType::Pointer MagnitudeUpdateMask;
+			MagnitudeUpdateMask=Uint8ImageType::New(dims);
+				
+			std::cout<<"Completed Calculation of filtered magnitude"<<std::endl;	
+				
+				//Calculate the threshold for the top ? % of voxel updates
+				
 			//printf("Iter %d\n",Iter);
 #ifdef ROI
 			AverageUpdate = 0;
@@ -1291,7 +1320,11 @@ void SOCEngine::execute()
 
 			for (j = 0; j < m_Geometry->N_z; j++)
 				for (k = 0; k < m_Geometry->N_x; k++)
+				{
 					VisitCount[j][k] = 0;
+					MagnitudeUpdateMap->d[j][k]=0;
+					MagnitudeUpdateMask->d[j][k]=1;
+				}
 #endif
 
 			START;
@@ -1313,7 +1346,7 @@ void SOCEngine::execute()
 					k_new=k;
 #endif //Random order updates
 					TempMemBlock = TempCol[j_new][k_new]; //Remove this
-					if(TempMemBlock->count > 0)
+					if(TempMemBlock->count > 0 && MagnitudeUpdateMask->d[j_new][k_new] == 1)
 					{
 						for (i = 0; i < m_Geometry->N_y; i++) //slice index
 						{
@@ -1390,18 +1423,7 @@ void SOCEngine::execute()
 							THETA1 = 0.0;
 							THETA2 = 0.0;
 
-							/*		y = ((DATA_TYPE)i+0.5)*Geometry->delta_xy + Geometry->y0;
-							 t = y;
-							 tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-							 tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax? t + Geometry->delta_xy/2 : Sinogram->TMax;
-
-							 slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
-							 slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
-
-							 if(slice_index_min < 0)
-							 slice_index_min = 0;
-							 if(slice_index_max >= Sinogram->N_t)
-							 slice_index_max = Sinogram->N_t-1;*/
+							
 
 							//TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
 							for (uint32_t q = 0; q < TempMemBlock->count; q++)
@@ -1487,6 +1509,7 @@ void SOCEngine::execute()
 
 							//TODO Print appropriate error messages for other values of error code
 							m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
+							MagnitudeUpdateMap->d[j_new][k_new]+= fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
 
 #ifdef ROI
 							if(Mask[j_new][k_new] == 1)
@@ -1508,21 +1531,7 @@ void SOCEngine::execute()
 								for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
 									//for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 								{
-									/*	center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
-									 delta_t = fabs(center_t - t);
-									 index_delta_t = floor(delta_t/OffsetT);
-
-									 if(index_delta_t < DETECTOR_RESPONSE_BINS)
-									 {
-									 w3 = delta_t - index_delta_t*OffsetT;
-									 w4 = (index_delta_t+1)*OffsetT - delta_t;
-									 //TODO: interpolation
-									 ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
-									 }
-									 else
-									 {
-									 ProfileThickness=0;
-									 }*/
+									
 
 									ErrorSino->d[i_theta][i_r][i_t] -= (NuisanceParams.I_0->d[i_theta]
 																	 * (TempMemBlock->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
@@ -1568,6 +1577,7 @@ void SOCEngine::execute()
 #endif //Cost calculation endif
 
 #ifdef ROI
+				/*
 			if(AverageMagnitudeOfRecon > 0)
 			{
 				printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);
@@ -1577,7 +1587,8 @@ void SOCEngine::execute()
 					m_Inputs->StopThreshold*=THRESHOLD_REDUCTION_FACTOR;//Reducing the thresold for subsequent iterations
 					break;
 				}
-			}
+			}*/
+				
 #endif//ROI end
 			if(getCancel() == true)
 			{
@@ -1605,8 +1616,10 @@ void SOCEngine::execute()
 				fclose(Fp3);
 			}
 #endif
+		
+			}
 		}
-#else
+#else //Regular random order ICD
 		{
 
 			//printf("Iter %d\n",Iter);
@@ -1645,6 +1658,7 @@ void SOCEngine::execute()
 #endif //Random order updates
 					TempMemBlock = TempCol[j_new][k_new]; //Remove this
 					if(TempMemBlock->count > 0)
+					//After this should ideally call UpdateVoxelLine(j_new,k_new) ie put everything in this "if" inside a method called UpdateVoxelLine 
 					{
 						for (i = 0; i < m_Geometry->N_y; i++) //slice index
 						{
@@ -1721,18 +1735,6 @@ void SOCEngine::execute()
 							THETA1 = 0.0;
 							THETA2 = 0.0;
 
-							/*		y = ((DATA_TYPE)i+0.5)*Geometry->delta_xy + Geometry->y0;
-							 t = y;
-							 tmin = (t - Geometry->delta_xy/2) > Sinogram->T0 ? t-Geometry->delta_xy/2 : Sinogram->T0;
-							 tmax = (t + Geometry->delta_xy/2) <= Sinogram->TMax? t + Geometry->delta_xy/2 : Sinogram->TMax;
-
-							 slice_index_min = floor((tmin - Sinogram->T0)/Sinogram->delta_t);
-							 slice_index_max = floor((tmax - Sinogram->T0)/Sinogram->delta_t);
-
-							 if(slice_index_min < 0)
-							 slice_index_min = 0;
-							 if(slice_index_max >= Sinogram->N_t)
-							 slice_index_max = Sinogram->N_t-1;*/
 
 							//TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
 							for (uint32_t q = 0; q < TempMemBlock->count; q++)
@@ -1744,21 +1746,7 @@ void SOCEngine::execute()
 								for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
 									// for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 								{
-									/* center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
-									 delta_t = fabs(center_t - t);
-									 index_delta_t = floor(delta_t/OffsetT);
-
-									 if(index_delta_t < DETECTOR_RESPONSE_BINS)
-									 {
-									 w3 = delta_t - index_delta_t*OffsetT;
-									 w4 = (index_delta_t+1)*OffsetT - delta_t;
-									 //TODO: interpolation
-									 ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
-									 }
-									 else
-									 {
-									 ProfileThickness=0;
-									 }*/
+									
 
 
 									THETA2 += ((NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta])
@@ -1940,7 +1928,8 @@ void SOCEngine::execute()
 			}
 #endif
 		}
-#endif//Non Homogenous ICD
+#endif//Non Homogenous ICD check 
+	
 	}
 #ifdef JOINT_ESTIMATION
 
@@ -2076,6 +2065,13 @@ void SOCEngine::execute()
 
       NuisanceParams.I_0->d[i_theta] = (-1 * LagrangeMultiplier - Qk_cost->d[i_theta][1] * d1->d[i_theta] + bk_cost->d[i_theta][0])
           / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]);
+		
+		//Postivity Constraing on the gains
+		
+		if (NuisanceParams.I_0->d[i_theta] < 0) {
+			NuisanceParams.I_0->d[i_theta]=0;
+		}
+		
       NuisanceParams.mu->d[i_theta] = d1->d[i_theta] - d2->d[i_theta] * NuisanceParams.I_0->d[i_theta]; //some function of I_0[i_theta]
     }
 
@@ -3115,6 +3111,7 @@ DATA_TYPE SOCEngine::absMaxArray(std::vector<DATA_TYPE> &Array)
 // -----------------------------------------------------------------------------
 void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams)
 {
+  
   DATA_TYPE low,high,dist;
   DATA_TYPE perturbation=1e-30;//perturbs the rooting range
   uint16_t rooting_attempt_counter;
@@ -3228,3 +3225,205 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
        NuisanceParams->mu->d[i_theta] = d1->d[i_theta] - d2->d[i_theta]*NuisanceParams->I_0->d[i_theta];//some function of I_0[i_theta]
      }
 }
+
+RealImageType::Pointer SOCEngine::ComputeVSC(RealImageType::Pointer MagnitudeMap)
+{
+  size_t dims[3]={m_Geometry->N_z,m_Geometry->N_x,0};
+  RealImageType::Pointer FiltMag;//Filtered Magnitude
+  FiltMag=RealImageType::New(dims);
+  DATA_TYPE filter_op=0;
+	
+	FILE *Fp=NULL;
+	Fp=fopen("MagnitudeMap.bin","wb");
+	
+ // std::cout<<"Starting to filter the magnitude"<<std::endl;  
+ // std::cout<<m_Geometry->N_x<<" " <<m_Geometry->N_z<<std::endl;
+  for(int16_t i=0; i < m_Geometry->N_z;i++)
+    for(int16_t j=0;j < m_Geometry->N_x;j++)
+      {
+	fwrite(&(MagnitudeMap->d[i][j]), 1, sizeof(DATA_TYPE), Fp);
+	filter_op=0;
+	//std::cout<<i<<" "<<j<<std::endl;
+	for(int16_t p=-2;p <= 2; p++)
+	  for(int16_t q=-2; q <= 2;q++)
+	    if(i+p >=0 && i+p < m_Geometry->N_x && j+q >= 0 && j+q < m_Geometry->N_x)
+	      {
+	       filter_op+=HAMMING_WINDOW[p+2][q+2]*MagnitudeMap->d[i+p][j+q];
+	      }
+	FiltMag->d[i][j]=filter_op;
+      }
+	fclose(Fp);
+	
+	Fp=fopen("FilteredMagMap.bin","wb");
+	fwrite(&(FiltMag->d[0][0]), m_Geometry->N_x*m_Geometry->N_z, sizeof(DATA_TYPE), Fp);
+	fclose(Fp);
+	
+ //std::cout<<"Finished filtering"<<std::endl;
+	return FiltMag;
+
+}
+
+
+/*
+//Updates a line of voxels
+//Required Global vars / Private members/some kind of inheritance:
+//ErrorSino
+//Weights
+//m_Geometry->Object 
+//NEIGHBORHOOD
+//BOUNDARYFLAG 
+//TempCol
+//VoxelLine
+//NuisanceParams 
+
+
+SOCEngine::UpdateVoxelLine(uint16_t j_new,uint16_t k_new)
+{
+	
+		
+	for (int32_t i = 0; i < m_Geometry->N_y; i++) //slice index
+		{
+			//Neighborhood of (i,j,k) should be initialized to zeros each time
+			for (int32_t p = 0; p <= 2; p++)
+			{
+                for (int32_t q = 0; q <= 2; q++)
+                {
+					for (int32_t r = 0; r <= 2; r++)
+					{
+						NEIGHBORHOOD[p][q][r] = 0.0;
+						BOUNDARYFLAG[p][q][r] = 0;
+					}
+                }
+			}
+
+			//For a given (i,j,k) store its 26 point neighborhood and indicate if its on a Boundary
+			for (int32_t p = -1; p <= 1; p++)
+			{
+                for (int32_t q = -1; q <= 1; q++)
+                {
+					for (int32_t r = -1; r <= 1; r++)
+					{
+						if(i + p >= 0 && i + p < m_Geometry->N_y) if(j_new + q >= 0 && j_new + q < m_Geometry->N_z) if(k_new + r >= 0
+																													   && k_new + r < m_Geometry->N_x)
+						{
+							NEIGHBORHOOD[p + 1][q + 1][r + 1] = m_Geometry->Object->d[q + j_new][r + k_new][p + i];
+							BOUNDARYFLAG[p + 1][q + 1][r + 1] = 1;
+						}
+						else
+						{
+							BOUNDARYFLAG[p + 1][q + 1][r + 1] = 0;
+						}
+						
+					}
+                }
+			}
+
+			NEIGHBORHOOD[1][1][1] = 0.0;
+			
+
+			//Compute theta1 and theta2
+			V = m_Geometry->Object->d[j_new][k_new][i]; //Store the present value of the voxel
+			THETA1 = 0.0;
+			THETA2 = 0.0;
+			
+			
+			//TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
+			for (uint32_t q = 0; q < TempCol[j_new][k_new]->count; q++)
+			{
+				
+                uint16_t i_theta = floor(static_cast<float>(TempCol[j_new][k_new]->index[q] / (m_Sinogram->N_r)));
+                uint16_t i_r = (TempCol[j_new][k_new]->index[q] % (m_Sinogram->N_r));
+                VoxelLineAccessCounter = 0;
+                for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
+                {
+					THETA2 += ((NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta])
+							   * (VoxelLineResponse[i].values[VoxelLineAccessCounter] * VoxelLineResponse[i].values[VoxelLineAccessCounter]) * (TempCol[j_new][k_new]>values[q])
+							   * (TempCol[j_new][k_new]>values[q]) * Weight->d[i_theta][i_r][i_t]);
+					THETA1 += NuisanceParams.I_0->d[i_theta] * ErrorSino->d[i_theta][i_r][i_t] * (TempCol[j_new][k_new]->values[q])
+					* (VoxelLineResponse[i].values[VoxelLineAccessCounter]) * Weight->d[i_theta][i_r][i_t];
+					VoxelLineAccessCounter++;
+                }
+			}
+			THETA1 *= -1;
+			minMax(&low, &high);
+
+			
+			//Solve the 1-D optimization problem
+			//printf("V before updating %lf",V);
+#ifndef SURROGATE_FUNCTION
+			//TODO : What if theta1 = 0 ? Then this will give error
+			DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
+			
+			UpdatedVoxelValue = (DATA_TYPE)solve<DerivOfCostFunc>(&docf, (double)low, (double)high, (double)accuracy, &errorcode);
+			
+#else
+			
+			errorcode=0;
+#ifdef QGGMRF
+			UpdatedVoxelValue = CE_FunctionalSubstitution(low,high);
+			
+#else
+			SurrogateUpdate=surrogateFunctionBasedMin();
+			UpdatedVoxelValue=SurrogateUpdate;
+#endif //QGGMRF
+			
+#endif//Surrogate function
+			
+			if(errorcode == 0)
+			{
+                
+#ifdef POSITIVITY_CONSTRAINT
+                if(UpdatedVoxelValue < 0.0) { //Enforcing positivity constraints
+					UpdatedVoxelValue = 0.0;}
+#endif
+			}
+			else
+			{
+                if(THETA1 == 0 && low == 0 && high == 0) UpdatedVoxelValue = 0;
+                else
+                {
+					printf("Error \n");
+					printf("%d %d\n", j_new, k_new);
+                }
+			}
+			
+			//TODO Print appropriate error messages for other values of error code
+			m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
+			
+			MagnitudeUpdateMap->d[j_new][k_new]+=fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+			
+			
+#ifdef ROI
+			if(Mask[j_new][k_new] == 1)
+			{
+				
+                AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+                AverageMagnitudeOfRecon += fabs(V);
+			}
+#endif
+			
+			//Update the ErrorSinogram
+			
+			for (uint32_t q = 0; q < TempMemBlock->count; q++)
+			{
+				
+                uint16_t i_theta = floor(static_cast<float>(TempMemBlock->index[q] / (m_Sinogram->N_r)));
+                uint16_t i_r = (TempMemBlock->index[q] % (m_Sinogram->N_r));
+                VoxelLineAccessCounter = 0;
+                for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
+					//for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
+                {
+										
+					ErrorSino->d[i_theta][i_r][i_t] -= (NuisanceParams.I_0->d[i_theta]
+														* (TempMemBlock->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
+					VoxelLineAccessCounter++;
+                }
+			}
+		}
+		
+		
+
+}
+ 
+*/
+
