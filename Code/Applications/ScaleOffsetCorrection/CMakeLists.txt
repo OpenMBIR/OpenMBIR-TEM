@@ -9,4 +9,4 @@ set(ScaleOffsetCorrection_PROJECT_FILES
 
 
 add_executable(soc ${ScaleOffsetCorrection_PROJECT_FILES} )
-target_link_libraries(soc MXA TomoEngine)
+target_link_libraries(soc TomoEngine)

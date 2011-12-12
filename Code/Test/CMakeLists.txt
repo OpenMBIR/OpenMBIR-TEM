@@ -10,9 +10,8 @@ if (EIMTomo_USE_TIFF)
     INCLUDE_DIRECTORIES(${TIFF_INCLUDE_DIRS})
     
 include_directories(${PROJECT_CODE_DIR})
-add_executable(mrctest ${PROJECT_CODE_DIR}/TomoEngine/IO/MRCReader.cpp 
-                        ${PROJECT_CODE_DIR}/Test/MRCReaderTest.cpp)
-target_link_libraries(mrctest MXA ${TIFF_LIBRARIES})
+add_executable(mrctest ${PROJECT_CODE_DIR}/Test/MRCReaderTest.cpp)
+target_link_libraries(mrctest TomoEngine ${TIFF_LIBRARIES})
 
 
 endif()
