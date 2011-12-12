@@ -76,6 +76,8 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
      */
     void execute();
 
+	
+	
 
     DATA_TYPE absMaxArray(std::vector<DATA_TYPE> &Array);
 
@@ -118,7 +120,12 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
     DATA_TYPE OffsetT;
 
     RealImageType::Pointer QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
-    RealImageType::Pointer Qk_cost;
+
+	RealImageType::Pointer MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
+	RealImageType::Pointer FiltMagUpdateMap;//Filters the above to compute threshold
+	Uint8ImageType::Pointer MagUpdateMask;//Masks only the voxels of interest
+    
+	RealImageType::Pointer Qk_cost;
     RealImageType::Pointer bk_cost;
     RealArrayType::Pointer ck_cost; //these are the terms of the quadratic cost function
     RealArrayType::Pointer d1;
@@ -194,11 +201,15 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
 	//Updates a single line of voxels along y-axis
 	void UpdateVoxelLine(uint16_t j_new,uint16_t k_new);
 	
-    /**
+   
+	/**
      * Code to take the magnitude map and filter it with a hamming window
      * Returns the filtered magnitude map 
      */
-    RealImageType::Pointer ComputeVSC(RealImageType::Pointer MagnitudeMap);
+    void ComputeVSC();
+	
+	//Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
+	DATA_TYPE SetNonHomThreshold();
 
     /**
      *Code to return the threshold corresponding to the top T percentage of magnitude

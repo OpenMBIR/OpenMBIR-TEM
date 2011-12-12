@@ -561,19 +561,21 @@ void SOCEngine::execute()
 	
 	
 #ifdef NHICD
-	RealImageType::Pointer MagnitudeUpdateMap;
+
 	dims[0]=m_Geometry->N_z;//height
 	dims[1]=m_Geometry->N_x;//width
 	dims[2]=0;
-	MagnitudeUpdateMap = RealImageType::New(dims);
-	MagnitudeUpdateMap->setName("Update Map for voxel lines");
 	
-	Uint8ImageType::Pointer MagnitudeUpdateMask;
-	dims[0]=m_Geometry->N_z;//height
-	dims[1]=m_Geometry->N_x;//width
-	dims[2]=0;
-	MagnitudeUpdateMask = Uint8ImageType::New(dims);
-	MagnitudeUpdateMask->setName("Update Mask for selecting voxel lines NHICD");
+	MagUpdateMap = RealImageType::New(dims);
+	MagUpdateMap->setName("Update Map for voxel lines");
+	
+	FiltMagUpdateMap = RealImageType::New(dims);
+	FiltMagUpdateMap->setName("Update Map for voxel lines");
+	
+	MagUpdateMask = Uint8ImageType::New(dims);
+	MagUpdateMask->setName("Update Mask for selecting voxel lines NHICD");
+	
+
 	
 #endif
 	
@@ -979,7 +981,8 @@ void SOCEngine::execute()
 #ifdef NHICD
 		if(0 == Iter%2) //During the even iterations just update all voxels
 		{
-      //printf("Iter %d\n",Iter);
+
+			std::cout<<"Homogenous update of voxels"<<std::endl;
 #ifdef ROI
       AverageUpdate = 0;
       AverageMagnitudeOfRecon = 0;
@@ -996,7 +999,7 @@ void SOCEngine::execute()
       {
         for (k = 0; k < m_Geometry->N_x; k++)
         {
-		  MagnitudeUpdateMap->d[j][k]=0;
+		  MagUpdateMap->d[j][k]=0;
           VisitCount[j][k] = 0;
         }
       }
@@ -1165,7 +1168,7 @@ void SOCEngine::execute()
               //TODO Print appropriate error messages for other values of error code
               m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
 			  
-				MagnitudeUpdateMap->d[j_new][k_new]+=fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+				MagUpdateMap->d[j_new][k_new]+=fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
 			  
 
 #ifdef ROI
@@ -1290,20 +1293,19 @@ void SOCEngine::execute()
 		}
 		else//Update the voxels in most need for a update
 		{
+         std::cout<<"Non Homogenous update of voxels"<<std::endl;
 		 
 			for (uint16_t NH_Iter=0; NH_Iter < NUM_NON_HOMOGENOUS_ITER; NH_Iter++) 
 			{
 
 			//Compute VSC and create a map of pixels that are above the threshold value
 			
-			RealImageType::Pointer FiltMag;//Filtered Magnitude
-			FiltMag = ComputeVSC(MagnitudeUpdateMap);
+            ComputeVSC();
+			DATA_TYPE NH_Threshold=SetNonHomThreshold();
 			
-			//Use  it to find MagnitudeUpdateMask
-			size_t dims[3]={m_Geometry->N_z,m_Geometry->N_x,0};
-			Uint8ImageType::Pointer MagnitudeUpdateMask;
-			MagnitudeUpdateMask=Uint8ImageType::New(dims);
-				
+			//Use  FiltMagUpdateMap  to find MagnitudeUpdateMask 
+			
+			
 			std::cout<<"Completed Calculation of filtered magnitude"<<std::endl;	
 				
 				//Calculate the threshold for the top ? % of voxel updates
@@ -1322,9 +1324,16 @@ void SOCEngine::execute()
 			for (j = 0; j < m_Geometry->N_z; j++)
 				for (k = 0; k < m_Geometry->N_x; k++)
 				{
+					if (MagUpdateMap->d[j][k]) {
+						MagUpdateMask->d[j][j]=1;
+					}
+					else {
+						MagUpdateMask->d[j][j]=0;
+					}
+					
 					VisitCount[j][k] = 0;
-					MagnitudeUpdateMap->d[j][k]=0;
-					MagnitudeUpdateMask->d[j][k]=1;
+					MagUpdateMap->d[j][k]=0;
+
 				}
 #endif
 
@@ -1347,7 +1356,7 @@ void SOCEngine::execute()
 					k_new=k;
 #endif //Random order updates
 					TempMemBlock = TempCol[j_new][k_new]; //Remove this
-					if(TempMemBlock->count > 0 && MagnitudeUpdateMask->d[j_new][k_new] == 1)
+					if(TempMemBlock->count > 0 && MagUpdateMask->d[j_new][k_new] == 1)
 					{
 						for (i = 0; i < m_Geometry->N_y; i++) //slice index
 						{
@@ -1510,7 +1519,7 @@ void SOCEngine::execute()
 
 							//TODO Print appropriate error messages for other values of error code
 							m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
-							MagnitudeUpdateMap->d[j_new][k_new]+= fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+							MagUpdateMap->d[j_new][k_new]+= fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
 
 #ifdef ROI
 							if(Mask[j_new][k_new] == 1)
@@ -3227,16 +3236,14 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
      }
 }
 
-RealImageType::Pointer SOCEngine::ComputeVSC(RealImageType::Pointer MagnitudeUpdateMap)
+void SOCEngine::ComputeVSC()
 {
-  size_t dims[2]={m_Geometry->N_z,m_Geometry->N_x};
-  RealImageType::Pointer FiltMag;//Filtered Magnitude
-  FiltMag=RealImageType::New(dims);
+
   DATA_TYPE filter_op=0;
 	
 	FILE *Fp=NULL;
 	Fp=fopen("MagnitudeMap.bin","wb");
-	fwrite(&(MagnitudeUpdateMap->d[0][0]), m_Geometry->N_x*m_Geometry->N_z , sizeof(DATA_TYPE), Fp);
+	fwrite(&(MagUpdateMap->d[0][0]), m_Geometry->N_x*m_Geometry->N_z , sizeof(DATA_TYPE), Fp);
 	fclose(Fp);
  // std::cout<<"Starting to filter the magnitude"<<std::endl;  
  // std::cout<<m_Geometry->N_x<<" " <<m_Geometry->N_z<<std::endl;
@@ -3244,23 +3251,69 @@ RealImageType::Pointer SOCEngine::ComputeVSC(RealImageType::Pointer MagnitudeUpd
     for(int16_t j=0;j < m_Geometry->N_x;j++)
       {
 	filter_op=0;
-	//std::cout<<i<<" "<<j<<std::endl;
 	for(int16_t p=-2;p <= 2; p++)
 	  for(int16_t q=-2; q <= 2;q++)
 	    if(i+p >=0 && i+p < m_Geometry->N_z && j+q >= 0 && j+q < m_Geometry->N_x)
 	      {
-	       filter_op+=HAMMING_WINDOW[p+2][q+2]*MagnitudeUpdateMap->d[i+p][j+q];
+	       filter_op+=HAMMING_WINDOW[p+2][q+2]*MagUpdateMap->d[i+p][j+q];
 	      }
-	FiltMag->d[i][j]=filter_op;
+		  
+	FiltMagUpdateMap->d[i][j]=filter_op;
       }
 	
 	Fp=fopen("FilteredMagMap.bin","wb");
-	fwrite(&(FiltMag->d[0][0]), m_Geometry->N_x*m_Geometry->N_z, sizeof(DATA_TYPE), Fp);
+	fwrite(&(FiltMagUpdateMap->d[0][0]), m_Geometry->N_x*m_Geometry->N_z, sizeof(DATA_TYPE), Fp);
 	fclose(Fp);
 	
- //std::cout<<"Finished filtering"<<std::endl;
-	return FiltMag;
+	
 
+}
+
+
+//Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
+DATA_TYPE SOCEngine::SetNonHomThreshold()
+{
+	size_t dims[2]={m_Geometry->N_z*m_Geometry->N_x,0};
+	RealArrayType::Pointer TempMagMap;
+	TempMagMap=RealArrayType::New(dims);
+	uint32_t ArrLength=m_Geometry->N_z*m_Geometry->N_x;
+	DATA_TYPE threshold;
+	
+	//Copy into a linear list for easier partial sorting
+	for (uint16_t i=0; i < m_Geometry->N_z; i++) 
+	    for (uint16_t j=0; j < m_Geometry->N_x; j++) 
+		{
+			TempMagMap->d[i*m_Geometry->N_x+j]=FiltMagUpdateMap->d[i][j];
+		}
+	
+	
+	//Insertion sort 
+	
+	int16_t j;
+	DATA_TYPE key;
+	for (int16_t i=1 ; i < ArrLength; i++) 
+	{
+		j=i-1;
+		key=TempMagMap->d[i];
+		while( j>=0 && TempMagMap->d[j] < key)
+		{
+			TempMagMap->d[j+1]=TempMagMap->d[j];
+		    j--;
+		}
+		TempMagMap->d[j+1]=key;
+	}
+	
+	//clear memory used for TempMagMap
+	
+	updateProgressAndMessage("Deallocating Memory for temp array", 100);
+	cleanupMemory();
+	
+	
+	
+	uint16_t percentile_index=ArrLength/NUM_NON_HOMOGENOUS_ITER;
+	threshold = TempMagMap->d[percentile_index];
+	return threshold;
+	
 }
 
 
@@ -3390,7 +3443,7 @@ SOCEngine::UpdateVoxelLine(uint16_t j_new,uint16_t k_new)
 			//TODO Print appropriate error messages for other values of error code
 			m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
 			
-			MagnitudeUpdateMap->d[j_new][k_new]+=fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+			MagUpdateMap->d[j_new][k_new]+=fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
 			
 			
 #ifdef ROI
