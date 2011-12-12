@@ -56,10 +56,10 @@
   fprintf(f, "data set from DREAM3D\n");\
   fprintf(f, FILE_TYPE); fprintf(f, "\n");\
   fprintf(f, "DATASET STRUCTURED_POINTS\n");\
-  fprintf(f, "DIMENSIONS %d %d %d\n", ptr->xpoints, ptr->ypoints, ptr->zpoints);\
+  fprintf(f, "DIMENSIONS %d %d %d\n", ptr->dim0, ptr->dim1, ptr->dim2);\
   fprintf(f, "ORIGIN 0.0 0.0 0.0\n");\
   fprintf(f, "SPACING %f %f %f\n", ptr->resx, ptr->resy, ptr->resz);\
-  fprintf(f, "POINT_DATA %d\n\n", ptr->xpoints * ptr->ypoints * ptr->zpoints );\
+  fprintf(f, "POINT_DATA %d\n\n", ptr->dim0 * ptr->dim1 * ptr->dim2 );\
 
 
 #define WRITE_VTK_GRAIN_IDS_ASCII(ptr, ScalarName)\
@@ -97,10 +97,10 @@
   fprintf(f, "LOOKUP_TABLE default\n"); \
   { \
     float t;\
-    for (int i = 0; i < ptr->N_y; i++) {\
-      for (int j = 0; j < ptr->N_x; j++) {\
-        for (int k = 0; k < ptr->N_z; k++) {\
-          t = static_cast<float>(ptr->Object[k][j][i]);\
+    for (uint16_t i = 0; i < ptr->N_z; ++i) {\
+     for (uint16_t j = 0; j < ptr->N_y; ++j) {\
+      for (uint16_t k = 0; k < ptr->N_x; k++) {\
+          t = static_cast<float>(ptr->Object->d[i][k][j]);\
           MXA::Endian::FromSystemToBig::convert<float>(t); \
           fwrite(&t, sizeof(float), 1, f);\
         }\
@@ -112,10 +112,10 @@
   fprintf(f, "SCALARS %s float 1\n", ScalarName.c_str() );\
   fprintf(f, "LOOKUP_TABLE default\n"); \
   { \
-    for (int i = 0; i < ptr->N_y; i++) {\
-      for (int j = 0; j < ptr->N_x; j++) {\
-        for (int k = 0; k < ptr->N_z; k++) {\
-          fprintf(f, "%0.6f ", ptr->Object[k][j][i]);\
+    for (int z = 0; z < ptr->N_z; z++) {\
+      for (int x = 0; x < ptr->N_x; x++) {\
+        for (int y = 0; y < ptr->N_y; y++) {\
+          fprintf(f, "%0.6f ", ptr->Object->d[z][x][y]);\
         }\
         fprintf(f, "\n");\
       }\

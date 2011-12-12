@@ -58,7 +58,12 @@ class VtkScalarWriter
     VtkScalarWriter() : m_WriteBinaryFiles(true){}
     virtual ~VtkScalarWriter(){}
 
-    bool m_WriteBinaryFiles;
+
+    void setWriteBinaryFiles(bool v) {
+      m_WriteBinaryFiles = v;
+    }
+
+    bool getWriteBinaryFiles() { return m_WriteBinaryFiles; }
 
     virtual int writeScalars(FILE* f)
     {
@@ -69,6 +74,8 @@ class VtkScalarWriter
   protected:
 
   private:
+    bool m_WriteBinaryFiles;
+
     VtkScalarWriter(const VtkScalarWriter&); // Copy Constructor Not Implemented
     void operator=(const VtkScalarWriter&); // Operator '=' Not Implemented
 };
@@ -78,9 +85,9 @@ class VtkScalarWriter
 // -----------------------------------------------------------------------------
 typedef struct
 {
-    int xpoints;
-    int ypoints;
-    int zpoints;
+    int dim0;
+    int dim1;
+    int dim2;
     float resx;
     float resy;
     float resz;
@@ -100,7 +107,8 @@ class TomoOutputScalarWriter : public VtkScalarWriter
   {
     int err = 0;
     std::string file;
-    if (m_WriteBinaryFiles == true) {
+    if (getWriteBinaryFiles() == true)
+    {
       WRITE_VTK_FLOAT_VOXEL_BINARY(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName, double);
     }
     else

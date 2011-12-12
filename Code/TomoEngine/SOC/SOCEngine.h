@@ -79,12 +79,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
      */
     void execute();
 
-
-
-
     DATA_TYPE absMaxArray(std::vector<DATA_TYPE> &Array);
-
-
 
   protected:
     // Protect this constructor because we want to force the use of the other
@@ -94,12 +89,12 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
 
     void calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams);
 
-    void cleanupMemory();
-
     /**
      * @brief This is to be implemented at some point
      */
     void updateVoxelValues_NHICD();
+
+    void updateVoxelLine(uint16_t j_new,uint16_t k_new);
 
   private:
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
