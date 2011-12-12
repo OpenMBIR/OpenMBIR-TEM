@@ -1324,15 +1324,16 @@ void SOCEngine::execute()
 			for (j = 0; j < m_Geometry->N_z; j++)
 				for (k = 0; k < m_Geometry->N_x; k++)
 				{
-					if (MagUpdateMap->d[j][k]) {
+					if (MagUpdateMap->d[j][k] > NH_Threshold) {
 						MagUpdateMask->d[j][j]=1;
+						MagUpdateMap->d[j][k]=0;
 					}
 					else {
 						MagUpdateMask->d[j][j]=0;
 					}
 					
 					VisitCount[j][k] = 0;
-					MagUpdateMap->d[j][k]=0;
+					
 
 				}
 #endif

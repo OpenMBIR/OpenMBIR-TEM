@@ -78,7 +78,7 @@
 #define RANDOM_ORDER_UPDATES
 //#define BRIGHT_FIELD
 #define NHICD 1
-#define NUM_NON_HOMOGENOUS_ITER 10
+#define NUM_NON_HOMOGENOUS_ITER 20
 
 
 //#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
