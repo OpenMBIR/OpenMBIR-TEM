@@ -97,7 +97,8 @@ namespace ScaleOffsetCorrection
   const std::string VoxelProfileFile("VoxelProfile.bin");
   const std::string ForwardProjectedObjectFile("ForwardProjectedObject.bin");
   const std::string CostFunctionCoefficientsFile("CostFunctionCoefficients.bin");
-
+  const std::string FilteredMagMapFile("FilteredMagMap.bin");
+  const std::string MagnitudeMapFile("MagnitudeMap.bin");
   namespace VTK
   {
     const std::string TomoVoxelScalarName("TomoVoxel");

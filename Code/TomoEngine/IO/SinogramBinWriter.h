@@ -52,7 +52,7 @@
  * @date Dec 9, 2011
  * @version 1.0
  */
-class SinogramBinWriter : public TomoFilter
+class TomoEngine_EXPORT SinogramBinWriter : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(SinogramBinWriter)

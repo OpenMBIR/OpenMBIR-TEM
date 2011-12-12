@@ -114,5 +114,5 @@ void DetectorResponse::execute()
 
   setErrorCondition(0);
   setErrorMessage("");
-  notify("Done Done Calculating the Detector Response", 0, UpdateProgressMessage);
+  notify("Done Calculating the Detector Response", 0, UpdateProgressMessage);
 }
