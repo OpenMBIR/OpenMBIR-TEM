@@ -892,7 +892,7 @@ void SOCEngine::execute()
   //TODO: This can be parallelized  for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
   for (int16_t zz = 0; zz < m_Sinogram->N_theta; zz++) //slice index
   {
-    printf("Computing Weights for Tilt Index %03d/%03d \n", zz, m_Sinogram->N_theta);
+    std::cout << "\rComputing Weights for Tilt Index " << zz<< "/" << m_Sinogram->N_theta;
     NuisanceParams.alpha->d[zz] = 1; //Initialize the refinement parameters to 1
     for (uint16_t xx = 0; xx < m_Sinogram->N_r; xx++)
     {
@@ -910,6 +910,7 @@ void SOCEngine::execute()
     }
   }
   STOP_TIMER;
+  std::cout << std::endl;
   printf("Computing Weights Time ");
   PRINT_TIME;
 #endif//Noise model
