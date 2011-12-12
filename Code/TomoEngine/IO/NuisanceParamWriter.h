@@ -53,7 +53,7 @@
  * @date Dec 9, 2011
  * @version 1.0
  */
-class NuisanceParamWriter : public TomoFilter
+class TomoEngine_EXPORT NuisanceParamWriter : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(NuisanceParamWriter)

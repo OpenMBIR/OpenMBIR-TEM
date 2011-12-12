@@ -5,7 +5,7 @@
 #-- This code was partly written under US Air Force Contract FA8650-07-D-5800
 #--////////////////////////////////////////////////////////////////////////////
 set (TomoEngine_SOC_SRCS
- #   ${TomoEngine_SOURCE_DIR}/SOC/ForwardProject.cpp
+    ${TomoEngine_SOURCE_DIR}/SOC/ForwardProject.cpp
     ${TomoEngine_SOURCE_DIR}/SOC/SOCEngine.cpp
     ${TomoEngine_SOURCE_DIR}/SOC/SOCInputs.cpp
  #   ${TomoEngine_SOURCE_DIR}/SOC/VoxelUpdate.cpp

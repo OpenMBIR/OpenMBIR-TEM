@@ -79,8 +79,8 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
      */
     void execute();
 
-	
-	
+
+
 
     DATA_TYPE absMaxArray(std::vector<DATA_TYPE> &Array);
 
@@ -106,8 +106,8 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
     uint8_t BOUNDARYFLAG[3][3][3];
     //Markov Random Field Prior parameters - Globals DATA_TYPE
     DATA_TYPE FILTER[3][3][3];
-    DATA_TYPE HAMMING_WINDOW[5][5];  
-  DATA_TYPE THETA1;
+    DATA_TYPE HAMMING_WINDOW[5][5];
+    DATA_TYPE THETA1;
     DATA_TYPE THETA2;
     DATA_TYPE NEIGHBORHOOD[3][3][3];
     DATA_TYPE V;
@@ -129,11 +129,11 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
 
     RealImageType::Pointer QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
 
-	RealImageType::Pointer MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
-	RealImageType::Pointer FiltMagUpdateMap;//Filters the above to compute threshold
-	Uint8ImageType::Pointer MagUpdateMask;//Masks only the voxels of interest
-    
-	RealImageType::Pointer Qk_cost;
+    RealImageType::Pointer MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
+    RealImageType::Pointer FiltMagUpdateMap;//Filters the above to compute threshold
+    Uint8ImageType::Pointer MagUpdateMask;//Masks only the voxels of interest
+
+    RealImageType::Pointer Qk_cost;
     RealImageType::Pointer bk_cost;
     RealArrayType::Pointer ck_cost; //these are the terms of the quadratic cost function
     RealArrayType::Pointer d1;
@@ -205,17 +205,17 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
      * @return
      */
     double surrogateFunctionBasedMin();
-	
+
 	//Updates a single line of voxels along y-axis
 	void UpdateVoxelLine(uint16_t j_new,uint16_t k_new);
-	
-   
+
+
 	/**
      * Code to take the magnitude map and filter it with a hamming window
-     * Returns the filtered magnitude map 
+     * Returns the filtered magnitude map
      */
     void ComputeVSC();
-	
+
 	//Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
 	DATA_TYPE SetNonHomThreshold();
 

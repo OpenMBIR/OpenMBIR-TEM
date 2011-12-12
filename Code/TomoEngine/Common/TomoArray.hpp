@@ -79,10 +79,10 @@ class TomoArray
     int getNDims() { return m_NDims; }
     int getTypeSize() { return sizeof(T); }
 
-    Ptr d;
-
   protected:
-    TomoArray(size_t* dims)
+    TomoArray(size_t* dims) // :
+//      GUARD_0(NULL),
+//      GUARD_1(NULL)
     {
       for(size_t i = 0; i < SIZE; ++i){
         m_Dims[i] = dims[i];
@@ -198,10 +198,12 @@ class TomoArray
       }
     }
 
-
     TomoArray(const TomoArray&); // Copy Constructor Not Implemented
     void operator=(const TomoArray&); // Operator '=' Not Implemented
-
+  public:
+ //   T* GUARD_0;
+    Ptr d;
+ //   T* GUARD_1;
 };
 
 
