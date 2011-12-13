@@ -34,7 +34,7 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-
+#error
 
 #ifndef VOXELUPDATE_H_
 #define VOXELUPDATE_H_
@@ -63,11 +63,11 @@ typedef struct {
     UInt8ImageType::Pointer Mask;
     RealArrayType::Pointer cost;
     RNGVars* RandomNumber;
-    uint8_t BOUNDARYFLAG[3][3][3];
+ //   uint8_t BOUNDARYFLAG[3][3][3];
     DATA_TYPE FILTER[3][3][3];
     DATA_TYPE THETA1;
     DATA_TYPE THETA2;
-    DATA_TYPE NEIGHBORHOOD[3][3][3];
+ //   DATA_TYPE NEIGHBORHOOD[3][3][3];
     DATA_TYPE V;
     DATA_TYPE MRF_P;
     DATA_TYPE SIGMA_X_P;

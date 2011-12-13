@@ -204,35 +204,28 @@ void SOCEngine::initVariables()
 void SOCEngine::execute()
 {
    uint64_t totalTime = EIMTOMO_getMilliSeconds();
-	uint8_t err = 0;
-	int16_t Iter,OuterIter;
-	int16_t i,j,k,r,Idx;
+
+
+	int16_t i,j,k,Idx;
 	size_t dims[3];
 	int16_t index_delta_t;
-	int32_t Index,ArraySize,j_new,k_new;
+
   Int32ArrayType::Pointer Counter;
   UInt8ImageType::Pointer VisitCount;
 
 	//uint16_t cost_counter=0;
-  uint16_t VoxelLineAccessCounter;
+
 	uint16_t MaxNumberOfDetectorElts;
 
 	DATA_TYPE center_t,delta_t;
 	DATA_TYPE w3,w4;
 	DATA_TYPE checksum = 0,temp;
-//	DATA_TYPE sum1,sum2;
-//	RealArrayType::Pointer cost;
-	std::vector<DATA_TYPE> cost;
+
 	RealImageType::Pointer VoxelProfile;
 	RealVolumeType::Pointer detectorResponse;
 	RealVolumeType::Pointer H_t;
 	DATA_TYPE ProfileCenterT;
 
-#ifdef ROI
-	//variables used to stop the process
-	DATA_TYPE AverageUpdate;
-	DATA_TYPE AverageMagnitudeOfRecon;
-#endif
 
 	RealVolumeType::Pointer Y_Est;//Estimated Sinogram
 	RealVolumeType::Pointer Final_Sinogram;//To store and write the final sinogram resulting from our reconstruction
@@ -240,8 +233,6 @@ void SOCEngine::execute()
 	RealVolumeType::Pointer Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
 	RNGVars* RandomNumber;
 	std::string indent("");
-
-  int fileError = 0;
 
 #if TomoEngine_USE_PARALLEL_ALGORITHMS
   tbb::task_scheduler_init init;
@@ -360,13 +351,6 @@ void SOCEngine::execute()
       return;
     }
   }
-
-	DATA_TYPE low,high;
-	DATA_TYPE UpdatedVoxelValue;
-	DATA_TYPE accuracy =1e-7;//This is the rooting accuracy for x
-	int32_t errorcode=-1;
-
-	//Pointer to  1-D minimization Function
 
 	//Scale and Offset Parameter Structures
 	ScaleOffsetParams NuisanceParams;
@@ -721,7 +705,7 @@ void SOCEngine::execute()
 	int16_t slice_index_min,slice_index_max;
 	AMatrixCol*** TempCol = (AMatrixCol***)multialloc(sizeof(AMatrixCol*),2,m_Geometry->N_z,m_Geometry->N_x);//stores 2-D forward projector
 //	AMatrixCol* Aj;
-	AMatrixCol* TempMemBlock;
+//	AMatrixCol* TempMemBlock;
 	//T-direction response
 	AMatrixCol* VoxelLineResponse=(AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));
 	MaxNumberOfDetectorElts = (uint16_t)((m_Inputs->delta_xy/m_Sinogram->delta_t)+2);
@@ -835,19 +819,6 @@ void SOCEngine::execute()
 
 
 	RandomNumber=init_genrand(1ul);
-	//	srand(time(NULL));
-	ArraySize= m_Geometry->N_z*m_Geometry->N_x;
-	//ArraySizeK = Geometry->N_x;
-
-	//  Counter = (int32_t*)malloc(ArraySize*sizeof(int32_t));
-  dims[0] = ArraySize;
-  Counter = Int32ArrayType::New(dims);
-  //CounterK = (int*)malloc(ArraySizeK*sizeof(int));
-
-  for(int32_t j_new = 0;j_new < ArraySize; j_new++) {
-    Counter->d[j_new]=j_new;
-  }
-
 
   updateProgressAndMessage("Starting Forward Projection", 10);
   START_TIMER;
@@ -958,988 +929,58 @@ void SOCEngine::execute()
 #endif
 
 #ifdef COST_CALCULATE
-	fileError = 0;
-	FILE* Fp2 = NULL;
-  MAKE_OUTPUT_FILE(Fp2, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::CostFunctionFile);
-  if (fileError < 0)
+	DATA_TYPE cost_value;
+  std::string filepath(m_Inputs->outputDir);
+  filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::CostFunctionFile);
+
+  CostData::Pointer cost = CostData::New();
+  cost->initOutputFile(filepath);
+
+  /*********************Cost Calculation*************************************/
+  cost_value = computeCost(ErrorSino, Weight);
+  int increase = cost->addCostValue(cost_value);
+  if (increase ==1)
   {
-    updateProgressAndMessage("Error Creating file for Cost function output", 100);
-    return;
+    std::cout << "Cost just increased!" << std::endl;
   }
-
-	printf("Cost Function Calculation \n");
-	/*********************Initial Cost Calculation***************************************************/
-
-	cost.push_back( computeCost(ErrorSino,Weight) );
-	printf("Cost: %lf\n",cost.back());
-	fwrite(&(cost.back()),sizeof(DATA_TYPE),1,Fp2);
-	//cost_counter++;
-	/*******************************************************************************/
+  cost->writeCostValue(cost_value);
+  /**************************************************************************/
 #endif //Cost calculation endif
 
 
 	//Loop through every voxel updating it by solving a cost function
-
-	for(OuterIter = 0; OuterIter < m_Inputs->NumOuterIter; OuterIter++)
+	for(int16_t OuterIter = 0; OuterIter < m_Inputs->NumOuterIter; OuterIter++)
 	{
 	  indent = "";
 	  std::cout << "Outer Iteration " << OuterIter << std::endl;
-    for (Iter = 0; Iter < m_Inputs->NumIter; Iter++)
+    for (int16_t Iter = 0; Iter < m_Inputs->NumIter; Iter++)
     {
       indent = "  ";
       std::cout << indent << "Inner Iteration " << Iter << std::endl;
       indent = "    ";
+      // This is all done PRIOR to calling what will become a method
+      VoxelUpdateType updateType = RegularRandomOrderUpdate;
 #ifdef NHICD
-      if(0 == Iter % 2) //During the even iterations just update all voxels
-      {
-        std::cout << indent << " Homogenous update of voxels" << std::endl;
-#ifdef ROI
-        AverageUpdate = 0;
-        AverageMagnitudeOfRecon = 0;
-#endif
-
-#ifdef RANDOM_ORDER_UPDATES
-        ArraySize = m_Geometry->N_x * m_Geometry->N_z;
-        for (j_new = 0; j_new < ArraySize; j_new++)
-        {
-          Counter->d[j_new] = j_new;
-        }
-
-        for (j = 0; j < m_Geometry->N_z; j++)
-        {
-          for (k = 0; k < m_Geometry->N_x; k++)
-          {
-            MagUpdateMap->d[j][k] = 0;
-            VisitCount->d[j][k] = 0;
-          }
-        }
-#endif
-
-        START_TIMER;
-        for (j = 0; j < m_Geometry->N_z; j++) //Row index
-        {
-          for (k = 0; k < m_Geometry->N_x; k++) //Column index
-          {
-#ifdef RANDOM_ORDER_UPDATES
-            //RandomNumber=init_genrand(Iter);
-            Index = (genrand_int31(RandomNumber)) % ArraySize;
-            k_new = Counter->d[Index] % m_Geometry->N_x;
-            j_new = Counter->d[Index] / m_Geometry->N_x;
-            //memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
-            //TODO: Instead just swap the value in Index with the one in ArraySize
-            Counter->d[Index] = Counter->d[ArraySize - 1];
-            VisitCount->d[j_new][k_new] = 1;
-            ArraySize--;
-#else
-            j_new=j;
-            k_new=k;
-#endif //Random order updates
-            TempMemBlock = TempCol[j_new][k_new]; //Remove this
-            if(TempMemBlock->count > 0)
-            {
-              for (i = 0; i < m_Geometry->N_y; i++) //slice index
-              {
-                //Neighborhood of (i,j,k) should be initialized to zeros each time
-                for (int32_t p = 0; p <= 2; p++)
-                {
-                  for (int32_t q = 0; q <= 2; q++)
-                  {
-                    for (r = 0; r <= 2; r++)
-                    {
-                      NEIGHBORHOOD[p][q][r] = 0.0;
-                      BOUNDARYFLAG[p][q][r] = 0;
-                    }
-                  }
-                }
-#ifdef CIRCULAR_BOUNDARY_CONDITION
-                for(p = -1; p <=1; p++)
-                for(q = -1; q <= 1; q++)
-                for(r = -1; r <= 1;r++)
-                {
-                  tempindex_x = mod(r+k_new,m_Geometry->N_x);
-                  tempindex_y =mod(p+i,m_Geometry->N_y);
-                  tempindex_z = mod(q+j_new,m_Geometry->N_z);
-                  NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object->d[tempindex_z][tempindex_x][tempindex_y];
-                  BOUNDARYFLAG[p+1][q+1][r+1]=1;
-                }
-#else
-                //For a given (i,j,k) store its 26 point neighborhood
-                for (int32_t p = -1; p <= 1; p++)
-                {
-                  for (int32_t q = -1; q <= 1; q++)
-                  {
-                    for (r = -1; r <= 1; r++)
-                    {
-                      if(i + p >= 0 && i + p < m_Geometry->N_y)
-                      {
-                        if(j_new + q >= 0 && j_new + q < m_Geometry->N_z)
-                        {
-                          if(k_new + r >= 0 && k_new + r < m_Geometry->N_x)
-                          {
-                            NEIGHBORHOOD[p + 1][q + 1][r + 1] = m_Geometry->Object->d[q + j_new][r + k_new][p + i];
-                            BOUNDARYFLAG[p + 1][q + 1][r + 1] = 1;
-                          }
-                          else
-                          {
-                            BOUNDARYFLAG[p + 1][q + 1][r + 1] = 0;
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-#endif//circular boundary condition check
-                NEIGHBORHOOD[1][1][1] = 0.0;
-
-#ifndef NDEBUG
-                if(i == 0 && j == 31 && k == 31)
-                {
-                  printf("***************************\n");
-                  printf("Geom %lf\n", m_Geometry->Object->d[i][31][31]);
-                  for (int p = 0; p <= 2; p++)
-                  {
-                    for (int q = 0; q <= 2; q++)
-                    {
-                      for (r = 0; r <= 2; r++)
-                      {
-                        printf("%lf\n", NEIGHBORHOOD[p][q][r]);
-                      }
-                    }
-                  }
-                }
-#endif
-                //Compute theta1 and theta2
-                V = m_Geometry->Object->d[j_new][k_new][i]; //Store the present value of the voxel
-                THETA1 = 0.0;
-                THETA2 = 0.0;
-
-                //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
-                for (uint32_t q = 0; q < TempMemBlock->count; q++)
-                {
-
-                  uint16_t i_theta = floor(static_cast<float>(TempMemBlock->index[q] / (m_Sinogram->N_r)));
-                  uint16_t i_r = (TempMemBlock->index[q] % (m_Sinogram->N_r));
-                  VoxelLineAccessCounter = 0;
-                  for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
-                  {
-                    THETA2 += ((NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta])
-                        * (VoxelLineResponse[i].values[VoxelLineAccessCounter] * VoxelLineResponse[i].values[VoxelLineAccessCounter])
-                        * (TempMemBlock->values[q]) * (TempMemBlock->values[q]) * Weight->d[i_theta][i_r][i_t]);
-                    THETA1 += NuisanceParams.I_0->d[i_theta] * ErrorSino->d[i_theta][i_r][i_t] * (TempMemBlock->values[q])
-                        * (VoxelLineResponse[i].values[VoxelLineAccessCounter]) * Weight->d[i_theta][i_r][i_t];
-                    VoxelLineAccessCounter++;
-                  }
-                }
-                THETA1 *= -1;
-                minMax(&low, &high);
-
-#ifdef DEBUG
-                if(i == 0 && j == 31 && k == 31) printf("(%lf,%lf,%lf) \n", low, high, V - (THETA1 / THETA2));
-#endif
-
-                //Solve the 1-D optimization problem
-                //printf("V before updating %lf",V);
-#ifndef SURROGATE_FUNCTION
-                //TODO : What if theta1 = 0 ? Then this will give error
-                DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
-
-                UpdatedVoxelValue = (DATA_TYPE)solve<DerivOfCostFunc>(&docf, (double)low, (double)high, (double)accuracy, &errorcode);
-
-#else
-
-                errorcode=0;
-#ifdef QGGMRF
-                UpdatedVoxelValue = CE_FunctionalSubstitution(low,high);
-
-#else
-                SurrogateUpdate=surrogateFunctionBasedMin();
-                UpdatedVoxelValue=SurrogateUpdate;
-#endif //QGGMRF
-#endif//Surrogate function
-                //printf("%lf\n",SurrogateUpdate);
-
-                if(errorcode == 0)
-                {
-                  //    printf("(%lf,%lf,%lf)\n",low,high,UpdatedVoxelValue);
-                  //	printf("Updated %lf\n",UpdatedVoxelValue);
-#ifdef POSITIVITY_CONSTRAINT
-                  if(UpdatedVoxelValue < 0.0)
-                  { //Enforcing positivity constraints
-                    UpdatedVoxelValue = 0.0;
-                  }
-#endif
-                }
-                else
-                {
-                  if(THETA1 == 0 && low == 0 && high == 0) UpdatedVoxelValue = 0;
-                  else
-                  {
-                    printf("Error \n");
-                    printf("%d %d\n", j_new, k_new);
-                  }
-                }
-
-                //TODO Print appropriate error messages for other values of error code
-                m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
-
-                MagUpdateMap->d[j_new][k_new] += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
-
-#ifdef ROI
-                if(Mask->d[j_new][k_new] == 1)
-                {
-
-                  AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
-                  AverageMagnitudeOfRecon += fabs(V);
-                }
-#endif
-
-                //Update the ErrorSinogram
-
-                for (uint32_t q = 0; q < TempMemBlock->count; q++)
-                {
-
-                  uint16_t i_theta = floor(static_cast<float>(TempMemBlock->index[q] / (m_Sinogram->N_r)));
-                  uint16_t i_r = (TempMemBlock->index[q] % (m_Sinogram->N_r));
-                  VoxelLineAccessCounter = 0;
-                  for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
-                  //for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
-                  {
-                    /*	center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
-                     delta_t = fabs(center_t - t);
-                     index_delta_t = floor(delta_t/OffsetT);
-
-                     if(index_delta_t < DETECTOR_RESPONSE_BINS)
-                     {
-                     w3 = delta_t - index_delta_t*OffsetT;
-                     w4 = (index_delta_t+1)*OffsetT - delta_t;
-                     //TODO: interpolation
-                     ProfileThickness =(w4/OffsetT)*H_t->d[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t->d[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
-                     }
-                     else
-                     {
-                     ProfileThickness=0;
-                     }*/
-
-                    ErrorSino->d[i_theta][i_r][i_t] -= (NuisanceParams.I_0->d[i_theta]
-                        * (TempMemBlock->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
-                    VoxelLineAccessCounter++;
-                  }
-                }
-                Idx++;
-              }
-
-            }
-            else
-            {
-              continue;
-            }
-
-          }
-        }
-        STOP_TIMER;
-        PRINT_TIME;
-
-#ifdef RANDOM_ORDER_UPDATES
-        for (j = 0; j < m_Geometry->N_z; j++) {//Row index
-          for (k = 0; k < m_Geometry->N_x; k++) { //Column index
-            if(VisitCount->d[j][k] == 0) { printf("Pixel (%d %d) not visited\n", j, k); }}}
-#endif
-
-#ifdef COST_CALCULATE
-        /*********************Cost Calculation***************************************************/
-        cost.push_back(computeCost(ErrorSino, Weight));
-        std::cout << indent << " cost[" << cost.size()  << "] = " << cost.back() << std::endl;
-        //printf("\n%lf", cost->d[cost_counter]);
-        if(cost[cost.size()-1] - cost[cost.size() - 2] > 0)
-        {
-          std::cout << indent << "Cost just increased!" << std::endl;
-          break;
-        }
-        fwrite( &(cost.back()), sizeof(DATA_TYPE), 1, Fp2);
-      //  cost_counter++;
-        /*******************************************************************************/
-#else
-        printf("%d\n",Iter);
-#endif //Cost calculation endif
-#ifdef ROI
-        if(AverageMagnitudeOfRecon > 0)
-        {
-          std::cout << indent << "Iter+1: " << (Iter+1) << "  AverageUpdate/AverageMagnitudeOfRecon: " << AverageUpdate / AverageMagnitudeOfRecon << std::endl;
-          if((AverageUpdate / AverageMagnitudeOfRecon) < m_Inputs->StopThreshold)
-          {
-            printf("This is the terminating point for NHICD%d\n", Iter);
-            m_Inputs->StopThreshold *= THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
-            break;
-          }
-        }
-#endif//ROI end
-        if(getCancel() == true)
-        {
-          setErrorCondition(err);
-          return;
-        }
-
-#ifdef WRITE_INTERMEDIATE_RESULTS
-
-        if(Iter == NumOfWrites*WriteCount)
-        {
-          WriteCount++;
-          sprintf(buffer,"%d",Iter);
-          sprintf(Filename,"ReconstructedObjectAfterIter");
-          strcat(Filename,buffer);
-          strcat(Filename,".bin");
-          Fp3 = fopen(Filename, "w");
-          //	for (i=0; i < Geometry->N_y; i++)
-          //		for (j=0; j < Geometry->N_z; j++)
-          //			for (k=0; k < Geometry->N_x; k++)
-          TempPointer = m_Geometry->Object;
-          NumOfBytesWritten=fwrite(&(m_Geometry->Object->d[0][0][0]), sizeof(DATA_TYPE),m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z, Fp3);
-          printf("%d\n",NumOfBytesWritten);
-
-          fclose(Fp3);
-        }
-#endif
-
+      if(0 == Iter % 2) {
+        updateType = HomogeniousUpdate;
       }
-      else //Update the voxels in most need for a update
+      else
       {
-
-        std::cout << indent << "Non Homogenous update of voxels" << std::endl;
-
-        for (uint16_t NH_Iter = 0; NH_Iter < NUM_NON_HOMOGENOUS_ITER; NH_Iter++)
-        {
-
-          //Compute VSC and create a map of pixels that are above the threshold value
-
-          ComputeVSC();
-          DATA_TYPE NH_Threshold = SetNonHomThreshold();
-
-          //Use  FiltMagUpdateMap  to find MagnitudeUpdateMask
-          //std::cout << "Completed Calculation of filtered magnitude" << std::endl;
-
-          //Calculate the threshold for the top ? % of voxel updates
-
-          //printf("Iter %d\n",Iter);
-#ifdef ROI
-          AverageUpdate = 0;
-          AverageMagnitudeOfRecon = 0;
-#endif
-
-#ifdef RANDOM_ORDER_UPDATES
-          ArraySize = m_Geometry->N_x * m_Geometry->N_z;
-          for (j_new = 0; j_new < ArraySize; j_new++)
-            Counter->d[j_new] = j_new;
-
-          for (j = 0; j < m_Geometry->N_z; j++)
-            for (k = 0; k < m_Geometry->N_x; k++)
-
-            {
-              if(MagUpdateMap->d[j][k] > NH_Threshold)
-              {
-                MagUpdateMask->d[j][j] = 1;
-                MagUpdateMap->d[j][k] = 0;
-              }
-              else
-              {
-                MagUpdateMask->d[j][j] = 0;
-              }
-
-              VisitCount->d[j][k] = 0;
-
-            }
-
-#endif
-
-          START_TIMER;
-          for (j = 0; j < m_Geometry->N_z; j++) //Row index
-          {
-            for (k = 0; k < m_Geometry->N_x; k++) //Column index
-            {
-#ifdef RANDOM_ORDER_UPDATES
-              //RandomNumber=init_genrand(Iter);
-              Index = (genrand_int31(RandomNumber)) % ArraySize;
-              k_new = Counter->d[Index] % m_Geometry->N_x;
-              j_new = Counter->d[Index] / m_Geometry->N_x;
-              //memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
-              //TODO: Instead just swap the value in Index with the one in ArraySize
-              Counter->d[Index] = Counter->d[ArraySize - 1];
-              VisitCount->d[j_new][k_new] = 1;
-              ArraySize--;
-#else
-              j_new=j;
-              k_new=k;
-#endif //Random order updates
-              TempMemBlock = TempCol[j_new][k_new]; //Remove this
-              if(TempMemBlock->count > 0 && MagUpdateMask->d[j_new][k_new] == 1)
-              {
-                for (i = 0; i < m_Geometry->N_y; i++) //slice index
-                {
-                  //Neighborhood of (i,j,k) should be initialized to zeros each time
-                  for (int32_t p = 0; p <= 2; p++)
-                  {
-                    for (int32_t q = 0; q <= 2; q++)
-                    {
-                      for (r = 0; r <= 2; r++)
-                      {
-                        NEIGHBORHOOD[p][q][r] = 0.0;
-                        BOUNDARYFLAG[p][q][r] = 0;
-                      }
-                    }
-                  }
-#ifndef CIRCULAR_BOUNDARY_CONDITION
-
-                  //For a given (i,j,k) store its 26 point neighborhood
-                  for (int32_t p = -1; p <= 1; p++)
-                  {
-                    for (int32_t q = -1; q <= 1; q++)
-                    {
-                      for (r = -1; r <= 1; r++)
-                      {
-                        if(i + p >= 0 && i + p < m_Geometry->N_y) if(j_new + q >= 0 && j_new + q < m_Geometry->N_z) if(k_new + r >= 0
-                            && k_new + r < m_Geometry->N_x)
-                        {
-                          NEIGHBORHOOD[p + 1][q + 1][r + 1] = m_Geometry->Object->d[q + j_new][r + k_new][p + i];
-                          BOUNDARYFLAG[p + 1][q + 1][r + 1] = 1;
-                        }
-                        else
-                        {
-                          BOUNDARYFLAG[p + 1][q + 1][r + 1] = 0;
-                        }
-
-                      }
-                    }
-                  }
-#else
-                  for(p = -1; p <=1; p++)
-                  for(q = -1; q <= 1; q++)
-                  for(r = -1; r <= 1;r++)
-                  {
-                    tempindex_x = mod(r+k_new,m_Geometry->N_x);
-                    tempindex_y =mod(p+i,m_Geometry->N_y);
-                    tempindex_z = mod(q+j_new,m_Geometry->N_z);
-                    NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object->d[tempindex_z][tempindex_x][tempindex_y];
-                    BOUNDARYFLAG[p+1][q+1][r+1]=1;
-                  }
-
-#endif//circular boundary condition check
-                  NEIGHBORHOOD[1][1][1] = 0.0;
-
-#ifdef DEBUG
-                  if(i == 0 && j == 31 && k == 31)
-                  {
-                    printf("***************************\n");
-                    printf("Geom %lf\n", m_Geometry->Object->d[i][31][31]);
-                    for (int p = 0; p <= 2; p++)
-                    {
-                      for (int q = 0; q <= 2; q++)
-                      {
-                        for (r = 0; r <= 2; r++)
-                        {
-                          printf("%lf\n", NEIGHBORHOOD[p][q][r]);
-                        }
-                      }
-                    }
-                  }
-#endif
-                  //Compute theta1 and theta2
-
-                  V = m_Geometry->Object->d[j_new][k_new][i]; //Store the present value of the voxel
-                  THETA1 = 0.0;
-                  THETA2 = 0.0;
-
-                  //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
-                  for (uint32_t q = 0; q < TempMemBlock->count; q++)
-                  {
-
-                    uint16_t i_theta = floor(static_cast<float>(TempMemBlock->index[q] / (m_Sinogram->N_r)));
-                    uint16_t i_r = (TempMemBlock->index[q] % (m_Sinogram->N_r));
-                    VoxelLineAccessCounter = 0;
-                    for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
-                    // for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
-                    {
-                      /* center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
-                       delta_t = fabs(center_t - t);
-                       index_delta_t = floor(delta_t/OffsetT);
-
-                       if(index_delta_t < DETECTOR_RESPONSE_BINS)
-                       {
-                       w3 = delta_t - index_delta_t*OffsetT;
-                       w4 = (index_delta_t+1)*OffsetT - delta_t;
-                       //TODO: interpolation
-                       ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
-                       }
-                       else
-                       {
-                       ProfileThickness=0;
-                       }*/
-
-                      THETA2 += ((NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta])
-                          * (VoxelLineResponse[i].values[VoxelLineAccessCounter] * VoxelLineResponse[i].values[VoxelLineAccessCounter])
-                          * (TempMemBlock->values[q]) * (TempMemBlock->values[q]) * Weight->d[i_theta][i_r][i_t]);
-                      THETA1 += NuisanceParams.I_0->d[i_theta] * ErrorSino->d[i_theta][i_r][i_t] * (TempMemBlock->values[q])
-                          * (VoxelLineResponse[i].values[VoxelLineAccessCounter]) * Weight->d[i_theta][i_r][i_t];
-                      VoxelLineAccessCounter++;
-                    }
-                  }
-                  THETA1 *= -1;
-                  minMax(&low, &high);
-
-#ifdef DEBUG
-                  if(i == 0 && j == 31 && k == 31) printf("(%lf,%lf,%lf) \n", low, high, V - (THETA1 / THETA2));
-#endif
-
-                  //Solve the 1-D optimization problem
-                  //printf("V before updating %lf",V);
-#ifndef SURROGATE_FUNCTION
-                  //TODO : What if theta1 = 0 ? Then this will give error
-                  DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
-
-                  UpdatedVoxelValue = (DATA_TYPE)solve<DerivOfCostFunc>(&docf, (double)low, (double)high, (double)accuracy, &errorcode);
-
-#else
-
-                  errorcode=0;
-#ifdef QGGMRF
-                  UpdatedVoxelValue = CE_FunctionalSubstitution(low,high);
-
-#else
-                  SurrogateUpdate=surrogateFunctionBasedMin();
-                  UpdatedVoxelValue=SurrogateUpdate;
-#endif //QGGMRF
-#endif//Surrogate function
-                  //printf("%lf\n",SurrogateUpdate);
-
-                  if(errorcode == 0)
-                  {
-                    //    printf("(%lf,%lf,%lf)\n",low,high,UpdatedVoxelValue);
-                    //	printf("Updated %lf\n",UpdatedVoxelValue);
-#ifdef POSITIVITY_CONSTRAINT
-                    if(UpdatedVoxelValue < 0.0) //Enforcing positivity constraints
-                    UpdatedVoxelValue = 0.0;
-#endif
-                  }
-                  else
-                  {
-                    if(THETA1 == 0 && low == 0 && high == 0) UpdatedVoxelValue = 0;
-                    else
-                    {
-                      printf("Error \n");
-                      printf("%d %d\n", j_new, k_new);
-                    }
-                  }
-
-                  //TODO Print appropriate error messages for other values of error code
-                  m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
-                  MagUpdateMap->d[j_new][k_new] += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
-
-#ifdef ROI
-                  if(Mask->d[j_new][k_new] == 1)
-                  {
-
-                    AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
-                    AverageMagnitudeOfRecon += fabs(V); //computing the percentage update =(Change in mag/Initial magnitude)
-                  }
-#endif
-
-                  //Update the ErrorSinogram
-
-                  for (uint32_t q = 0; q < TempMemBlock->count; q++)
-                  {
-
-                    uint16_t i_theta = floor(static_cast<float>(TempMemBlock->index[q] / (m_Sinogram->N_r)));
-                    uint16_t i_r = (TempMemBlock->index[q] % (m_Sinogram->N_r));
-                    VoxelLineAccessCounter = 0;
-                    for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
-                    //for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
-                    {
-
-                      ErrorSino->d[i_theta][i_r][i_t] -= (NuisanceParams.I_0->d[i_theta]
-                          * (TempMemBlock->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
-                      VoxelLineAccessCounter++;
-                    }
-                  }
-                  Idx++;
-                }
-
-              }
-              else
-              {
-                continue;
-              }
-
-            }}
-          STOP_TIMER;
-         // PRINT_TIME;
-
-#ifdef RANDOM_ORDER_UPDATES
-          for (j = 0; j < m_Geometry->N_z; j++) {//Row index
-            for (k = 0; k < m_Geometry->N_x; k++) { //Column index
-              if(VisitCount->d[j][k] == 0) {printf("Pixel (%d %d) not visited\n", j, k);}}}
-#endif
-
-#ifdef COST_CALCULATE
-          /*********************Cost Calculation***************************************************/
-          cost.push_back(computeCost(ErrorSino, Weight));
-          std::cout << indent << " cost[" << cost.size()  << "] = " << cost.back() << std::endl;
-          //printf("\n%lf", cost->d[cost_counter]);
-          if(cost[cost.size()-1] - cost[cost.size() - 2] > 0)
-          {
-            std::cout << indent << "Cost just increased!" << std::endl;
-            break;
-          }
-          fwrite( &(cost.back()), sizeof(DATA_TYPE), 1, Fp2);
-        //  cost_counter++;
-          /*******************************************************************************/
-#else
-          printf("%d\n",Iter);
-#endif //Cost calculation endif
-#ifdef ROI
-          /*
-           if(AverageMagnitudeOfRecon > 0)
-           {
-           printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);
-           if((AverageUpdate / AverageMagnitudeOfRecon) < m_Inputs->StopThreshold)
-           {
-           printf("This is the terminating point %d\n", Iter);
-           m_Inputs->StopThreshold*=THRESHOLD_REDUCTION_FACTOR;//Reducing the thresold for subsequent iterations
-           break;
-           }
-           }*/
-
-#endif//ROI end
-          if(getCancel() == true)
-          {
-            setErrorCondition(err);
-            return;
-          }
-
-#ifdef WRITE_INTERMEDIATE_RESULTS
-
-          if(Iter == NumOfWrites*WriteCount)
-          {
-            WriteCount++;
-            sprintf(buffer,"%d",Iter);
-            sprintf(Filename,"ReconstructedObjectAfterIter");
-            strcat(Filename,buffer);
-            strcat(Filename,".bin");
-            Fp3 = fopen(Filename, "w");
-            //	for (i=0; i < Geometry->N_y; i++)
-            //		for (j=0; j < Geometry->N_z; j++)
-            //			for (k=0; k < Geometry->N_x; k++)
-            TempPointer = m_Geometry->Object;
-            NumOfBytesWritten=fwrite(&(m_Geometry->Object->d[0][0][0]), sizeof(DATA_TYPE),m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z, Fp3);
-            printf("%d\n",NumOfBytesWritten);
-
-            fclose(Fp3);
-          }
-#endif
-
-        }
-        std::cout << std::endl;
+        updateType = NonHomogeniousUpdate;
       }
-#else //Regular random order ICD
+#endif
+
+      // This could contain multiple Subloops also
+      updateVoxels(Iter, updateType, VisitCount, RandomNumber, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams, Mask, cost);
+
+      // Check to see if we are canceled.
+      if(getCancel() == true)
       {
-
-        //printf("Iter %d\n",Iter);
-#ifdef ROI
-        AverageUpdate = 0;
-        AverageMagnitudeOfRecon = 0;
-#endif
-
-#ifdef RANDOM_ORDER_UPDATES
-        ArraySize = m_Geometry->N_x * m_Geometry->N_z;
-        for (j_new = 0; j_new < ArraySize; j_new++)
-        Counter->d[j_new] = j_new;
-
-        for (j = 0; j < m_Geometry->N_z; j++)
-        for (k = 0; k < m_Geometry->N_x; k++)
-        VisitCount->d[j][k] = 0;
-#endif
-
-        START_TIMER;
-        for (j = 0; j < m_Geometry->N_z; j++) //Row index
-        for (k = 0; k < m_Geometry->N_x; k++)//Column index
-        {
-#ifdef RANDOM_ORDER_UPDATES
-          //RandomNumber=init_genrand(Iter);
-          Index = (genrand_int31(RandomNumber)) % ArraySize;
-          k_new = Counter->d[Index] % m_Geometry->N_x;
-          j_new = Counter->d[Index] / m_Geometry->N_x;
-          //memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
-          //TODO: Instead just swap the value in Index with the one in ArraySize
-          Counter->d[Index] = Counter->d[ArraySize - 1];
-          VisitCount->d[j_new][k_new] = 1;
-          ArraySize--;
-#else
-          j_new=j;
-          k_new=k;
-#endif //Random order updates
-          TempMemBlock = TempCol[j_new][k_new]; //Remove this
-          if(TempMemBlock->count > 0)
-          //After this should ideally call UpdateVoxelLine(j_new,k_new) ie put everything in this "if" inside a method called UpdateVoxelLine
-          {
-            for (i = 0; i < m_Geometry->N_y; i++) //slice index
-            {
-              //Neighborhood of (i,j,k) should be initialized to zeros each time
-              for (int32_t p = 0; p <= 2; p++)
-              {
-                for (int32_t q = 0; q <= 2; q++)
-                {
-                  for (r = 0; r <= 2; r++)
-                  {
-                    NEIGHBORHOOD[p][q][r] = 0.0;
-                    BOUNDARYFLAG[p][q][r] = 0;
-                  }
-                }
-              }
-#ifndef CIRCULAR_BOUNDARY_CONDITION
-
-              //For a given (i,j,k) store its 26 point neighborhood
-              for (int32_t p = -1; p <= 1; p++)
-              {
-                for (int32_t q = -1; q <= 1; q++)
-                {
-                  for (r = -1; r <= 1; r++)
-                  {
-                    if(i + p >= 0 && i + p < m_Geometry->N_y) if(j_new + q >= 0 && j_new + q < m_Geometry->N_z) if(k_new + r >= 0
-                        && k_new + r < m_Geometry->N_x)
-                    {
-                      NEIGHBORHOOD[p + 1][q + 1][r + 1] = m_Geometry->Object->d[q + j_new][r + k_new][p + i];
-                      BOUNDARYFLAG[p + 1][q + 1][r + 1] = 1;
-                    }
-                    else
-                    {
-                      BOUNDARYFLAG[p + 1][q + 1][r + 1] = 0;
-                    }
-
-                  }
-                }
-              }
-#else
-              for(p = -1; p <=1; p++)
-              for(q = -1; q <= 1; q++)
-              for(r = -1; r <= 1;r++)
-              {
-                tempindex_x = mod(r+k_new,m_Geometry->N_x);
-                tempindex_y =mod(p+i,m_Geometry->N_y);
-                tempindex_z = mod(q+j_new,m_Geometry->N_z);
-                NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object->d[tempindex_z][tempindex_x][tempindex_y];
-                BOUNDARYFLAG[p+1][q+1][r+1]=1;
-              }
-
-#endif//circular boundary condition check
-              NEIGHBORHOOD[1][1][1] = 0.0;
-
-#ifdef DEBUG
-              if(i == 0 && j == 31 && k == 31)
-              {
-                printf("***************************\n");
-                printf("Geom %lf\n", m_Geometry->Object->d[i][31][31]);
-                for (int p = 0; p <= 2; p++)
-                {
-                  for (int q = 0; q <= 2; q++)
-                  {
-                    for (r = 0; r <= 2; r++)
-                    {
-                      printf("%lf\n", NEIGHBORHOOD[p][q][r]);
-                    }
-                  }
-                }
-              }
-#endif
-              //Compute theta1 and theta2
-
-              V = m_Geometry->Object->d[j_new][k_new][i];//Store the present value of the voxel
-              THETA1 = 0.0;
-              THETA2 = 0.0;
-
-              //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
-              for (uint32_t q = 0; q < TempMemBlock->count; q++)
-              {
-
-                uint16_t i_theta = floor(static_cast<float>(TempMemBlock->index[q] / (m_Sinogram->N_r)));
-                uint16_t i_r = (TempMemBlock->index[q] % (m_Sinogram->N_r));
-                VoxelLineAccessCounter = 0;
-                for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
-                // for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
-                {
-
-                  THETA2 += ((NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta])
-                      * (VoxelLineResponse[i].values[VoxelLineAccessCounter] * VoxelLineResponse[i].values[VoxelLineAccessCounter]) * (TempMemBlock->values[q])
-                      * (TempMemBlock->values[q]) * Weight->d[i_theta][i_r][i_t]);
-                  THETA1 += NuisanceParams.I_0->d[i_theta] * ErrorSino->d[i_theta][i_r][i_t] * (TempMemBlock->values[q])
-                  * (VoxelLineResponse[i].values[VoxelLineAccessCounter]) * Weight->d[i_theta][i_r][i_t];
-                  VoxelLineAccessCounter++;
-                }
-              }
-              THETA1 *= -1;
-              minMax(&low, &high);
-
-#ifdef DEBUG
-              if(i == 0 && j == 31 && k == 31) printf("(%lf,%lf,%lf) \n", low, high, V - (THETA1 / THETA2));
-#endif
-
-              //Solve the 1-D optimization problem
-              //printf("V before updating %lf",V);
-#ifndef SURROGATE_FUNCTION
-              //TODO : What if theta1 = 0 ? Then this will give error
-              DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
-
-              UpdatedVoxelValue = (DATA_TYPE)solve<DerivOfCostFunc>(&docf, (double)low, (double)high, (double)accuracy, &errorcode);
-
-#else
-
-              errorcode=0;
-#ifdef QGGMRF
-              UpdatedVoxelValue = CE_FunctionalSubstitution(low,high);
-
-#else
-              SurrogateUpdate=surrogateFunctionBasedMin();
-              UpdatedVoxelValue=SurrogateUpdate;
-#endif //QGGMRF
-#endif//Surrogate function
-              //printf("%lf\n",SurrogateUpdate);
-
-              if(errorcode == 0)
-              {
-                //    printf("(%lf,%lf,%lf)\n",low,high,UpdatedVoxelValue);
-                //	printf("Updated %lf\n",UpdatedVoxelValue);
-#ifdef POSITIVITY_CONSTRAINT
-                if(UpdatedVoxelValue < 0.0) //Enforcing positivity constraints
-                UpdatedVoxelValue = 0.0;
-#endif
-              }
-              else
-              {
-                if(THETA1 == 0 && low == 0 && high == 0) UpdatedVoxelValue = 0;
-                else
-                {
-                  printf("Error \n");
-                  printf("%d %d\n", j_new, k_new);
-                }
-              }
-
-              //TODO Print appropriate error messages for other values of error code
-              m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
-
-#ifdef ROI
-              if(Mask->d[j_new][k_new] == 1)
-              {
-
-                AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
-                AverageMagnitudeOfRecon += fabs(V); //computing the percentage update =(Change in mag/Initial magnitude)
-              }
-#endif
-
-              //Update the ErrorSinogram
-
-              for (uint32_t q = 0; q < TempMemBlock->count; q++)
-              {
-
-                uint16_t i_theta = floor(static_cast<float>(TempMemBlock->index[q] / (m_Sinogram->N_r)));
-                uint16_t i_r = (TempMemBlock->index[q] % (m_Sinogram->N_r));
-                VoxelLineAccessCounter = 0;
-                for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
-                //for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
-                {
-                  /*	center_t = ((DATA_TYPE)i_t + 0.5)*Sinogram->delta_t + Sinogram->T0;
-                   delta_t = fabs(center_t - t);
-                   index_delta_t = floor(delta_t/OffsetT);
-
-                   if(index_delta_t < DETECTOR_RESPONSE_BINS)
-                   {
-                   w3 = delta_t - index_delta_t*OffsetT;
-                   w4 = (index_delta_t+1)*OffsetT - delta_t;
-                   //TODO: interpolation
-                   ProfileThickness =(w4/OffsetT)*H_t[0][i_theta][index_delta_t] + (w3/OffsetT)*H_t[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
-                   }
-                   else
-                   {
-                   ProfileThickness=0;
-                   }*/
-
-                  ErrorSino->d[i_theta][i_r][i_t] -= (NuisanceParams.I_0->d[i_theta]
-                      * (TempMemBlock->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
-                  VoxelLineAccessCounter++;
-                }
-              }
-              Idx++;
-            }
-
-          }
-          else
-          {
-            continue;
-          }
-
-        }
-        STOP_TIMER;
-        PRINT_TIME;
-
-#ifdef RANDOM_ORDER_UPDATES
-        for (j = 0; j < m_Geometry->N_z; j++) //Row index
-        for (k = 0; k < m_Geometry->N_x; k++)//Column index
-        if(VisitCount->d[j][k] == 0) printf("Pixel (%d %d) not visited\n", j, k);
-#endif
-
-#ifdef COST_CALCULATE
-        /*********************Cost Calculation***************************************************/
-
-        cost->d[cost_counter] = computeCost(ErrorSino, Weight);
-        printf("\n%lf", cost->d[cost_counter]);
-
-        if(cost->d[cost_counter] - cost->d[cost_counter - 1] > 0)
-        {
-          printf("\nCost just increased!\n");
-          break;
-        }
-
-        fwrite(&cost->d[cost_counter], sizeof(DATA_TYPE), 1, Fp2);
-        cost_counter++;
-        /*******************************************************************************/
-#else
-        printf("%d\n",Iter);
-#endif //Cost calculation endif
-#ifdef ROI
-        if(AverageMagnitudeOfRecon > 0)
-        {
-          printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);
-          if((AverageUpdate / AverageMagnitudeOfRecon) < m_Inputs->StopThreshold)
-          {
-            printf("This is the terminating point %d\n", Iter);
-            m_Inputs->StopThreshold*=THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
-            break;
-          }
-        }
-#endif//ROI end
-        if(getCancel() == true)
-        {
-          setErrorCondition(err);
-          return;
-        }
-
-#ifdef WRITE_INTERMEDIATE_RESULTS
-
-        if(Iter == NumOfWrites*WriteCount)
-        {
-          WriteCount++;
-          sprintf(buffer,"%d",Iter);
-          sprintf(Filename,"ReconstructedObjectAfterIter");
-          strcat(Filename,buffer);
-          strcat(Filename,".bin");
-          Fp3 = fopen(Filename, "w");
-          //	for (i=0; i < Geometry->N_y; i++)
-          //		for (j=0; j < Geometry->N_z; j++)
-          //			for (k=0; k < Geometry->N_x; k++)
-          TempPointer = m_Geometry->Object;
-          NumOfBytesWritten=fwrite(&(m_Geometry->Object->d[0][0][0]), sizeof(DATA_TYPE),m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z, Fp3);
-          printf("%d\n",NumOfBytesWritten);
-
-          fclose(Fp3);
-        }
-#endif
+        setErrorCondition(-100);
+        return;
       }
-#endif//Non Homogenous ICD check
+
+
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
 #ifdef JOINT_ESTIMATION
 
@@ -2212,12 +1253,7 @@ void SOCEngine::execute()
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
 
   indent = "";
-  std::cout << indent << "Number of costs recorded " << cost.size() << std::endl;
-  std::cout << indent << "Final Cost" << std::endl;
-  for(std::vector<DATA_TYPE>::size_type ii = 0 ; ii < cost.size(); ii++)
-  {
-    std::cout << indent << cost[ii] << std::endl;
-  }
+  cost->printCosts(std::cout);
 
 
 #ifdef FORWARD_PROJECT_MODE
@@ -2344,33 +1380,9 @@ void SOCEngine::execute()
   //#else
   //  free((void*)TempCol);
 #endif
-#ifdef RANDOM_ORDER_UPDATES
-  //free_img((void**)VisitCount);
-#endif
 
-#ifdef ROI
-  //free_img((void**)Mask);
-#endif
-//  free_img((void**)VoxelProfile);
-//  free_3D((void***)DetectorResponse);
-//  free_3D((void***)H_t);
-//
-//  free_3D((void***)Y_Est);
-//  free_3D((void***)Final_Sinogram);
-//  free_3D((void***)ErrorSino);
-//  free_3D((void***)Weight);
-//free(Counter);
-//  free_img((void**)MicroscopeImage);
 
-#ifdef COST_CALCULATE
-  fclose(Fp2);// writing cost function
-  //free(cost);
-#endif
-  //free_3D(neighborhood);
-  // Get values from ComputationInputs and perform calculation
-  // Return any error code
   updateProgressAndMessage("Reconstruction Complete", 100);
-
   setErrorCondition(0);
   std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds()-totalTime)/1000 << std::endl;
   return;
@@ -3324,143 +2336,392 @@ DATA_TYPE SOCEngine::SetNonHomThreshold()
 
 
 
-void SOCEngine::UpdateVoxelLine(uint16_t j_new,uint16_t k_new)
+void SOCEngine::updateVoxels(int16_t Iter,
+                             VoxelUpdateType updateType,
+                             UInt8ImageType::Pointer VisitCount,
+                             RNGVars* RandomNumber,
+                             AMatrixCol*** TempCol,
+                             RealVolumeType::Pointer ErrorSino,
+                             RealVolumeType::Pointer Weight,
+                             AMatrixCol* VoxelLineResponse,
+                             ScaleOffsetParams &NuisanceParams,
+                             UInt8ImageType::Pointer Mask,
+                             CostData::Pointer cost)
 {
-#if 0
-  for (int32_t i = 0; i < m_Geometry->N_y; i++) //slice index
+  uint16_t subIterations = 1;
+  std::string indent("    ");
+  uint8_t err = 0;
+  DATA_TYPE UpdatedVoxelValue;
+  DATA_TYPE accuracy = 1e-7; //This is the rooting accuracy for x
+  int32_t errorcode = -1;
+  int16_t Idx;
+
+  //FIXME: Where are these Initialized? Or what values should they be initialized to?
+  DATA_TYPE low, high;
+
+  if(updateType == RegularRandomOrderUpdate)
   {
-    //Neighborhood of (i,j,k) should be initialized to zeros each time
-    for (int32_t p = 0; p <= 2; p++)
+    std::cout << indent << "Regular Random Order update of Voxels" << std::endl;
+  }
+  else if(updateType == HomogeniousUpdate)
+  {
+    std::cout << indent << "Homogenous update of voxels" << std::endl;
+  }
+  else if(updateType == NonHomogeniousUpdate)
+  {
+    std::cout << indent << "Non Homogenous update of voxels" << std::endl;
+    subIterations = NUM_NON_HOMOGENOUS_ITER;
+  }
+  else
+  {
+    std::cout << indent << "Unknown Voxel Update Type. Returning Now" << std::endl;
+    return;
+  }
+
+  DATA_TYPE NH_Threshold = 0.0;
+
+  for (uint16_t NH_Iter = 0; NH_Iter < subIterations; ++NH_Iter)
+  {
+    if(updateType == NonHomogeniousUpdate)
     {
-      for (int32_t q = 0; q <= 2; q++)
-      {
-        for (int32_t r = 0; r <= 2; r++)
-        {
-          NEIGHBORHOOD[p][q][r] = 0.0;
-          BOUNDARYFLAG[p][q][r] = 0;
-        }
-      }
+      //Compute VSC and create a map of pixels that are above the threshold value
+      ComputeVSC();
+      NH_Threshold = SetNonHomThreshold();
+      //Use  FiltMagUpdateMap  to find MagnitudeUpdateMask
+      //std::cout << "Completed Calculation of filtered magnitude" << std::endl;
+      //Calculate the threshold for the top ? % of voxel updates
     }
 
-    //For a given (i,j,k) store its 26 point neighborhood and indicate if its on a Boundary
-    for (int32_t p = -1; p <= 1; p++)
+    //printf("Iter %d\n",Iter);
+#ifdef ROI
+    //variables used to stop the process
+    DATA_TYPE AverageUpdate = 0;
+    DATA_TYPE AverageMagnitudeOfRecon = 0;
+#endif
+
+#ifdef RANDOM_ORDER_UPDATES
+    int32_t ArraySize = m_Geometry->N_x * m_Geometry->N_z;
+    size_t dims[3] =
+    { ArraySize, 0, 0 };
+    Int32ArrayType::Pointer Counter = Int32ArrayType::New(dims);
+
+    for (int32_t j_new = 0; j_new < ArraySize; j_new++)
     {
-      for (int32_t q = -1; q <= 1; q++)
+      Counter->d[j_new] = j_new;
+    }
+    for (int32_t j = 0; j < m_Geometry->N_z; j++)
+    {
+      for (int32_t k = 0; k < m_Geometry->N_x; k++)
       {
-        for (int32_t r = -1; r <= 1; r++)
+        if(updateType == NonHomogeniousUpdate)
         {
-          if(i + p >= 0 && i + p < m_Geometry->N_y) if(j_new + q >= 0 && j_new + q < m_Geometry->N_z) if(k_new + r >= 0 && k_new + r < m_Geometry->N_x)
+          // WHERE DOES MagUpdateMap get initialized at? These if statements will not cover all the possibilities
+          if(MagUpdateMap->d[j][k] > NH_Threshold)
           {
-            NEIGHBORHOOD[p + 1][q + 1][r + 1] = m_Geometry->Object->d[q + j_new][r + k_new][p + i];
-            BOUNDARYFLAG[p + 1][q + 1][r + 1] = 1;
+            MagUpdateMask->d[j][j] = 1;
+            MagUpdateMap->d[j][k] = 0;
           }
           else
           {
-            BOUNDARYFLAG[p + 1][q + 1][r + 1] = 0;
+            MagUpdateMask->d[j][j] = 0;
           }
+        }
+        else if(updateType == HomogeniousUpdate)
+        {
+          MagUpdateMap->d[j][k] = 0;
+        }
 
+        VisitCount->d[j][k] = 0;
+      }
+    }
+#endif
+
+    START_TIMER;
+    for (int32_t j = 0; j < m_Geometry->N_z; j++) //Row index
+    {
+      for (int32_t k = 0; k < m_Geometry->N_x; k++) //Column index
+      {
+
+#ifdef RANDOM_ORDER_UPDATES
+        //RandomNumber=init_genrand(Iter);
+        int32_t Index = (genrand_int31(RandomNumber)) % ArraySize;
+        int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
+        int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
+        //memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
+        //TODO: Instead just swap the value in Index with the one in ArraySize
+        Counter->d[Index] = Counter->d[ArraySize - 1];
+        VisitCount->d[j_new][k_new] = 1;
+        ArraySize--;
+#else
+        j_new=j;
+        k_new=k;
+#endif //Random order updates
+        AMatrixCol* TempMemBlock = TempCol[j_new][k_new]; //Remove this
+
+        int shouldInitNeighborhood = 0;
+        if(TempMemBlock->count > 0)
+        {
+          ++shouldInitNeighborhood;
+        }
+        if(updateType == NonHomogeniousUpdate && shouldInitNeighborhood == 1 && MagUpdateMask->d[j_new][k_new] == 1)
+        {
+          ++shouldInitNeighborhood;
+        }
+
+        if(shouldInitNeighborhood > 0)
+        //After this should ideally call UpdateVoxelLine(j_new,k_new) ie put everything in this "if" inside a method called UpdateVoxelLine
+        {
+          for (int32_t i = 0; i < m_Geometry->N_y; i++) //slice index
+          {
+            //Neighborhood of (i,j,k) should be initialized to zeros each time
+            for (int32_t p = 0; p <= 2; p++)
+            {
+              for (int32_t q = 0; q <= 2; q++)
+              {
+                for (int32_t r = 0; r <= 2; r++)
+                {
+                  NEIGHBORHOOD[p][q][r] = 0.0;
+                  BOUNDARYFLAG[p][q][r] = 0;
+                }
+              }
+            }
+#ifdef CIRCULAR_BOUNDARY_CONDITION
+            for(p = -1; p <=1; p++)
+            for(q = -1; q <= 1; q++)
+            for(r = -1; r <= 1;r++)
+            {
+              tempindex_x = mod(r+k_new,m_Geometry->N_x);
+              tempindex_y =mod(p+i,m_Geometry->N_y);
+              tempindex_z = mod(q+j_new,m_Geometry->N_z);
+              NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object->d[tempindex_z][tempindex_x][tempindex_y];
+              BOUNDARYFLAG[p+1][q+1][r+1]=1;
+            }
+#else
+            //For a given (i,j,k) store its 26 point neighborhood
+            for (int32_t p = -1; p <= 1; p++)
+            {
+              for (int32_t q = -1; q <= 1; q++)
+              {
+                for (int32_t r = -1; r <= 1; r++)
+                {
+                  if(i + p >= 0 && i + p < m_Geometry->N_y)
+                  {
+                    if(j_new + q >= 0 && j_new + q < m_Geometry->N_z)
+                    {
+                      if(k_new + r >= 0 && k_new + r < m_Geometry->N_x)
+                      {
+                        NEIGHBORHOOD[p + 1][q + 1][r + 1] = m_Geometry->Object->d[q + j_new][r + k_new][p + i];
+                        BOUNDARYFLAG[p + 1][q + 1][r + 1] = 1;
+                      }
+                      else
+                      {
+                        BOUNDARYFLAG[p + 1][q + 1][r + 1] = 0;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+#endif//circular boundary condition check
+            NEIGHBORHOOD[1][1][1] = 0.0;
+
+#ifndef NDEBUG
+            if(i == 0 && j == 31 && k == 31)
+            {
+              printf("***************************\n");
+              printf("Geom %lf\n", m_Geometry->Object->d[i][31][31]);
+              for (int p = 0; p <= 2; p++)
+              {
+                for (int q = 0; q <= 2; q++)
+                {
+                  for (int r = 0; r <= 2; r++)
+                  {
+                    printf("%lf\n", NEIGHBORHOOD[p][q][r]);
+                  }
+                }
+              }
+            }
+#endif
+            //Compute theta1 and theta2
+            V = m_Geometry->Object->d[j_new][k_new][i]; //Store the present value of the voxel
+            THETA1 = 0.0;
+            THETA2 = 0.0;
+
+            //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
+            for (uint32_t q = 0; q < TempMemBlock->count; q++)
+            {
+              uint16_t i_theta = floor(static_cast<float>(TempMemBlock->index[q] / (m_Sinogram->N_r)));
+              uint16_t i_r = (TempMemBlock->index[q] % (m_Sinogram->N_r));
+              uint16_t VoxelLineAccessCounter = 0;
+              for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
+              {
+                THETA2 += ((NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta])
+                    * (VoxelLineResponse[i].values[VoxelLineAccessCounter] * VoxelLineResponse[i].values[VoxelLineAccessCounter]) * (TempMemBlock->values[q])
+                    * (TempMemBlock->values[q]) * Weight->d[i_theta][i_r][i_t]);
+                THETA1 += NuisanceParams.I_0->d[i_theta] * ErrorSino->d[i_theta][i_r][i_t] * (TempMemBlock->values[q])
+                    * (VoxelLineResponse[i].values[VoxelLineAccessCounter]) * Weight->d[i_theta][i_r][i_t];
+                VoxelLineAccessCounter++;
+              }
+            }
+            THETA1 *= -1;
+            minMax(&low, &high);
+
+#ifdef DEBUG
+            if(i == 0 && j == 31 && k == 31) printf("(%lf,%lf,%lf) \n", low, high, V - (THETA1 / THETA2));
+#endif
+
+            //Solve the 1-D optimization problem
+            //printf("V before updating %lf",V);
+#ifndef SURROGATE_FUNCTION
+            //TODO : What if theta1 = 0 ? Then this will give error
+            DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
+
+            UpdatedVoxelValue = (DATA_TYPE)solve<DerivOfCostFunc>(&docf, (double)low, (double)high, (double)accuracy, &errorcode);
+
+#else
+
+            errorcode=0;
+#ifdef QGGMRF
+            UpdatedVoxelValue = CE_FunctionalSubstitution(low,high);
+
+#else
+            SurrogateUpdate=surrogateFunctionBasedMin();
+            UpdatedVoxelValue=SurrogateUpdate;
+#endif //QGGMRF
+#endif//Surrogate function
+            //printf("%lf\n",SurrogateUpdate);
+
+            if(errorcode == 0)
+            {
+              //    printf("(%lf,%lf,%lf)\n",low,high,UpdatedVoxelValue);
+              //  printf("Updated %lf\n",UpdatedVoxelValue);
+#ifdef POSITIVITY_CONSTRAINT
+              if(UpdatedVoxelValue < 0.0)
+              { //Enforcing positivity constraints
+                UpdatedVoxelValue = 0.0;
+              }
+#endif
+            }
+            else
+            {
+              if(THETA1 == 0 && low == 0 && high == 0) UpdatedVoxelValue = 0;
+              else
+              {
+                printf("Error \n");
+                printf("%d %d\n", j_new, k_new);
+              }
+            }
+
+            //TODO Print appropriate error messages for other values of error code
+            m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
+#ifdef NHICD
+            MagUpdateMap->d[j_new][k_new] += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+#endif
+
+#ifdef ROI
+            if(Mask->d[j_new][k_new] == 1)
+            {
+              AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+              AverageMagnitudeOfRecon += fabs(V); //computing the percentage update =(Change in mag/Initial magnitude)
+            }
+#endif
+
+            //Update the ErrorSinogram
+            for (uint32_t q = 0; q < TempMemBlock->count; q++)
+            {
+              uint16_t i_theta = floor(static_cast<float>(TempMemBlock->index[q] / (m_Sinogram->N_r)));
+              uint16_t i_r = (TempMemBlock->index[q] % (m_Sinogram->N_r));
+              uint16_t VoxelLineAccessCounter = 0;
+              for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
+              //for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
+              {
+                ErrorSino->d[i_theta][i_r][i_t] -= (NuisanceParams.I_0->d[i_theta]
+                    * (TempMemBlock->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
+                VoxelLineAccessCounter++;
+              }
+            }
+            Idx++;
+          }
+        }
+        else
+        {
+          continue;
         }
       }
     }
+    STOP_TIMER;
+    PRINT_TIME;
 
-    NEIGHBORHOOD[1][1][1] = 0.0;
-
-    //Compute theta1 and theta2
-    V = m_Geometry->Object->d[j_new][k_new][i]; //Store the present value of the voxel
-    THETA1 = 0.0;
-    THETA2 = 0.0;
-
-    //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
-    for (uint32_t q = 0; q < TempCol[j_new][k_new]->count; q++)
-    {
-
-      uint16_t i_theta = floor(static_cast<float>(TempCol[j_new][k_new]->index[q] / (m_Sinogram->N_r)));
-      uint16_t i_r = (TempCol[j_new][k_new]->index[q] % (m_Sinogram->N_r));
-      VoxelLineAccessCounter = 0;
-      for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
-      {
-        THETA2 += ((NuisanceParams.I_0->d[i_theta] * NuisanceParams.I_0->d[i_theta])
-            * (VoxelLineResponse[i].values[VoxelLineAccessCounter] * VoxelLineResponse[i].values[VoxelLineAccessCounter]) * (TempCol[j_new][k_new] > values[q])
-            * (TempCol[j_new][k_new] > values[q]) * Weight->d[i_theta][i_r][i_t]);
-        THETA1 += NuisanceParams.I_0->d[i_theta] * ErrorSino->d[i_theta][i_r][i_t] * (TempCol[j_new][k_new]->values[q])
-            * (VoxelLineResponse[i].values[VoxelLineAccessCounter]) * Weight->d[i_theta][i_r][i_t];
-        VoxelLineAccessCounter++;
+#ifdef RANDOM_ORDER_UPDATES
+    for (int j = 0; j < m_Geometry->N_z; j++)
+    { //Row index
+      for (int k = 0; k < m_Geometry->N_x; k++)
+      { //Column index
+        if(VisitCount->d[j][k] == 0)
+        {
+          printf("Pixel (%d %d) not visited\n", j, k);
+        }
       }
     }
-    THETA1 *= -1;
-    minMax(&low, &high);
-
-    //Solve the 1-D optimization problem
-    //printf("V before updating %lf",V);
-#ifndef SURROGATE_FUNCTION
-    //TODO : What if theta1 = 0 ? Then this will give error
-    DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
-
-    UpdatedVoxelValue = (DATA_TYPE)solve<DerivOfCostFunc>(&docf, (double)low, (double)high, (double)accuracy, &errorcode);
-
-#else
-
-    errorcode=0;
-#ifdef QGGMRF
-    UpdatedVoxelValue = CE_FunctionalSubstitution(low,high);
-
-#else
-    SurrogateUpdate=surrogateFunctionBasedMin();
-    UpdatedVoxelValue=SurrogateUpdate;
-#endif //QGGMRF
-#endif//Surrogate function
-    if(errorcode == 0)
-    {
-
-#ifdef POSITIVITY_CONSTRAINT
-      if(UpdatedVoxelValue < 0.0)
-      { //Enforcing positivity constraints
-        UpdatedVoxelValue = 0.0;
-      }
 #endif
-    }
-    else
+
+#ifdef COST_CALCULATE
+
+    /*********************Cost Calculation*************************************/
+    DATA_TYPE cost_value = computeCost(ErrorSino, Weight);
+    int increase = cost->addCostValue(cost_value);
+    if (increase ==1)
     {
-      if(THETA1 == 0 && low == 0 && high == 0) { UpdatedVoxelValue = 0;}
-      else
-      {
-        printf("Error \n");
-        printf("%d %d\n", j_new, k_new);
-      }
+      std::cout << "Cost just increased!" << std::endl;
+      break;
     }
-
-    //TODO Print appropriate error messages for other values of error code
-    m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
-
-    MagUpdateMap->d[j_new][k_new] += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
-
+    cost->writeCostValue(cost_value);
+    /**************************************************************************/
+#else
+    printf("%d\n",Iter);
+#endif //Cost calculation endif
 #ifdef ROI
-    if(Mask[j_new][k_new] == 1)
+    if(AverageMagnitudeOfRecon > 0)
     {
-      AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
-      AverageMagnitudeOfRecon += fabs(V);
-    }
-#endif
-
-    //Update the ErrorSinogram
-
-    for (uint32_t q = 0; q < TempMemBlock->count; q++)
-    {
-
-      uint16_t i_theta = floor(static_cast<float>(TempMemBlock->index[q] / (m_Sinogram->N_r)));
-      uint16_t i_r = (TempMemBlock->index[q] % (m_Sinogram->N_r));
-      VoxelLineAccessCounter = 0;
-      for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
-      //for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
+      printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);
+      if((AverageUpdate / AverageMagnitudeOfRecon) < m_Inputs->StopThreshold)
       {
-
-        ErrorSino->d[i_theta][i_r][i_t] -= (NuisanceParams.I_0->d[i_theta]
-            * (TempMemBlock->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
-        VoxelLineAccessCounter++;
+        printf("This is the terminating point %d\n", Iter);
+        m_Inputs->StopThreshold *= THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
+        break;
       }
     }
-  }
+#endif//ROI end
+
+#ifdef WRITE_INTERMEDIATE_RESULTS
+
+    if(Iter == NumOfWrites*WriteCount)
+    {
+      WriteCount++;
+      sprintf(buffer,"%d",Iter);
+      sprintf(Filename,"ReconstructedObjectAfterIter");
+      strcat(Filename,buffer);
+      strcat(Filename,".bin");
+      Fp3 = fopen(Filename, "w");
+      //  for (i=0; i < Geometry->N_y; i++)
+      //    for (j=0; j < Geometry->N_z; j++)
+      //      for (k=0; k < Geometry->N_x; k++)
+      TempPointer = m_Geometry->Object;
+      NumOfBytesWritten=fwrite(&(m_Geometry->Object->d[0][0][0]), sizeof(DATA_TYPE),m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z, Fp3);
+      printf("%d\n",NumOfBytesWritten);
+
+      fclose(Fp3);
+    }
 #endif
+
+    if(getCancel() == true)
+    {
+      setErrorCondition(err);
+      return;
+    }
+
+  }
+
 }
 
 
