@@ -49,6 +49,8 @@
 #include "TomoEngine/mt/mt19937ar.h"
 
 #include "TomoEngine/SOC/SOCStructures.h"
+#include "TomoEngine/Filters/CostData.h"
+
 
 /**
  * @class SOCEngine SOCEngine.h TomoEngine/SOC/SOCEngine.h
@@ -73,6 +75,12 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
 
     virtual ~SOCEngine();
 
+    enum VoxelUpdateType {
+      RegularRandomOrderUpdate = 0,
+      HomogeniousUpdate = 1,
+      NonHomogeniousUpdate = 2
+    };
+
     /**
      * @brief overload from super class
      * @return
@@ -94,7 +102,11 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
      */
     void updateVoxelValues_NHICD();
 
-    void updateVoxelLine(uint16_t j_new,uint16_t k_new);
+    void updateVoxels(int16_t Iter, VoxelUpdateType updateType, UInt8ImageType::Pointer VisitCount,
+                      RNGVars* RandomNumber, AMatrixCol*** TempCol,
+                      RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight,
+                      AMatrixCol* VoxelLineResponse, ScaleOffsetParams &NuisanceParams,
+                      UInt8ImageType::Pointer Mask, CostData::Pointer cost);
 
   private:
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered

@@ -6,7 +6,8 @@
 #--////////////////////////////////////////////////////////////////////////////
 set (TomoEngine_Filters_SRCS
     ${TomoEngine_SOURCE_DIR}/Filters/AbstractFilter.cpp
-    ${TomoEngine_SOURCE_DIR}/Filters/CalculateAMatrixColumn.cpp   
+    ${TomoEngine_SOURCE_DIR}/Filters/CalculateAMatrixColumn.cpp
+    ${TomoEngine_SOURCE_DIR}/Filters/CostData.cpp
     ${TomoEngine_SOURCE_DIR}/Filters/MRCSinogramInitializer.cpp
     ${TomoEngine_SOURCE_DIR}/Filters/RawSinogramInitializer.cpp
     ${TomoEngine_SOURCE_DIR}/Filters/GainsOffsetsReader.cpp
@@ -21,6 +22,7 @@ set (TomoEngine_Filters_SRCS
 set (TomoEngine_Filters_HDRS
     ${TomoEngine_SOURCE_DIR}/Filters/AbstractFilter.h
     ${TomoEngine_SOURCE_DIR}/Filters/CalculateAMatrixColumn.h
+    ${TomoEngine_SOURCE_DIR}/Filters/CostData.h
     ${TomoEngine_SOURCE_DIR}/Filters/MRCSinogramInitializer.h
     ${TomoEngine_SOURCE_DIR}/Filters/RawSinogramInitializer.h
     ${TomoEngine_SOURCE_DIR}/Filters/GainsOffsetsReader.h
