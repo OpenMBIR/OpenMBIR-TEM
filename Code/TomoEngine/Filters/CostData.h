@@ -36,14 +36,14 @@
 #include <vector>
 
 #include "MXA/Common/MXASetGetMacros.h"
-
+#include "TomoEngine/TomoEngine.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 
 
 /*
  *
  */
-class CostData
+class TomoEngine_EXPORT CostData
 {
   public:
     MXA_SHARED_POINTERS(CostData);
