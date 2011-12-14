@@ -77,7 +77,7 @@
 //#define DEBUG_CONSTRAINT_OPT
 #define RANDOM_ORDER_UPDATES
 //#define BRIGHT_FIELD
-#define NHICD 0
+#define NHICD 
 #define NUM_NON_HOMOGENOUS_ITER 20
 
 

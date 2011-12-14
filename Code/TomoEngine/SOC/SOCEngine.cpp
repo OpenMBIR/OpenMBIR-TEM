@@ -2392,6 +2392,7 @@ void SOCEngine::updateVoxels(int16_t Iter,
       //Compute VSC and create a map of pixels that are above the threshold value
       ComputeVSC();
       NH_Threshold = SetNonHomThreshold();
+	  std::cout<<NH_Threshold<<std::endl;
       //Use  FiltMagUpdateMap  to find MagnitudeUpdateMask
       //std::cout << "Completed Calculation of filtered magnitude" << std::endl;
       //Calculate the threshold for the top ? % of voxel updates
@@ -2414,16 +2415,18 @@ void SOCEngine::updateVoxels(int16_t Iter,
     {
       Counter->d[j_new] = j_new;
     }
+	  uint16_t NumVoxelsToUpdate=0;
     for (int32_t j = 0; j < m_Geometry->N_z; j++)
     {
       for (int32_t k = 0; k < m_Geometry->N_x; k++)
       {
-        if(updateType == NonHomogeniousUpdate)
+		          if(updateType == NonHomogeniousUpdate)
         {
           if(MagUpdateMap->d[j][k] > NH_Threshold)
           {
             MagUpdateMask->d[j][j] = 1;
             MagUpdateMap->d[j][k] = 0;
+			  NumVoxelsToUpdate++;
           }
           else
           {
@@ -2438,6 +2441,7 @@ void SOCEngine::updateVoxels(int16_t Iter,
         VisitCount->d[j][k] = 0;
       }
     }
+	  std::cout<<"Number of voxels to update"<<NumVoxelsToUpdate<<std::endl;
 #endif
 
     START_TIMER;
@@ -2463,14 +2467,17 @@ void SOCEngine::updateVoxels(int16_t Iter,
         AMatrixCol* TempMemBlock = TempCol[j_new][k_new]; //Remove this
 
         int shouldInitNeighborhood = 0;
-        if(TempMemBlock->count > 0)
+        
+        if(updateType == NonHomogeniousUpdate && MagUpdateMask->d[j_new][k_new] == 1 && TempMemBlock->count > 0)
         {
-          ++shouldInitNeighborhood;
+				++shouldInitNeighborhood;
         }
-        if(updateType == NonHomogeniousUpdate && shouldInitNeighborhood == 1 && MagUpdateMask->d[j_new][k_new] == 1)
-        {
-          ++shouldInitNeighborhood;
-        }
+		if(updateType == HomogeniousUpdate  && TempMemBlock->count > 0)
+		{
+			  ++shouldInitNeighborhood;
+		}  
+		  
+
 
         if(shouldInitNeighborhood > 0)
         //After this should ideally call UpdateVoxelLine(j_new,k_new) ie put everything in this "if" inside a method called UpdateVoxelLine
