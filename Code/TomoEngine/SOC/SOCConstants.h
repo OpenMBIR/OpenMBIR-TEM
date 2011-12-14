@@ -41,9 +41,9 @@
 
 #include <string>
 
-//#define EXTEND_OBJECT
+#define EXTEND_OBJECT
 #define X_SHRINK_FACTOR 0.6
-#define TARGET_GAIN 1
+#define TARGET_GAIN 20000
 
 #define X_STRETCH 1
 #define Z_STRETCH 2
@@ -69,7 +69,7 @@
 #define COST_CALCULATE
 //#define BEAM_CALCULATION
 #define DETECTOR_RESPONSE_BINS 64
-//#define JOINT_ESTIMATION
+#define JOINT_ESTIMATION
 //#define GEOMETRIC_MEAN_CONSTRAINT
 #define NOISE_MODEL
 #define POSITIVITY_CONSTRAINT

@@ -968,6 +968,8 @@ void SOCEngine::execute()
       {
         updateType = NonHomogeniousUpdate;
       }
+#else
+		
 #endif
 
       // This could contain multiple Subloops also
@@ -985,8 +987,8 @@ void SOCEngine::execute()
 #ifdef JOINT_ESTIMATION
 
     //high=5e100;//this maintains the max and min bracket values for rooting lambda
-    high = (DATA_TYPE)INT64_MAX;
-    low = (DATA_TYPE)INT64_MIN;
+    DATA_TYPE high = (DATA_TYPE)INT64_MAX;
+    DATA_TYPE low = (DATA_TYPE)INT64_MIN;
     //Joint Scale And Offset Estimation
 
     //forward project
@@ -1017,7 +1019,7 @@ void SOCEngine::execute()
               uint16_t i_theta = int16_t(floor(static_cast<float>(TempCol[j][k]->index[q] / (m_Sinogram->N_r))));
               uint16_t i_r = (TempCol[j][k]->index[q] % (m_Sinogram->N_r));
 
-              VoxelLineAccessCounter = 0;
+              uint16_t VoxelLineAccessCounter = 0;
               for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
               {
                 Y_Est->d[i_theta][i_r][i_t] += ((TempCol[j][k]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object->d[j][k][i]));
@@ -1032,13 +1034,13 @@ void SOCEngine::execute()
 
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      a = 0;
-      b = 0;
-      c = 0;
-      d = 0;
-      e = 0;
-      numerator_sum = 0;
-      denominator_sum = 0;
+      DATA_TYPE a = 0;
+      DATA_TYPE b = 0;
+      DATA_TYPE c = 0;
+      DATA_TYPE d = 0;
+      DATA_TYPE e = 0;
+      DATA_TYPE numerator_sum = 0;
+      DATA_TYPE denominator_sum = 0;
 
       //compute the parameters of the quadratic for each view
       for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
@@ -1104,14 +1106,14 @@ void SOCEngine::execute()
 #ifdef GEOMETRIC_MEAN_CONSTRAINT
     calculateGeometricMeanConstraint();
 #else
-    sum1 = 0;
-    sum2 = 0;
+    DATA_TYPE sum1 = 0;
+    DATA_TYPE sum2 = 0;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
       sum1 += (1.0 / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]));
       sum2 += ((bk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d1->d[i_theta]) / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]));
     }
-    LagrangeMultiplier = (-m_Sinogram->N_theta * m_Sinogram->TargetGain + sum2) / sum1;
+    DATA_TYPE LagrangeMultiplier = (-m_Sinogram->N_theta * m_Sinogram->TargetGain + sum2) / sum1;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
 
@@ -1182,17 +1184,18 @@ void SOCEngine::execute()
      }*/
 
 #ifdef COST_CALCULATE
-    cost->d[cost_counter] = computeCost(ErrorSino, Weight);
-    printf("After Gain Update %lf\n", cost->d[cost_counter]);
-
-    if(cost->d[cost_counter] - cost->d[cost_counter - 1] > 0)
-    {
-      printf("Cost just increased!\n");
-      break;
-    }
-    fwrite(&cost->d[cost_counter], sizeof(DATA_TYPE), 1, Fp2);
-    cost_counter++;
-
+		
+		/*********************Cost Calculation*************************************/
+		DATA_TYPE cost_value = computeCost(ErrorSino, Weight);
+		int increase = cost->addCostValue(cost_value);
+		if (increase ==1)
+		{
+			std::cout << "Cost just increased!" << std::endl;
+			break;
+		}
+		cost->writeCostValue(cost_value);
+		/**************************************************************************/
+		
 #endif
     printf("Lagrange Multiplier = %lf\n", LagrangeMultiplier);
 
@@ -1235,17 +1238,18 @@ void SOCEngine::execute()
     }
 
 #ifdef COST_CALCULATE
-    cost->d[cost_counter]=computeCost(ErrorSino,Weight);
-    printf("After Noise Variance Update %lf\n",cost->d[cost_counter]);
-    fwrite(&cost->d[cost_counter],sizeof(DATA_TYPE),1,Fp2);
-    if(cost->d[cost_counter]-cost->d[cost_counter-1] > 0)
-    {
-      printf("Cost just increased!\n");
-      break;
-    }
-
-    cost_counter++;
-
+		
+		/*********************Cost Calculation*************************************/
+		cost_value = computeCost(ErrorSino, Weight);
+		increase = cost->addCostValue(cost_value);
+		if (increase ==1)
+		{
+			std::cout << "Cost just increased!" << std::endl;
+			break;
+		}
+		cost->writeCostValue(cost_value);
+		/**************************************************************************/
+		
 #endif//cost
 #endif//NOISE_MODEL
 #endif//Joint estimation endif
@@ -2357,7 +2361,7 @@ void SOCEngine::updateVoxels(int16_t Iter,
   int16_t Idx;
 
   //FIXME: Where are these Initialized? Or what values should they be initialized to?
-  DATA_TYPE low, high;
+	DATA_TYPE low = 0.0, high = 0.0;
 
   if(updateType == RegularRandomOrderUpdate)
   {
@@ -2415,7 +2419,6 @@ void SOCEngine::updateVoxels(int16_t Iter,
       {
         if(updateType == NonHomogeniousUpdate)
         {
-          // WHERE DOES MagUpdateMap get initialized at? These if statements will not cover all the possibilities
           if(MagUpdateMap->d[j][k] > NH_Threshold)
           {
             MagUpdateMask->d[j][j] = 1;
