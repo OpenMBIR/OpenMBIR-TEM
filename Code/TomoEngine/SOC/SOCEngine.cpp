@@ -941,7 +941,8 @@ void SOCEngine::execute()
   int increase = cost->addCostValue(cost_value);
   if (increase ==1)
   {
-    std::cout << "Cost just increased!" << std::endl;
+	  //Only one cost so dont worry about increase
+ //   std::cout << "Cost just increased!" << std::endl;
   }
   cost->writeCostValue(cost_value);
   /**************************************************************************/
