@@ -546,7 +546,7 @@ void SOCEngine::execute()
 #endif//Random update
 
 
-#ifdef NHICD
+  //#ifdef NHICD
 	dims[0]=m_Geometry->N_z;//height
 	dims[1]=m_Geometry->N_x;//width
 	dims[2]=0;
@@ -559,7 +559,7 @@ void SOCEngine::execute()
 
 	MagUpdateMask = Uint8ImageType::New(dims);
 	MagUpdateMask->setName("Update Mask for selecting voxel lines NHICD");
-#endif
+	//#endif
 
 
 #ifdef ROI
@@ -2439,6 +2439,7 @@ void SOCEngine::updateVoxels(int16_t Iter,
         }
 	else if(updateType == RegularRandomOrderUpdate)
 	  {
+	    MagUpdateMap->d[j][k]=0;
 	    NumVoxelsToUpdate++;
 	  }
 
@@ -2485,8 +2486,6 @@ void SOCEngine::updateVoxels(int16_t Iter,
 	    ++shouldInitNeighborhood;
 	  }  
 		  
-
-
         if(shouldInitNeighborhood > 0)
         //After this should ideally call UpdateVoxelLine(j_new,k_new) ie put everything in this "if" inside a method called UpdateVoxelLine
         {
