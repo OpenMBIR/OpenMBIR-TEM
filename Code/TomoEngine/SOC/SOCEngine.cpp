@@ -2392,7 +2392,7 @@ void SOCEngine::updateVoxels(int16_t Iter,
       //Compute VSC and create a map of pixels that are above the threshold value
       ComputeVSC();
       NH_Threshold = SetNonHomThreshold();
-	  std::cout<<NH_Threshold<<std::endl;
+	  std::cout<<"NHICD THreshold"<<NH_Threshold<<std::endl;
       //Use  FiltMagUpdateMap  to find MagnitudeUpdateMask
       //std::cout << "Completed Calculation of filtered magnitude" << std::endl;
       //Calculate the threshold for the top ? % of voxel updates
@@ -2415,18 +2415,18 @@ void SOCEngine::updateVoxels(int16_t Iter,
     {
       Counter->d[j_new] = j_new;
     }
-	  uint16_t NumVoxelsToUpdate=0;
+    uint32_t NumVoxelsToUpdate=0;
     for (int32_t j = 0; j < m_Geometry->N_z; j++)
     {
       for (int32_t k = 0; k < m_Geometry->N_x; k++)
       {
-		          if(updateType == NonHomogeniousUpdate)
+	if(updateType == NonHomogeniousUpdate)
         {
           if(MagUpdateMap->d[j][k] > NH_Threshold)
           {
             MagUpdateMask->d[j][j] = 1;
             MagUpdateMap->d[j][k] = 0;
-			  NumVoxelsToUpdate++;
+	    NumVoxelsToUpdate++;
           }
           else
           {
@@ -2437,11 +2437,15 @@ void SOCEngine::updateVoxels(int16_t Iter,
         {
           MagUpdateMap->d[j][k] = 0;
         }
+	else if(updateType == RegularRandomOrderUpdate)
+	  {
+	    NumVoxelsToUpdate++;
+	  }
 
         VisitCount->d[j][k] = 0;
       }
     }
-	  std::cout<<"Number of voxels to update"<<NumVoxelsToUpdate<<std::endl;
+     std::cout<<"Number of voxels to update"<<NumVoxelsToUpdate<<std::endl;
 #endif
 
     START_TIMER;
@@ -2470,12 +2474,16 @@ void SOCEngine::updateVoxels(int16_t Iter,
         
         if(updateType == NonHomogeniousUpdate && MagUpdateMask->d[j_new][k_new] == 1 && TempMemBlock->count > 0)
         {
-				++shouldInitNeighborhood;
+	      ++shouldInitNeighborhood;
         }
-		if(updateType == HomogeniousUpdate  && TempMemBlock->count > 0)
-		{
-			  ++shouldInitNeighborhood;
-		}  
+	if(updateType == HomogeniousUpdate  && TempMemBlock->count > 0)
+	{
+	      ++shouldInitNeighborhood;
+	}
+	if(updateType == RegularRandomOrderUpdate && TempMemBlock->count > 0)
+	  {
+	    ++shouldInitNeighborhood;
+	  }  
 		  
 
 
@@ -2625,9 +2633,9 @@ void SOCEngine::updateVoxels(int16_t Iter,
 
             //TODO Print appropriate error messages for other values of error code
             m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
-#ifdef NHICD
+	    //#ifdef NHICD
             MagUpdateMap->d[j_new][k_new] += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
-#endif
+	    //#endif
 
 #ifdef ROI
             if(Mask->d[j_new][k_new] == 1)
