@@ -194,8 +194,6 @@ void SOCEngine::initVariables()
   HAMMING_WINDOW[4][0]= 0.0086;HAMMING_WINDOW[4][1]=0.0581;HAMMING_WINDOW[4][2]=0.1076;HAMMING_WINDOW[4][3]=0.0581;HAMMING_WINDOW[4][4]=0.0086;
 
 
-
-
 }
 
 // -----------------------------------------------------------------------------
@@ -974,8 +972,12 @@ void SOCEngine::execute()
 #endif
 
       // This could contain multiple Subloops also
-      updateVoxels(Iter, updateType, VisitCount, RandomNumber, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams, Mask, cost);
+ uint8_t status= updateVoxels(Iter, updateType, VisitCount, RandomNumber, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams, Mask, cost);
 
+ if(status == 0)
+   {
+     break;//stop inner loop if we have hit the threshold value for x
+   }
       // Check to see if we are canceled.
       if(getCancel() == true)
       {
@@ -2341,7 +2343,7 @@ DATA_TYPE SOCEngine::SetNonHomThreshold()
 
 
 
-void SOCEngine::updateVoxels(int16_t Iter,
+uint8_t SOCEngine::updateVoxels(int16_t Iter,
                              VoxelUpdateType updateType,
                              UInt8ImageType::Pointer VisitCount,
                              RNGVars* RandomNumber,
@@ -2353,6 +2355,7 @@ void SOCEngine::updateVoxels(int16_t Iter,
                              UInt8ImageType::Pointer Mask,
                              CostData::Pointer cost)
 {
+  uint8_t exit_status=1;//Indicates normal exit ; else indicates to stop inner iterations
   uint16_t subIterations = 1;
   std::string indent("    ");
   uint8_t err = 0;
@@ -2380,7 +2383,7 @@ void SOCEngine::updateVoxels(int16_t Iter,
   else
   {
     std::cout << indent << "Unknown Voxel Update Type. Returning Now" << std::endl;
-    return;
+    return exit_status;
   }
 
   DATA_TYPE NH_Threshold = 0.0;
@@ -2706,6 +2709,7 @@ void SOCEngine::updateVoxels(int16_t Iter,
       {
         printf("This is the terminating point %d\n", Iter);
         m_Inputs->StopThreshold *= THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
+	exit_status=0;        
         break;
       }
     }
@@ -2735,10 +2739,11 @@ void SOCEngine::updateVoxels(int16_t Iter,
     if(getCancel() == true)
     {
       setErrorCondition(err);
-      return;
+      return exit_status;
     }
 
   }
+  return exit_status;
 
 }
 

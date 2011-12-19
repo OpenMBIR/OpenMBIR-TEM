@@ -102,7 +102,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
      */
     void updateVoxelValues_NHICD();
 
-    void updateVoxels(int16_t Iter, VoxelUpdateType updateType, UInt8ImageType::Pointer VisitCount,
+    uint8_t updateVoxels(int16_t Iter, VoxelUpdateType updateType, UInt8ImageType::Pointer VisitCount,
                       RNGVars* RandomNumber, AMatrixCol*** TempCol,
                       RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight,
                       AMatrixCol* VoxelLineResponse, ScaleOffsetParams &NuisanceParams,
