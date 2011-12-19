@@ -758,8 +758,8 @@ void SOCEngine::execute()
     tmin = (t - m_Inputs->delta_xy / 2) > m_Sinogram->T0 ? t - m_Inputs->delta_xy / 2 : m_Sinogram->T0;
     tmax = (t + m_Inputs->delta_xy / 2) <= m_Sinogram->TMax ? t + m_Inputs->delta_xy / 2 : m_Sinogram->TMax;
 
-    slice_index_min = floor((tmin - m_Sinogram->T0) / m_Sinogram->delta_t);
-    slice_index_max = floor((tmax - m_Sinogram->T0) / m_Sinogram->delta_t);
+    slice_index_min = static_cast<uint16_t>(floor((tmin - m_Sinogram->T0) / m_Sinogram->delta_t));
+    slice_index_max = static_cast<uint16_t>(floor((tmax - m_Sinogram->T0) / m_Sinogram->delta_t));
 
     if(slice_index_min < 0)
     {
@@ -776,7 +776,7 @@ void SOCEngine::execute()
     {
       center_t = ((DATA_TYPE)i_t + 0.5) * m_Sinogram->delta_t + m_Sinogram->T0;
       delta_t = fabs(center_t - t);
-      index_delta_t = floor(delta_t / OffsetT);
+      index_delta_t = static_cast<uint16_t>(floor(delta_t / OffsetT));
       if(index_delta_t < DETECTOR_RESPONSE_BINS)
       {
         w3 = delta_t - (DATA_TYPE)(index_delta_t) * OffsetT;
@@ -1544,8 +1544,8 @@ RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer Detect
 					if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax)
 						continue;
 
-					index_min = floor(((rmin - m_Sinogram->R0)/m_Sinogram->delta_r));
-					index_max = floor((rmax - m_Sinogram->R0)/m_Sinogram->delta_r);
+					index_min = static_cast<uint16_t>(floor(((rmin - m_Sinogram->R0)/m_Sinogram->delta_r)));
+					index_max = static_cast<uint16_t>(floor((rmax - m_Sinogram->R0)/m_Sinogram->delta_r));
 
 					if(index_max >= m_Sinogram->N_r)
 						index_max = m_Sinogram->N_r - 1;
@@ -1560,8 +1560,8 @@ RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer Detect
 					tmin = (t - m_Inputs->delta_xy/2) > m_Sinogram->T0 ? t-m_Inputs->delta_xy/2 : m_Sinogram->T0;
 					tmax = (t + m_Inputs->delta_xy/2) <= m_Sinogram->TMax? t + m_Inputs->delta_xy/2 : m_Sinogram->TMax;
 
-					slice_index_min = floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t);
-					slice_index_max = floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t);
+					slice_index_min = static_cast<uint16_t>(floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t));
+					slice_index_max = static_cast<uint16_t>(floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t));
 
 					if(slice_index_min < 0)
 						slice_index_min = 0;
@@ -1572,7 +1572,7 @@ RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer Detect
 					{
 						center_r = m_Sinogram->R0 + ((double)i_r + 0.5)*m_Sinogram->delta_r ;
 						delta_r = fabs(center_r - r);
-						index_delta_r = floor((delta_r/OffsetR));
+						index_delta_r = static_cast<uint16_t>(floor((delta_r/OffsetR)));
 
 						if(index_delta_r < DETECTOR_RESPONSE_BINS)
 						{
@@ -1591,7 +1591,7 @@ RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer Detect
 						{
 							center_t = m_Sinogram->T0 + ((double)i_t + 0.5)*m_Sinogram->delta_t;
 							delta_t = fabs(center_t - t);
-							index_delta_t = floor((delta_t/OffsetT));
+							index_delta_t = static_cast<uint16_t>(floor((delta_t/OffsetT)));
 
 							if(index_delta_t < DETECTOR_RESPONSE_BINS)
 							{
@@ -1943,8 +1943,8 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
 
 
 
-		index_min = floor(((rmin - m_Sinogram->R0)/m_Sinogram->delta_r));
-		index_max = floor((rmax - m_Sinogram->R0)/m_Sinogram->delta_r);
+		index_min = static_cast<int32_t>(floor(((rmin - m_Sinogram->R0)/m_Sinogram->delta_r)));
+		index_max = static_cast<int32_t>(floor((rmax - m_Sinogram->R0)/m_Sinogram->delta_r));
 
 
 		if(index_max >= m_Sinogram->N_r)
@@ -1953,8 +1953,8 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
 		if(index_min < 0)
 			index_min = 0;
 
-		slice_index_min = floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t);
-		slice_index_max = floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t);
+		slice_index_min = static_cast<int32_t>(floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t));
+		slice_index_max = static_cast<int32_t>(floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t));
 
 		if(slice_index_min < 0)
 			slice_index_min = 0;
@@ -1971,7 +1971,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
 
 			//Find the difference between the center of detector and center of projection and compute the Index to look up into
 			delta_r = fabs(r - R_Center);
-			index_delta_r = floor((delta_r/OffsetR));
+			index_delta_r = static_cast<int32_t>(floor((delta_r/OffsetR)));
 
 
 			if (index_delta_r >= 0 && index_delta_r < DETECTOR_RESPONSE_BINS)

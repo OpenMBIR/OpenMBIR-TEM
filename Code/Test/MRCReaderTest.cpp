@@ -157,9 +157,9 @@ void getColorCorrespondingTovalue(int16_t val,
     if((val >= currFloor) && (val <= currCeil))
     {
       float currFraction = (val - currFloor) / (currCeil - currFloor);
-      r = color[i][0] * (1.0 - currFraction) + color[i + 1][0] * currFraction;
-      g = color[i][1] * (1.0 - currFraction) + color[i + 1][1] * currFraction;
-      b = color[i][2] * (1.0 - currFraction) + color[i + 1][2] * currFraction;
+      r = color[i][0] * (1.0f - currFraction) + color[i + 1][0] * currFraction;
+      g = color[i][1] * (1.0f - currFraction) + color[i + 1][1] * currFraction;
+      b = color[i][2] * (1.0f - currFraction) + color[i + 1][2] * currFraction;
     }
   }
 }
@@ -194,21 +194,21 @@ int main(int argc, char **argv)
                   (voxelMax[2] - voxelMin[2] + 1) };
 
   // Generate a Color Table
-  int max = header.amax;
-  int min = header.amin;
-  int numColors = (max-min) + 1;
+  float max = static_cast<float>(header.amax);
+  float min = static_cast<float>(header.amin);
+  int numColors = static_cast<int>((max-min) + 1);
 
   std::vector<unsigned char> colorTable(numColors * 3);
-  int range = max - min;
+  float range = max - min;
 
   float r, g, b;
   for (int i = 0; i < numColors; i++)
   {
-    int val = min + ((float)i / numColors) * range;
+    int16_t val = static_cast<int16_t>( min + ((float)i / numColors) * range);
     getColorCorrespondingTovalue(val, r, g, b, max, min);
-    colorTable[i*3] = r*255;
-    colorTable[i*3+1] = g*255;
-    colorTable[i*3+2] = b*255;
+    colorTable[i*3] = static_cast<unsigned char>(r*255);
+    colorTable[i*3+1] = static_cast<unsigned char>(g*255);
+    colorTable[i*3+2] = static_cast<unsigned char>(b*255);
   }
 
   std::string path = MXAFileInfo::parentPath(filepath);
@@ -236,7 +236,7 @@ int main(int argc, char **argv)
     int totalPixels = header.nx * header.ny;
     for (int idx = 0; idx < totalPixels; ++idx)
     {
-      int colorIndex = data[idx] - header.amin;
+      int colorIndex = data[idx] - static_cast<int>(header.amin);
       image[idx * 3] = colorTable[colorIndex * 3];
       image[idx * 3 + 1] = colorTable[colorIndex * 3 + 1];
       image[idx * 3 + 2] = colorTable[colorIndex * 3 + 2];
