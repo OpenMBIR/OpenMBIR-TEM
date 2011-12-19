@@ -59,6 +59,7 @@
 #include "MXA/Utilities/MXAFileInfo.h"
 
 // Our own includes
+#include "TomoEngine/TomoEngine.h"
 #include "TomoEngine/Common/EIMMath.h"
 #include "TomoEngine/Common/allocate.h"
 #include "TomoEngine/Common/EIMTime.h"
@@ -990,8 +991,8 @@ void SOCEngine::execute()
 #ifdef JOINT_ESTIMATION
 
     //high=5e100;//this maintains the max and min bracket values for rooting lambda
-    DATA_TYPE high = (DATA_TYPE)INT64_MAX;
-    DATA_TYPE low = (DATA_TYPE)INT64_MIN;
+    DATA_TYPE high = std::numeric_limits<DATA_TYPE>::max();
+    DATA_TYPE low = std::numeric_limits<DATA_TYPE>::min();
     //Joint Scale And Offset Estimation
 
     //forward project
@@ -2140,14 +2141,14 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
   //Root the expression using the derived quadratic parameters. Need to choose min and max values
      printf("Rooting the equation to solve for the optimal Lagrange multiplier\n");
 
-     if(high != (DATA_TYPE)INT64_MAX)
+     if(high != std::numeric_limits<DATA_TYPE>::max())
      {
        high-=perturbation; //Since the high value is set to make all discriminants exactly >=0 there are some issues when it is very close due to round off issues. So we get sqrt(-6e-20) for example. So subtract an arbitrary value like 0.5
        //we need to find a window within which we need to root the expression . the upper bound is clear but lower bound we need to look for one
        //low=high;
        dist=-1;
      }
-     else if (low != (DATA_TYPE)INT64_MIN)
+     else if (low != std::numeric_limits<DATA_TYPE>::min())
      {
        low +=perturbation;
        //high=low;
