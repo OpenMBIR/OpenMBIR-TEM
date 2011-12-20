@@ -37,7 +37,9 @@
 #ifndef CE_CONSTRAINTEQUATION_HPP_
 #define CE_CONSTRAINTEQUATION_HPP_
 
+#include <limits>
 
+#include "TomoEngine/TomoEngine.h"
 
 /**
  * @class CE_ConstraintEquation CE_ConstraintEquation.h EIMTomo/ScaleOffsetCorrectionEngine.h
@@ -108,7 +110,7 @@ class CE_ConstraintEquation
      */
     double execute(DATA_TYPE lambda)
     {
-      double sum = 0, temp_cost = 0, min = (double)INT64_MAX;
+      double sum = 0, temp_cost = 0, min = std::numeric_limits<double>::max();
       double value = 0;
       DATA_TYPE* root;
       double temp_mu;

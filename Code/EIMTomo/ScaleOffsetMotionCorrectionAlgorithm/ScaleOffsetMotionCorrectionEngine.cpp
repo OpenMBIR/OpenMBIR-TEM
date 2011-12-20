@@ -155,7 +155,7 @@ class CE_ConstraintEquation
      */
     double execute(DATA_TYPE lambda)
     {
-      double sum = 0, temp_cost = 0, min = (double)INT64_MAX;
+      double sum = 0, temp_cost = 0, min = std::numeric_limits<double>::max();
       double value = 0;
       double* root;
       double temp_mu;
@@ -1356,8 +1356,8 @@ int SOMCEngine::mapicdReconstruct()
 #ifdef JOINT_ESTIMATION
 
 		//high=5e100;//this maintains the max and min bracket values for rooting lambda
-		high=(DATA_TYPE)INT64_MAX;
-		low=(DATA_TYPE)INT64_MIN;
+		high=std::numeric_limits<DATA_TYPE>::max();
+		low=std::numeric_limits<DATA_TYPE>::min();
 	 //Joint Scale And Offset Estimation
 
 		//forward project
