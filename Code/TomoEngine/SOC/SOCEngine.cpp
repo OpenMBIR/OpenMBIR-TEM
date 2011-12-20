@@ -2270,6 +2270,7 @@ void SOCEngine::ComputeVSC()
         }
       }
       FiltMagUpdateMap->d[i][j] = filter_op;
+      MagUpdateMap->d[i][j]=FiltMagUpdateMap->d[i][j];
     }
   }
 
@@ -2298,11 +2299,34 @@ DATA_TYPE SOCEngine::SetNonHomThreshold()
 	for (uint32_t i=0; i < m_Geometry->N_z; i++)
 	    for (uint32_t j=0; j < m_Geometry->N_x; j++)
 		{
-		  TempMagMap->d[i*(uint32_t)m_Geometry->N_x+j]=FiltMagUpdateMap->d[i][j];
+		  //TempMagMap->d[i*m_Geometry->N_x+j]=i*m_Geometry->N_x+j;
+		  	  TempMagMap->d[i*(uint32_t)m_Geometry->N_x+j]=MagUpdateMap->d[i][j];
 		}
 
-	//Insertion sort
+	uint16_t percentile_index=ArrLength/NUM_NON_HOMOGENOUS_ITER;
+	//Partial selection sort
 
+	DATA_TYPE max;
+	uint32_t max_index;
+	for(uint32_t i=0; i <= percentile_index;i++)
+	  {
+	    max=TempMagMap->d[i];
+	    max_index=i;
+	    for(uint32_t j=i+1;j<ArrLength;j++)
+	      {
+		if(TempMagMap->d[j] > max)
+		  {
+                  max=TempMagMap->d[j];
+                  max_index=j;
+		  }
+	      }
+	    DATA_TYPE temp=TempMagMap->d[i];
+	    TempMagMap->d[i]=TempMagMap->d[max_index];
+	    TempMagMap->d[max_index]=temp;
+	  }
+
+	//Insertion sort
+	/*
 	int32_t j;
 	DATA_TYPE key;
 	for (uint32_t i=1 ; i < ArrLength; i++)
@@ -2320,7 +2344,8 @@ DATA_TYPE SOCEngine::SetNonHomThreshold()
 	//TempMagMap is a local variable and will clean up its own memory when this method exits
 	uint16_t percentile_index=ArrLength/NUM_NON_HOMOGENOUS_ITER;
 	std::cout<<ArrLength<<" "<<percentile_index<<std::endl;	
-        threshold = TempMagMap->d[percentile_index];
+	*/        
+threshold = TempMagMap->d[percentile_index];
 	return threshold;
 }
 
@@ -2428,7 +2453,7 @@ std::cout<<"NHICD THreshold"<<NH_Threshold<<std::endl;
       {
 	if(updateType == NonHomogeniousUpdate)
         {
-          if(MagUpdateMap->d[j][k] > NH_Threshold)
+          if(FiltMagUpdateMap->d[j][k] > NH_Threshold)
           {
             MagUpdateMask->d[j][j] = 1;
             MagUpdateMap->d[j][k] = 0;
