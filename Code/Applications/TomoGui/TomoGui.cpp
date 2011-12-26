@@ -45,6 +45,7 @@
 #include <QtCore/QThread>
 #include <QtCore/QThreadPool>
 #include <QtCore/QFileInfoList>
+#include <QtCore/QTimer>
 
 #include <QtGui/QApplication>
 #include <QtGui/QFileDialog>
@@ -54,6 +55,7 @@
 #include <QtGui/QStringListModel>
 #include <QtGui/QLineEdit>
 #include <QtGui/QDoubleValidator>
+#include <QtGui/QImage>
 
 // Our Project wide includes
 #include "QtSupport/ApplicationAboutBoxDialog.h"
@@ -64,11 +66,19 @@
 #include "QtSupport/ProcessQueueDialog.h"
 
 
+//-- TomoEngine Includes
+#include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/TomoEngineVersion.h"
+#include "TomoEngine/IO/MRCHeader.h"
+#include "TomoEngine/IO/MRCReader.h"
 //
 #include "License/LicenseFiles.h"
-#include "TomoEngine/TomoEngineVersion.h"
+
 #include "TomoEngineTask.h"
 #include "LayersDockWidget.h"
+
+#define GRAY_SCALE 0
+
 
 #define READ_STRING_SETTING(prefs, var, emptyValue)\
   var->setText( prefs.value(#var).toString() );\
@@ -116,6 +126,7 @@ QMainWindow(parent),
 m_OutputExistsCheck(false),
 m_QueueController(NULL),
 m_LayersPalette(NULL),
+_stopAnimation(true),
 #if defined(Q_WS_WIN)
 m_OpenDialogLastDirectory("C:\\")
 #else
@@ -124,6 +135,9 @@ m_OpenDialogLastDirectory("~/")
 {
   setupUi(this);
   setupGui();
+
+  _animationTimer = new QTimer(this);
+  connect(_animationTimer, SIGNAL(timeout() ), this, SLOT(stepForwardFromTimer() ));
 
 #if defined (Q_OS_MAC)
   QSettings prefs(QSettings::NativeFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
@@ -355,6 +369,10 @@ void TomoGui::setupGui()
 
 
   m_GraphicsView->setTomoGui(this);
+  // Just place a really big white image to get our GUI to layout properly
+  QImage image(1000, 1000, QImage::Format_ARGB32_Premultiplied);
+  image.fill(0);
+  m_GraphicsView->loadBaseImageFile(image);
 
 //  if (m_LayersPalette == NULL)
 //  {
@@ -425,7 +443,7 @@ void TomoGui::setupGui()
 
   QFileCompleter* com4 = new QFileCompleter(this, false);
   outputMRCFilePath->setCompleter(com4);
-  QObject::connect(com4, SIGNAL(activated(const QString &)), this, SLOT(on_outputMRCFile_textChanged(const QString &)));
+  QObject::connect(com4, SIGNAL(activated(const QString &)), this, SLOT(on_outputMRCFilePath_textChanged(const QString &)));
 
 
 //  m_QueueDialog->setVisible(false);
@@ -671,7 +689,7 @@ void TomoGui::queueControllerFinished()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_outputDirectoryBtn_clicked()
+void TomoGui::on_outputDirectoryPathBtn_clicked()
 {
   bool canWrite = false;
   QString aDir = QFileDialog::getExistingDirectory(this, tr("Select Output Directory"), getOpenDialogLastDirectory(),
@@ -701,7 +719,7 @@ void TomoGui::on_inputMRCFilePathBtn_clicked()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString imageFile =
-      QFileDialog::getOpenFileName(this, tr("Select Fixed Image"), getOpenDialogLastDirectory(), tr("Images (*.tif *.tiff *.bmp *.jpg *.jpeg *.png)"));
+      QFileDialog::getOpenFileName(this, tr("Select MRC Data file"), getOpenDialogLastDirectory(), tr("MRC Files (*.mrc *.ali)"));
 
   if (true == imageFile.isEmpty())
   {
@@ -713,10 +731,10 @@ void TomoGui::on_inputMRCFilePathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_outputMRCButton_clicked()
+void TomoGui::on_outputMRCFilePathBtn_clicked()
 {
-  QString outputFile = getOpenDialogLastDirectory() + QDir::separator() + "Untitled.tif";
-  outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("Images (*.tif *.tiff *.bmp *.jpg *.jpeg *.png)"));
+  QString outputFile = getOpenDialogLastDirectory() + QDir::separator() + "Untitled.mrc";
+  outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("MRC files (*.mrc *.ali)"));
   if (outputFile.isEmpty())
   {
     return;
@@ -742,7 +760,7 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & text)
 {
   if (verifyPathExists(inputMRCFilePath->text(), inputMRCFilePath))
   {
-    openBaseImageFile(text);
+    openMRCImageFile(text, 0);
   }
 }
 
@@ -756,8 +774,8 @@ void TomoGui::on_outputMRCFilePath_textChanged(const QString & text)
 
 // -----------------------------------------------------------------------------
 //
+void TomoGui::on_outputDirectoryPath_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
-void TomoGui::on_outputDirectory_textChanged(const QString & text)
 {
   verifyPathExists(outputDirectoryPath->text(), outputDirectoryPath);
 }
@@ -859,7 +877,7 @@ void TomoGui::openRecentBaseImageFile()
   {
     //std::cout << "Opening Recent file: " << action->data().toString().toStdString() << std::endl;
     QString file = action->data().toString();
-    openBaseImageFile( file );
+    inputMRCFilePath->setText( file );
   }
 }
 
@@ -869,17 +887,17 @@ void TomoGui::openRecentBaseImageFile()
 void TomoGui::on_actionOpenMRCFile_triggered()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
-  QString imageFile = QFileDialog::getOpenFileName(this, tr("Open Image File"),
+  QString file = QFileDialog::getOpenFileName(this, tr("Open Image File"),
     m_OpenDialogLastDirectory,
     tr("Images (*.tif *.tiff *.bmp *.jpg *.jpeg *.png)") );
 
-  if ( true == imageFile.isEmpty() )
+  if ( true == file.isEmpty() )
   {
     return;
   }
-  QFileInfo fi(imageFile);
+  QFileInfo fi(file);
   m_OpenDialogLastDirectory = fi.absolutePath();
-  openBaseImageFile(imageFile);
+  inputMRCFilePath->setText( file );
 }
 
 // -----------------------------------------------------------------------------
@@ -958,36 +976,6 @@ void TomoGui::on_actionExit_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::openBaseImageFile(QString imageFile)
-{
-  if ( true == imageFile.isEmpty() ) // User cancelled the operation
-  {
-    return;
-  }
-
-  inputMRCFilePath->blockSignals(true);
-  inputMRCFilePath->setText(imageFile);
-  inputMRCFilePath->blockSignals(false);
-
-  setWindowTitle(imageFile);
-  this->setWindowFilePath(imageFile);
-
-#if 0
-  m_LayersPalette->getOriginalImageCheckBox()->setChecked(true);
-  m_LayersPalette->getSegmentedImageCheckBox()->setChecked(false);
-#endif
-
-  // Tell the RecentFileList to update itself then broadcast those changes.
-  QRecentFileList::instance()->addFile(imageFile);
-  setWidgetListEnabled(true);
-  setImageWidgetsEnabled(true);
-  updateBaseRecentFileList(imageFile);
-
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 void TomoGui::openOverlayImage(QString processedImage)
 {
   if ( true == processedImage.isEmpty() ) // User cancelled the operation
@@ -1039,3 +1027,258 @@ void TomoGui::on_actionLayers_Palette_triggered()
 {
   m_LayersPalette->show();
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::openMRCImageFile(QString filepath, int tiltIndex)
+{
+  MRCHeader header;
+
+  MRCReader::Pointer reader = MRCReader::New(true);
+
+  int err = reader->readHeader(filepath.toStdString(), &header);
+  if (err < 0)
+  {
+    return;
+  }
+  m_XDim->setText(QString::number(header.nx));
+  m_YDim->setText(QString::number(header.ny));
+  m_nTilts->setText(QString::number(header.nz));
+  m_XGrid->setText(QString::number(header.mx));
+  m_YGrid->setText(QString::number(header.my));
+  m_ZGrid->setText(QString::number(header.mz));
+  m_XCell->setText(QString::number(header.xlen));
+  m_YCell->setText(QString::number(header.ylen));
+  m_ZCell->setText(QString::number(header.zlen));
+  m_XOrigin->setText(QString::number(header.xorg));
+  m_YOrigin->setText(QString::number(header.yorg));
+  m_ZOrigin->setText(QString::number(header.zorg));
+
+
+  currentTiltIndex->setRange(0, header.nz - 1);
+  currentTiltIndex->setValue(tiltIndex);
+
+  if (header.feiHeaders != NULL)
+    {
+      FEIHeader fei = header.feiHeaders[tiltIndex];
+      a_tilt->setText(QString::number(fei.a_tilt));
+      b_tilt->setText(QString::number(fei.b_tilt));
+      x_stage->setText(QString::number(fei.x_stage));
+      y_stage->setText(QString::number(fei.y_stage));
+      z_stage->setText(QString::number(fei.z_stage));
+      x_shift->setText(QString::number(fei.x_shift));
+      y_shift->setText(QString::number(fei.y_shift));
+      defocus->setText(QString::number(fei.defocus));
+      exp_time->setText(QString::number(fei.exp_time));
+      mean_int->setText(QString::number(fei.mean_int));
+      tiltaxis->setText(QString::number(fei.tiltaxis));
+      pixelsize->setText(QString::number(fei.pixelsize));
+      magnification->setText(QString::number(fei.magnification));
+      voltage->setText(QString::number(fei.voltage ));
+    }
+
+
+  // Read the first image from the file
+  int voxelMin[3] = {0,0,tiltIndex};
+  int voxelMax[3] = {header.nx-1, header.ny-1, tiltIndex};
+
+  err = reader->read(filepath.toStdString(), voxelMin, voxelMax);
+  QImage image;
+  if (err >= 0)
+  {
+    switch(header.mode)
+    {
+      case 0:
+        break;
+      case 1:
+        image = signed16Image(reinterpret_cast<qint16*>(reader->getDataPointer()), header); break;
+      case 2:
+        break;
+      default:
+        break;
+    }
+  }
+
+
+  m_GraphicsView->loadBaseImageFile(image);
+
+  if ( true == filepath.isEmpty() ) // User cancelled the operation
+    {
+      return;
+    }
+
+    inputMRCFilePath->blockSignals(true);
+    inputMRCFilePath->setText(filepath);
+    inputMRCFilePath->blockSignals(false);
+
+    setWindowTitle(filepath);
+    this->setWindowFilePath(filepath);
+
+  #if 0
+    m_LayersPalette->getOriginalImageCheckBox()->setChecked(true);
+    m_LayersPalette->getSegmentedImageCheckBox()->setChecked(false);
+  #endif
+
+    // Tell the RecentFileList to update itself then broadcast those changes.
+    QRecentFileList::instance()->addFile(filepath);
+    setWidgetListEnabled(true);
+    setImageWidgetsEnabled(true);
+    updateBaseRecentFileList(filepath);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_currentTiltIndex_valueChanged(int i)
+{
+  openMRCImageFile(this->windowFilePath(), i);
+}
+
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QImage TomoGui::signed16Image(qint16* data, MRCHeader &header)
+{
+  // Generate a Color Table
+    float max = static_cast<float>(header.amax);
+    float min = static_cast<float>(header.amin);
+    int numColors = static_cast<int>((max-min) + 1);
+
+    // Only generate the color table if the number of colors does not match
+    if (colorTable.size() != numColors)
+    {
+      colorTable.resize(numColors);
+      float range = max - min;
+
+      float r, g, b;
+      for (int i = 0; i < numColors; i++)
+      {
+        int16_t val = static_cast<int16_t>( min + ((float)i / numColors) * range);
+        getColorCorrespondingTovalue(val, r, g, b, max, min);
+        colorTable[i] = qRgba(r*255, g*255, b*255, 255);
+      }
+    }
+
+    // Create an RGB Image
+    QImage image(header.nx, header.ny, QImage::Format_ARGB32);
+
+    int idx = 0;
+    for (int y = 0; y < header.ny; ++y)
+    {
+      for (int x = 0; x < header.nx; ++x)
+      {
+        idx = (header.nx * y) + x;
+        int colorIndex = data[idx] - static_cast<int>(header.amin);
+        image.setPixel(x, y, colorTable[colorIndex]);
+      }
+    }
+    return image;
+}
+
+
+///getColorCorrespondingToValue ////////////////////////////////////////////////
+//
+// Assumes you've already generated min and max -- the extrema for the data
+// to which you're applying the color map. Then define the number of colorNodes
+// and make sure there's a row of three float values (representing r, g, and b
+// in a 0.0-1.0 range) for each node. Then call this method for with parameter
+// val some float value between min and max inclusive. The corresponding rgb
+// values will be returned in the reference-to-float parameters r, g, and b.
+//
+////////////////////////////////////////////////////////////////////////////////
+void TomoGui::getColorCorrespondingTovalue(int16_t val,
+                                   float &r, float &g, float &b,
+                                   float max, float min)
+{
+#if GRAY_SCALE
+  static const int numColorNodes = 2;
+  float color[numColorNodes][3] =
+  {
+        {0.0f, 0.0f, 0.0f},    // blue
+        {1.0f, 0.0f, 0.0f}     // red
+  };
+#else
+  static const int numColorNodes = 4;
+  float color[numColorNodes][3] =
+  {
+        {0.25f, 0.2549f, 0.7961f},    // blue
+        {0.8274f, 0.8039f, 0.0941f},    // yellow
+        {0.1803f, 0.6655f, 0.1490f},    // Green
+        {1.0f, 0.0f, 0.0f}     // red
+  };
+#endif
+  float range = max - min;
+  for (int i = 0; i < (numColorNodes - 1); i++)
+  {
+    float currFloor = min + ((float)i / (numColorNodes - 1)) * range;
+    float currCeil = min + ((float)(i + 1) / (numColorNodes - 1)) * range;
+
+    if((val >= currFloor) && (val <= currCeil))
+    {
+      float currFraction = (val - currFloor) / (currCeil - currFloor);
+      r = color[i][0] * (1.0f - currFraction) + color[i + 1][0] * currFraction;
+      g = color[i][1] * (1.0f - currFraction) + color[i + 1][1] * currFraction;
+      b = color[i][2] * (1.0f - currFraction) + color[i + 1][2] * currFraction;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_playBtn_clicked()
+{
+  if (playBtn->text().compare(QString(">") ) == 0)
+  {
+    playBtn->setText(QString("||") );
+ //   qint32 currentIndex = framesPerSecComboBox->currentIndex();
+    double rate = 500;
+    double update = 1.0/rate * 1000.0;
+    this->_stopAnimation = false;
+    _animationTimer->setSingleShot(true);
+    _animationTimer->start(static_cast<int>(update) );
+  }
+  else
+  {
+    playBtn->setText(">");
+    this->_stopAnimation = true;
+  }
+}
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::stepForwardFromTimer()
+{
+  //Stop Playing if the user clicked the play button again
+  if (_stopAnimation)
+  {
+    this->_animationTimer->stop();
+    playBtn->setText(QString(">") );
+    return;
+  }
+  QCoreApplication::processEvents();
+
+  int idx = currentTiltIndex->value();
+  if (idx < currentTiltIndex->maximum())
+  {
+    currentTiltIndex->setValue(idx += 1); // This should cause a loading of the image
+  }
+  else
+  {
+    _stopAnimation = true;
+  }
+
+  //   qint32 currentIndex = framesPerSecComboBox->currentIndex();
+  double rate = 500;
+  double update = 1.0/rate * 1000.0;
+  _animationTimer->setSingleShot(true);
+  _animationTimer->start(static_cast<int>(update) );
+  QCoreApplication::processEvents();
+}
+
+
+
+

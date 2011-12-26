@@ -100,7 +100,7 @@ class TomoGuiGraphicsView : public QGraphicsView
 
     QImage getCompositedImage();
 
-    void loadBaseImageFile(const QString &filename);
+    void loadBaseImageFile(QImage image);
     void loadOverlayImageFile(const QString &filename);
 
     QImage& blend(QImage& src, QImage& dst, float opacity);
@@ -130,7 +130,7 @@ class TomoGuiGraphicsView : public QGraphicsView
 
 
   signals:
-   void fireBaseImageFileLoaded(const QString &filename);
+   void fireBaseMRCFileLoaded();
    void fireOverlayImageFileLoaded(const QString &filename);
 
 

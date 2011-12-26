@@ -176,7 +176,7 @@ void TomoGuiGraphicsView::dropEvent(QDropEvent *event)
           || ext.compare("png") == 0
           || ext.compare("bmp") == 0)
       {
-        m_MainGui->openBaseImageFile(fName);
+        m_MainGui->openMRCImageFile(fName, 0);
       }
     }
   }
@@ -334,27 +334,23 @@ void TomoGuiGraphicsView::setImageDisplayType(TomoGui_Constants::ImageDisplayTyp
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::loadBaseImageFile(const QString &filename)
+void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
 {
-  m_BaseImage = QImage(filename);
+  m_BaseImage = image;
   if (m_BaseImage.isNull() == true)
   {
     return;
   }
   QSize pSize(0, 0);
-  //pSize = m_BaseImage.size();
   m_OverlayImage = m_BaseImage;
   m_CompositedImage = m_BaseImage;
 
-//  m_OverlayImage = QImage(pSize, QImage::Format_ARGB32_Premultiplied);
-//  m_CompositedImage = QImage(pSize, QImage::Format_ARGB32_Premultiplied);
-
-  QVector<QRgb > colorTable(256);
-  for (quint32 i = 0; i < 256; ++i)
-  {
-    colorTable[i] = qRgb(i, i, i);
-  }
-  m_BaseImage.setColorTable(colorTable);
+//  QVector<QRgb > colorTable(256);
+//  for (quint32 i = 0; i < 256; ++i)
+//  {
+//    colorTable[i] = qRgb(i, i, i);
+//  }
+//  m_BaseImage.setColorTable(colorTable);
 
   m_BaseImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
@@ -382,7 +378,7 @@ void TomoGuiGraphicsView::loadBaseImageFile(const QString &filename)
   gScene->setSceneRect(rect);
   centerOn(m_ImageGraphicsItem);
   this->updateDisplay();
-  emit fireBaseImageFileLoaded(filename);
+  emit fireBaseMRCFileLoaded();
 }
 
 

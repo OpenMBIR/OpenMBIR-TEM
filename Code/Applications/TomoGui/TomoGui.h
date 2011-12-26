@@ -48,18 +48,16 @@ class LayersDockWidget;
 //-- UIC generated Header
 #include <ui_TomoGui.h>
 
+
+#include "TomoEngine/IO/MRCHeader.h"
+
+
 /**
- * @class TomoGui TomoGui.h Code/TomoGui/TomoGui.h
- * @brief This is the implementation of the Main Window for the EMMPM Gui application.
- *
- * @section additions Things to Add
- * @li Save the histogram/Gaussian curves to a file
- * @li Present the segmented image in colors matching the colors that the user selects
- * @li Redo most of the icons to make them small and along the bottom of the GraphicsView
- *
+ * @class TomoGui TomoGui.h Code/Applications/TomoGui/TomoGui.h
+ * @brief This is the implementation of the Main Window for the Tomo Gui application.
  *
  * @author Michael A. Jackson for BlueQuartz Software
- * @date Apr 3, 2011
+ * @date Dec 26, 2011
  * @version 1.0
  */
 class TomoGui :  public QMainWindow, private Ui::TomoGui
@@ -109,9 +107,15 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
      * @brief Opens an Image file
      * @param imageFile The path to the image file to open.
      */
-    void openBaseImageFile(QString imageFile);
+    void openMRCImageFile(QString filepath, int tiltIndex);
 
     void openOverlayImage(QString mountImage);
+
+    QImage signed16Image(qint16* data, MRCHeader &header);
+
+    void getColorCorrespondingTovalue(int16_t val,
+                                       float &r, float &g, float &b,
+                                       float max, float min);
 
   signals:
     void cancelTask();
@@ -137,6 +141,9 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
 //Window Menu
     void on_actionParameters_triggered();
     void on_actionLayers_Palette_triggered();
+
+    void on_playBtn_clicked();
+    void stepForwardFromTimer();
 
 
     /* slots for the buttons in the GUI */
@@ -171,14 +178,16 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     // -----------------------------------------------------------------------------
     //  Input Tab Widgets
     void on_inputMRCFilePathBtn_clicked();
-    void on_outputMRCButton_clicked();
-
-
-    void on_outputDirectoryBtn_clicked();
-
     void on_inputMRCFilePath_textChanged(const QString &string);
+
+    void on_outputMRCFilePathBtn_clicked();
     void on_outputMRCFilePath_textChanged(const QString & text);
-    void on_outputDirectory_textChanged(const QString & text);
+
+    void on_outputDirectoryPathBtn_clicked();
+    void on_outputDirectoryPath_textChanged(const QString & text);
+
+    void on_currentTiltIndex_valueChanged(int i);
+
 
     /* Slots to receive events from the ProcessQueueController */
     void queueControllerFinished();
@@ -193,7 +202,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
   protected:
 
     TomoEngineTask* newTomoEngineTask( QString inputFile, QString outputFile, ProcessQueueController* queueController);
-//
+
     void addProcess(TomoEngineTask* task);
 
     /**
@@ -237,8 +246,6 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
 
     qint32 initImageViews();
 
-
-
     void setImageWidgetsEnabled(bool b);
 
 
@@ -249,7 +256,9 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     QList<QWidget*> m_WidgetList;
     QList<QWidget*> m_ImageWidgets;
 
-
+    bool                  _stopAnimation;     // Trigger to stop a running animation
+    QTimer*               _animationTimer;
+    QVector<QRgb>         colorTable;
 
     TomoGui(const TomoGui&); // Copy Constructor Not Implemented
     void operator=(const TomoGui&); // Operator '=' Not Implemented
