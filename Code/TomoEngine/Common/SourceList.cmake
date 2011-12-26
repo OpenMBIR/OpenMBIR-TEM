@@ -7,6 +7,7 @@
 set (TomoEngine_Common_SRCS
     ${TomoEngine_SOURCE_DIR}/Common/allocate.c
     ${TomoEngine_SOURCE_DIR}/Common/EIMTime.c
+    ${TomoEngine_SOURCE_DIR}/Common/EIMImage.cpp
     ${TomoEngine_SOURCE_DIR}/Common/AbstractPipeline.cpp
     ${TomoEngine_SOURCE_DIR}/Common/Observer.cpp
     ${TomoEngine_SOURCE_DIR}/Common/Observable.cpp
@@ -16,6 +17,7 @@ set (TomoEngine_Common_HDRS
     ${TomoEngine_SOURCE_DIR}/Common/allocate.h
     ${TomoEngine_SOURCE_DIR}/Common/TomoEngineDLLExport.h
     ${TomoEngine_SOURCE_DIR}/Common/MSVCDefines.h
+    ${TomoEngine_SOURCE_DIR}/Common/EIMImage.h
     ${TomoEngine_SOURCE_DIR}/Common/EIMTime.h
     ${TomoEngine_SOURCE_DIR}/Common/EIMMath.h
     ${TomoEngine_SOURCE_DIR}/Common/AbstractPipeline.h

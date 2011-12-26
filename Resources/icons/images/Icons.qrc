@@ -1,0 +1,17 @@
+ <!DOCTYPE RCC>
+ <RCC version="1.0">
+ <qresource>
+
+    <file>zoomIn.png</file>
+    <file>zoomOut.png</file>
+    <file>fitToWindow.png</file>
+    <file>addUserInitArea.png</file>
+<file>magnifyingglass.png</file>
+<file>minus.png</file>
+<file>plus.png</file>
+<file>preferences.png</file>
+<file>reload.png</file>
+<file>photos.png</file>
+<file>disk.png</file> 
+ </qresource>
+ </RCC>

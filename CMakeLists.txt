@@ -105,10 +105,6 @@ FIND_PACKAGE(Boost)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
-# --------------------------------------------------------------------
-# Now configure this extra file with some additional definitions
-#configure_file(${EIMTomo_SOURCE_DIR}/Resources/EIMTomo/EIMTomoConfiguration.h.in
-#               ${EIMTomo_BINARY_DIR}/EIMTomo/${CMP_TOP_HEADER_FILE})
                
 # --------------------------------------------------------------------
 # Add in some compiler definitions
@@ -133,6 +129,10 @@ ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 if (MSVC)
  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
+
+# --------------------------------------------------------------------
+# Generate the License File Headers
+include(${PROJECT_SOURCE_DIR}/License/License.cmake)
 
 # Add the MXA as a library project
 add_subdirectory( ${PROJECT_CODE_DIR}/MXA ${PROJECT_BINARY_DIR}/MXA)
@@ -161,3 +161,42 @@ Add_Algorithm(ScaleOffsetMotionCorrectionAlgorithm)
 
 
 add_subdirectory(${PROJECT_CODE_DIR}/Test ${PROJECT_BINARY_DIR}/Test)
+
+# --------------------------------------------------------------------
+# Build the Qt Based GUI
+option(EIMTomo_BUILD_GUI "Build the Qt Based Gui Application" OFF)
+if (EIMTomo_BUILD_GUI)
+# ------------------------------------------------------------------------------
+#  Qt 4 Section
+#  if we are going to build Qt based applications then we need to find Qt 4 first
+# ------------------------------------------------------------------------------
+# by default only QtCore and QtGui modules are enabled
+# other modules must be enabled like this:  
+    IF (WIN32)
+        SET (QT_USE_QTMAIN TRUE)
+    ENDIF (WIN32)
+
+   # this command finds Qt4 libraries and sets all required variables
+   # note that it's Qt4, not QT4 or qt4
+    FIND_PACKAGE( Qt4 REQUIRED )
+    IF (QT4_FOUND)
+        CMP_COPY_QT4_RUNTIME_LIBRARIES( "QtCore;QtGui")
+        CMP_QT_LIBRARIES_INSTALL_RULES("QtCore;QtGui" ".")
+    endif()
+    # add some useful macros and variables
+    # (QT_USE_FILE is a variable defined by FIND_PACKAGE( Qt4 ) that 
+    # contains a path to CMake script)
+    INCLUDE( ${QT_USE_FILE} )
+   
+    # Append the locations of the Qt libraries to our Library Search Paths
+    list(APPEND CMP_LIB_SEARCH_DIRS ${QT_BINARY_DIR} ${QT_LIBRARY_DIR} )
+   
+    # Build the static QtSupport library - which MUST be a static library or the linking
+    # will not work due to signals/slots mechanism.
+    add_subdirectory(${EIMTomo_SOURCE_DIR}/Code/QtSupport ${PROJECT_BINARY_DIR}/QtSupport)
+   
+    add_subdirectory(${EIMTomo_SOURCE_DIR}/Code/Applications/TomoGui ${PROJECT_BINARY_DIR}/TomoGui)
+
+endif()
+
+

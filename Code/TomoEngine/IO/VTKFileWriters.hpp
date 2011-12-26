@@ -141,7 +141,7 @@ class name : public VtkScalarWriter\
   int writeScalars(FILE* f)  {\
     int err = 0;\
     std::string file;\
-    size_t total = r->xpoints * r->ypoints * r->zpoints;\
+    size_t total = r->getXPoints() * r->getYPoints() * r->getZPoints();\
     if (m_WriteBinaryFiles == true) {\
       WRITE_VTK_SCALARS_FROM_VOXEL_BINARY(r, const_name, type, scalar)\
     }    else    {\
@@ -165,7 +165,7 @@ class name : public VtkScalarWriter\
   int writeScalars(FILE* f)  {\
     int err = 0;\
     std::string file;\
-    size_t total = r->xpoints * r->ypoints * r->zpoints;\
+    size_t total = r->getXPoints() * r->getYPoints() * r->getZPoints();\
     if (m_WriteBinaryFiles == true) {\
       WRITE_VTK_SCALARS_FROM_VOXEL_BINARY_NOSWAP(r, const_name, type, scalar)\
     }    else    {\
@@ -275,19 +275,19 @@ class VTKRectilinearGridFileWriter
       // Write the correct header
       if (m_WriteBinaryFiles == true)
       {
-        WRITE_RECTILINEAR_GRID_HEADER("BINARY", r, r->xpoints, r->ypoints, r->zpoints)
+        WRITE_RECTILINEAR_GRID_HEADER("BINARY", r, r->getXPoints(), r->getYPoints(), r->getZPoints())
       }
       else
       {
-        WRITE_RECTILINEAR_GRID_HEADER("ASCII", r, r->xpoints, r->ypoints, r->zpoints)
+        WRITE_RECTILINEAR_GRID_HEADER("ASCII", r, r->getXPoints(), r->getYPoints(), r->getZPoints())
       }
 
       // Write the XCoords
-      writeCoords(f, "X_COORDINATES", "float", r->xpoints + 1, 0.0f - r->resx * 0.5f, (float)(r->xpoints + 1 * r->resx), r->resx);
-      writeCoords(f, "Y_COORDINATES", "float", r->ypoints + 1, 0.0f - r->resy * 0.5f, (float)(r->ypoints + 1 * r->resy), r->resy);
-      writeCoords(f, "Z_COORDINATES", "float", r->zpoints + 1, 0.0f - r->resz * 0.5f, (float)(r->zpoints + 1 * r->resz), r->resz);
+      writeCoords(f, "X_COORDINATES", "float", r->getXPoints() + 1, 0.0f - r->resx * 0.5f, (float)(r->getXPoints() + 1 * r->resx), r->resx);
+      writeCoords(f, "Y_COORDINATES", "float", r->getYPoints() + 1, 0.0f - r->resy * 0.5f, (float)(r->getYPoints() + 1 * r->resy), r->resy);
+      writeCoords(f, "Z_COORDINATES", "float", r->getZPoints() + 1, 0.0f - r->resz * 0.5f, (float)(r->getZPoints() + 1 * r->resz), r->resz);
 
-      size_t total = r->xpoints * r->ypoints * r->zpoints;
+      size_t total = r->getXPoints() * r->getYPoints() * r->getZPoints();
       fprintf(f, "CELL_DATA %d\n", (int)total);
 
       // Now loop on all of our Scalars and write those arrays as CELL_DATA
@@ -344,7 +344,7 @@ class VTKStructuredPointsFileWriter
         WRITE_STRUCTURED_POINTS_HEADER("ASCII", r)
       }
 
-      //size_t total = r->xpoints * r->ypoints * r->zpoints;
+      //size_t total = r->getXPoints() * r->getYPoints() * r->getZPoints();
       // Now loop on all of our Scalars and write those arrays as CELL_DATA
       for (typename std::vector<VtkScalarWriter*>::iterator iter = scalars.begin(); iter != scalars.end(); ++iter )
       {
