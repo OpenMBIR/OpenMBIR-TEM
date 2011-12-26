@@ -2271,6 +2271,7 @@ void SOCEngine::ComputeVSC()
         }
       }
       FiltMagUpdateMap->d[i][j] = filter_op;
+      MagUpdateMap->d[i][j]=FiltMagUpdateMap->d[i][j];
     }
   }
 
@@ -2296,16 +2297,38 @@ DATA_TYPE SOCEngine::SetNonHomThreshold()
 	DATA_TYPE threshold;
 
 	//Copy into a linear list for easier partial sorting
-	for (uint16_t i=0; i < m_Geometry->N_z; i++)
-	    for (uint16_t j=0; j < m_Geometry->N_x; j++)
+	for (uint32_t i=0; i < m_Geometry->N_z; i++)
+	    for (uint32_t j=0; j < m_Geometry->N_x; j++)
 		{
-			TempMagMap->d[i*m_Geometry->N_x+j]=FiltMagUpdateMap->d[i][j];
+		  //TempMagMap->d[i*m_Geometry->N_x+j]=i*m_Geometry->N_x+j;
+		  	  TempMagMap->d[i*(uint32_t)m_Geometry->N_x+j]=MagUpdateMap->d[i][j];
 		}
 
+	uint16_t percentile_index=ArrLength/NUM_NON_HOMOGENOUS_ITER;
+	//Partial selection sort
+
+	DATA_TYPE max;
+	uint32_t max_index;
+	for(uint32_t i=0; i <= percentile_index;i++)
+	  {
+	    max=TempMagMap->d[i];
+	    max_index=i;
+	    for(uint32_t j=i+1;j<ArrLength;j++)
+	      {
+		if(TempMagMap->d[j] > max)
+		  {
+                  max=TempMagMap->d[j];
+                  max_index=j;
+		  }
+	      }
+	    DATA_TYPE temp=TempMagMap->d[i];
+	    TempMagMap->d[i]=TempMagMap->d[max_index];
+	    TempMagMap->d[max_index]=temp;
+	  }
 
 	//Insertion sort
-
-	int16_t j;
+	/*
+	int32_t j;
 	DATA_TYPE key;
 	for (uint32_t i=1 ; i < ArrLength; i++)
 	{
@@ -2321,7 +2344,9 @@ DATA_TYPE SOCEngine::SetNonHomThreshold()
 
 	//TempMagMap is a local variable and will clean up its own memory when this method exits
 	uint16_t percentile_index=ArrLength/NUM_NON_HOMOGENOUS_ITER;
-	threshold = TempMagMap->d[percentile_index];
+	std::cout<<ArrLength<<" "<<percentile_index<<std::endl;	
+	*/        
+threshold = TempMagMap->d[percentile_index];
 	return threshold;
 }
 
@@ -2395,8 +2420,11 @@ uint8_t SOCEngine::updateVoxels(int16_t Iter,
     {
       //Compute VSC and create a map of pixels that are above the threshold value
       ComputeVSC();
+      START_TIMER;
       NH_Threshold = SetNonHomThreshold();
-	  std::cout<<"NHICD THreshold"<<NH_Threshold<<std::endl;
+      STOP_TIMER;
+      PRINT_TIME;      
+std::cout<<"NHICD THreshold"<<NH_Threshold<<std::endl;
       //Use  FiltMagUpdateMap  to find MagnitudeUpdateMask
       //std::cout << "Completed Calculation of filtered magnitude" << std::endl;
       //Calculate the threshold for the top ? % of voxel updates
@@ -2426,7 +2454,7 @@ uint8_t SOCEngine::updateVoxels(int16_t Iter,
       {
 	if(updateType == NonHomogeniousUpdate)
         {
-          if(MagUpdateMap->d[j][k] > NH_Threshold)
+          if(FiltMagUpdateMap->d[j][k] > NH_Threshold)
           {
             MagUpdateMask->d[j][j] = 1;
             MagUpdateMap->d[j][k] = 0;
@@ -2440,6 +2468,7 @@ uint8_t SOCEngine::updateVoxels(int16_t Iter,
         else if(updateType == HomogeniousUpdate)
         {
           MagUpdateMap->d[j][k] = 0;
+	  NumVoxelsToUpdate++;
         }
 	else if(updateType == RegularRandomOrderUpdate)
 	  {
