@@ -44,6 +44,8 @@
 class ProcessQueueController;
 class TomoEngineTask;
 class LayersDockWidget;
+class GainsOffsetsTableModel;
+
 
 //-- UIC generated Header
 #include <ui_TomoGui.h>
@@ -161,6 +163,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     void z600_triggered();
     void on_fitToWindow_clicked();
     void on_layersPalette_clicked();
+    void on_originCB_currentIndexChanged(int i);
 
 
     /**
@@ -187,6 +190,10 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     void on_outputDirectoryPath_textChanged(const QString & text);
 
     void on_currentTiltIndex_valueChanged(int i);
+
+    void on_importGainsOffsetsBtn_clicked();
+
+
 
 
     /* Slots to receive events from the ProcessQueueController */
@@ -259,6 +266,10 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     bool                  _stopAnimation;     // Trigger to stop a running animation
     QTimer*               _animationTimer;
     QVector<QRgb>         colorTable;
+    int                   m_CurrentCorner;
+    QImage                m_CurrentImage;
+
+    GainsOffsetsTableModel*  m_GainsOffsetsTableModel;
 
     TomoGui(const TomoGui&); // Copy Constructor Not Implemented
     void operator=(const TomoGui&); // Operator '=' Not Implemented

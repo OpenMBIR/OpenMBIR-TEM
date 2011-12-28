@@ -69,15 +69,19 @@
 //-- TomoEngine Includes
 #include "TomoEngine/TomoEngine.h"
 #include "TomoEngine/TomoEngineVersion.h"
+#include "TomoEngine/SOC/SOCStructures.h"
 #include "TomoEngine/IO/MRCHeader.h"
 #include "TomoEngine/IO/MRCReader.h"
+#include "TomoEngine/Filters/GainsOffsetsReader.h"
 //
 #include "License/LicenseFiles.h"
 
+#include "CheckBoxDelegate.h"
 #include "TomoEngineTask.h"
 #include "LayersDockWidget.h"
+#include "GainsOffsetsTableModel.h"
 
-#define GRAY_SCALE 0
+#define GRAY_SCALE 1
 
 
 #define READ_STRING_SETTING(prefs, var, emptyValue)\
@@ -127,6 +131,7 @@ m_OutputExistsCheck(false),
 m_QueueController(NULL),
 m_LayersPalette(NULL),
 _stopAnimation(true),
+m_CurrentCorner(0),
 #if defined(Q_WS_WIN)
 m_OpenDialogLastDirectory("C:\\")
 #else
@@ -451,13 +456,31 @@ void TomoGui::setupGui()
 
 
   // setup the Widget List
- // m_WidgetList << m_NumClasses << m_EmIterations << m_MpmIterations << m_Beta << m_MinVariance;
+  m_WidgetList << inputMRCFilePath << inputMRCFilePathBtn;
 
-  setWidgetListEnabled(false);
+  setWidgetListEnabled(true);
 
   m_ImageWidgets << zoomIn << zoomOut << fitToWindow << layersPalette;
   setImageWidgetsEnabled(false);
 
+  // Setup the TableView and Table Models
+    QHeaderView* headerView = new QHeaderView(Qt::Horizontal, gainsOffsetsTableView);
+    headerView->setResizeMode(QHeaderView::Interactive);
+    gainsOffsetsTableView->setHorizontalHeader(headerView);
+    headerView->show();
+
+    m_GainsOffsetsTableModel = new GainsOffsetsTableModel;
+    m_GainsOffsetsTableModel->setInitialValues();
+    gainsOffsetsTableView->setModel(m_GainsOffsetsTableModel);
+    QAbstractItemDelegate* idelegate = m_GainsOffsetsTableModel->getItemDelegate();
+    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::TiltIndex, idelegate);
+    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::A_Tilt, idelegate);
+    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::B_Tilt, idelegate);
+    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Gains, idelegate);
+    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Offsets, idelegate);
+
+    QAbstractItemDelegate* cbDelegate = new CheckBoxDelegate;
+    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Exclude, cbDelegate);
 }
 
 // -----------------------------------------------------------------------------
@@ -1036,12 +1059,13 @@ void TomoGui::openMRCImageFile(QString filepath, int tiltIndex)
   MRCHeader header;
 
   MRCReader::Pointer reader = MRCReader::New(true);
-
+  // Read the header from the file
   int err = reader->readHeader(filepath.toStdString(), &header);
-  if (err < 0)
+  if(err < 0)
   {
     return;
   }
+  // Transfer the meta data from the MRC Header to the GUI
   m_XDim->setText(QString::number(header.nx));
   m_YDim->setText(QString::number(header.ny));
   m_nTilts->setText(QString::number(header.nz));
@@ -1054,45 +1078,71 @@ void TomoGui::openMRCImageFile(QString filepath, int tiltIndex)
   m_XOrigin->setText(QString::number(header.xorg));
   m_YOrigin->setText(QString::number(header.yorg));
   m_ZOrigin->setText(QString::number(header.zorg));
-
-
+  // Set the current tilt index range and value
   currentTiltIndex->setRange(0, header.nz - 1);
   currentTiltIndex->setValue(tiltIndex);
 
-  if (header.feiHeaders != NULL)
+  // If we have the FEI headers get that information
+  if(header.feiHeaders != NULL)
+  {
+    FEIHeader fei = header.feiHeaders[tiltIndex];
+    a_tilt->setText(QString::number(fei.a_tilt));
+    b_tilt->setText(QString::number(fei.b_tilt));
+    x_stage->setText(QString::number(fei.x_stage));
+    y_stage->setText(QString::number(fei.y_stage));
+    z_stage->setText(QString::number(fei.z_stage));
+    x_shift->setText(QString::number(fei.x_shift));
+    y_shift->setText(QString::number(fei.y_shift));
+    defocus->setText(QString::number(fei.defocus));
+    exp_time->setText(QString::number(fei.exp_time));
+    mean_int->setText(QString::number(fei.mean_int));
+    tiltaxis->setText(QString::number(fei.tiltaxis));
+    pixelsize->setText(QString::number(fei.pixelsize));
+    magnification->setText(QString::number(fei.magnification));
+    voltage->setText(QString::number(fei.voltage));
+    QVector<int> indices;
+    QVector<float> a_tilts;
+    QVector<float> b_tilts;
+    QVector<float> gains;
+    QVector<float> offsets;
+    QVector<bool>  excludes;
+    for(int l = 0; l < header.nz; ++l)
     {
-      FEIHeader fei = header.feiHeaders[tiltIndex];
-      a_tilt->setText(QString::number(fei.a_tilt));
-      b_tilt->setText(QString::number(fei.b_tilt));
-      x_stage->setText(QString::number(fei.x_stage));
-      y_stage->setText(QString::number(fei.y_stage));
-      z_stage->setText(QString::number(fei.z_stage));
-      x_shift->setText(QString::number(fei.x_shift));
-      y_shift->setText(QString::number(fei.y_shift));
-      defocus->setText(QString::number(fei.defocus));
-      exp_time->setText(QString::number(fei.exp_time));
-      mean_int->setText(QString::number(fei.mean_int));
-      tiltaxis->setText(QString::number(fei.tiltaxis));
-      pixelsize->setText(QString::number(fei.pixelsize));
-      magnification->setText(QString::number(fei.magnification));
-      voltage->setText(QString::number(fei.voltage ));
+      indices.append(l);
+      a_tilts.append(header.feiHeaders[l].a_tilt);
+      b_tilts.append(header.feiHeaders[l].b_tilt);
+      gains.append(0.0f);
+      offsets.append(0.0f);
+      excludes.append(false);
     }
-
+    if (NULL != m_GainsOffsetsTableModel)
+    {
+      m_GainsOffsetsTableModel->setTableData(indices, a_tilts, b_tilts, gains, offsets, excludes);
+    }
+  }
+  else
+  {
+    statusBar()->showMessage("FEI Header information was not found in the file and is needed.");
+    return;
+  }
 
   // Read the first image from the file
-  int voxelMin[3] = {0,0,tiltIndex};
-  int voxelMax[3] = {header.nx-1, header.ny-1, tiltIndex};
+  int voxelMin[3] =
+  { 0, 0, tiltIndex };
+  int voxelMax[3] =
+  { header.nx - 1, header.ny - 1, tiltIndex };
 
   err = reader->read(filepath.toStdString(), voxelMin, voxelMax);
-  QImage image;
-  if (err >= 0)
+  m_CurrentCorner = 0; // Reset the corner
+  if(err >= 0)
   {
     switch(header.mode)
     {
       case 0:
         break;
       case 1:
-        image = signed16Image(reinterpret_cast<qint16*>(reader->getDataPointer()), header); break;
+        m_CurrentImage = signed16Image(reinterpret_cast<qint16*>(reader->getDataPointer()), header);
+        break;
       case 2:
         break;
       default:
@@ -1100,31 +1150,32 @@ void TomoGui::openMRCImageFile(QString filepath, int tiltIndex)
     }
   }
 
+  // Be sure to properly orient the image which will in turn load the image into
+  // the graphics scene
+  on_originCB_currentIndexChanged(originCB->currentIndex());
 
-  m_GraphicsView->loadBaseImageFile(image);
+  if(true == filepath.isEmpty()) // User cancelled the operation
+  {
+    return;
+  }
 
-  if ( true == filepath.isEmpty() ) // User cancelled the operation
-    {
-      return;
-    }
+  inputMRCFilePath->blockSignals(true);
+  inputMRCFilePath->setText(filepath);
+  inputMRCFilePath->blockSignals(false);
 
-    inputMRCFilePath->blockSignals(true);
-    inputMRCFilePath->setText(filepath);
-    inputMRCFilePath->blockSignals(false);
+  setWindowTitle(filepath);
+  this->setWindowFilePath(filepath);
 
-    setWindowTitle(filepath);
-    this->setWindowFilePath(filepath);
+#if 0
+  m_LayersPalette->getOriginalImageCheckBox()->setChecked(true);
+  m_LayersPalette->getSegmentedImageCheckBox()->setChecked(false);
+#endif
 
-  #if 0
-    m_LayersPalette->getOriginalImageCheckBox()->setChecked(true);
-    m_LayersPalette->getSegmentedImageCheckBox()->setChecked(false);
-  #endif
-
-    // Tell the RecentFileList to update itself then broadcast those changes.
-    QRecentFileList::instance()->addFile(filepath);
-    setWidgetListEnabled(true);
-    setImageWidgetsEnabled(true);
-    updateBaseRecentFileList(filepath);
+  // Tell the RecentFileList to update itself then broadcast those changes.
+  QRecentFileList::instance()->addFile(filepath);
+  setWidgetListEnabled(true);
+  setImageWidgetsEnabled(true);
+  updateBaseRecentFileList(filepath);
 }
 
 // -----------------------------------------------------------------------------
@@ -1197,8 +1248,8 @@ void TomoGui::getColorCorrespondingTovalue(int16_t val,
   static const int numColorNodes = 2;
   float color[numColorNodes][3] =
   {
-        {0.0f, 0.0f, 0.0f},    // blue
-        {1.0f, 0.0f, 0.0f}     // red
+        {0.0f, 0.0f, 0.0f},    // black
+        {1.0f, 1.0f, 1.0f}     // white
   };
 #else
   static const int numColorNodes = 4;
@@ -1224,6 +1275,60 @@ void TomoGui::getColorCorrespondingTovalue(int16_t val,
       b = color[i][2] * (1.0f - currFraction) + color[i + 1][2] * currFraction;
     }
   }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_importGainsOffsetsBtn_clicked()
+{
+  QString gainsOffsetsFile =
+      QFileDialog::getOpenFileName(this, tr("Select Gains Offsets Data file"), getOpenDialogLastDirectory(), tr("Binary Files (*.bin)"));
+
+  if (true == gainsOffsetsFile.isEmpty())
+  {
+    return;
+  }
+
+
+
+  GainsOffsetsReader::Pointer reader = GainsOffsetsReader::New();
+  TomoInputs inputs;
+  inputs.fileZSize = m_GainsOffsetsTableModel->rowCount();
+  std::vector<int> goodViews(inputs.fileZSize);
+  for(int i = 0; i < m_GainsOffsetsTableModel->rowCount(); ++i)
+  {
+    goodViews[i] = i;
+  }
+  inputs.goodViews = goodViews;
+  inputs.GainsOffsetsFile = gainsOffsetsFile.toStdString();
+  Sinogram sinogram;
+  sinogram.N_theta = m_GainsOffsetsTableModel->rowCount();
+  reader->setInputs(&inputs);
+  reader->setSinogram(&sinogram);
+  reader->execute();
+
+  RealArrayType::Pointer gains = sinogram.InitialGain;
+  RealArrayType::Pointer offsets = sinogram.InitialOffset;
+ // int nDims = gains->getNDims();
+  size_t* dims = gains->getDims();
+  size_t total = dims[0];
+  double* gainsPtr = gains->getPointer();
+  double* offsetsPtr = offsets->getPointer();
+
+  QVector<float> fGains(total);
+  QVector<float> fOffsets(total);
+  for(size_t i = 0; i < total; ++i)
+  {
+    fGains[i] = gainsPtr[i];
+    fOffsets[i] = offsetsPtr[i];
+  }
+
+  if (m_GainsOffsetsTableModel != NULL)
+  {
+    m_GainsOffsetsTableModel->setGainsAndOffsets(fGains, fOffsets);
+  }
+
 }
 
 // -----------------------------------------------------------------------------
@@ -1279,6 +1384,50 @@ void TomoGui::stepForwardFromTimer()
   QCoreApplication::processEvents();
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_originCB_currentIndexChanged(int corner)
+{
+
+//  int corner = 0;
+//  if (m_UpperLeftBtn->isChecked()) { corner = 0; }
+//  if (m_UpperRightBtn->isChecked()) { corner = 1; }
+//  if (m_LowerRightBtn->isChecked()) { corner = 2; }
+//  if (m_LowerLeftBtn->isChecked()) { corner = 3; }
+
+  switch(m_CurrentCorner)
+  {
+
+    case 0:
+      if (corner == 1) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
+      if (corner == 2) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
+      if (corner == 3) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
+      break;
+    case 1:
+      if (corner == 0) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
+      if (corner == 2) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
+      if (corner == 3) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
+      break;
+    case 2:
+      if (corner == 0) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
+      if (corner == 1) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
+      if (corner == 3) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
+      break;
+    case 3:
+      if (corner == 0) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
+      if (corner == 1) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
+      if (corner == 2) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
+      break;
+    default:
+      break;
+  }
+  m_CurrentCorner = corner;
+
+
+  // This will display the image in the graphics scene
+  m_GraphicsView->loadBaseImageFile(m_CurrentImage);
+}
 
 
 

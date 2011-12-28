@@ -145,7 +145,7 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
   TCLAP::ValueArg<std::string> in_InitialRecon("i", "ini_recon", "Initial Reconstruction to initialize algorithm", false, "", "");
   cmd.add(in_InitialRecon);
 
-  TCLAP::ValueArg<std::string> in_GainsOffsets("", "gains_offsets", "Initiail Gains and Offsets to use.", false, "", "");
+  TCLAP::ValueArg<std::string> in_GainsOffsets("", "gains_offsets", "Initial Gains and Offsets to use.", false, "", "");
   cmd.add(in_GainsOffsets);
 
   TCLAP::ValueArg<std::string> in_outputFile("o", "outputfile", "The Output File", true, "", "");
