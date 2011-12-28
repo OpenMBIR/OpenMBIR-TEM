@@ -158,7 +158,7 @@ void TomoGuiGraphicsView::dropEvent(QDropEvent *event)
   QList<QUrl> urlList;
   QString fName;
   QFileInfo info;
-
+#if 0
   if (event->mimeData()->hasUrls())
   {
     urlList = event->mimeData()->urls(); // returns list of QUrls
@@ -176,10 +176,11 @@ void TomoGuiGraphicsView::dropEvent(QDropEvent *event)
           || ext.compare("png") == 0
           || ext.compare("bmp") == 0)
       {
-        m_MainGui->openMRCImageFile(fName, 0);
+        m_MainGui->on_inputMRCFilePath_textChanged(fName);
       }
     }
   }
+#endif
   event->acceptProposedAction();
 }
 
@@ -345,13 +346,6 @@ void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
   m_OverlayImage = m_BaseImage;
   m_CompositedImage = m_BaseImage;
 
-//  QVector<QRgb > colorTable(256);
-//  for (quint32 i = 0; i < 256; ++i)
-//  {
-//    colorTable[i] = qRgb(i, i, i);
-//  }
-//  m_BaseImage.setColorTable(colorTable);
-
   m_BaseImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
   QGraphicsScene* gScene = scene();
@@ -376,7 +370,7 @@ void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
   m_ImageGraphicsItem->setZValue(-1);
   QRectF rect = m_ImageGraphicsItem->boundingRect();
   gScene->setSceneRect(rect);
-  centerOn(m_ImageGraphicsItem);
+  //centerOn(m_ImageGraphicsItem);
   this->updateDisplay();
   emit fireBaseMRCFileLoaded();
 }

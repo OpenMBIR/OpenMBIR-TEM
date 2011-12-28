@@ -105,11 +105,9 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     MXA_INSTANCE_PROPERTY(InputOutputFilePairList, InputOutputFilePairList)
 
 
-    /**
-     * @brief Opens an Image file
-     * @param imageFile The path to the image file to open.
-     */
-    void openMRCImageFile(QString filepath, int tiltIndex);
+    void readMRCHeader(QString filepath);
+
+    void loadMRCTiltImage(QString filepath, int tiltIndex);
 
     void openOverlayImage(QString mountImage);
 
@@ -193,9 +191,6 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
 
     void on_importGainsOffsetsBtn_clicked();
 
-
-
-
     /* Slots to receive events from the ProcessQueueController */
     void queueControllerFinished();
 
@@ -254,6 +249,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     qint32 initImageViews();
 
     void setImageWidgetsEnabled(bool b);
+
+    void drawOrigin(QImage image);
 
 
   private:

@@ -242,13 +242,16 @@ int main(int argc, char **argv)
       image[idx * 3 + 2] = colorTable[colorIndex * 3 + 2];
     }
 
+    std::stringstream ss;
 
     std::string baseName = MXAFileInfo::fileNameWithOutExtension(filepath);
+    ss << baseName;
     baseName = path + MXADir::getSeparator() + baseName.append("_").append(StringUtils::numToString(z));
     baseName = baseName.append(".tif");
     std::cout << "Writing File " << baseName << std::endl;
+    ss << ": Tilt Index " << z;
     err = writeColorTiff(baseName, image, header.nx, header.ny,
-                       "Tomography Slice", ORIENTATION_TOPLEFT);
+                       ss.str(), ORIENTATION_TOPLEFT);
     if (err < 0)
     {
       std::cout << "Error Writing Tif file for slice " << z << std::endl;

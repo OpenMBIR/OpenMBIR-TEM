@@ -779,11 +779,28 @@ void TomoGui::on_outputMRCFilePathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_inputMRCFilePath_textChanged(const QString & text)
+void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
 {
   if (verifyPathExists(inputMRCFilePath->text(), inputMRCFilePath))
   {
-    openMRCImageFile(text, 0);
+    // Read the header info from the file and populate the GUI with those values
+    readMRCHeader(filepath);
+    // Now load up the first tilt from the file
+    loadMRCTiltImage(filepath, 0);
+
+    setWindowTitle(filepath);
+    this->setWindowFilePath(filepath);
+
+#if 0
+    m_LayersPalette->getOriginalImageCheckBox()->setChecked(true);
+    m_LayersPalette->getSegmentedImageCheckBox()->setChecked(false);
+#endif
+
+    // Tell the RecentFileList to update itself then broadcast those changes.
+    QRecentFileList::instance()->addFile(filepath);
+    setWidgetListEnabled(true);
+    setImageWidgetsEnabled(true);
+    updateBaseRecentFileList(filepath);
   }
 }
 
@@ -797,8 +814,8 @@ void TomoGui::on_outputMRCFilePath_textChanged(const QString & text)
 
 // -----------------------------------------------------------------------------
 //
-void TomoGui::on_outputDirectoryPath_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
+void TomoGui::on_outputDirectoryPath_textChanged(const QString & text)
 {
   verifyPathExists(outputDirectoryPath->text(), outputDirectoryPath);
 }
@@ -1054,7 +1071,7 @@ void TomoGui::on_actionLayers_Palette_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::openMRCImageFile(QString filepath, int tiltIndex)
+void TomoGui::readMRCHeader(QString filepath)
 {
   MRCHeader header;
 
@@ -1065,6 +1082,7 @@ void TomoGui::openMRCImageFile(QString filepath, int tiltIndex)
   {
     return;
   }
+  int tiltIndex = 0;
   // Transfer the meta data from the MRC Header to the GUI
   m_XDim->setText(QString::number(header.nx));
   m_YDim->setText(QString::number(header.ny));
@@ -1125,7 +1143,43 @@ void TomoGui::openMRCImageFile(QString filepath, int tiltIndex)
     statusBar()->showMessage("FEI Header information was not found in the file and is needed.");
     return;
   }
+}
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::loadMRCTiltImage(QString filepath, int tiltIndex)
+{
+  MRCHeader header;
+  currentTiltIndex->setValue(tiltIndex);
+
+   MRCReader::Pointer reader = MRCReader::New(true);
+   // Read the header from the file
+   int err = reader->readHeader(filepath.toStdString(), &header);
+   if(err < 0)
+   {
+     return;
+   }
+
+   // If we have the FEI headers get that information
+   if(header.feiHeaders != NULL)
+   {
+     FEIHeader fei = header.feiHeaders[tiltIndex];
+     a_tilt->setText(QString::number(fei.a_tilt));
+     b_tilt->setText(QString::number(fei.b_tilt));
+     x_stage->setText(QString::number(fei.x_stage));
+     y_stage->setText(QString::number(fei.y_stage));
+     z_stage->setText(QString::number(fei.z_stage));
+     x_shift->setText(QString::number(fei.x_shift));
+     y_shift->setText(QString::number(fei.y_shift));
+     defocus->setText(QString::number(fei.defocus));
+     exp_time->setText(QString::number(fei.exp_time));
+     mean_int->setText(QString::number(fei.mean_int));
+     tiltaxis->setText(QString::number(fei.tiltaxis));
+     pixelsize->setText(QString::number(fei.pixelsize));
+     magnification->setText(QString::number(fei.magnification));
+     voltage->setText(QString::number(fei.voltage));
+   }
   // Read the first image from the file
   int voxelMin[3] =
   { 0, 0, tiltIndex };
@@ -1150,32 +1204,14 @@ void TomoGui::openMRCImageFile(QString filepath, int tiltIndex)
     }
   }
 
+  drawOrigin(m_CurrentImage);
+
+
   // Be sure to properly orient the image which will in turn load the image into
   // the graphics scene
   on_originCB_currentIndexChanged(originCB->currentIndex());
 
-  if(true == filepath.isEmpty()) // User cancelled the operation
-  {
-    return;
-  }
 
-  inputMRCFilePath->blockSignals(true);
-  inputMRCFilePath->setText(filepath);
-  inputMRCFilePath->blockSignals(false);
-
-  setWindowTitle(filepath);
-  this->setWindowFilePath(filepath);
-
-#if 0
-  m_LayersPalette->getOriginalImageCheckBox()->setChecked(true);
-  m_LayersPalette->getSegmentedImageCheckBox()->setChecked(false);
-#endif
-
-  // Tell the RecentFileList to update itself then broadcast those changes.
-  QRecentFileList::instance()->addFile(filepath);
-  setWidgetListEnabled(true);
-  setImageWidgetsEnabled(true);
-  updateBaseRecentFileList(filepath);
 }
 
 // -----------------------------------------------------------------------------
@@ -1183,19 +1219,94 @@ void TomoGui::openMRCImageFile(QString filepath, int tiltIndex)
 // -----------------------------------------------------------------------------
 void TomoGui::on_currentTiltIndex_valueChanged(int i)
 {
-  openMRCImageFile(this->windowFilePath(), i);
+  loadMRCTiltImage(this->windowFilePath(), i);
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::drawOrigin(QImage image)
+{
+  int imageWidth = image.width();
+  int imageHeight = image.height();
 
+  int pxHigh = 0;
+  int pxWide = 0;
+
+  QFont font("Ariel", 16, QFont::Bold);
+  {
+    QPainter painter;
+    QImage pImage(100, 100, QImage::Format_ARGB32_Premultiplied);
+    pImage.fill(0xFFFFFFFF); // All white background
+    painter.begin(&pImage);
+
+    painter.setFont(font);
+    QFontMetrics metrics = painter.fontMetrics();
+    pxHigh = metrics.height();
+    pxWide = metrics.width(QString("TD"));
+    painter.end();
+  }
+
+  int pxOffset = 2 * pxWide;
+  int pyOffset = 2 * pxHigh;
+  // Get a QPainter object to add some more details to the image
+
+  int pImageWidth = imageWidth + pxOffset * 2;
+  int pImageHeight = imageHeight + pyOffset * 2;
+
+  QImage pImage(pImageWidth, pImageHeight, QImage::Format_ARGB32_Premultiplied);
+  pImage.fill(0xFFFFFFFF); // All white background
+
+  // Create a Painter backed by a QImage to draw into
+  QPainter painter;
+  painter.begin(&pImage);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+
+  painter.setFont(font);
+  QFontMetrics metrics = painter.fontMetrics();
+  pxHigh = metrics.height();
+  pxWide = metrics.width(QString("TD"));
+
+  QPoint point(pxOffset, pyOffset);
+  painter.drawImage(point, image); // Draw the image we just generated into the QPainter's canvas
+
+  qint32 penWidth = 2;
+  painter.setPen(QPen(QColor(0, 0, 0, 255), penWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+
+
+  pxWide = metrics.width(QString("(0,0)"));
+  painter.drawText(0, pImageHeight - pyOffset + pxHigh + 2, "(0,0)");
+
+
+  // Draw slightly transparent lines
+  painter.setPen(QPen(QColor(0, 0, 0, 180), penWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+//  painter.drawLine(pImageWidth / 2, pImageHeight / 2, pImageWidth - pxOffset, pImageHeight / 2);
+//  painter.drawLine(pImageWidth / 2, pImageHeight / 2, pImageWidth / 2, pImageHeight - pyOffset);
+
+  painter.end();
+
+  m_CurrentImage = pImage;
+
+}
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
 QImage TomoGui::signed16Image(qint16* data, MRCHeader &header)
 {
+  qint16 dmax = std::numeric_limits<qint16>::min();
+  qint16 dmin = std::numeric_limits<qint16>::max();
+  size_t size = header.nx * header.ny;
+  for(size_t i = 0; i < size; ++i)
+  {
+    if (data[i] > dmax) dmax = data[i];
+    if (data[i] < dmin) dmin = data[i];
+  }
+
+
   // Generate a Color Table
-    float max = static_cast<float>(header.amax);
-    float min = static_cast<float>(header.amin);
+    float max = static_cast<float>(dmax);
+    float min = static_cast<float>(dmin);
     int numColors = static_cast<int>((max-min) + 1);
 
     // Only generate the color table if the number of colors does not match
@@ -1222,13 +1333,57 @@ QImage TomoGui::signed16Image(qint16* data, MRCHeader &header)
       for (int x = 0; x < header.nx; ++x)
       {
         idx = (header.nx * y) + x;
-        int colorIndex = data[idx] - static_cast<int>(header.amin);
+        int colorIndex = data[idx] - static_cast<int>(dmin);
         image.setPixel(x, y, colorTable[colorIndex]);
       }
     }
     return image;
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_originCB_currentIndexChanged(int corner)
+{
+
+//  int corner = 0;
+//  if (m_UpperLeftBtn->isChecked()) { corner = 0; }
+//  if (m_UpperRightBtn->isChecked()) { corner = 1; }
+//  if (m_LowerRightBtn->isChecked()) { corner = 2; }
+//  if (m_LowerLeftBtn->isChecked()) { corner = 3; }
+
+  switch(m_CurrentCorner)
+  {
+
+    case 0:
+      if (corner == 1) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
+      if (corner == 2) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
+      if (corner == 3) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
+      break;
+    case 1:
+      if (corner == 0) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
+      if (corner == 2) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
+      if (corner == 3) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
+      break;
+    case 2:
+      if (corner == 0) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
+      if (corner == 1) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
+      if (corner == 3) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
+      break;
+    case 3:
+      if (corner == 0) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
+      if (corner == 1) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
+      if (corner == 2) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
+      break;
+    default:
+      break;
+  }
+  m_CurrentCorner = corner;
+
+
+  // This will display the image in the graphics scene
+  m_GraphicsView->loadBaseImageFile(m_CurrentImage);
+}
 
 ///getColorCorrespondingToValue ////////////////////////////////////////////////
 //
@@ -1289,9 +1444,6 @@ void TomoGui::on_importGainsOffsetsBtn_clicked()
   {
     return;
   }
-
-
-
   GainsOffsetsReader::Pointer reader = GainsOffsetsReader::New();
   TomoInputs inputs;
   inputs.fileZSize = m_GainsOffsetsTableModel->rowCount();
@@ -1383,51 +1535,5 @@ void TomoGui::stepForwardFromTimer()
   _animationTimer->start(static_cast<int>(update) );
   QCoreApplication::processEvents();
 }
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TomoGui::on_originCB_currentIndexChanged(int corner)
-{
-
-//  int corner = 0;
-//  if (m_UpperLeftBtn->isChecked()) { corner = 0; }
-//  if (m_UpperRightBtn->isChecked()) { corner = 1; }
-//  if (m_LowerRightBtn->isChecked()) { corner = 2; }
-//  if (m_LowerLeftBtn->isChecked()) { corner = 3; }
-
-  switch(m_CurrentCorner)
-  {
-
-    case 0:
-      if (corner == 1) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
-      if (corner == 2) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
-      if (corner == 3) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
-      break;
-    case 1:
-      if (corner == 0) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
-      if (corner == 2) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
-      if (corner == 3) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
-      break;
-    case 2:
-      if (corner == 0) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
-      if (corner == 1) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
-      if (corner == 3) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
-      break;
-    case 3:
-      if (corner == 0) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
-      if (corner == 1) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
-      if (corner == 2) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
-      break;
-    default:
-      break;
-  }
-  m_CurrentCorner = corner;
-
-
-  // This will display the image in the graphics scene
-  m_GraphicsView->loadBaseImageFile(m_CurrentImage);
-}
-
 
 
