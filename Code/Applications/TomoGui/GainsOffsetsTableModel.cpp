@@ -291,10 +291,10 @@ bool GainsOffsetsTableModel::setData(const QModelIndex & index, const QVariant &
         m_BTilts[row] = value.toFloat(&ok);
         break;
       case Gains:
-        m_Gains[row] = value.toFloat(&ok);
+        m_Gains[row] = value.toDouble(&ok);
         break;
       case Offsets:
-        m_Offsets[row] = value.toFloat(&ok);
+        m_Offsets[row] = value.toDouble(&ok);
         break;
       case Exclude:
         m_Excludes[row] = value.toBool();
@@ -318,8 +318,8 @@ bool GainsOffsetsTableModel::insertRows(int row, int count, const QModelIndex& i
   QString axis("<0,0,1>");
   int angleIndx = 0;
   float angle = 0.0;
-  float gain = 0.0;
-  float offset = 0.0f;
+  double gain = 0.0;
+  double offset = 0.0;
   bool exclude = false;
 
   beginInsertRows(QModelIndex(), row, row + count - 1);
@@ -389,8 +389,8 @@ void GainsOffsetsTableModel::setColumnData(int col, QVector<float> &data)
 void GainsOffsetsTableModel::setTableData(QVector<int> angleIndexes,
                                           QVector<float> a_tilts,
                                           QVector<float> b_tilts,
-                                          QVector<float> gains,
-                                          QVector<float> offsets,
+                                          QVector<double> gains,
+                                          QVector<double> offsets,
                                           QVector<bool> excludes)
 {
   qint32 count = angleIndexes.count();
@@ -421,8 +421,8 @@ void GainsOffsetsTableModel::setTableData(QVector<int> angleIndexes,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void GainsOffsetsTableModel::setGainsAndOffsets(QVector<float> gains,
-                  QVector<float> offsets)
+void GainsOffsetsTableModel::setGainsAndOffsets(QVector<double> gains,
+                  QVector<double> offsets)
 {
   qint32 count = gains.count();
   qint32 row = 0;
@@ -456,6 +456,24 @@ void GainsOffsetsTableModel::setGainsAndOffsets(QVector<float> gains,
   m_Excludes = excludes;
 
   emit dataChanged(topLeft, botRight);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void GainsOffsetsTableModel::getGainsAndOffsets(QVector<double> &gains, QVector<double> &offsets)
+{
+  gains.clear();
+  offsets.clear();
+  qint32 size = m_Gains.size();
+
+  gains.resize(size);
+  offsets.resize(size);
+  for(qint32 i = 0; i < size; ++i)
+  {
+    gains[i] = m_Gains[i];
+    offsets[i] = m_Offsets[i];
+  }
 }
 
 // -----------------------------------------------------------------------------

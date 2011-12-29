@@ -130,7 +130,7 @@ QMainWindow(parent),
 m_OutputExistsCheck(false),
 m_QueueController(NULL),
 m_LayersPalette(NULL),
-_stopAnimation(true),
+m_StopAnimation(true),
 m_CurrentCorner(0),
 #if defined(Q_WS_WIN)
 m_OpenDialogLastDirectory("C:\\")
@@ -141,15 +141,14 @@ m_OpenDialogLastDirectory("~/")
   setupUi(this);
   setupGui();
 
-  _animationTimer = new QTimer(this);
-  connect(_animationTimer, SIGNAL(timeout() ), this, SLOT(stepForwardFromTimer() ));
+  m_AnimationTimer = new QTimer(this);
+  connect(m_AnimationTimer, SIGNAL(timeout() ), this, SLOT(stepForwardFromTimer() ));
 
 #if defined (Q_OS_MAC)
   QSettings prefs(QSettings::NativeFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
 #else
   QSettings prefs(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
 #endif
-  readIOSettings(prefs);
   readSettings(prefs);
   readWindowSettings(prefs);
 
@@ -186,37 +185,12 @@ void TomoGui::closeEvent(QCloseEvent *event)
 #else
   QSettings prefs(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
 #endif
-    writeIOSettings(prefs);
     writeSettings(prefs);
     writeWindowSettings(prefs);
     event->accept();
   }
 }
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TomoGui::writeIOSettings(QSettings &prefs)
-{
-  prefs.beginGroup("Input_Output");
-  WRITE_STRING_SETTING(prefs, inputMRCFilePath);
-  WRITE_STRING_SETTING(prefs, outputMRCFilePath);
-
-  prefs.endGroup();
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TomoGui::readIOSettings(QSettings &prefs)
-{
-  prefs.beginGroup("Input_Output");
-  READ_STRING_SETTING(prefs, outputMRCFilePath, "");
-
-
-  prefs.endGroup();
-
-}
 
 // -----------------------------------------------------------------------------
 //  Read the prefs from the local storage file
@@ -226,9 +200,30 @@ void TomoGui::readSettings(QSettings &prefs)
   QString val;
   bool ok;
   qint32 i;
-  double d;
+ // double d;
   prefs.beginGroup("Parameters");
 
+  READ_STRING_SETTING(prefs, inputMRCFilePath, ""); // This will auto load the MRC File
+  READ_STRING_SETTING(prefs, outputFilePath, "");
+  READ_STRING_SETTING(prefs, outputDirectoryPath, "");
+  READ_STRING_SETTING(prefs, initialReconstructionPath, "");
+  READ_STRING_SETTING(prefs, stopThreshold, "");
+  READ_STRING_SETTING(prefs, sampleThickness, "");
+  READ_STRING_SETTING(prefs, outerIterations, "");
+  READ_STRING_SETTING(prefs, innerIterations, "");
+  READ_STRING_SETTING(prefs, sigmaX, "");
+  READ_STRING_SETTING(prefs, mrf, "");
+  READ_STRING_SETTING(prefs, xyPixel, "");
+  READ_STRING_SETTING(prefs, xzPixel, "");
+
+  prefs.setValue("gainsOffsetsFile" , gainsOffsetsFile);
+  readGainsOffsetsFile(gainsOffsetsFile);
+
+
+  ok = false;
+  i = prefs.value("tiltSelection").toInt(&ok);
+  if (false == ok) {i = 0;}
+  tiltSelection->setCurrentIndex(i);
 
   prefs.endGroup();
 }
@@ -239,6 +234,20 @@ void TomoGui::readSettings(QSettings &prefs)
 void TomoGui::writeSettings(QSettings &prefs)
 {
   prefs.beginGroup("Parameters");
+  WRITE_STRING_SETTING(prefs, inputMRCFilePath);
+  WRITE_STRING_SETTING(prefs, outputFilePath);
+  WRITE_STRING_SETTING(prefs, outputDirectoryPath);
+  WRITE_STRING_SETTING(prefs, initialReconstructionPath);
+  WRITE_STRING_SETTING(prefs, stopThreshold);
+  WRITE_STRING_SETTING(prefs, sampleThickness);
+  WRITE_STRING_SETTING(prefs, outerIterations);
+  WRITE_STRING_SETTING(prefs, innerIterations);
+  WRITE_STRING_SETTING(prefs, sigmaX);
+  WRITE_STRING_SETTING(prefs, mrf);
+  WRITE_STRING_SETTING(prefs, xyPixel);
+  WRITE_STRING_SETTING(prefs, xzPixel);
+  prefs.setValue("gainsOffsetsFile" , gainsOffsetsFile);
+  prefs.setValue("tiltSelection", tiltSelection->currentIndex());
 
   prefs.endGroup();
 }
@@ -282,8 +291,8 @@ void TomoGui::writeWindowSettings(QSettings &prefs)
 // -----------------------------------------------------------------------------
 void TomoGui::on_actionSave_Config_File_triggered()
 {
-  QString proposedFile = m_OpenDialogLastDirectory + QDir::separator() + "EMMPM-Config.txt";
-  QString file = QFileDialog::getSaveFileName(this, tr("Save EM/MPM Configuration"),
+  QString proposedFile = m_OpenDialogLastDirectory + QDir::separator() + "Tomo-Config.txt";
+  QString file = QFileDialog::getSaveFileName(this, tr("Save Tomo Configuration"),
                                               proposedFile,
                                               tr("*.txt") );
   if ( true == file.isEmpty() ){ return;  }
@@ -447,8 +456,8 @@ void TomoGui::setupGui()
   QObject::connect(com, SIGNAL(activated(const QString &)), this, SLOT(on_inputMRCFilePath_textChanged(const QString &)));
 
   QFileCompleter* com4 = new QFileCompleter(this, false);
-  outputMRCFilePath->setCompleter(com4);
-  QObject::connect(com4, SIGNAL(activated(const QString &)), this, SLOT(on_outputMRCFilePath_textChanged(const QString &)));
+  outputFilePath->setCompleter(com4);
+  QObject::connect(com4, SIGNAL(activated(const QString &)), this, SLOT(on_outputFilePath_textChanged(const QString &)));
 
 
 //  m_QueueDialog->setVisible(false);
@@ -507,12 +516,12 @@ void TomoGui::on_processBtn_clicked()
       return;
     }
 
-    if (outputMRCFilePath->text().isEmpty() == true)
+    if (outputFilePath->text().isEmpty() == true)
     {
       QMessageBox::critical(this, tr("Output Image File Error"), tr("Please select a file name for the segmented image to be saved as."), QMessageBox::Ok);
       return;
     }
-    QFile file(outputMRCFilePath->text());
+    QFile file(outputFilePath->text());
     if (file.exists() == true)
     {
       int ret = QMessageBox::warning(this, tr("EIM Tomo GUI"),
@@ -530,7 +539,7 @@ void TomoGui::on_processBtn_clicked()
       }
       else
       {
-        QString outputFile = getOpenDialogLastDirectory() + QDir::separator() + "Untitled.tif";
+        QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled.tif";
         outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("TIF (*.tif)"));
         if (!outputFile.isNull())
         {
@@ -545,7 +554,7 @@ void TomoGui::on_processBtn_clicked()
       }
     }
 
-    fi = QFileInfo(outputMRCFilePath->text());
+    fi = QFileInfo(outputFilePath->text());
     QDir outputDir(fi.absolutePath());
     if (outputDir.exists() == false)
     {
@@ -568,7 +577,7 @@ void TomoGui::on_processBtn_clicked()
   setQueueController(queueController);
  // bool ok;
 
-  InputOutputFilePairList filepairs;
+
 
 #if 0
   m_LayersPalette->getSegmentedImageCheckBox()->setEnabled(true);
@@ -578,7 +587,7 @@ void TomoGui::on_processBtn_clicked()
 #endif
 
   QString inputFile = inputMRCFilePath->text();
-  QString outputFile = outputMRCFilePath->text();
+  QString outputFile = outputFilePath->text();
   TomoEngineTask* task = newTomoEngineTask(inputFile, outputFile, queueController);
 
   queueController->addTask(static_cast<QThread*> (task));
@@ -590,7 +599,6 @@ void TomoGui::on_processBtn_clicked()
   connect(task, SIGNAL(updateHistogramAvailable(QVector<double>)), this, SLOT(addProcessHistogram(QVector<double>)));
   this->addProcess(task);
 
-  setInputOutputFilePairList(filepairs);
 
   // When the event loop of the controller starts it will signal the ProcessQueue to run
   connect(queueController, SIGNAL(started()), queueController, SLOT(processTask()));
@@ -616,7 +624,7 @@ void TomoGui::on_processBtn_clicked()
 // -----------------------------------------------------------------------------
 TomoEngineTask* TomoGui::newTomoEngineTask( QString inputFile, QString outputFile, ProcessQueueController* queueController)
 {
-  bool ok = false;
+ // bool ok = false;
   TomoEngineTask* task = new TomoEngineTask(NULL);
   //FIXME: Setup all the input/output parameters
   return task;
@@ -693,8 +701,8 @@ void TomoGui::queueControllerFinished()
 #endif
 
     setCurrentImageFile (inputMRCFilePath->text());
-    setCurrentProcessedFile(outputMRCFilePath->text());
-    m_GraphicsView->loadOverlayImageFile(outputMRCFilePath->text());
+    setCurrentProcessedFile(outputFilePath->text());
+    m_GraphicsView->loadOverlayImageFile(outputFilePath->text());
 //    m_LayersPalette->getSegmentedImageCheckBox()->setChecked(true);
 
   setWindowTitle(m_CurrentImageFile);
@@ -715,16 +723,16 @@ void TomoGui::queueControllerFinished()
 void TomoGui::on_outputDirectoryPathBtn_clicked()
 {
   bool canWrite = false;
-  QString aDir = QFileDialog::getExistingDirectory(this, tr("Select Output Directory"), getOpenDialogLastDirectory(),
+  QString aDir = QFileDialog::getExistingDirectory(this, tr("Select Output Directory"), m_OpenDialogLastDirectory,
                                             QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
-  setOpenDialogLastDirectory(aDir);
-  if (!getOpenDialogLastDirectory().isNull())
+  m_OpenDialogLastDirectory = aDir;
+  if (!m_OpenDialogLastDirectory.isNull())
   {
     QFileInfo fi(aDir);
     canWrite = fi.isWritable();
     if (canWrite) {
-      this->outputDirectoryPath->setText(getOpenDialogLastDirectory());
+      this->outputDirectoryPath->setText(m_OpenDialogLastDirectory);
     }
     else
     {
@@ -742,7 +750,7 @@ void TomoGui::on_inputMRCFilePathBtn_clicked()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString imageFile =
-      QFileDialog::getOpenFileName(this, tr("Select MRC Data file"), getOpenDialogLastDirectory(), tr("MRC Files (*.mrc *.ali)"));
+      QFileDialog::getOpenFileName(this, tr("Select MRC Data file"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc *.ali)"));
 
   if (true == imageFile.isEmpty())
   {
@@ -754,10 +762,10 @@ void TomoGui::on_inputMRCFilePathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_outputMRCFilePathBtn_clicked()
+void TomoGui::on_outputFilePathBtn_clicked()
 {
-  QString outputFile = getOpenDialogLastDirectory() + QDir::separator() + "Untitled.mrc";
-  outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("MRC files (*.mrc *.ali)"));
+  QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled";
+  outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("All files (*.*)"));
   if (outputFile.isEmpty())
   {
     return;
@@ -766,12 +774,12 @@ void TomoGui::on_outputMRCFilePathBtn_clicked()
   QFileInfo fi(outputFile);
   QFileInfo fi2(fi.absolutePath());
   if (fi2.isWritable() == true) {
-    outputMRCFilePath->setText(outputFile);
+    outputFilePath->setText(outputFile);
   }
   else
   {
-    QMessageBox::critical(this, tr("Output Image File Error"),
-                          tr("The parent directory of the output image is not writable by your user. Please make it writeable by changing the permissions or select another directory"),
+    QMessageBox::critical(this, tr("Output File Error"),
+                          tr("The parent directory of the output file is not writable by your user. Please make it writeable by changing the permissions or select another directory"),
                           QMessageBox::Ok);
   }
 }
@@ -807,7 +815,7 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_outputMRCFilePath_textChanged(const QString & text)
+void TomoGui::on_outputFilePath_textChanged(const QString & text)
 {
   //  verifyPathExists(outputMRCFilePath->text(), movingImageFile);
 }
@@ -819,6 +827,34 @@ void TomoGui::on_outputDirectoryPath_textChanged(const QString & text)
 {
   verifyPathExists(outputDirectoryPath->text(), outputDirectoryPath);
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_initialReconstructionPathBtn_clicked()
+{
+  QString reconFile =
+      QFileDialog::getOpenFileName(this, tr("Select Initial Reconstruction file"), m_OpenDialogLastDirectory, tr("All Files (*.*)"));
+
+  if (true == reconFile.isEmpty())
+  {
+    return;
+  }
+  initialReconstructionPath->setText(reconFile);
+}
+
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_initialReconstructionPath_textChanged(const QString & text)
+{
+  verifyPathExists(initialReconstructionPath->text(), initialReconstructionPath);
+}
+
+
+
 
 // -----------------------------------------------------------------------------
 //
@@ -863,11 +899,11 @@ bool TomoGui::verifyOutputPathParentExists(QString outFilePath, QLineEdit* lineE
 bool TomoGui::verifyPathExists(QString outFilePath, QLineEdit* lineEdit)
 {
   QFileInfo fileinfo(outFilePath);
-  if (false == fileinfo.exists())
+  if (false == fileinfo.exists() && lineEdit != NULL)
   {
     lineEdit->setStyleSheet("border: 1px solid red;");
   }
-  else
+  else if (lineEdit != NULL)
   {
     lineEdit->setStyleSheet("");
   }
@@ -1047,9 +1083,9 @@ void TomoGui::openOverlayImage(QString processedImage)
 void TomoGui::overlayImageFileLoaded(const QString &filename)
 {
   // std::cout << "TomoGui::overlayImageFileLoaded" << std::endl;
-  outputMRCFilePath->blockSignals(true);
-  outputMRCFilePath->setText(filename);
-  outputMRCFilePath->blockSignals(false);
+  outputFilePath->blockSignals(true);
+  outputFilePath->setText(filename);
+  outputFilePath->blockSignals(false);
 }
 
 // -----------------------------------------------------------------------------
@@ -1121,16 +1157,16 @@ void TomoGui::readMRCHeader(QString filepath)
     QVector<int> indices;
     QVector<float> a_tilts;
     QVector<float> b_tilts;
-    QVector<float> gains;
-    QVector<float> offsets;
+    QVector<double> gains;
+    QVector<double> offsets;
     QVector<bool>  excludes;
     for(int l = 0; l < header.nz; ++l)
     {
       indices.append(l);
       a_tilts.append(header.feiHeaders[l].a_tilt);
       b_tilts.append(header.feiHeaders[l].b_tilt);
-      gains.append(0.0f);
-      offsets.append(0.0f);
+      gains.append(0.0);
+      offsets.append(0.0);
       excludes.append(false);
     }
     if (NULL != m_GainsOffsetsTableModel)
@@ -1310,9 +1346,9 @@ QImage TomoGui::signed16Image(qint16* data, MRCHeader &header)
     int numColors = static_cast<int>((max-min) + 1);
 
     // Only generate the color table if the number of colors does not match
-    if (colorTable.size() != numColors)
+    if (m_ColorTable.size() != numColors)
     {
-      colorTable.resize(numColors);
+      m_ColorTable.resize(numColors);
       float range = max - min;
 
       float r, g, b;
@@ -1320,7 +1356,7 @@ QImage TomoGui::signed16Image(qint16* data, MRCHeader &header)
       {
         int16_t val = static_cast<int16_t>( min + ((float)i / numColors) * range);
         getColorCorrespondingTovalue(val, r, g, b, max, min);
-        colorTable[i] = qRgba(r*255, g*255, b*255, 255);
+        m_ColorTable[i] = qRgba(r*255, g*255, b*255, 255);
       }
     }
 
@@ -1334,7 +1370,7 @@ QImage TomoGui::signed16Image(qint16* data, MRCHeader &header)
       {
         idx = (header.nx * y) + x;
         int colorIndex = data[idx] - static_cast<int>(dmin);
-        image.setPixel(x, y, colorTable[colorIndex]);
+        image.setPixel(x, y, m_ColorTable[colorIndex]);
       }
     }
     return image;
@@ -1437,10 +1473,23 @@ void TomoGui::getColorCorrespondingTovalue(int16_t val,
 // -----------------------------------------------------------------------------
 void TomoGui::on_importGainsOffsetsBtn_clicked()
 {
-  QString gainsOffsetsFile =
-      QFileDialog::getOpenFileName(this, tr("Select Gains Offsets Data file"), getOpenDialogLastDirectory(), tr("Binary Files (*.bin)"));
+  QString file =
+      QFileDialog::getOpenFileName(this, tr("Select Gains Offsets Data file"), m_OpenDialogLastDirectory, tr("Binary Files (*.bin)"));
 
-  if (true == gainsOffsetsFile.isEmpty())
+  if (true == file.isEmpty())
+  {
+    return;
+  }
+  readGainsOffsetsFile (file);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::readGainsOffsetsFile(QString file)
+{
+  gainsOffsetsFile = file;
+  if (verifyPathExists(gainsOffsetsFile, NULL) == false)
   {
     return;
   }
@@ -1468,8 +1517,8 @@ void TomoGui::on_importGainsOffsetsBtn_clicked()
   double* gainsPtr = gains->getPointer();
   double* offsetsPtr = offsets->getPointer();
 
-  QVector<float> fGains(total);
-  QVector<float> fOffsets(total);
+  QVector<double> fGains(total);
+  QVector<double> fOffsets(total);
   for(size_t i = 0; i < total; ++i)
   {
     fGains[i] = gainsPtr[i];
@@ -1480,8 +1529,50 @@ void TomoGui::on_importGainsOffsetsBtn_clicked()
   {
     m_GainsOffsetsTableModel->setGainsAndOffsets(fGains, fOffsets);
   }
-
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_exportGainsOffsets_clicked()
+{
+  QString proposedFile = m_OpenDialogLastDirectory + QDir::separator() + "GainsOffsets.bin";
+  QString file = QFileDialog::getSaveFileName(this, tr("Save Gains/Offsets Data"),
+                                              proposedFile,
+                                              tr("*.bin") );
+  if ( true == file.isEmpty() ){ return;  }
+  QFileInfo fi(file);
+  m_OpenDialogLastDirectory = fi.absolutePath();
+
+  QVector<double> gains;
+  QVector<double> offsets;
+  // Convert to 8 byte double
+  m_GainsOffsetsTableModel->getGainsAndOffsets(gains, offsets);
+
+  FILE* f = fopen(file.toStdString().c_str(), "wb");
+  if (NULL == f)
+  {
+    QMessageBox::critical(this, tr("Gains Offsets File Creation"),
+                          tr("The Gains & Offsets file could not be created."), QMessageBox::Ok);
+    return;
+  }
+  qint32 written = fwrite(gains.data(), sizeof(double), gains.size(), f);
+  if (written != gains.size())
+  {
+    QMessageBox::critical(this, tr("Gains Offsets File Writing"),
+                          tr("The number of gains values did not match the number of rows in the table."), QMessageBox::Ok);
+    fclose(f);return;
+  }
+  written = fwrite(offsets.data(), sizeof(double), offsets.size(), f);
+  if (written != gains.size())
+  {
+    QMessageBox::critical(this, tr("Gains Offsets File Writing"),
+                          tr("The number of offset values did not match the number of rows in the table."), QMessageBox::Ok);
+    fclose(f);return;
+  }
+  fclose(f);
+}
+
 
 // -----------------------------------------------------------------------------
 //
@@ -1494,25 +1585,43 @@ void TomoGui::on_playBtn_clicked()
  //   qint32 currentIndex = framesPerSecComboBox->currentIndex();
     double rate = 500;
     double update = 1.0/rate * 1000.0;
-    this->_stopAnimation = false;
-    _animationTimer->setSingleShot(true);
-    _animationTimer->start(static_cast<int>(update) );
+    this->m_StopAnimation = false;
+    m_AnimationTimer->setSingleShot(true);
+    m_AnimationTimer->start(static_cast<int>(update) );
   }
   else
   {
     playBtn->setText(">");
-    this->_stopAnimation = true;
+    this->m_StopAnimation = true;
   }
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_skipEnd_clicked()
+{
+  currentTiltIndex->setValue(currentTiltIndex->maximum());
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_skipStart_clicked()
+{
+  currentTiltIndex->setValue(currentTiltIndex->minimum());
+}
+
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
 void TomoGui::stepForwardFromTimer()
 {
   //Stop Playing if the user clicked the play button again
-  if (_stopAnimation)
+  if (m_StopAnimation)
   {
-    this->_animationTimer->stop();
+    this->m_AnimationTimer->stop();
     playBtn->setText(QString(">") );
     return;
   }
@@ -1525,14 +1634,14 @@ void TomoGui::stepForwardFromTimer()
   }
   else
   {
-    _stopAnimation = true;
+    m_StopAnimation = true;
   }
 
   //   qint32 currentIndex = framesPerSecComboBox->currentIndex();
   double rate = 500;
   double update = 1.0/rate * 1000.0;
-  _animationTimer->setSingleShot(true);
-  _animationTimer->start(static_cast<int>(update) );
+  m_AnimationTimer->setSingleShot(true);
+  m_AnimationTimer->start(static_cast<int>(update) );
   QCoreApplication::processEvents();
 }
 

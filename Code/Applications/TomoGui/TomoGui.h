@@ -64,9 +64,7 @@ class GainsOffsetsTableModel;
  */
 class TomoGui :  public QMainWindow, private Ui::TomoGui
 {
-
     Q_OBJECT;
-
 
   public:
     TomoGui(QWidget *parent = 0);
@@ -86,23 +84,16 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
      */
     void writeSettings(QSettings &prefs);
 
-    void readIOSettings(QSettings &prefs);
-    void writeIOSettings(QSettings &prefs);
-
     void readWindowSettings(QSettings &prefs);
     void writeWindowSettings(QSettings &prefs);
 
-    typedef QPair<QString, QString>        InputOutputFilePair;
-    typedef QList<InputOutputFilePair>     InputOutputFilePairList;
 
     MXA_INSTANCE_PROPERTY(QString, CurrentImageFile)
     MXA_INSTANCE_PROPERTY(QString, CurrentProcessedFile)
 
-
     MXA_INSTANCE_PROPERTY(bool, OutputExistsCheck)
     MXA_INSTANCE_PROPERTY(ProcessQueueController*, QueueController)
-    MXA_INSTANCE_PROPERTY(QString, OpenDialogLastDirectory)
-    MXA_INSTANCE_PROPERTY(InputOutputFilePairList, InputOutputFilePairList)
+ //   MXA_INSTANCE_PROPERTY(QString, OpenDialogLastDirectory)
 
 
     void readMRCHeader(QString filepath);
@@ -116,6 +107,9 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     void getColorCorrespondingTovalue(int16_t val,
                                        float &r, float &g, float &b,
                                        float max, float min);
+
+    void readGainsOffsetsFile(QString file);
+
 
   signals:
     void cancelTask();
@@ -143,6 +137,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     void on_actionLayers_Palette_triggered();
 
     void on_playBtn_clicked();
+    void on_skipStart_clicked();
+    void on_skipEnd_clicked();
     void stepForwardFromTimer();
 
 
@@ -181,15 +177,20 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     void on_inputMRCFilePathBtn_clicked();
     void on_inputMRCFilePath_textChanged(const QString &string);
 
-    void on_outputMRCFilePathBtn_clicked();
-    void on_outputMRCFilePath_textChanged(const QString & text);
+    void on_outputFilePathBtn_clicked();
+    void on_outputFilePath_textChanged(const QString & text);
 
     void on_outputDirectoryPathBtn_clicked();
     void on_outputDirectoryPath_textChanged(const QString & text);
 
+    void on_initialReconstructionPathBtn_clicked();
+    void on_initialReconstructionPath_textChanged(const QString & text);
+
+
     void on_currentTiltIndex_valueChanged(int i);
 
     void on_importGainsOffsetsBtn_clicked();
+    void on_exportGainsOffsets_clicked();
 
     /* Slots to receive events from the ProcessQueueController */
     void queueControllerFinished();
@@ -260,13 +261,15 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     QList<QWidget*> m_WidgetList;
     QList<QWidget*> m_ImageWidgets;
 
-    bool                  _stopAnimation;     // Trigger to stop a running animation
-    QTimer*               _animationTimer;
-    QVector<QRgb>         colorTable;
+    bool                  m_StopAnimation;     // Trigger to stop a running animation
+    QTimer*               m_AnimationTimer;
+    QVector<QRgb>         m_ColorTable;
     int                   m_CurrentCorner;
     QImage                m_CurrentImage;
+    QString               gainsOffsetsFile;
 
     GainsOffsetsTableModel*  m_GainsOffsetsTableModel;
+    QString      m_OpenDialogLastDirectory;
 
     TomoGui(const TomoGui&); // Copy Constructor Not Implemented
     void operator=(const TomoGui&); // Operator '=' Not Implemented

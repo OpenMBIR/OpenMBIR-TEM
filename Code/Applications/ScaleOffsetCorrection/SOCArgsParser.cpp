@@ -163,7 +163,7 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
 
 
 
-  TCLAP::ValueArg<int> in_numIter("n", "numIter", "Number of Iterations", true, 0, "0");
+  TCLAP::ValueArg<int> in_numIter("n", "numIter", "Number of Inner Iterations", true, 0, "0");
   cmd.add(in_numIter);
   TCLAP::ValueArg<double> in_sigmaX("l", "sigmax", "Sigma X Value", true, 1.0, "1.0");
   cmd.add(in_sigmaX);

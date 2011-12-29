@@ -158,12 +158,14 @@ class GainsOffsetsTableModel : public QAbstractTableModel
      void setTableData(QVector<int> angleIndexes,
                        QVector<float> a_tilts,
                        QVector<float> b_tilts,
-                       QVector<float> gains,
-                       QVector<float> offsets,
+                       QVector<double> gains,
+                       QVector<double> offsets,
                        QVector<bool> excludes);
 
-     void setGainsAndOffsets(QVector<float> gains,
-                       QVector<float> offsets);
+     void setGainsAndOffsets(QVector<double> gains,
+                       QVector<double> offsets);
+
+     void getGainsAndOffsets(QVector<double> &gains, QVector<double> &offsets);
 
   private:
      int m_ColumnCount;
@@ -172,8 +174,8 @@ class GainsOffsetsTableModel : public QAbstractTableModel
      QVector<int> m_AngleIndexes;
      QVector<float> m_ATilts;
      QVector<float> m_BTilts;
-     QVector<float> m_Gains;
-     QVector<float> m_Offsets;
+     QVector<double> m_Gains;
+     QVector<double> m_Offsets;
      QVector<bool>  m_Excludes;
 
 
