@@ -62,6 +62,7 @@ set (CMP_HEADER_DIR ${EIMTomo_BINARY_DIR}/DONOTUSE)
 #set (CMP_LIB_SEARCH_DIRS "")
 #set (CMP_GENERATE_VERSION_STRING 1)
 set (CMP_INSTALL_FILES 1)
+set (CMP_CONFIGURED_FILES_SOURCE_DIR ${CMP_SOURCE_DIR}/ConfiguredFiles)
 #INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
 
 # We need to add the binary directory to our list of include directories so the source files
