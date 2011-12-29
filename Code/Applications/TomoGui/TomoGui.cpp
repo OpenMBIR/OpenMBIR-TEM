@@ -473,6 +473,10 @@ void TomoGui::setupGui()
     m_GainsOffsetsTableModel->setInitialValues();
     gainsOffsetsTableView->setModel(m_GainsOffsetsTableModel);
     QAbstractItemDelegate* idelegate = m_GainsOffsetsTableModel->getItemDelegate();
+
+#if 1
+    gainsOffsetsTableView->setItemDelegate(idelegate);
+#else
     gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::TiltIndex, idelegate);
     gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::A_Tilt, idelegate);
     gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::B_Tilt, idelegate);
@@ -481,6 +485,7 @@ void TomoGui::setupGui()
 
     QAbstractItemDelegate* cbDelegate = new CheckBoxDelegate;
     gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Exclude, cbDelegate);
+#endif
 }
 
 // -----------------------------------------------------------------------------
@@ -1123,7 +1128,7 @@ void TomoGui::readMRCHeader(QString filepath)
     QVector<float> b_tilts;
     QVector<float> gains;
     QVector<float> offsets;
-    QVector<bool>  excludes;
+    QVector<Qt::CheckState>  excludes;
     for(int l = 0; l < header.nz; ++l)
     {
       indices.append(l);
@@ -1131,7 +1136,7 @@ void TomoGui::readMRCHeader(QString filepath)
       b_tilts.append(header.feiHeaders[l].b_tilt);
       gains.append(0.0f);
       offsets.append(0.0f);
-      excludes.append(false);
+      excludes.append(Qt::Unchecked);
     }
     if (NULL != m_GainsOffsetsTableModel)
     {

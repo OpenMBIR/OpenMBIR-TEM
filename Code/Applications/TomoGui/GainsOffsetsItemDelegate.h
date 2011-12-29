@@ -82,8 +82,8 @@ class GainsOffsetsItemDelegate : public QStyledItemDelegate
     QWidget* createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
     {
       QLineEdit* editor;
-      QCheckBox* checkbox;
-      QIntValidator* intValidator;
+//      QCheckBox* checkbox;
+//      QIntValidator* intValidator;
       QDoubleValidator* dblValidator;
 
       qint32 col = index.column();
