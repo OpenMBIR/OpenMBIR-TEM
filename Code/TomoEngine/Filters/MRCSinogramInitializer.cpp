@@ -62,8 +62,8 @@ MRCSinogramInitializer::~MRCSinogramInitializer()
 void MRCSinogramInitializer::execute()
 {
 
-  Sinogram* sinogram = getSinogram();
-  TomoInputs* inputs = getInputs();
+  SinogramPtr sinogram = getSinogram();
+  TomoInputsPtr inputs = getTomoInputs();
  // int16_t i,j,k;
  // uint16_t TotalNumMaskedViews;
 
@@ -184,7 +184,13 @@ void MRCSinogramInitializer::execute()
     if (NULL != header.feiHeaders) {
       int offset = inputs->goodViews[z];
       fei = &(header.feiHeaders[offset]);
-      sinogram->angles[z] = -fei->a_tilt;
+      if (inputs->tiltSelection == SOC::A_Tilt) {
+        sinogram->angles[z] = -fei->a_tilt;
+      }
+      else if (inputs->tiltSelection == SOC::B_Tilt)
+      {
+        sinogram->angles[z] = -fei->b_tilt;
+      }
     }
    // std::cout << "data_z_index: " << inputs->goodViews[z] << "  dataZOffset: " << dataZOffset << "   counts offset: " << z << std::endl;
     for (uint16_t y = 0; y < sinogram->N_t; y++)

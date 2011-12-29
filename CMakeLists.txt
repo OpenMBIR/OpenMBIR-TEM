@@ -195,7 +195,7 @@ if (EIMTomo_BUILD_GUI)
     # will not work due to signals/slots mechanism.
     add_subdirectory(${EIMTomo_SOURCE_DIR}/Code/QtSupport ${PROJECT_BINARY_DIR}/QtSupport)
    
-    add_subdirectory(${EIMTomo_SOURCE_DIR}/Code/Applications/TomoGui ${PROJECT_BINARY_DIR}/TomoGui)
+    add_subdirectory(${EIMTomo_SOURCE_DIR}/Code/Applications/TomoGui ${PROJECT_BINARY_DIR}/Applications/TomoGui)
 
 endif()
 

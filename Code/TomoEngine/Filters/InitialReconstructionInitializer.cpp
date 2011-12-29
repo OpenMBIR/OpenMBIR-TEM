@@ -75,7 +75,7 @@ DATA_TYPE InitialReconstructionInitializer::absMaxArray(std::vector<DATA_TYPE> &
 // -----------------------------------------------------------------------------
 void InitialReconstructionInitializer::initializeData()
 {
-  Geometry* geometry = getGeometry();
+  GeometryPtr geometry = getGeometry();
 
   for (uint16_t i = 0; i < geometry->N_y; i++)
   {
@@ -97,9 +97,9 @@ void InitialReconstructionInitializer::initializeData()
 void InitialReconstructionInitializer::execute()
 {
 
-  Sinogram* sinogram = getSinogram();
-  TomoInputs* input = getInputs();
-  Geometry* geometry = getGeometry();
+  SinogramPtr sinogram = getSinogram();
+  TomoInputsPtr input = getTomoInputs();
+  GeometryPtr geometry = getGeometry();
 
 
   DATA_TYPE sum=0,max;

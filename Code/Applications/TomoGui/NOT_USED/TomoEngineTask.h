@@ -37,9 +37,14 @@
 #include <QtCore/QString>
 #include <QtGui/QImage>
 
+
+#include "MXA/Common/MXASetGetMacros.h"
+
 #include "QtSupport/ProcessQueueTask.h"
 
-#include "TomoEngine/Common/EIMImage.h"
+#include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/SOC/SOCEngine.h"
+#include "TomoEngine/SOC/SOCStructures.h"
 
 #define UPDATE_PROGRESS(m, p)\
   emit progressTextChanged( (m) );\
@@ -62,6 +67,10 @@ class TomoEngineTask : public ProcessQueueTask
     TomoEngineTask(QObject* parent = 0);
     virtual ~TomoEngineTask();
 
+    MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
+    MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)
+    MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
+    MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams)
 
     virtual void run();
 
@@ -72,20 +81,16 @@ class TomoEngineTask : public ProcessQueueTask
      */
     void cancel();
 
-signals:
+  signals:
      /**
      * @brief Signal sent when the encoder has a message to relay to the GUI or other output device.
      */
-   //   void progressTextChanged (QString progressText );
+      void progressTextChanged (QString progressText );
 
 
 
   private:
-
-
-
-    EIMImage::Pointer m_OriginalImage;
-    EIMImage::Pointer m_SegmentedImage;
+      SOCEngine::Pointer m_Engine;
 
     TomoEngineTask(const TomoEngineTask&); // Copy Constructor Not Implemented
     void operator=(const TomoEngineTask&); // Operator '=' Not Implemented

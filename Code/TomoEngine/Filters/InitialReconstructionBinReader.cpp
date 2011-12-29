@@ -69,8 +69,8 @@ void InitialReconstructionBinReader::execute()
 // -----------------------------------------------------------------------------
 void InitialReconstructionBinReader::initializeData()
 {
-  TomoInputs* input = getInputs();
-  Geometry* geometry = getGeometry();
+  TomoInputsPtr input = getTomoInputs();
+  GeometryPtr geometry = getGeometry();
 
   //Read the Initial Reconstruction data into a 3-D matrix
   FILE* Fp=fopen(input->InitialReconFile.c_str(),"r");

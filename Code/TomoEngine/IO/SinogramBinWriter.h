@@ -63,7 +63,7 @@ class TomoEngine_EXPORT SinogramBinWriter : public TomoFilter
     virtual ~SinogramBinWriter();
 
     MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Data);
-    MXA_INSTANCE_PROPERTY(ScaleOffsetParams*, NuisanceParams);
+    MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams);
 
     void execute();
 

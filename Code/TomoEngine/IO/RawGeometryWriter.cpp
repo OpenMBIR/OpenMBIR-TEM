@@ -56,7 +56,7 @@ void RawGeometryWriter::execute()
   notify("Starting RawGeometryWriter", 0, UpdateProgressMessage);
 //  Sinogram* sinogram = getSinogram();
  // TomoInputs* input = getInputs();
-  Geometry* geometry = getGeometry();
+  GeometryPtr geometry = getGeometry();
 
   FILE* Fp = fopen(getFilePath().c_str(), "wb");
   if(NULL == Fp)

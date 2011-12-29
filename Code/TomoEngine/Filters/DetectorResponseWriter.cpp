@@ -65,7 +65,7 @@ void DetectorResponseWriter::execute()
 {
   FILE* Fp = NULL;
 
-  std::string filepath(getInputs()->outputDir);
+  std::string filepath(getTomoInputs()->outputDir);
   filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::DetectorResponseFile);
 
 

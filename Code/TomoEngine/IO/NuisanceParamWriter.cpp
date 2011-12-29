@@ -79,7 +79,7 @@ NuisanceParamWriter::~NuisanceParamWriter()
 // -----------------------------------------------------------------------------
 void NuisanceParamWriter::execute()
 {
-  if(NULL == getInputs())
+  if(NULL == getTomoInputs())
   {
     setErrorCondition(-1);
     setErrorMessage("NuisanceBinWriter::TomoInputs not initialized Correctly");
@@ -101,7 +101,7 @@ void NuisanceParamWriter::execute()
     return;
   }
 
-  std::string filepath(getInputs()->outputDir);
+  std::string filepath(getTomoInputs()->outputDir);
   filepath = filepath.append(MXADir::getSeparator()).append(m_FileName);
 
   FILE* file = fopen(filepath.c_str(), "wb");

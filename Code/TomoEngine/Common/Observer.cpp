@@ -57,6 +57,13 @@ void Observer::updateProgressAndMessage(const char* message, int progress)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+void Observer::updateProgressAndMessage(const std::string &message, int progress)
+{
+  updateProgressAndMessage(message.c_str(), progress);
+}
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void Observer::pipelineProgress(int value)
 {
   std::cout << value << "%" << std::endl;

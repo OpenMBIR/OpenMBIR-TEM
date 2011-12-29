@@ -86,7 +86,7 @@ MRCReader::~MRCReader()
 // -----------------------------------------------------------------------------
 int MRCReader::readHeader(const std::string &filepath, MRCHeader* header)
 {
-  MXAFileReader64 reader(filepath);
+   MXAFileReader64 reader(filepath);
    bool success = reader.initReader();
    if (false == success)
    {
@@ -110,13 +110,20 @@ int MRCReader::readHeader(const std::string &filepath, MRCHeader* header)
 
    // If we have an FEI header then parse the extended header information
    std::string feiLabel(header->labels[0], 80);
-   if (feiLabel.find_first_of("Fei Company") != std::string::npos)
+   std::string::size_type pos = feiLabel.find("Fei Company");
+   if (pos != std::string::npos)
    {
      // Allocate and copy in the data
      header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * header->nz));
      ::memcpy(header->feiHeaders, &(extended_header.front()), sizeof(FEIHeader) * header->nz);
    }
-
+   pos = feiLabel.find("EIC project");
+   if (pos != std::string::npos)
+   {
+     // Allocate and copy in the data
+     header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * header->nz));
+     ::memcpy(header->feiHeaders, &(extended_header.front()), sizeof(FEIHeader) * header->nz);
+   }
 
    return 1;
 }

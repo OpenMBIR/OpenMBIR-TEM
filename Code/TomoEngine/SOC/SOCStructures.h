@@ -61,6 +61,12 @@ typedef TomoArray<DATA_TYPE, DATA_TYPE**, 2> RealImageType;
 typedef TomoArray<DATA_TYPE, DATA_TYPE*, 1> RealArrayType;
 
 
+namespace SOC {
+  enum TiltSelection {
+    A_Tilt,
+    B_Tilt
+  };
+}
 
   /* Axes conventions:
 
@@ -99,7 +105,7 @@ typedef TomoArray<DATA_TYPE, DATA_TYPE*, 1> RealArrayType;
 
   } Sinogram;
 
-
+  typedef boost::shared_ptr<Sinogram> SinogramPtr;
 
   typedef struct
   {
@@ -116,35 +122,25 @@ typedef TomoArray<DATA_TYPE, DATA_TYPE*, 1> RealArrayType;
     DATA_TYPE y0;//-LengthY/2
   } Geometry;
 
+  typedef boost::shared_ptr<Geometry> GeometryPtr;
 
   typedef struct
   {
-  //  std::string ParamFile;
-    std::string SinoFile;
-    std::string InitialReconFile;
-    std::string GainsOffsetsFile;
-    std::string OutputFile;
-
-    std::string outputDir; // Output directory
-
-    int16_t NumIter;
+    uint16_t NumIter;
     uint16_t NumOuterIter;
     DATA_TYPE SigmaX;
     DATA_TYPE p;
     DATA_TYPE StopThreshold;
 
-    std::vector<uint8_t> excludedViews;// Indices of views to exclude from reconstruction
-    std::vector<int> goodViews; // Contains the indices of the views to use for reconstruction
-
     bool useSubvolume;
     uint16_t xStart;
     uint16_t xEnd;
-
     uint16_t yStart;
     uint16_t yEnd;
-
     uint16_t zStart;
     uint16_t zEnd;
+
+    SOC::TiltSelection tiltSelection;
 
     uint16_t fileXSize; // Size in voxels of the complete width of the image from the file
     uint16_t fileYSize; // Size in voxels of the complete height of the image from the file
@@ -154,7 +150,19 @@ typedef TomoArray<DATA_TYPE, DATA_TYPE*, 1> RealArrayType;
     DATA_TYPE delta_xz;//Voxel size in the x-z plane (assuming square shaped voxels in the x-z plane)
     DATA_TYPE delta_xy;//Voxel size in the x-y plane
 
+
+    std::string SinoFile;
+    std::string InitialReconFile;
+    std::string GainsOffsetsFile;
+    std::string OutputFile;
+
+    std::string outputDir; // Output directory
+    std::vector<uint8_t> excludedViews;// Indices of views to exclude from reconstruction
+    std::vector<int> goodViews; // Contains the indices of the views to use for reconstruction
+
   } TomoInputs;
+
+  typedef boost::shared_ptr<TomoInputs> TomoInputsPtr;
 
   //Structure to store a single column(A_i) of the A-matrix
   typedef struct
@@ -172,6 +180,7 @@ typedef TomoArray<DATA_TYPE, DATA_TYPE*, 1> RealArrayType;
     RealArrayType::Pointer alpha;//Noise variance refinement factor
   } ScaleOffsetParams;
 
+  typedef boost::shared_ptr<ScaleOffsetParams> ScaleOffsetParamsPtr;
 
 
 #endif /* SCALEOFFSETMOTIONSTRUCTURES_H_ */

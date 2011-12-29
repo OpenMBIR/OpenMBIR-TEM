@@ -67,11 +67,15 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
     MXA_TYPE_MACRO(SOCEngine);
     MXA_STATIC_NEW_MACRO(SOCEngine);
 
-    MXA_INSTANCE_PROPERTY(TomoInputs*, Inputs);
-    MXA_INSTANCE_PROPERTY(Sinogram*, Sinogram);
-    MXA_INSTANCE_PROPERTY(Geometry*, Geometry);
-    MXA_INSTANCE_PROPERTY(ScaleOffsetParams*, NuisanceParams);
+    MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
+    MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)
+    MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
+    MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams)
 
+    static void InitializeTomoInputs(TomoInputsPtr);
+    static void InitializeSinogram(SinogramPtr);
+    static void InitializeGeometry(GeometryPtr);
+    static void InitializeScaleOffsetParams(ScaleOffsetParamsPtr);
 
     virtual ~SOCEngine();
 
@@ -102,10 +106,10 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
      */
     void updateVoxelValues_NHICD();
 
-    uint8_t updateVoxels(int16_t Iter, VoxelUpdateType updateType, UInt8ImageType::Pointer VisitCount,
+    uint8_t updateVoxels(int16_t OuterIter, int16_t Iter, VoxelUpdateType updateType, UInt8ImageType::Pointer VisitCount,
                       RNGVars* RandomNumber, AMatrixCol*** TempCol,
                       RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight,
-                      AMatrixCol* VoxelLineResponse, ScaleOffsetParams &NuisanceParams,
+                      AMatrixCol* VoxelLineResponse, ScaleOffsetParams* NuisanceParams,
                       UInt8ImageType::Pointer Mask, CostData::Pointer cost);
 
   private:

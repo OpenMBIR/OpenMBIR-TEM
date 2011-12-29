@@ -37,7 +37,7 @@
 #include <QtGui/QImage>
 
 #include "MXA/Common/MXASetGetMacros.h"
-//#include "AIM/Common/AIMImage.h"
+
 
 /**
  * @class ProcessQueueTask ProcessQueueTask.h QtSupport/ProcessQueueTask.h
@@ -68,16 +68,7 @@ class ProcessQueueTask : public QThread
 
 
     MXA_INSTANCE_PROPERTY(bool, Debug);
-    MXA_VIRTUAL_INSTANCE_PROPERTY(QString, InputFilePath);
-    MXA_VIRTUAL_INSTANCE_PROPERTY(QString, OutputFilePath);
 
-    /**
-     * @brief Converts a QImage to a Gray Scale (8 bit) AIMImage object
-     * @param image The input QImage
-     * @return An AIMImage smart pointer. The Wrapped pointer will be NULL if there
-     * was an error during the conversion.
-     */
- //   AIMImage::Pointer convertQImageToGrayScaleAIMImage(QImage image);
 
     signals:
 
@@ -94,11 +85,6 @@ class ProcessQueueTask : public QThread
 
       /**
        * @brief Signal sent when the encoding task is complete
-       */
-    //  void finished();
-
-      /**
-       * @brief Signal sent when the encoding task is complete
        * @param o A QObject to send with the signal
        */
       void taskFinished(QObject *o);
@@ -110,16 +96,6 @@ class ProcessQueueTask : public QThread
        */
       void updateImageAvailable(QImage image);
 
-      /**
-       *
-       */
-      void histogramsAboutToBeUpdated();
-
-      /**
-       *
-       * @param values
-       */
-      void updateHistogramAvailable(QVector<double> values);
 
     public slots:
 

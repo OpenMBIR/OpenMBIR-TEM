@@ -61,9 +61,9 @@
 #include "QtSupport/ApplicationAboutBoxDialog.h"
 #include "QtSupport/QRecentFileList.h"
 #include "QtSupport/QFileCompleter.h"
-#include "QtSupport/ImageGraphicsDelegate.h"
-#include "QtSupport/ProcessQueueController.h"
-#include "QtSupport/ProcessQueueDialog.h"
+//#include "QtSupport/ImageGraphicsDelegate.h"
+//#include "QtSupport/ProcessQueueController.h"
+//#include "QtSupport/ProcessQueueDialog.h"
 
 
 //-- TomoEngine Includes
@@ -77,7 +77,6 @@
 #include "License/LicenseFiles.h"
 
 #include "CheckBoxDelegate.h"
-#include "TomoEngineTask.h"
 #include "LayersDockWidget.h"
 #include "GainsOffsetsTableModel.h"
 
@@ -128,10 +127,11 @@
 TomoGui::TomoGui(QWidget *parent) :
 QMainWindow(parent),
 m_OutputExistsCheck(false),
-m_QueueController(NULL),
 m_LayersPalette(NULL),
 m_StopAnimation(true),
 m_CurrentCorner(0),
+m_WorkerThread(NULL),
+m_SOCEngine(NULL),
 #if defined(Q_WS_WIN)
 m_OpenDialogLastDirectory("C:\\")
 #else
@@ -203,7 +203,7 @@ void TomoGui::readSettings(QSettings &prefs)
  // double d;
   prefs.beginGroup("Parameters");
 
-  READ_STRING_SETTING(prefs, inputMRCFilePath, ""); // This will auto load the MRC File
+
   READ_STRING_SETTING(prefs, outputFilePath, "");
   READ_STRING_SETTING(prefs, outputDirectoryPath, "");
   READ_STRING_SETTING(prefs, initialReconstructionPath, "");
@@ -215,8 +215,20 @@ void TomoGui::readSettings(QSettings &prefs)
   READ_STRING_SETTING(prefs, mrf, "");
   READ_STRING_SETTING(prefs, xyPixel, "");
   READ_STRING_SETTING(prefs, xzPixel, "");
+  READ_BOOL_SETTING(prefs, useSubVolume, false);
+  READ_STRING_SETTING(prefs, xMin, "0");
+  READ_STRING_SETTING(prefs, xMax, "0");
+  READ_STRING_SETTING(prefs, yMin, "0");
+  READ_STRING_SETTING(prefs, yMax, "0");
+  READ_STRING_SETTING(prefs, zMin, "0");
+  READ_STRING_SETTING(prefs, zMax, "0");
 
-  prefs.setValue("gainsOffsetsFile" , gainsOffsetsFile);
+  READ_STRING_SETTING(prefs, inputMRCFilePath, "");
+  // This will auto load the MRC File
+  on_inputMRCFilePath_textChanged(inputMRCFilePath->text());
+
+  // Then load any Gains/Offsets data next
+  gainsOffsetsFile = prefs.value("gainsOffsetsFile" , "").toString();
   readGainsOffsetsFile(gainsOffsetsFile);
 
 
@@ -246,6 +258,13 @@ void TomoGui::writeSettings(QSettings &prefs)
   WRITE_STRING_SETTING(prefs, mrf);
   WRITE_STRING_SETTING(prefs, xyPixel);
   WRITE_STRING_SETTING(prefs, xzPixel);
+  WRITE_BOOL_SETTING(prefs, useSubVolume, useSubVolume->isChecked());
+  WRITE_STRING_SETTING(prefs, xMin);
+  WRITE_STRING_SETTING(prefs, xMax);
+  WRITE_STRING_SETTING(prefs, yMin);
+  WRITE_STRING_SETTING(prefs, yMax);
+  WRITE_STRING_SETTING(prefs, zMin);
+  WRITE_STRING_SETTING(prefs, zMax);
   prefs.setValue("gainsOffsetsFile" , gainsOffsetsFile);
   prefs.setValue("tiltSelection", tiltSelection->currentIndex());
 
@@ -291,10 +310,10 @@ void TomoGui::writeWindowSettings(QSettings &prefs)
 // -----------------------------------------------------------------------------
 void TomoGui::on_actionSave_Config_File_triggered()
 {
-  QString proposedFile = m_OpenDialogLastDirectory + QDir::separator() + "Tomo-Config.txt";
+  QString proposedFile = m_OpenDialogLastDirectory + QDir::separator() + "Tomo-Config.config";
   QString file = QFileDialog::getSaveFileName(this, tr("Save Tomo Configuration"),
                                               proposedFile,
-                                              tr("*.txt") );
+                                              tr("*.config") );
   if ( true == file.isEmpty() ){ return;  }
   QFileInfo fi(file);
   m_OpenDialogLastDirectory = fi.absolutePath();
@@ -309,7 +328,7 @@ void TomoGui::on_actionLoad_Config_File_triggered()
 {
   QString file = QFileDialog::getOpenFileName(this, tr("Select Configuration File"),
                                                  m_OpenDialogLastDirectory,
-                                                 tr("Configuration File (*.txt)") );
+                                                 tr("Configuration File (*.config)") );
   if ( true == file.isEmpty() ){return;  }
   QFileInfo fi(file);
   m_OpenDialogLastDirectory = fi.absolutePath();
@@ -364,7 +383,7 @@ void TomoGui::setupGui()
 #ifdef Q_WS_MAC
   // Adjust for the size of the menu bar which is at the top of the screen not in the window
   QSize mySize = size();
-  mySize.setHeight( mySize.height() -30);
+  mySize.setHeight(mySize.height() - 30);
   resize(mySize);
 #endif
 
@@ -380,7 +399,6 @@ void TomoGui::setupGui()
   ZOOM_MENU(600, zoomMenu, z600_triggered);
 
   zoomButton->setMenu(zoomMenu);
-
 
   m_GraphicsView->setTomoGui(this);
   // Just place a really big white image to get our GUI to layout properly
@@ -406,7 +424,6 @@ void TomoGui::setupGui()
   compositeModeCB->insertItem(2, "Alpha Blend", QVariant(EmMpm_Constants::Alpha_Blend));
 #endif
 
-
 #if 0
   compositeModeCB->insertItem(2, "Plus");
   compositeModeCB->insertItem(3, "Multiply");
@@ -417,7 +434,6 @@ void TomoGui::setupGui()
   compositeModeCB->insertItem(8, "Color Burn");
   compositeModeCB->insertItem(9, "Hard Light");
   compositeModeCB->insertItem(10, "Soft Light");
-
 
   compositeModeCB->insertItem(12, "Destination");
   compositeModeCB->insertItem(13, "Source Over");
@@ -443,13 +459,10 @@ void TomoGui::setupGui()
 //  connect (m_GraphicsView, SIGNAL(fireBaseImageFileLoaded(const QString &)),
 //           this, SLOT(baseImageFileLoaded(const QString &)), Qt::QueuedConnection);
 
-  connect (m_GraphicsView, SIGNAL(fireOverlayImageFileLoaded(const QString &)),
-           this, SLOT(overlayImageFileLoaded(const QString &)), Qt::QueuedConnection);
+  connect(m_GraphicsView, SIGNAL(fireOverlayImageFileLoaded(const QString &)), this, SLOT(overlayImageFileLoaded(const QString &)), Qt::QueuedConnection);
 
-  connect (zoomIn, SIGNAL(clicked()),
-           m_GraphicsView, SLOT(zoomIn()), Qt::QueuedConnection);
-  connect(zoomOut, SIGNAL(clicked()),
-          m_GraphicsView, SLOT(zoomOut()), Qt::QueuedConnection);
+  connect(zoomIn, SIGNAL(clicked()), m_GraphicsView, SLOT(zoomIn()), Qt::QueuedConnection);
+  connect(zoomOut, SIGNAL(clicked()), m_GraphicsView, SLOT(zoomOut()), Qt::QueuedConnection);
 
   QFileCompleter* com = new QFileCompleter(this, false);
   inputMRCFilePath->setCompleter(com);
@@ -458,11 +471,6 @@ void TomoGui::setupGui()
   QFileCompleter* com4 = new QFileCompleter(this, false);
   outputFilePath->setCompleter(com4);
   QObject::connect(com4, SIGNAL(activated(const QString &)), this, SLOT(on_outputFilePath_textChanged(const QString &)));
-
-
-//  m_QueueDialog->setVisible(false);
-  cancelBtn->setVisible(false);
-
 
   // setup the Widget List
   m_WidgetList << inputMRCFilePath << inputMRCFilePathBtn;
@@ -473,23 +481,23 @@ void TomoGui::setupGui()
   setImageWidgetsEnabled(false);
 
   // Setup the TableView and Table Models
-    QHeaderView* headerView = new QHeaderView(Qt::Horizontal, gainsOffsetsTableView);
-    headerView->setResizeMode(QHeaderView::Interactive);
-    gainsOffsetsTableView->setHorizontalHeader(headerView);
-    headerView->show();
+  QHeaderView* headerView = new QHeaderView(Qt::Horizontal, gainsOffsetsTableView);
+  headerView->setResizeMode(QHeaderView::Interactive);
+  gainsOffsetsTableView->setHorizontalHeader(headerView);
+  headerView->show();
 
-    m_GainsOffsetsTableModel = new GainsOffsetsTableModel;
-    m_GainsOffsetsTableModel->setInitialValues();
-    gainsOffsetsTableView->setModel(m_GainsOffsetsTableModel);
-    QAbstractItemDelegate* idelegate = m_GainsOffsetsTableModel->getItemDelegate();
-    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::TiltIndex, idelegate);
-    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::A_Tilt, idelegate);
-    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::B_Tilt, idelegate);
-    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Gains, idelegate);
-    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Offsets, idelegate);
+  m_GainsOffsetsTableModel = new GainsOffsetsTableModel;
+  m_GainsOffsetsTableModel->setInitialValues();
+  gainsOffsetsTableView->setModel(m_GainsOffsetsTableModel);
+  QAbstractItemDelegate* idelegate = m_GainsOffsetsTableModel->getItemDelegate();
+  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::TiltIndex, idelegate);
+  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::A_Tilt, idelegate);
+  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::B_Tilt, idelegate);
+  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Gains, idelegate);
+  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Offsets, idelegate);
 
-    QAbstractItemDelegate* cbDelegate = new CheckBoxDelegate;
-    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Exclude, cbDelegate);
+  QAbstractItemDelegate* cbDelegate = new CheckBoxDelegate;
+  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Exclude, cbDelegate);
 }
 
 // -----------------------------------------------------------------------------
@@ -500,192 +508,264 @@ void TomoGui::on_layersPalette_clicked()
 //  m_LayersPalette->setVisible(true);
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+bool TomoGui::sanityCheckOutputDirectory(QLineEdit* le, QString msgTitle)
+{
+
+  if (le->text().isEmpty() == true)
+  {
+    QMessageBox::critical(this, msgTitle,
+                          "The output directory has NOT been set. Please set a directory path and try again.",
+                          QMessageBox::Ok | QMessageBox::Default);
+    return false;
+  }
+
+  if (verifyPathExists(le->text(), le) == false)
+  {
+    QString msg("The Output Directory '");
+    msg.append(le->text()).append("'\ndoes not exist. Would you like to create it?");
+    int ret = QMessageBox::warning(this, msgTitle,
+                                   msg,
+                                   QMessageBox::Yes | QMessageBox::Default,
+                                   QMessageBox::No);
+    if (ret == QMessageBox::No)
+    {
+      return false;
+    }
+    else if (ret == QMessageBox::Yes)
+    {
+      QDir outputDir(le->text());
+      if (outputDir.exists() == false)
+      {
+        bool ok = outputDir.mkpath(".");
+        if (ok == false)
+        {
+          QMessageBox::critical(this,
+                                tr("Output Directory Creation"),
+                                tr("The output directory could not be created."),
+                                QMessageBox::Ok);
+          return false;
+        }
+        else
+        {
+          return true;
+        }
+      }
+    }
+  }
+  verifyPathExists(le->text(), le);
+  return true;
+}
+
 
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_processBtn_clicked()
+void TomoGui::on_m_GoBtn_clicked()
 {
-
+  // First make sure we are not already running a reconstruction
+  if(m_GoBtn->text().compare("Cancel") == 0)
   {
-    QFileInfo fi(inputMRCFilePath->text());
-    if (fi.exists() == false)
+    if(m_SOCEngine != NULL)
     {
-      QMessageBox::critical(this, tr("Fixed Image File Error"), tr("Input Image does not exist. Please check the path."), QMessageBox::Ok);
-      return;
+      std::cout << "canceling from GUI...." << std::endl;
+      emit cancelPipeline();
     }
+    return;
+  }
 
-    if (outputFilePath->text().isEmpty() == true)
+  // Make sure we have an output directory setup and created
+  if(false == sanityCheckOutputDirectory(outputDirectoryPath, QString("Tomography Reconstruction")))
+  {
+    return;
+  }
+
+  // Now check the input file to make sure it does exist
+  QFileInfo fi(inputMRCFilePath->text());
+  if(fi.exists() == false)
+  {
+    QMessageBox::critical(this, tr("Input File File Error"), tr("Input File does not exist. Please check the path."), QMessageBox::Ok);
+    return;
+  }
+
+  // Make sure we have a name for the output file
+  if(outputFilePath->text().isEmpty() == true)
+  {
+    QMessageBox::critical(this, tr("Output File Error"), tr("Please select a file name for the reconstructed file to be saved as."), QMessageBox::Ok);
+    return;
+  }
+  // We have a name, make sure the user wants to over write the file
+  QFile file(outputFilePath->text());
+  if(file.exists() == true)
+  {
+    int ret = QMessageBox::warning(this, tr("EIM Tomo GUI"), tr("The Output File Already Exists\nDo you want to over write the existing file?"), QMessageBox::No
+                                       | QMessageBox::Default, QMessageBox::Yes, QMessageBox::Cancel);
+    if(ret == QMessageBox::Cancel)
     {
-      QMessageBox::critical(this, tr("Output Image File Error"), tr("Please select a file name for the segmented image to be saved as."), QMessageBox::Ok);
       return;
     }
-    QFile file(outputFilePath->text());
-    if (file.exists() == true)
+    else if(ret == QMessageBox::Yes)
     {
-      int ret = QMessageBox::warning(this, tr("EIM Tomo GUI"),
-                                     tr("The Output File Already Exists\nDo you want to over write the existing file?"),
-                                     QMessageBox::No | QMessageBox::Default,
-                                     QMessageBox::Yes,
-                                     QMessageBox::Cancel);
-      if (ret == QMessageBox::Cancel)
+      setOutputExistsCheck(true);
+    }
+    else
+    {
+      QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled.raw";
+      outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("RAW (*.raw)"));
+      if(!outputFile.isNull())
       {
-        return;
-      }
-      else if (ret == QMessageBox::Yes)
-      {
+        setCurrentProcessedFile("");
         setOutputExistsCheck(true);
       }
-      else
-      {
-        QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled.tif";
-        outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("TIF (*.tif)"));
-        if (!outputFile.isNull())
-        {
-          setCurrentProcessedFile("");
-          setOutputExistsCheck(true);
-        }
-        else // The user clicked cancel from the save file dialog
+      else // The user clicked cancel from the save file dialog
 
-        {
-          return;
-        }
-      }
-    }
-
-    fi = QFileInfo(outputFilePath->text());
-    QDir outputDir(fi.absolutePath());
-    if (outputDir.exists() == false)
-    {
-      bool ok = outputDir.mkpath(".");
-      if (ok == false)
       {
-        QMessageBox::critical(this, tr("Output Directory Creation"), tr("The output directory could not be created."), QMessageBox::Ok);
         return;
       }
     }
   }
 
-
-  m_QueueDialog->clearTable();
-  if (getQueueController() != NULL)
+  // Create a Worker Thread that will run the Reconstruction
+  if(m_WorkerThread != NULL)
   {
-    getQueueController()->deleteLater();
+    m_WorkerThread->wait(); // Wait until the thread is complete
+    delete m_WorkerThread; // Kill the thread
+    m_WorkerThread = NULL;
   }
-  ProcessQueueController* queueController = new ProcessQueueController(this);
-  setQueueController(queueController);
- // bool ok;
+  m_WorkerThread = new QThread(); // Create a new Thread Resource
 
+  m_SOCEngine = new QSOCEngine(NULL);
 
+  // Move the Reconstruction object into the thread that we just created.
+  m_SOCEngine->moveToThread(m_WorkerThread);
+  initializeSOCEngine();
 
-#if 0
-  m_LayersPalette->getSegmentedImageCheckBox()->setEnabled(true);
-  m_LayersPalette->getSegmentedImageCheckBox()->setChecked(true);
-  m_LayersPalette->getCompositeTypeComboBox()->setEnabled(true);
-  m_LayersPalette->getUseColorTable()->setEnabled(enableUserDefinedAreas->isChecked());
-#endif
+  /* Connect the signal 'started()' from the QThread to the 'run' slot of the
+   * SOCEngine object. Since the SOCEngine object has been moved to another
+   * thread of execution and the actual QThread lives in *this* thread then the
+   * type of connection will be a Queued connection.
+   */
+  // When the thread starts its event loop, start the Reconstruction going
+  connect(m_WorkerThread, SIGNAL(started()), m_SOCEngine, SLOT(run()));
 
-  QString inputFile = inputMRCFilePath->text();
-  QString outputFile = outputFilePath->text();
-  TomoEngineTask* task = newTomoEngineTask(inputFile, outputFile, queueController);
+  // When the Reconstruction ends then tell the QThread to stop its event loop
+  connect(m_SOCEngine, SIGNAL(finished() ), m_WorkerThread, SLOT(quit()));
 
-  queueController->addTask(static_cast<QThread*> (task));
-  connect(cancelBtn, SIGNAL(clicked()), task, SLOT(cancel()));
+  // When the QThread finishes, tell this object that it has finished.
+  connect(m_WorkerThread, SIGNAL(finished()), this, SLOT( pipelineComplete() ));
 
-  connect(task, SIGNAL(progressTextChanged(QString )), this, SLOT(processingMessage(QString )), Qt::QueuedConnection);
-  connect(task, SIGNAL(updateImageAvailable(QImage)), m_GraphicsView, SLOT(setOverlayImage(QImage)));
-  connect(task, SIGNAL(histogramsAboutToBeUpdated()), this, SLOT(clearProcessHistograms()));
-  connect(task, SIGNAL(updateHistogramAvailable(QVector<double>)), this, SLOT(addProcessHistogram(QVector<double>)));
-  this->addProcess(task);
+  // If the use clicks on the "Cancel" button send a message to the Reconstruction object
+  // We need a Direct Connection so the
+  connect(this, SIGNAL(cancelPipeline() ), m_SOCEngine, SLOT (on_CancelWorker() ), Qt::DirectConnection);
 
+  // Send Progress from the Reconstruction to this object for display
+  connect(m_SOCEngine, SIGNAL (updateProgress(int)), this, SLOT(pipelineProgress(int) ));
 
-  // When the event loop of the controller starts it will signal the ProcessQueue to run
-  connect(queueController, SIGNAL(started()), queueController, SLOT(processTask()));
-  // When the QueueController finishes it will signal the QueueController to 'quit', thus stopping the thread
-  connect(queueController, SIGNAL(finished()), this, SLOT(queueControllerFinished()));
+  // Send progress messages from Reconstruction to this object for display
+  connect(m_SOCEngine, SIGNAL (progressMessage(QString)), this, SLOT(addProgressMessage(QString) ));
 
-  connect(queueController, SIGNAL(started()), this, SLOT(processingStarted()));
-  connect(queueController, SIGNAL(finished()), this, SLOT(processingFinished()));
+  // Send progress messages from Reconstruction to this object for display
+  connect(m_SOCEngine, SIGNAL (warningMessage(QString)), this, SLOT(addWarningMessage(QString) ));
 
-//  getQueueDialog()->setParent(this);
-//  m_QueueDialog->setVisible(true);
-  processBtn->setVisible(false);
-  cancelBtn->setVisible(true);
+  // Send progress messages from Reconstruction to this object for display
+  connect(m_SOCEngine, SIGNAL (errorMessage(QString)), this, SLOT(addErrorMessage(QString) ));
 
   setWidgetListEnabled(false);
-  setImageWidgetsEnabled(true);
+  emit
+  pipelineStarted();
+  m_WorkerThread->start();
+  m_GoBtn->setText("Cancel");
 
-  queueController->start();
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-TomoEngineTask* TomoGui::newTomoEngineTask( QString inputFile, QString outputFile, ProcessQueueController* queueController)
+void TomoGui::initializeSOCEngine()
 {
- // bool ok = false;
-  TomoEngineTask* task = new TomoEngineTask(NULL);
-  //FIXME: Setup all the input/output parameters
-  return task;
+
+  // Create some shared pointers to all the structures
+  TomoInputsPtr inputs = TomoInputsPtr(new TomoInputs);
+  SinogramPtr sinogram = SinogramPtr(new Sinogram);
+  GeometryPtr geometry = GeometryPtr(new Geometry);
+  ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
+
+  m_SOCEngine->setTomoInputs(inputs);
+  m_SOCEngine->setSinogram(sinogram);
+  m_SOCEngine->setGeometry(geometry);
+  m_SOCEngine->setNuisanceParams(nuisanceParams);
+
+  SOCEngine::InitializeTomoInputs(inputs);
+  SOCEngine::InitializeSinogram(sinogram);
+  SOCEngine::InitializeGeometry(geometry);
+  SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
+
+  QString path = outputDirectoryPath->text() + QDir::separator() + outputFilePath->text();
+  path = QDir::toNativeSeparators(path);
+  inputs->OutputFile = path.toStdString();
+
+  path = QDir::toNativeSeparators(inputMRCFilePath->text());
+  inputs->SinoFile = path.toStdString();
+
+  path = QDir::toNativeSeparators(initialReconstructionPath->text());
+  inputs->InitialReconFile = path.toStdString();
+
+  path = QDir::toNativeSeparators(gainsOffsetsFile);
+  inputs->GainsOffsetsFile = path.toStdString();
+
+  path = QDir::toNativeSeparators(outputDirectoryPath->text());
+  inputs->outputDir = path.toStdString();
+  bool ok = false;
+  inputs->NumIter = innerIterations->text().toUShort(&ok);
+  inputs->SigmaX = sigmaX->text().toDouble(&ok);
+  inputs->p = mrf->text().toDouble(&ok);
+  inputs->NumOuterIter = outerIterations->text().toUShort(&ok);
+  inputs->StopThreshold = stopThreshold->text().toDouble(&ok);
+  inputs->tiltSelection = static_cast<SOC::TiltSelection>(tiltSelection->currentIndex());
+  inputs->useSubvolume = useSubVolume->isChecked();
+  if(useSubVolume->isChecked())
+  {
+    inputs->useSubvolume = true;
+    inputs->xStart = xMin->text().toUShort(&ok);
+    inputs->xEnd = xMax->text().toUShort(&ok);
+    inputs->yStart = yMin->text().toUShort(&ok);
+    inputs->yEnd = yMax->text().toUShort(&ok);
+    inputs->zStart = zMin->text().toUShort(&ok);
+    inputs->zEnd = zMax->text().toUShort(&ok);
+  }
+
+  inputs->delta_xz = xzPixel->text().toDouble(&ok);
+  inputs->delta_xy = xyPixel->text().toDouble(&ok);
+  inputs->LengthZ = sampleThickness->text().toDouble(&ok);
+
+  std::vector<uint8_t> viewMasks;
+  QVector<bool> excludedViews = m_GainsOffsetsTableModel->getExcludedTilts();
+  for(int i = 0; i < excludedViews.size(); ++i)
+  {
+    if (excludedViews[i] == true)
+    {
+      viewMasks.push_back(i);
+    }
+  }
+  inputs->excludedViews = viewMasks;
+
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::addProcess(TomoEngineTask* task)
+void TomoGui::pipelineComplete()
 {
-  m_QueueDialog->addProcess(task);
-}
+ // std::cout << "ReconstructionWidget::threadFinished()" << std::endl;
+  m_GoBtn->setText("Reconstruct");
+  setWidgetListEnabled(true);
+  this->progressBar->setValue(0);
+  emit pipelineEnded();
+  m_SOCEngine->deleteLater();
 
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TomoGui::on_cancelBtn_clicked()
-{
-  std::cout << "on_cancelBtn_clicked" << std::endl;
-}
-
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TomoGui::processingStarted()
-{
-//  std::cout << "TomoGui::processingStarted()" << std::endl;
-  processBtn->setText("Cancel");
-  processBtn->setVisible(false);
-  this->statusBar()->showMessage("Processing Images...");
-}
-
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TomoGui::processingFinished()
-{
-//  std::cout << "IPHelper::processingFinished()" << std::endl;
-  /* Code that cleans up anything from the processing */
-  processBtn->setText("Segment");
-  processBtn->setVisible(true);
-  cancelBtn->setVisible(false);
-//  this->statusBar()->showMessage("Processing Complete");
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TomoGui::processingMessage(QString str)
-{
-  this->statusBar()->showMessage(str);
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TomoGui::queueControllerFinished()
-{
 
 #if 0
   if (m_LayersPalette != NULL)
@@ -708,14 +788,45 @@ void TomoGui::queueControllerFinished()
   setWindowTitle(m_CurrentImageFile);
   setWidgetListEnabled(true);
 
-  getQueueController()->deleteLater();
-  setQueueController(NULL);
-
   // Make sure the image manipulating widgets are enabled
   setImageWidgetsEnabled(true);
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::pipelineProgress(int val)
+{
+  this->progressBar->setValue( val );
+}
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::addErrorMessage(QString message)
+{
+  QString title = "TomoGui Error";
+  displayDialogBox(title, message, QMessageBox::Critical);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::addWarningMessage(QString message)
+{
+  QString title = "TomoGui Warning";
+  displayDialogBox(title, message, QMessageBox::Warning);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::addProgressMessage(QString message)
+{
+  if (NULL != this->statusBar()) {
+    this->statusBar()->showMessage(message);
+  }
+}
 
 // -----------------------------------------------------------------------------
 //
@@ -795,6 +906,8 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
     readMRCHeader(filepath);
     // Now load up the first tilt from the file
     loadMRCTiltImage(filepath, 0);
+
+    gainsOffsetsFile = ""; // We are reading a new .mrc file so we probably need a new Gains Offsets File
 
     setWindowTitle(filepath);
     this->setWindowFilePath(filepath);
@@ -1093,7 +1206,7 @@ void TomoGui::overlayImageFileLoaded(const QString &filename)
 // -----------------------------------------------------------------------------
 void TomoGui::on_actionParameters_triggered()
 {
-  ParametersDockWidget->show();
+  //ParametersDockWidget->show();
 }
 
 // -----------------------------------------------------------------------------
@@ -1109,6 +1222,7 @@ void TomoGui::on_actionLayers_Palette_triggered()
 // -----------------------------------------------------------------------------
 void TomoGui::readMRCHeader(QString filepath)
 {
+
   MRCHeader header;
 
   MRCReader::Pointer reader = MRCReader::New(true);
@@ -1135,6 +1249,14 @@ void TomoGui::readMRCHeader(QString filepath)
   // Set the current tilt index range and value
   currentTiltIndex->setRange(0, header.nz - 1);
   currentTiltIndex->setValue(tiltIndex);
+
+  xMin->setText("0");
+  yMin->setText("0");
+  zMin->setText("0");
+  xMax->setText(QString::number(header.nx-1));
+  yMax->setText(QString::number(header.ny-1));
+  zMax->setText(QString::number(header.nz-1));
+
 
   // If we have the FEI headers get that information
   if(header.feiHeaders != NULL)
@@ -1494,23 +1616,30 @@ void TomoGui::readGainsOffsetsFile(QString file)
     return;
   }
   GainsOffsetsReader::Pointer reader = GainsOffsetsReader::New();
-  TomoInputs inputs;
-  inputs.fileZSize = m_GainsOffsetsTableModel->rowCount();
-  std::vector<int> goodViews(inputs.fileZSize);
+  TomoInputsPtr inputs = TomoInputsPtr(new TomoInputs);
+  SOCEngine::InitializeTomoInputs(inputs);
+  inputs->fileZSize = m_GainsOffsetsTableModel->rowCount();
+  std::vector<int> goodViews(inputs->fileZSize);
   for(int i = 0; i < m_GainsOffsetsTableModel->rowCount(); ++i)
   {
     goodViews[i] = i;
   }
-  inputs.goodViews = goodViews;
-  inputs.GainsOffsetsFile = gainsOffsetsFile.toStdString();
-  Sinogram sinogram;
-  sinogram.N_theta = m_GainsOffsetsTableModel->rowCount();
-  reader->setInputs(&inputs);
-  reader->setSinogram(&sinogram);
+  inputs->goodViews = goodViews;
+  inputs->GainsOffsetsFile = gainsOffsetsFile.toStdString();
+  SinogramPtr sinogram = SinogramPtr(new Sinogram);
+  SOCEngine::InitializeSinogram(sinogram);
+  sinogram->N_theta = m_GainsOffsetsTableModel->rowCount();
+  reader->setTomoInputs(inputs);
+  reader->setSinogram(sinogram);
   reader->execute();
+  if (reader->getErrorCondition() < 0)
+  {
+    gainsOffsetsFile = ""; // Clear out the variable so we don't try to load it again.
+    return;
+  }
 
-  RealArrayType::Pointer gains = sinogram.InitialGain;
-  RealArrayType::Pointer offsets = sinogram.InitialOffset;
+  RealArrayType::Pointer gains = sinogram->InitialGain;
+  RealArrayType::Pointer offsets = sinogram->InitialOffset;
  // int nDims = gains->getNDims();
   size_t* dims = gains->getDims();
   size_t total = dims[0];
@@ -1645,4 +1774,19 @@ void TomoGui::stepForwardFromTimer()
   QCoreApplication::processEvents();
 }
 
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::displayDialogBox(QString title, QString text, QMessageBox::Icon icon)
+{
+
+  QMessageBox msgBox;
+  msgBox.setText(title);
+  msgBox.setInformativeText(text);
+  msgBox.setStandardButtons(QMessageBox::Ok);
+  msgBox.setDefaultButton(QMessageBox::Ok);
+  msgBox.setIcon(icon);
+  msgBox.exec();
+}
 

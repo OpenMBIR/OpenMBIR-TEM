@@ -42,13 +42,19 @@ include_directories( ${PROJECT_CODE_DIR}/QtSupport )
 include_directories( ${TomoGui_BINARY_DIR} )
 include_directories( ${EIMTomo_BINARY_DIR}/QtSupport )
 
+
+set(CLASS_NAME "SOCEngine")
+SET(ENGINE_INCLUDE_PATH "TomoEngine/SOC")
+configure_file( ${PROJECT_CODE_DIR}/QtSupport/QAbstractPipelineWrapper.h.in
+                ${TomoGui_BINARY_DIR}/Q${CLASS_NAME}.h @ONLY IMMEDIATE)
+                
 # --------------------------------------------------------------------
 # Set up all the source codes
 SET( TomoGui_SRCS
   ${TomoGui_SOURCE_DIR}/main.cpp
   ${TomoGui_SOURCE_DIR}/TomoGui.cpp
   ${TomoGui_SOURCE_DIR}/TomoGuiGraphicsView.cpp
-  ${TomoGui_SOURCE_DIR}/TomoEngineTask.cpp
+ # ${TomoGui_SOURCE_DIR}/TomoEngineTask.cpp
   ${TomoGui_SOURCE_DIR}/LayersDockWidget.cpp
   ${TomoGui_SOURCE_DIR}/GainsOffsetsTableModel.cpp
   ${TomoGui_SOURCE_DIR}/CheckBoxDelegate.cpp
@@ -59,7 +65,7 @@ SET( TomoGui_SRCS
 SET( TomoGui_MOC_HDRS
   ${TomoGui_SOURCE_DIR}/TomoGui.h
   ${TomoGui_SOURCE_DIR}/TomoGuiGraphicsView.h
-  ${TomoGui_SOURCE_DIR}/TomoEngineTask.h
+#  ${TomoGui_SOURCE_DIR}/TomoEngineTask.h
   ${TomoGui_SOURCE_DIR}/LayersDockWidget.h
   ${TomoGui_SOURCE_DIR}/GainsOffsetsItemDelegate.h
   ${TomoGui_SOURCE_DIR}/GainsOffsetsTableModel.h
@@ -92,10 +98,10 @@ QT4_ADD_RESOURCES( Generated_RC_SRCS ${TomoGui_RCS}  ${QRC_LICENSE_FILES})
 QT4_WRAP_UI( Generated_UI_HDRS ${TomoGui_UIS} )
 
 # and finally this will run moc:
-QT4_WRAP_CPP( Generated_MOC_SRCS ${TomoGui_MOC_HDRS} )
+QT4_WRAP_CPP( Generated_MOC_SRCS ${TomoGui_MOC_HDRS} ${TomoGui_BINARY_DIR}/Q${CLASS_NAME}.h )
 
 #-- Put the generated files into their own group for IDEs
-cmp_IDE_GENERATED_PROPERTIES(TomoGui/Generated "${Generated_UI_HDRS}" "${Generated_MOC_SRCS};${Generated_RC_SRCS}")
+cmp_IDE_GENERATED_PROPERTIES(TomoGui/Generated "${Generated_UI_HDRS};${TomoGui_BINARY_DIR}/Q${CLASS_NAME}.h" "${Generated_MOC_SRCS};${Generated_RC_SRCS}")
 
 
 # -- Finally set the Project Sources to include all the sources

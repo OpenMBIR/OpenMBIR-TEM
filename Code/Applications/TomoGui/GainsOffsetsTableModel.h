@@ -166,6 +166,8 @@ class GainsOffsetsTableModel : public QAbstractTableModel
                        QVector<double> offsets);
 
      void getGainsAndOffsets(QVector<double> &gains, QVector<double> &offsets);
+     QVector<bool> getExcludedTilts();
+
 
   private:
      int m_ColumnCount;

@@ -58,8 +58,8 @@ GainsOffsetsReader::~GainsOffsetsReader()
 void GainsOffsetsReader::execute()
 {
   notify("GainsOffsetsReader Starting", 0, UpdateProgressMessage);
-  Sinogram* sinogram = getSinogram();
-  TomoInputs* inputs = getInputs();
+  SinogramPtr sinogram = getSinogram();
+  TomoInputsPtr inputs = getTomoInputs();
 
 
   std::vector<double> fileGains(inputs->fileZSize, 0);

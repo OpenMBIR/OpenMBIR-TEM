@@ -66,8 +66,8 @@ void DetectorResponse::execute()
   DATA_TYPE r0 = -(m_BeamWidth)/2;
   DATA_TYPE StepSize = m_BeamWidth/BEAM_RESOLUTION;
   int16_t i,j,k,p,ProfileIndex;
-  Sinogram* sinogram = getSinogram();
-  TomoInputs* inputs = getInputs();
+  SinogramPtr sinogram = getSinogram();
+  TomoInputsPtr inputs = getTomoInputs();
 
   size_t dims[3] = {1, sinogram->N_theta,DETECTOR_RESPONSE_BINS};
   RealVolumeType::Pointer H = RealVolumeType::New(dims);

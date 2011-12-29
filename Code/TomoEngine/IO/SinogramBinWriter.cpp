@@ -50,8 +50,7 @@
 //
 // -----------------------------------------------------------------------------
 SinogramBinWriter::SinogramBinWriter() :
-TomoFilter(),
-m_NuisanceParams(NULL)
+TomoFilter()
 {
 
 }
@@ -68,7 +67,7 @@ SinogramBinWriter::~SinogramBinWriter()
 // -----------------------------------------------------------------------------
 void SinogramBinWriter::execute()
 {
-  if(NULL == getInputs())
+  if(NULL == getTomoInputs())
   {
     setErrorCondition(-1);
     setErrorMessage("SinogramBinWriter::TomoInputs not initialized Correctly");
@@ -94,7 +93,7 @@ void SinogramBinWriter::execute()
 
   FILE* file = NULL;
 
-  std::string filepath(getInputs()->outputDir);
+  std::string filepath(getTomoInputs()->outputDir);
   filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedSinogramFile);\
   file = fopen(filepath.c_str(), "wb");
   if(file == 0)

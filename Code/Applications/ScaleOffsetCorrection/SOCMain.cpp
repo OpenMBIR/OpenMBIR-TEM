@@ -49,16 +49,17 @@ int main(int argc, char **argv)
 {
   std::cout << "Starting ScaleOffsetCorrection Version " << TomoEngine::Version::Complete << std::endl;
 
-  TomoInputs inputs;
+  TomoInputsPtr inputs = TomoInputsPtr(new TomoInputs);
+  SOCEngine::InitializeTomoInputs(inputs);
   SOCArgsParser argParser;
-  int err = argParser.parseArguments(argc, argv, &inputs);
+  int err = argParser.parseArguments(argc, argv, inputs.get());
   if(err < 0)
   {
     std::cout << "Error Parsing the arguments." << std::endl;
     return EXIT_FAILURE;
   }
 
-  argParser.printArgs(std::cout, &inputs);
+  argParser.printArgs(std::cout, inputs.get());
 
 #if 0
   char path1[MAXPATHLEN]; // This is a buffer for the text
@@ -67,12 +68,12 @@ int main(int argc, char **argv)
   std::cout << "Current Working Directory: " << path1 << std::endl;
 #endif
   // Make sure the output directory is created if it does not exist
-  if(MXADir::exists(inputs.outputDir) == false)
+  if(MXADir::exists(inputs->outputDir) == false)
   {
-    std::cout << "Output Directory '" << inputs.outputDir << "' does NOT exist. Attempting to create it." << std::endl;
-    if(MXADir::mkdir(inputs.outputDir, true) == false)
+    std::cout << "Output Directory '" << inputs->outputDir << "' does NOT exist. Attempting to create it." << std::endl;
+    if(MXADir::mkdir(inputs->outputDir, true) == false)
     {
-      std::cout << "Error creating the output directory '" << inputs.outputDir << "'\n   Exiting Now." << std::endl;
+      std::cout << "Error creating the output directory '" << inputs->outputDir << "'\n   Exiting Now." << std::endl;
       return EXIT_FAILURE;
     }
     std::cout << "Output Directory Created." << std::endl;
@@ -84,18 +85,19 @@ int main(int argc, char **argv)
 #endif
 
   // Create these variables so we
-  Sinogram sinogram;
-  ::memset(&sinogram, 0, sizeof(Sinogram));
-  Geometry geometry;
-  ::memset(&geometry, 0, sizeof(Geometry));
-  ScaleOffsetParams nuisanceParams;
-  ::memset(&nuisanceParams, 0, sizeof(ScaleOffsetParams));
+  SinogramPtr sinogram = SinogramPtr(new Sinogram);
+  GeometryPtr geometry =  GeometryPtr(new   Geometry);
+  ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
+
+  SOCEngine::InitializeSinogram(sinogram);
+  SOCEngine::InitializeGeometry(geometry);
+  SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
 
   SOCEngine::Pointer engine = SOCEngine::New();
-  engine->setInputs(&inputs);
-  engine->setSinogram(&sinogram);
-  engine->setGeometry(&geometry);
-  engine->setNuisanceParams(&nuisanceParams);
+  engine->setTomoInputs(inputs);
+  engine->setSinogram(sinogram);
+  engine->setGeometry(geometry);
+  engine->setNuisanceParams(nuisanceParams);
 
   // Run the reconstruction
   engine->run();

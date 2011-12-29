@@ -69,7 +69,10 @@ TomoEngineTask::~TomoEngineTask()
 // -----------------------------------------------------------------------------
 void TomoEngineTask::cancel()
 {
-
+  if (m_Engine.get() != NULL)
+  {
+    m_Engine->setCancel(true);
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -77,7 +80,20 @@ void TomoEngineTask::cancel()
 // -----------------------------------------------------------------------------
 void TomoEngineTask::run()
 {
+  m_Engine = SOCEngine::New();
+  m_Engine->setInputs(getTomoInputs().get());
+  m_Engine->setSinogram(getSinogram().get());
+  m_Engine->setGeometry(getGeometry().get());
+  m_Engine->setNuisanceParams(getNuisanceParams().get());
 
+  // Run the reconstruction
+  m_Engine->run();
+  if(m_Engine->getErrorCondition() < 0)
+  {
+    emit progressTextChanged( QString::fromStdString(m_Engine->get))
+    return EXIT_FAILURE;
+  }
+  std::cout << "Completed SOC Run" << std::endl;
 
 }
 

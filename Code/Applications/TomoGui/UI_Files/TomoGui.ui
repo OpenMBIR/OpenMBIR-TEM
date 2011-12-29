@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>959</width>
-    <height>651</height>
+    <width>792</width>
+    <height>717</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -60,7 +60,7 @@
           <property name="verticalSpacing">
            <number>4</number>
           </property>
-          <item row="8" column="0">
+          <item row="10" column="0">
            <widget class="QLabel" name="label_3">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -73,7 +73,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="9" column="0">
+          <item row="11" column="0">
            <widget class="QLabel" name="label_4">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -86,7 +86,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="11" column="0">
+          <item row="13" column="0">
            <widget class="QLabel" name="label_23">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -99,7 +99,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="13" column="0">
+          <item row="15" column="0">
            <widget class="QLabel" name="label_34">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -112,7 +112,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="9" column="3">
+          <item row="11" column="3">
            <widget class="QLabel" name="label_8">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -125,7 +125,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="9" column="4">
+          <item row="11" column="4">
            <widget class="QLineEdit" name="innerIterations">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -138,7 +138,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="11" column="3">
+          <item row="13" column="3">
            <widget class="QLabel" name="label_33">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -151,7 +151,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="11" column="4">
+          <item row="13" column="4">
            <widget class="QLineEdit" name="mrf">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -164,7 +164,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="13" column="3">
+          <item row="15" column="3">
            <widget class="QLabel" name="label_35">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -177,7 +177,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="13" column="4">
+          <item row="15" column="4">
            <widget class="QLineEdit" name="xzPixel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -190,59 +190,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QLabel" name="label_6">
-            <property name="toolTip">
-             <string>The image to be segmented</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-            </property>
-            <property name="text">
-             <string>MRC File:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1" colspan="4">
-           <widget class="QFSDropLineEdit" name="inputMRCFilePath">
-            <property name="toolTip">
-             <string>The image to be segmented</string>
-            </property>
-            <property name="text">
-             <string>/Users/Shared/Data/TomographyData/TiO2Ps100kRun3/Run3TiO2PS100k_2.ali</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QLabel" name="label_7">
-            <property name="toolTip">
-             <string>The output image to be written at the conclusion of the segmentation</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-            </property>
-            <property name="text">
-             <string>Initial Reconstruction File:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1" colspan="4">
-           <widget class="QFSDropLineEdit" name="outputFilePath">
-            <property name="toolTip">
-             <string>The output image to be written at the conclusion of the segmentation</string>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="1">
+          <item row="10" column="1">
            <widget class="QLineEdit" name="stopThreshold">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -255,7 +203,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="9" column="1">
+          <item row="11" column="1">
            <widget class="QLineEdit" name="outerIterations">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -268,7 +216,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="11" column="1">
+          <item row="13" column="1">
            <widget class="QLineEdit" name="sigmaX">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -281,7 +229,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="13" column="1">
+          <item row="15" column="1">
            <widget class="QLineEdit" name="xyPixel">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -294,17 +242,17 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="16" column="0">
+          <item row="20" column="0">
            <widget class="QToolButton" name="importGainsOffsetsBtn">
             <property name="text">
              <string>Import Gains/Offsets Data</string>
             </property>
            </widget>
           </item>
-          <item row="17" column="0" colspan="6">
+          <item row="21" column="0" colspan="6">
            <widget class="QTableView" name="gainsOffsetsTableView"/>
           </item>
-          <item row="8" column="3">
+          <item row="10" column="3">
            <widget class="QLabel" name="label_36">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -317,7 +265,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="8" column="4">
+          <item row="10" column="4">
            <widget class="QLineEdit" name="sampleThickness">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
@@ -330,7 +278,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="7" column="5" rowspan="6">
+          <item row="9" column="5" rowspan="6">
            <spacer name="horizontalSpacer_6">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -343,33 +291,7 @@ font-size: 10px;
             </property>
            </spacer>
           </item>
-          <item row="4" column="5">
-           <widget class="QPushButton" name="outputFilePathBtn">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Select...</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="5">
-           <widget class="QPushButton" name="inputMRCFilePathBtn">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>Select...</string>
-            </property>
-           </widget>
-          </item>
-          <item row="14" column="0">
+          <item row="16" column="0">
            <widget class="QLabel" name="label_37">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -382,7 +304,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="14" column="1">
+          <item row="16" column="1">
            <widget class="QComboBox" name="tiltSelection">
             <item>
              <property name="text">
@@ -396,717 +318,1111 @@ font-size: 10px;
             </item>
            </widget>
           </item>
-          <item row="1" column="0" colspan="6">
-           <layout class="QHBoxLayout" name="horizontalLayout">
-            <item>
-             <layout class="QFormLayout" name="formLayout">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_13">
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                </property>
-                <property name="text">
-                 <string>X Dim:</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLabel" name="m_XDim">
-                <property name="minimumSize">
-                 <size>
-                  <width>65</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <italic>true</italic>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-	font-size: 11px;
-	font-style: italic;
-}</string>
-                </property>
-                <property name="text">
-                 <string>0</string>
-                </property>
-                <property name="scaledContents">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_14">
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                </property>
-                <property name="text">
-                 <string>Y Dim:</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="m_YDim">
-                <property name="minimumSize">
-                 <size>
-                  <width>65</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <italic>true</italic>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-	font-size: 11px;
-	font-style: italic;
-}</string>
-                </property>
-                <property name="text">
-                 <string>0</string>
-                </property>
-                <property name="scaledContents">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="label_15">
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                </property>
-                <property name="text">
-                 <string>Tilts:</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QLabel" name="m_nTilts">
-                <property name="minimumSize">
-                 <size>
-                  <width>65</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <italic>true</italic>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-	font-size: 11px;
-	font-style: italic;
-}</string>
-                </property>
-                <property name="text">
-                 <string>0</string>
-                </property>
-                <property name="scaledContents">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QFormLayout" name="formLayout_4">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_17">
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                </property>
-                <property name="text">
-                 <string>X Grid:</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLabel" name="m_XGrid">
-                <property name="minimumSize">
-                 <size>
-                  <width>65</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <italic>true</italic>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-	font-size: 11px;
-	font-style: italic;
-}</string>
-                </property>
-                <property name="text">
-                 <string>0.0</string>
-                </property>
-                <property name="scaledContents">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_18">
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                </property>
-                <property name="text">
-                 <string>Y Grid:</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="m_YGrid">
-                <property name="minimumSize">
-                 <size>
-                  <width>65</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <italic>true</italic>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-	font-size: 11px;
-	font-style: italic;
-}</string>
-                </property>
-                <property name="text">
-                 <string>0.0</string>
-                </property>
-                <property name="scaledContents">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="m_ZMax_2">
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                </property>
-                <property name="text">
-                 <string>Z Grid:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QLabel" name="m_ZGrid">
-                <property name="minimumSize">
-                 <size>
-                  <width>65</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <italic>true</italic>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-	font-size: 11px;
-	font-style: italic;
-}</string>
-                </property>
-                <property name="text">
-                 <string>0.0</string>
-                </property>
-                <property name="scaledContents">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QFormLayout" name="formLayout_5">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_19">
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                </property>
-                <property name="text">
-                 <string>X Cell:</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLabel" name="m_XCell">
-                <property name="minimumSize">
-                 <size>
-                  <width>65</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <italic>true</italic>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-	font-size: 11px;
-	font-style: italic;
-}</string>
-                </property>
-                <property name="text">
-                 <string>0.0</string>
-                </property>
-                <property name="scaledContents">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_20">
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                </property>
-                <property name="text">
-                 <string>Y Cell:</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="m_YCell">
-                <property name="minimumSize">
-                 <size>
-                  <width>65</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <italic>true</italic>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-	font-size: 11px;
-	font-style: italic;
-}</string>
-                </property>
-                <property name="text">
-                 <string>0.0</string>
-                </property>
-                <property name="scaledContents">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="m_ZMax_3">
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                </property>
-                <property name="text">
-                 <string>Z Cell:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QLabel" name="m_ZCell">
-                <property name="minimumSize">
-                 <size>
-                  <width>65</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <italic>true</italic>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-	font-size: 11px;
-	font-style: italic;
-}</string>
-                </property>
-                <property name="text">
-                 <string>0.0</string>
-                </property>
-                <property name="scaledContents">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QFormLayout" name="formLayout_6">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_21">
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                </property>
-                <property name="text">
-                 <string>X Origin:</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLabel" name="m_XOrigin">
-                <property name="minimumSize">
-                 <size>
-                  <width>65</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <italic>true</italic>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-	font-size: 11px;
-	font-style: italic;
-}</string>
-                </property>
-                <property name="text">
-                 <string>0.0</string>
-                </property>
-                <property name="scaledContents">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QLabel" name="label_22">
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                </property>
-                <property name="text">
-                 <string>Y Origin:</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="m_YOrigin">
-                <property name="minimumSize">
-                 <size>
-                  <width>65</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <italic>true</italic>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-	font-size: 11px;
-	font-style: italic;
-}</string>
-                </property>
-                <property name="text">
-                 <string>0.0</string>
-                </property>
-                <property name="scaledContents">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="0">
-               <widget class="QLabel" name="m_ZMax_4">
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                </property>
-                <property name="text">
-                 <string>Z Origin:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="2" column="1">
-               <widget class="QLabel" name="m_ZOrigin">
-                <property name="minimumSize">
-                 <size>
-                  <width>65</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="font">
-                 <font>
-                  <pointsize>-1</pointsize>
-                  <italic>true</italic>
-                 </font>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QLabel {
-	font-size: 11px;
-	font-style: italic;
-}</string>
-                </property>
-                <property name="text">
-                 <string>0.0</string>
-                </property>
-                <property name="scaledContents">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_3">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>37</width>
-                <height>17</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-          <item row="16" column="1" colspan="2">
+          <item row="20" column="1" colspan="2">
            <widget class="QToolButton" name="exportGainsOffsets">
             <property name="text">
              <string>Export Gains/Offsets</string>
             </property>
            </widget>
           </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="label">
-            <property name="styleSheet">
-             <string notr="true">QLabel {
+          <item row="19" column="0" colspan="6">
+           <layout class="QGridLayout" name="gridLayout_5">
+            <property name="topMargin">
+             <number>10</number>
+            </property>
+            <property name="rightMargin">
+             <number>10</number>
+            </property>
+            <item row="0" column="1" colspan="2">
+             <widget class="QLabel" name="label_16">
+              <property name="styleSheet">
+               <string notr="true">QLabel {
 font-weight: bold;
 font-size: 10px;
 }</string>
-            </property>
-            <property name="text">
-             <string>Initial Reconstruction:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1" colspan="4">
-           <widget class="QFSDropLineEdit" name="initialReconstructionPath">
-            <property name="toolTip">
-             <string>The output image to be written at the conclusion of the segmentation</string>
-            </property>
-            <property name="text">
-             <string>/Users/Shared/Data/TomographyData/TiO2Ps100kRun3/Run3TiO2PS100k_2_output</string>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="5">
-           <widget class="QPushButton" name="initialReconstructionPathBtn">
-            <property name="text">
-             <string>Select</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1" colspan="4">
-           <widget class="QFSDropLineEdit" name="outputDirectoryPath">
-            <property name="toolTip">
-             <string>The output image to be written at the conclusion of the segmentation</string>
-            </property>
-            <property name="text">
-             <string>ReconstructedObject.raw</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QLabel" name="label_9">
-            <property name="toolTip">
-             <string>The output image to be written at the conclusion of the segmentation</string>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">QLabel {
+              </property>
+              <property name="text">
+               <string>Min:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="3" colspan="2">
+             <widget class="QLabel" name="label_38">
+              <property name="styleSheet">
+               <string notr="true">QLabel {
 font-weight: bold;
 font-size: 10px;
 }</string>
-            </property>
-            <property name="text">
-             <string>Output Directory:</string>
-            </property>
-           </widget>
+              </property>
+              <property name="text">
+               <string>Max:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLabel" name="label_39">
+              <property name="font">
+               <font>
+                <pointsize>-1</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>X:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="label_40">
+              <property name="font">
+               <font>
+                <pointsize>-1</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Y:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLabel" name="m_ZMax_7">
+              <property name="font">
+               <font>
+                <pointsize>-1</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Z:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QLineEdit" name="xMin">
+              <property name="maximumSize">
+               <size>
+                <width>65</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>--</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QLineEdit" name="yMin">
+              <property name="maximumSize">
+               <size>
+                <width>65</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>--</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="2">
+             <widget class="QLineEdit" name="zMin">
+              <property name="maximumSize">
+               <size>
+                <width>65</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>--</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QLabel" name="label_41">
+              <property name="font">
+               <font>
+                <pointsize>-1</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>X:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <widget class="QLabel" name="label_42">
+              <property name="font">
+               <font>
+                <pointsize>-1</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Y</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="3">
+             <widget class="QLabel" name="m_ZMax_8">
+              <property name="font">
+               <font>
+                <pointsize>-1</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Z</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="4">
+             <widget class="QLineEdit" name="xMax">
+              <property name="maximumSize">
+               <size>
+                <width>65</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>--</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="4">
+             <widget class="QLineEdit" name="yMax">
+              <property name="maximumSize">
+               <size>
+                <width>65</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>--</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="4">
+             <widget class="QLineEdit" name="zMax">
+              <property name="maximumSize">
+               <size>
+                <width>65</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>--</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="5" rowspan="4">
+             <spacer name="horizontalSpacer_9">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="0" column="0" rowspan="4">
+             <widget class="QCheckBox" name="useSubVolume">
+              <property name="styleSheet">
+               <string notr="true">QCheckBox {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Use SubVolume</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
-          <item row="3" column="5">
-           <widget class="QPushButton" name="outputDirectoryPathBtn">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
+          <item row="0" column="0" colspan="6">
+           <layout class="QGridLayout" name="gridLayout_2">
+            <property name="topMargin">
+             <number>0</number>
             </property>
-            <property name="text">
-             <string>Select...</string>
+            <property name="rightMargin">
+             <number>0</number>
             </property>
-           </widget>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_6">
+              <property name="toolTip">
+               <string>The image to be segmented</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>MRC File:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QFSDropLineEdit" name="inputMRCFilePath">
+              <property name="toolTip">
+               <string>The image to be segmented</string>
+              </property>
+              <property name="text">
+               <string>/Users/Shared/Data/TomographyData/TiO2Ps100kRun3/Run3TiO2PS100k_2.ali</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="inputMRCFilePathBtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Select...</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1" colspan="2">
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <item>
+               <layout class="QFormLayout" name="formLayout">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_13">
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>X Dim:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QLabel" name="m_XDim">
+                  <property name="minimumSize">
+                   <size>
+                    <width>65</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <italic>true</italic>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+	font-size: 11px;
+	font-style: italic;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>0</string>
+                  </property>
+                  <property name="scaledContents">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_14">
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>Y Dim:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QLabel" name="m_YDim">
+                  <property name="minimumSize">
+                   <size>
+                    <width>65</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <italic>true</italic>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+	font-size: 11px;
+	font-style: italic;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>0</string>
+                  </property>
+                  <property name="scaledContents">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="label_15">
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>Tilts:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QLabel" name="m_nTilts">
+                  <property name="minimumSize">
+                   <size>
+                    <width>65</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <italic>true</italic>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+	font-size: 11px;
+	font-style: italic;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>0</string>
+                  </property>
+                  <property name="scaledContents">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QFormLayout" name="formLayout_4">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_17">
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>X Grid:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QLabel" name="m_XGrid">
+                  <property name="minimumSize">
+                   <size>
+                    <width>65</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <italic>true</italic>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+	font-size: 11px;
+	font-style: italic;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>0.0</string>
+                  </property>
+                  <property name="scaledContents">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_18">
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>Y Grid:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QLabel" name="m_YGrid">
+                  <property name="minimumSize">
+                   <size>
+                    <width>65</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <italic>true</italic>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+	font-size: 11px;
+	font-style: italic;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>0.0</string>
+                  </property>
+                  <property name="scaledContents">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="m_ZMax_2">
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>Z Grid:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QLabel" name="m_ZGrid">
+                  <property name="minimumSize">
+                   <size>
+                    <width>65</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <italic>true</italic>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+	font-size: 11px;
+	font-style: italic;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>0.0</string>
+                  </property>
+                  <property name="scaledContents">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QFormLayout" name="formLayout_5">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_19">
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>X Cell:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QLabel" name="m_XCell">
+                  <property name="minimumSize">
+                   <size>
+                    <width>65</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <italic>true</italic>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+	font-size: 11px;
+	font-style: italic;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>0.0</string>
+                  </property>
+                  <property name="scaledContents">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_20">
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>Y Cell:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QLabel" name="m_YCell">
+                  <property name="minimumSize">
+                   <size>
+                    <width>65</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <italic>true</italic>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+	font-size: 11px;
+	font-style: italic;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>0.0</string>
+                  </property>
+                  <property name="scaledContents">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="m_ZMax_3">
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>Z Cell:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QLabel" name="m_ZCell">
+                  <property name="minimumSize">
+                   <size>
+                    <width>65</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <italic>true</italic>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+	font-size: 11px;
+	font-style: italic;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>0.0</string>
+                  </property>
+                  <property name="scaledContents">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QFormLayout" name="formLayout_6">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_21">
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>X Origin:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QLabel" name="m_XOrigin">
+                  <property name="minimumSize">
+                   <size>
+                    <width>65</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <italic>true</italic>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+	font-size: 11px;
+	font-style: italic;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>0.0</string>
+                  </property>
+                  <property name="scaledContents">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_22">
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>Y Origin:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QLabel" name="m_YOrigin">
+                  <property name="minimumSize">
+                   <size>
+                    <width>65</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <italic>true</italic>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+	font-size: 11px;
+	font-style: italic;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>0.0</string>
+                  </property>
+                  <property name="scaledContents">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QLabel" name="m_ZMax_4">
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <weight>75</weight>
+                    <bold>true</bold>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>Z Origin:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QLabel" name="m_ZOrigin">
+                  <property name="minimumSize">
+                   <size>
+                    <width>65</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>-1</pointsize>
+                    <italic>true</italic>
+                   </font>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+	font-size: 11px;
+	font-style: italic;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>0.0</string>
+                  </property>
+                  <property name="scaledContents">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_3">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>37</width>
+                  <height>17</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item row="3" column="0" colspan="6">
+           <layout class="QGridLayout" name="gridLayout_3">
+            <property name="topMargin">
+             <number>10</number>
+            </property>
+            <property name="verticalSpacing">
+             <number>4</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label">
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Initial Reconstruction:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QFSDropLineEdit" name="initialReconstructionPath">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>The output image to be written at the conclusion of the segmentation</string>
+              </property>
+              <property name="text">
+               <string>/Users/Shared/Data/TomographyData/TiO2Ps100kRun3/Run3TiO2PS100k_2_output</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="initialReconstructionPathBtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Select...</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_9">
+              <property name="toolTip">
+               <string>The output image to be written at the conclusion of the segmentation</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Output Directory:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QFSDropLineEdit" name="outputDirectoryPath">
+              <property name="toolTip">
+               <string>The output image to be written at the conclusion of the segmentation</string>
+              </property>
+              <property name="text">
+               <string>ReconstructedObject.raw</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QPushButton" name="outputDirectoryPathBtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Select...</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="toolTip">
+               <string>The output image to be written at the conclusion of the segmentation</string>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Initial Reconstruction File:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QFSDropLineEdit" name="outputFilePath">
+              <property name="toolTip">
+               <string>The output image to be written at the conclusion of the segmentation</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="QPushButton" name="outputFilePathBtn">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Select...</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
@@ -1123,9 +1439,6 @@ font-size: 10px;
           </property>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <property name="margin">
-             <number>0</number>
-            </property>
             <item>
              <layout class="QFormLayout" name="formLayout_8">
               <property name="fieldGrowthPolicy">
@@ -2264,6 +2577,48 @@ font-size: 10px;
       </item>
      </layout>
     </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <item>
+       <widget class="QProgressBar" name="progressBar">
+        <property name="value">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="m_GoBtn">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>50</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="statusTip">
+         <string>Click this to start the reconstruction</string>
+        </property>
+        <property name="text">
+         <string>Reconstruct</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -2271,7 +2626,7 @@ font-size: 10px;
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>959</width>
+     <width>792</width>
      <height>22</height>
     </rect>
    </property>
@@ -2306,160 +2661,6 @@ font-size: 10px;
    <addaction name="menuWindow"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QDockWidget" name="ParametersDockWidget">
-   <property name="floating">
-    <bool>false</bool>
-   </property>
-   <property name="features">
-    <set>QDockWidget::AllDockWidgetFeatures</set>
-   </property>
-   <property name="allowedAreas">
-    <set>Qt::AllDockWidgetAreas</set>
-   </property>
-   <property name="windowTitle">
-    <string>Parameters</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents">
-    <layout class="QVBoxLayout" name="verticalLayout_6">
-     <property name="margin">
-      <number>4</number>
-     </property>
-     <item>
-      <widget class="QGroupBox" name="groupBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>225</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="font">
-        <font>
-         <weight>50</weight>
-         <bold>false</bold>
-        </font>
-       </property>
-       <property name="title">
-        <string>Parameters</string>
-       </property>
-       <layout class="QFormLayout" name="formLayout_2">
-        <property name="fieldGrowthPolicy">
-         <enum>QFormLayout::FieldsStayAtSizeHint</enum>
-        </property>
-        <property name="verticalSpacing">
-         <number>4</number>
-        </property>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <widget class="QGroupBox" name="groupBox_3">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="minimumSize">
-        <size>
-         <width>225</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="title">
-        <string>Process Queue</string>
-       </property>
-       <layout class="QVBoxLayout" name="verticalLayout_2">
-        <property name="spacing">
-         <number>0</number>
-        </property>
-        <property name="margin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="ProcessQueueDialog" name="m_QueueDialog" native="true">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>215</width>
-            <height>0</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_7">
-       <property name="sizeConstraint">
-        <enum>QLayout::SetMaximumSize</enum>
-       </property>
-       <item>
-        <widget class="QPushButton" name="processBtn">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="statusTip">
-          <string>Click this to start the reconstruction</string>
-         </property>
-         <property name="text">
-          <string>Reconstruct</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="cancelBtn">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>50</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Cancel</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </widget>
-  </widget>
   <action name="actionOpenMRCFile">
    <property name="text">
     <string>Open MRC File</string>
@@ -2532,12 +2733,6 @@ font-size: 10px;
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ProcessQueueDialog</class>
-   <extends>QWidget</extends>
-   <header location="global">ProcessQueueDialog.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>QFSDropLineEdit</class>
    <extends>QLineEdit</extends>
    <header location="global">QFSDropLineEdit.h</header>
@@ -2550,14 +2745,6 @@ font-size: 10px;
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>inputMRCFilePath</tabstop>
-  <tabstop>inputMRCFilePathBtn</tabstop>
-  <tabstop>initialReconstructionPath</tabstop>
-  <tabstop>initialReconstructionPathBtn</tabstop>
-  <tabstop>outputDirectoryPath</tabstop>
-  <tabstop>outputDirectoryPathBtn</tabstop>
-  <tabstop>outputFilePath</tabstop>
-  <tabstop>outputFilePathBtn</tabstop>
   <tabstop>stopThreshold</tabstop>
   <tabstop>sampleThickness</tabstop>
   <tabstop>outerIterations</tabstop>
@@ -2568,8 +2755,6 @@ font-size: 10px;
   <tabstop>xzPixel</tabstop>
   <tabstop>tiltSelection</tabstop>
   <tabstop>importGainsOffsetsBtn</tabstop>
-  <tabstop>processBtn</tabstop>
-  <tabstop>cancelBtn</tabstop>
   <tabstop>zoomIn</tabstop>
   <tabstop>zoomOut</tabstop>
   <tabstop>fitToWindow</tabstop>
@@ -2582,7 +2767,6 @@ font-size: 10px;
   <tabstop>skipStart</tabstop>
   <tabstop>skipEnd</tabstop>
   <tabstop>gainsOffsetsTableView</tabstop>
-  <tabstop>tabWidget</tabstop>
  </tabstops>
  <resources>
   <include location="../../../../Resources/icons/images/Icons.qrc"/>

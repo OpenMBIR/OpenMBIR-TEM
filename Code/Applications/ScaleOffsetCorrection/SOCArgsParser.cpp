@@ -129,9 +129,9 @@ SOCArgsParser::~SOCArgsParser()
 
 
 
-int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
+int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs)
 {
-  if ( NULL == Input)
+  if ( NULL == inputs)
   {
     printf("The CommandLineInputspointer was null. Returning early.\n");
     return -1;
@@ -163,7 +163,7 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
 
 
 
-  TCLAP::ValueArg<int> in_numIter("n", "numIter", "Number of Inner Iterations", true, 0, "0");
+  TCLAP::ValueArg<int> in_numIter("n", "inner", "Number of Inner Iterations", true, 0, "0");
   cmd.add(in_numIter);
   TCLAP::ValueArg<double> in_sigmaX("l", "sigmax", "Sigma X Value", true, 1.0, "1.0");
   cmd.add(in_sigmaX);
@@ -174,7 +174,7 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
 	//TCLAP::ValueArg<std::string> InitialParameters("g", "initp", "InitialParameters", false, "", "");
  // cmd.add(InitialParameters);
 
-  TCLAP::ValueArg<int> NumOuterIter("O", "", "NumOuterIter", true, 1, "1");
+  TCLAP::ValueArg<int> NumOuterIter("O", "outer", "NumOuterIter", true, 1, "1");
   cmd.add(NumOuterIter);
 
   TCLAP::ValueArg<DATA_TYPE> xz_size("", "xz_size", "Size in nm of output pixel xz plane", true, 1, "1");
@@ -187,6 +187,9 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
 
   TCLAP::ValueArg<std::string> viewMask("", "exclude_views", "Comma separated list of tilts to exclude by index", false, "", "");
   cmd.add(viewMask);
+
+  TCLAP::ValueArg<unsigned int> tiltSelection("", "tilt_selection", "Which Tilt Values to use from file. Default is 'A'", true, SOC::A_Tilt, "0");
+  cmd.add(tiltSelection);
 
   if (argc < 2)
   {
@@ -202,20 +205,20 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
   try
   {
     cmd.parse(argc, argv);
-    Input->OutputFile = in_outputDir.getValue() + MXADir::getSeparator() + in_outputFile.getValue();
-    Input->SinoFile = in_sinoFile.getValue();
-    Input->InitialReconFile = in_InitialRecon.getValue();
-    Input->GainsOffsetsFile = in_GainsOffsets.getValue();
-    Input->outputDir = in_outputDir.getValue();
-    Input->NumIter = in_numIter.getValue();
-    Input->SigmaX = in_sigmaX.getValue();
-    Input->p = in_markov.getValue();
-    Input->NumOuterIter = NumOuterIter.getValue();
-    Input->StopThreshold = in_stopThreshold.getValue();
+    inputs->OutputFile = in_outputDir.getValue() + MXADir::getSeparator() + in_outputFile.getValue();
+    inputs->SinoFile = in_sinoFile.getValue();
+    inputs->InitialReconFile = in_InitialRecon.getValue();
+    inputs->GainsOffsetsFile = in_GainsOffsets.getValue();
+    inputs->outputDir = in_outputDir.getValue();
+    inputs->NumIter = in_numIter.getValue();
+    inputs->SigmaX = in_sigmaX.getValue();
+    inputs->p = in_markov.getValue();
+    inputs->NumOuterIter = NumOuterIter.getValue();
+    inputs->StopThreshold = in_stopThreshold.getValue();
 
     int subvolumeValues[6];
     ::memset(subvolumeValues, 0, 6 * sizeof(int));
-    Input->useSubvolume = false;
+    inputs->useSubvolume = false;
 
     if(subvolume.getValue().length() != 0)
     {
@@ -225,18 +228,19 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
         std::cout << "Error Parsing the Subvolume Dimensions. They should be entered as --subvolume 64,128,256,80,150,280" << std::endl;
         return -1;
       }
-      Input->useSubvolume = true;
-      Input->xStart = subvolumeValues[0];
-      Input->xEnd = subvolumeValues[3];
-      Input->yStart = subvolumeValues[1];
-      Input->yEnd = subvolumeValues[4];
-      Input->zStart = subvolumeValues[2];
-      Input->zEnd = subvolumeValues[5];
+      inputs->useSubvolume = true;
+      inputs->xStart = subvolumeValues[0];
+      inputs->xEnd = subvolumeValues[3];
+      inputs->yStart = subvolumeValues[1];
+      inputs->yEnd = subvolumeValues[4];
+      inputs->zStart = subvolumeValues[2];
+      inputs->zEnd = subvolumeValues[5];
     }
 
-    Input->delta_xz = xz_size.getValue();
-    Input->delta_xy = xy_size.getValue();
-    Input->LengthZ = thickness.getValue();
+    inputs->delta_xz = xz_size.getValue();
+    inputs->delta_xy = xy_size.getValue();
+    inputs->LengthZ = thickness.getValue();
+    inputs->tiltSelection = static_cast<SOC::TiltSelection>(tiltSelection.getValue());
 
     std::vector<uint8_t> viewMasks;
 
@@ -246,7 +250,7 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* Input)
       std::cout << "Error Parsing the Tilt Mask Values. They should be entered as 4,7,12,34,67" << std::endl;
       return -1;
     }
-    Input->excludedViews = viewMasks;
+    inputs->excludedViews = viewMasks;
 
   }
   catch (TCLAP::ArgException &e)

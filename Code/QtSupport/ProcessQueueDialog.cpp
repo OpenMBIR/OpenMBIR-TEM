@@ -72,8 +72,8 @@ void ProcessQueueDialog::addProcess(ProcessQueueTask* task)
   progBar->setRange(0, 100);
   progBar->setAlignment(Qt::AlignBottom);
 
-  QFileInfo fileInfo(task->getInputFilePath());
-  progBar->setText(fileInfo.fileName());
+ // QFileInfo fileInfo(task->getInputFilePath());
+ // progBar->setText(fileInfo.fileName());
 
   QSizePolicy sizePolicy1(QSizePolicy::Preferred, QSizePolicy::Fixed);
   sizePolicy1.setHorizontalStretch(0);

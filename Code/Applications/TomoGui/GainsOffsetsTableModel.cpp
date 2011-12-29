@@ -479,6 +479,14 @@ void GainsOffsetsTableModel::getGainsAndOffsets(QVector<double> &gains, QVector<
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+QVector<bool> GainsOffsetsTableModel::getExcludedTilts()
+{
+  return m_Excludes;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 QAbstractItemDelegate* GainsOffsetsTableModel::getItemDelegate()
 {
   return new GainsOffsetsItemDelegate;

@@ -74,9 +74,9 @@ void CalculateAMatrixColumn::execute()
   int32_t BaseIndex,FinalIndex,ProfileIndex=0;
   uint32_t count = 0;
 
-  Sinogram* sinogram = getSinogram();
-  Geometry* geometry = getGeometry();
-  TomoInputs* inputs = getInputs();
+  SinogramPtr sinogram = getSinogram();
+  GeometryPtr geometry = getGeometry();
+  TomoInputsPtr inputs = getTomoInputs();
 
 #ifdef BEAM_CALCULATION
   BEAM_WIDTH = (0.5)*sinogram->delta_r;

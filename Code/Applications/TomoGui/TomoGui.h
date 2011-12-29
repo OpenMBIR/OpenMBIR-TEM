@@ -39,17 +39,17 @@
 #include <QtGui/QMainWindow>
 #include <QtGui/QWidget>
 #include <QtGui/QGraphicsScene>
+#include <QtGui/QMessageBox>
 
 
-class ProcessQueueController;
-class TomoEngineTask;
+
 class LayersDockWidget;
 class GainsOffsetsTableModel;
 
 
 //-- UIC generated Header
 #include <ui_TomoGui.h>
-
+#include "QSOCEngine.h"
 
 #include "TomoEngine/IO/MRCHeader.h"
 
@@ -69,10 +69,11 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
   public:
     TomoGui(QWidget *parent = 0);
     virtual ~TomoGui();
-    void initWithFile(const QString imageFile, QString mountImage);
 
+    MXA_INSTANCE_PROPERTY(QString, CurrentImageFile)
+    MXA_INSTANCE_PROPERTY(QString, CurrentProcessedFile)
 
-    int processInputs(QObject* parentGUI);
+    MXA_INSTANCE_PROPERTY(bool, OutputExistsCheck)
 
     /**
      * @brief Reads the Preferences from the users pref file
@@ -86,15 +87,6 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
 
     void readWindowSettings(QSettings &prefs);
     void writeWindowSettings(QSettings &prefs);
-
-
-    MXA_INSTANCE_PROPERTY(QString, CurrentImageFile)
-    MXA_INSTANCE_PROPERTY(QString, CurrentProcessedFile)
-
-    MXA_INSTANCE_PROPERTY(bool, OutputExistsCheck)
-    MXA_INSTANCE_PROPERTY(ProcessQueueController*, QueueController)
- //   MXA_INSTANCE_PROPERTY(QString, OpenDialogLastDirectory)
-
 
     void readMRCHeader(QString filepath);
 
@@ -110,10 +102,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
 
     void readGainsOffsetsFile(QString file);
 
-
-  signals:
-    void cancelTask();
-    void cancelProcessQueue();
+    bool sanityCheckOutputDirectory(QLineEdit* le, QString msgTitle);
 
   public slots:
 
@@ -143,8 +132,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
 
 
     /* slots for the buttons in the GUI */
-    void on_processBtn_clicked();
-    void on_cancelBtn_clicked();
+    void on_m_GoBtn_clicked();
 
     void z10_triggered();
     void z25_triggered();
@@ -192,60 +180,47 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     void on_importGainsOffsetsBtn_clicked();
     void on_exportGainsOffsets_clicked();
 
-    /* Slots to receive events from the ProcessQueueController */
-    void queueControllerFinished();
-
-    // These slots get called when the plugin starts and finishes processing
-    void processingStarted();
-    void processingFinished();
-    void processingMessage(QString str);
-
-
-
   protected:
-
-    TomoEngineTask* newTomoEngineTask( QString inputFile, QString outputFile, ProcessQueueController* queueController);
-
-    void addProcess(TomoEngineTask* task);
 
     /**
     * @brief Implements the CloseEvent to Quit the application and write settings
     * to the preference file
     */
-   void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent *event);
 
 
-   /**
+    /**
     * @brief Initializes some of the GUI elements with selections or other GUI related items
     */
-   void setupGui();
+    void setupGui();
 
-   /**
+    /**
     * @brief Checks the currently open file for changes that need to be saved
     * @return
     */
-   qint32 checkDirtyDocument();
+    qint32 checkDirtyDocument();
 
-   /**
+    /**
     * @brief Enables or Disables all the widgets in a list
     * @param b
     */
-   void setWidgetListEnabled(bool b);
+    void setWidgetListEnabled(bool b);
 
-   /**
+    /**
     * @brief Verifies that a path exists on the file system.
     * @param outFilePath The file path to check
     * @param lineEdit The QLineEdit object to modify visuals of (Usually by placing a red line around the QLineEdit widget)
     */
-   bool verifyPathExists(QString outFilePath, QLineEdit* lineEdit);
+    bool verifyPathExists(QString outFilePath, QLineEdit* lineEdit);
 
-   /**
+    /**
     * @brief Verifies that a parent path exists on the file system.
     * @param outFilePath The parent file path to check
     * @param lineEdit The QLineEdit object to modify visuals of (Usually by placing a red line around the QLineEdit widget)
     */
-   bool verifyOutputPathParentExists(QString outFilePath, QLineEdit* lineEdit);
+    bool verifyOutputPathParentExists(QString outFilePath, QLineEdit* lineEdit);
 
+    void initializeSOCEngine();
 
     qint32 initImageViews();
 
@@ -253,6 +228,41 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
 
     void drawOrigin(QImage image);
 
+    void displayDialogBox(QString title, QString text, QMessageBox::Icon icon);
+
+  signals:
+
+    /**
+    * @brief Signal emitted when a process is started
+    */
+    void pipelineStarted();
+
+    /**
+    * @brief Signal Emitted when a process has ended.
+    */
+    void pipelineEnded();
+
+    /**
+    * @brief Signal Emitted when the process has been canceled.
+    */
+    void cancelPipeline();
+
+    /**
+    * @brief Signal emitted when a message is available for display to the user
+    * @param
+    */
+    void pipelineWarningMessage(const QString &);
+    void pipelineErrorMessage(const QString &);
+
+  private slots:
+    // slots for our worker thread to communicate
+    virtual void addErrorMessage(QString message);
+    virtual void addWarningMessage(QString message);
+    virtual void addProgressMessage(QString message);
+
+    /* Reconstruction Thread communicates throught these methods */
+    virtual void pipelineComplete();
+    virtual void pipelineProgress(int value);
 
   private:
     LayersDockWidget*  m_LayersPalette;
@@ -267,7 +277,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     int                   m_CurrentCorner;
     QImage                m_CurrentImage;
     QString               gainsOffsetsFile;
-
+    QThread*              m_WorkerThread;
+    QSOCEngine*           m_SOCEngine;
     GainsOffsetsTableModel*  m_GainsOffsetsTableModel;
     QString      m_OpenDialogLastDirectory;
 
