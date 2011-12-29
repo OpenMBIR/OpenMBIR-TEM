@@ -160,7 +160,7 @@ class GainsOffsetsTableModel : public QAbstractTableModel
                        QVector<float> b_tilts,
                        QVector<float> gains,
                        QVector<float> offsets,
-                       QVector<Qt::CheckState> excludes);
+                       QVector<bool> excludes);
 
      void setGainsAndOffsets(QVector<float> gains,
                        QVector<float> offsets);
@@ -174,7 +174,7 @@ class GainsOffsetsTableModel : public QAbstractTableModel
      QVector<float> m_BTilts;
      QVector<float> m_Gains;
      QVector<float> m_Offsets;
-     QVector<Qt::CheckState>  m_Excludes;
+     QVector<bool>  m_Excludes;
 
 
      GainsOffsetsTableModel(const GainsOffsetsTableModel&); // Copy Constructor Not Implemented

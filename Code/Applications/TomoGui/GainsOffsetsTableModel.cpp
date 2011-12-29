@@ -88,7 +88,7 @@ Qt::ItemFlags GainsOffsetsTableModel::flags(const QModelIndex &index) const
     }
     else if (col == Exclude)
     {
-      theFlags = Qt::ItemIsUserCheckable | Qt::ItemIsEnabled;
+      theFlags = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
     }
 
   }
@@ -147,13 +147,13 @@ QVariant GainsOffsetsTableModel::data(const QModelIndex &index, qint32 role) con
         if (header.length() > contents.text().length()) contents.text() = header;
         break;
       }
-//      case Exclude:
-//      {
-//        contents.setText( QString("11.") );
-//        const QString header = headerData(Exclude, Qt::Horizontal, Qt::DisplayRole).toString();
-//        if (header.length() > contents.text().length()) contents.text() = header;
-//        break;
-//      }
+      case Exclude:
+      {
+        contents.setText( QString("11.") );
+        const QString header = headerData(Exclude, Qt::Horizontal, Qt::DisplayRole).toString();
+        if (header.length() > contents.text().length()) contents.text() = header;
+        break;
+      }
       default:
         Q_ASSERT(false);
     }
@@ -162,15 +162,9 @@ QVariant GainsOffsetsTableModel::data(const QModelIndex &index, qint32 role) con
     QSize size(fontMetrics.width(contents.text()), fontMetrics.height());
     return qApp->style()->sizeFromContents(QStyle::CT_ComboBox, &comboBox, size);
   }
-  else if (role == Qt::TextAlignmentRole )
+  else if (role == Qt::TextAlignmentRole)
   {
-    if ( index.column() < Exclude) {
     return int(Qt::AlignRight | Qt::AlignVCenter);
-    }
-    else if (index.column() == Exclude)
-    {
-      return (int(Qt::AlignCenter | Qt::AlignVCenter));
-    }
   }
   else if (role == Qt::DisplayRole || role == Qt::EditRole)
   {
@@ -195,14 +189,18 @@ QVariant GainsOffsetsTableModel::data(const QModelIndex &index, qint32 role) con
     {
       return QVariant(m_Offsets[index.row()]);
     }
-//    else if(col == Exclude)
-//    {
-//      return QVariant(m_Excludes[index.row()]);
-//    }
+    else if(col == Exclude)
+    {
+      return QVariant(m_Excludes[index.row()]);
+    }
   }
-  else if(index.column() == Exclude && role == Qt::CheckStateRole)
+  else if(role == Qt::CheckStateRole)
   {
-    return QVariant(m_Excludes[index.row()]);
+    int col = index.column();
+    if(col == Exclude)
+    {
+      return QVariant(m_Excludes[index.row()]);
+    }
   }
 
   return QVariant();
@@ -225,10 +223,13 @@ QVariant GainsOffsetsTableModel::headerData(int section, Qt::Orientation orienta
         return QVariant(QString("B Tilts"));
       case Gains:
         return QVariant(QString("Gains"));
+        break;
       case Offsets:
         return QVariant(QString("Offsets"));
+        break;
       case Exclude:
         return QVariant(QString("Exclude Tilt"));
+        break;
       default:
         break;
     }
@@ -296,16 +297,13 @@ bool GainsOffsetsTableModel::setData(const QModelIndex & index, const QVariant &
         m_Offsets[row] = value.toFloat(&ok);
         break;
       case Exclude:
+        m_Excludes[row] = value.toBool();
         break;
       default:
         Q_ASSERT(false);
 
     }
     emit dataChanged(index, index);
-  }
-  else if (role == Qt::CheckStateRole)
-  {
-    m_Excludes[index.row()] = static_cast<Qt::CheckState>(value.toUInt());
   }
 
 
@@ -322,7 +320,7 @@ bool GainsOffsetsTableModel::insertRows(int row, int count, const QModelIndex& i
   float angle = 0.0;
   float gain = 0.0;
   float offset = 0.0f;
-  Qt::CheckState exclude = Qt::Unchecked;
+  bool exclude = false;
 
   beginInsertRows(QModelIndex(), row, row + count - 1);
   for (int i = 0; i < count; ++i)
@@ -393,7 +391,7 @@ void GainsOffsetsTableModel::setTableData(QVector<int> angleIndexes,
                                           QVector<float> b_tilts,
                                           QVector<float> gains,
                                           QVector<float> offsets,
-                                          QVector<Qt::CheckState> excludes)
+                                          QVector<bool> excludes)
 {
   qint32 count = angleIndexes.count();
   qint32 row = 0;
@@ -424,7 +422,7 @@ void GainsOffsetsTableModel::setTableData(QVector<int> angleIndexes,
 //
 // -----------------------------------------------------------------------------
 void GainsOffsetsTableModel::setGainsAndOffsets(QVector<float> gains,
-                                                QVector<float> offsets)
+                  QVector<float> offsets)
 {
   qint32 count = gains.count();
   qint32 row = 0;
@@ -432,7 +430,7 @@ void GainsOffsetsTableModel::setGainsAndOffsets(QVector<float> gains,
   QVector<int> angleIndexes(m_AngleIndexes);
   QVector<float> aTilts(m_ATilts);
   QVector<float> bTilts(m_BTilts);
-  QVector<Qt::CheckState> excludes(m_Excludes);
+  QVector<bool> excludes(m_Excludes);
 
   // Remove all the current rows in the table model
   removeRows(0, rowCount());
