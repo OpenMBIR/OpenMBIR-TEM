@@ -2341,11 +2341,18 @@ void SOCEngine::ComputeVSC()
         }
       }
       FiltMagUpdateMap->d[i][j] = filter_op;
-      MagUpdateMap->d[i][j]=FiltMagUpdateMap->d[i][j];
+     
     }
   }
-
-
+	
+	for (int16_t i = 0; i < m_Geometry->N_z; i++)
+	{
+		for (int16_t j = 0; j < m_Geometry->N_x; j++)
+		{		
+		 MagUpdateMap->d[i][j]=FiltMagUpdateMap->d[i][j];
+		}
+	}
+	
   MAKE_OUTPUT_FILE(Fp, err, m_TomoInputs->outputDir, ScaleOffsetCorrection::FilteredMagMapFile);
   if(err < 0)
   {
@@ -2532,15 +2539,15 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
       {
 	if(updateType == NonHomogeniousUpdate)
         {
-          if(FiltMagUpdateMap->d[j][k] > NH_Threshold)
+          if(MagUpdateMap->d[j][k] > NH_Threshold)
           {
-            MagUpdateMask->d[j][j] = 1;
+            MagUpdateMask->d[j][k] = 1;
             MagUpdateMap->d[j][k] = 0;
 	    NumVoxelsToUpdate++;
           }
           else
           {
-            MagUpdateMask->d[j][j] = 0;
+            MagUpdateMask->d[j][k] = 0;
           }
         }
         else if(updateType == HomogeniousUpdate)
