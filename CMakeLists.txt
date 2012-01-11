@@ -180,6 +180,8 @@ if (EIMTomo_BUILD_GUI)
    # this command finds Qt4 libraries and sets all required variables
    # note that it's Qt4, not QT4 or qt4
     FIND_PACKAGE( Qt4 REQUIRED )
+    message(STATUS "QT_INCLUDE_DIR: ${QT_INCLUDE_DIR}")
+    message(STATUS "QT_USE_FRAMEWORKS: ${QT_USE_FRAMEWORKS}")
     IF (QT4_FOUND)
         CMP_COPY_QT4_RUNTIME_LIBRARIES( "QtCore;QtGui")
         CMP_QT_LIBRARIES_INSTALL_RULES("QtCore;QtGui" ".")
