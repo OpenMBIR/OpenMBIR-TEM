@@ -2821,7 +2821,9 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     if(AverageMagnitudeOfRecon > 0)
     {
       printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);
-      if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold)
+		
+		//Use the stopping criteria if we are performing a full update of all voxels 
+      if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != NonHomogeniousUpdate)
       {
         printf("This is the terminating point %d\n", Iter);
         m_TomoInputs->StopThreshold *= THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations

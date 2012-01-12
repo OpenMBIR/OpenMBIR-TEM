@@ -41,7 +41,7 @@
 
 #include <string>
 
-//#define EXTEND_OBJECT
+#define EXTEND_OBJECT
 #define X_SHRINK_FACTOR 0.15
 #define TARGET_GAIN 1
 
