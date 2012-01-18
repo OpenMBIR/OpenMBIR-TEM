@@ -97,7 +97,7 @@
   fprintf(f, "LOOKUP_TABLE default\n"); \
   { \
     float t;\
-    for (uint16_t i = 0; i < ptr->N_z; ++i) {\
+    for (int16_t i = ptr->N_z-1; i >= 0; --i) {\
      for (uint16_t j = 0; j < ptr->N_y; ++j) {\
       for (uint16_t k = 0; k < ptr->N_x; k++) {\
           t = static_cast<float>(ptr->Object->d[i][k][j]);\

@@ -1728,7 +1728,7 @@ void SOCEngine::initializeBeamProfile()
 	{
 
 		BeamProfile->d[i]/=sum;
-		BeamProfile->d[i]/=m_Sinogram->delta_t;
+		BeamProfile->d[i]/=m_Sinogram->delta_t;//This is for proper normalization
 		// printf("%lf\n",BeamProfile->d[i]);
 	}
 
