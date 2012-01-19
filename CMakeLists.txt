@@ -165,7 +165,7 @@ add_subdirectory(${PROJECT_CODE_DIR}/Test ${PROJECT_BINARY_DIR}/Test)
 
 # --------------------------------------------------------------------
 # Build the Qt Based GUI
-option(EIMTomo_BUILD_GUI "Build the Qt Based Gui Application" OFF)
+option(EIMTomo_BUILD_GUI "Build the Qt Based Gui Application" ON)
 if (EIMTomo_BUILD_GUI)
 # ------------------------------------------------------------------------------
 #  Qt 4 Section
@@ -184,11 +184,13 @@ if (EIMTomo_BUILD_GUI)
         CMP_COPY_QT4_RUNTIME_LIBRARIES( "QtCore;QtGui")
         CMP_QT_LIBRARIES_INSTALL_RULES("QtCore;QtGui" ".")
     endif()
+    message(STATUS "QT_INCLUDE_DIR: ${QT_INCLUDE_DIR}")
     # add some useful macros and variables
     # (QT_USE_FILE is a variable defined by FIND_PACKAGE( Qt4 ) that 
     # contains a path to CMake script)
     INCLUDE( ${QT_USE_FILE} )
-   
+    message(STATUS "QT_INCLUDE_DIR: ${QT_INCLUDE_DIR}")
+    message(STATUS "QT_USE_FRAMEWORKS: ${QT_USE_FRAMEWORKS}")
     # Append the locations of the Qt libraries to our Library Search Paths
     list(APPEND CMP_LIB_SEARCH_DIRS ${QT_BINARY_DIR} ${QT_LIBRARY_DIR} )
    
