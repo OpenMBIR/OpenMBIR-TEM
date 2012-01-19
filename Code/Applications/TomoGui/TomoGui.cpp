@@ -200,7 +200,7 @@ void TomoGui::readSettings(QSettings &prefs)
   QString val;
   bool ok;
   qint32 i;
- // double d;
+  double d;
   prefs.beginGroup("Parameters");
 
 
@@ -212,7 +212,7 @@ void TomoGui::readSettings(QSettings &prefs)
   READ_STRING_SETTING(prefs, outerIterations, "");
   READ_STRING_SETTING(prefs, innerIterations, "");
   READ_STRING_SETTING(prefs, sigmaX, "");
-  READ_STRING_SETTING(prefs, mrf, "");
+  READ_SETTING(prefs, mrf, ok, d, 0.1 , Float);
   READ_STRING_SETTING(prefs, xyPixel, "");
   READ_STRING_SETTING(prefs, xzPixel, "");
   READ_BOOL_SETTING(prefs, useSubVolume, false);

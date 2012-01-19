@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>792</width>
-    <height>717</height>
+    <height>720</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -41,7 +41,7 @@
       <item>
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tab">
          <attribute name="title">
@@ -147,20 +147,7 @@ font-size: 10px;
 }</string>
             </property>
             <property name="text">
-             <string>Markov Random Field:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="13" column="4">
-           <widget class="QLineEdit" name="mrf">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>1.2</string>
+             <string>MRF Shape Parameter:</string>
             </property>
            </widget>
           </item>
@@ -1463,6 +1450,25 @@ font-size: 10px;
             </item>
            </layout>
           </item>
+          <item row="13" column="4">
+           <widget class="QDoubleSpinBox" name="mrf">
+            <property name="decimals">
+             <number>6</number>
+            </property>
+            <property name="minimum">
+             <double>0.000001000000000</double>
+            </property>
+            <property name="maximum">
+             <double>2.000000000000000</double>
+            </property>
+            <property name="singleStep">
+             <double>0.050000000000000</double>
+            </property>
+            <property name="value">
+             <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
         <widget class="QWidget" name="tab_2">
@@ -2666,7 +2672,7 @@ font-size: 10px;
      <x>0</x>
      <y>0</y>
      <width>792</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -2789,7 +2795,6 @@ font-size: 10px;
   <tabstop>outerIterations</tabstop>
   <tabstop>innerIterations</tabstop>
   <tabstop>sigmaX</tabstop>
-  <tabstop>mrf</tabstop>
   <tabstop>xyPixel</tabstop>
   <tabstop>xzPixel</tabstop>
   <tabstop>tiltSelection</tabstop>

@@ -2599,10 +2599,12 @@ DATA_TYPE SOMCEngine::computeCost(DATA_TYPE*** ErrorSino,DATA_TYPE*** Weight)
 #ifdef NOISE_MODEL
 	temp=0;
 	for(i=0;i< m_Sinogram->N_theta;i++)
-		if(Weight[i][0][0] != 0)
-		temp += log(2*M_PI*(1.0/Weight[i][0][0]));//2*pi*sigma_k^{2}
+		for( j =0; j < m_Sinogram->N_r;j++)
+			for (k = 0; k < m_Sinogram->N_t; k++) 
+		if(Weight[i][j][k] != 0)
+		temp += log(2*M_PI*(1.0/Weight[i][j][k]));//2*pi*sigma_k^{2}
 
-	temp*=((m_Sinogram->N_r*m_Sinogram->N_t)/2);
+	temp/=2;
 
 	cost+=temp;
 #endif//noise model
