@@ -103,15 +103,20 @@ void InitialReconstructionInitializer::execute()
 
 
   DATA_TYPE sum=0,max;
+	uint16_t interpolation_factor=8;
 
   //Find the maximum absolute tilt angle
   max= absMaxArray(sinogram->angles);
 
 #ifndef FORWARD_PROJECT_MODE
   input->LengthZ *= Z_STRETCH;
+	input->LengthZ/=interpolation_factor;
+	input->LengthZ=round(input->LengthZ)*interpolation_factor;
 
 #ifdef EXTEND_OBJECT
   geometry->LengthX = X_SHRINK_FACTOR*((sinogram->N_r * sinogram->delta_r)/cos(max*M_PI/180)) + input->LengthZ*tan(max*M_PI/180) ;
+	geometry->LengthX/=interpolation_factor;
+	geometry->LengthX=round(geometry->LengthX)*interpolation_factor;
 #else
   geometry->LengthX = ((sinogram->N_r * sinogram->delta_r));
 #endif //Extend object endif

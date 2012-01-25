@@ -145,11 +145,24 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs)
   TCLAP::ValueArg<std::string> in_InitialRecon("i", "ini_recon", "Initial Reconstruction to initialize algorithm", false, "", "");
   cmd.add(in_InitialRecon);
 
-  TCLAP::ValueArg<std::string> in_GainsOffsets("", "gains_offsets", "Initial Gains and Offsets to use.", false, "", "");
-  cmd.add(in_GainsOffsets);
+ // TCLAP::ValueArg<std::string> in_GainsOffsets("", "gains_offsets", "Initial Gains and Offsets to use.", false, "", "");
+ // cmd.add(in_GainsOffsets);
+	
+	TCLAP::ValueArg<std::string> in_Gains("", "gains", "Initial Gains to use.", false, "", "");
+	cmd.add(in_Gains);
+	
+	TCLAP::ValueArg<std::string> in_Offsets("", "offsets", "Initial Offsets to use.", false, "", "");
+	cmd.add(in_Offsets);
+	
+	TCLAP::ValueArg<std::string> in_Variance("", "variance", "Initial Variance to use.", false, "", "");
+	cmd.add(in_Variance);
+	
+	//Whether to interpolate initial file or not
+	TCLAP::ValueArg<uint8_t> in_InterpFlag("", "interpolate", "Iterpolate Initial Reconstruction", false,0, "");
+	cmd.add(in_InterpFlag);
 
-  TCLAP::ValueArg<std::string> in_outputFile("o", "outputfile", "The Output File", true, "", "");
-  cmd.add(in_outputFile);
+   TCLAP::ValueArg<std::string> in_outputFile("o", "outputfile", "The Output File", true, "", "");
+   cmd.add(in_outputFile);
 
   TCLAP::ValueArg<std::string> in_outputDir("", "outdir", "The Output dir", true, ".", ".");
   cmd.add(in_outputDir);
@@ -208,7 +221,13 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs)
     inputs->OutputFile = in_outputDir.getValue() + MXADir::getSeparator() + in_outputFile.getValue();
     inputs->SinoFile = in_sinoFile.getValue();
     inputs->InitialReconFile = in_InitialRecon.getValue();
-    inputs->GainsOffsetsFile = in_GainsOffsets.getValue();
+	inputs->InterpFlag = in_InterpFlag.getValue();
+//  inputs->GainsOffsetsFile = in_GainsOffsets.getValue();
+	inputs->GainsFile = in_Gains.getValue();  
+    inputs->OffsetsFile = in_Offsets.getValue();  //Offset
+    inputs->VarianceFile = in_Variance.getValue(); //variance
+    
+	  
     inputs->outputDir = in_outputDir.getValue();
     inputs->NumIter = in_numIter.getValue();
     inputs->SigmaX = in_sigmaX.getValue();
@@ -273,7 +292,12 @@ void SOCArgsParser::printArgs(std::ostream &out, TomoInputs* Input)
   out << "SOC Inputs ------------------------" << std::endl;
   PRINT_INPUT_VAR(Input, SinoFile)
   PRINT_INPUT_VAR(Input, InitialReconFile)
-  PRINT_INPUT_VAR(Input, GainsOffsetsFile)
+  //PRINT_INPUT_VAR(Input, GainsOffsetsFile)
+  PRINT_INPUT_VAR(Input, GainsFile)
+  PRINT_INPUT_VAR(Input, OffsetsFile)
+  PRINT_INPUT_VAR(Input, VarianceFile)
+  PRINT_INPUT_VAR(Input, InterpFlag)
+	
   PRINT_INPUT_VAR(Input, OutputFile)
   PRINT_INPUT_VAR(Input, outputDir)
   PRINT_INPUT_VAR(Input, NumIter)

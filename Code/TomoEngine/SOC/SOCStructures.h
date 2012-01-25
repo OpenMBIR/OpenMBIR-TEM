@@ -102,6 +102,7 @@ namespace SOC {
 
     RealArrayType::Pointer InitialGain;//Reads in the initial value for the gain for each view
     RealArrayType::Pointer InitialOffset;
+	RealArrayType::Pointer InitialVariance;
 
   } Sinogram;
 
@@ -131,6 +132,7 @@ namespace SOC {
     DATA_TYPE SigmaX;
     DATA_TYPE p;
     DATA_TYPE StopThreshold;
+	uint8_t   InterpFlag;
 
     bool useSubvolume;
     uint16_t xStart;
@@ -153,7 +155,11 @@ namespace SOC {
 
     std::string SinoFile;
     std::string InitialReconFile;
-    std::string GainsOffsetsFile;
+    //std::string GainsOffsetsFile;
+	std::string GainsFile;
+	std::string OffsetsFile;
+	std::string VarianceFile;
+	  
     std::string OutputFile;
 
     std::string outputDir; // Output directory

@@ -150,7 +150,10 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
 {
    v->SinoFile = "";
    v->InitialReconFile = "";
-   v->GainsOffsetsFile = "";
+   v->GainsFile = "";
+   v->OffsetsFile = "";
+   v->VarianceFile = "";
+   v->InterpFlag=0;	
    v->OutputFile = "";
    v->outputDir = "";
    v->NumIter = 0;
@@ -329,7 +332,7 @@ void SOCEngine::execute()
 	// We are scoping here so the various readers are automatically cleaned up before
 	// the code goes any farther
 	{
-	  TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
+	TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
     std::string extension = MXAFileInfo::extension(m_TomoInputs->SinoFile);
     if (extension.compare("mrc") == 0 || extension.compare("ali") == 0)
     {
@@ -362,7 +365,7 @@ void SOCEngine::execute()
   // so the reader automactically gets cleaned up at this point.
   {
     TomoFilter::Pointer gainsOffsetsInitializer = TomoFilter::NullPointer();
-    if(m_TomoInputs->GainsOffsetsFile.empty() == true)      // Calculate the initial Gains and Offsets
+    if(m_TomoInputs->GainsFile.empty() == true && m_TomoInputs->OffsetsFile.empty() == true)      // Calculate the initial Gains and Offsets
     {
       gainsOffsetsInitializer = ComputeGainsOffsets::NewTomoFilter();
     }
@@ -487,15 +490,12 @@ void SOCEngine::execute()
   Weight = RealVolumeType::New(dims);
   Weight->setName("Weight");
 
-  //Setting the value of all the global variables
+  //Setting the value of all the private members
   OffsetR = ((m_TomoInputs->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
   OffsetT = ((m_TomoInputs->delta_xz/2) + m_Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 
-#ifdef BEAM_CALCULATION
-	BEAM_WIDTH = (0.5)*m_Sinogram->delta_r;
-#else
-	BEAM_WIDTH = m_Sinogram->delta_r;
-#endif
+  BEAM_WIDTH = m_Sinogram->delta_r;
+
 
 #ifndef QGGMRF
 	MRF_P = m_TomoInputs->p;
@@ -716,10 +716,30 @@ void SOCEngine::execute()
       ProfileCenterT = i * OffsetT;
       if(m_TomoInputs->delta_xy >= m_Sinogram->delta_t)
       {
-        if(ProfileCenterT <= ((m_TomoInputs->delta_xy / 2) - (m_Sinogram->delta_t / 2))) H_t->d[0][k][i] = m_Sinogram->delta_t;
+        if(ProfileCenterT <= ((m_TomoInputs->delta_xy / 2) - (m_Sinogram->delta_t / 2)))
+		{
+			H_t->d[0][k][i] = m_Sinogram->delta_t;
+			//Need to weight this by the appropriate kernel along t-direction
+		/*	sum=0;
+			for(uint16_t j=0; j < BEAM_RESOLUTION; j++)
+				sum+=BeamProfile->d[j];
+			
+			H_t->d[0][k][i]*=(sum/m_Sinogram->delta_t);
+		*/	
+				
+		}
         else
         {
           H_t->d[0][k][i] = -1 * ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
+			//Need to weight this number by the appropriate kernel along t-direction
+		/*	sum=0;
+			int16_t OverlapIndex = int16_t(((H_t->d[0][k][i]/m_Sinogram->delta_t)*BEAM_RESOLUTION));			
+			for(int16_t j=0; j < OverlapIndex; j++)
+				sum+=BeamProfile->d[j];
+			
+			H_t->d[0][k][i]*=(sum/m_Sinogram->delta_t);
+		 */
+			
         }
         if(H_t->d[0][k][i] < 0)
         {
@@ -848,7 +868,9 @@ void SOCEngine::execute()
         w4 = ((DATA_TYPE)index_delta_t + 1) * OffsetT - delta_t;
         ProfileThickness = (w4 / OffsetT) * H_t->d[0][0][index_delta_t]
             + (w3 / OffsetT) * H_t->d[0][0][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
-      }
+		//  ProfileThickness = (w4 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t]
+		//  + (w3 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
+	  }
       else
       {
         ProfileThickness = 0;
@@ -927,8 +949,9 @@ void SOCEngine::execute()
   for (int16_t zz = 0; zz < m_Sinogram->N_theta; zz++) //slice index
   {
     std::cout << "\rComputing Weights for Tilt Index " << zz<< "/" << m_Sinogram->N_theta;
-    NuisanceParams->alpha->d[zz] = 1; //Initialize the refinement parameters to 1
-    for (uint16_t xx = 0; xx < m_Sinogram->N_r; xx++)
+    NuisanceParams->alpha->d[zz] = m_Sinogram->InitialVariance->d[zz]; //Initialize the refinement parameters from any previous run
+
+	for (uint16_t xx = 0; xx < m_Sinogram->N_r; xx++)
     {
       for (uint16_t yy = 0; yy < m_Sinogram->N_t; yy++)
       {
@@ -1200,6 +1223,13 @@ void SOCEngine::execute()
       }
 
       NuisanceParams->mu->d[i_theta] = d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
+	
+		//Postivity Constraing on the offsets
+		
+	  if (NuisanceParams->mu->d[i_theta] < 0)
+	  {
+			NuisanceParams->mu->d[i_theta]=0;
+	   }
     }
 
 #endif //Type of constraing Geometric or arithmetic
