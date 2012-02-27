@@ -172,7 +172,10 @@ void getColorCorrespondingTovalue(int16_t val,
 
 int main(int argc, char **argv)
 {
-	if (argc != 2) { return 1;}
+	if(argc != 2)
+  {
+    return 1;
+  }
 	std::string filepath(argv[1]);
   std::cout << "Testing file \n  " << filepath << std::endl;
 

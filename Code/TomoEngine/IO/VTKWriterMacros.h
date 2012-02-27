@@ -97,9 +97,9 @@
   fprintf(f, "LOOKUP_TABLE default\n"); \
   { \
     float t;\
-    for (uint16_t i = 0; i < ptr->N_z; ++i) {\
-     for (uint16_t j = 0; j < ptr->N_y; ++j) {\
-      for (uint16_t k = 0; k < ptr->N_x; k++) {\
+    for (int i = 0; i < ptr->N_z; ++i) {\
+     for (int j = 0; j < ptr->N_y; ++j) {\
+      for (int k = 0; k < ptr->N_x; k++) {\
           t = static_cast<float>(ptr->Object->d[i][k][j]);\
           MXA::Endian::FromSystemToBig::convert<float>(t); \
           fwrite(&t, sizeof(float), 1, f);\
@@ -201,13 +201,13 @@
     float var[3] = {0.0f, 0.0f, 1.0f};
 
 #define GGVTKW_IPFCOLOR_BIANRY(var, quat)\
-if (r->crystruct[phase] == Ebsd::Cubic) {\
+if (r->crystruct[phase] == Ebsd::CrystalStructure::Cubic) {\
   OIMColoring::GenerateIPFColor(var->euler1,\
                               var->euler2,\
                               var->euler3,\
                               RefDirection[0], RefDirection[1], RefDirection[2],\
                               &rgba[i * 4], hkl);\
-} else if (r->crystruct[phase] == Ebsd::Hexagonal)   { \
+} else if (r->crystruct[phase] == Ebsd::CrystalStructure::Hexagonal)   { \
   q1[1] = var->quat[1];\
   q1[2] = var->quat[2];\
   q1[3] = var->quat[3];\
