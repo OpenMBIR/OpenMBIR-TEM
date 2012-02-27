@@ -1038,7 +1038,7 @@ void SOCEngine::execute()
       }
 #else
 
-#endif
+#endif//NHICD end if 
 
       // This could contain multiple Subloops also
       uint8_t status =
@@ -1282,35 +1282,37 @@ void SOCEngine::execute()
       printf("%lf\n", NuisanceParams->I_0->d[i_theta]);
     }
 
+#endif//Joint estimation endif
+		
 #ifdef NOISE_MODEL
-    //Updating the Weights
-    for(uint16_t i_theta=0;i_theta < m_Sinogram->N_theta;i_theta++)
-    {
-      sum=0;
-
-      for(uint16_t i_r=0; i_r < m_Sinogram->N_r; i_r++)
-      for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-      sum+=(ErrorSino->d[i_theta][i_r][i_t]*ErrorSino->d[i_theta][i_r][i_t]*Weight->d[i_theta][i_r][i_t]);
-      sum/=(m_Sinogram->N_r*m_Sinogram->N_t);
-
-      NuisanceParams->alpha->d[i_theta]=sum;
-
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-
-          if(NuisanceParams->alpha->d[i_theta] != 0)
-          {
-            Weight->d[i_theta][i_r][i_t] /= NuisanceParams->alpha->d[i_theta];
-          }
-        }
-      }
-
-    }
-
+		//Updating the Weights
+		for(uint16_t i_theta=0;i_theta < m_Sinogram->N_theta;i_theta++)
+		{
+			sum=0;
+			
+			for(uint16_t i_r=0; i_r < m_Sinogram->N_r; i_r++)
+				for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+					sum+=(ErrorSino->d[i_theta][i_r][i_t]*ErrorSino->d[i_theta][i_r][i_t]*Weight->d[i_theta][i_r][i_t]);
+			sum/=(m_Sinogram->N_r*m_Sinogram->N_t);
+			
+			NuisanceParams->alpha->d[i_theta]=sum;
+			
+			for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+			{
+				for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+				{
+					
+					if(NuisanceParams->alpha->d[i_theta] != 0)
+					{
+						Weight->d[i_theta][i_r][i_t] /= NuisanceParams->alpha->d[i_theta];
+					}
+				}
+			}
+			
+		}
+		
 #ifdef COST_CALCULATE
-
+		
 		/*********************Cost Calculation*************************************/
 		cost_value = computeCost(ErrorSino, Weight);
 		increase = cost->addCostValue(cost_value);
@@ -1321,10 +1323,10 @@ void SOCEngine::execute()
 		}
 		cost->writeCostValue(cost_value);
 		/**************************************************************************/
-
+		
 #endif//cost
 #endif//NOISE_MODEL
-#endif//Joint estimation endif
+		
 
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
 
@@ -1726,7 +1728,7 @@ void SOCEngine::initializeBeamProfile()
 	{
 
 		BeamProfile->d[i]/=sum;
-		BeamProfile->d[i]/=m_Sinogram->delta_t;
+		BeamProfile->d[i]/=m_Sinogram->delta_t;//This is for proper normalization
 		// printf("%lf\n",BeamProfile->d[i]);
 	}
 
@@ -2339,11 +2341,18 @@ void SOCEngine::ComputeVSC()
         }
       }
       FiltMagUpdateMap->d[i][j] = filter_op;
-      MagUpdateMap->d[i][j]=FiltMagUpdateMap->d[i][j];
+     
     }
   }
-
-
+	
+	for (int16_t i = 0; i < m_Geometry->N_z; i++)
+	{
+		for (int16_t j = 0; j < m_Geometry->N_x; j++)
+		{		
+		 MagUpdateMap->d[i][j]=FiltMagUpdateMap->d[i][j];
+		}
+	}
+	
   MAKE_OUTPUT_FILE(Fp, err, m_TomoInputs->outputDir, ScaleOffsetCorrection::FilteredMagMapFile);
   if(err < 0)
   {
@@ -2530,15 +2539,15 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
       {
 	if(updateType == NonHomogeniousUpdate)
         {
-          if(FiltMagUpdateMap->d[j][k] > NH_Threshold)
+          if(MagUpdateMap->d[j][k] > NH_Threshold)
           {
-            MagUpdateMask->d[j][j] = 1;
+            MagUpdateMask->d[j][k] = 1;
             MagUpdateMap->d[j][k] = 0;
 	    NumVoxelsToUpdate++;
           }
           else
           {
-            MagUpdateMask->d[j][j] = 0;
+            MagUpdateMask->d[j][k] = 0;
           }
         }
         else if(updateType == HomogeniousUpdate)
@@ -2731,7 +2740,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             }
             else
             {
-              if(THETA1 == 0 && low == 0 && high == 0) UpdatedVoxelValue = 0;
+              if(THETA1 == 0 && low == 0 && high == 0) 
+				  UpdatedVoxelValue = 0;
               else
               {
                 printf("Error \n");
@@ -2811,11 +2821,14 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     if(AverageMagnitudeOfRecon > 0)
     {
       printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);
-      if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold)
+		
+		//Use the stopping criteria if we are performing a full update of all voxels 
+      if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != NonHomogeniousUpdate)
       {
         printf("This is the terminating point %d\n", Iter);
         m_TomoInputs->StopThreshold *= THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
-	exit_status=0;
+		std::cout<<"New threshold"<<m_TomoInputs->StopThreshold<<std::endl;
+	    exit_status=0;
         break;
       }
     }

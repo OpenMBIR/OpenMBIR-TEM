@@ -13,7 +13,7 @@
  * list of conditions and the following disclaimer in the documentation and/or
  * other materials provided with the distribution.
  *
- * Neither the name of Singanallur Venkatakrishnan, Michael A. Jackson, the Pudue
+ * Neither the name of Singanallur Venkatakrishnan, Michael A. Jackson, the Purdue
  * Univeristy, BlueQuartz Software nor the names of its contributors may be used
  * to endorse or promote products derived from this software without specific
  * prior written permission.
@@ -41,9 +41,9 @@
 
 #include <string>
 
-#define EXTEND_OBJECT
+//#define EXTEND_OBJECT
 #define X_SHRINK_FACTOR 0.6
-#define TARGET_GAIN 20000
+#define TARGET_GAIN 1
 
 #define X_STRETCH 1
 #define Z_STRETCH 2
@@ -60,7 +60,7 @@
 #define ROI 1
 
 #define STOPPING_THRESHOLD 0.009
-#define THRESHOLD_REDUCTION_FACTOR .5 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
+#define THRESHOLD_REDUCTION_FACTOR 0.5 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
 //#define SURROGATE_FUNCTION
 //#define QGGMRF
 //#define DISTANCE_DRIVEN
@@ -71,13 +71,13 @@
 #define DETECTOR_RESPONSE_BINS 64
 #define JOINT_ESTIMATION
 //#define GEOMETRIC_MEAN_CONSTRAINT
-#define NOISE_MODEL
+//#define NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
 //#define CIRCULAR_BOUNDARY_CONDITION
 //#define DEBUG_CONSTRAINT_OPT
 #define RANDOM_ORDER_UPDATES
 //#define BRIGHT_FIELD
-#define NHICD 
+//#define NHICD 
 #define NUM_NON_HOMOGENOUS_ITER 20
 
 //#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits

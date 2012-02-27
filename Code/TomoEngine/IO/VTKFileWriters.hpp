@@ -291,7 +291,7 @@ class VTKRectilinearGridFileWriter
       fprintf(f, "CELL_DATA %d\n", (int)total);
 
       // Now loop on all of our Scalars and write those arrays as CELL_DATA
-      for (typename std::vector<VtkScalarWriter*>::iterator iter = scalars.begin(); iter != scalars.end(); ++iter )
+      for (typename std::vector<VtkScalarWriter*>::iterator iter = scalars.begin(); iter != scalars.end(); ++iter)
       {
         err = (*iter)->writeScalars(f);
         if (err < 0)
