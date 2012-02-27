@@ -144,6 +144,11 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs)
 
   TCLAP::ValueArg<std::string> in_InitialRecon("i", "ini_recon", "Initial Reconstruction to initialize algorithm", false, "", "");
   cmd.add(in_InitialRecon);
+	
+	//Normalizing Bright Field Scan
+	
+	TCLAP::ValueArg<std::string> in_BrightField("", "brightfield", "Acquired Bright Field tilt series", false, "", "");
+	cmd.add(in_BrightField);
 
  // TCLAP::ValueArg<std::string> in_GainsOffsets("", "gains_offsets", "Initial Gains and Offsets to use.", false, "", "");
  // cmd.add(in_GainsOffsets);
@@ -222,7 +227,10 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs)
     inputs->SinoFile = in_sinoFile.getValue();
     inputs->InitialReconFile = in_InitialRecon.getValue();
 	inputs->InterpFlag = in_InterpFlag.getValue();
+	
+	inputs->BrightFieldFile = in_BrightField.getValue();
 //  inputs->GainsOffsetsFile = in_GainsOffsets.getValue();
+	  
 	inputs->GainsFile = in_Gains.getValue();  
     inputs->OffsetsFile = in_Offsets.getValue();  //Offset
     inputs->VarianceFile = in_Variance.getValue(); //variance

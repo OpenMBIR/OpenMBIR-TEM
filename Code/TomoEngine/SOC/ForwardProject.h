@@ -59,7 +59,7 @@ class TomoEngine_EXPORT ForwardProject
 {
   public:
     ForwardProject(Sinogram* sinogram, Geometry* geometry,
-                   AMatrixCol*** tempCol, AMatrixCol* voxelLineResponse,
+                   AMatrixCol** tempCol, AMatrixCol* voxelLineResponse,
                    RealVolumeType::Pointer yEst,
                    ScaleOffsetParams* nuisanceParams,
                    uint16_t tilt);
@@ -71,7 +71,7 @@ class TomoEngine_EXPORT ForwardProject
   private:
     Sinogram* m_Sinogram;
     Geometry* m_Geometry;
-    AMatrixCol*** TempCol;
+    AMatrixCol** TempCol;
     AMatrixCol* VoxelLineResponse;
     RealVolumeType::Pointer Y_Est;
     ScaleOffsetParams* NuisanceParams;

@@ -156,6 +156,8 @@ namespace SOC {
     std::string SinoFile;
     std::string InitialReconFile;
     //std::string GainsOffsetsFile;
+	  std::string BrightFieldFile;
+	  
 	std::string GainsFile;
 	std::string OffsetsFile;
 	std::string VarianceFile;

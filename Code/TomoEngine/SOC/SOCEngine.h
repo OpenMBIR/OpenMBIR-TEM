@@ -50,6 +50,7 @@
 
 #include "TomoEngine/SOC/SOCStructures.h"
 #include "TomoEngine/Filters/CostData.h"
+#include "TomoEngine/SOC/SOCConstants.h"
 
 
 /**
@@ -107,10 +108,18 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
     void updateVoxelValues_NHICD();
 
     uint8_t updateVoxels(int16_t OuterIter, int16_t Iter, VoxelUpdateType updateType, UInt8ImageType::Pointer VisitCount,
-                      RNGVars* RandomNumber, AMatrixCol*** TempCol,
+                      RNGVars* RandomNumber, AMatrixCol** TempCol,
                       RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight,
                       AMatrixCol* VoxelLineResponse, ScaleOffsetParams* NuisanceParams,
                       UInt8ImageType::Pointer Mask, CostData::Pointer cost);
+#ifdef QGGMRF
+	DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax);
+	void CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax);
+	DATA_TYPE CE_QGGMRF_Value(DATA_TYPE delta);
+	DATA_TYPE CE_QGGMRF_Derivative(DATA_TYPE delta);
+	DATA_TYPE CE_QGGMRF_SecondDerivative(DATA_TYPE delta);
+#endif //QGGMRF
+	
 
   private:
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
@@ -129,7 +138,9 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
     DATA_TYPE MRF_Q,MRF_C;
     DATA_TYPE QGGMRF_Params[26][3];
     DATA_TYPE MRF_ALPHA;
-#endif
+	DATA_TYPE SIGMA_X_P_Q;
+	DATA_TYPE SIGMA_X_Q;
+#endif //QGGMRF
     //used to store cosine and sine of all angles through which sample is tilted
     RealArrayType::Pointer cosine;
     RealArrayType::Pointer sine;
@@ -237,12 +248,15 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
     DATA_TYPE ComputeThreshold(RealImageType::Pointer FilteredMagnitudeMap);
 
     template<typename T>
-    double solve(T* f, double a, double b, double err, int32_t *code)
+    double solve(T* f, double a, double b, double err, int32_t *code,uint32_t iteration_count)
 
     {
+		
       int signa, signb, signc;
       double fa, fb, fc, c, signaling_nan();
       double dist;
+	  uint32_t num_iter=0;
+      
 
       fa = f->execute(a);
       signa = fa > 0;
@@ -260,8 +274,10 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
 
       /* half interval search */
       if((dist = b - a) < 0) dist = -dist;
-      while (dist > err)
+		
+      while (num_iter < iteration_count)//(dist > err)
       {
+		num_iter++;
         c = (b + a) / 2;
         fc = f->execute(c);
         signc = fc > 0;

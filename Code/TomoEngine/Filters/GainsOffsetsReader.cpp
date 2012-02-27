@@ -62,7 +62,7 @@ void GainsOffsetsReader::execute()
   TomoInputsPtr inputs = getTomoInputs();
 
 
-  std::vector<double> fileGains(inputs->fileZSize, 1);//Default value is TARGET_GAIN
+  std::vector<double> fileGains(inputs->fileZSize, TARGET_GAIN);//Default value is TARGET_GAIN
   std::vector<double> fileOffsets(inputs->fileZSize, 0);//Defaulted to zero
   std::vector<double> fileVariance(inputs->fileZSize, 1);//Default set to 1	
 
