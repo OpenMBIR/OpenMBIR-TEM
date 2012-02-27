@@ -16,6 +16,7 @@
 #include "TomoEngine/SOC/SOCStructures.h"
 #include "TomoEngine/Common/allocate.h"
 #include "TomoEngine/Common/EIMMath.h"
+#include "TomoEngine/SOC/SOCConstants.h"
 
 /*
  *

@@ -103,33 +103,50 @@ void InitialReconstructionInitializer::execute()
 
 
   DATA_TYPE sum=0,max;
+	
+	//uint16_t interpolation_factor=24;//TODO: Need to Remove this
+	//DATA_TYPE res=3;
 
+	input->delta_xz=sinogram->delta_r*input->delta_xz;
+	input->delta_xy=input->delta_xz;
   //Find the maximum absolute tilt angle
   max= absMaxArray(sinogram->angles);
 
 #ifndef FORWARD_PROJECT_MODE
-  input->LengthZ *= Z_STRETCH;
+    input->LengthZ *= Z_STRETCH;
+	input->LengthZ/=INTERPOLATE_FACTOR;
+	//interpolation_factor;
+	input->LengthZ=round(input->LengthZ)*INTERPOLATE_FACTOR;//interpolation_factor;
 
 #ifdef EXTEND_OBJECT
   geometry->LengthX = X_SHRINK_FACTOR*((sinogram->N_r * sinogram->delta_r)/cos(max*M_PI/180)) + input->LengthZ*tan(max*M_PI/180) ;
+  geometry->LengthX/=INTERPOLATE_FACTOR;
+  geometry->LengthX=round(geometry->LengthX)*INTERPOLATE_FACTOR;
 #else
   geometry->LengthX = ((sinogram->N_r * sinogram->delta_r));
 #endif //Extend object endif
 
 #else
-  Geometry->LengthX = ((Sinogram->N_r * Sinogram->delta_r));
+  geometry->LengthX = ((sinogram->N_r * sinogram->delta_r));
 #endif//Forward projector mode end if
 
 //  Geometry->LengthY = (Geometry->EndSlice- Geometry->StartSlice)*Geometry->delta_xy;
   geometry->LengthY = (input->yEnd-input->yStart + 1)*sinogram->delta_t;
 
-  geometry->N_x = ceil(geometry->LengthX/input->delta_xz);//Number of voxels in x direction
-  geometry->N_z = ceil(input->LengthZ/input->delta_xz);//Number of voxels in z direction
-  geometry->N_y = ceil(geometry->LengthY/input->delta_xy);//Number of measurements in y direction
+  geometry->N_x = round(geometry->LengthX/input->delta_xz);//Number of voxels in x direction
+  geometry->N_z = round(input->LengthZ/input->delta_xz);//Number of voxels in z direction
+  geometry->N_y = round(geometry->LengthY/input->delta_xy);//Number of measurements in y direction
 
+	printf("Geometry->LengthX=%lf nm \n",geometry->LengthX);
+	printf("Geometry->LengthY=%lf nm \n",geometry->LengthY);
+	printf("Geometry->LengthZ=%lf nm \n",input->LengthZ);
+	
+	
   printf("Geometry->Nz=%d\n",geometry->N_z);
   printf("Geometry->Nx=%d\n",geometry->N_x);
   printf("Geometry->Ny=%d\n",geometry->N_y);
+	
+	
 
   size_t dims[3] = {geometry->N_z, geometry->N_x, geometry->N_y};
   geometry->Object  = RealVolumeType::New(dims);

@@ -39,8 +39,10 @@ void ComputeGainsOffsets::execute()
 	size_t dims[3] = {sinogram->N_theta, 0, 0};
 	sinogram->InitialGain = RealArrayType::New(dims);
 	sinogram->InitialGain->setName("sinogram->InitialGain");
-  sinogram->InitialOffset = RealArrayType::New(dims);
-  sinogram->InitialOffset->setName("sinogram->InitialOffset");
+    sinogram->InitialOffset = RealArrayType::New(dims);
+    sinogram->InitialOffset->setName("sinogram->InitialOffset");
+	sinogram->InitialVariance = RealArrayType::New(dims);
+	sinogram->InitialVariance->setName("sinogram->InitialVariance");
 	//Form the average Gain per view
 	std::vector<DATA_TYPE> AverageGain(sinogram->N_theta,0);
 	std::vector<DATA_TYPE> TargetGain(sinogram->N_theta,0);
@@ -121,6 +123,7 @@ void ComputeGainsOffsets::execute()
 
 	}
 
+	sinogram->TargetGain=TARGET_GAIN;
 	std::cout<<"Target Gain"<<sinogram->TargetGain<<std::endl;
 	//In this the Gains are all set to the target Gain
 	std::cout << "------------Initial Gains-----------" << std::endl;
@@ -134,6 +137,12 @@ void ComputeGainsOffsets::execute()
 	{
 		sinogram->InitialOffset->d[i_theta] = LS_Estimates[1];
 		std::cout << "Tilt: " << i_theta << "  Offset: "<< sinogram->InitialOffset->d[i_theta] << std::endl;
+	}
+	std::cout << "------------Initial Variance-----------" << std::endl;
+	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	{
+		sinogram->InitialVariance->d[i_theta] = 1;
+		std::cout << "Tilt: " << i_theta << "  Variance: "<< sinogram->InitialVariance->d[i_theta] << std::endl;
 	}
 
   setErrorCondition(0);

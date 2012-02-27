@@ -40,14 +40,15 @@
 #define SCALEOFFSETCORRECTIONCONSTANTS_H_
 
 #include <string>
-
+//#define FORWARD_PROJECT_MODE
 //#define EXTEND_OBJECT
 #define X_SHRINK_FACTOR 0.6
-#define TARGET_GAIN 1
+#define TARGET_GAIN 52732864
 
 #define X_STRETCH 1
 #define Z_STRETCH 2
 
+#define INTERPOLATE_FACTOR 8
 //#define DEBUG ,
 #define PROFILE_RESOLUTION 1536
 //#define PI 4*atan(1)//3.14159265
@@ -59,19 +60,21 @@
 //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
 #define ROI 1
 
-#define STOPPING_THRESHOLD 0.009
-#define THRESHOLD_REDUCTION_FACTOR 0.5 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
-//#define SURROGATE_FUNCTION
-//#define QGGMRF
+#define STOPPING_THRESHOLD 0.001
+#define STOPPING_THRESHOLD_I_k 0.001
+#define STOPPING_THRESHOLD_Delta_k 0.001
+#define STOPPING_THRESHOLD_Var_k 0.001
+#define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
+#define SURROGATE_FUNCTION
+#define QGGMRF
 //#define DISTANCE_DRIVEN
 //#define CORRECTION
 //#define WRITE_INTERMEDIATE_RESULTS
 #define COST_CALCULATE
-//#define BEAM_CALCULATION
 #define DETECTOR_RESPONSE_BINS 64
 #define JOINT_ESTIMATION
 //#define GEOMETRIC_MEAN_CONSTRAINT
-//#define NOISE_MODEL
+#define NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
 //#define CIRCULAR_BOUNDARY_CONDITION
 //#define DEBUG_CONSTRAINT_OPT
@@ -99,7 +102,6 @@ namespace ScaleOffsetCorrection
   const std::string FilteredMagMapFile("FilteredMagMap.bin");
   const std::string MagnitudeMapFile("MagnitudeMap.bin");
   const std::string VtkGeometryFile("ReconstructedData.vtk");
-
 
   namespace VTK
   {

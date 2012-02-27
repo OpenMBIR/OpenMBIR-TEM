@@ -150,7 +150,10 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
 {
    v->SinoFile = "";
    v->InitialReconFile = "";
-   v->GainsOffsetsFile = "";
+   v->GainsFile = "";
+   v->OffsetsFile = "";
+   v->VarianceFile = "";
+   v->InterpFlag=0;	
    v->OutputFile = "";
    v->outputDir = "";
    v->NumIter = 0;
@@ -255,7 +258,7 @@ void SOCEngine::initVariables()
   //Hamming Window here
   HAMMING_WINDOW[0][0]= 0.0013; HAMMING_WINDOW[0][1]=0.0086; HAMMING_WINDOW[0][2]=0.0159; HAMMING_WINDOW[0][3]=0.0086;HAMMING_WINDOW[0][4]=0.0013;
   HAMMING_WINDOW[1][0]= 0.0086; HAMMING_WINDOW[1][1]=0.0581;HAMMING_WINDOW[1][2]=0.1076;HAMMING_WINDOW[1][3]=0.0581;HAMMING_WINDOW[1][4]=0.0086;
-  HAMMING_WINDOW[2][0]=0.0159;HAMMING_WINDOW[2][1]=0.1076;HAMMING_WINDOW[2][2]=0.1993;HAMMING_WINDOW[2][3]=0.1076;HAMMING_WINDOW[2][4]=0.0159;
+  HAMMING_WINDOW[2][0]= 0.0159;HAMMING_WINDOW[2][1]=0.1076;HAMMING_WINDOW[2][2]=0.1993;HAMMING_WINDOW[2][3]=0.1076;HAMMING_WINDOW[2][4]=0.0159;
   HAMMING_WINDOW[3][0]= 0.0013;HAMMING_WINDOW[3][1]=0.0086;HAMMING_WINDOW[3][2]=0.0159;HAMMING_WINDOW[3][3]=0.0086;HAMMING_WINDOW[3][4]=0.0013;
   HAMMING_WINDOW[4][0]= 0.0086;HAMMING_WINDOW[4][1]=0.0581;HAMMING_WINDOW[4][2]=0.1076;HAMMING_WINDOW[4][3]=0.0581;HAMMING_WINDOW[4][4]=0.0086;
 
@@ -280,6 +283,7 @@ void SOCEngine::execute()
 	//uint16_t cost_counter=0;
 
 	uint16_t MaxNumberOfDetectorElts;
+	uint8_t status;//set to 1 if ICD has converged
 
 	DATA_TYPE center_t,delta_t;
 	DATA_TYPE w3,w4;
@@ -329,7 +333,7 @@ void SOCEngine::execute()
 	// We are scoping here so the various readers are automatically cleaned up before
 	// the code goes any farther
 	{
-	  TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
+	TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
     std::string extension = MXAFileInfo::extension(m_TomoInputs->SinoFile);
     if (extension.compare("mrc") == 0 || extension.compare("ali") == 0)
     {
@@ -358,11 +362,42 @@ void SOCEngine::execute()
 	}
 
 
+	//Read the Bright Field Data for normalization
+	/*{
+	TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
+    std::string extension = MXAFileInfo::extension(m_TomoInputs->BrightFieldFile);
+    if (extension.compare("mrc") == 0 || extension.compare("ali") == 0)
+    {
+		dataReader = MRCSinogramInitializer::NewTomoFilter();
+    }
+    else if (extension.compare("bin") == 0 )
+    {
+		dataReader = RawSinogramInitializer::NewTomoFilter();
+    }
+    else
+    {
+		setErrorCondition(-1);
+		updateProgressAndMessage("A supported file reader for the input file was not found." , 100);
+		return;
+    }
+    dataReader->setTomoInputs(m_TomoInputs);
+    dataReader->setSinogram(m_Sinogram);
+    dataReader->addObserver(this);
+    dataReader->execute();
+    if (dataReader->getErrorCondition() < 0)
+    {
+		updateProgressAndMessage("Error reading Input Sinogram Data file", 100);
+		setErrorCondition(dataReader->getErrorCondition());
+		return;
+    }
+	}*/
+	
+	
   // Now read or generate the Gains and Offsets data. We are scoping this section
   // so the reader automactically gets cleaned up at this point.
   {
     TomoFilter::Pointer gainsOffsetsInitializer = TomoFilter::NullPointer();
-    if(m_TomoInputs->GainsOffsetsFile.empty() == true)      // Calculate the initial Gains and Offsets
+    if(m_TomoInputs->GainsFile.empty() == true && m_TomoInputs->OffsetsFile.empty() == true)      // Calculate the initial Gains and Offsets
     {
       gainsOffsetsInitializer = ComputeGainsOffsets::NewTomoFilter();
     }
@@ -486,30 +521,31 @@ void SOCEngine::execute()
   ErrorSino->setName("ErrorSino");
   Weight = RealVolumeType::New(dims);
   Weight->setName("Weight");
+  Final_Sinogram = RealVolumeType::New(dims);
+  Y_Est->setName("Final Sinogram");
 
-  //Setting the value of all the global variables
+  //Setting the value of all the private members
   OffsetR = ((m_TomoInputs->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
   OffsetT = ((m_TomoInputs->delta_xz/2) + m_Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
 
-#ifdef BEAM_CALCULATION
-	BEAM_WIDTH = (0.5)*m_Sinogram->delta_r;
-#else
-	BEAM_WIDTH = m_Sinogram->delta_r;
-#endif
+  BEAM_WIDTH = m_Sinogram->delta_r;
+
 
 #ifndef QGGMRF
 	MRF_P = m_TomoInputs->p;
 	SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
 #else
-	MRF_P=2;
-	MRF_Q=1.2;
-	MRF_C=30;
-	MRF_ALPHA=1.5;
+	MRF_P = 2;
+	MRF_Q = 1.2;
+	MRF_C = 0.1;
+	MRF_ALPHA = 1.5;
 	SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
-	for(i=0;i < 3;i++) {
+	SIGMA_X_P_Q = pow(m_TomoInputs->SigmaX, (MRF_P - MRF_Q)); 
+	SIGMA_X_Q = pow(m_TomoInputs->SigmaX,MRF_Q);
+	/*for(i=0;i < 3;i++) {
 		for(j=0; j < 3;j++) {
 			for(k=0; k < 3;k++) {
-				FILTER[i][j][k]*=(1.0/SIGMA_X_P); }}}
+				FILTER[i][j][k]*=(1.0/SIGMA_X_P); }}}*/	
 #endif //QGGMRF
 
 	//globals assosiated with finding the optimal gain and offset parameters
@@ -523,7 +559,7 @@ void SOCEngine::execute()
 	QuadraticParameters->setName("QuadraticParameters");
 	//  Qk_cost=(DATA_TYPE**)get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE));
 	Qk_cost = RealImageType::New(dims);
-  Qk_cost->setName("Qk_cost");
+    Qk_cost->setName("Qk_cost");
 //	bk_cost=(DATA_TYPE**)get_img(2, m_Sinogram->N_theta, sizeof(DATA_TYPE));
     dims[1] = 2;
 	bk_cost = RealImageType::New(dims);
@@ -673,7 +709,7 @@ void SOCEngine::execute()
   for(k=0 ; k < m_Sinogram->N_theta;k++)
   {
     // Gains
-    NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k];
+	NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k];
     // Offsets
     NuisanceParams->mu->d[k] = m_Sinogram->InitialOffset->d[k];
 #ifdef GEOMETRIC_MEAN_CONSTRAINT
@@ -716,10 +752,30 @@ void SOCEngine::execute()
       ProfileCenterT = i * OffsetT;
       if(m_TomoInputs->delta_xy >= m_Sinogram->delta_t)
       {
-        if(ProfileCenterT <= ((m_TomoInputs->delta_xy / 2) - (m_Sinogram->delta_t / 2))) H_t->d[0][k][i] = m_Sinogram->delta_t;
+        if(ProfileCenterT <= ((m_TomoInputs->delta_xy / 2) - (m_Sinogram->delta_t / 2)))
+		{
+			H_t->d[0][k][i] = m_Sinogram->delta_t;
+			//Need to weight this by the appropriate kernel along t-direction
+		/*	sum=0;
+			for(uint16_t j=0; j < BEAM_RESOLUTION; j++)
+				sum+=BeamProfile->d[j];
+			
+			H_t->d[0][k][i]*=(sum/m_Sinogram->delta_t);
+		*/	
+				
+		}
         else
         {
           H_t->d[0][k][i] = -1 * ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
+			//Need to weight this number by the appropriate kernel along t-direction
+		/*	sum=0;
+			int16_t OverlapIndex = int16_t(((H_t->d[0][k][i]/m_Sinogram->delta_t)*BEAM_RESOLUTION));			
+			for(int16_t j=0; j < OverlapIndex; j++)
+				sum+=BeamProfile->d[j];
+			
+			H_t->d[0][k][i]*=(sum/m_Sinogram->delta_t);
+		 */
+			
         }
         if(H_t->d[0][k][i] < 0)
         {
@@ -767,7 +823,8 @@ void SOCEngine::execute()
 	DATA_TYPE y;
 	DATA_TYPE t,tmin,tmax,ProfileThickness;
 	int16_t slice_index_min,slice_index_max;
-	AMatrixCol*** TempCol = (AMatrixCol***)multialloc(sizeof(AMatrixCol*),2,m_Geometry->N_z,m_Geometry->N_x);//stores 2-D forward projector
+//	AMatrixCol*** TempCol = (AMatrixCol***)multialloc(sizeof(AMatrixCol*),2,m_Geometry->N_z,m_Geometry->N_x);//stores 2-D forward projector
+	AMatrixCol** TempCol = (AMatrixCol**)get_spc(m_Geometry->N_x*m_Geometry->N_z, sizeof(AMatrixCol*));
 //	AMatrixCol* Aj;
 //	AMatrixCol* TempMemBlock;
 	//T-direction response
@@ -804,12 +861,24 @@ void SOCEngine::execute()
 	printf("Stored A matrix\n");
 #else
 	temp = 0;
+	uint32_t voxel_count=0;
   for (j = 0; j < m_Geometry->N_z; j++)
   {
     for (k = 0; k < m_Geometry->N_x; k++)
     {
-      TempCol[j][k] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
-      temp += TempCol[j][k]->count;
+      //TempCol[j][k] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
+	  TempCol[voxel_count] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
+//      temp += TempCol[j][k].count;`
+	  temp += TempCol[voxel_count]->count;
+	  if(0 == TempCol[voxel_count]->count)	
+	  {
+		  //If this line is never hit and the Object is badly initialized 
+		  //set it to zero
+		  for (i=0; i < m_Geometry->N_y; i++) {
+			  m_Geometry->Object->d[j][k][i]=0;
+		  }
+	  }
+		voxel_count++;
     }
   }
 #endif
@@ -848,7 +917,9 @@ void SOCEngine::execute()
         w4 = ((DATA_TYPE)index_delta_t + 1) * OffsetT - delta_t;
         ProfileThickness = (w4 / OffsetT) * H_t->d[0][0][index_delta_t]
             + (w3 / OffsetT) * H_t->d[0][0][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
-      }
+		//  ProfileThickness = (w4 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t]
+		//  + (w3 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
+	  }
       else
       {
         ProfileThickness = 0;
@@ -927,8 +998,9 @@ void SOCEngine::execute()
   for (int16_t zz = 0; zz < m_Sinogram->N_theta; zz++) //slice index
   {
     std::cout << "\rComputing Weights for Tilt Index " << zz<< "/" << m_Sinogram->N_theta;
-    NuisanceParams->alpha->d[zz] = 1; //Initialize the refinement parameters to 1
-    for (uint16_t xx = 0; xx < m_Sinogram->N_r; xx++)
+    NuisanceParams->alpha->d[zz] = m_Sinogram->InitialVariance->d[zz]; //Initialize the refinement parameters from any previous run
+
+	for (uint16_t xx = 0; xx < m_Sinogram->N_r; xx++)
     {
       for (uint16_t yy = 0; yy < m_Sinogram->N_t; yy++)
       {
@@ -956,7 +1028,6 @@ void SOCEngine::execute()
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-
         // checksum+=Y_Est->d[i][j][k];
         ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - Y_Est->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];
         //	if(fabs(ErrorSino->d[i_theta][i_r][i_t]) > 20000)
@@ -1000,6 +1071,7 @@ void SOCEngine::execute()
 
   /*********************Cost Calculation*************************************/
   cost_value = computeCost(ErrorSino, Weight);
+  std::cout<<cost_value<<std::endl;
   int increase = cost->addCostValue(cost_value);
   if (increase ==1)
   {
@@ -1017,7 +1089,12 @@ void SOCEngine::execute()
 	{
 	  ss.str(""); // Clear the string stream
 	  indent = "";
-    for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
+	  if(OuterIter != 0)
+		m_TomoInputs->NumIter = 1;
+		
+		
+		
+     for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
     {
       indent = "  ";
 //      ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
@@ -1041,7 +1118,7 @@ void SOCEngine::execute()
 #endif//NHICD end if 
 
       // This could contain multiple Subloops also
-      uint8_t status =
+       status =
           updateVoxels(OuterIter, Iter, updateType, VisitCount, RandomNumber, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost);
 
       if(status == 0)
@@ -1058,7 +1135,15 @@ void SOCEngine::execute()
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
 #ifdef JOINT_ESTIMATION
 
-    //high=5e100;//this maintains the max and min bracket values for rooting lambda
+		DATA_TYPE AverageI_kUpdate=0;//absolute sum of the gain updates
+		DATA_TYPE AverageMagI_k=0;//absolute sum of the initial gains
+		
+		DATA_TYPE AverageDelta_kUpdate=0; //absolute sum of the offsets
+		DATA_TYPE AverageMagDelta_k=0;//abs sum of the initial offset 
+		
+		
+		
+    //high=5e 100;//this maintains the max and min bracket values for rooting lambda
     DATA_TYPE high = std::numeric_limits<DATA_TYPE>::max();
     DATA_TYPE low = std::numeric_limits<DATA_TYPE>::min();
     //Joint Scale And Offset Estimation
@@ -1070,11 +1155,14 @@ void SOCEngine::execute()
       {
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
-          Y_Est->d[i_theta][i_r][i_t] = 0.0;
+			//Y_Est->d[i_theta][i_r][i_t]=0;
+          Y_Est->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - ErrorSino->d[i_theta][i_r][i_t]-NuisanceParams->mu->d[i_theta];
+		  Y_Est->d[i_theta][i_r][i_t] /=NuisanceParams->I_0->d[i_theta];
         }
       }
     }
 
+		/* Forward Projection
     for (j = 0; j < m_Geometry->N_z; j++)
     {
       for (k = 0; k < m_Geometry->N_x; k++)
@@ -1103,6 +1191,7 @@ void SOCEngine::execute()
 
       }
     }
+		 */
 
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
@@ -1189,19 +1278,42 @@ void SOCEngine::execute()
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
 
-      NuisanceParams->I_0->d[i_theta] = (-1 * LagrangeMultiplier - Qk_cost->d[i_theta][1] * d1->d[i_theta] + bk_cost->d[i_theta][0])
-      / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]);
+		AverageMagI_k += fabs(NuisanceParams->I_0->d[i_theta]);//store the sum of the vector of gains 
+		
+		DATA_TYPE NewI_k = (-1 * LagrangeMultiplier - Qk_cost->d[i_theta][1] * d1->d[i_theta] + bk_cost->d[i_theta][0])
+		/ (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]);
 
-      //Postivity Constraing on the gains
+		AverageI_kUpdate += fabs(NewI_k-NuisanceParams->I_0->d[i_theta]);
+		
+		NuisanceParams->I_0->d[i_theta]=NewI_k;		
+/*      NuisanceParams->I_0->d[i_theta] = (-1 * LagrangeMultiplier - Qk_cost->d[i_theta][1] * d1->d[i_theta] + bk_cost->d[i_theta][0])
+      / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]);
+*/
+      //Postivity Constraint on the gains
 
       if (NuisanceParams->I_0->d[i_theta] < 0)
       {
-        NuisanceParams->I_0->d[i_theta]=0;
+        NuisanceParams->I_0->d[i_theta]*=1;
       }
+		AverageMagDelta_k += fabs(NuisanceParams->mu->d[i_theta]);
+		
 
-      NuisanceParams->mu->d[i_theta] = d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
+//      NuisanceParams->mu->d[i_theta] = d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
+
+		DATA_TYPE NewDelta_k= d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
+		AverageDelta_kUpdate += fabs(NewDelta_k - NuisanceParams->mu->d[i_theta]);
+		NuisanceParams->mu->d[i_theta] = NewDelta_k; 
+		//Postivity Constraing on the offsets
+		
+	  if (NuisanceParams->mu->d[i_theta] < 0)
+	  {
+			NuisanceParams->mu->d[i_theta]*=1;
+	   }
     }
+		
 
+		
+		
 #endif //Type of constraing Geometric or arithmetic
     //Re normalization
 
@@ -1259,10 +1371,11 @@ void SOCEngine::execute()
 
 		/*********************Cost Calculation*************************************/
 		DATA_TYPE cost_value = computeCost(ErrorSino, Weight);
+		std::cout<<cost_value<<std::endl;
 		int increase = cost->addCostValue(cost_value);
 		if (increase ==1)
 		{
-			std::cout << "Cost just increased!" << std::endl;
+			std::cout << "Cost just increased after gains+offset update!" << std::endl;
 			break;
 		}
 		cost->writeCostValue(cost_value);
@@ -1282,52 +1395,92 @@ void SOCEngine::execute()
       printf("%lf\n", NuisanceParams->I_0->d[i_theta]);
     }
 
+		
+		DATA_TYPE I_kRatio=AverageI_kUpdate/AverageMagI_k;
+		DATA_TYPE Delta_kRatio = AverageDelta_kUpdate/AverageMagDelta_k;
+		std::cout<<"Ratio of change in I_k "<<I_kRatio<<std::endl;
+		std::cout<<"Ratio of change in Delta_k "<<Delta_kRatio<<std::endl;
 #endif//Joint estimation endif
 		
 #ifdef NOISE_MODEL
 		//Updating the Weights
+		DATA_TYPE AverageVarUpdate=0;//absolute sum of the gain updates
+		DATA_TYPE AverageMagVar=0;//absolute sum of the initial gains
+		
 		for(uint16_t i_theta=0;i_theta < m_Sinogram->N_theta;i_theta++)
 		{
-			sum=0;
+			uint32_t NumNonZeroEntries=0;
+			sum=0;			
+			//Factoring out the variance parameter from the Weight matrix
+			for(uint16_t i_r=0; i_r < m_Sinogram->N_r; i_r++)
+				for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+					if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
+					{
+					Weight->d[i_theta][i_r][i_t] = 1.0/m_Sinogram->counts->d[i_theta][i_r][i_t];
+						NumNonZeroEntries++;
+					}
+			
 			
 			for(uint16_t i_r=0; i_r < m_Sinogram->N_r; i_r++)
 				for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-					sum+=(ErrorSino->d[i_theta][i_r][i_t]*ErrorSino->d[i_theta][i_r][i_t]*Weight->d[i_theta][i_r][i_t]);
-			sum/=(m_Sinogram->N_r*m_Sinogram->N_t);
+					sum+=(ErrorSino->d[i_theta][i_r][i_t]*ErrorSino->d[i_theta][i_r][i_t]*Weight->d[i_theta][i_r][i_t]);//Changed to only account for the counts
+			sum/=NumNonZeroEntries;//(m_Sinogram->N_r*m_Sinogram->N_t);
 			
+			AverageMagVar += fabs(NuisanceParams->alpha->d[i_theta]);
+			AverageVarUpdate += fabs(sum - NuisanceParams->alpha->d[i_theta]);
 			NuisanceParams->alpha->d[i_theta]=sum;
-			
+			//Update the weight for ICD updates
 			for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
 			{
 				for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
 				{
-					
-					if(NuisanceParams->alpha->d[i_theta] != 0)
+					if(NuisanceParams->alpha->d[i_theta] != 0 && m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
 					{
-						Weight->d[i_theta][i_r][i_t] /= NuisanceParams->alpha->d[i_theta];
+						Weight->d[i_theta][i_r][i_t] = 1.0/(m_Sinogram->counts->d[i_theta][i_r][i_t]*NuisanceParams->alpha->d[i_theta]);
 					}
+					else {
+						Weight->d[i_theta][i_r][i_t]= 0;
+					}
+
 				}
 			}
 			
 		}
+		for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+		{
+			printf("%lf\n", NuisanceParams->alpha->d[i_theta]);
+		}
+		
+		DATA_TYPE VarRatio = AverageVarUpdate/AverageMagVar;
+		std::cout<<"Ratio of change in Variance "<<VarRatio<<std::endl;
 		
 #ifdef COST_CALCULATE
 		
 		/*********************Cost Calculation*************************************/
 		cost_value = computeCost(ErrorSino, Weight);
+		std::cout<<cost_value<<std::endl;
 		increase = cost->addCostValue(cost_value);
 		if (increase ==1)
 		{
-			std::cout << "Cost just increased!" << std::endl;
+			std::cout << "Cost just increased after variance update!" << std::endl;
 			break;
 		}
 		cost->writeCostValue(cost_value);
 		/**************************************************************************/
 		
 #endif//cost
+		
 #endif//NOISE_MODEL
 		
-
+		//Stopping Criteria for the algorithm is the relative change in parameters is less than a threshold
+#ifdef NOISE_MODEL
+		if(0 == status && OuterIter >= 1)//&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+			break;
+#else
+		if(0 == status)//&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+			break;
+#endif //Noise Model
+		
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
 
   indent = "";
@@ -1335,6 +1488,8 @@ void SOCEngine::execute()
 
 
 #ifdef FORWARD_PROJECT_MODE
+	int fileError=0;
+	FILE *Fp6;
   MAKE_OUTPUT_FILE(Fp6, fileError, m_TomoInputs->outputDir, ScaleOffsetCorrection::ForwardProjectedObjectFile);
   if (fileError == 1)
   {
@@ -1345,6 +1500,7 @@ void SOCEngine::execute()
 
 #ifdef DEBUG_CONSTRAINT_OPT
   FILE *Fp8 = NULL;
+	int fileError=0;
   MAKE_OUTPUT_FILE(Fp8, fileError, m_TomoInputs->outputDir, ScaleOffsetCorrection::CostFunctionCoefficientsFile);
   if (fileError >= 0)
   {
@@ -1390,7 +1546,19 @@ void SOCEngine::execute()
 
   START_TIMER;
   //calculates Ax and returns a pointer to the memory block
-  Final_Sinogram=forwardProject(detectorResponse, H_t);
+ // Final_Sinogram=forwardProject(detectorResponse, H_t);
+	for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+    {
+		for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+		{
+			for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+			{
+				
+				Final_Sinogram->d[i_theta][i_r][i_t]=m_Sinogram->counts->d[i_theta][i_r][i_t]-ErrorSino->d[i_theta][i_r][i_t];
+			}
+		}
+    }
+	
   STOP_TIMER;
   PRINT_TIME("Forward Project");
 
@@ -1499,6 +1667,7 @@ void SOCEngine::minMax(DATA_TYPE *low,DATA_TYPE *high)
 	if(THETA2 !=0)
 	{
 	*low = (*low > (V - (THETA1/THETA2)) ? (V - (THETA1/THETA2)): *low);
+
 	*high = (*high < (V - (THETA1/THETA2)) ? (V - (THETA1/THETA2)): *high);
 	}
 }
@@ -1743,12 +1912,15 @@ void SOCEngine::initializeBeamProfile()
 DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::Pointer Weight)
 {
 	DATA_TYPE cost=0,temp=0;
-//	DATA_TYPE delta;
+	DATA_TYPE delta;
 	int16_t i,j,k;
+#ifdef QGGMRF
+	//DATA_TYPE MRF_C_TIMES_SIGMA_P_Q= MRF_C*SIGMA_X_P_Q;
+#endif
 //	int16_t p,q,r;
 
 //Data Mismatch Error
-	for (i = 0; i < m_Sinogram->N_theta; i++)
+  for (i = 0; i < m_Sinogram->N_theta; i++)
   {
     for (j = 0; j < m_Sinogram->N_r; j++)
     {
@@ -1765,6 +1937,7 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 //	fflush(stdout);
 
 //Prior Model Error
+	temp=0;
 #ifndef QGGMRF
 	for (i = 0; i < m_Geometry->N_z; i++)
 		for (j = 0; j < m_Geometry->N_x; j++)
@@ -1829,7 +2002,7 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 			}
 		cost+=(temp/(MRF_P*SIGMA_X_P));
 #else
-	for (i = 0; i < m_Geometry->N_z; i++)
+	/*for (i = 0; i < m_Geometry->N_z; i++)
 		for (j = 0; j < m_Geometry->N_x; j++)
 			for(k = 0; k < m_Geometry->N_y; k++)
 			{
@@ -1837,7 +2010,8 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 				if(k+1 <  m_Geometry->N_y)
 				{
 					delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j][k+1];
-					temp += FILTER[2][1][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+					temp += FILTER[2][1][1]*(pow(fabs(delta),MRF_P))/(MRF_C_TIMES_SIGMA_P_Q+pow(fabs(delta),MRF_P-MRF_Q));
+					
 				}
 
 
@@ -1847,17 +2021,17 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 					if(k-1 >= 0)
 					{
 						delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k-1];
-						temp += FILTER[0][1][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+						temp += FILTER[0][1][2]*(pow(fabs(delta),MRF_P))/(MRF_C_TIMES_SIGMA_P_Q+pow(fabs(delta), MRF_P-MRF_Q));
 					}
 
 					delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k];
-					temp += FILTER[1][1][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+					temp += FILTER[1][1][2]*(pow(fabs(delta),MRF_P))/(MRF_C_TIMES_SIGMA_P_Q + pow(fabs(delta), MRF_P-MRF_Q));
 
 
 					if(k+1 < m_Geometry->N_y)
 					{
 						delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k+1];
-						temp += FILTER[2][1][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+						temp += FILTER[2][1][2]*(pow(fabs(delta),MRF_P))/(MRF_C_TIMES_SIGMA_P_Q + pow(fabs(delta), MRF_P-MRF_Q));
 					}
 
 				}
@@ -1868,16 +2042,16 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 					if(j-1 >= 0)
 					{
 						delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k];
-						temp += FILTER[1][2][0]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+						temp += FILTER[1][2][0]*(pow(fabs(delta),MRF_P))/(MRF_C_TIMES_SIGMA_P_Q + pow(fabs(delta), MRF_P-MRF_Q));
 					}
 
 					delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k];
-					temp += FILTER[1][2][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+					temp += FILTER[1][2][1]*(pow(fabs(delta),MRF_P))/(MRF_C_TIMES_SIGMA_P_Q+pow(fabs(delta), MRF_P-MRF_Q));
 
 					if(j+1 < m_Geometry->N_x)
 					{
 						delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k];
-						temp += FILTER[1][2][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+						temp += FILTER[1][2][2]*(pow(fabs(delta),MRF_P))/(MRF_C_TIMES_SIGMA_P_Q + pow(fabs(delta), MRF_P-MRF_Q));
 					}
 
 
@@ -1885,14 +2059,14 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 					{
 						if(k-1 >= 0)
 						{
-							delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k-1];
-							temp += FILTER[0][2][0]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+							delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k-1];
+							temp += FILTER[0][2][0]*(pow(fabs(delta),MRF_P))/(MRF_C_TIMES_SIGMA_P_Q+pow(fabs(delta), MRF_P-MRF_Q));
 						}
 
 						if(k+1 < m_Geometry->N_y)
 						{
-							delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k+1];
-							temp += FILTER[2][2][0]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+							delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k+1];
+							temp += FILTER[2][2][0]*(pow(fabs(delta),MRF_P))/(MRF_C_TIMES_SIGMA_P_Q + pow(fabs(delta), MRF_P-MRF_Q));
 						}
 
 					}
@@ -1900,7 +2074,7 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 					if(k-1 >= 0)
 					{
 						delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k-1];
-						temp += FILTER[0][2][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+						temp += FILTER[0][2][1]*(pow(fabs(delta),MRF_P))/(MRF_C_TIMES_SIGMA_P_Q + pow(fabs(delta), MRF_P-MRF_Q));
 					}
 
 					if(j+1 < m_Geometry->N_x)
@@ -1908,24 +2082,120 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 						if(k-1 >= 0)
 						{
 							delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k-1];
-							temp += FILTER[0][2][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+							temp += FILTER[0][2][2]*(pow(fabs(delta),MRF_P))/(MRF_C_TIMES_SIGMA_P_Q + pow(fabs(delta), MRF_P-MRF_Q));
 						}
 
 						if(k+1 < m_Geometry->N_y)
 						{
 							delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k+1];
-							temp+= FILTER[2][2][2]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+							temp+= FILTER[2][2][2]*(pow(fabs(delta),MRF_P))/(MRF_C_TIMES_SIGMA_P_Q + pow(fabs(delta), MRF_P-MRF_Q));
 						}
 					}
 
 					if(k+1 < m_Geometry->N_y)
 					{
 						delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k+1];
-						temp+= FILTER[2][2][1]*(pow(fabs(delta),MRF_P))/(1+pow(fabs(delta/MRF_C), MRF_P-MRF_Q));
+						temp+= FILTER[2][2][1]*(pow(fabs(delta),MRF_P))/(MRF_C_TIMES_SIGMA_P_Q +pow(fabs(delta), MRF_P-MRF_Q));
 					}
 				}
 			}
-			cost+=(temp);
+			cost+=(temp/SIGMA_X_Q);*/
+	for (i = 0; i < m_Geometry->N_z; i++)
+		for (j = 0; j < m_Geometry->N_x; j++)
+			for(k = 0; k < m_Geometry->N_y; k++)
+			{
+				
+				if(k+1 <  m_Geometry->N_y)
+				{
+					delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j][k+1];
+					temp += FILTER[2][1][1]*CE_QGGMRF_Value(delta);
+					
+				}
+				
+				if(j+1 < m_Geometry->N_x)
+				{
+					if(k-1 >= 0)
+					{
+						delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k-1];
+						temp += FILTER[0][1][2]*CE_QGGMRF_Value(delta);
+					}
+					
+					delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k];
+					temp += FILTER[1][1][2]*CE_QGGMRF_Value(delta);
+					
+					
+					if(k+1 < m_Geometry->N_y)
+					{
+						delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k+1];
+						temp += FILTER[2][1][2]*CE_QGGMRF_Value(delta);
+					}
+					
+				}
+				
+				if(i+1 < m_Geometry->N_z)
+				{
+					
+					if(j-1 >= 0)
+					{
+						delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k];
+						temp += FILTER[1][2][0]*CE_QGGMRF_Value(delta);
+					}
+					
+					delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k];
+					temp += FILTER[1][2][1]*CE_QGGMRF_Value(delta);
+					
+					if(j+1 < m_Geometry->N_x)
+					{
+						delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k];
+						temp += FILTER[1][2][2]*CE_QGGMRF_Value(delta);
+					}
+					
+					
+					if(j-1 >= 0)
+					{
+						if(k-1 >= 0)
+						{
+							delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k-1];
+							temp += FILTER[0][2][0]*CE_QGGMRF_Value(delta);
+						}
+						
+						if(k+1 < m_Geometry->N_y)
+						{
+							delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k+1];
+							temp += FILTER[2][2][0]*CE_QGGMRF_Value(delta);
+						}
+						
+					}
+					
+					if(k-1 >= 0)
+					{
+						delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k-1];
+						temp += FILTER[0][2][1]*CE_QGGMRF_Value(delta);
+					}
+					
+					if(j+1 < m_Geometry->N_x)
+					{
+						if(k-1 >= 0)
+						{
+							delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k-1];
+							temp += FILTER[0][2][2]*CE_QGGMRF_Value(delta);
+						}
+						
+						if(k+1 < m_Geometry->N_y)
+						{
+							delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k+1];
+							temp+= FILTER[2][2][2]*CE_QGGMRF_Value(delta);
+						}
+					}
+					
+					if(k+1 < m_Geometry->N_y)
+					{
+						delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k+1];
+						temp+= FILTER[2][2][1]*CE_QGGMRF_Value(delta);
+					}
+				}
+			}
+	cost+=(temp);
 #endif //QGGMRF
 
 	//printf("Cost calculation End..\n");
@@ -1934,14 +2204,26 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 //Noise Error
 #ifdef NOISE_MODEL
 	temp = 0;
-  for (i = 0; i < m_Sinogram->N_theta; i++)
+ /* for (i = 0; i < m_Sinogram->N_theta; i++)
   {
     if(Weight->d[i][0][0] != 0)
     {
       temp += log(2 * M_PI * (1.0 / Weight->d[i][0][0])); //2*pi*sigma_k^{2}
     }
   }
-  temp *= ((m_Sinogram->N_r * m_Sinogram->N_t) / 2);
+  temp *= ((m_Sinogram->N_r * m_Sinogram->N_t) / 2);*/
+	for (i = 0; i < m_Sinogram->N_theta; i++)
+	{
+		for (j = 0; j < m_Sinogram->N_r; j++)
+		{
+			for (k = 0; k < m_Sinogram->N_t; k++)
+			{
+				if(Weight->d[i][j][k] != 0)
+				temp+= log(2 * M_PI * (1.0/Weight->d[i][j][k]));
+			}
+		}
+	}
+	temp/=2;	
   cost += temp;
 #endif//noise model
 	return cost;
@@ -2243,8 +2525,8 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
 
      while(errorcode != 0 && low <= high && rooting_attempt_counter < MaxNumRootingAttempts) //0 implies the signof the function at low and high is the same
      {
-
-       LagrangeMultiplier=solve<CE_ConstraintEquation>(&ce, low, high, LambdaRootingAccuracy, &errorcode);
+		 uint32_t iter_count;
+       LagrangeMultiplier=solve<CE_ConstraintEquation>(&ce, low, high, LambdaRootingAccuracy, &errorcode,iter_count);
        low=low+dist;
        dist*=2;
        rooting_attempt_counter++;
@@ -2450,7 +2732,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                              VoxelUpdateType updateType,
                              UInt8ImageType::Pointer VisitCount,
                              RNGVars* RandomNumber,
-                             AMatrixCol*** TempCol,
+                             AMatrixCol** TempCol,
                              RealVolumeType::Pointer ErrorSino,
                              RealVolumeType::Pointer Weight,
                              AMatrixCol* VoxelLineResponse,
@@ -2463,7 +2745,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
   std::string indent("    ");
   uint8_t err = 0;
   DATA_TYPE UpdatedVoxelValue;
-  DATA_TYPE accuracy = 1e-7; //This is the rooting accuracy for x
+  DATA_TYPE accuracy = 1e-9; //This is the rooting accuracy for x
+  uint32_t binarysearch_count=10;//Accuracy is 1/(2^10)
   int32_t errorcode = -1;
   int16_t Idx;
 
@@ -2543,7 +2826,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
           {
             MagUpdateMask->d[j][k] = 1;
             MagUpdateMap->d[j][k] = 0;
-	    NumVoxelsToUpdate++;
+	        NumVoxelsToUpdate++;
           }
           else
           {
@@ -2553,7 +2836,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         else if(updateType == HomogeniousUpdate)
         {
           MagUpdateMap->d[j][k] = 0;
-	  NumVoxelsToUpdate++;
+	      NumVoxelsToUpdate++;
         }
 	else if(updateType == RegularRandomOrderUpdate)
 	  {
@@ -2575,31 +2858,38 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 
 #ifdef RANDOM_ORDER_UPDATES
         //RandomNumber=init_genrand(Iter);
-        int32_t Index = (genrand_int31(RandomNumber)) % ArraySize;
-        int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
-        int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
+        //int32_t Index = (genrand_int31(RandomNumber)) % ArraySize;
+		uint32_t Index = (genrand_int31(RandomNumber)) % ArraySize;  		          
+//		int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
+//        int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
+		int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
+		int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
+		 // std::cout<<k_new<<","<<j_new<<std::endl;
         //memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
         //TODO: Instead just swap the value in Index with the one in ArraySize
         Counter->d[Index] = Counter->d[ArraySize - 1];
         VisitCount->d[j_new][k_new] = 1;
         ArraySize--;
+		Index = j_new*m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to 
+		  //the voxel line (j_new,k_new)
 #else
-        j_new=j;
-        k_new=k;
+        int32_t j_new=j;
+        int32_t k_new=k;
+		  uint32_t Index = j_new*m_Geometry->N_x + k_new;
 #endif //Random order updates
-        AMatrixCol* TempMemBlock = TempCol[j_new][k_new]; //Remove this
+     //   AMatrixCol* TempMemBlock = TempCol[j_new][k_new]; //Remove this
 
         int shouldInitNeighborhood = 0;
 
-        if(updateType == NonHomogeniousUpdate && MagUpdateMask->d[j_new][k_new] == 1 && TempMemBlock->count > 0)
+        if(updateType == NonHomogeniousUpdate && MagUpdateMask->d[j_new][k_new] == 1 && TempCol[Index]->count > 0)
         {
 	      ++shouldInitNeighborhood;
         }
-	if(updateType == HomogeniousUpdate  && TempMemBlock->count > 0)
+	if(updateType == HomogeniousUpdate  && TempCol[Index]->count > 0)
 	{
 	      ++shouldInitNeighborhood;
 	}
-	if(updateType == RegularRandomOrderUpdate && TempMemBlock->count > 0)
+	if(updateType == RegularRandomOrderUpdate && TempCol[Index]->count > 0)
 	  {
 	    ++shouldInitNeighborhood;
 	  }
@@ -2651,6 +2941,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                       }
                       else
                       {
+						NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object->d[j_new][k_new][i];//So that influence is zero 
                         BOUNDARYFLAG[p + 1][q + 1][r + 1] = 0;
                       }
                     }
@@ -2659,8 +2950,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
               }
             }
 #endif//circular boundary condition check
-            NEIGHBORHOOD[1][1][1] = 0.0;
-
+			  NEIGHBORHOOD[1][1][1] = 0.0;
 #ifndef NDEBUG
             if(i == 0 && j == 31 && k == 31)
             {
@@ -2683,50 +2973,51 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             THETA1 = 0.0;
             THETA2 = 0.0;
 
+			
             //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
-            for (uint32_t q = 0; q < TempMemBlock->count; q++)
+            for (uint32_t q = 0; q < TempCol[Index]->count; q++)
             {
-              uint16_t i_theta = floor(static_cast<float>(TempMemBlock->index[q] / (m_Sinogram->N_r)));
-              uint16_t i_r = (TempMemBlock->index[q] % (m_Sinogram->N_r));
+              uint16_t i_theta = floor(static_cast<float>(TempCol[Index]->index[q] / (m_Sinogram->N_r)));
+              uint16_t i_r = (TempCol[Index]->index[q] % (m_Sinogram->N_r));
               uint16_t VoxelLineAccessCounter = 0;
               for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
               {
-                THETA2 += ((NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta])
-                    * (VoxelLineResponse[i].values[VoxelLineAccessCounter] * VoxelLineResponse[i].values[VoxelLineAccessCounter]) * (TempMemBlock->values[q])
-                    * (TempMemBlock->values[q]) * Weight->d[i_theta][i_r][i_t]);
-                THETA1 += NuisanceParams->I_0->d[i_theta] * ErrorSino->d[i_theta][i_r][i_t] * (TempMemBlock->values[q])
-                    * (VoxelLineResponse[i].values[VoxelLineAccessCounter]) * Weight->d[i_theta][i_r][i_t];
-                VoxelLineAccessCounter++;
+				  DATA_TYPE ProjectionEntry = NuisanceParams->I_0->d[i_theta]*VoxelLineResponse[i].values[VoxelLineAccessCounter] * (TempCol[Index]->values[q]);
+				  THETA2 += (ProjectionEntry*ProjectionEntry*Weight->d[i_theta][i_r][i_t]);
+				  THETA1 +=  (ErrorSino->d[i_theta][i_r][i_t]*ProjectionEntry* Weight->d[i_theta][i_r][i_t]);
+                  VoxelLineAccessCounter++;
               }
             }
+						  
+			  
             THETA1 *= -1;
             minMax(&low, &high);
 
 #ifdef DEBUG
-            if(i == 0 && j == 31 && k == 31) printf("(%lf,%lf,%lf) \n", low, high, V - (THETA1 / THETA2));
+            if(i == 0 && j == 31 && k == 31)
+				printf("(%lf,%lf,%lf) \n", low, high, V - (THETA1 / THETA2));
 #endif
 
             //Solve the 1-D optimization problem
             //printf("V before updating %lf",V);
 #ifndef SURROGATE_FUNCTION
-            //TODO : What if theta1 = 0 ? Then this will give error
-            DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
-
-            UpdatedVoxelValue = (DATA_TYPE)solve<DerivOfCostFunc>(&docf, (double)low, (double)high, (double)accuracy, &errorcode);
-
+            //TODO : What if theta1 = 0 ? Then this will give error	
+			
+            DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);			 
+			UpdatedVoxelValue = (DATA_TYPE)solve<DerivOfCostFunc>(&docf, (double)low, (double)high, (double)accuracy, &errorcode,binarysearch_count);
+			  
+			//std::cout<<low<<","<<high<<","<<UpdatedVoxelValue<<std::endl;			  
 #else
-
             errorcode=0;
 #ifdef QGGMRF
-            UpdatedVoxelValue = CE_FunctionalSubstitution(low,high);
-
+            UpdatedVoxelValue = CE_FunctionalSubstitution(low,high);			  			  
 #else
-            SurrogateUpdate=surrogateFunctionBasedMin();
-            UpdatedVoxelValue=SurrogateUpdate;
+            SurrogateUpdate = surrogateFunctionBasedMin();
+            UpdatedVoxelValue = SurrogateUpdate;
 #endif //QGGMRF
+			  
 #endif//Surrogate function
             //printf("%lf\n",SurrogateUpdate);
-
             if(errorcode == 0)
             {
               //    printf("(%lf,%lf,%lf)\n",low,high,UpdatedVoxelValue);
@@ -2744,8 +3035,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 				  UpdatedVoxelValue = 0;
               else
               {
-                printf("Error \n");
-                printf("%d %d\n", j_new, k_new);
+               // printf("Error \n");
+               // printf("%d %d\n", j_new, k_new);
               }
             }
 
@@ -2764,19 +3055,21 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 #endif
 
             //Update the ErrorSinogram
-            for (uint32_t q = 0; q < TempMemBlock->count; q++)
+            for (uint32_t q = 0; q < TempCol[Index]->count; q++)
             {
-              uint16_t i_theta = floor(static_cast<float>(TempMemBlock->index[q] / (m_Sinogram->N_r)));
-              uint16_t i_r = (TempMemBlock->index[q] % (m_Sinogram->N_r));
+              uint16_t i_theta = floor(static_cast<float>(TempCol[Index]->index[q] / (m_Sinogram->N_r)));
+              uint16_t i_r = (TempCol[Index]->index[q] % (m_Sinogram->N_r));
               uint16_t VoxelLineAccessCounter = 0;
               for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
               //for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
               {
                 ErrorSino->d[i_theta][i_r][i_t] -= (NuisanceParams->I_0->d[i_theta]
-                    * (TempMemBlock->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
+                    * (TempCol[Index]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
                 VoxelLineAccessCounter++;
               }
             }
+			  
+			
             Idx++;
           }
         }
@@ -2784,7 +3077,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         {
           continue;
         }
-      }
+		  
+	  }
     }
     STOP_TIMER;
     PRINT_TIME("Voxel Update");
@@ -2806,10 +3100,11 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 
     /*********************Cost Calculation*************************************/
     DATA_TYPE cost_value = computeCost(ErrorSino, Weight);
+	  std::cout<<cost_value<<std::endl;
     int increase = cost->addCostValue(cost_value);
     if (increase ==1)
     {
-      std::cout << "Cost just increased!" << std::endl;
+      std::cout << "Cost just increased after ICD!" << std::endl;
       break;
     }
     cost->writeCostValue(cost_value);
@@ -2867,4 +3162,109 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 }
 
 
+#ifdef QGGMRF
+//Function to compute parameters of thesurrogate function
+void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
+{
+	DATA_TYPE Delta0,DeltaMin,DeltaMax,T,Derivative_Delta0;
+	DATA_TYPE AbsDelta0,AbsDeltaMin,AbsDeltaMax;
+	uint8_t i,j,k,count=0;
+	for(i=0;i<3;i++)
+		for (j=0; j < 3; j++)
+			for(k=0; k < 3;k++)
+				if(i != 1 || j !=1 || k != 1)
+				{
+					Delta0 = V - NEIGHBORHOOD[i][j][k];
+					DeltaMin = umin - NEIGHBORHOOD[i][j][k];
+					DeltaMax = umax - NEIGHBORHOOD[i][j][k];
+					AbsDelta0 = fabs(Delta0);
+					AbsDeltaMin = fabs(DeltaMin);
+					AbsDeltaMax = fabs(DeltaMax);
+					
+					if(AbsDelta0 <= Minimum(AbsDeltaMin,AbsDeltaMax))
+						T = -Delta0;
+					else if(AbsDeltaMin <= Minimum(AbsDelta0,AbsDeltaMax))
+						T = DeltaMin;
+					else if(AbsDeltaMax <= Minimum(AbsDeltaMin,AbsDelta0))
+						T = DeltaMax;
+					if(Delta0 != 0)
+					{
+						Derivative_Delta0 = CE_QGGMRF_Derivative(Delta0);
+						if( T == -Delta0)
+						{
+						QGGMRF_Params[count][0] = - Derivative_Delta0/(T-Delta0);	//Because the QGGMRF prior is symmetric
+						}
+						else 
+						{
+						QGGMRF_Params[count][0] = ((CE_QGGMRF_Value(T) - CE_QGGMRF_Value(Delta0))/((T-Delta0)*(T - Delta0))) - (Derivative_Delta0/(T-Delta0));	
+						}
+						
+					}
+					else 
+					{
+						Derivative_Delta0 = CE_QGGMRF_Derivative(Delta0);
+						QGGMRF_Params[count][0] = CE_QGGMRF_SecondDerivative(0)/2;
+					}
+					QGGMRF_Params[count][1] = Derivative_Delta0 - 2*QGGMRF_Params[count][0]*V;
+					QGGMRF_Params[count][2] = CE_QGGMRF_Value(Delta0) - QGGMRF_Params[count][0]*V*V - QGGMRF_Params[count][1]*V;
+					count++;
+				}
+	
+}
+
+DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
+{
+	DATA_TYPE u,temp1=0,temp2=0;
+	uint8_t i,j,k,count=0;
+#ifdef POSITIVITY_CONSTRAINT
+	if(umin < 0)
+		umin =0;
+#endif //Positivity 
+	CE_ComputeQGGMRFParameters(umin, umax);
+	for(i = 0;i < 3; i++)
+		for (j=0; j < 3; j++)
+			for(k=0; k < 3; k++)
+			{
+				if((i != 1 || j != 1 || k != 1))
+				{
+					temp1 += FILTER[i][j][k]*QGGMRF_Params[count][1];
+					temp2 += FILTER[i][j][k]*QGGMRF_Params[count][0];
+				    count++;	
+				}
+				
+			}
+	u=(-temp1+ (THETA2*V) - THETA1)/(2*temp2 + THETA2);
+	
+	return Clip(V + MRF_ALPHA*(u-V),umin,umax);
+	
+}
+
+
+
+
+DATA_TYPE SOCEngine::CE_QGGMRF_Value(DATA_TYPE delta)
+{
+	return ((pow(fabs(delta),MRF_P)/SIGMA_X_P)/(MRF_C + pow(fabs(delta),MRF_P - MRF_Q)/SIGMA_X_P_Q));
+}
+
+DATA_TYPE SOCEngine::CE_QGGMRF_Derivative(DATA_TYPE delta)
+{
+	DATA_TYPE temp1,temp2,temp3;
+	temp1=pow(fabs(delta),MRF_P - MRF_Q)/(SIGMA_X_P_Q);
+	temp2=pow(fabs(delta),MRF_P - 1);
+	temp3 = MRF_C + temp1;
+	if(delta < 0)
+		return ((-1*temp2/(temp3*SIGMA_X_P))*(MRF_P - ((MRF_P-MRF_Q)*temp1)/(temp3)));
+	else 
+	{
+		return ((temp2/(temp3*SIGMA_X_P))*(MRF_P - ((MRF_P-MRF_Q)*temp1)/(temp3)));
+	}
+}
+
+DATA_TYPE SOCEngine::CE_QGGMRF_SecondDerivative(DATA_TYPE delta)
+{
+	return MRF_P/(SIGMA_X_P*MRF_C);
+}
+
+#endif //QGGMRF
 

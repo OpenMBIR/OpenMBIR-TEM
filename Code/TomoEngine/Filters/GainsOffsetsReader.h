@@ -42,6 +42,8 @@
 #include "TomoEngine/Filters/TomoFilter.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 
+#include "TomoEngine/SOC/SOCConstants.h"//Added by venkat on 1/26/2012
+
 
 /*
  *

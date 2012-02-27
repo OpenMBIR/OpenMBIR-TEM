@@ -158,8 +158,6 @@ void MRCSinogramInitializer::execute()
   // This data is read as a Z,Y,X array where X is the fastest moving variable and Z is the slowest
   int16_t* data = reinterpret_cast<int16_t*>(reader->getDataPointer());
 
-
-
   //Allocate a 3-D matrix to store the singoram in the form of a N_y X N_theta X N_x  matrix
   // Here in the actual data, Z is the slowest, then X, then Y (The Fastest) so we
   // will need to "rotate" the data in the XY plane when copying from the MRC read data into our
@@ -169,11 +167,21 @@ void MRCSinogramInitializer::execute()
 //                                        inputs->yEnd - inputs->yStart+1,
 //                                        sizeof(DATA_TYPE));
   size_t dims[3] = {sinogram->N_theta,
-      inputs->xEnd - inputs->xStart+1,
-      inputs->yEnd - inputs->yStart+1};
+  inputs->xEnd - inputs->xStart+1,
+  inputs->yEnd - inputs->yStart+1};
   sinogram->counts = RealVolumeType::New(dims);
   sinogram->counts->setName("Sinogram.counts");
 
+	//If the bright field image is included initialize space for it
+	/*if(inputs->BrightFieldFile != NULL)
+	{
+	size_t dims[3] = {sinogram->N_theta,
+	inputs->xEnd - inputs->xStart+1,
+	inputs->yEnd - inputs->yStart+1};
+	sinogram->counts_BF = RealVolumeType::New(dims);
+	sinogram->counts_BF->setName("Sinogram.counts_BrightField");
+	}*/
+	
 
   sinogram->angles.resize(sinogram->N_theta);
   FEIHeader* fei = NULL;
