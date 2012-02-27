@@ -276,7 +276,9 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     QVector<QRgb>         m_ColorTable;
     int                   m_CurrentCorner;
     QImage                m_CurrentImage;
-    QString               gainsOffsetsFile;
+    QString               m_GainsFile;
+    QString               m_OffsetsFile;
+    QString               m_VarianceFile;
     QThread*              m_WorkerThread;
     QSOCEngine*           m_SOCEngine;
     GainsOffsetsTableModel*  m_GainsOffsetsTableModel;

@@ -228,8 +228,8 @@ void TomoGui::readSettings(QSettings &prefs)
   on_inputMRCFilePath_textChanged(inputMRCFilePath->text());
 
   // Then load any Gains/Offsets data next
-  gainsOffsetsFile = prefs.value("gainsOffsetsFile" , "").toString();
-  readGainsOffsetsFile(gainsOffsetsFile);
+  m_GainsFile = prefs.value("m_GainsFile" , "").toString();
+  readGainsOffsetsFile(m_GainsFile);
 
 
   ok = false;
@@ -265,7 +265,7 @@ void TomoGui::writeSettings(QSettings &prefs)
   WRITE_STRING_SETTING(prefs, yMax);
   WRITE_STRING_SETTING(prefs, zMin);
   WRITE_STRING_SETTING(prefs, zMax);
-  prefs.setValue("gainsOffsetsFile" , gainsOffsetsFile);
+  prefs.setValue("m_GainsFile" , m_GainsFile);
   prefs.setValue("tiltSelection", tiltSelection->currentIndex());
 
   prefs.endGroup();
@@ -713,8 +713,8 @@ void TomoGui::initializeSOCEngine()
   path = QDir::toNativeSeparators(initialReconstructionPath->text());
   inputs->InitialReconFile = path.toStdString();
 
-  path = QDir::toNativeSeparators(gainsOffsetsFile);
-  inputs->GainsOffsetsFile = path.toStdString();
+  path = QDir::toNativeSeparators(m_GainsFile);
+  inputs->GainsFile = path.toStdString();
 
   path = QDir::toNativeSeparators(outputDirectoryPath->text());
   inputs->outputDir = path.toStdString();
@@ -907,7 +907,7 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
     // Now load up the first tilt from the file
     loadMRCTiltImage(filepath, 0);
 
-    gainsOffsetsFile = ""; // We are reading a new .mrc file so we probably need a new Gains Offsets File
+    m_GainsFile = ""; // We are reading a new .mrc file so we probably need a new Gains Offsets File
 
     setWindowTitle(filepath);
     this->setWindowFilePath(filepath);
@@ -1610,8 +1610,8 @@ void TomoGui::on_importGainsOffsetsBtn_clicked()
 // -----------------------------------------------------------------------------
 void TomoGui::readGainsOffsetsFile(QString file)
 {
-  gainsOffsetsFile = file;
-  if (verifyPathExists(gainsOffsetsFile, NULL) == false)
+  m_GainsFile = file;
+  if (verifyPathExists(m_GainsFile, NULL) == false)
   {
     return;
   }
@@ -1625,7 +1625,7 @@ void TomoGui::readGainsOffsetsFile(QString file)
     goodViews[i] = i;
   }
   inputs->goodViews = goodViews;
-  inputs->GainsOffsetsFile = gainsOffsetsFile.toStdString();
+  inputs->GainsFile = m_GainsFile.toStdString();
   SinogramPtr sinogram = SinogramPtr(new Sinogram);
   SOCEngine::InitializeSinogram(sinogram);
   sinogram->N_theta = m_GainsOffsetsTableModel->rowCount();
@@ -1634,7 +1634,7 @@ void TomoGui::readGainsOffsetsFile(QString file)
   reader->execute();
   if (reader->getErrorCondition() < 0)
   {
-    gainsOffsetsFile = ""; // Clear out the variable so we don't try to load it again.
+    m_GainsFile = ""; // Clear out the variable so we don't try to load it again.
     return;
   }
 
