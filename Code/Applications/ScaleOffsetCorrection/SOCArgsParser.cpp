@@ -129,7 +129,7 @@ SOCArgsParser::~SOCArgsParser()
 
 
 
-int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs)
+int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, TomoInputs* bf_inputs)
 {
   if ( NULL == inputs)
   {
@@ -228,7 +228,8 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs)
     inputs->InitialReconFile = in_InitialRecon.getValue();
 	inputs->InterpFlag = in_InterpFlag.getValue();
 	
-	inputs->BrightFieldFile = in_BrightField.getValue();
+	bf_inputs->SinoFile = in_BrightField.getValue();
+	
 //  inputs->GainsOffsetsFile = in_GainsOffsets.getValue();
 	  
 	inputs->GainsFile = in_Gains.getValue();  
@@ -262,6 +263,16 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs)
       inputs->yEnd = subvolumeValues[4];
       inputs->zStart = subvolumeValues[2];
       inputs->zEnd = subvolumeValues[5];
+		
+		//Do same for BF sinogram as well 
+		
+		bf_inputs->useSubvolume = true;
+		bf_inputs->xStart = subvolumeValues[0];
+		bf_inputs->xEnd = subvolumeValues[3];
+		bf_inputs->yStart = subvolumeValues[1];
+		bf_inputs->yEnd = subvolumeValues[4];
+		bf_inputs->zStart = subvolumeValues[2];
+		bf_inputs->zEnd = subvolumeValues[5];
     }
 
     inputs->delta_xz = xz_size.getValue();

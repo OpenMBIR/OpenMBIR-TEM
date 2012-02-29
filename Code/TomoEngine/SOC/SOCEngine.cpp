@@ -360,44 +360,53 @@ void SOCEngine::execute()
       return;
     }
 	}
-
-
-	//Read the Bright Field Data for normalization
-	/*{
-	TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
-    std::string extension = MXAFileInfo::extension(m_TomoInputs->BrightFieldFile);
-    if (extension.compare("mrc") == 0 || extension.compare("ali") == 0)
-    {
-		dataReader = MRCSinogramInitializer::NewTomoFilter();
-    }
-    else if (extension.compare("bin") == 0 )
-    {
-		dataReader = RawSinogramInitializer::NewTomoFilter();
-    }
-    else
-    {
-		setErrorCondition(-1);
-		updateProgressAndMessage("A supported file reader for the input file was not found." , 100);
-		return;
-    }
-    dataReader->setTomoInputs(m_TomoInputs);
-    dataReader->setSinogram(m_Sinogram);
-    dataReader->addObserver(this);
-    dataReader->execute();
-    if (dataReader->getErrorCondition() < 0)
-    {
-		updateProgressAndMessage("Error reading Input Sinogram Data file", 100);
-		setErrorCondition(dataReader->getErrorCondition());
-		return;
-    }
-	}*/
 	
+	
+	//Read Bright Field
+	if (m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL)
+	{
+		TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
+		std::string extension = MXAFileInfo::extension(m_BFTomoInputs->SinoFile);
+		if (extension.compare("mrc") == 0 || extension.compare("ali") == 0)
+		{
+			dataReader = MRCSinogramInitializer::NewTomoFilter();
+		}
+		else
+		{
+			setErrorCondition(-1);
+			updateProgressAndMessage("A supported file reader for the Bright Field file was not found." , 100);
+			return;
+		}
+		dataReader->setTomoInputs(m_BFTomoInputs);
+		dataReader->setSinogram(m_BFSinogram);
+		dataReader->addObserver(this);
+		dataReader->execute();
+		if (dataReader->getErrorCondition() < 0)
+		{
+			updateProgressAndMessage("Error reading Input Sinogram Data file", 100);
+			setErrorCondition(dataReader->getErrorCondition());
+			return;
+		}
+		
+		//Normalize the HAADF image
+		for (uint16_t i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++) 
+		{//slice index
+			for(uint16_t i_r = 0; i_r < m_Sinogram->N_r;i_r++) {
+				for(uint16_t i_t = 0;i_t < m_Sinogram->N_t;i_t++)
+				{
+					//1000 is for Marc De Graef data which needed to be divided
+					m_Sinogram->counts->d[i_theta][i_r][i_t] /= (m_BFSinogram->counts->d[i_theta][i_r][i_t]*1000);
+				}
+			}
+		}
+	}
+
 	
   // Now read or generate the Gains and Offsets data. We are scoping this section
   // so the reader automactically gets cleaned up at this point.
   {
     TomoFilter::Pointer gainsOffsetsInitializer = TomoFilter::NullPointer();
-    if(m_TomoInputs->GainsFile.empty() == true && m_TomoInputs->OffsetsFile.empty() == true)      // Calculate the initial Gains and Offsets
+    if(m_TomoInputs->GainsFile.empty() == true && m_TomoInputs->OffsetsFile.empty() == true) // Calculate the initial Gains and Offsets
     {
       gainsOffsetsInitializer = ComputeGainsOffsets::NewTomoFilter();
     }
@@ -1009,7 +1018,7 @@ void SOCEngine::execute()
 #ifdef BRIGHT_FIELD
           Weight->d[zz][xx][yy] = m_Sinogram->counts->d[zz][xx][yy];
 #else
-          Weight->d[zz][xx][yy] = 1.0 / (m_Sinogram->counts->d[zz][xx][yy] * NuisanceParams->alpha->d[zz]); //The variance for each view ~=averagecounts in that view
+			Weight->d[zz][xx][yy] = 1.0 / (m_Sinogram->counts->d[zz][xx][yy] * NuisanceParams->alpha->d[zz]); //The variance for each view ~=averagecounts in that view
 #endif
         }
       }
@@ -1039,7 +1048,8 @@ void SOCEngine::execute()
 #ifdef BRIGHT_FIELD
           Weight->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
 #else
-          Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
+			
+			Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
 #endif //bright field check
         }
         else Weight->d[i_theta][i_r][i_t] = 0;

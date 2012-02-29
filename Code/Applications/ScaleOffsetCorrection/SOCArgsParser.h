@@ -49,7 +49,7 @@ class SOCArgsParser
     SOCArgsParser();
     virtual ~SOCArgsParser();
 
-    int parseArguments(int argc, char **argv, TomoInputs* Input);
+    int parseArguments(int argc, char **argv, TomoInputs* Input, TomoInputs* BF_Inputs);
 
     void printArgs(std::ostream &out, TomoInputs* Input);
 

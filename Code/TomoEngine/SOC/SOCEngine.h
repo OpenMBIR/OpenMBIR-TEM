@@ -73,6 +73,10 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
     MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
     MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams)
 
+	MXA_INSTANCE_PROPERTY(bool, UseBrightFieldData)
+	MXA_INSTANCE_PROPERTY(TomoInputsPtr, BFTomoInputs)
+    MXA_INSTANCE_PROPERTY(SinogramPtr, BFSinogram)
+	
     static void InitializeTomoInputs(TomoInputsPtr);
     static void InitializeSinogram(SinogramPtr);
     static void InitializeGeometry(GeometryPtr);
