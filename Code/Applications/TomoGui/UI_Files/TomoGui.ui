@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>792</width>
-    <height>720</height>
+    <width>895</width>
+    <height>758</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -229,14 +229,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="20" column="0">
-           <widget class="QToolButton" name="importGainsOffsetsBtn">
-            <property name="text">
-             <string>Import Gains/Offsets Data</string>
-            </property>
-           </widget>
-          </item>
-          <item row="21" column="0" colspan="6">
+          <item row="23" column="0" colspan="6">
            <widget class="QTableView" name="gainsOffsetsTableView"/>
           </item>
           <item row="10" column="3">
@@ -305,13 +298,6 @@ font-size: 10px;
             </item>
            </widget>
           </item>
-          <item row="20" column="1" colspan="2">
-           <widget class="QToolButton" name="exportGainsOffsets">
-            <property name="text">
-             <string>Export Gains/Offsets</string>
-            </property>
-           </widget>
-          </item>
           <item row="19" column="0" colspan="6">
            <layout class="QGridLayout" name="gridLayout_5">
             <property name="topMargin">
@@ -320,7 +306,7 @@ font-size: 10px;
             <property name="rightMargin">
              <number>10</number>
             </property>
-            <item row="0" column="1" colspan="2">
+            <item row="0" column="2" colspan="2">
              <widget class="QLabel" name="label_16">
               <property name="styleSheet">
                <string notr="true">QLabel {
@@ -336,7 +322,7 @@ font-size: 10px;
               </property>
              </widget>
             </item>
-            <item row="0" column="3" colspan="2">
+            <item row="0" column="4" colspan="2">
              <widget class="QLabel" name="label_38">
               <property name="styleSheet">
                <string notr="true">QLabel {
@@ -352,7 +338,7 @@ font-size: 10px;
               </property>
              </widget>
             </item>
-            <item row="1" column="1">
+            <item row="1" column="2">
              <widget class="QLabel" name="label_39">
               <property name="font">
                <font>
@@ -375,53 +361,7 @@ font-size: 10px;
               </property>
              </widget>
             </item>
-            <item row="2" column="1">
-             <widget class="QLabel" name="label_40">
-              <property name="font">
-               <font>
-                <pointsize>-1</pointsize>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-              </property>
-              <property name="text">
-               <string>Y:</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QLabel" name="m_ZMax_7">
-              <property name="font">
-               <font>
-                <pointsize>-1</pointsize>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-              </property>
-              <property name="text">
-               <string>Z:</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="2">
+            <item row="1" column="3">
              <widget class="QLineEdit" name="xMin">
               <property name="maximumSize">
                <size>
@@ -434,33 +374,7 @@ font-size: 10px;
               </property>
              </widget>
             </item>
-            <item row="2" column="2">
-             <widget class="QLineEdit" name="yMin">
-              <property name="maximumSize">
-               <size>
-                <width>65</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>--</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="2">
-             <widget class="QLineEdit" name="zMin">
-              <property name="maximumSize">
-               <size>
-                <width>65</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>--</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="3">
+            <item row="1" column="4">
              <widget class="QLabel" name="label_41">
               <property name="font">
                <font>
@@ -483,7 +397,56 @@ font-size: 10px;
               </property>
              </widget>
             </item>
-            <item row="2" column="3">
+            <item row="1" column="5">
+             <widget class="QLineEdit" name="xMax">
+              <property name="maximumSize">
+               <size>
+                <width>65</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>--</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="6">
+             <widget class="QLabel" name="label_40">
+              <property name="font">
+               <font>
+                <pointsize>-1</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Y:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="7">
+             <widget class="QLineEdit" name="yMin">
+              <property name="maximumSize">
+               <size>
+                <width>65</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>--</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="8">
              <widget class="QLabel" name="label_42">
               <property name="font">
                <font>
@@ -506,7 +469,88 @@ font-size: 10px;
               </property>
              </widget>
             </item>
-            <item row="3" column="3">
+            <item row="1" column="9">
+             <widget class="QLineEdit" name="yMax">
+              <property name="maximumSize">
+               <size>
+                <width>65</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>--</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="6" colspan="2">
+             <widget class="QLabel" name="label_43">
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Min:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="8" colspan="2">
+             <widget class="QLabel" name="label_44">
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Max:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="10">
+             <widget class="QLabel" name="m_ZMax_7">
+              <property name="font">
+               <font>
+                <pointsize>-1</pointsize>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Z:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="11">
+             <widget class="QLineEdit" name="zMin">
+              <property name="maximumSize">
+               <size>
+                <width>65</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>--</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="12">
              <widget class="QLabel" name="m_ZMax_8">
               <property name="font">
                <font>
@@ -529,33 +573,7 @@ font-size: 10px;
               </property>
              </widget>
             </item>
-            <item row="1" column="4">
-             <widget class="QLineEdit" name="xMax">
-              <property name="maximumSize">
-               <size>
-                <width>65</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>--</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="4">
-             <widget class="QLineEdit" name="yMax">
-              <property name="maximumSize">
-               <size>
-                <width>65</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>--</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="4">
+            <item row="1" column="13">
              <widget class="QLineEdit" name="zMax">
               <property name="maximumSize">
                <size>
@@ -568,7 +586,39 @@ font-size: 10px;
               </property>
              </widget>
             </item>
-            <item row="0" column="5" rowspan="4">
+            <item row="0" column="10" colspan="2">
+             <widget class="QLabel" name="label_45">
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Min:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="12" colspan="2">
+             <widget class="QLabel" name="label_46">
+              <property name="styleSheet">
+               <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+              </property>
+              <property name="text">
+               <string>Max:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="14" rowspan="2">
              <spacer name="horizontalSpacer_9">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -581,7 +631,7 @@ font-size: 10px;
               </property>
              </spacer>
             </item>
-            <item row="0" column="0" rowspan="4">
+            <item row="0" column="1" rowspan="2">
              <widget class="QCheckBox" name="useSubVolume">
               <property name="styleSheet">
                <string notr="true">QCheckBox {
@@ -1421,7 +1471,7 @@ font-size: 10px;
 }</string>
               </property>
               <property name="text">
-               <string>Initial Reconstruction File:</string>
+               <string>Output Reconstruction File:</string>
               </property>
              </widget>
             </item>
@@ -1468,6 +1518,68 @@ font-size: 10px;
              <double>0.100000000000000</double>
             </property>
            </widget>
+          </item>
+          <item row="20" column="0" colspan="6">
+           <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QToolButton" name="importGainBtn">
+              <property name="text">
+               <string>Import Gain Data</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="exportGainBtn">
+              <property name="text">
+               <string>Export Gains Data</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="importOffsetBtn">
+              <property name="text">
+               <string>Import Offset Data</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="exportOffsetBtn">
+              <property name="text">
+               <string>Export Offset Data</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="importVarianceBtn">
+              <property name="text">
+               <string>Import Variance Data</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="exportVarianceBtn">
+              <property name="text">
+               <string>Export Variance Data</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_10">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
@@ -2671,7 +2783,7 @@ font-size: 10px;
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>792</width>
+     <width>895</width>
      <height>22</height>
     </rect>
    </property>
@@ -2798,7 +2910,6 @@ font-size: 10px;
   <tabstop>xyPixel</tabstop>
   <tabstop>xzPixel</tabstop>
   <tabstop>tiltSelection</tabstop>
-  <tabstop>importGainsOffsetsBtn</tabstop>
   <tabstop>zoomIn</tabstop>
   <tabstop>zoomOut</tabstop>
   <tabstop>fitToWindow</tabstop>
@@ -2807,7 +2918,6 @@ font-size: 10px;
   <tabstop>currentTiltIndex</tabstop>
   <tabstop>playBtn</tabstop>
   <tabstop>zoomButton</tabstop>
-  <tabstop>exportGainsOffsets</tabstop>
   <tabstop>skipStart</tabstop>
   <tabstop>skipEnd</tabstop>
   <tabstop>gainsOffsetsTableView</tabstop>

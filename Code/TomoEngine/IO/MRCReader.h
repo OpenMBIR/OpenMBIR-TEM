@@ -37,10 +37,9 @@
 #include "MXA/Common/MXASetGetMacros.h"
 #include "MXA/Common/IO/MXAFileReader64.h"
 
-#include "MRCHeader.h"
 
 #include "TomoEngine/TomoEngine.h"
-
+#include "TomoEngine/IO/MRCHeader.h"
 
 
 /**

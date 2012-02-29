@@ -7,6 +7,7 @@
 set (TomoEngine_IO_SRCS
     ${TomoEngine_SOURCE_DIR}/IO/RawGeometryWriter.cpp
     ${TomoEngine_SOURCE_DIR}/IO/MRCReader.cpp
+    ${TomoEngine_SOURCE_DIR}/IO/MRCWriter.cpp
     ${TomoEngine_SOURCE_DIR}/IO/NuisanceParamWriter.cpp
     ${TomoEngine_SOURCE_DIR}/IO/SinogramBinWriter.cpp
     )
@@ -16,6 +17,7 @@ set (TomoEngine_IO_HDRS
     ${TomoEngine_SOURCE_DIR}/IO/VTKWriterMacros.h
     ${TomoEngine_SOURCE_DIR}/IO/RawGeometryWriter.h
     ${TomoEngine_SOURCE_DIR}/IO/MRCReader.h
+    ${TomoEngine_SOURCE_DIR}/IO/MRCWriter.h
     ${TomoEngine_SOURCE_DIR}/IO/MRCHeader.h
     ${TomoEngine_SOURCE_DIR}/IO/NuisanceParamWriter.h
     ${TomoEngine_SOURCE_DIR}/IO/SinogramBinWriter.h

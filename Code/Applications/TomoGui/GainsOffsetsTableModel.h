@@ -62,6 +62,7 @@ class GainsOffsetsTableModel : public QAbstractTableModel
       B_Tilt,
       Gains,
       Offsets,
+      Variances,
       Exclude,
       ColumnCount   // Leave this as the last member of the enumeration
     };
@@ -160,12 +161,13 @@ class GainsOffsetsTableModel : public QAbstractTableModel
                        QVector<float> b_tilts,
                        QVector<double> gains,
                        QVector<double> offsets,
+                       QVector<double> variances,
                        QVector<bool> excludes);
 
      void setGainsAndOffsets(QVector<double> gains,
-                       QVector<double> offsets);
+                             QVector<double> offsets, QVector<double> variances);
 
-     void getGainsAndOffsets(QVector<double> &gains, QVector<double> &offsets);
+     void getGainsAndOffsets(QVector<double> &gains, QVector<double> &offsets, QVector<double> &variances);
      QVector<bool> getExcludedTilts();
 
 
@@ -178,6 +180,7 @@ class GainsOffsetsTableModel : public QAbstractTableModel
      QVector<float> m_BTilts;
      QVector<double> m_Gains;
      QVector<double> m_Offsets;
+     QVector<double> m_Variances;
      QVector<bool>  m_Excludes;
 
 

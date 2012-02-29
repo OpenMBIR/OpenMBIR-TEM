@@ -1276,24 +1276,26 @@ void TomoGui::readMRCHeader(QString filepath)
     pixelsize->setText(QString::number(fei.pixelsize));
     magnification->setText(QString::number(fei.magnification));
     voltage->setText(QString::number(fei.voltage));
-    QVector<int> indices;
-    QVector<float> a_tilts;
-    QVector<float> b_tilts;
-    QVector<double> gains;
-    QVector<double> offsets;
-    QVector<bool>  excludes;
+    QVector<int> indices(header.nz);
+    QVector<float> a_tilts(header.nz);
+    QVector<float> b_tilts(header.nz);
+    QVector<double> gains(header.nz);
+    QVector<double> offsets(header.nz);
+    QVector<double> variances(header.nz);
+    QVector<bool>  excludes(header.nz);
     for(int l = 0; l < header.nz; ++l)
     {
-      indices.append(l);
-      a_tilts.append(header.feiHeaders[l].a_tilt);
-      b_tilts.append(header.feiHeaders[l].b_tilt);
-      gains.append(0.0);
-      offsets.append(0.0);
-      excludes.append(false);
+      indices[l] = l;
+      a_tilts[l] = header.feiHeaders[l].a_tilt;
+      b_tilts[l] = header.feiHeaders[l].b_tilt;
+      gains[l] = 0.0;
+      offsets[l] = 0.0;
+      variances[l] = 0.0;
+      excludes[l] = false;
     }
     if (NULL != m_GainsOffsetsTableModel)
     {
-      m_GainsOffsetsTableModel->setTableData(indices, a_tilts, b_tilts, gains, offsets, excludes);
+      m_GainsOffsetsTableModel->setTableData(indices, a_tilts, b_tilts, gains, offsets, variances, excludes);
     }
   }
   else
@@ -1640,23 +1642,28 @@ void TomoGui::readGainsOffsetsFile(QString file)
 
   RealArrayType::Pointer gains = sinogram->InitialGain;
   RealArrayType::Pointer offsets = sinogram->InitialOffset;
+  RealArrayType::Pointer variances = sinogram->InitialVariance;
+
  // int nDims = gains->getNDims();
   size_t* dims = gains->getDims();
   size_t total = dims[0];
   double* gainsPtr = gains->getPointer();
   double* offsetsPtr = offsets->getPointer();
+  double* variancesPtr = variances->getPointer();
 
   QVector<double> fGains(total);
   QVector<double> fOffsets(total);
+  QVector<double> fVariances(total);
   for(size_t i = 0; i < total; ++i)
   {
     fGains[i] = gainsPtr[i];
     fOffsets[i] = offsetsPtr[i];
+    fVariances[i] = variancesPtr[i];
   }
 
   if (m_GainsOffsetsTableModel != NULL)
   {
-    m_GainsOffsetsTableModel->setGainsAndOffsets(fGains, fOffsets);
+    m_GainsOffsetsTableModel->setGainsAndOffsets(fGains, fOffsets, fVariances);
   }
 }
 
@@ -1675,8 +1682,9 @@ void TomoGui::on_exportGainsOffsets_clicked()
 
   QVector<double> gains;
   QVector<double> offsets;
+  QVector<double> variances;
   // Convert to 8 byte double
-  m_GainsOffsetsTableModel->getGainsAndOffsets(gains, offsets);
+  m_GainsOffsetsTableModel->getGainsAndOffsets(gains, offsets, variances);
 
   FILE* f = fopen(file.toStdString().c_str(), "wb");
   if (NULL == f)

@@ -102,7 +102,7 @@ namespace SOC {
 
     RealArrayType::Pointer InitialGain;//Reads in the initial value for the gain for each view
     RealArrayType::Pointer InitialOffset;
-	RealArrayType::Pointer InitialVariance;
+	  RealArrayType::Pointer InitialVariance;
 
   } Sinogram;
 
