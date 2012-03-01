@@ -361,7 +361,7 @@ void SOCEngine::execute()
     }
 	}
 	
-	/*
+	
 	//Read Bright Field
 	if (m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL)
 	{
@@ -400,13 +400,14 @@ void SOCEngine::execute()
 			}
 		}
 	}
-*/
+
 	
   // Now read or generate the Gains and Offsets data. We are scoping this section
   // so the reader automactically gets cleaned up at this point.
   {
     TomoFilter::Pointer gainsOffsetsInitializer = TomoFilter::NullPointer();
-    if(m_TomoInputs->GainsFile.empty() == true && m_TomoInputs->OffsetsFile.empty() == true) // Calculate the initial Gains and Offsets
+	  
+    if(m_TomoInputs->OffsetsFile.empty() == true) // Calculate the initial Offsets in case nothing is specified
     {
       gainsOffsetsInitializer = ComputeGainsOffsets::NewTomoFilter();
     }
@@ -424,11 +425,15 @@ void SOCEngine::execute()
      setErrorCondition(gainsOffsetsInitializer->getErrorCondition());
      return;
     }
+	  
+	
     /********************REMOVE************************/
     std::cout<<"HARD WIRED TARGET GAIN"<<std::endl;
 	m_Sinogram->TargetGain = m_TomoInputs->TargetGain;//TARGET_GAIN;
     std::cout << "Target Gain: " << m_Sinogram->TargetGain << std::endl;
     /*************************************************/
+	  
+	
   }
 
   // Initialize the Geometry data from a rough reconstruction

@@ -32,7 +32,7 @@ void ComputeGainsOffsets::execute()
 
 	notify("GainsOffsetsCalculation Starting", 0, UpdateProgressMessage);
 	SinogramPtr sinogram = getSinogram();//This I assume some how gets the sinogram as it stands now
-//	TomoInputs* inputs = getInputs();//This gets the input files
+	TomoInputsPtr inputs = getTomoInputs();//This gets the input files
 
 	//The normalization and offset parameters for the views
 
@@ -123,7 +123,7 @@ void ComputeGainsOffsets::execute()
 
 	}
 
-	sinogram->TargetGain=TARGET_GAIN;
+	sinogram->TargetGain=inputs->TargetGain;
 	std::cout<<"Target Gain"<<sinogram->TargetGain<<std::endl;
 	//In this the Gains are all set to the target Gain
 	std::cout << "------------Initial Gains-----------" << std::endl;
