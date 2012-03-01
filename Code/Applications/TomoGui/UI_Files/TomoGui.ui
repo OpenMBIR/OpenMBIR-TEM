@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>895</width>
-    <height>758</height>
+    <width>800</width>
+    <height>813</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>EM/MPM</string>
+   <string>HAADF Multi-Resolution Tomography Reconstruction</string>
   </property>
   <property name="dockNestingEnabled">
    <bool>true</bool>
@@ -60,7 +60,7 @@
           <property name="verticalSpacing">
            <number>4</number>
           </property>
-          <item row="10" column="0">
+          <item row="12" column="0">
            <widget class="QLabel" name="label_3">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -73,7 +73,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="11" column="0">
+          <item row="13" column="0">
            <widget class="QLabel" name="label_4">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -86,7 +86,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="13" column="0">
+          <item row="15" column="0">
            <widget class="QLabel" name="label_23">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -99,7 +99,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="15" column="0">
+          <item row="17" column="0">
            <widget class="QLabel" name="label_34">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -108,170 +108,14 @@ font-size: 10px;
 }</string>
             </property>
             <property name="text">
-             <string>XY Output Pixel (nm):</string>
+             <string>XY Output Res. Multiple:</string>
             </property>
            </widget>
           </item>
-          <item row="11" column="3">
-           <widget class="QLabel" name="label_8">
-            <property name="styleSheet">
-             <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-            </property>
-            <property name="text">
-             <string>Inner Iterations:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="11" column="4">
-           <widget class="QLineEdit" name="innerIterations">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>2</string>
-            </property>
-           </widget>
-          </item>
-          <item row="13" column="3">
-           <widget class="QLabel" name="label_33">
-            <property name="styleSheet">
-             <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-            </property>
-            <property name="text">
-             <string>MRF Shape Parameter:</string>
-            </property>
-           </widget>
-          </item>
-          <item row="15" column="3">
-           <widget class="QLabel" name="label_35">
-            <property name="styleSheet">
-             <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-            </property>
-            <property name="text">
-             <string>XZ Output Pixel (nm):</string>
-            </property>
-           </widget>
-          </item>
-          <item row="15" column="4">
-           <widget class="QLineEdit" name="xzPixel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="1">
-           <widget class="QLineEdit" name="stopThreshold">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>0.009</string>
-            </property>
-           </widget>
-          </item>
-          <item row="11" column="1">
-           <widget class="QLineEdit" name="outerIterations">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="13" column="1">
-           <widget class="QLineEdit" name="sigmaX">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>0.00004</string>
-            </property>
-           </widget>
-          </item>
-          <item row="15" column="1">
-           <widget class="QLineEdit" name="xyPixel">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>1</string>
-            </property>
-           </widget>
-          </item>
-          <item row="23" column="0" colspan="6">
+          <item row="25" column="0" colspan="6">
            <widget class="QTableView" name="gainsOffsetsTableView"/>
           </item>
-          <item row="10" column="3">
-           <widget class="QLabel" name="label_36">
-            <property name="styleSheet">
-             <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-            </property>
-            <property name="text">
-             <string>Sample Thickness (nm):</string>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="4">
-           <widget class="QLineEdit" name="sampleThickness">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text">
-             <string>150</string>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="5" rowspan="6">
-           <spacer name="horizontalSpacer_6">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item row="16" column="0">
+          <item row="19" column="0">
            <widget class="QLabel" name="label_37">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -284,7 +128,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="16" column="1">
+          <item row="19" column="1">
            <widget class="QComboBox" name="tiltSelection">
             <item>
              <property name="text">
@@ -298,7 +142,7 @@ font-size: 10px;
             </item>
            </widget>
           </item>
-          <item row="19" column="0" colspan="6">
+          <item row="22" column="0" colspan="6">
            <layout class="QGridLayout" name="gridLayout_5">
             <property name="topMargin">
              <number>10</number>
@@ -1500,74 +1344,117 @@ font-size: 10px;
             </item>
            </layout>
           </item>
-          <item row="13" column="4">
-           <widget class="QDoubleSpinBox" name="mrf">
-            <property name="decimals">
-             <number>6</number>
+          <item row="18" column="0">
+           <widget class="QLabel" name="label_35">
+            <property name="styleSheet">
+             <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
             </property>
-            <property name="minimum">
-             <double>0.000001000000000</double>
-            </property>
-            <property name="maximum">
-             <double>2.000000000000000</double>
-            </property>
-            <property name="singleStep">
-             <double>0.050000000000000</double>
-            </property>
-            <property name="value">
-             <double>0.100000000000000</double>
+            <property name="text">
+             <string>XZ Output Res. Multiple:</string>
             </property>
            </widget>
           </item>
-          <item row="20" column="0" colspan="6">
-           <layout class="QHBoxLayout" name="horizontalLayout_6">
-            <property name="topMargin">
-             <number>0</number>
+          <item row="14" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="styleSheet">
+             <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
             </property>
+            <property name="text">
+             <string>Inner Iterations:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="16" column="0">
+           <widget class="QLabel" name="label_33">
+            <property name="styleSheet">
+             <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+            </property>
+            <property name="text">
+             <string>MRF Shape Parameter:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="5">
+           <widget class="QLineEdit" name="targetGain">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>150</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="4">
+           <widget class="QLabel" name="label_47">
+            <property name="styleSheet">
+             <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+            </property>
+            <property name="text">
+             <string>Target Gain:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="3">
+           <widget class="QLineEdit" name="sampleThickness">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>150</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="2">
+           <widget class="QLabel" name="label_36">
+            <property name="styleSheet">
+             <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+            </property>
+            <property name="text">
+             <string>Sample Thickness (nm):</string>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="0">
+           <widget class="QLabel" name="label_48">
+            <property name="styleSheet">
+             <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+            </property>
+            <property name="text">
+             <string>Resolution:</string>
+            </property>
+           </widget>
+          </item>
+          <item row="12" column="1" rowspan="7" colspan="5">
+           <layout class="QHBoxLayout" name="tomoInputHorzLayout">
             <item>
-             <widget class="QToolButton" name="importGainBtn">
-              <property name="text">
-               <string>Import Gain Data</string>
-              </property>
-             </widget>
+             <widget class="TomoInputWidget" name="tomoInputWidget" native="true"/>
             </item>
             <item>
-             <widget class="QToolButton" name="exportGainBtn">
-              <property name="text">
-               <string>Export Gains Data</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QToolButton" name="importOffsetBtn">
-              <property name="text">
-               <string>Import Offset Data</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QToolButton" name="exportOffsetBtn">
-              <property name="text">
-               <string>Export Offset Data</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QToolButton" name="importVarianceBtn">
-              <property name="text">
-               <string>Import Variance Data</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QToolButton" name="exportVarianceBtn">
-              <property name="text">
-               <string>Export Variance Data</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer_10">
+             <spacer name="horizontalSpacer_11">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -1578,6 +1465,117 @@ font-size: 10px;
                </size>
               </property>
              </spacer>
+            </item>
+           </layout>
+          </item>
+          <item row="9" column="1">
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <property name="spacing">
+             <number>6</number>
+            </property>
+            <item>
+             <widget class="QPushButton" name="addResolution">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>32</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>24</width>
+                <height>20</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+	image: url(:/plus.png);
+     border: 2px solid #8f8f91;
+     border-radius: 4px;
+     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                       stop: 0 #f6f7fa, stop: 1 #dadbde);
+     min-width: 24px;
+	padding: 2px;
+ }
+
+ QPushButton:pressed {
+     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                       stop: 0 #dadbde, stop: 1 #f6f7fa);
+ }
+
+ QPushButton:flat {
+     border: none; /* no border for a flat push button */
+ }
+
+ QPushButton:default {
+     border-color: navy; /* make the default button prominent */
+ }</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="flat">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="removeResolution">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>32</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>24</width>
+                <height>20</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+	image: url(:/minus.png);
+     border: 2px solid #8f8f91;
+     border-radius: 4px;
+     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                       stop: 0 #f6f7fa, stop: 1 #dadbde);
+     min-width: 24px;
+	padding: 2px;
+ }
+
+ QPushButton:pressed {
+     background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                       stop: 0 #dadbde, stop: 1 #f6f7fa);
+ }
+
+ QPushButton:flat {
+     border: none; /* no border for a flat push button */
+ }
+
+ QPushButton:default {
+     border-color: navy; /* make the default button prominent */
+ }</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="flat">
+               <bool>false</bool>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -2783,7 +2781,7 @@ font-size: 10px;
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>895</width>
+     <width>800</width>
      <height>22</height>
     </rect>
    </property>
@@ -2900,15 +2898,14 @@ font-size: 10px;
    <header location="global">TomoGuiGraphicsView.h</header>
    <container>1</container>
   </customwidget>
+  <customwidget>
+   <class>TomoInputWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">TomoInputWidget.h</header>
+   <container>1</container>
+  </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>stopThreshold</tabstop>
-  <tabstop>sampleThickness</tabstop>
-  <tabstop>outerIterations</tabstop>
-  <tabstop>innerIterations</tabstop>
-  <tabstop>sigmaX</tabstop>
-  <tabstop>xyPixel</tabstop>
-  <tabstop>xzPixel</tabstop>
   <tabstop>tiltSelection</tabstop>
   <tabstop>zoomIn</tabstop>
   <tabstop>zoomOut</tabstop>

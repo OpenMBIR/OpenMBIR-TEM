@@ -147,6 +147,9 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     void on_layersPalette_clicked();
     void on_originCB_currentIndexChanged(int i);
 
+    void on_addResolution_clicked();
+    void on_removeResolution_clicked();
+
 
     /**
      * @brief Qt Slot that fires in response to a click on a "Recent File' Menu entry.
@@ -270,7 +273,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
 
     QList<QWidget*> m_WidgetList;
     QList<QWidget*> m_ImageWidgets;
-
+    QVector<QWidget*>     m_TomoInputs;
     bool                  m_StopAnimation;     // Trigger to stop a running animation
     QTimer*               m_AnimationTimer;
     QVector<QRgb>         m_ColorTable;
@@ -282,7 +285,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     QThread*              m_WorkerThread;
     QSOCEngine*           m_SOCEngine;
     GainsOffsetsTableModel*  m_GainsOffsetsTableModel;
-    QString      m_OpenDialogLastDirectory;
+    QString               m_OpenDialogLastDirectory;
 
     TomoGui(const TomoGui&); // Copy Constructor Not Implemented
     void operator=(const TomoGui&); // Operator '=' Not Implemented
