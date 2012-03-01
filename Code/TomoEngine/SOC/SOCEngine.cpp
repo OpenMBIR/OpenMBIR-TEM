@@ -361,7 +361,7 @@ void SOCEngine::execute()
     }
 	}
 	
-	
+	/*
 	//Read Bright Field
 	if (m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL)
 	{
@@ -400,7 +400,7 @@ void SOCEngine::execute()
 			}
 		}
 	}
-
+*/
 	
   // Now read or generate the Gains and Offsets data. We are scoping this section
   // so the reader automactically gets cleaned up at this point.
@@ -426,8 +426,7 @@ void SOCEngine::execute()
     }
     /********************REMOVE************************/
     std::cout<<"HARD WIRED TARGET GAIN"<<std::endl;
-
-    m_Sinogram->TargetGain = TARGET_GAIN;
+	m_Sinogram->TargetGain = m_TomoInputs->TargetGain;//TARGET_GAIN;
     std::cout << "Target Gain: " << m_Sinogram->TargetGain << std::endl;
     /*************************************************/
   }

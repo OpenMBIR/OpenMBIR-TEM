@@ -43,7 +43,7 @@
 //#define FORWARD_PROJECT_MODE
 //#define EXTEND_OBJECT
 #define X_SHRINK_FACTOR 0.6
-#define TARGET_GAIN 1
+#define TARGET_GAIN 7872950.013398
 
 #define X_STRETCH 1
 #define Z_STRETCH 2
@@ -65,8 +65,8 @@
 #define STOPPING_THRESHOLD_Delta_k 0.001
 #define STOPPING_THRESHOLD_Var_k 0.001
 #define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
-//#define SURROGATE_FUNCTION
-//#define QGGMRF
+#define SURROGATE_FUNCTION
+#define QGGMRF
 //#define DISTANCE_DRIVEN
 //#define CORRECTION
 //#define WRITE_INTERMEDIATE_RESULTS

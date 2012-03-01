@@ -153,6 +153,9 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, Tomo
  // TCLAP::ValueArg<std::string> in_GainsOffsets("", "gains_offsets", "Initial Gains and Offsets to use.", false, "", "");
  // cmd.add(in_GainsOffsets);
 	
+	TCLAP::ValueArg<double> in_TargetGain("","TargetGain","Target Gain for unscattered electrons",true, 1, "");
+	cmd.add(in_TargetGain);
+	
 	TCLAP::ValueArg<std::string> in_Gains("", "gains", "Initial Gains to use.", false, "", "");
 	cmd.add(in_Gains);
 	
@@ -243,6 +246,7 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, Tomo
     inputs->p = in_markov.getValue();
     inputs->NumOuterIter = NumOuterIter.getValue();
     inputs->StopThreshold = in_stopThreshold.getValue();
+	inputs->TargetGain = in_TargetGain.getValue();
 
     int subvolumeValues[6];
     ::memset(subvolumeValues, 0, 6 * sizeof(int));
