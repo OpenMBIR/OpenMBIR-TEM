@@ -207,14 +207,14 @@ void TomoGui::readSettings(QSettings &prefs)
   READ_STRING_SETTING(prefs, outputFilePath, "");
   READ_STRING_SETTING(prefs, outputDirectoryPath, "");
   READ_STRING_SETTING(prefs, initialReconstructionPath, "");
-  READ_STRING_SETTING(prefs, stopThreshold, "");
+//  READ_STRING_SETTING(prefs, stopThreshold, "");
   READ_STRING_SETTING(prefs, sampleThickness, "");
-  READ_STRING_SETTING(prefs, outerIterations, "");
-  READ_STRING_SETTING(prefs, innerIterations, "");
-  READ_STRING_SETTING(prefs, sigmaX, "");
-  READ_SETTING(prefs, mrf, ok, d, 0.1 , Float);
-  READ_STRING_SETTING(prefs, xyPixel, "");
-  READ_STRING_SETTING(prefs, xzPixel, "");
+//  READ_STRING_SETTING(prefs, outerIterations, "");
+//  READ_STRING_SETTING(prefs, innerIterations, "");
+//  READ_STRING_SETTING(prefs, sigmaX, "");
+//  READ_SETTING(prefs, mrf, ok, d, 0.1 , Float);
+//  READ_SETTING(prefs, xyPixelMultiple, ok, i, 1, Int);
+//  READ_SETTING(prefs, xzPixelMultiple, ok, i, 1, Int);
   READ_BOOL_SETTING(prefs, useSubVolume, false);
   READ_STRING_SETTING(prefs, xMin, "0");
   READ_STRING_SETTING(prefs, xMax, "0");
@@ -250,14 +250,14 @@ void TomoGui::writeSettings(QSettings &prefs)
   WRITE_STRING_SETTING(prefs, outputFilePath);
   WRITE_STRING_SETTING(prefs, outputDirectoryPath);
   WRITE_STRING_SETTING(prefs, initialReconstructionPath);
-  WRITE_STRING_SETTING(prefs, stopThreshold);
+ // WRITE_STRING_SETTING(prefs, stopThreshold);
   WRITE_STRING_SETTING(prefs, sampleThickness);
-  WRITE_STRING_SETTING(prefs, outerIterations);
-  WRITE_STRING_SETTING(prefs, innerIterations);
-  WRITE_STRING_SETTING(prefs, sigmaX);
-  WRITE_STRING_SETTING(prefs, mrf);
-  WRITE_STRING_SETTING(prefs, xyPixel);
-  WRITE_STRING_SETTING(prefs, xzPixel);
+//  WRITE_STRING_SETTING(prefs, outerIterations);
+//  WRITE_STRING_SETTING(prefs, innerIterations);
+//  WRITE_STRING_SETTING(prefs, sigmaX);
+//  WRITE_STRING_SETTING(prefs, mrf);
+//  WRITE_SETTING(prefs, xyPixelMultiple);
+//  WRITE_SETTING(prefs, xzPixelMultiple);
   WRITE_BOOL_SETTING(prefs, useSubVolume, useSubVolume->isChecked());
   WRITE_STRING_SETTING(prefs, xMin);
   WRITE_STRING_SETTING(prefs, xMax);
@@ -386,6 +386,11 @@ void TomoGui::setupGui()
   mySize.setHeight(mySize.height() - 30);
   resize(mySize);
 #endif
+
+  m_TomoInputs.push_back(tomoInputWidget);
+
+
+
 
   QMenu* zoomMenu = new QMenu(this);
   ZOOM_MENU(10, zoomMenu, z10_triggered);
@@ -719,11 +724,11 @@ void TomoGui::initializeSOCEngine()
   path = QDir::toNativeSeparators(outputDirectoryPath->text());
   inputs->outputDir = path.toStdString();
   bool ok = false;
-  inputs->NumIter = innerIterations->text().toUShort(&ok);
-  inputs->SigmaX = sigmaX->text().toDouble(&ok);
-  inputs->p = mrf->text().toDouble(&ok);
-  inputs->NumOuterIter = outerIterations->text().toUShort(&ok);
-  inputs->StopThreshold = stopThreshold->text().toDouble(&ok);
+//  inputs->NumIter = innerIterations->text().toUShort(&ok);
+//  inputs->SigmaX = sigmaX->text().toDouble(&ok);
+//  inputs->p = mrf->text().toDouble(&ok);
+//  inputs->NumOuterIter = outerIterations->text().toUShort(&ok);
+//  inputs->StopThreshold = stopThreshold->text().toDouble(&ok);
   inputs->tiltSelection = static_cast<SOC::TiltSelection>(tiltSelection->currentIndex());
   inputs->useSubvolume = useSubVolume->isChecked();
   if(useSubVolume->isChecked())
@@ -737,8 +742,8 @@ void TomoGui::initializeSOCEngine()
     inputs->zEnd = zMax->text().toUShort(&ok);
   }
 
-  inputs->delta_xz = xzPixel->text().toDouble(&ok);
-  inputs->delta_xy = xyPixel->text().toDouble(&ok);
+//  inputs->delta_xz = xzPixelMultiple->value();
+//  inputs->delta_xy = xyPixelMultiple->value();
   inputs->LengthZ = sampleThickness->text().toDouble(&ok);
 
   std::vector<uint8_t> viewMasks;
@@ -1798,3 +1803,34 @@ void TomoGui::displayDialogBox(QString title, QString text, QMessageBox::Icon ic
   msgBox.exec();
 }
 
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_addResolution_clicked()
+{
+  int count = tomoInputHorzLayout->count() -1;
+
+  // The user is adding a resolution
+
+    TomoInputWidget* tiw = new TomoInputWidget(this);
+    m_TomoInputs.push_back(tiw);
+    tomoInputHorzLayout->insertWidget(count, tiw);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_removeResolution_clicked()
+{
+ // int count = tomoInputHorzLayout->count() -1;
+  if (m_TomoInputs.count() == 1)
+  {
+    return;
+  }
+  // The user is removing a resolution
+    QWidget* tiw = m_TomoInputs.at(m_TomoInputs.count()-1);
+    m_TomoInputs.pop_back(); // Remove it from our internal storage
+    tomoInputHorzLayout->removeWidget(tiw);
+    tiw->deleteLater(); // Delete it later
+}
