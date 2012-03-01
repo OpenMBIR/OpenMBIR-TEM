@@ -362,8 +362,8 @@ void SOCEngine::execute()
 	}
 	
 	
-	//Read Bright Field
-	if (m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL)
+	
+	if (m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->SinoFile.empty()== false)
 	{
 		TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
 		std::string extension = MXAFileInfo::extension(m_BFTomoInputs->SinoFile);

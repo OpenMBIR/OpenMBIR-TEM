@@ -132,7 +132,7 @@ namespace SOC {
     DATA_TYPE SigmaX;
     DATA_TYPE p;
     DATA_TYPE StopThreshold;
-	  uint8_t   InterpFlag;
+	uint8_t   InterpFlag;
 
     bool useSubvolume;
     uint16_t xStart;
