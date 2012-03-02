@@ -75,9 +75,11 @@ void GainsOffsetsReader::execute()
 	if(Fp != NULL)
 	{
 		// Read all the gains in a single shot
-		elementsRead = fread( &(fileGains.front()), sizeof(double), inputs->fileZSize, Fp);
-		if (elementsRead != inputs->fileZSize)
+		elementsRead = fread( &(fileGains.front()), sizeof(double), inputs->goodViews.size(), Fp);
+		if (elementsRead != inputs->goodViews.size())
 		{
+			std::cout<<elementsRead<<std::endl;
+			std::cout<<inputs->fileZSize<<std::endl;
 			setErrorCondition(-1);
 			setErrorMessage("Error Reading Gains from File");
 			notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
@@ -132,8 +134,8 @@ void GainsOffsetsReader::execute()
 	if(Fp != NULL)
 	{
 		
-		elementsRead = fread( &(fileOffsets.front()), sizeof(double), inputs->fileZSize, Fp);
-		if (elementsRead != inputs->fileZSize)
+		elementsRead = fread( &(fileOffsets.front()), sizeof(double), inputs->goodViews.size(), Fp);
+		if (elementsRead != inputs->goodViews.size())
 		{
 			setErrorCondition(-1);
 			setErrorMessage("Error Reading Offsets from File");
@@ -182,8 +184,8 @@ void GainsOffsetsReader::execute()
 	if(Fp != NULL)
 	{
 		// Read all the gains in a single shot
-		elementsRead = fread( &(fileVariance.front()), sizeof(double), inputs->fileZSize, Fp);
-		if (elementsRead != inputs->fileZSize)
+		elementsRead = fread( &(fileVariance.front()), sizeof(double), inputs->goodViews.size(), Fp);
+		if (elementsRead != inputs->goodViews.size())
 		{
 			setErrorCondition(-1);
 			setErrorMessage("Error Reading Variance from File");

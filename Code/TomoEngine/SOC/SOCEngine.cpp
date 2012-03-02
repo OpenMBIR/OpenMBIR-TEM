@@ -394,7 +394,7 @@ void SOCEngine::execute()
 			for(uint16_t i_r = 0; i_r < m_Sinogram->N_r;i_r++) {
 				for(uint16_t i_t = 0;i_t < m_Sinogram->N_t;i_t++)
 				{
-					//1000 is for Marc De Graef data which needed to be divided
+					//1000 is for Marc De Graef data which needed to multiplied
 					m_Sinogram->counts->d[i_theta][i_r][i_t] /= (m_BFSinogram->counts->d[i_theta][i_r][i_t]*1000);
 				}
 			}

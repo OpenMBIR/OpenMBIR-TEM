@@ -65,16 +65,16 @@
 #define STOPPING_THRESHOLD_Delta_k 0.001
 #define STOPPING_THRESHOLD_Var_k 0.001
 #define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
-#define SURROGATE_FUNCTION
-#define QGGMRF
+//#define SURROGATE_FUNCTION
+//#define QGGMRF
 //#define DISTANCE_DRIVEN
 //#define CORRECTION
 //#define WRITE_INTERMEDIATE_RESULTS
 #define COST_CALCULATE
 #define DETECTOR_RESPONSE_BINS 64
-//#define JOINT_ESTIMATION
+#define JOINT_ESTIMATION
 //#define GEOMETRIC_MEAN_CONSTRAINT
-//#define NOISE_MODEL
+#define NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
 //#define CIRCULAR_BOUNDARY_CONDITION
 //#define DEBUG_CONSTRAINT_OPT
