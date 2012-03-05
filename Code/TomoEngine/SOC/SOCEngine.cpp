@@ -389,6 +389,7 @@ void SOCEngine::execute()
 		}
 		
 		//Normalize the HAADF image
+		std::cout<<"Normalizing Dark Field Measurements"<<std::endl;
 		for (uint16_t i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++) 
 		{//slice index
 			for(uint16_t i_r = 0; i_r < m_Sinogram->N_r;i_r++) {
@@ -550,7 +551,7 @@ void SOCEngine::execute()
 #else
 	MRF_P = 2;
 	MRF_Q = 1.2;
-	MRF_C = 0.1;
+	MRF_C = 0.01;
 	MRF_ALPHA = 1.5;
 	SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
 	SIGMA_X_P_Q = pow(m_TomoInputs->SigmaX, (MRF_P - MRF_Q)); 
@@ -1010,8 +1011,9 @@ void SOCEngine::execute()
   //TODO: This can be parallelized  for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
   for (int16_t zz = 0; zz < m_Sinogram->N_theta; zz++) //slice index
   {
-    std::cout << "\rComputing Weights for Tilt Index " << zz<< "/" << m_Sinogram->N_theta;
+	  std::cout << "\rComputing Weights for Tilt Index " << zz<< "/" << m_Sinogram->N_theta<<std::endl;
     NuisanceParams->alpha->d[zz] = m_Sinogram->InitialVariance->d[zz]; //Initialize the refinement parameters from any previous run
+	 // std::cout<<NuisanceParams->alpha->d[zz]<<std::endl;  
 
 	for (uint16_t xx = 0; xx < m_Sinogram->N_r; xx++)
     {
@@ -3178,7 +3180,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 
 #ifdef QGGMRF
 //Function to compute parameters of thesurrogate function
-void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
+void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax,DATA_TYPE RefValue)
 {
 	DATA_TYPE Delta0,DeltaMin,DeltaMax,T,Derivative_Delta0;
 	DATA_TYPE AbsDelta0,AbsDeltaMin,AbsDeltaMax;
@@ -3187,7 +3189,7 @@ void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
 		for (j=0; j < 3; j++)
 			for(k=0; k < 3;k++)
 				if(i != 1 || j !=1 || k != 1)
-				{
+			/*	{
 					Delta0 = V - NEIGHBORHOOD[i][j][k];
 					DeltaMin = umin - NEIGHBORHOOD[i][j][k];
 					DeltaMax = umax - NEIGHBORHOOD[i][j][k];
@@ -3222,34 +3224,64 @@ void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
 					QGGMRF_Params[count][1] = Derivative_Delta0 - 2*QGGMRF_Params[count][0]*V;
 					QGGMRF_Params[count][2] = CE_QGGMRF_Value(Delta0) - QGGMRF_Params[count][0]*V*V - QGGMRF_Params[count][1]*V;
 					count++;
+				}*/
+				{
+					Delta0  = RefValue - NEIGHBORHOOD[i][j][k];
+					
+					if(Delta0 != 0)
+					QGGMRF_Params[count][0] = CE_QGGMRF_Derivative(Delta0)/(Delta0);
+					else {
+						QGGMRF_Params[count][0] = CE_QGGMRF_SecondDerivative(0);
+					}
+					//QGGMRF_Params[count][1] = CE_QGGMRF_Value(Delta0) - (Delta0/2)*CE_QGGMRF_Derivative(Delta0);
+					count++;					
 				}
+	
 	
 }
 
 DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
 {
-	DATA_TYPE u,temp1=0,temp2=0;
+	DATA_TYPE u,temp1=0,temp2=0,temp_const,RefValue=0;
 	uint8_t i,j,k,count=0;
 #ifdef POSITIVITY_CONSTRAINT
 	if(umin < 0)
 		umin =0;
 #endif //Positivity 
-	CE_ComputeQGGMRFParameters(umin, umax);
+	RefValue = V;
+	//Need to Loop this for multiple iterations of substitute function
+	for(int8_t Iter=0; Iter < QGGMRF_ITER;Iter++)
+	{	
+	CE_ComputeQGGMRFParameters(umin, umax,RefValue);
 	for(i = 0;i < 3; i++)
 		for (j=0; j < 3; j++)
 			for(k=0; k < 3; k++)
 			{
 				if((i != 1 || j != 1 || k != 1))
-				{
+				/*{
 					temp1 += FILTER[i][j][k]*QGGMRF_Params[count][1];
 					temp2 += FILTER[i][j][k]*QGGMRF_Params[count][0];
 				    count++;	
+				}*/
+				{
+					temp_const = FILTER[i][j][k]*QGGMRF_Params[count][0]; 
+					temp1 += temp_const*NEIGHBORHOOD[i][j][k];
+					temp2 += temp_const;
+					count++;
 				}
 				
 			}
-	u=(-temp1+ (THETA2*V) - THETA1)/(2*temp2 + THETA2);
+	u=(temp1+ (THETA2*V) - THETA1)/(temp2 + THETA2);
 	
-	return Clip(V + MRF_ALPHA*(u-V),umin,umax);
+		if(Iter < QGGMRF_ITER-1)
+			RefValue = Clip(RefValue + MRF_ALPHA*(u-RefValue),umin,umax);
+		else {
+			RefValue = Clip(u, umin, umax);
+		}
+
+	}
+	
+	return RefValue;
 	
 }
 
