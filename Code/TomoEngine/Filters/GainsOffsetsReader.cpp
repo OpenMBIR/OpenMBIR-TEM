@@ -96,9 +96,16 @@ void GainsOffsetsReader::execute()
 		// Copy just the values of the gains we need from the data read
 		// from the file. The indices into the fileGains array are stored
 		// in the inputs->goodViews vector
-		for (size_t i = 0; i < inputs->goodViews.size(); i++)
+	
+		/*for (size_t i = 0; i < inputs->goodViews.size(); i++)
 		{
 			sinogram->InitialGain->d[i] = fileGains[inputs->goodViews[i]];
+		}*/
+		
+		//This has been changed since the # of gains = # of good views
+		for (size_t i = 0; i < inputs->goodViews.size(); i++)
+		{
+			sinogram->InitialGain->d[i] = fileGains[i];
 		}
 		
 #if 1
@@ -153,10 +160,16 @@ void GainsOffsetsReader::execute()
 		// Copy just the values of the gains and offsets we need from the data read
 		// from the file. The indices into the fileGains/fileOffsets array are stored
 		// in the inputs->goodViews vector
-		for (size_t i = 0; i < inputs->goodViews.size(); i++)
+	/*	for (size_t i = 0; i < inputs->goodViews.size(); i++)
 		{
 			sinogram->InitialOffset->d[i] = fileOffsets[inputs->goodViews[i]];
-		}
+		}*/
+	 
+		//This has been changed since the # of gains = # of good views
+		for (size_t i = 0; i < inputs->goodViews.size(); i++)
+	    {
+	    sinogram->InitialOffset->d[i] = fileOffsets[i];
+	    }
 		
 #if 1
 		
@@ -204,9 +217,14 @@ void GainsOffsetsReader::execute()
 		// Copy just the values of the gains and offsets we need from the data read
 		// from the file. The indices into the fileGains/fileOffsets array are stored
 		// in the inputs->goodViews vector
-		for (size_t i = 0; i < inputs->goodViews.size(); i++)
+		/*for (size_t i = 0; i < inputs->goodViews.size(); i++)
 		{
 			sinogram->InitialVariance->d[i] = fileVariance[inputs->goodViews[i]];
+		}*/
+		
+		for (size_t i = 0; i < inputs->goodViews.size(); i++)
+		{
+			sinogram->InitialVariance->d[i] = fileVariance[i];
 		}
 		
 #if 1
