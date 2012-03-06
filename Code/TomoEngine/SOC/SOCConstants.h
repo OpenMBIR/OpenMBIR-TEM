@@ -67,7 +67,7 @@
 #define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
 #define SURROGATE_FUNCTION
 #define QGGMRF
-#define QGGMRF_ITER 1
+#define QGGMRF_ITER 4
 //#define DISTANCE_DRIVEN
 //#define CORRECTION
 //#define WRITE_INTERMEDIATE_RESULTS

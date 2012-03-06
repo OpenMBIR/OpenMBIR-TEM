@@ -3227,7 +3227,6 @@ void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax,DATA_TY
 				}*/
 				{
 					Delta0  = RefValue - NEIGHBORHOOD[i][j][k];
-					
 					if(Delta0 != 0)
 					QGGMRF_Params[count][0] = CE_QGGMRF_Derivative(Delta0)/(Delta0);
 					else {
@@ -3272,6 +3271,8 @@ DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
 				
 			}
 	u=(temp1+ (THETA2*V) - THETA1)/(temp2 + THETA2);
+		//printf("%d\n",Iter);
+		//std::cout<<"Change"<<fabs(u - RefValue)<<std::endl;
 	
 		if(Iter < QGGMRF_ITER-1)
 			RefValue = Clip(RefValue + MRF_ALPHA*(u-RefValue),umin,umax);
