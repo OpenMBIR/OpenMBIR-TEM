@@ -64,10 +64,12 @@ void MultiResolutionSOC::execute()
   int err = 0;
   std::cout << "-- There are " << m_TomoInputs.size() << " resolutions to reconstruct." << std::endl;
 
+
+  //Run the First resolution to prime the pipeline
   SOCEngine::Pointer soc = SOCEngine::New();
 
-  TomoInputsPtr inputs = m_TomoInputs.at(0);
-  soc->setTomoInputs(inputs);
+  TomoInputsPtr prevInputs = m_TomoInputs.at(0);
+  soc->setTomoInputs(prevInputs);
   SinogramPtr sinogram = SinogramPtr(new Sinogram);
   soc->setSinogram(sinogram);
 
@@ -77,7 +79,8 @@ void MultiResolutionSOC::execute()
   ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
   soc->setNuisanceParams(nuisanceParams);
 
-  SOCEngine::InitializeTomoInputs(inputs);
+
+  SOCEngine::InitializeTomoInputs(prevInputs);
   SOCEngine::InitializeSinogram(sinogram);
   SOCEngine::InitializeGeometry(geometry);
   SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
@@ -87,7 +90,42 @@ void MultiResolutionSOC::execute()
 
   soc->execute();
 
+  soc = SOCEngine::NullPointer();
 
+
+  for (size_t i = 1; i < m_TomoInputs.size(); ++i)
+  {
+    TomoInputsPtr inputs = m_TomoInputs.at(i);
+    inputs->GainsFile = prevInputs->GainsFile;
+    inputs->OffsetsFile = prevInputs->OffsetsFile;
+    inputs->VarianceFile = prevInputs->VarianceFile;
+    inputs->InitialReconFile = prevInputs->SinoFile;
+
+    soc = SOCEngine::New();
+    soc->setTomoInputs(inputs);
+    sinogram = SinogramPtr(new Sinogram);
+    soc->setSinogram(sinogram);
+
+    geometry = GeometryPtr(new Geometry);
+    soc->setGeometry(geometry);
+
+    nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
+    soc->setNuisanceParams(nuisanceParams);
+
+    SOCEngine::InitializeTomoInputs(inputs);
+    SOCEngine::InitializeSinogram(sinogram);
+    SOCEngine::InitializeGeometry(geometry);
+    SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
+
+    // We need to get messages to the gui or command line
+    soc->addObserver(this);
+
+    soc->execute();
+    soc = SOCEngine::NullPointer();
+
+    prevInputs = inputs;
+
+  }
 
   updateProgressAndMessage("MultiResolution SOC Complete", 100);
   setErrorCondition(err);

@@ -712,7 +712,8 @@ void TomoGui::initializeSOCEngine()
       inputs->delta_xy = tiw->getXYPixelMultiple();
       inputs->delta_xz = tiw->getXZPixelMultiple();
 
-      QString path = outputDirectoryPath->text() + QDir::separator() + outputFilePath->text();
+
+      QString path = outputDirectoryPath->text() + QString("_") + QString::number(i, 10) + QDir::separator() + outputFilePath->text();
       path = QDir::toNativeSeparators(path);
       inputs->OutputFile = path.toStdString();
 
@@ -722,10 +723,7 @@ void TomoGui::initializeSOCEngine()
       path = QDir::toNativeSeparators(initialReconstructionPath->text());
       inputs->InitialReconFile = path.toStdString();
 
-      path = QDir::toNativeSeparators(m_GainsFile);
-      inputs->GainsFile = path.toStdString();
-
-      path = QDir::toNativeSeparators(outputDirectoryPath->text());
+      path = QDir::toNativeSeparators(outputDirectoryPath->text()+ QString("_") + QString::number(i, 10));
       inputs->outputDir = path.toStdString();
       bool ok = false;
 
