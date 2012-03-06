@@ -1220,7 +1220,7 @@ font-size: 10px;
                <string>The output image to be written at the conclusion of the segmentation</string>
               </property>
               <property name="text">
-               <string>/Users/Shared/Data/TomographyData/TiO2Ps100kRun3/Run3TiO2PS100k_2_output</string>
+               <string/>
               </property>
              </widget>
             </item>
@@ -1259,7 +1259,7 @@ font-size: 10px;
                <string>The output image to be written at the conclusion of the segmentation</string>
               </property>
               <property name="text">
-               <string>ReconstructedObject.raw</string>
+               <string/>
               </property>
              </widget>
             </item>
