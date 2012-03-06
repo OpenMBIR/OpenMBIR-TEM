@@ -27,92 +27,105 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-#include "Observer.h"
 
-#include <iostream>
+#include "FilterPipeline.h"
+
+#include "MXA/MXA.h"
+#include "MXA/Common/LogTime.h"
+
+#if MXA_BENCHMARKS
+#define START_CLOCK()\
+  unsigned long long int millis;\
+  millis = MXA::getMilliSeconds();
+#else
+#define START_CLOCK() unsigned long long int millis = 0;\
+  millis = 0;
+#endif
+
+
+#define CHECK_FOR_CANCELED(FuncClass, Message, name)\
+    if (this->getCancel() ) { \
+              pipelineProgressMessage(#Message);\
+              pipelineProgress(0);\
+              pipelineFinished();\
+              return;}\
+
+
+#define CHECK_FOR_ERROR(FuncClass, Message, err)\
+    if(err < 0) {\
+      setErrorCondition(err);\
+      std::string msg = std::string(Message);\
+      pipelineErrorMessage(msg.c_str());\
+      pipelineProgress(0);\
+      pipelineFinished();\
+      return;   }
+
+
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Observer::Observer()
+FilterPipeline::FilterPipeline() :
+    Observer(),
+    m_ErrorCondition(0),
+    m_Cancel(false)
+{
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+FilterPipeline::~FilterPipeline()
+{
+}
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void FilterPipeline::pipelineFinished()
 {
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Observer::~Observer()
+void FilterPipeline::setCancel(bool value)
 {
+  this->m_Cancel = value;
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void Observer::updateProgressAndMessage(const std::string &msg, int progress)
+bool FilterPipeline::getCancel()
 {
-  std::cout << progress << "% " << msg << std::endl;
+  return m_Cancel;
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void Observer::updateProgressAndMessage(const char* message, int progress)
+void FilterPipeline::run()
 {
-  std::cout << progress << "% " << message << std::endl;
+  std::cout << "FilterPipeline::run()" << std::endl;
+  execute();
+  pipelineFinished();
 }
+
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void Observer::pipelineProgress(int value)
+void FilterPipeline::execute()
 {
-  std::cout << value << "%" << std::endl;
-}
+  int err = 0;
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void Observer::pipelineProgressMessage(const std::string &msg)
-{
-  pipelineProgressMessage(msg.c_str());
-}
+  std::stringstream ss;
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void Observer::pipelineProgressMessage(const char* message)
-{
-  std::cout << message << std::endl;
-}
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void Observer::pipelineWarningMessage(const char* message)
-{
-  std::cout << "Warning Message: " << message << std::endl;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void Observer::pipelineWarningMessage(const std::string &msg)
-{
-  std::cout << "Warning Message: " << msg << std::endl;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void Observer::pipelineErrorMessage(const char* message)
-{
-  std::cout << "Error Message: " << message << std::endl;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void Observer::pipelineErrorMessage(const std::string &msg)
-{
-  std::cout << "Error Message: " << msg << std::endl;
+   ss.str("");
+   ss << "FilterPipeline Complete";
+   pipelineProgressMessage(ss.str());
 }

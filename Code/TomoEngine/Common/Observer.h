@@ -1,4 +1,4 @@
- /* ============================================================================
+/* ============================================================================
  * Copyright (c) 2011, Michael A. Jackson (BlueQuartz Software)
  * All rights reserved.
  *
@@ -32,10 +32,9 @@
 #define OBSERVER_H_
 
 
-#include "MXA/MXA.h"
+#include "TomoEngine/TomoEngine.h"
 #include "MXA/Common/MXASetGetMacros.h"
 
-#include "TomoEngine/TomoEngine.h"
 /**
  * @class Observer Observer.h DREAM3D/Common/Observer.h
  * @brief This class implmements the <b>Observer</b> pattern from the <b>Gang of
@@ -59,13 +58,7 @@ class TomoEngine_EXPORT Observer
       * @param progress The progress of the GrainGenerator normalized to a value between 0 and 100
       */
      virtual void updateProgressAndMessage(const char* message, int progress);
-
-     /**
-       * @brief Either prints a message or sends the message to the User Interface
-       * @param message The message to print
-       * @param progress The progress of the GrainGenerator normalized to a value between 0 and 100
-       */
-     virtual void updateProgressAndMessage(const std::string &message, int progress);
+     virtual void updateProgressAndMessage(const std::string &msg, int progress);
 
      /**
       * @brief This method reports progress such that a user interface element such
@@ -81,13 +74,14 @@ class TomoEngine_EXPORT Observer
       * @param message
       */
      virtual void pipelineProgressMessage(const char* message);
-
+     virtual void pipelineProgressMessage(const std::string &msg);
      /**
       * @brief This message reports some human readable message suitable for display
       * on a GUI or printed to a console or possibly saved to a log file
       * @param message
       */
      virtual void pipelineWarningMessage(const char* message);
+     virtual void pipelineWarningMessage(const std::string &msg);
 
      /**
       * @brief This message reports some human readable message suitable for display
@@ -95,6 +89,7 @@ class TomoEngine_EXPORT Observer
       * @param message
       */
      virtual void pipelineErrorMessage(const char* message);
+     virtual void pipelineErrorMessage(const std::string &msg);
 
 
 

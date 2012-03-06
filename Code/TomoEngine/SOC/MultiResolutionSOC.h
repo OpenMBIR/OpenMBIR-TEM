@@ -1,5 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2011, Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -12,9 +13,10 @@
  * list of conditions and the following disclaimer in the documentation and/or
  * other materials provided with the distribution.
  *
- * Neither the name of Michael A. Jackson nor the names of its contributors may
- * be used to endorse or promote products derived from this software without
- * specific prior written permission.
+ * Neither the name of Singanallur Venkatakrishnan, Michael A. Jackson, the Pudue
+ * Univeristy, BlueQuartz Software nor the names of its contributors may be used
+ * to endorse or promote products derived from this software without specific
+ * prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -26,34 +28,46 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *  This code was written under United States Air Force Contract number
+ *                           FA8650-07-D-5800
+ *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "AbstractFilter.h"
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-AbstractFilter::AbstractFilter() :
-m_ErrorCondition(0),
-m_ErrorMessage("")
+#ifndef MULTIRESOLUTIONSOC_H_
+#define MULTIRESOLUTIONSOC_H_
+
+
+#include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/FilterPipeline.h"
+#include "TomoEngine/SOC/SOCStructures.h"
+
+/*
+ *
+ */
+class MultiResolutionSOC : public FilterPipeline
 {
+  public:
+    MXA_SHARED_POINTERS(MultiResolutionSOC);
+    MXA_TYPE_MACRO_SUPER(MultiResolutionSOC, FilterPipeline);
+    MXA_STATIC_NEW_MACRO(MultiResolutionSOC);
 
-}
+    virtual ~MultiResolutionSOC();
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-AbstractFilter::~AbstractFilter()
-{
+    MXA_INSTANCE_PROPERTY(std::vector<TomoInputsPtr>, TomoInputs);
 
-}
+    /**
+     * @brief
+     */
+    virtual void execute();
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void AbstractFilter::execute()
-{
-  setErrorCondition(-1);
-  setErrorMessage("AbstractFilter does not implement an execute method. Please use a subclass instead.");
-  notify(getErrorMessage().c_str(), 0, Observable::UpdateErrorMessage);
-}
+  protected:
+    MultiResolutionSOC();
+
+  private:
+    MultiResolutionSOC(const MultiResolutionSOC&); // Copy Constructor Not Implemented
+    void operator=(const MultiResolutionSOC&); // Operator '=' Not Implemented
+};
+
+#endif /* MULTIRESOLUTIONSOC_H_ */

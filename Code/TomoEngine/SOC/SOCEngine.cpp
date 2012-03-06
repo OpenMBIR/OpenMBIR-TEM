@@ -153,7 +153,7 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
    v->GainsFile = "";
    v->OffsetsFile = "";
    v->VarianceFile = "";
-   v->InterpFlag=0;	
+   v->InterpFlag=0;
    v->OutputFile = "";
    v->outputDir = "";
    v->NumIter = 0;
@@ -310,20 +310,20 @@ void SOCEngine::execute()
   if (m_TomoInputs == NULL)
   {
     setErrorCondition(-1);
-    updateProgressAndMessage("Error: The TomoInput Structure was NULL. The proper API is to supply this class with that structure,", 100);
+    notify("Error: The TomoInput Structure was NULL. The proper API is to supply this class with that structure,", 100, Observable::UpdateProgressValueAndMessage);
     return;
   }
   //Based on the inputs , calculate the "other" variables in the structure definition
   if (m_Sinogram == NULL)
   {
     setErrorCondition(-1);
-    updateProgressAndMessage("Error: The Sinogram Structure was NULL. The proper API is to supply this class with that structure,", 100);
+    notify("Error: The Sinogram Structure was NULL. The proper API is to supply this class with that structure,", 100, Observable::UpdateProgressValueAndMessage);
     return;
   }
   if (m_Geometry == NULL)
   {
     setErrorCondition(-1);
-    updateProgressAndMessage("Error: The Geometry Structure was NULL. The proper API is to supply this class with that structure,", 100);
+    notify("Error: The Geometry Structure was NULL. The proper API is to supply this class with that structure,", 100, Observable::UpdateProgressValueAndMessage);
     return;
   }
 
@@ -346,23 +346,23 @@ void SOCEngine::execute()
     else
     {
       setErrorCondition(-1);
-      updateProgressAndMessage("A supported file reader for the input file was not found." , 100);
+      notify("A supported file reader for the input file was not found." , 100, Observable::UpdateProgressValueAndMessage);
       return;
     }
     dataReader->setTomoInputs(m_TomoInputs);
     dataReader->setSinogram(m_Sinogram);
-    dataReader->addObserver(this);
+    dataReader->setObservers(getObservers());
     dataReader->execute();
     if (dataReader->getErrorCondition() < 0)
     {
-      updateProgressAndMessage("Error reading Input Sinogram Data file", 100);
+      notify("Error reading Input Sinogram Data file", 100, Observable::UpdateProgressValueAndMessage);
       setErrorCondition(dataReader->getErrorCondition());
       return;
     }
 	}
-	
-	
-	
+
+
+
 	if (m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->SinoFile.empty()== false)
 	{
 		TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
@@ -374,22 +374,22 @@ void SOCEngine::execute()
 		else
 		{
 			setErrorCondition(-1);
-			updateProgressAndMessage("A supported file reader for the Bright Field file was not found." , 100);
+			notify("A supported file reader for the Bright Field file was not found." , 100, Observable::UpdateProgressValueAndMessage);
 			return;
 		}
 		dataReader->setTomoInputs(m_BFTomoInputs);
 		dataReader->setSinogram(m_BFSinogram);
-		dataReader->addObserver(this);
+		dataReader->setObservers(getObservers());
 		dataReader->execute();
 		if (dataReader->getErrorCondition() < 0)
 		{
-			updateProgressAndMessage("Error reading Input Sinogram Data file", 100);
+			notify("Error reading Input Sinogram Data file", 100, Observable::UpdateProgressValueAndMessage);
 			setErrorCondition(dataReader->getErrorCondition());
 			return;
 		}
-		
+
 		//Normalize the HAADF image
-		for (uint16_t i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++) 
+		for (uint16_t i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)
 		{//slice index
 			for(uint16_t i_r = 0; i_r < m_Sinogram->N_r;i_r++) {
 				for(uint16_t i_t = 0;i_t < m_Sinogram->N_t;i_t++)
@@ -401,12 +401,12 @@ void SOCEngine::execute()
 		}
 	}
 
-	
+
   // Now read or generate the Gains and Offsets data. We are scoping this section
   // so the reader automactically gets cleaned up at this point.
   {
     TomoFilter::Pointer gainsOffsetsInitializer = TomoFilter::NullPointer();
-	  
+
     if(m_TomoInputs->OffsetsFile.empty() == true) // Calculate the initial Offsets in case nothing is specified
     {
       gainsOffsetsInitializer = ComputeGainsOffsets::NewTomoFilter();
@@ -417,23 +417,23 @@ void SOCEngine::execute()
     }
     gainsOffsetsInitializer->setSinogram(m_Sinogram);
     gainsOffsetsInitializer->setTomoInputs(m_TomoInputs);
-    gainsOffsetsInitializer->addObserver(this);
+    gainsOffsetsInitializer->setObservers(getObservers());
     gainsOffsetsInitializer->execute();
     if(gainsOffsetsInitializer->getErrorCondition() < 0)
     {
-     updateProgressAndMessage("Error initializing Input Gains and Offsets Data file", 100);
+     notify("Error initializing Input Gains and Offsets Data file", 100, Observable::UpdateProgressValueAndMessage);
      setErrorCondition(gainsOffsetsInitializer->getErrorCondition());
      return;
     }
-	  
-	
+
+
     /********************REMOVE************************/
     std::cout<<"HARD WIRED TARGET GAIN"<<std::endl;
 	m_Sinogram->TargetGain = m_TomoInputs->TargetGain;//TARGET_GAIN;
     std::cout << "Target Gain: " << m_Sinogram->TargetGain << std::endl;
     /*************************************************/
-	  
-	
+
+
   }
 
   // Initialize the Geometry data from a rough reconstruction
@@ -453,12 +453,12 @@ void SOCEngine::execute()
     geomInitializer->setSinogram(m_Sinogram);
     geomInitializer->setTomoInputs(m_TomoInputs);
     geomInitializer->setGeometry(m_Geometry);
-    geomInitializer->addObserver(this);
+    geomInitializer->setObservers(getObservers());
     geomInitializer->execute();
 
     if(geomInitializer->getErrorCondition() < 0)
     {
-      updateProgressAndMessage("Error reading Initial Reconstruction Data from File", 100);
+      notify("Error reading Initial Reconstruction Data from File", 100, Observable::UpdateProgressValueAndMessage);
       setErrorCondition(geomInitializer->getErrorCondition());
       return;
     }
@@ -553,12 +553,12 @@ void SOCEngine::execute()
 	MRF_C = 0.1;
 	MRF_ALPHA = 1.5;
 	SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
-	SIGMA_X_P_Q = pow(m_TomoInputs->SigmaX, (MRF_P - MRF_Q)); 
+	SIGMA_X_P_Q = pow(m_TomoInputs->SigmaX, (MRF_P - MRF_Q));
 	SIGMA_X_Q = pow(m_TomoInputs->SigmaX,MRF_Q);
 	/*for(i=0;i < 3;i++) {
 		for(j=0; j < 3;j++) {
 			for(k=0; k < 3;k++) {
-				FILTER[i][j][k]*=(1.0/SIGMA_X_P); }}}*/	
+				FILTER[i][j][k]*=(1.0/SIGMA_X_P); }}}*/
 #endif //QGGMRF
 
 	//globals assosiated with finding the optimal gain and offset parameters
@@ -609,7 +609,7 @@ void SOCEngine::execute()
 	dResponseFilter->setOffsetT(OffsetT);
 	dResponseFilter->setVoxelProfile(VoxelProfile);
 	dResponseFilter->setBeamProfile(BeamProfile);
-	dResponseFilter->addObserver(this);
+	dResponseFilter->setObservers(getObservers());
 	dResponseFilter->execute();
 	if (dResponseFilter->getErrorCondition() < 0)
   {
@@ -622,14 +622,14 @@ void SOCEngine::execute()
 	DetectorResponseWriter::Pointer responseWriter = DetectorResponseWriter::New();
 	responseWriter->setTomoInputs(m_TomoInputs);
 	responseWriter->setSinogram(m_Sinogram);
-	responseWriter->addObserver(this);
+	responseWriter->setObservers(getObservers());
 	responseWriter->setResponse(detectorResponse);
 	responseWriter->execute();
   if (responseWriter->getErrorCondition() < 0)
   {
     std::cout << "Error writing detector response to file." << __FILE__ << "(" << __LINE__ << ")" << std::endl;
     setErrorCondition(-2);
-    updateProgressAndMessage("Error Encountered During Reconstruction", 100);
+    notify("Error Encountered During Reconstruction", 100, Observable::UpdateProgressValueAndMessage);
     return;
   }
 
@@ -772,23 +772,23 @@ void SOCEngine::execute()
 		/*	sum=0;
 			for(uint16_t j=0; j < BEAM_RESOLUTION; j++)
 				sum+=BeamProfile->d[j];
-			
+
 			H_t->d[0][k][i]*=(sum/m_Sinogram->delta_t);
-		*/	
-				
+		*/
+
 		}
         else
         {
           H_t->d[0][k][i] = -1 * ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
 			//Need to weight this number by the appropriate kernel along t-direction
 		/*	sum=0;
-			int16_t OverlapIndex = int16_t(((H_t->d[0][k][i]/m_Sinogram->delta_t)*BEAM_RESOLUTION));			
+			int16_t OverlapIndex = int16_t(((H_t->d[0][k][i]/m_Sinogram->delta_t)*BEAM_RESOLUTION));
 			for(int16_t j=0; j < OverlapIndex; j++)
 				sum+=BeamProfile->d[j];
-			
+
 			H_t->d[0][k][i]*=(sum/m_Sinogram->delta_t);
 		 */
-			
+
         }
         if(H_t->d[0][k][i] < 0)
         {
@@ -883,9 +883,9 @@ void SOCEngine::execute()
 	  TempCol[voxel_count] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
 //      temp += TempCol[j][k].count;`
 	  temp += TempCol[voxel_count]->count;
-	  if(0 == TempCol[voxel_count]->count)	
+	  if(0 == TempCol[voxel_count]->count)
 	  {
-		  //If this line is never hit and the Object is badly initialized 
+		  //If this line is never hit and the Object is badly initialized
 		  //set it to zero
 		  for (i=0; i < m_Geometry->N_y; i++) {
 			  m_Geometry->Object->d[j][k][i]=0;
@@ -897,7 +897,7 @@ void SOCEngine::execute()
 #endif
 
 	//Storing the response along t-direction for each voxel line
-  updateProgressAndMessage("Storing the response along Y-direction for each voxel line", 0);
+  notify("Storing the response along Y-direction for each voxel line", 0, Observable::UpdateProgressMessage);
 	for (i =0; i < m_Geometry->N_y; i++)
 	{
     y = ((DATA_TYPE)i + 0.5) * m_TomoInputs->delta_xy + m_Geometry->y0;
@@ -968,7 +968,7 @@ void SOCEngine::execute()
 
 	RandomNumber=init_genrand(1ul);
 
-  updateProgressAndMessage("Starting Forward Projection", 10);
+  notify("Starting Forward Projection", 10, Observable::UpdateProgressValueAndMessage);
   START_TIMER;
   // This next section looks crazy with all the #if's but this makes sure we are
   // running the exact same code whether in parallel or serial.
@@ -1052,7 +1052,7 @@ void SOCEngine::execute()
 #ifdef BRIGHT_FIELD
           Weight->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
 #else
-			
+
 			Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
 #endif //bright field check
         }
@@ -1105,16 +1105,16 @@ void SOCEngine::execute()
 	  indent = "";
 	  if(OuterIter != 0)
 		m_TomoInputs->NumIter = 1;
-		
-		
-		
+
+
+
      for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
     {
       indent = "  ";
 //      ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
 //      ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
 //      float currentLoop = OuterIter * m_TomoInputs->NumIter + Iter;
-//      updateProgressAndMessage(ss.str(), currentLoop / totalLoops * 100);
+//      notify(ss.str(), currentLoop / totalLoops * 100);
       indent = "    ";
       // This is all done PRIOR to calling what will become a method
       VoxelUpdateType updateType = RegularRandomOrderUpdate;
@@ -1129,7 +1129,7 @@ void SOCEngine::execute()
       }
 #else
 
-#endif//NHICD end if 
+#endif//NHICD end if
 
       // This could contain multiple Subloops also
        status =
@@ -1151,12 +1151,12 @@ void SOCEngine::execute()
 
 		DATA_TYPE AverageI_kUpdate=0;//absolute sum of the gain updates
 		DATA_TYPE AverageMagI_k=0;//absolute sum of the initial gains
-		
+
 		DATA_TYPE AverageDelta_kUpdate=0; //absolute sum of the offsets
-		DATA_TYPE AverageMagDelta_k=0;//abs sum of the initial offset 
-		
-		
-		
+		DATA_TYPE AverageMagDelta_k=0;//abs sum of the initial offset
+
+
+
     //high=5e 100;//this maintains the max and min bracket values for rooting lambda
     DATA_TYPE high = std::numeric_limits<DATA_TYPE>::max();
     DATA_TYPE low = std::numeric_limits<DATA_TYPE>::min();
@@ -1292,14 +1292,14 @@ void SOCEngine::execute()
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
 
-		AverageMagI_k += fabs(NuisanceParams->I_0->d[i_theta]);//store the sum of the vector of gains 
-		
+		AverageMagI_k += fabs(NuisanceParams->I_0->d[i_theta]);//store the sum of the vector of gains
+
 		DATA_TYPE NewI_k = (-1 * LagrangeMultiplier - Qk_cost->d[i_theta][1] * d1->d[i_theta] + bk_cost->d[i_theta][0])
 		/ (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]);
 
 		AverageI_kUpdate += fabs(NewI_k-NuisanceParams->I_0->d[i_theta]);
-		
-		NuisanceParams->I_0->d[i_theta]=NewI_k;		
+
+		NuisanceParams->I_0->d[i_theta]=NewI_k;
 /*      NuisanceParams->I_0->d[i_theta] = (-1 * LagrangeMultiplier - Qk_cost->d[i_theta][1] * d1->d[i_theta] + bk_cost->d[i_theta][0])
       / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]);
 */
@@ -1310,24 +1310,24 @@ void SOCEngine::execute()
         NuisanceParams->I_0->d[i_theta]*=1;
       }
 		AverageMagDelta_k += fabs(NuisanceParams->mu->d[i_theta]);
-		
+
 
 //      NuisanceParams->mu->d[i_theta] = d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
 
 		DATA_TYPE NewDelta_k= d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
 		AverageDelta_kUpdate += fabs(NewDelta_k - NuisanceParams->mu->d[i_theta]);
-		NuisanceParams->mu->d[i_theta] = NewDelta_k; 
+		NuisanceParams->mu->d[i_theta] = NewDelta_k;
 		//Postivity Constraing on the offsets
-		
+
 	  if (NuisanceParams->mu->d[i_theta] < 0)
 	  {
 			NuisanceParams->mu->d[i_theta]*=1;
 	   }
     }
-		
 
-		
-		
+
+
+
 #endif //Type of constraing Geometric or arithmetic
     //Re normalization
 
@@ -1409,22 +1409,22 @@ void SOCEngine::execute()
       printf("%lf\n", NuisanceParams->I_0->d[i_theta]);
     }
 
-		
+
 		DATA_TYPE I_kRatio=AverageI_kUpdate/AverageMagI_k;
 		DATA_TYPE Delta_kRatio = AverageDelta_kUpdate/AverageMagDelta_k;
 		std::cout<<"Ratio of change in I_k "<<I_kRatio<<std::endl;
 		std::cout<<"Ratio of change in Delta_k "<<Delta_kRatio<<std::endl;
 #endif//Joint estimation endif
-		
+
 #ifdef NOISE_MODEL
 		//Updating the Weights
 		DATA_TYPE AverageVarUpdate=0;//absolute sum of the gain updates
 		DATA_TYPE AverageMagVar=0;//absolute sum of the initial gains
-		
+
 		for(uint16_t i_theta=0;i_theta < m_Sinogram->N_theta;i_theta++)
 		{
 			uint32_t NumNonZeroEntries=0;
-			sum=0;			
+			sum=0;
 			//Factoring out the variance parameter from the Weight matrix
 			for(uint16_t i_r=0; i_r < m_Sinogram->N_r; i_r++)
 				for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
@@ -1433,13 +1433,13 @@ void SOCEngine::execute()
 					Weight->d[i_theta][i_r][i_t] = 1.0/m_Sinogram->counts->d[i_theta][i_r][i_t];
 						NumNonZeroEntries++;
 					}
-			
-			
+
+
 			for(uint16_t i_r=0; i_r < m_Sinogram->N_r; i_r++)
 				for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
 					sum+=(ErrorSino->d[i_theta][i_r][i_t]*ErrorSino->d[i_theta][i_r][i_t]*Weight->d[i_theta][i_r][i_t]);//Changed to only account for the counts
 			sum/=NumNonZeroEntries;//(m_Sinogram->N_r*m_Sinogram->N_t);
-			
+
 			AverageMagVar += fabs(NuisanceParams->alpha->d[i_theta]);
 			AverageVarUpdate += fabs(sum - NuisanceParams->alpha->d[i_theta]);
 			NuisanceParams->alpha->d[i_theta]=sum;
@@ -1458,18 +1458,18 @@ void SOCEngine::execute()
 
 				}
 			}
-			
+
 		}
 		for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
 		{
 			printf("%lf\n", NuisanceParams->alpha->d[i_theta]);
 		}
-		
+
 		DATA_TYPE VarRatio = AverageVarUpdate/AverageMagVar;
 		std::cout<<"Ratio of change in Variance "<<VarRatio<<std::endl;
-		
+
 #ifdef COST_CALCULATE
-		
+
 		/*********************Cost Calculation*************************************/
 		cost_value = computeCost(ErrorSino, Weight);
 		std::cout<<cost_value<<std::endl;
@@ -1481,11 +1481,11 @@ void SOCEngine::execute()
 		}
 		cost->writeCostValue(cost_value);
 		/**************************************************************************/
-		
+
 #endif//cost
-		
+
 #endif//NOISE_MODEL
-		
+
 		//Stopping Criteria for the algorithm is the relative change in parameters is less than a threshold
 #ifdef NOISE_MODEL
 		if(0 == status && OuterIter >= 1)//&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
@@ -1494,7 +1494,7 @@ void SOCEngine::execute()
 		if(0 == status)//&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
 			break;
 #endif //Noise Model
-		
+
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
 
   indent = "";
@@ -1526,7 +1526,7 @@ void SOCEngine::execute()
   NuisanceParamWriter::Pointer nuisanceBinWriter = NuisanceParamWriter::New();
   nuisanceBinWriter->setSinogram(m_Sinogram);
   nuisanceBinWriter->setTomoInputs(m_TomoInputs);
-  nuisanceBinWriter->addObserver(this);
+  nuisanceBinWriter->setObservers(getObservers());
   nuisanceBinWriter->setNuisanceParams(NuisanceParams.get());
   nuisanceBinWriter->setFileName(ScaleOffsetCorrection::FinalGainParametersFile);
   nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_I_O);
@@ -1534,7 +1534,7 @@ void SOCEngine::execute()
   if (nuisanceBinWriter->getErrorCondition() < 0)
   {
     setErrorCondition(-1);
-    updateProgressAndMessage(nuisanceBinWriter->getErrorMessage().c_str(), 100);
+    notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
   }
 
   nuisanceBinWriter->setFileName(ScaleOffsetCorrection::FinalOffsetParametersFile);
@@ -1543,7 +1543,7 @@ void SOCEngine::execute()
   if (nuisanceBinWriter->getErrorCondition() < 0)
   {
    setErrorCondition(-1);
-   updateProgressAndMessage(nuisanceBinWriter->getErrorMessage().c_str(), 100);
+   notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
   }
 
 #ifdef NOISE_MODEL
@@ -1553,7 +1553,7 @@ void SOCEngine::execute()
   if (nuisanceBinWriter->getErrorCondition() < 0)
   {
     setErrorCondition(-1);
-    updateProgressAndMessage(nuisanceBinWriter->getErrorMessage().c_str(), 100);
+    notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
   }
 #endif//Noise Model
 
@@ -1567,12 +1567,12 @@ void SOCEngine::execute()
 		{
 			for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
 			{
-				
+
 				Final_Sinogram->d[i_theta][i_r][i_t]=m_Sinogram->counts->d[i_theta][i_r][i_t]-ErrorSino->d[i_theta][i_r][i_t];
 			}
 		}
     }
-	
+
   STOP_TIMER;
   PRINT_TIME("Forward Project");
 
@@ -1580,26 +1580,26 @@ void SOCEngine::execute()
   SinogramBinWriter::Pointer sinogramWriter = SinogramBinWriter::New();
   sinogramWriter->setSinogram(m_Sinogram);
   sinogramWriter->setTomoInputs(m_TomoInputs);
-  sinogramWriter->addObserver(this);
+  sinogramWriter->setObservers(getObservers());
   sinogramWriter->setNuisanceParams(NuisanceParams);
   sinogramWriter->setData(Final_Sinogram);
   sinogramWriter->execute();
   if (sinogramWriter->getErrorCondition() < 0)
   {
     setErrorCondition(-1);
-    updateProgressAndMessage(sinogramWriter->getErrorMessage().c_str(), 100);
+    notify(sinogramWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
   }
 
   // Write the Reconstruction out to a file
   RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
   writer->setGeometry(m_Geometry);
   writer->setFilePath(m_TomoInputs->OutputFile);
-  writer->addObserver(this);
+  writer->setObservers(getObservers());
   writer->execute();
   if (writer->getErrorCondition() < 0)
   {
     setErrorCondition(writer->getErrorCondition());
-    updateProgressAndMessage("Error Writing the Raw Geometry", 100);
+    notify("Error Writing the Raw Geometry", 100, Observable::UpdateProgressValueAndMessage);
   }
 
 
@@ -1642,7 +1642,7 @@ void SOCEngine::execute()
 #endif
 
 
-  updateProgressAndMessage("Reconstruction Complete", 100);
+  notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
   setErrorCondition(0);
   std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds()-totalTime)/1000 << std::endl;
   return;
@@ -1763,7 +1763,7 @@ RealImageType::Pointer SOCEngine::calculateVoxelProfile()
  ********************************************************************/
 RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer DetectorResponse, RealVolumeType::Pointer H_t)
 {
-  updateProgressAndMessage("Executing Forward Projection", 50);
+  notify("Executing Forward Projection", 50, Observable::UpdateProgressValueAndMessage);
 
 	DATA_TYPE x,z,y;
 	DATA_TYPE r,rmin,rmax,t,tmin,tmax;
@@ -2025,7 +2025,7 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 				{
 					delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j][k+1];
 					temp += FILTER[2][1][1]*(pow(fabs(delta),MRF_P))/(MRF_C_TIMES_SIGMA_P_Q+pow(fabs(delta),MRF_P-MRF_Q));
-					
+
 				}
 
 
@@ -2118,14 +2118,14 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 		for (j = 0; j < m_Geometry->N_x; j++)
 			for(k = 0; k < m_Geometry->N_y; k++)
 			{
-				
+
 				if(k+1 <  m_Geometry->N_y)
 				{
 					delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j][k+1];
 					temp += FILTER[2][1][1]*CE_QGGMRF_Value(delta);
-					
+
 				}
-				
+
 				if(j+1 < m_Geometry->N_x)
 				{
 					if(k-1 >= 0)
@@ -2133,38 +2133,38 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 						delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k-1];
 						temp += FILTER[0][1][2]*CE_QGGMRF_Value(delta);
 					}
-					
+
 					delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k];
 					temp += FILTER[1][1][2]*CE_QGGMRF_Value(delta);
-					
-					
+
+
 					if(k+1 < m_Geometry->N_y)
 					{
 						delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k+1];
 						temp += FILTER[2][1][2]*CE_QGGMRF_Value(delta);
 					}
-					
+
 				}
-				
+
 				if(i+1 < m_Geometry->N_z)
 				{
-					
+
 					if(j-1 >= 0)
 					{
 						delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k];
 						temp += FILTER[1][2][0]*CE_QGGMRF_Value(delta);
 					}
-					
+
 					delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k];
 					temp += FILTER[1][2][1]*CE_QGGMRF_Value(delta);
-					
+
 					if(j+1 < m_Geometry->N_x)
 					{
 						delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k];
 						temp += FILTER[1][2][2]*CE_QGGMRF_Value(delta);
 					}
-					
-					
+
+
 					if(j-1 >= 0)
 					{
 						if(k-1 >= 0)
@@ -2172,21 +2172,21 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 							delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k-1];
 							temp += FILTER[0][2][0]*CE_QGGMRF_Value(delta);
 						}
-						
+
 						if(k+1 < m_Geometry->N_y)
 						{
 							delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k+1];
 							temp += FILTER[2][2][0]*CE_QGGMRF_Value(delta);
 						}
-						
+
 					}
-					
+
 					if(k-1 >= 0)
 					{
 						delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k-1];
 						temp += FILTER[0][2][1]*CE_QGGMRF_Value(delta);
 					}
-					
+
 					if(j+1 < m_Geometry->N_x)
 					{
 						if(k-1 >= 0)
@@ -2194,14 +2194,14 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 							delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k-1];
 							temp += FILTER[0][2][2]*CE_QGGMRF_Value(delta);
 						}
-						
+
 						if(k+1 < m_Geometry->N_y)
 						{
 							delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k+1];
 							temp+= FILTER[2][2][2]*CE_QGGMRF_Value(delta);
 						}
 					}
-					
+
 					if(k+1 < m_Geometry->N_y)
 					{
 						delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k+1];
@@ -2237,7 +2237,7 @@ DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeTyp
 			}
 		}
 	}
-	temp/=2;	
+	temp/=2;
   cost += temp;
 #endif//noise model
 	return cost;
@@ -2637,18 +2637,18 @@ void SOCEngine::ComputeVSC()
         }
       }
       FiltMagUpdateMap->d[i][j] = filter_op;
-     
+
     }
   }
-	
+
 	for (int16_t i = 0; i < m_Geometry->N_z; i++)
 	{
 		for (int16_t j = 0; j < m_Geometry->N_x; j++)
-		{		
+		{
 		 MagUpdateMap->d[i][j]=FiltMagUpdateMap->d[i][j];
 		}
 	}
-	
+
   MAKE_OUTPUT_FILE(Fp, err, m_TomoInputs->outputDir, ScaleOffsetCorrection::FilteredMagMapFile);
   if(err < 0)
   {
@@ -2797,7 +2797,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
     ss << "   SubLoop: " << NH_Iter << " of " << subIterations;
     float currentLoop = OuterIter * m_TomoInputs->NumIter + Iter;
-    updateProgressAndMessage(ss.str(), currentLoop / totalLoops * 100);
+    notify(ss.str(), currentLoop / totalLoops * 100, Observable::UpdateProgressValueAndMessage);
     if(updateType == NonHomogeniousUpdate)
     {
       //Compute VSC and create a map of pixels that are above the threshold value
@@ -2873,7 +2873,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 #ifdef RANDOM_ORDER_UPDATES
         //RandomNumber=init_genrand(Iter);
         //int32_t Index = (genrand_int31(RandomNumber)) % ArraySize;
-		uint32_t Index = (genrand_int31(RandomNumber)) % ArraySize;  		          
+		uint32_t Index = (genrand_int31(RandomNumber)) % ArraySize;
 //		int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
 //        int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
 		int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
@@ -2884,7 +2884,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         Counter->d[Index] = Counter->d[ArraySize - 1];
         VisitCount->d[j_new][k_new] = 1;
         ArraySize--;
-		Index = j_new*m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to 
+		Index = j_new*m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to
 		  //the voxel line (j_new,k_new)
 #else
         int32_t j_new=j;
@@ -2955,7 +2955,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                       }
                       else
                       {
-						NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object->d[j_new][k_new][i];//So that influence is zero 
+						NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object->d[j_new][k_new][i];//So that influence is zero
                         BOUNDARYFLAG[p + 1][q + 1][r + 1] = 0;
                       }
                     }
@@ -2987,7 +2987,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             THETA1 = 0.0;
             THETA2 = 0.0;
 
-			
+
             //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
             for (uint32_t q = 0; q < TempCol[Index]->count; q++)
             {
@@ -3002,8 +3002,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                   VoxelLineAccessCounter++;
               }
             }
-						  
-			  
+
+
             THETA1 *= -1;
             minMax(&low, &high);
 
@@ -3015,21 +3015,21 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             //Solve the 1-D optimization problem
             //printf("V before updating %lf",V);
 #ifndef SURROGATE_FUNCTION
-            //TODO : What if theta1 = 0 ? Then this will give error	
-			
-            DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);			 
+            //TODO : What if theta1 = 0 ? Then this will give error
+
+            DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
 			UpdatedVoxelValue = (DATA_TYPE)solve<DerivOfCostFunc>(&docf, (double)low, (double)high, (double)accuracy, &errorcode,binarysearch_count);
-			  
-			//std::cout<<low<<","<<high<<","<<UpdatedVoxelValue<<std::endl;			  
+
+			//std::cout<<low<<","<<high<<","<<UpdatedVoxelValue<<std::endl;
 #else
             errorcode=0;
 #ifdef QGGMRF
-            UpdatedVoxelValue = CE_FunctionalSubstitution(low,high);			  			  
+            UpdatedVoxelValue = CE_FunctionalSubstitution(low,high);
 #else
             SurrogateUpdate = surrogateFunctionBasedMin();
             UpdatedVoxelValue = SurrogateUpdate;
 #endif //QGGMRF
-			  
+
 #endif//Surrogate function
             //printf("%lf\n",SurrogateUpdate);
             if(errorcode == 0)
@@ -3045,7 +3045,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             }
             else
             {
-              if(THETA1 == 0 && low == 0 && high == 0) 
+              if(THETA1 == 0 && low == 0 && high == 0)
 				  UpdatedVoxelValue = 0;
               else
               {
@@ -3082,8 +3082,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                 VoxelLineAccessCounter++;
               }
             }
-			  
-			
+
+
             Idx++;
           }
         }
@@ -3091,7 +3091,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         {
           continue;
         }
-		  
+
 	  }
     }
     STOP_TIMER;
@@ -3130,8 +3130,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     if(AverageMagnitudeOfRecon > 0)
     {
       printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);
-		
-		//Use the stopping criteria if we are performing a full update of all voxels 
+
+		//Use the stopping criteria if we are performing a full update of all voxels
       if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != NonHomogeniousUpdate)
       {
         printf("This is the terminating point %d\n", Iter);
@@ -3194,7 +3194,7 @@ void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
 					AbsDelta0 = fabs(Delta0);
 					AbsDeltaMin = fabs(DeltaMin);
 					AbsDeltaMax = fabs(DeltaMax);
-					
+
 					if(AbsDelta0 <= Minimum(AbsDeltaMin,AbsDeltaMax))
 						T = -Delta0;
 					else if(AbsDeltaMin <= Minimum(AbsDelta0,AbsDeltaMax))
@@ -3208,13 +3208,13 @@ void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
 						{
 						QGGMRF_Params[count][0] = - Derivative_Delta0/(T-Delta0);	//Because the QGGMRF prior is symmetric
 						}
-						else 
+						else
 						{
-						QGGMRF_Params[count][0] = ((CE_QGGMRF_Value(T) - CE_QGGMRF_Value(Delta0))/((T-Delta0)*(T - Delta0))) - (Derivative_Delta0/(T-Delta0));	
+						QGGMRF_Params[count][0] = ((CE_QGGMRF_Value(T) - CE_QGGMRF_Value(Delta0))/((T-Delta0)*(T - Delta0))) - (Derivative_Delta0/(T-Delta0));
 						}
-						
+
 					}
-					else 
+					else
 					{
 						Derivative_Delta0 = CE_QGGMRF_Derivative(Delta0);
 						QGGMRF_Params[count][0] = CE_QGGMRF_SecondDerivative(0)/2;
@@ -3223,7 +3223,7 @@ void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax)
 					QGGMRF_Params[count][2] = CE_QGGMRF_Value(Delta0) - QGGMRF_Params[count][0]*V*V - QGGMRF_Params[count][1]*V;
 					count++;
 				}
-	
+
 }
 
 DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
@@ -3233,7 +3233,7 @@ DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
 #ifdef POSITIVITY_CONSTRAINT
 	if(umin < 0)
 		umin =0;
-#endif //Positivity 
+#endif //Positivity
 	CE_ComputeQGGMRFParameters(umin, umax);
 	for(i = 0;i < 3; i++)
 		for (j=0; j < 3; j++)
@@ -3243,14 +3243,14 @@ DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
 				{
 					temp1 += FILTER[i][j][k]*QGGMRF_Params[count][1];
 					temp2 += FILTER[i][j][k]*QGGMRF_Params[count][0];
-				    count++;	
+				    count++;
 				}
-				
+
 			}
 	u=(-temp1+ (THETA2*V) - THETA1)/(2*temp2 + THETA2);
-	
+
 	return Clip(V + MRF_ALPHA*(u-V),umin,umax);
-	
+
 }
 
 
@@ -3269,7 +3269,7 @@ DATA_TYPE SOCEngine::CE_QGGMRF_Derivative(DATA_TYPE delta)
 	temp3 = MRF_C + temp1;
 	if(delta < 0)
 		return ((-1*temp2/(temp3*SIGMA_X_P))*(MRF_P - ((MRF_P-MRF_Q)*temp1)/(temp3)));
-	else 
+	else
 	{
 		return ((temp2/(temp3*SIGMA_X_P))*(MRF_P - ((MRF_P-MRF_Q)*temp1)/(temp3)));
 	}

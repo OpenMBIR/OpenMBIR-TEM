@@ -51,10 +51,10 @@ int main(int argc, char **argv)
 
   TomoInputsPtr inputs = TomoInputsPtr(new TomoInputs);
   SOCEngine::InitializeTomoInputs(inputs);
-	
+
 	TomoInputsPtr bf_inputs = TomoInputsPtr(new TomoInputs);
 	SOCEngine::InitializeTomoInputs(bf_inputs);
-	
+
   SOCArgsParser argParser;
   int err = argParser.parseArguments(argc, argv, inputs.get(), bf_inputs.get());
   if(err < 0)
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
   SOCEngine::InitializeSinogram(sinogram);
   SOCEngine::InitializeGeometry(geometry);
   SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
-	
+
   SOCEngine::InitializeSinogram(bf_sinogram);
 
   SOCEngine::Pointer engine = SOCEngine::New();
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 	engine->setBFSinogram(bf_sinogram);
 
   // Run the reconstruction
-  engine->run();
+  engine->execute();
   if(engine->getErrorCondition() < 0)
   {
     std::cout << "Error Reconstructing the Data" << std::endl;

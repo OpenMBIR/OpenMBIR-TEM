@@ -44,7 +44,7 @@
 #include "MXA/Common/MXASetGetMacros.h"
 
 #include "TomoEngine/TomoEngine.h"
-#include "TomoEngine/Common/AbstractPipeline.h"
+#include "TomoEngine/Common/AbstractFilter.h"
 #include "TomoEngine/Common/Observer.h"
 #include "TomoEngine/mt/mt19937ar.h"
 
@@ -60,7 +60,7 @@
  * @author Singanallur Venkatakrishnan (Purdue University)
  * @version 1.0
  */
-class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
+class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 {
 
   public:
@@ -73,10 +73,10 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
     MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
     MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams)
 
-	MXA_INSTANCE_PROPERTY(bool, UseBrightFieldData)
-	MXA_INSTANCE_PROPERTY(TomoInputsPtr, BFTomoInputs)
+    MXA_INSTANCE_PROPERTY(bool, UseBrightFieldData)
+    MXA_INSTANCE_PROPERTY(TomoInputsPtr, BFTomoInputs)
     MXA_INSTANCE_PROPERTY(SinogramPtr, BFSinogram)
-	
+
     static void InitializeTomoInputs(TomoInputsPtr);
     static void InitializeSinogram(SinogramPtr);
     static void InitializeGeometry(GeometryPtr);
@@ -123,7 +123,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
 	DATA_TYPE CE_QGGMRF_Derivative(DATA_TYPE delta);
 	DATA_TYPE CE_QGGMRF_SecondDerivative(DATA_TYPE delta);
 #endif //QGGMRF
-	
+
 
   private:
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
@@ -255,12 +255,12 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
     double solve(T* f, double a, double b, double err, int32_t *code,uint32_t iteration_count)
 
     {
-		
+
       int signa, signb, signc;
       double fa, fb, fc, c, signaling_nan();
       double dist;
 	  uint32_t num_iter=0;
-      
+
 
       fa = f->execute(a);
       signa = fa > 0;
@@ -278,7 +278,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractPipeline, public Observer
 
       /* half interval search */
       if((dist = b - a) < 0) dist = -dist;
-		
+
       while (num_iter < iteration_count)//(dist > err)
       {
 		num_iter++;

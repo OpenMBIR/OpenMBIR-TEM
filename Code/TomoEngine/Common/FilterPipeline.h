@@ -27,51 +27,71 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-#ifndef _TomoLib_DLL_EXPORT_H_
-#define _TomoLib_DLL_EXPORT_H_
 
-#if 0
-#if defined (_MSC_VER)
-  #pragma warning(disable: 4251)
-  #pragma warning(disable: 4710)
-  #pragma warning(disable: 4820)
-  #pragma warning(disable: 4668)
-  #pragma warning(disable: 4265)
-  #pragma warning(disable: 4189)
-  #pragma warning(disable: 4640)
-  #pragma warning(disable: 4996)
-  #pragma warning(disable: 4548)
-#endif
-#endif
-
-/* Cmake will define TomoEngine_EXPORTS on Windows when it
-configures to build a shared library. If you are going to use
-another build system on windows or create the visual studio
-projects by hand you need to define TomoEngine_EXPORTS when
-building the TomoLib DLL on windows.
-*/
-
-#if defined (TomoEngine_BUILT_AS_DYNAMIC_LIB)
-
-  #if defined (TomoEngine_EXPORTS)  /* Compiling the MXA DLL/Dylib */
-    #if defined (_MSC_VER)  /* MSVC Compiler Case */
-      #define  TomoEngine_EXPORT __declspec(dllexport)
-    #elif (__GNUC__ >= 4)  /* GCC 4.x has support for visibility options */
-      #define TomoEngine_EXPORT __attribute__ ((visibility("default")))
-    #endif
-  #else  /* Importing the DLL into another project */
-    #if defined (_MSC_VER)  /* MSVC Compiler Case */
-      #define  TomoEngine_EXPORT __declspec(dllimport)
-    #elif (__GNUC__ >= 4)  /* GCC 4.x has support for visibility options */
-      #define TomoEngine_EXPORT __attribute__ ((visibility("default")))
-    #endif
-  #endif
-#endif
-
-/* If TomoEngine_EXPORT was never defined, define it here */
-#ifndef TomoEngine_EXPORT
-  #define TomoEngine_EXPORT
-#endif
+#ifndef FILTERPIPELINE_H_
+#define FILTERPIPELINE_H_
 
 
-#endif /* _TomoLib_DLL_EXPORT_H_ */
+#include <string>
+#include <vector>
+
+#include "MXA/Common/MXASetGetMacros.h"
+
+#include "TomoEngine/TomoEngine.h"
+
+#include "TomoEngine/Common/Observer.h"
+#include "TomoEngine/Common/AbstractFilter.h"
+
+/*
+ *
+ */
+class TomoEngine_EXPORT FilterPipeline : public Observer
+{
+  public:
+    MXA_SHARED_POINTERS(FilterPipeline);
+    MXA_TYPE_MACRO_SUPER(FilterPipeline, Observer);
+    MXA_STATIC_NEW_MACRO(FilterPipeline);
+
+    virtual ~FilterPipeline();
+
+    typedef std::vector<AbstractFilter::Pointer>  FilterContainerType;
+
+    MXA_INSTANCE_PROPERTY(int, ErrorCondition);
+
+    /**
+     * @brief Cancel the operation
+     */
+    virtual void setCancel(bool value);
+    virtual bool getCancel();
+
+    /**
+     * @brief This method is called to start the pipeline for a plugin
+     */
+    virtual void run();
+
+    /**
+     * @brief A pure virtual function that gets called from the "run()" method. Subclasses
+     * are expected to create a concrete implementation of this method.
+     */
+    virtual void execute();
+
+    /**
+     * @brief This method is called from the run() method just before exiting and
+     * signals the end of the pipeline execution
+     */
+    virtual void pipelineFinished();
+
+   // virtual void printFilterNames(std::ostream &out);
+
+
+  protected:
+    FilterPipeline();
+
+  private:
+    bool m_Cancel;
+
+    FilterPipeline(const FilterPipeline&); // Copy Constructor Not Implemented
+    void operator=(const FilterPipeline&); // Operator '=' Not Implemented
+};
+
+#endif /* FILTERPIPELINE_H_ */

@@ -43,9 +43,11 @@
  
  */
 
+#include <QtCore/QObject>
+
+#include "TomoEngine/TomoEngine.h"
 #include "@ENGINE_INCLUDE_PATH@/@CLASS_NAME@.h"
 
-#include <QtCore/QObject>
 /**
 * @brief This is a subclass of the @CLASS_NAME@ class that controls this pipeline
 * execution. This class is here to simply wrap the methods with Qt's signals and
