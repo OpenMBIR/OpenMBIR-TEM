@@ -1,5 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2011, Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -12,9 +13,10 @@
  * list of conditions and the following disclaimer in the documentation and/or
  * other materials provided with the distribution.
  *
- * Neither the name of Michael A. Jackson nor the names of its contributors may
- * be used to endorse or promote products derived from this software without
- * specific prior written permission.
+ * Neither the name of Singanallur Venkatakrishnan, Michael A. Jackson, the Pudue
+ * Univeristy, BlueQuartz Software nor the names of its contributors may be used
+ * to endorse or promote products derived from this software without specific
+ * prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -26,16 +28,22 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *  This code was written under United States Air Force Contract number
+ *                           FA8650-07-D-5800
+ *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "AbstractFilter.h"
+
+
+#include "MultiResolutionSOC.h"
+
+#include "TomoEngine/SOC/SOCEngine.h"
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-AbstractFilter::AbstractFilter() :
-m_ErrorCondition(0),
-m_ErrorMessage("")
+MultiResolutionSOC::MultiResolutionSOC()
 {
 
 }
@@ -43,17 +51,44 @@ m_ErrorMessage("")
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-AbstractFilter::~AbstractFilter()
+MultiResolutionSOC::~MultiResolutionSOC()
 {
-
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void AbstractFilter::execute()
+void MultiResolutionSOC::execute()
 {
-  setErrorCondition(-1);
-  setErrorMessage("AbstractFilter does not implement an execute method. Please use a subclass instead.");
-  notify(getErrorMessage().c_str(), 0, Observable::UpdateErrorMessage);
+  std::cout << "MultiResolutionSOC::execute" << std::endl;
+  int err = 0;
+  std::cout << "-- There are " << m_TomoInputs.size() << " resolutions to reconstruct." << std::endl;
+
+  SOCEngine::Pointer soc = SOCEngine::New();
+
+  TomoInputsPtr inputs = m_TomoInputs.at(0);
+  soc->setTomoInputs(inputs);
+  SinogramPtr sinogram = SinogramPtr(new Sinogram);
+  soc->setSinogram(sinogram);
+
+  GeometryPtr geometry = GeometryPtr(new Geometry);
+  soc->setGeometry(geometry);
+
+  ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
+  soc->setNuisanceParams(nuisanceParams);
+
+  SOCEngine::InitializeTomoInputs(inputs);
+  SOCEngine::InitializeSinogram(sinogram);
+  SOCEngine::InitializeGeometry(geometry);
+  SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
+
+  // We need to get messages to the gui or command line
+  soc->addObserver(this);
+
+  soc->execute();
+
+
+
+  updateProgressAndMessage("MultiResolution SOC Complete", 100);
+  setErrorCondition(err);
 }

@@ -132,7 +132,7 @@ namespace SOC {
     DATA_TYPE SigmaX;
     DATA_TYPE p;
     DATA_TYPE StopThreshold;
-	uint8_t   InterpFlag;
+    uint8_t   InterpFlag;
 
     bool useSubvolume;
     uint16_t xStart;
@@ -157,7 +157,7 @@ namespace SOC {
     std::string InitialReconFile;
     //std::string GainsOffsetsFile;
 
-	DATA_TYPE TargetGain;
+    DATA_TYPE TargetGain;
     std::string GainsFile;
     std::string OffsetsFile;
     std::string VarianceFile;

@@ -1,6 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2011 Michael A. Jackson (BlueQuartz Software)
- * Copyright (c) 2011 Singanallur Venkatakrishnan (Purdue University)
+ * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -34,42 +34,40 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#ifndef TOMOFILTER_H_
-#define TOMOFILTER_H_
 
-#include "MXA/Common/MXASetGetMacros.h"
+#ifndef MULTIRESOLUTIONSOC_H_
+#define MULTIRESOLUTIONSOC_H_
+
 
 #include "TomoEngine/TomoEngine.h"
-#include "TomoEngine/Common/AbstractFilter.h"
+#include "TomoEngine/Common/FilterPipeline.h"
 #include "TomoEngine/SOC/SOCStructures.h"
-
 
 /*
  *
  */
-class TomoEngine_EXPORT TomoFilter : public AbstractFilter
+class MultiResolutionSOC : public FilterPipeline
 {
   public:
-    MXA_SHARED_POINTERS(TomoFilter)
-    MXA_STATIC_NEW_MACRO(TomoFilter);
-    MXA_STATIC_NEW_SUPERCLASS(AbstractFilter, TomoFilter);
-    MXA_TYPE_MACRO_SUPER(TomoFilter, AbstractFilter)
+    MXA_SHARED_POINTERS(MultiResolutionSOC);
+    MXA_TYPE_MACRO_SUPER(MultiResolutionSOC, FilterPipeline);
+    MXA_STATIC_NEW_MACRO(MultiResolutionSOC);
 
-    virtual ~TomoFilter();
+    virtual ~MultiResolutionSOC();
 
-    MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
-    MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)
-    MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
+    MXA_INSTANCE_PROPERTY(std::vector<TomoInputsPtr>, TomoInputs);
 
+    /**
+     * @brief
+     */
     virtual void execute();
 
   protected:
-    TomoFilter();
+    MultiResolutionSOC();
 
   private:
-    TomoFilter(const TomoFilter&); // Copy Constructor Not Implemented
-    void operator=(const TomoFilter&); // Operator '=' Not Implemented
+    MultiResolutionSOC(const MultiResolutionSOC&); // Copy Constructor Not Implemented
+    void operator=(const MultiResolutionSOC&); // Operator '=' Not Implemented
 };
 
-
-#endif /* TOMOFILTER_H_ */
+#endif /* MULTIRESOLUTIONSOC_H_ */

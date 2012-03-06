@@ -49,7 +49,7 @@ class GainsOffsetsTableModel;
 
 //-- UIC generated Header
 #include <ui_TomoGui.h>
-#include "QSOCEngine.h"
+#include "QMultiResolutionSOC.h"
 
 #include "TomoEngine/IO/MRCHeader.h"
 
@@ -180,8 +180,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
 
     void on_currentTiltIndex_valueChanged(int i);
 
-    void on_importGainsOffsetsBtn_clicked();
-    void on_exportGainsOffsets_clicked();
+//    void on_importGainsOffsetsBtn_clicked();
+//    void on_exportGainsOffsets_clicked();
 
   protected:
 
@@ -283,7 +283,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     QString               m_OffsetsFile;
     QString               m_VarianceFile;
     QThread*              m_WorkerThread;
-    QSOCEngine*           m_SOCEngine;
+    QMultiResolutionSOC*           m_MultiResSOC;
     GainsOffsetsTableModel*  m_GainsOffsetsTableModel;
     QString               m_OpenDialogLastDirectory;
 
