@@ -194,6 +194,7 @@ void MultiResolutionSOC::execute()
     inputs->offsetsInputFile = prevInputs->offsetsOutputFile;
     inputs->varianceInputFile = prevInputs->varianceOutputFile;
     inputs->initialReconFile = prevInputs->reconstructedOutputFile;
+    inputs->InterpFlag = 1;
 
     /* Now set the output files for this resolution */
     ss.str("");
