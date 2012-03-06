@@ -27,55 +27,36 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-#ifndef _AbstractFilter_H_
-#define _AbstractFilter_H_
 
+#include "AbstractFilter.h"
 
-#include "MXA/MXA.h"
-#include "MXA/Common/MXASetGetMacros.h"
-#include "TomoEngine/Common/Observable.h"
-
-
-/**
- * @class AbstractFilter AbstractFilter.h MXA/Common/AbstractFilter.h
- * @brief This class is the basic class to subclass when creating a new Filter for
- * DREAM.3D. The subclass must implement at least the  execute method. If an
- * error occurs during the execution of the filter set the errorCondition to
- * a non zero value and optionally use the setErrorMessage() method to explain what the
- * error was. This class also inherits from Observable so that the filter can
- * provide updates to the user interface during execution.
- * @author Michael A. Jackson for BlueQuartz Software
- * @date Nov 28, 2011
- * @version 1.0
- */
-class TomoEngine_EXPORT  AbstractFilter : public Observable
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+AbstractFilter::AbstractFilter() :
+m_ErrorMessage(""),
+m_ErrorCondition(0),
+m_Cancel(false)
 {
-  public:
-    MXA_SHARED_POINTERS(AbstractFilter)
-    MXA_STATIC_NEW_MACRO(AbstractFilter)
-    MXA_TYPE_MACRO_SUPER(AbstractFilter, Observable)
 
-    virtual ~AbstractFilter();
+}
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+AbstractFilter::~AbstractFilter()
+{
 
-    MXA_INSTANCE_PROPERTY(int, ErrorCondition);
-
-    MXA_INSTANCE_STRING_PROPERTY(ErrorMessage);
-
-    /**
-     * @brief This method should be fully implemented in subclasses.
-     */
-    virtual void execute();
-
-  protected:
-    AbstractFilter();
-
-  private:
-    AbstractFilter(const AbstractFilter&); // Copy Constructor Not Implemented
-    void operator=(const AbstractFilter&); // Operator '=' Not Implemented
-};
+}
 
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void AbstractFilter::execute()
+{
+  setErrorCondition(-1);
+  setErrorMessage("AbstractFilter does not implement an execute method. Please use a subclass instead.");
+  notify(getErrorMessage().c_str(), 0, Observable::UpdateErrorMessage);
+}
 
-
-#endif /* _AbstractFilter_H_  */

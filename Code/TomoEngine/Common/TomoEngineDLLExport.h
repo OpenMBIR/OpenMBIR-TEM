@@ -30,7 +30,7 @@
 #ifndef _TomoLib_DLL_EXPORT_H_
 #define _TomoLib_DLL_EXPORT_H_
 
-
+#if 0
 #if defined (_MSC_VER)
   #pragma warning(disable: 4251)
   #pragma warning(disable: 4710)
@@ -41,6 +41,7 @@
   #pragma warning(disable: 4640)
   #pragma warning(disable: 4996)
   #pragma warning(disable: 4548)
+#endif
 #endif
 
 /* Cmake will define TomoEngine_EXPORTS on Windows when it

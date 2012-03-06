@@ -59,6 +59,94 @@ TomoInputWidget::~TomoInputWidget()
 // -----------------------------------------------------------------------------
 void TomoInputWidget::setupGui()
 {
+  QDoubleValidator* dVal = new QDoubleValidator(this);
+  stopThreshold->setValidator(dVal);
 
+  QIntValidator* outVal = new QIntValidator(this);
+  outerIterations->setValidator(outVal);
+
+  QIntValidator* inVal = new QIntValidator(this);
+  innerIterations->setValidator(inVal);
+
+  QDoubleValidator* sigVal = new QDoubleValidator(this);
+  sigmaX->setValidator(sigVal);
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoInputWidget::setIndexLabel(int i)
+{
+  interationIndex->setText(QString::number(i, 10));
+}
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoInputWidget::setResolutionMultiple(int x)
+{
+  xyPixelMultiple->setValue(x);
+  xzPixelMultiple->setValue(x);
+}
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+double TomoInputWidget::getStopThreshold()
+{
+  bool ok = false;
+  return stopThreshold->text().toDouble(&ok);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+int TomoInputWidget::getOuterIterations()
+{
+  bool ok = false;
+  return outerIterations->text().toInt(&ok);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+int TomoInputWidget::getInnerIterations()
+{
+  bool ok = false;
+  return innerIterations->text().toInt(&ok);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+double TomoInputWidget::getSigmaX()
+{
+  bool ok = false;
+  return sigmaX->text().toDouble(&ok);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+double TomoInputWidget::getMRF()
+{
+  return mrf->value();
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+int TomoInputWidget::getXYPixelMultiple()
+{
+  return xyPixelMultiple->value();
+}
+
+// ----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+int TomoInputWidget::getXZPixelMultiple()
+{
+  return xzPixelMultiple->value();
 }
 

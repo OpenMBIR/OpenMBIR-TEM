@@ -93,7 +93,7 @@ void SinogramBinWriter::execute()
 
   FILE* file = NULL;
 
-  std::string filepath(getTomoInputs()->outputDir);
+  std::string filepath(getTomoInputs()->tempDir);
   filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedSinogramFile);\
   file = fopen(filepath.c_str(), "wb");
   if(file == 0)

@@ -102,20 +102,20 @@ class GainsOffsetsItemDelegate : public QStyledItemDelegate
 //          dblValidator->setDecimals(4);
 //          editor->setValidator(dblValidator);
 //          return editor;
-        case GainsOffsetsTableModel::Gains:
-          editor = new QLineEdit(parent);
-          editor->setFrame(false);
-          dblValidator = new QDoubleValidator(editor);
-          dblValidator->setDecimals(4);
-          editor->setValidator(dblValidator);
-          return editor;
-        case GainsOffsetsTableModel::Offsets:
-          editor = new QLineEdit(parent);
-          editor->setFrame(false);
-          dblValidator = new QDoubleValidator(editor);
-          dblValidator->setDecimals(4);
-          editor->setValidator(dblValidator);
-          return editor;
+//        case GainsOffsetsTableModel::Gains:
+//          editor = new QLineEdit(parent);
+//          editor->setFrame(false);
+//          dblValidator = new QDoubleValidator(editor);
+//          dblValidator->setDecimals(4);
+//          editor->setValidator(dblValidator);
+//          return editor;
+//        case GainsOffsetsTableModel::Offsets:
+//          editor = new QLineEdit(parent);
+//          editor->setFrame(false);
+//          dblValidator = new QDoubleValidator(editor);
+//          dblValidator->setDecimals(4);
+//          editor->setValidator(dblValidator);
+//          return editor;
 //        case GainsOffsetsTableModel::Exclude:
 //          checkbox = new QCheckBox(parent);
 //          checkbox->setText("");
@@ -134,9 +134,7 @@ class GainsOffsetsItemDelegate : public QStyledItemDelegate
     {
       qint32 col = index.column();
       if (col == GainsOffsetsTableModel::TiltIndex
-          || col == GainsOffsetsTableModel::A_Tilt
-          || col == GainsOffsetsTableModel::Gains
-          || col == GainsOffsetsTableModel::Offsets)
+          || col == GainsOffsetsTableModel::A_Tilt)
       {
         QLineEdit* lineEdit = qobject_cast<QLineEdit* > (editor);
         Q_ASSERT(lineEdit);
@@ -170,9 +168,7 @@ class GainsOffsetsItemDelegate : public QStyledItemDelegate
         int v = lineEdit->text().toInt(&ok);
         model->setData(index, v);
       }
-      else if (col == GainsOffsetsTableModel::A_Tilt
-          || col == GainsOffsetsTableModel::Gains
-          || col == GainsOffsetsTableModel::Offsets)
+      else if (col == GainsOffsetsTableModel::A_Tilt )
       {
         QLineEdit* lineEdit = qobject_cast<QLineEdit* > (editor);
         Q_ASSERT(lineEdit);

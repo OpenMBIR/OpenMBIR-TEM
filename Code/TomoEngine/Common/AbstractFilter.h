@@ -27,33 +27,58 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+#ifndef _AbstractFilter_H_
+#define _AbstractFilter_H_
 
-#include "AbstractFilter.h"
+#include <set>
+#include <string>
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-AbstractFilter::AbstractFilter() :
-m_ErrorCondition(0),
-m_ErrorMessage("")
+#include "MXA/Common/MXASetGetMacros.h"
+
+
+#include "TomoEngine/TomoEngine.h"
+
+#include "TomoEngine/Common/Observable.h"
+
+
+
+
+class TomoEngine_EXPORT AbstractFilter : public Observable
 {
+  public:
+    MXA_SHARED_POINTERS(AbstractFilter)
+    MXA_STATIC_NEW_MACRO(AbstractFilter)
+    MXA_TYPE_MACRO_SUPER(AbstractFilter, Observable)
 
-}
+    virtual ~AbstractFilter();
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-AbstractFilter::~AbstractFilter()
-{
+    // These should be implemented by the subclass
+    MXA_INSTANCE_STRING_PROPERTY(ErrorMessage);
+    MXA_INSTANCE_PROPERTY(int, ErrorCondition);
+    /**
+     * @brief Cancel the operation
+     */
+    MXA_INSTANCE_PROPERTY(bool, Cancel);
 
-}
+    virtual void printValues(std::ostream &out){}
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void AbstractFilter::execute()
-{
-  setErrorCondition(-1);
-  setErrorMessage("AbstractFilter does not implement an execute method. Please use a subclass instead.");
-  notify(getErrorMessage().c_str(), 0, Observable::UpdateErrorMessage);
-}
+
+    /**
+     * @brief This method should be fully implemented in subclasses.
+     */
+    virtual void execute();
+
+  protected:
+    AbstractFilter();
+
+
+
+  private:
+    AbstractFilter(const AbstractFilter&); // Copy Constructor Not Implemented
+    void operator=(const AbstractFilter&); // Operator '=' Not Implemented
+};
+
+
+
+
+#endif /* _AbstractFilter_H_  */

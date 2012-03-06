@@ -32,6 +32,9 @@
 
 #include <stdio.h>
 #include <string>
+#include <iostream>
+
+
 #include "TomoEngine/SOC/SOCStructures.h"
 
 
@@ -51,7 +54,7 @@ class SOCArgsParser
 
     int parseArguments(int argc, char **argv, TomoInputs* Input, TomoInputs* BF_Inputs);
 
-    void printArgs(std::ostream &out, TomoInputs* Input);
+    void printInputs(TomoInputsPtr inputs, std::ostream &out);
 
   private:
     uint64_t startm;

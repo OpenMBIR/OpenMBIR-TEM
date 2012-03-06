@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     int32_t*** data = object->d;
 
     printf("Array to Hold Pointers to start of Slice: Address=%p  Num Elements:%d \n Values:", data, z);
-    for(int i = 0; i < z; ++i)
+    for(size_t i = 0; i < z; ++i)
     {
       printf("| 0x%08x ", object->d[i]);
     }
@@ -41,20 +41,20 @@ int main(int argc, char **argv)
     printf("-------------------------- \n");
 
     printf("Array to Hold Pointers to start of each Row: Address=%p  Num Elements:%d \n Values:", &(data[0][0]), z*y);
-    for(int i =0; i < y*z; ++i)
+    for(size_t i =0; i < y*z; ++i)
     {
       printf("| 0x%08x ", object->d[0][i]);
     }
     printf("|\n");
     printf("-------------------------- \n");
 
-    for(int k = 0; k < z; ++k)
+    for(size_t k = 0; k < z; ++k)
       {
-        printf("Slice %d  Ptr: %p   Value: 0x%08x \n", k, object->d[k], *object->d[k]);
-        for(int j = 0; j < y; ++j)
+        printf("Slice %lud  Ptr: %p   Value: 0x%08x \n", k, object->d[k], *object->d[k]);
+        for(size_t j = 0; j < y; ++j)
         {
-          printf("Row %d %p [%d][%d][0] | ", j, object->d[k][j], k, j);
-          for(int i=0; i < x; ++i)
+          printf("Row %lud %p [%lud][%lud][0] | ", j, object->d[k][j], k, j);
+          for(size_t i=0; i < x; ++i)
           {
             object->d[k][j][i] = i*10 + j*100 + k*1000;
             printf(" %04d |", data[k][j][i]);
@@ -76,14 +76,14 @@ int main(int argc, char **argv)
 
     DATA_TYPE** data = reinterpret_cast<double**>(object->getPointer());
     printf("Array to Hold Pointers to start of each Row: %p \n", data);
-    for(int i = 0; i < y; ++i)
+    for(size_t i = 0; i < y; ++i)
     {
-      printf("| 0x%08x ", data[i]);
+      printf("| 0x%08x ", reinterpret_cast<size_t>(data[i]));
     }
     printf("|\n");
     printf("-------------------------- \n");
 
-    printf("Data Array Address: %p Num. Elements: %d\n", &(data[0][0]), x * y);
+    printf("Data Array Address: %p Num. Elements: %ld\n", &(data[0][0]), x * y);
     printf("-------------------------- \n");
 
     std::cout << "Cleaning up Memory\n" << std::endl;
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
   {
     RealArrayType::Pointer object = RealArrayType::New(dims);
     DATA_TYPE* data = object->getPointer();
-    printf("Array to Hold Pointers to start of Data: Address=%p Num.Elements: %d\n", data, x);
+    printf("Array to Hold Pointers to start of Data: Address=%p Num.Elements: %lud\n", data, x);
 
   }
 

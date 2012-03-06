@@ -1,5 +1,5 @@
 /* ============================================================================
- * Copyright (c) 2010, Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2011, Michael A. Jackson (BlueQuartz Software)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -26,56 +26,72 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- //
- //  This code was written under United States Air Force Contract number
- //                           FA8650-07-D-5800
- //
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-#ifndef TOMOINPUTWIDGET_H_
-#define TOMOINPUTWIDGET_H_
+
+#ifndef FILTERPIPELINE_H_
+#define FILTERPIPELINE_H_
 
 
+#include <string>
+#include <vector>
 
-#include <QtGui/QWidget>
+#include "MXA/Common/MXASetGetMacros.h"
 
-#include "ui_TomoInputWidget.h"
+#include "TomoEngine/TomoEngine.h"
 
-
-
+#include "TomoEngine/Common/Observer.h"
+#include "TomoEngine/Common/AbstractFilter.h"
 
 /*
  *
  */
-class TomoInputWidget : public QWidget, private Ui::TomoInputWidget
+class TomoEngine_EXPORT FilterPipeline : public Observer
 {
-  Q_OBJECT;
-
   public:
-    TomoInputWidget(QWidget *parent = 0);
-    virtual ~TomoInputWidget();
+    MXA_SHARED_POINTERS(FilterPipeline);
+    MXA_TYPE_MACRO_SUPER(FilterPipeline, Observer);
+    MXA_STATIC_NEW_MACRO(FilterPipeline);
 
+    virtual ~FilterPipeline();
 
-    void setResolutionMultiple(int x);
-    void setIndexLabel(int i);
+    typedef std::vector<AbstractFilter::Pointer>  FilterContainerType;
 
-    double getStopThreshold();
-    int getOuterIterations();
-    int getInnerIterations();
-    double getSigmaX();
-    double getMRF();
-    int getXYPixelMultiple();
-    int getXZPixelMultiple();
-  protected slots:
+    MXA_INSTANCE_PROPERTY(int, ErrorCondition);
+
+    /**
+     * @brief Cancel the operation
+     */
+    virtual void setCancel(bool value);
+    virtual bool getCancel();
+
+    /**
+     * @brief This method is called to start the pipeline for a plugin
+     */
+    virtual void run();
+
+    /**
+     * @brief A pure virtual function that gets called from the "run()" method. Subclasses
+     * are expected to create a concrete implementation of this method.
+     */
+    virtual void execute();
+
+    /**
+     * @brief This method is called from the run() method just before exiting and
+     * signals the end of the pipeline execution
+     */
+    virtual void pipelineFinished();
+
+   // virtual void printFilterNames(std::ostream &out);
 
 
   protected:
-    void setupGui();
-
+    FilterPipeline();
 
   private:
-    TomoInputWidget(const TomoInputWidget&); // Copy Constructor Not Implemented
-    void operator=(const TomoInputWidget&); // Operator '=' Not Implemented
+    bool m_Cancel;
+
+    FilterPipeline(const FilterPipeline&); // Copy Constructor Not Implemented
+    void operator=(const FilterPipeline&); // Operator '=' Not Implemented
 };
 
-#endif /* TOMOINPUTWIDGET_H_ */
+#endif /* FILTERPIPELINE_H_ */

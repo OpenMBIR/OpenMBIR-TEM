@@ -78,19 +78,7 @@ Qt::ItemFlags GainsOffsetsTableModel::flags(const QModelIndex &index) const
   //  theFlags |= Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 
     int col = index.column();
-    if (col == Gains)
-    {
-      theFlags = Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsEnabled;
-    }
-    else if (col == Offsets)
-    {
-      theFlags = Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsEnabled;
-    }
-    else if (col == Variances)
-    {
-      theFlags = Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsEnabled;
-    }
-    else if (col == Exclude)
+    if (col == Exclude)
     {
       theFlags = Qt::ItemIsSelectable | Qt::ItemIsEnabled;
     }
@@ -137,27 +125,6 @@ QVariant GainsOffsetsTableModel::data(const QModelIndex &index, qint32 role) con
         if (header.length() > contents.text().length()) contents.text() = header;
         break;
       }
-      case Gains:
-      {
-        contents.setText( QString("1,1,1") );
-        const QString header = headerData(Gains, Qt::Horizontal, Qt::DisplayRole).toString();
-        if (header.length() > contents.text().length()) contents.text() = header;
-        break;
-      }
-      case Offsets:
-      {
-        contents.setText( QString("11.") );
-        const QString header = headerData(Offsets, Qt::Horizontal, Qt::DisplayRole).toString();
-        if (header.length() > contents.text().length()) contents.text() = header;
-        break;
-      }
-      case Variances:
-      {
-        contents.setText( QString("11.") );
-        const QString header = headerData(Variances, Qt::Horizontal, Qt::DisplayRole).toString();
-        if (header.length() > contents.text().length()) contents.text() = header;
-        break;
-      }
       case Exclude:
       {
         contents.setText( QString("11.") );
@@ -192,18 +159,6 @@ QVariant GainsOffsetsTableModel::data(const QModelIndex &index, qint32 role) con
     {
       return QVariant(m_BTilts[index.row()]);
     }
-    else if (col == Gains)
-    {
-      return QVariant(m_Gains[index.row()]);
-    }
-    else if (col == Offsets)
-    {
-      return QVariant(m_Offsets[index.row()]);
-    }
-    else if (col == Variances)
-    {
-      return QVariant(m_Variances[index.row()]);
-    }
     else if(col == Exclude)
     {
       return QVariant(m_Excludes[index.row()]);
@@ -236,15 +191,6 @@ QVariant GainsOffsetsTableModel::headerData(int section, Qt::Orientation orienta
         return QVariant(QString("A Tilts"));
       case B_Tilt:
         return QVariant(QString("B Tilts"));
-      case Gains:
-        return QVariant(QString("Gains"));
-        break;
-      case Offsets:
-        return QVariant(QString("Offsets"));
-        break;
-      case Variances:
-        return QVariant(QString("Variances"));
-        break;
       case Exclude:
         return QVariant(QString("Exclude Tilt"));
         break;
@@ -308,15 +254,6 @@ bool GainsOffsetsTableModel::setData(const QModelIndex & index, const QVariant &
       case B_Tilt:
         m_BTilts[row] = value.toFloat(&ok);
         break;
-      case Gains:
-        m_Gains[row] = value.toDouble(&ok);
-        break;
-      case Offsets:
-        m_Offsets[row] = value.toDouble(&ok);
-        break;
-      case Variances:
-        m_Variances[row] = value.toDouble(&ok);
-        break;
       case Exclude:
         m_Excludes[row] = value.toBool();
         break;
@@ -350,9 +287,6 @@ bool GainsOffsetsTableModel::insertRows(int row, int count, const QModelIndex& i
     m_AngleIndexes.append(angleIndx);
     m_ATilts.append(angle);
     m_BTilts.append(angle);
-    m_Offsets.append(offset);
-    m_Gains.append(gain);
-    m_Variances.append(variances);
     m_Excludes.append(exclude);
     m_RowCount = m_ATilts.count();
   }
@@ -376,9 +310,6 @@ bool GainsOffsetsTableModel::removeRows(int row, int count, const QModelIndex& i
     m_AngleIndexes.remove(row);
     m_ATilts.remove(row);
     m_BTilts.remove(row);
-    m_Offsets.remove(row);
-    m_Gains.remove(row);
-    m_Variances.remove(row);
     m_Excludes.remove(row);
     m_RowCount = m_ATilts.count();
   }
@@ -413,9 +344,6 @@ void GainsOffsetsTableModel::setColumnData(int col, QVector<float> &data)
 void GainsOffsetsTableModel::setTableData(QVector<int> angleIndexes,
                                           QVector<float> a_tilts,
                                           QVector<float> b_tilts,
-                                          QVector<double> gains,
-                                          QVector<double> offsets,
-                                          QVector<double> variances,
                                           QVector<bool> excludes)
 {
   qint32 count = angleIndexes.count();
@@ -431,9 +359,6 @@ void GainsOffsetsTableModel::setTableData(QVector<int> angleIndexes,
     m_AngleIndexes = angleIndexes;
     m_ATilts = a_tilts;
     m_BTilts = b_tilts;
-    m_Gains = gains;
-    m_Offsets = offsets;
-    m_Variances = variances;
     m_Excludes = excludes;
 
     m_RowCount = count;
@@ -444,6 +369,7 @@ void GainsOffsetsTableModel::setTableData(QVector<int> angleIndexes,
   emit dataChanged(topLeft, botRight);
 }
 
+#if 0
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -467,10 +393,6 @@ void GainsOffsetsTableModel::setGainsAndOffsets(QVector<double> gains,
   if (count > 0) {
     // Now mass insert the data to the table then emit that the data has changed
     beginInsertRows(QModelIndex(), row, row + count - 1);
-    m_Gains = gains;
-    m_Offsets = offsets;
-    m_Variances = variances;
-
     m_RowCount = count;
     endInsertRows();
     QModelIndex topLeft = createIndex(0, 0);
@@ -492,7 +414,7 @@ void GainsOffsetsTableModel::getGainsAndOffsets(QVector<double> &gains, QVector<
 {
   gains.clear();
   offsets.clear();
-  qint32 size = m_Gains.size();
+  qint32 size = m_Excludes.size();
 
   gains.resize(size);
   offsets.resize(size);
@@ -504,6 +426,7 @@ void GainsOffsetsTableModel::getGainsAndOffsets(QVector<double> &gains, QVector<
     variances[i] = m_Variances[i];
   }
 }
+#endif
 
 // -----------------------------------------------------------------------------
 //

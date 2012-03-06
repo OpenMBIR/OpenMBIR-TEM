@@ -1,6 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2011 Michael A. Jackson (BlueQuartz Software)
- * Copyright (c) 2011 Singanallur Venkatakrishnan (Purdue University)
+ * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -33,38 +33,43 @@
  *                           FA8650-07-D-5800
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-#include "AbstractPipeline.h"
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-AbstractPipeline::AbstractPipeline() :
-    m_ErrorCondition(0), m_Cancel(false)
+
+#ifndef MULTIRESOLUTIONSOC_H_
+#define MULTIRESOLUTIONSOC_H_
+
+
+#include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/FilterPipeline.h"
+#include "TomoEngine/SOC/SOCStructures.h"
+
+/*
+ *
+ */
+class MultiResolutionSOC : public FilterPipeline
 {
-}
+  public:
+    MXA_SHARED_POINTERS(MultiResolutionSOC);
+    MXA_TYPE_MACRO_SUPER(MultiResolutionSOC, FilterPipeline);
+    MXA_STATIC_NEW_MACRO(MultiResolutionSOC);
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-AbstractPipeline::~AbstractPipeline()
-{
+    virtual ~MultiResolutionSOC();
 
-}
+    MXA_INSTANCE_PROPERTY(std::vector<TomoInputsPtr>, TomoInputs);
 
+    /**
+     * @brief
+     */
+    virtual void execute();
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void AbstractPipeline::pipelineFinished()
-{
-}
+    void printInputs(TomoInputsPtr inputs, std::ostream &out);
 
+  protected:
+    MultiResolutionSOC();
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void AbstractPipeline::run()
-{
-  execute();
-  pipelineFinished();
-}
+  private:
+    MultiResolutionSOC(const MultiResolutionSOC&); // Copy Constructor Not Implemented
+    void operator=(const MultiResolutionSOC&); // Operator '=' Not Implemented
+};
+
+#endif /* MULTIRESOLUTIONSOC_H_ */

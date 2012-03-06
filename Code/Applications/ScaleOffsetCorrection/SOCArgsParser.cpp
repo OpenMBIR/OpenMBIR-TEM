@@ -40,14 +40,13 @@
 #include "MXA/Utilities/MXADir.h"
 
 #include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/TomoEngineVersion.h"
 #include "TomoEngine/Common/EIMTime.h"
 #include "TomoEngine/Common/EIMMath.h"
 #include "TomoEngine/Common/allocate.h"
 #include "TomoEngine/IO/MRCReader.h"
 #include "TomoEngine/IO/MRCHeader.h"
-#include "TomoEngine/TomoEngineVersion.h"
-
-
+#include "TomoEngine/SOC/SOCConstants.h"
 
 /**
  * @brief Parses numeric values from a delimited string into a preallocated array storage.
@@ -62,17 +61,17 @@ int parseValues(const std::string &values, const char* format, T* output)
 {
   std::string::size_type pos = values.find(",", 0);
   size_t index = 0;
-  int n = sscanf(values.substr(0, pos).c_str(), format, &(output[index]) );
-  if (n != 1)
+  int n = sscanf(values.substr(0, pos).c_str(), format, &(output[index]));
+  if(n != 1)
   {
     return -1;
   }
 
   ++index;
-  while(pos != std::string::npos && pos != values.size() - 1)
+  while (pos != std::string::npos && pos != values.size() - 1)
   {
-    n = sscanf(values.substr(pos+1).c_str(), format, &(output[index]) );
-    pos = values.find(",", pos+1);
+    n = sscanf(values.substr(pos + 1).c_str(), format, &(output[index]));
+    pos = values.find(",", pos + 1);
     ++index;
   }
   return 0;
@@ -92,24 +91,23 @@ int parseUnknownArray(const std::string &values, const char* format, std::vector
   std::string::size_type pos = values.find(",", 0);
   size_t index = 0;
   T t;
-  int n = sscanf(values.substr(0, pos).c_str(), format, &t );
-  if (n != 1)
+  int n = sscanf(values.substr(0, pos).c_str(), format, &t);
+  if(n != 1)
   {
     return -1;
   }
   output.push_back(t);
 
   ++index;
-  while(pos != std::string::npos && pos != values.size() - 1)
+  while (pos != std::string::npos && pos != values.size() - 1)
   {
-    n = sscanf(values.substr(pos+1).c_str(), format, &(t) );
+    n = sscanf(values.substr(pos + 1).c_str(), format, &(t));
     output.push_back(t);
-    pos = values.find(",", pos+1);
+    pos = values.find(",", pos + 1);
     ++index;
   }
   return 0;
 }
-
 
 // -----------------------------------------------------------------------------
 //
@@ -127,11 +125,9 @@ SOCArgsParser::~SOCArgsParser()
 
 }
 
-
-
-int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, TomoInputs* bf_inputs)
+int SOCArgsParser::parseArguments(int argc, char **argv, TomoInputs* inputs, TomoInputs* bf_inputs)
 {
-  if ( NULL == inputs)
+  if(NULL == inputs)
   {
     printf("The CommandLineInputspointer was null. Returning early.\n");
     return -1;
@@ -144,45 +140,42 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, Tomo
 
   TCLAP::ValueArg<std::string> in_InitialRecon("i", "ini_recon", "Initial Reconstruction to initialize algorithm", false, "", "");
   cmd.add(in_InitialRecon);
-	
-	//Normalizing Bright Field Scan
-	
-	TCLAP::ValueArg<std::string> in_BrightField("", "brightfield", "Acquired Bright Field tilt series", false, "", "");
-	cmd.add(in_BrightField);
 
- // TCLAP::ValueArg<std::string> in_GainsOffsets("", "gains_offsets", "Initial Gains and Offsets to use.", false, "", "");
- // cmd.add(in_GainsOffsets);
-	
-	TCLAP::ValueArg<double> in_TargetGain("","TargetGain","Target Gain for unscattered electrons",true, 1, "");
-	cmd.add(in_TargetGain);
-	
-	TCLAP::ValueArg<std::string> in_Gains("", "gains", "Initial Gains to use.", false, "", "");
-	cmd.add(in_Gains);
-	
-	TCLAP::ValueArg<std::string> in_Offsets("", "offsets", "Initial Offsets to use.", false, "", "");
-	cmd.add(in_Offsets);
-	
-	TCLAP::ValueArg<std::string> in_Variance("", "variance", "Initial Variance to use.", false, "", "");
-	cmd.add(in_Variance);
-	
-	//Whether to interpolate initial file or not
-	TCLAP::ValueArg<uint8_t> in_InterpFlag("", "interpolate", "Iterpolate Initial Reconstruction", false,0, "");
-	cmd.add(in_InterpFlag);
+  //Normalizing Bright Field Scan
 
-   TCLAP::ValueArg<std::string> in_outputFile("o", "outputfile", "The Output File", true, "", "");
-   cmd.add(in_outputFile);
+  TCLAP::ValueArg<std::string> in_BrightField("", "brightfield", "Acquired Bright Field tilt series", false, "", "");
+  cmd.add(in_BrightField);
+
+  // TCLAP::ValueArg<std::string> in_GainsOffsets("", "gains_offsets", "Initial Gains and Offsets to use.", false, "", "");
+  // cmd.add(in_GainsOffsets);
+
+  TCLAP::ValueArg<double> in_TargetGain("", "TargetGain", "Target Gain for unscattered electrons", true, 1, "");
+  cmd.add(in_TargetGain);
+
+  TCLAP::ValueArg<std::string> in_Gains("", "gains", "Initial Gains to use.", false, "", "");
+  cmd.add(in_Gains);
+
+  TCLAP::ValueArg<std::string> in_Offsets("", "offsets", "Initial Offsets to use.", false, "", "");
+  cmd.add(in_Offsets);
+
+  TCLAP::ValueArg<std::string> in_Variance("", "variance", "Initial Variance to use.", false, "", "");
+  cmd.add(in_Variance);
+
+  //Whether to interpolate initial file or not
+  TCLAP::ValueArg<uint8_t> in_InterpFlag("", "interpolate", "Iterpolate Initial Reconstruction", false, 0, "");
+  cmd.add(in_InterpFlag);
+
+  TCLAP::ValueArg<std::string> in_outputFile("o", "outputfile", "The Output File", true, "", "");
+  cmd.add(in_outputFile);
 
   TCLAP::ValueArg<std::string> in_outputDir("", "outdir", "The Output dir", true, ".", ".");
   cmd.add(in_outputDir);
 
-	TCLAP::ValueArg<double> in_stopThreshold("T","stopThreshold","Stopping Threshold for inner loop",false, .009, "");
-	cmd.add(in_stopThreshold);
-
+  TCLAP::ValueArg<double> in_stopThreshold("T", "stopThreshold", "Stopping Threshold for inner loop", false, .009, "");
+  cmd.add(in_stopThreshold);
 
   TCLAP::ValueArg<std::string> subvolume("", "subvolume", "SubVolume to Reconstruct in the form xmin,ymin,zmin,xmax,ymax,zmax", false, "", "");
   cmd.add(subvolume);
-
-
 
   TCLAP::ValueArg<int> in_numIter("n", "inner", "Number of Inner Iterations", true, 0, "0");
   cmd.add(in_numIter);
@@ -192,8 +185,8 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, Tomo
   TCLAP::ValueArg<double> in_markov("m", "mrf", "Markov Random Field Parameter", true, 0.0, "0.0");
   cmd.add(in_markov);
 
-	//TCLAP::ValueArg<std::string> InitialParameters("g", "initp", "InitialParameters", false, "", "");
- // cmd.add(InitialParameters);
+  //TCLAP::ValueArg<std::string> InitialParameters("g", "initp", "InitialParameters", false, "", "");
+  // cmd.add(InitialParameters);
 
   TCLAP::ValueArg<int> NumOuterIter("O", "outer", "NumOuterIter", true, 1, "1");
   cmd.add(NumOuterIter);
@@ -212,7 +205,7 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, Tomo
   TCLAP::ValueArg<unsigned int> tiltSelection("", "tilt_selection", "Which Tilt Values to use from file. Default is 'A'", true, SOC::A_Tilt, "0");
   cmd.add(tiltSelection);
 
-  if (argc < 2)
+  if(argc < 2)
   {
     std::cout << "Scale Offset Correction Command Line Version " << cmd.getVersion() << std::endl;
     std::vector<std::string> args;
@@ -222,31 +215,32 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, Tomo
     return -1;
   }
 
-
   try
   {
     cmd.parse(argc, argv);
-    inputs->OutputFile = in_outputDir.getValue() + MXADir::getSeparator() + in_outputFile.getValue();
-    inputs->SinoFile = in_sinoFile.getValue();
-    inputs->InitialReconFile = in_InitialRecon.getValue();
-	inputs->InterpFlag = in_InterpFlag.getValue();
-	
-	bf_inputs->SinoFile = in_BrightField.getValue();
-	
-//  inputs->GainsOffsetsFile = in_GainsOffsets.getValue();
-	  
-	inputs->GainsFile = in_Gains.getValue();  
-    inputs->OffsetsFile = in_Offsets.getValue();  //Offset
-    inputs->VarianceFile = in_Variance.getValue(); //variance
-    
-	  
-    inputs->outputDir = in_outputDir.getValue();
+    inputs->reconstructedOutputFile = in_outputDir.getValue() + MXADir::getSeparator() + in_outputFile.getValue();
+    inputs->sinoFile = in_sinoFile.getValue();
+    inputs->initialReconFile = in_InitialRecon.getValue();
+    inputs->InterpFlag = in_InterpFlag.getValue();
+
+    bf_inputs->sinoFile = in_BrightField.getValue();
+
+
+    inputs->gainsInputFile = in_Gains.getValue();
+    inputs->offsetsInputFile = in_Offsets.getValue(); //Offset
+    inputs->varianceInputFile = in_Variance.getValue(); //variance
+
+    inputs->gainsOutputFile = inputs->tempDir + ScaleOffsetCorrection::FinalGainParametersFile;
+    inputs->offsetsOutputFile = inputs->tempDir + ScaleOffsetCorrection::FinalOffsetParametersFile;
+    inputs->varianceOutputFile = inputs->tempDir + ScaleOffsetCorrection::FinalVariancesFile;
+
+    inputs->tempDir = in_outputDir.getValue();
     inputs->NumIter = in_numIter.getValue();
     inputs->SigmaX = in_sigmaX.getValue();
     inputs->p = in_markov.getValue();
     inputs->NumOuterIter = NumOuterIter.getValue();
     inputs->StopThreshold = in_stopThreshold.getValue();
-	inputs->TargetGain = in_TargetGain.getValue();
+    inputs->targetGain = in_TargetGain.getValue();
 
     int subvolumeValues[6];
     ::memset(subvolumeValues, 0, 6 * sizeof(int));
@@ -267,16 +261,16 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, Tomo
       inputs->yEnd = subvolumeValues[4];
       inputs->zStart = subvolumeValues[2];
       inputs->zEnd = subvolumeValues[5];
-		
-		//Do same for BF sinogram as well 
-		
-		bf_inputs->useSubvolume = true;
-		bf_inputs->xStart = subvolumeValues[0];
-		bf_inputs->xEnd = subvolumeValues[3];
-		bf_inputs->yStart = subvolumeValues[1];
-		bf_inputs->yEnd = subvolumeValues[4];
-		bf_inputs->zStart = subvolumeValues[2];
-		bf_inputs->zEnd = subvolumeValues[5];
+
+      //Do same for BF sinogram as well
+
+      bf_inputs->useSubvolume = true;
+      bf_inputs->xStart = subvolumeValues[0];
+      bf_inputs->xEnd = subvolumeValues[3];
+      bf_inputs->yStart = subvolumeValues[1];
+      bf_inputs->yEnd = subvolumeValues[4];
+      bf_inputs->zStart = subvolumeValues[2];
+      bf_inputs->zEnd = subvolumeValues[5];
     }
 
     inputs->delta_xz = xz_size.getValue();
@@ -286,8 +280,7 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, Tomo
 
     std::vector<uint8_t> viewMasks;
 
-    if( viewMask.getValue().length() != 0
-         && parseUnknownArray(viewMask.getValue(), "%d", viewMasks) < 0)
+    if(viewMask.getValue().length() != 0 && parseUnknownArray(viewMask.getValue(), "%d", viewMasks) < 0)
     {
       std::cout << "Error Parsing the Tilt Mask Values. They should be entered as 4,7,12,34,67" << std::endl;
       return -1;
@@ -304,39 +297,46 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, Tomo
   return 0;
 }
 
-
-#define PRINT_INPUT_VAR(input, var)\
-  std::cout << #var << ": " << input->var << std::endl;
+#define PRINT_VAR(out, inputs, var)\
+	out << #var << ": " << inputs->var << std::endl;
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCArgsParser::printArgs(std::ostream &out, TomoInputs* Input)
+void SOCArgsParser::printInputs(TomoInputsPtr inputs, std::ostream &out)
 {
-  out << "SOC Inputs ------------------------" << std::endl;
-  PRINT_INPUT_VAR(Input, SinoFile)
-  PRINT_INPUT_VAR(Input, InitialReconFile)
-  //PRINT_INPUT_VAR(Input, GainsOffsetsFile)
-  PRINT_INPUT_VAR(Input, GainsFile)
-  PRINT_INPUT_VAR(Input, OffsetsFile)
-  PRINT_INPUT_VAR(Input, VarianceFile)
-  PRINT_INPUT_VAR(Input, InterpFlag)
-	
-  PRINT_INPUT_VAR(Input, OutputFile)
-  PRINT_INPUT_VAR(Input, outputDir)
-  PRINT_INPUT_VAR(Input, NumIter)
-  PRINT_INPUT_VAR(Input, NumOuterIter)
-  PRINT_INPUT_VAR(Input, SigmaX)
-  PRINT_INPUT_VAR(Input, p)
-  PRINT_INPUT_VAR(Input, StopThreshold)
-  PRINT_INPUT_VAR(Input, useSubvolume)
-  PRINT_INPUT_VAR(Input, xStart)
-  PRINT_INPUT_VAR(Input, xEnd)
-  PRINT_INPUT_VAR(Input, yStart)
-  PRINT_INPUT_VAR(Input, yEnd)
-  PRINT_INPUT_VAR(Input, zStart)
-  PRINT_INPUT_VAR(Input, zEnd)
-  PRINT_INPUT_VAR(Input, LengthZ)
-  PRINT_INPUT_VAR(Input, delta_xz)
-  PRINT_INPUT_VAR(Input, delta_xy)
+  out << "------------------ TomoInputs Begin ------------------" << std::endl;
+  PRINT_VAR(out, inputs, NumIter);
+  PRINT_VAR(out, inputs, NumOuterIter);
+  PRINT_VAR(out, inputs, SigmaX);
+  PRINT_VAR(out, inputs, p);
+  PRINT_VAR(out, inputs, StopThreshold);
+  PRINT_VAR(out, inputs, InterpFlag);
+  PRINT_VAR(out, inputs, useSubvolume);
+  PRINT_VAR(out, inputs, xStart);
+  PRINT_VAR(out, inputs, xEnd);
+  PRINT_VAR(out, inputs, yStart);
+  PRINT_VAR(out, inputs, yEnd);
+  PRINT_VAR(out, inputs, zStart);
+  PRINT_VAR(out, inputs, zEnd);
+  PRINT_VAR(out, inputs, tiltSelection);
+  PRINT_VAR(out, inputs, fileXSize);
+  PRINT_VAR(out, inputs, fileYSize);
+  PRINT_VAR(out, inputs, fileZSize);
+  PRINT_VAR(out, inputs, LengthZ);
+  PRINT_VAR(out, inputs, delta_xz);
+  PRINT_VAR(out, inputs, delta_xy);
+  PRINT_VAR(out, inputs, targetGain);
+  PRINT_VAR(out, inputs, sinoFile);
+  PRINT_VAR(out, inputs, initialReconFile);
+  PRINT_VAR(out, inputs, gainsInputFile);
+  PRINT_VAR(out, inputs, offsetsInputFile);
+  PRINT_VAR(out, inputs, varianceInputFile);
 
+  PRINT_VAR(out, inputs, tempDir);
+  PRINT_VAR(out, inputs, reconstructedOutputFile);
+  PRINT_VAR(out, inputs, gainsOutputFile);
+  PRINT_VAR(out, inputs, offsetsOutputFile);
+  PRINT_VAR(out, inputs, varianceOutputFile);
+
+  out << "------------------ TomoInputs End ------------------" << std::endl;
 }
