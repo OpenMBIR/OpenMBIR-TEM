@@ -172,7 +172,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     void on_outputFilePath_textChanged(const QString & text);
 
     void on_outputDirectoryPathBtn_clicked();
-    void on_outputDirectoryPath_textChanged(const QString & text);
+    void on_tempDirPath_textChanged(const QString & text);
 
     void on_initialReconstructionPathBtn_clicked();
     void on_initialReconstructionPath_textChanged(const QString & text);

@@ -203,7 +203,7 @@ void TomoGui::readSettings(QSettings &prefs)
 
 
   READ_STRING_SETTING(prefs, outputFilePath, "");
-  READ_STRING_SETTING(prefs, outputDirectoryPath, "");
+  READ_STRING_SETTING(prefs, tempDirPath, "");
   READ_STRING_SETTING(prefs, initialReconstructionPath, "");
 //  READ_STRING_SETTING(prefs, stopThreshold, "");
   READ_STRING_SETTING(prefs, sampleThickness, "");
@@ -246,7 +246,7 @@ void TomoGui::writeSettings(QSettings &prefs)
   prefs.beginGroup("Parameters");
   WRITE_STRING_SETTING(prefs, inputMRCFilePath);
   WRITE_STRING_SETTING(prefs, outputFilePath);
-  WRITE_STRING_SETTING(prefs, outputDirectoryPath);
+  WRITE_STRING_SETTING(prefs, tempDirPath);
   WRITE_STRING_SETTING(prefs, initialReconstructionPath);
  // WRITE_STRING_SETTING(prefs, stopThreshold);
   WRITE_STRING_SETTING(prefs, sampleThickness);
@@ -581,7 +581,7 @@ void TomoGui::on_m_GoBtn_clicked()
   }
 
   // Make sure we have an output directory setup and created
-  if(false == sanityCheckOutputDirectory(outputDirectoryPath, QString("Tomography Reconstruction")))
+  if(false == sanityCheckOutputDirectory(tempDirPath, QString("Tomography Reconstruction")))
   {
     return;
   }
@@ -712,19 +712,21 @@ void TomoGui::initializeSOCEngine()
       inputs->delta_xy = tiw->getXYPixelMultiple();
       inputs->delta_xz = tiw->getXZPixelMultiple();
 
+      QString path;
 
-      QString path = outputDirectoryPath->text() + QString("_") + QString::number(i, 10) + QDir::separator() + outputFilePath->text();
-      path = QDir::toNativeSeparators(path);
-      inputs->OutputFile = path.toStdString();
+    //  path = tempDirPath->text()  + QDir::separator() + outputFilePath->text();
+    //  path = QDir::toNativeSeparators(path);
+    //  inputs->reconstructedOutputFile = path.toStdString();
 
       path = QDir::toNativeSeparators(inputMRCFilePath->text());
-      inputs->SinoFile = path.toStdString();
+      inputs->sinoFile = path.toStdString();
 
       path = QDir::toNativeSeparators(initialReconstructionPath->text());
-      inputs->InitialReconFile = path.toStdString();
+    //  inputs->initialReconFile = path.toStdString();
 
-      path = QDir::toNativeSeparators(outputDirectoryPath->text()+ QString("_") + QString::number(i, 10));
-      inputs->outputDir = path.toStdString();
+      path = QDir::toNativeSeparators(tempDirPath->text());
+      inputs->tempDir = path.toStdString();
+
       bool ok = false;
 
       inputs->tiltSelection = static_cast<SOC::TiltSelection>(tiltSelection->currentIndex());
@@ -741,7 +743,7 @@ void TomoGui::initializeSOCEngine()
       }
 
       inputs->LengthZ = sampleThickness->text().toDouble(&ok);
-      inputs->TargetGain = targetGain->text().toInt(&ok);
+      inputs->targetGain = targetGain->text().toInt(&ok);
 
       std::vector<uint8_t> viewMasks;
       QVector<bool> excludedViews = m_GainsOffsetsTableModel->getExcludedTilts();
@@ -861,7 +863,7 @@ void TomoGui::on_outputDirectoryPathBtn_clicked()
     QFileInfo fi(aDir);
     canWrite = fi.isWritable();
     if (canWrite) {
-      this->outputDirectoryPath->setText(m_OpenDialogLastDirectory);
+      this->tempDirPath->setText(m_OpenDialogLastDirectory);
     }
     else
     {
@@ -954,9 +956,9 @@ void TomoGui::on_outputFilePath_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_outputDirectoryPath_textChanged(const QString & text)
+void TomoGui::on_tempDirPath_textChanged(const QString & text)
 {
-  verifyPathExists(outputDirectoryPath->text(), outputDirectoryPath);
+  verifyPathExists(tempDirPath->text(), tempDirPath);
 }
 
 // -----------------------------------------------------------------------------

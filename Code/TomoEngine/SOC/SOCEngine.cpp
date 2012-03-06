@@ -148,14 +148,14 @@ inline double Minimum(double a, double b)
 // -----------------------------------------------------------------------------
 void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
 {
-   v->SinoFile = "";
-   v->InitialReconFile = "";
-   v->GainsFile = "";
-   v->OffsetsFile = "";
-   v->VarianceFile = "";
+   v->sinoFile = "";
+   v->initialReconFile = "";
+   v->gainsInputFile = "";
+   v->offsetsInputFile = "";
+   v->varianceInputFile = "";
    v->InterpFlag=0;
-   v->OutputFile = "";
-   v->outputDir = "";
+   v->reconstructedOutputFile = "";
+   v->tempDir = "";
    v->NumIter = 0;
    v->NumOuterIter = 0;
    v->SigmaX = 0.0;
@@ -194,7 +194,7 @@ void SOCEngine::InitializeSinogram(SinogramPtr v)
   v->RMax = 0.0;
   v->T0 = 0.0;
   v->TMax = 0.0;
-  v->TargetGain = 0.0;
+  v->targetGain = 0.0;
   v->InitialGain = RealArrayType::NullPointer();
   v->InitialOffset = RealArrayType::NullPointer();
 }
@@ -334,7 +334,7 @@ void SOCEngine::execute()
   // the code goes any farther
   {
   TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
-    std::string extension = MXAFileInfo::extension(m_TomoInputs->SinoFile);
+    std::string extension = MXAFileInfo::extension(m_TomoInputs->sinoFile);
     if (extension.compare("mrc") == 0 || extension.compare("ali") == 0)
     {
       dataReader = MRCSinogramInitializer::NewTomoFilter();
@@ -363,10 +363,10 @@ void SOCEngine::execute()
 
 
 
-  if (m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->SinoFile.empty()== false)
+  if (m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->sinoFile.empty()== false)
   {
     TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
-    std::string extension = MXAFileInfo::extension(m_BFTomoInputs->SinoFile);
+    std::string extension = MXAFileInfo::extension(m_BFTomoInputs->sinoFile);
     if (extension.compare("mrc") == 0 || extension.compare("ali") == 0)
     {
       dataReader = MRCSinogramInitializer::NewTomoFilter();
@@ -407,7 +407,7 @@ void SOCEngine::execute()
   {
     TomoFilter::Pointer gainsOffsetsInitializer = TomoFilter::NullPointer();
 
-    if(m_TomoInputs->OffsetsFile.empty() == true) // Calculate the initial Offsets in case nothing is specified
+    if(m_TomoInputs->offsetsInputFile.empty() == true) // Calculate the initial Offsets in case nothing is specified
     {
       gainsOffsetsInitializer = ComputeGainsOffsets::NewTomoFilter();
     }
@@ -429,8 +429,8 @@ void SOCEngine::execute()
 
     /********************REMOVE************************/
     std::cout<<"HARD WIRED TARGET GAIN"<<std::endl;
-  m_Sinogram->TargetGain = m_TomoInputs->TargetGain;//TARGET_GAIN;
-    std::cout << "Target Gain: " << m_Sinogram->TargetGain << std::endl;
+  m_Sinogram->targetGain = m_TomoInputs->targetGain;//TARGET_GAIN;
+    std::cout << "Target Gain: " << m_Sinogram->targetGain << std::endl;
     /*************************************************/
 
 
@@ -439,8 +439,8 @@ void SOCEngine::execute()
   // Initialize the Geometry data from a rough reconstruction
   {
     InitialReconstructionInitializer::Pointer geomInitializer = InitialReconstructionInitializer::NullPointer();
-    std::string extension = MXAFileInfo::extension(m_TomoInputs->InitialReconFile);
-    if (m_TomoInputs->InitialReconFile.empty() == true)
+    std::string extension = MXAFileInfo::extension(m_TomoInputs->initialReconFile);
+    if (m_TomoInputs->initialReconFile.empty() == true)
     {
       // This will just initialize all the values to Zero (0)
       geomInitializer = InitialReconstructionInitializer::New();
@@ -584,7 +584,7 @@ void SOCEngine::execute()
 //  ck_cost=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
 
   NumOfViews = m_Sinogram->N_theta;
-  LogGain = m_Sinogram->N_theta*log(m_Sinogram->TargetGain);
+  LogGain = m_Sinogram->N_theta*log(m_Sinogram->targetGain);
   dims[0] = m_Sinogram->N_theta;
 //  d1=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
   d1 = RealArrayType::New(dims);
@@ -703,7 +703,7 @@ void SOCEngine::execute()
     }
   }
 #endif
-  //m_Sinogram->TargetGain=20000;
+  //m_Sinogram->targetGain=20000;
 
 #ifdef BRIGHT_FIELD //Take log of the data and subtract log(Dosage) from it
   for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++) {//slice index
@@ -737,20 +737,20 @@ void SOCEngine::execute()
   printf("The geometric mean of the gains is %lf\n",sum);
 
   //Checking if the input parameters satisfy the target geometric mean
-  if(fabs(sum - m_Sinogram->TargetGain) > 1e-5)
+  if(fabs(sum - m_Sinogram->targetGain) > 1e-5)
   {
     printf("The input paramters dont meet the constraint..Renormalizing\n");
-    temp = exp(log(m_Sinogram->TargetGain) - log(sum));
+    temp = exp(log(m_Sinogram->targetGain) - log(sum));
     for (k = 0 ; k < m_Sinogram->N_theta; k++) {
       NuisanceParams->I_0->d[k]=m_Sinogram->InitialGain->d[k]*temp;
     }
   }
 #else
   printf("The Arithmetic mean of the constraint is %lf\n",sum);
-  if(sum - m_Sinogram->TargetGain > 1e-5)
+  if(sum - m_Sinogram->targetGain > 1e-5)
   {
     printf("Arithmetic Mean Constraint not met..renormalizing\n");
-    temp = m_Sinogram->TargetGain/sum;
+    temp = m_Sinogram->targetGain/sum;
     for (k = 0 ; k < m_Sinogram->N_theta; k++) {
       NuisanceParams->I_0->d[k]=m_Sinogram->InitialGain->d[k]*temp;
     }
@@ -1077,7 +1077,7 @@ void SOCEngine::execute()
 
 #ifdef COST_CALCULATE
   DATA_TYPE cost_value;
-  std::string filepath(m_TomoInputs->outputDir);
+  std::string filepath(m_TomoInputs->tempDir);
   filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::CostFunctionFile);
 
   CostData::Pointer cost = CostData::New();
@@ -1288,7 +1288,7 @@ void SOCEngine::execute()
       sum1 += (1.0 / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]));
       sum2 += ((bk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d1->d[i_theta]) / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]));
     }
-    DATA_TYPE LagrangeMultiplier = (-m_Sinogram->N_theta * m_Sinogram->TargetGain + sum2) / sum1;
+    DATA_TYPE LagrangeMultiplier = (-m_Sinogram->N_theta * m_Sinogram->targetGain + sum2) / sum1;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
 
@@ -1335,7 +1335,7 @@ void SOCEngine::execute()
      for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
      sum+=(log(NuisanceParams->I_0->d[i_theta]));
      sum/=Sinogram->N_theta;
-     temp=exp(sum) - Sinogram->TargetGain;
+     temp=exp(sum) - Sinogram->targetGain;
 
      printf("%lf\n",temp);*/
 
@@ -1504,7 +1504,7 @@ void SOCEngine::execute()
 #ifdef FORWARD_PROJECT_MODE
   int fileError=0;
   FILE *Fp6;
-  MAKE_OUTPUT_FILE(Fp6, fileError, m_TomoInputs->outputDir, ScaleOffsetCorrection::ForwardProjectedObjectFile);
+  MAKE_OUTPUT_FILE(Fp6, fileError, m_TomoInputs->tempDir, ScaleOffsetCorrection::ForwardProjectedObjectFile);
   if (fileError == 1)
   {
 
@@ -1515,7 +1515,7 @@ void SOCEngine::execute()
 #ifdef DEBUG_CONSTRAINT_OPT
   FILE *Fp8 = NULL;
   int fileError=0;
-  MAKE_OUTPUT_FILE(Fp8, fileError, m_TomoInputs->outputDir, ScaleOffsetCorrection::CostFunctionCoefficientsFile);
+  MAKE_OUTPUT_FILE(Fp8, fileError, m_TomoInputs->tempDir, ScaleOffsetCorrection::CostFunctionCoefficientsFile);
   if (fileError >= 0)
   {
     // Write the output File
@@ -1593,7 +1593,7 @@ void SOCEngine::execute()
   // Write the Reconstruction out to a file
   RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
   writer->setGeometry(m_Geometry);
-  writer->setFilePath(m_TomoInputs->OutputFile);
+  writer->setFilePath(m_TomoInputs->reconstructedOutputFile);
   writer->setObservers(getObservers());
   writer->execute();
   if (writer->getErrorCondition() < 0)
@@ -1604,7 +1604,7 @@ void SOCEngine::execute()
 
 
 
-  std::string vtkFile(m_TomoInputs->outputDir);
+  std::string vtkFile(m_TomoInputs->tempDir);
   vtkFile = vtkFile.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::VtkGeometryFile);
 
   VTKStructuredPointsFileWriter vtkWriter;
@@ -1703,7 +1703,7 @@ RealImageType::Pointer SOCEngine::calculateVoxelProfile()
   uint16_t i,j;
   FILE* Fp = NULL;
   int fileError = 0;
-  MAKE_OUTPUT_FILE(Fp, fileError, m_TomoInputs->outputDir, ScaleOffsetCorrection::VoxelProfileFile);
+  MAKE_OUTPUT_FILE(Fp, fileError, m_TomoInputs->tempDir, ScaleOffsetCorrection::VoxelProfileFile);
   if (fileError < 0)
   {
 
@@ -2611,7 +2611,7 @@ void SOCEngine::ComputeVSC()
   DATA_TYPE filter_op = 0;
   int err = 0;
   FILE *Fp = NULL;
-  MAKE_OUTPUT_FILE(Fp, err, m_TomoInputs->outputDir, ScaleOffsetCorrection::MagnitudeMapFile);
+  MAKE_OUTPUT_FILE(Fp, err, m_TomoInputs->tempDir, ScaleOffsetCorrection::MagnitudeMapFile);
   if(err < 0)
   {
 
@@ -2649,7 +2649,7 @@ void SOCEngine::ComputeVSC()
     }
   }
 
-  MAKE_OUTPUT_FILE(Fp, err, m_TomoInputs->outputDir, ScaleOffsetCorrection::FilteredMagMapFile);
+  MAKE_OUTPUT_FILE(Fp, err, m_TomoInputs->tempDir, ScaleOffsetCorrection::FilteredMagMapFile);
   if(err < 0)
   {
 

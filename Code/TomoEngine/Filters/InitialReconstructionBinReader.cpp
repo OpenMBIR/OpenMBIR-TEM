@@ -73,12 +73,12 @@ void InitialReconstructionBinReader::initializeData()
   GeometryPtr geometry = getGeometry();
 	uint16_t INTERP_FACTOR=2;
   //Read the Initial Reconstruction data into a 3-D matrix
-  //If Interpolate flag is set then the input has only half the 
+  //If Interpolate flag is set then the input has only half the
   //number of voxels along each dimension as the output
-	FILE* Fp2=fopen("UpsampledObject.bin","w");	
-  FILE* Fp=fopen(input->InitialReconFile.c_str(),"r");
+	FILE* Fp2=fopen("UpsampledObject.bin","w");
+  FILE* Fp=fopen(input->initialReconFile.c_str(),"r");
   std::cout<<"Reading Geom"<<std::endl;
-	
+
   if(NULL != Fp)
   {
 	//If we need to interpolate
@@ -102,7 +102,7 @@ void InitialReconstructionBinReader::initializeData()
 					}
 				}
 			}
-		}	
+		}
 	}
 	else
 	{
@@ -118,7 +118,7 @@ void InitialReconstructionBinReader::initializeData()
         }
       }
     }
-	}	  
+	}
     fclose(Fp);
     notify("Done Reading Initial Reconstruction", 0, UpdateProgressMessage);
 	  for (uint16_t i = 0; i < geometry->N_y; i++)
@@ -126,8 +126,8 @@ void InitialReconstructionBinReader::initializeData()
 		  for (uint16_t j = 0; j < geometry->N_x; j++)
 		  {
 			  for (uint16_t k = 0; k < geometry->N_z; k++)
-			  {	 
-				  DATA_TYPE buffer=geometry->Object->d[k][j][i];	  
+			  {
+				  DATA_TYPE buffer=geometry->Object->d[k][j][i];
 				  fwrite(&buffer, sizeof(double), 1, Fp2);
 			  }
 		  }

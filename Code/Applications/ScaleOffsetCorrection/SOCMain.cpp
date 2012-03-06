@@ -63,8 +63,8 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  argParser.printArgs(std::cout, inputs.get());
-  argParser.printArgs(std::cout, bf_inputs.get());
+  argParser.printInputs(inputs, std::cout);
+  argParser.printInputs(bf_inputs, std::cout);
 
 #if 0
   char path1[MAXPATHLEN]; // This is a buffer for the text
@@ -73,12 +73,12 @@ int main(int argc, char **argv)
   std::cout << "Current Working Directory: " << path1 << std::endl;
 #endif
   // Make sure the output directory is created if it does not exist
-  if(MXADir::exists(inputs->outputDir) == false)
+  if(MXADir::exists(inputs->tempDir) == false)
   {
-    std::cout << "Output Directory '" << inputs->outputDir << "' does NOT exist. Attempting to create it." << std::endl;
-    if(MXADir::mkdir(inputs->outputDir, true) == false)
+    std::cout << "Output Directory '" << inputs->tempDir << "' does NOT exist. Attempting to create it." << std::endl;
+    if(MXADir::mkdir(inputs->tempDir, true) == false)
     {
-      std::cout << "Error creating the output directory '" << inputs->outputDir << "'\n   Exiting Now." << std::endl;
+      std::cout << "Error creating the output directory '" << inputs->tempDir << "'\n   Exiting Now." << std::endl;
       return EXIT_FAILURE;
     }
     std::cout << "Output Directory Created." << std::endl;

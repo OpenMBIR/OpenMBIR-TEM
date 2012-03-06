@@ -38,6 +38,10 @@
 
 #include "MultiResolutionSOC.h"
 
+#include <iostream>
+
+#include "MXA/Utilities/MXADir.h"
+
 #include "TomoEngine/SOC/SOCEngine.h"
 
 // -----------------------------------------------------------------------------
@@ -53,6 +57,52 @@ MultiResolutionSOC::MultiResolutionSOC()
 // -----------------------------------------------------------------------------
 MultiResolutionSOC::~MultiResolutionSOC()
 {
+}
+
+
+#define PRINT_VAR(out, inputs, var)\
+	out << #var << ": " << inputs->var << std::endl;
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void MultiResolutionSOC::printInputs(TomoInputsPtr inputs, std::ostream &out)
+{
+	out << "------------------ TomoInputs Begin ------------------" << std::endl;
+	PRINT_VAR(out, inputs, NumIter);
+	PRINT_VAR(out, inputs, NumOuterIter);
+	PRINT_VAR(out, inputs, SigmaX);
+	PRINT_VAR(out, inputs, p);
+	PRINT_VAR(out, inputs, StopThreshold);
+	PRINT_VAR(out, inputs, InterpFlag);
+	PRINT_VAR(out, inputs, useSubvolume);
+	PRINT_VAR(out, inputs, xStart);
+	PRINT_VAR(out, inputs, xEnd);
+	PRINT_VAR(out, inputs, yStart);
+	PRINT_VAR(out, inputs, yEnd);
+	PRINT_VAR(out, inputs, zStart);
+	PRINT_VAR(out, inputs, zEnd);
+	PRINT_VAR(out, inputs, tiltSelection);
+	PRINT_VAR(out, inputs, fileXSize);
+	PRINT_VAR(out, inputs, fileYSize);
+	PRINT_VAR(out, inputs, fileZSize);
+	PRINT_VAR(out, inputs, LengthZ);
+	PRINT_VAR(out, inputs, delta_xz);
+	PRINT_VAR(out, inputs, delta_xy);
+	PRINT_VAR(out, inputs, targetGain);
+	PRINT_VAR(out, inputs, sinoFile);
+	PRINT_VAR(out, inputs, initialReconFile);
+	PRINT_VAR(out, inputs, gainsInputFile);
+	PRINT_VAR(out, inputs, offsetsInputFile);
+	PRINT_VAR(out, inputs, varianceInputFile);
+
+	PRINT_VAR(out, inputs, tempDir);
+	PRINT_VAR(out, inputs, reconstructedOutputFile);
+	PRINT_VAR(out, inputs, gainsOutputFile);
+	PRINT_VAR(out, inputs, offsetsOutputFile);
+	PRINT_VAR(out, inputs, varianceOutputFile);
+
+	out << "------------------ TomoInputs End ------------------" << std::endl;
 }
 
 // -----------------------------------------------------------------------------
@@ -80,7 +130,28 @@ void MultiResolutionSOC::execute()
   soc->setNuisanceParams(nuisanceParams);
 
 
-  SOCEngine::InitializeTomoInputs(prevInputs);
+  // The first time through we only have a target Gain so set the output files
+  std::stringstream ss;
+  ss << prevInputs->tempDir << MXADir::Separator << prevInputs->delta_xz << "x_Resolution";
+  prevInputs->tempDir = ss.str(); // Reset the output Directory to a sub directory
+
+  ss.str("");
+  ss << prevInputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
+  prevInputs->gainsOutputFile = ss.str();
+
+  ss.str("");
+  ss << prevInputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalOffsetParametersFile;
+  prevInputs->offsetsOutputFile = ss.str();
+
+  ss.str("");
+  ss << prevInputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalVariancesFile;
+  prevInputs->varianceOutputFile = ss.str();
+
+  ss.str("");
+  ss << prevInputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedVolumeFile;
+  prevInputs->reconstructedOutputFile = ss.str();
+
+
   SOCEngine::InitializeSinogram(sinogram);
   SOCEngine::InitializeGeometry(geometry);
   SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
@@ -88,7 +159,9 @@ void MultiResolutionSOC::execute()
   // We need to get messages to the gui or command line
   soc->addObserver(this);
 
-  soc->execute();
+  printInputs(prevInputs, std::cout);
+
+  //soc->execute();
 
   soc = SOCEngine::NullPointer();
 
@@ -96,10 +169,32 @@ void MultiResolutionSOC::execute()
   for (size_t i = 1; i < m_TomoInputs.size(); ++i)
   {
     TomoInputsPtr inputs = m_TomoInputs.at(i);
-    inputs->GainsFile = prevInputs->GainsFile;
-    inputs->OffsetsFile = prevInputs->OffsetsFile;
-    inputs->VarianceFile = prevInputs->VarianceFile;
-    inputs->InitialReconFile = prevInputs->SinoFile;
+    /* Get our input files from the last resolution iteration */
+    inputs->gainsInputFile = prevInputs->gainsOutputFile;
+    inputs->offsetsInputFile = prevInputs->offsetsOutputFile;
+    inputs->varianceInputFile = prevInputs->varianceOutputFile;
+    inputs->initialReconFile = prevInputs->reconstructedOutputFile;
+
+    /* Now set the output files for this resolution */
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << inputs->delta_xz << "x_Resolution";
+    inputs->tempDir = ss.str(); // Reset the output Directory to a sub directory
+
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
+    inputs->gainsOutputFile = ss.str();
+
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalOffsetParametersFile;
+    inputs->offsetsOutputFile = ss.str();
+
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalVariancesFile;
+    inputs->varianceOutputFile = ss.str();
+
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedVolumeFile;
+    inputs->reconstructedOutputFile = ss.str();
+
 
     soc = SOCEngine::New();
     soc->setTomoInputs(inputs);
@@ -112,15 +207,15 @@ void MultiResolutionSOC::execute()
     nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
     soc->setNuisanceParams(nuisanceParams);
 
-    SOCEngine::InitializeTomoInputs(inputs);
+
     SOCEngine::InitializeSinogram(sinogram);
     SOCEngine::InitializeGeometry(geometry);
     SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
 
     // We need to get messages to the gui or command line
     soc->addObserver(this);
-
-    soc->execute();
+    printInputs(inputs, std::cout);
+   // soc->execute();
     soc = SOCEngine::NullPointer();
 
     prevInputs = inputs;

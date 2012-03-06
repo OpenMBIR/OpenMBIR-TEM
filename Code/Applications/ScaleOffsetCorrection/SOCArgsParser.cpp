@@ -144,27 +144,27 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, Tomo
 
   TCLAP::ValueArg<std::string> in_InitialRecon("i", "ini_recon", "Initial Reconstruction to initialize algorithm", false, "", "");
   cmd.add(in_InitialRecon);
-	
+
 	//Normalizing Bright Field Scan
-	
+
 	TCLAP::ValueArg<std::string> in_BrightField("", "brightfield", "Acquired Bright Field tilt series", false, "", "");
 	cmd.add(in_BrightField);
 
  // TCLAP::ValueArg<std::string> in_GainsOffsets("", "gains_offsets", "Initial Gains and Offsets to use.", false, "", "");
  // cmd.add(in_GainsOffsets);
-	
+
 	TCLAP::ValueArg<double> in_TargetGain("","TargetGain","Target Gain for unscattered electrons",true, 1, "");
 	cmd.add(in_TargetGain);
-	
+
 	TCLAP::ValueArg<std::string> in_Gains("", "gains", "Initial Gains to use.", false, "", "");
 	cmd.add(in_Gains);
-	
+
 	TCLAP::ValueArg<std::string> in_Offsets("", "offsets", "Initial Offsets to use.", false, "", "");
 	cmd.add(in_Offsets);
-	
+
 	TCLAP::ValueArg<std::string> in_Variance("", "variance", "Initial Variance to use.", false, "", "");
 	cmd.add(in_Variance);
-	
+
 	//Whether to interpolate initial file or not
 	TCLAP::ValueArg<uint8_t> in_InterpFlag("", "interpolate", "Iterpolate Initial Reconstruction", false,0, "");
 	cmd.add(in_InterpFlag);
@@ -226,27 +226,27 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, Tomo
   try
   {
     cmd.parse(argc, argv);
-    inputs->OutputFile = in_outputDir.getValue() + MXADir::getSeparator() + in_outputFile.getValue();
-    inputs->SinoFile = in_sinoFile.getValue();
-    inputs->InitialReconFile = in_InitialRecon.getValue();
+    inputs->reconstructedOutputFile = in_outputDir.getValue() + MXADir::getSeparator() + in_outputFile.getValue();
+    inputs->sinoFile = in_sinoFile.getValue();
+    inputs->initialReconFile = in_InitialRecon.getValue();
 	inputs->InterpFlag = in_InterpFlag.getValue();
-	
-	bf_inputs->SinoFile = in_BrightField.getValue();
-	
+
+	bf_inputs->sinoFile = in_BrightField.getValue();
+
 //  inputs->GainsOffsetsFile = in_GainsOffsets.getValue();
-	  
-	inputs->GainsFile = in_Gains.getValue();  
-    inputs->OffsetsFile = in_Offsets.getValue();  //Offset
-    inputs->VarianceFile = in_Variance.getValue(); //variance
-    
-	  
-    inputs->outputDir = in_outputDir.getValue();
+
+	inputs->gainsInputFile = in_Gains.getValue();
+    inputs->offsetsInputFile = in_Offsets.getValue();  //Offset
+    inputs->varianceInputFile = in_Variance.getValue(); //variance
+
+
+    inputs->tempDir = in_outputDir.getValue();
     inputs->NumIter = in_numIter.getValue();
     inputs->SigmaX = in_sigmaX.getValue();
     inputs->p = in_markov.getValue();
     inputs->NumOuterIter = NumOuterIter.getValue();
     inputs->StopThreshold = in_stopThreshold.getValue();
-	inputs->TargetGain = in_TargetGain.getValue();
+	inputs->targetGain = in_TargetGain.getValue();
 
     int subvolumeValues[6];
     ::memset(subvolumeValues, 0, 6 * sizeof(int));
@@ -267,9 +267,9 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, Tomo
       inputs->yEnd = subvolumeValues[4];
       inputs->zStart = subvolumeValues[2];
       inputs->zEnd = subvolumeValues[5];
-		
-		//Do same for BF sinogram as well 
-		
+
+		//Do same for BF sinogram as well
+
 		bf_inputs->useSubvolume = true;
 		bf_inputs->xStart = subvolumeValues[0];
 		bf_inputs->xEnd = subvolumeValues[3];
@@ -305,38 +305,47 @@ int SOCArgsParser::parseArguments(int argc,char **argv, TomoInputs* inputs, Tomo
 }
 
 
-#define PRINT_INPUT_VAR(input, var)\
-  std::cout << #var << ": " << input->var << std::endl;
+
+#define PRINT_VAR(out, inputs, var)\
+	out << #var << ": " << inputs->var << std::endl;
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCArgsParser::printArgs(std::ostream &out, TomoInputs* Input)
+void SOCArgsParser::printInputs(TomoInputsPtr inputs, std::ostream &out)
 {
-  out << "SOC Inputs ------------------------" << std::endl;
-  PRINT_INPUT_VAR(Input, SinoFile)
-  PRINT_INPUT_VAR(Input, InitialReconFile)
-  //PRINT_INPUT_VAR(Input, GainsOffsetsFile)
-  PRINT_INPUT_VAR(Input, GainsFile)
-  PRINT_INPUT_VAR(Input, OffsetsFile)
-  PRINT_INPUT_VAR(Input, VarianceFile)
-  PRINT_INPUT_VAR(Input, InterpFlag)
-	
-  PRINT_INPUT_VAR(Input, OutputFile)
-  PRINT_INPUT_VAR(Input, outputDir)
-  PRINT_INPUT_VAR(Input, NumIter)
-  PRINT_INPUT_VAR(Input, NumOuterIter)
-  PRINT_INPUT_VAR(Input, SigmaX)
-  PRINT_INPUT_VAR(Input, p)
-  PRINT_INPUT_VAR(Input, StopThreshold)
-  PRINT_INPUT_VAR(Input, useSubvolume)
-  PRINT_INPUT_VAR(Input, xStart)
-  PRINT_INPUT_VAR(Input, xEnd)
-  PRINT_INPUT_VAR(Input, yStart)
-  PRINT_INPUT_VAR(Input, yEnd)
-  PRINT_INPUT_VAR(Input, zStart)
-  PRINT_INPUT_VAR(Input, zEnd)
-  PRINT_INPUT_VAR(Input, LengthZ)
-  PRINT_INPUT_VAR(Input, delta_xz)
-  PRINT_INPUT_VAR(Input, delta_xy)
+	out << "------------------ TomoInputs Begin ------------------" << std::endl;
+	PRINT_VAR(out, inputs, NumIter);
+	PRINT_VAR(out, inputs, NumOuterIter);
+	PRINT_VAR(out, inputs, SigmaX);
+	PRINT_VAR(out, inputs, p);
+	PRINT_VAR(out, inputs, StopThreshold);
+	PRINT_VAR(out, inputs, InterpFlag);
+	PRINT_VAR(out, inputs, useSubvolume);
+	PRINT_VAR(out, inputs, xStart);
+	PRINT_VAR(out, inputs, xEnd);
+	PRINT_VAR(out, inputs, yStart);
+	PRINT_VAR(out, inputs, yEnd);
+	PRINT_VAR(out, inputs, zStart);
+	PRINT_VAR(out, inputs, zEnd);
+	PRINT_VAR(out, inputs, tiltSelection);
+	PRINT_VAR(out, inputs, fileXSize);
+	PRINT_VAR(out, inputs, fileYSize);
+	PRINT_VAR(out, inputs, fileZSize);
+	PRINT_VAR(out, inputs, LengthZ);
+	PRINT_VAR(out, inputs, delta_xz);
+	PRINT_VAR(out, inputs, delta_xy);
+	PRINT_VAR(out, inputs, targetGain);
+	PRINT_VAR(out, inputs, sinoFile);
+	PRINT_VAR(out, inputs, initialReconFile);
+	PRINT_VAR(out, inputs, gainsInputFile);
+	PRINT_VAR(out, inputs, offsetsInputFile);
+	PRINT_VAR(out, inputs, varianceInputFile);
 
+	PRINT_VAR(out, inputs, tempDir);
+	PRINT_VAR(out, inputs, reconstructedOutputFile);
+	PRINT_VAR(out, inputs, gainsOutputFile);
+	PRINT_VAR(out, inputs, offsetsOutputFile);
+	PRINT_VAR(out, inputs, varianceOutputFile);
+
+	out << "------------------ TomoInputs End ------------------" << std::endl;
 }

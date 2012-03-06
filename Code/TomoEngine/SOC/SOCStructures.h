@@ -98,11 +98,11 @@ namespace SOC {
     std::vector<DATA_TYPE> angles;//Holds the angles through which the object is tilted
     DATA_TYPE R0,RMax;
     DATA_TYPE T0,TMax;
-    DATA_TYPE TargetGain;//,InitialOffset;//Initial scale and offset of the sinogram data
+    DATA_TYPE targetGain;//,InitialOffset;//Initial scale and offset of the sinogram data
 
     RealArrayType::Pointer InitialGain;//Reads in the initial value for the gain for each view
     RealArrayType::Pointer InitialOffset;
-	  RealArrayType::Pointer InitialVariance;
+	RealArrayType::Pointer InitialVariance;
 
   } Sinogram;
 
@@ -152,18 +152,23 @@ namespace SOC {
     DATA_TYPE delta_xz;//Voxel size in the x-z plane (assuming square shaped voxels in the x-z plane)
     DATA_TYPE delta_xy;//Voxel size in the x-y plane
 
+    DATA_TYPE targetGain;
+    /* These are input files */
+    std::string sinoFile; /* .mrc formatted files are accepted currently */
+    std::string initialReconFile;
 
-    std::string SinoFile;
-    std::string InitialReconFile;
+    std::string gainsInputFile;
+    std::string offsetsInputFile;
+    std::string varianceInputFile;
 
-    DATA_TYPE TargetGain;
-    std::string GainsFile;
-    std::string OffsetsFile;
-    std::string VarianceFile;
+    /* These are output related files and parameters */
+    std::string tempDir; // Output directory
+    std::string reconstructedOutputFile;
+    std::string gainsOutputFile;
+    std::string offsetsOutputFile;
+    std::string varianceOutputFile;
 
-    std::string OutputFile;
 
-    std::string outputDir; // Output directory
     std::vector<uint8_t> excludedViews;// Indices of views to exclude from reconstruction
     std::vector<int> goodViews; // Contains the indices of the views to use for reconstruction
 

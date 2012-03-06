@@ -71,7 +71,7 @@ void MRCSinogramInitializer::execute()
 
   MRCReader::Pointer reader = MRCReader::New(true);
   MRCHeader header;
-  int err = reader->readHeader(inputs->SinoFile, &header);
+  int err = reader->readHeader(inputs->sinoFile, &header);
   reader->printHeader(&header, std::cout);
 	if (err < 0)
   {
@@ -147,7 +147,7 @@ void MRCSinogramInitializer::execute()
   sinogram->N_theta = inputs->goodViews.size();
 
   // Read the subvolume of the MRC file which may contain extra views
-  err = reader->read(inputs->SinoFile, voxelMin, voxelMax);
+  err = reader->read(inputs->sinoFile, voxelMin, voxelMax);
   if (err < 0)
   {
     setErrorMessage("Error Code from Reading MRC File");
@@ -181,7 +181,7 @@ void MRCSinogramInitializer::execute()
 	sinogram->counts_BF = RealVolumeType::New(dims);
 	sinogram->counts_BF->setName("Sinogram.counts_BrightField");
 	}*/
-	
+
 
   sinogram->angles.resize(sinogram->N_theta);
   FEIHeader* fei = NULL;

@@ -1249,12 +1249,12 @@ font-size: 10px;
 }</string>
               </property>
               <property name="text">
-               <string>Output Directory:</string>
+               <string>Temp Directory:</string>
               </property>
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QFSDropLineEdit" name="outputDirectoryPath">
+             <widget class="QFSDropLineEdit" name="tempDirPath">
               <property name="toolTip">
                <string>The output image to be written at the conclusion of the segmentation</string>
               </property>
@@ -2785,7 +2785,7 @@ font-size: 10px;
      <x>0</x>
      <y>0</y>
      <width>924</width>
-     <height>22</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
