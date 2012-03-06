@@ -56,6 +56,9 @@ class TomoInputWidget : public QWidget, private Ui::TomoInputWidget
     virtual ~TomoInputWidget();
 
 
+    void setResolutionMultiple(int x);
+    void setIndexLabel(int i);
+
     double getStopThreshold();
     int getOuterIterations();
     int getInnerIterations();

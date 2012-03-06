@@ -1528,7 +1528,7 @@ void SOCEngine::execute()
   nuisanceBinWriter->setTomoInputs(m_TomoInputs);
   nuisanceBinWriter->setObservers(getObservers());
   nuisanceBinWriter->setNuisanceParams(NuisanceParams.get());
-  nuisanceBinWriter->setFileName(ScaleOffsetCorrection::FinalGainParametersFile);
+  nuisanceBinWriter->setFileName(m_TomoInputs->gainsOutputFile);
   nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_I_O);
   nuisanceBinWriter->execute();
   if (nuisanceBinWriter->getErrorCondition() < 0)
@@ -1537,7 +1537,7 @@ void SOCEngine::execute()
     notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
   }
 
-  nuisanceBinWriter->setFileName(ScaleOffsetCorrection::FinalOffsetParametersFile);
+  nuisanceBinWriter->setFileName(m_TomoInputs->offsetsOutputFile);
   nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_mu);
   nuisanceBinWriter->execute();
   if (nuisanceBinWriter->getErrorCondition() < 0)
@@ -1547,7 +1547,7 @@ void SOCEngine::execute()
   }
 
 #ifdef NOISE_MODEL
-  nuisanceBinWriter->setFileName(ScaleOffsetCorrection::FinalVariancesFile);
+  nuisanceBinWriter->setFileName(m_TomoInputs->varianceOutputFile);
   nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_alpha);
   nuisanceBinWriter->execute();
   if (nuisanceBinWriter->getErrorCondition() < 0)

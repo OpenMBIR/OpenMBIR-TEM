@@ -135,6 +135,13 @@ void MultiResolutionSOC::execute()
   ss << prevInputs->tempDir << MXADir::Separator << prevInputs->delta_xz << "x_Resolution";
   prevInputs->tempDir = ss.str(); // Reset the output Directory to a sub directory
 
+  //Make sure the directory is created:
+  bool success = MXADir::mkdir(prevInputs->tempDir, true);
+  if (!success)
+  {
+    std::cout << "Could not create path: " << prevInputs->tempDir << std::endl;
+  }
+
   ss.str("");
   ss << prevInputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
   prevInputs->gainsOutputFile = ss.str();
@@ -160,9 +167,22 @@ void MultiResolutionSOC::execute()
   soc->addObserver(this);
 
   printInputs(prevInputs, std::cout);
-
-  //soc->execute();
-
+#if 1
+  soc->execute();
+#else
+     FILE* f = fopen(prevInputs->gainsOutputFile.c_str(), "wb");
+     fprintf(f, "Testing\n");
+    fclose(f); f = NULL;
+    f = fopen(prevInputs->offsetsOutputFile.c_str(), "wb");
+    fprintf(f, "Testing\n");
+    fclose(f); f = NULL;
+    f = fopen(prevInputs->varianceOutputFile.c_str(), "wb");
+    fprintf(f, "Testing\n");
+    fclose(f); f = NULL;
+    f = fopen(prevInputs->reconstructedOutputFile.c_str(), "wb");
+    fprintf(f, "Testing\n");
+    fclose(f); f = NULL;
+#endif
   soc = SOCEngine::NullPointer();
 
 
@@ -179,7 +199,13 @@ void MultiResolutionSOC::execute()
     ss.str("");
     ss << inputs->tempDir << MXADir::Separator << inputs->delta_xz << "x_Resolution";
     inputs->tempDir = ss.str(); // Reset the output Directory to a sub directory
-
+    //Make sure the directory is created:
+    success = MXADir::mkdir(inputs->tempDir, true);
+    if (!success)
+    {
+      std::cout << "Could not create path: " << inputs->tempDir << std::endl;
+    }
+    ss.str("");
     ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
     inputs->gainsOutputFile = ss.str();
 
@@ -194,7 +220,6 @@ void MultiResolutionSOC::execute()
     ss.str("");
     ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedVolumeFile;
     inputs->reconstructedOutputFile = ss.str();
-
 
     soc = SOCEngine::New();
     soc->setTomoInputs(inputs);
@@ -215,11 +240,27 @@ void MultiResolutionSOC::execute()
     // We need to get messages to the gui or command line
     soc->addObserver(this);
     printInputs(inputs, std::cout);
-   // soc->execute();
+#if 1
+    soc->execute();
+#else
+     f = fopen(inputs->gainsOutputFile.c_str(), "wb");
+     fprintf(f, "Testing\n");
+    fclose(f); f = NULL;
+    f = fopen(inputs->offsetsOutputFile.c_str(), "wb");
+    fprintf(f, "Testing\n");
+    fclose(f); f = NULL;
+    f = fopen(inputs->varianceOutputFile.c_str(), "wb");
+    fprintf(f, "Testing\n");
+    fclose(f); f = NULL;
+    f = fopen(inputs->reconstructedOutputFile.c_str(), "wb");
+    fprintf(f, "Testing\n");
+    fclose(f); f = NULL;
+#endif
+
+
     soc = SOCEngine::NullPointer();
 
     prevInputs = inputs;
-
   }
 
   updateProgressAndMessage("MultiResolution SOC Complete", 100);

@@ -69,11 +69,11 @@ font-size: 10px;
 }</string>
             </property>
             <property name="text">
-             <string>Stop Threshold:</string>
+             <string>Iteration Index</string>
             </property>
            </widget>
           </item>
-          <item row="11" column="0">
+          <item row="12" column="0">
            <widget class="QLabel" name="label_4">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -86,7 +86,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="13" column="0">
+          <item row="14" column="0">
            <widget class="QLabel" name="label_23">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -99,7 +99,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="15" column="0">
+          <item row="16" column="0">
            <widget class="QLabel" name="label_34">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -112,10 +112,10 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="23" column="0" colspan="4">
+          <item row="24" column="0" colspan="4">
            <widget class="QTableView" name="gainsOffsetsTableView"/>
           </item>
-          <item row="20" column="0" colspan="4">
+          <item row="21" column="0" colspan="4">
            <layout class="QGridLayout" name="gridLayout_5">
             <property name="topMargin">
              <number>10</number>
@@ -1317,7 +1317,7 @@ font-size: 10px;
             </item>
            </layout>
           </item>
-          <item row="16" column="0">
+          <item row="17" column="0">
            <widget class="QLabel" name="label_35">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -1330,7 +1330,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="12" column="0">
+          <item row="13" column="0">
            <widget class="QLabel" name="label_8">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -1343,7 +1343,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="14" column="0">
+          <item row="15" column="0">
            <widget class="QLabel" name="label_33">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -1356,7 +1356,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="10" column="1" rowspan="7" colspan="3">
+          <item row="10" column="1" rowspan="8" colspan="3">
            <layout class="QHBoxLayout" name="tomoInputHorzLayout">
             <item>
              <widget class="TomoInputWidget" name="tomoInputWidget" native="true"/>
@@ -1379,13 +1379,13 @@ font-size: 10px;
           <item row="4" column="0" colspan="4">
            <layout class="QGridLayout" name="gridLayout_6">
             <property name="topMargin">
-             <number>10</number>
+             <number>0</number>
             </property>
             <property name="rightMargin">
-             <number>10</number>
+             <number>0</number>
             </property>
             <property name="bottomMargin">
-             <number>10</number>
+             <number>0</number>
             </property>
             <item row="0" column="0">
              <widget class="QLabel" name="label_36">
@@ -1542,7 +1542,7 @@ font-size: 10px;
             </item>
            </layout>
           </item>
-          <item row="21" column="0">
+          <item row="22" column="0">
            <widget class="QLabel" name="label_37">
             <property name="styleSheet">
              <string notr="true">QLabel {
@@ -1555,7 +1555,7 @@ font-size: 10px;
             </property>
            </widget>
           </item>
-          <item row="21" column="1">
+          <item row="22" column="1">
            <widget class="QComboBox" name="tiltSelection">
             <item>
              <property name="text">
@@ -1569,7 +1569,7 @@ font-size: 10px;
             </item>
            </widget>
           </item>
-          <item row="21" column="2">
+          <item row="22" column="2">
            <spacer name="horizontalSpacer_12">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -1581,6 +1581,19 @@ font-size: 10px;
              </size>
             </property>
            </spacer>
+          </item>
+          <item row="11" column="0">
+           <widget class="QLabel" name="label_49">
+            <property name="styleSheet">
+             <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+            </property>
+            <property name="text">
+             <string>Stop Threshold:</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -2785,7 +2798,7 @@ font-size: 10px;
      <x>0</x>
      <y>0</y>
      <width>924</width>
-     <height>25</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

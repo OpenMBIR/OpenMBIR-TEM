@@ -66,6 +66,7 @@
 //-- TomoEngine Includes
 #include "TomoEngine/TomoEngine.h"
 #include "TomoEngine/TomoEngineVersion.h"
+#include "TomoEngine/Common/EIMMath.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 #include "TomoEngine/SOC/SOCEngine.h"
 #include "TomoEngine/IO/MRCHeader.h"
@@ -688,11 +689,6 @@ void TomoGui::on_m_GoBtn_clicked()
 // -----------------------------------------------------------------------------
 void TomoGui::initializeSOCEngine()
 {
-
-  // Create some shared pointers to all the structures
-//  SinogramPtr sinogram = SinogramPtr(new Sinogram);
-//  GeometryPtr geometry = GeometryPtr(new Geometry);
-//  ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
   std::vector<TomoInputsPtr> inputVector;
 
   // Loop over all of the Input Resolution Widgets and gather the values
@@ -762,15 +758,7 @@ void TomoGui::initializeSOCEngine()
 
   m_MultiResSOC->setTomoInputs(inputVector);
 
-//  m_SOCEngine->setTomoInputs(inputs);
-//  m_SOCEngine->setSinogram(sinogram);
-//  m_SOCEngine->setGeometry(geometry);
-//  m_SOCEngine->setNuisanceParams(nuisanceParams);
 
-//  SOCEngine::InitializeTomoInputs(inputs);
-//  SOCEngine::InitializeSinogram(sinogram);
-//  SOCEngine::InitializeGeometry(geometry);
-//  SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
 
 }
 
@@ -1821,13 +1809,23 @@ void TomoGui::displayDialogBox(QString title, QString text, QMessageBox::Icon ic
 // -----------------------------------------------------------------------------
 void TomoGui::on_addResolution_clicked()
 {
-  int count = tomoInputHorzLayout->count() -1;
+  int count = tomoInputHorzLayout->count() - 1;
 
   // The user is adding a resolution
+  TomoInputWidget* tiw = new TomoInputWidget(this);
+  m_TomoInputs.push_back(tiw);
+  tomoInputHorzLayout->insertWidget(count, tiw);
 
-    TomoInputWidget* tiw = new TomoInputWidget(this);
-    m_TomoInputs.push_back(tiw);
-    tomoInputHorzLayout->insertWidget(count, tiw);
+  for(int i = 0; i < m_TomoInputs.size(); ++i)
+  {
+    TomoInputWidget* tiw = qobject_cast<TomoInputWidget*>(m_TomoInputs.at(i));
+    if(NULL != tiw)
+    {
+      tiw->setResolutionMultiple(pow(2, m_TomoInputs.size() - (1+i) ) );
+      tiw->setIndexLabel(i);
+    }
+  }
+
 }
 
 // -----------------------------------------------------------------------------
@@ -1835,14 +1833,25 @@ void TomoGui::on_addResolution_clicked()
 // -----------------------------------------------------------------------------
 void TomoGui::on_removeResolution_clicked()
 {
- // int count = tomoInputHorzLayout->count() -1;
-  if (m_TomoInputs.count() == 1)
+  // int count = tomoInputHorzLayout->count() -1;
+  if(m_TomoInputs.count() == 1)
   {
     return;
   }
   // The user is removing a resolution
-    QWidget* tiw = m_TomoInputs.at(m_TomoInputs.count()-1);
-    m_TomoInputs.pop_back(); // Remove it from our internal storage
-    tomoInputHorzLayout->removeWidget(tiw);
-    tiw->deleteLater(); // Delete it later
+  QWidget* tiw = m_TomoInputs.at(m_TomoInputs.count() - 1);
+  m_TomoInputs.pop_back(); // Remove it from our internal storage
+  tomoInputHorzLayout->removeWidget(tiw);
+  tiw->deleteLater(); // Delete it later
+
+  for(int i = 0; i < m_TomoInputs.size(); ++i)
+  {
+    TomoInputWidget* tiw = qobject_cast<TomoInputWidget*>(m_TomoInputs.at(i));
+    if(NULL != tiw)
+    {
+      tiw->setResolutionMultiple(pow(2, m_TomoInputs.size() - (1+i) ) );
+      tiw->setIndexLabel(i);
+    }
+  }
+
 }
