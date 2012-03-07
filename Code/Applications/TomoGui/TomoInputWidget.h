@@ -36,7 +36,8 @@
 #define TOMOINPUTWIDGET_H_
 
 
-
+#include <QtCore/QObject>
+#include <QtCore/QSettings>
 #include <QtGui/QWidget>
 
 #include "ui_TomoInputWidget.h"
@@ -55,6 +56,15 @@ class TomoInputWidget : public QWidget, private Ui::TomoInputWidget
     TomoInputWidget(QWidget *parent = 0);
     virtual ~TomoInputWidget();
 
+    /**
+     * @brief Reads the Preferences from the users pref file
+     */
+    void readSettings(QSettings &prefs);
+
+    /**
+     * @brief Writes the preferences to the users pref file
+     */
+    void writeSettings(QSettings &prefs);
 
     void setResolutionMultiple(int x);
     void setIndexLabel(int i);
@@ -66,6 +76,7 @@ class TomoInputWidget : public QWidget, private Ui::TomoInputWidget
     double getMRF();
     int getXYPixelMultiple();
     int getXZPixelMultiple();
+
   protected slots:
 
 

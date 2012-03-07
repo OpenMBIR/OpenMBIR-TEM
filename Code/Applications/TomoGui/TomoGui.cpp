@@ -206,14 +206,8 @@ void TomoGui::readSettings(QSettings &prefs)
   READ_STRING_SETTING(prefs, outputFilePath, "");
   READ_STRING_SETTING(prefs, tempDirPath, "");
   READ_STRING_SETTING(prefs, initialReconstructionPath, "");
-//  READ_STRING_SETTING(prefs, stopThreshold, "");
+  READ_STRING_SETTING(prefs, targetGain, "0")
   READ_STRING_SETTING(prefs, sampleThickness, "");
-//  READ_STRING_SETTING(prefs, outerIterations, "");
-//  READ_STRING_SETTING(prefs, innerIterations, "");
-//  READ_STRING_SETTING(prefs, sigmaX, "");
-//  READ_SETTING(prefs, mrf, ok, d, 0.1 , Float);
-//  READ_SETTING(prefs, xyPixelMultiple, ok, i, 1, Int);
-//  READ_SETTING(prefs, xzPixelMultiple, ok, i, 1, Int);
   READ_BOOL_SETTING(prefs, useSubVolume, false);
   READ_STRING_SETTING(prefs, xMin, "0");
   READ_STRING_SETTING(prefs, xMax, "0");
@@ -226,17 +220,38 @@ void TomoGui::readSettings(QSettings &prefs)
   // This will auto load the MRC File
   on_inputMRCFilePath_textChanged(inputMRCFilePath->text());
 
-  // Then load any Gains/Offsets data next
-  m_GainsFile = prefs.value("m_GainsFile" , "").toString();
-  //readGainsOffsetsFile(m_GainsFile);
-
-
   ok = false;
   i = prefs.value("tiltSelection").toInt(&ok);
   if (false == ok) {i = 0;}
   tiltSelection->setCurrentIndex(i);
 
+  // Read how many Resolutions were saved
+  ok = false;
+  int nRes = prefs.value("Num_Resolutions").toInt(&ok);
+  if(false == ok)
+  {
+    nRes = 0;
+  }
   prefs.endGroup();
+
+  if (nRes > 0)
+  {
+    TomoInputWidget* tiw = qobject_cast<TomoInputWidget*>(m_TomoInputs.at(0));
+    if (NULL != tiw)
+    {
+      tiw->readSettings(prefs);
+    }
+  }
+  for(int i = 1; i < nRes; ++i)
+  {
+    on_addResolution_clicked();
+    TomoInputWidget* tiw = qobject_cast<TomoInputWidget*>(m_TomoInputs.at(i));
+    if (NULL != tiw)
+    {
+      tiw->readSettings(prefs);
+    }
+  }
+
 }
 
 // -----------------------------------------------------------------------------
@@ -249,14 +264,8 @@ void TomoGui::writeSettings(QSettings &prefs)
   WRITE_STRING_SETTING(prefs, outputFilePath);
   WRITE_STRING_SETTING(prefs, tempDirPath);
   WRITE_STRING_SETTING(prefs, initialReconstructionPath);
- // WRITE_STRING_SETTING(prefs, stopThreshold);
   WRITE_STRING_SETTING(prefs, sampleThickness);
-//  WRITE_STRING_SETTING(prefs, outerIterations);
-//  WRITE_STRING_SETTING(prefs, innerIterations);
-//  WRITE_STRING_SETTING(prefs, sigmaX);
-//  WRITE_STRING_SETTING(prefs, mrf);
-//  WRITE_SETTING(prefs, xyPixelMultiple);
-//  WRITE_SETTING(prefs, xzPixelMultiple);
+  WRITE_STRING_SETTING(prefs, targetGain)
   WRITE_BOOL_SETTING(prefs, useSubVolume, useSubVolume->isChecked());
   WRITE_STRING_SETTING(prefs, xMin);
   WRITE_STRING_SETTING(prefs, xMax);
@@ -267,7 +276,17 @@ void TomoGui::writeSettings(QSettings &prefs)
   prefs.setValue("m_GainsFile" , m_GainsFile);
   prefs.setValue("tiltSelection", tiltSelection->currentIndex());
 
+  prefs.setValue("Num_Resolutions", m_TomoInputs.size());
   prefs.endGroup();
+
+  for(int i = 0; i < m_TomoInputs.size(); ++i)
+  {
+    TomoInputWidget* tiw = qobject_cast<TomoInputWidget*>(m_TomoInputs.at(i));
+    if (NULL != tiw)
+    {
+      tiw->writeSettings(prefs);
+    }
+  }
 }
 
 // -----------------------------------------------------------------------------

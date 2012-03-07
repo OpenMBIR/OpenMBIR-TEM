@@ -36,6 +36,44 @@
 
 #include <iostream>
 
+#define READ_STRING_SETTING(prefs, var, emptyValue)\
+  var->setText( prefs.value(#var).toString() );\
+  if (var->text().isEmpty() == true) { var->setText(emptyValue); }
+
+
+#define READ_SETTING(prefs, var, ok, temp, default, type)\
+  ok = false;\
+  temp = prefs.value(#var).to##type(&ok);\
+  if (false == ok) {temp = default;}\
+  var->setValue(temp);
+
+#define READ_VALUE(prefs, var, ok, temp, default, type)\
+  ok = false;\
+  temp = prefs.value(#var).to##type(&ok);\
+  if (false == ok) {temp = default;}\
+  var = temp;
+
+#define WRITE_STRING_SETTING(prefs, var)\
+  prefs.setValue(#var , this->var->text());
+
+#define WRITE_SETTING(prefs, var)\
+  prefs.setValue(#var, this->var->value());
+
+#define READ_BOOL_SETTING(prefs, var, emptyValue)\
+  { QString s = prefs.value(#var).toString();\
+  if (s.isEmpty() == false) {\
+    bool bb = prefs.value(#var).toBool();\
+  var->setChecked(bb); } else { var->setChecked(emptyValue); } }
+
+#define WRITE_BOOL_SETTING(prefs, var, b)\
+    prefs.setValue(#var, (b) );
+
+#define WRITE_CHECKBOX_SETTING(prefs, var)\
+    prefs.setValue(#var, var->isChecked() );
+
+#define WRITE_VALUE(prefs, var)\
+    prefs.setValue(#var, var);
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -53,6 +91,59 @@ TomoInputWidget::~TomoInputWidget()
 {
 
 }
+
+// -----------------------------------------------------------------------------
+//  Read the prefs from the local storage file
+// -----------------------------------------------------------------------------
+void TomoInputWidget::readSettings(QSettings &prefs)
+{
+  QString val;
+  bool ok;
+  qint32 i;
+  double d;
+  prefs.beginGroup(interationIndex->text());
+  std::cout << "Reading Settings for Index " << interationIndex->text().toStdString() << std::endl;
+
+
+  READ_STRING_SETTING(prefs, interationIndex, "");
+  READ_STRING_SETTING(prefs, stopThreshold, "0.01")
+  READ_STRING_SETTING(prefs, innerIterations, "10")
+  READ_STRING_SETTING(prefs, outerIterations, "1")
+  READ_STRING_SETTING(prefs, sigmaX, "0.00004")
+  READ_SETTING(prefs, mrf, ok, d, 0.00001, Double)
+  READ_SETTING(prefs, xyPixelMultiple, ok, i, 1, Int)
+  READ_SETTING(prefs, xzPixelMultiple, ok, i, 1, Int)
+
+  prefs.endGroup();
+}
+
+// -----------------------------------------------------------------------------
+//  Write our prefs to file
+// -----------------------------------------------------------------------------
+void TomoInputWidget::writeSettings(QSettings &prefs)
+{
+  QString val;
+//  bool ok;
+//  qint32 i;
+//  double d;
+
+  prefs.beginGroup(interationIndex->text());
+  std::cout << "Writing Settings for Index " << interationIndex->text().toStdString() << std::endl;
+
+
+  WRITE_STRING_SETTING(prefs, interationIndex);
+  WRITE_STRING_SETTING(prefs, stopThreshold)
+  WRITE_STRING_SETTING(prefs, innerIterations)
+  WRITE_STRING_SETTING(prefs, outerIterations)
+  WRITE_STRING_SETTING(prefs, sigmaX)
+  WRITE_SETTING(prefs, mrf)
+  WRITE_SETTING(prefs, xyPixelMultiple)
+  WRITE_SETTING(prefs, xzPixelMultiple)
+
+  prefs.endGroup();
+}
+
+
 
 // -----------------------------------------------------------------------------
 //
