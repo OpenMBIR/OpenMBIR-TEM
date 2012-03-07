@@ -9,6 +9,7 @@ set (TomoEngine_IO_SRCS
     ${TomoEngine_SOURCE_DIR}/IO/MRCReader.cpp
     ${TomoEngine_SOURCE_DIR}/IO/MRCWriter.cpp
     ${TomoEngine_SOURCE_DIR}/IO/NuisanceParamWriter.cpp
+    ${TomoEngine_SOURCE_DIR}/IO/NuisanceParamReader.cpp
     ${TomoEngine_SOURCE_DIR}/IO/SinogramBinWriter.cpp
     )
 
@@ -20,6 +21,7 @@ set (TomoEngine_IO_HDRS
     ${TomoEngine_SOURCE_DIR}/IO/MRCWriter.h
     ${TomoEngine_SOURCE_DIR}/IO/MRCHeader.h
     ${TomoEngine_SOURCE_DIR}/IO/NuisanceParamWriter.h
+    ${TomoEngine_SOURCE_DIR}/IO/NuisanceParamReader.h
     ${TomoEngine_SOURCE_DIR}/IO/SinogramBinWriter.h
 )
 cmp_IDE_SOURCE_PROPERTIES( "IO" "${TomoEngine_IO_HDRS}" "${TomoEngine_IO_SRCS}" "${CMP_INSTALL_FILES}")

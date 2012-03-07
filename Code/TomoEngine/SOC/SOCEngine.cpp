@@ -71,18 +71,19 @@
 #include "TomoEngine/IO/MRCReader.h"
 #include "TomoEngine/IO/RawGeometryWriter.h"
 #include "TomoEngine/IO/NuisanceParamWriter.h"
+#include "TomoEngine/IO/NuisanceParamReader.h"
 #include "TomoEngine/IO/SinogramBinWriter.h"
 #include "TomoEngine/IO/VTKFileWriters.hpp"
 #include "TomoEngine/SOC/SOCConstants.h"
 #include "TomoEngine/SOC/ForwardProject.h"
-#include "TomoEngine/Filters/ComputeGainsOffsets.h"
+#include "TomoEngine/Filters/ComputeInitialOffsets.h"
 #include "TomoEngine/Filters/DetectorResponse.h"
 #include "TomoEngine/Filters/DetectorResponseWriter.h"
 #include "TomoEngine/Filters/TomoFilter.h"
 #include "TomoEngine/Filters/MRCSinogramInitializer.h"
 #include "TomoEngine/Filters/RawSinogramInitializer.h"
 #include "TomoEngine/Filters/GainsOffsetsReader.h"
-#include "TomoEngine/Filters/ComputeGainsOffsets.h"
+#include "TomoEngine/Filters/ComputeInitialOffsets.h"
 #include "TomoEngine/Filters/InitialReconstructionInitializer.h"
 #include "TomoEngine/Filters/InitialReconstructionBinReader.h"
 
@@ -178,6 +179,7 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
    v->delta_xy = 0;
    v->tiltSelection = SOC::A_Tilt;
    v->defaultOffset = 0.0;
+   v->useDefaultOffset = false;
 }
 
 // -----------------------------------------------------------------------------
@@ -334,27 +336,27 @@ void SOCEngine::execute()
   // We are scoping here so the various readers are automatically cleaned up before
   // the code goes any farther
   {
-  TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
+    TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
     std::string extension = MXAFileInfo::extension(m_TomoInputs->sinoFile);
-    if (extension.compare("mrc") == 0 || extension.compare("ali") == 0)
+    if(extension.compare("mrc") == 0 || extension.compare("ali") == 0)
     {
       dataReader = MRCSinogramInitializer::NewTomoFilter();
     }
-    else if (extension.compare("bin") == 0 )
+    else if(extension.compare("bin") == 0)
     {
       dataReader = RawSinogramInitializer::NewTomoFilter();
     }
     else
     {
       setErrorCondition(-1);
-      notify("A supported file reader for the input file was not found." , 100, Observable::UpdateProgressValueAndMessage);
+      notify("A supported file reader for the input file was not found.", 100, Observable::UpdateProgressValueAndMessage);
       return;
     }
     dataReader->setTomoInputs(m_TomoInputs);
     dataReader->setSinogram(m_Sinogram);
     dataReader->setObservers(getObservers());
     dataReader->execute();
-    if (dataReader->getErrorCondition() < 0)
+    if(dataReader->getErrorCondition() < 0)
     {
       notify("Error reading Input Sinogram Data file", 100, Observable::UpdateProgressValueAndMessage);
       setErrorCondition(dataReader->getErrorCondition());
@@ -368,21 +370,21 @@ void SOCEngine::execute()
   {
     TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
     std::string extension = MXAFileInfo::extension(m_BFTomoInputs->sinoFile);
-    if (extension.compare("mrc") == 0 || extension.compare("ali") == 0)
+    if(extension.compare("mrc") == 0 || extension.compare("ali") == 0)
     {
       dataReader = MRCSinogramInitializer::NewTomoFilter();
     }
     else
     {
       setErrorCondition(-1);
-      notify("A supported file reader for the Bright Field file was not found." , 100, Observable::UpdateProgressValueAndMessage);
+      notify("A supported file reader for the Bright Field file was not found.", 100, Observable::UpdateProgressValueAndMessage);
       return;
     }
     dataReader->setTomoInputs(m_BFTomoInputs);
     dataReader->setSinogram(m_BFSinogram);
     dataReader->setObservers(getObservers());
     dataReader->execute();
-    if (dataReader->getErrorCondition() < 0)
+    if(dataReader->getErrorCondition() < 0)
     {
       notify("Error reading Input Sinogram Data file", 100, Observable::UpdateProgressValueAndMessage);
       setErrorCondition(dataReader->getErrorCondition());
@@ -390,52 +392,168 @@ void SOCEngine::execute()
     }
 
     //Normalize the HAADF image
-    for (uint16_t i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)
-    {//slice index
-      for(uint16_t i_r = 0; i_r < m_Sinogram->N_r;i_r++) {
-        for(uint16_t i_t = 0;i_t < m_Sinogram->N_t;i_t++)
+    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+    { //slice index
+      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+      {
+        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
           //1000 is for Marc De Graef data which needed to multiplied
-          m_Sinogram->counts->d[i_theta][i_r][i_t] /= (m_BFSinogram->counts->d[i_theta][i_r][i_t]*1000);
+          m_Sinogram->counts->d[i_theta][i_r][i_t] /= (m_BFSinogram->counts->d[i_theta][i_r][i_t] * 1000);
         }
       }
     }
   }
 
 
-  // Now read or generate the Gains and Offsets data. We are scoping this section
-  // so the reader automactically gets cleaned up at this point.
-  {
-    TomoFilter::Pointer gainsOffsetsInitializer = TomoFilter::NullPointer();
+// Now read or generate the Gains and Offsets data.
+//    TomoFilter::Pointer gainsOffsetsInitializer = TomoFilter::NullPointer();
+//
+//    if(m_TomoInputs->offsetsInputFile.empty() == false) // Calculate the initial Offsets in case nothing is specified
+//    {
+//      gainsOffsetsInitializer = ComputeGainsOffsets::NewTomoFilter();
+//    }
+//    else
+//    {
+//      gainsOffsetsInitializer = GainsOffsetsReader::NewTomoFilter();
+//    }
+//    gainsOffsetsInitializer->setSinogram(m_Sinogram);
+//    gainsOffsetsInitializer->setTomoInputs(m_TomoInputs);
+//    gainsOffsetsInitializer->setObservers(getObservers());
+//    gainsOffsetsInitializer->execute();
+//    if(gainsOffsetsInitializer->getErrorCondition() < 0)
+//    {
+//      notify("Error initializing Input Gains and Offsets Data file", 100, Observable::UpdateProgressValueAndMessage);
+//      setErrorCondition(gainsOffsetsInitializer->getErrorCondition());
+//      return;
+//    }
 
-    if(m_TomoInputs->offsetsInputFile.empty() == true) // Calculate the initial Offsets in case nothing is specified
+/* ********************* Initialize the Gains Array **************************/
+    size_t gains_dims[1] = {m_Sinogram->N_theta};
+    m_Sinogram->InitialGain = RealArrayType::New(gains_dims);
+    if (m_TomoInputs->gainsInputFile.empty() == false)
     {
-      gainsOffsetsInitializer = ComputeGainsOffsets::NewTomoFilter();
+      // Read the initial Gains from a File
+      NuisanceParamReader::Pointer gainsInitializer = NuisanceParamReader::New();
+      gainsInitializer->setFileName(m_TomoInputs->gainsInputFile);
+      gainsInitializer->setData(m_Sinogram->InitialGain);
+      gainsInitializer->setSinogram(m_Sinogram);
+      gainsInitializer->setTomoInputs(m_TomoInputs);
+      gainsInitializer->setGeometry(m_Geometry);
+      gainsInitializer->setObservers(getObservers());
+      gainsInitializer->execute();
+      if(gainsInitializer->getErrorCondition() < 0)
+      {
+        notify("Error initializing Input Gains from Data file", 100, Observable::UpdateProgressValueAndMessage);
+        setErrorCondition(gainsInitializer->getErrorCondition());
+        return;
+      }
     }
     else
     {
-      gainsOffsetsInitializer = GainsOffsetsReader::NewTomoFilter();
+      // Set the values to the target gain value set by the user
+      for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+      {
+        m_Sinogram->InitialGain->d[i_theta] = m_TomoInputs->targetGain;
+      }
     }
-    gainsOffsetsInitializer->setSinogram(m_Sinogram);
-    gainsOffsetsInitializer->setTomoInputs(m_TomoInputs);
-    gainsOffsetsInitializer->setObservers(getObservers());
-    gainsOffsetsInitializer->execute();
-    if(gainsOffsetsInitializer->getErrorCondition() < 0)
-    {
-     notify("Error initializing Input Gains and Offsets Data file", 100, Observable::UpdateProgressValueAndMessage);
-     setErrorCondition(gainsOffsetsInitializer->getErrorCondition());
-     return;
-    }
-
-
     /********************REMOVE************************/
-    std::cout<<"HARD WIRED TARGET GAIN"<<std::endl;
-  m_Sinogram->targetGain = m_TomoInputs->targetGain;//TARGET_GAIN;
+    std::cout << "HARD WIRED TARGET GAIN" << std::endl;
+    m_Sinogram->targetGain = m_TomoInputs->targetGain; //TARGET_GAIN;
     std::cout << "Target Gain: " << m_Sinogram->targetGain << std::endl;
     /*************************************************/
 
 
-  }
+/* ********************* Initialize the Offsets Array **************************/
+    size_t offsets_dims[1] = {m_Sinogram->N_theta};
+    m_Sinogram->InitialOffset = RealArrayType::New(offsets_dims);
+    m_Sinogram->InitialOffset->setName("sinogram->InitialOffset");
+    if (m_TomoInputs->offsetsInputFile.empty() == false)
+    {
+      // Read the initial offsets from a File
+      NuisanceParamReader::Pointer offsetsInitializer = NuisanceParamReader::New();
+      offsetsInitializer->setFileName(m_TomoInputs->offsetsInputFile);
+      offsetsInitializer->setData(m_Sinogram->InitialOffset);
+      offsetsInitializer->setSinogram(m_Sinogram);
+      offsetsInitializer->setTomoInputs(m_TomoInputs);
+      offsetsInitializer->setGeometry(m_Geometry);
+      offsetsInitializer->setObservers(getObservers());
+      offsetsInitializer->execute();
+      if(offsetsInitializer->getErrorCondition() < 0)
+      {
+        notify("Error initializing Input Offsets from Data file", 100, Observable::UpdateProgressValueAndMessage);
+        setErrorCondition(offsetsInitializer->getErrorCondition());
+        return;
+      }
+    }
+    else if (m_TomoInputs->useDefaultOffset == true)
+    {
+      // Set the values to the default offset value set by the user
+      for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+      {
+        m_Sinogram->InitialOffset->d[i_theta] = m_TomoInputs->defaultOffset;
+      }
+    }
+    else
+    {
+      // Compute the initial offset values from the data
+      ComputeInitialOffsets::Pointer initializer = ComputeInitialOffsets::New();
+      initializer->setSinogram(m_Sinogram);
+      initializer->setTomoInputs(m_TomoInputs);
+      initializer->setObservers(getObservers());
+      initializer->execute();
+      if(initializer->getErrorCondition() < 0)
+      {
+        notify("Error initializing Input Gains and Offsets Data file", 100, Observable::UpdateProgressValueAndMessage);
+        setErrorCondition(initializer->getErrorCondition());
+        return;
+      }
+    }
+
+/* ********************* Initialize the Variances Array **************************/
+    size_t variance_dims[1] = {m_Sinogram->N_theta};
+    m_Sinogram->InitialVariance = RealArrayType::New(variance_dims);
+    m_Sinogram->InitialVariance->setName("sinogram->InitialVariance");
+    if(m_TomoInputs->varianceInputFile.empty() == false)
+    {
+      // Read the initial variances from a File
+      NuisanceParamReader::Pointer variancesInitializer = NuisanceParamReader::New();
+      variancesInitializer->setFileName(m_TomoInputs->varianceInputFile);
+      variancesInitializer->setData(m_Sinogram->InitialVariance);
+      variancesInitializer->setSinogram(m_Sinogram);
+      variancesInitializer->setTomoInputs(m_TomoInputs);
+      variancesInitializer->setGeometry(m_Geometry);
+      variancesInitializer->setObservers(getObservers());
+      variancesInitializer->execute();
+      if(variancesInitializer->getErrorCondition() < 0)
+      {
+        notify("Error initializing Input Offsets from Data file", 100, Observable::UpdateProgressValueAndMessage);
+        setErrorCondition(variancesInitializer->getErrorCondition());
+        return;
+      }
+    }
+    else
+    {
+      //  std::cout << "------------Initial Variance-----------" << std::endl;
+      for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+      {
+        m_Sinogram->InitialVariance->d[i_theta] = 1;
+        // std::cout << "Tilt: " << i_theta << "  Variance: " << sinogram->InitialVariance->d[i_theta] << std::endl;
+      }
+    }
+
+
+#if 1
+// Print out the Initial Gains, Offsets, Variances
+    std::cout << "Tilt\tGain\tOffset\tVariance" << std::endl;
+    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+    {
+
+       std::cout << i_theta << "\t" << m_Sinogram->InitialGain->d[i_theta]
+                                    << "\t" << m_Sinogram->InitialOffset->d[i_theta]
+                                    << "\t" << m_Sinogram->InitialVariance->d[i_theta] << std::endl;
+    }
+#endif
 
   // Initialize the Geometry data from a rough reconstruction
   {
@@ -465,7 +583,7 @@ void SOCEngine::execute()
     }
   }
 
-  //Scale and Offset Parameter Structures
+  //Gain, Offset and Variance Parameter Structures
   ScaleOffsetParamsPtr NuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
   NuisanceParams->I_0 = RealArrayType::NullPointer();
   NuisanceParams->mu = RealArrayType::NullPointer();
