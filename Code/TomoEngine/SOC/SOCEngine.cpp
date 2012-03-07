@@ -1562,16 +1562,16 @@ void SOCEngine::execute()
   //calculates Ax and returns a pointer to the memory block
  // Final_Sinogram=forwardProject(detectorResponse, H_t);
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
+  {
     for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
 
-        Final_Sinogram->d[i_theta][i_r][i_t]=m_Sinogram->counts->d[i_theta][i_r][i_t]-ErrorSino->d[i_theta][i_r][i_t];
+        Final_Sinogram->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - ErrorSino->d[i_theta][i_r][i_t];
       }
     }
-    }
+  }
 
   STOP_TIMER;
   PRINT_TIME("Forward Project");
@@ -2834,13 +2834,13 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     {
       for (int32_t k = 0; k < m_Geometry->N_x; k++)
       {
-  if(updateType == NonHomogeniousUpdate)
+        if(updateType == NonHomogeniousUpdate)
         {
           if(MagUpdateMap->d[j][k] > NH_Threshold)
           {
             MagUpdateMask->d[j][k] = 1;
             MagUpdateMap->d[j][k] = 0;
-          NumVoxelsToUpdate++;
+            NumVoxelsToUpdate++;
           }
           else
           {
@@ -2850,18 +2850,19 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         else if(updateType == HomogeniousUpdate)
         {
           MagUpdateMap->d[j][k] = 0;
-        NumVoxelsToUpdate++;
+          NumVoxelsToUpdate++;
         }
-  else if(updateType == RegularRandomOrderUpdate)
-    {
-      MagUpdateMap->d[j][k]=0;
-      NumVoxelsToUpdate++;
-    }
+        else if(updateType == RegularRandomOrderUpdate)
+        {
+          MagUpdateMap->d[j][k] = 0;
+          NumVoxelsToUpdate++;
+        }
 
         VisitCount->d[j][k] = 0;
       }
     }
      std::cout << indent <<"Number of voxels to update: "<<NumVoxelsToUpdate<<std::endl;
+
 #endif
 
     START_TIMER;

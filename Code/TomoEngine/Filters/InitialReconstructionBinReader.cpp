@@ -36,6 +36,10 @@
 
 #include "InitialReconstructionBinReader.h"
 
+#include <sstream>
+
+#include "MXA/Utilities/MXADir.h"
+
 #include "TomoEngine/SOC/SOCConstants.h"
 #include "TomoEngine/Common/EIMMath.h"
 
@@ -75,64 +79,67 @@ void InitialReconstructionBinReader::initializeData()
   //Read the Initial Reconstruction data into a 3-D matrix
   //If Interpolate flag is set then the input has only half the
   //number of voxels along each dimension as the output
-	FILE* Fp2=fopen("UpsampledObject.bin","w");
+	std::stringstream outPath;
+	outPath << input->tempDir << MXADir::Separator <<  "UpsampledObject.bin";
+	FILE* Fp2=fopen(outPath.str().c_str(),"wb");
   FILE* Fp=fopen(input->initialReconFile.c_str(),"r");
   std::cout<<"Reading Geom"<<std::endl;
 
   if(NULL != Fp)
   {
-	//If we need to interpolate
-	  std::cout<<input->InterpFlag<<std::endl;
-	if('1' == input->InterpFlag)
-	{
-		for (uint16_t i = 0; i < geometry->N_y/INTERP_FACTOR ; i++)
-		{
-			for (uint16_t j = 0; j < geometry->N_x/INTERP_FACTOR; j++)
-			{
-				for (uint16_t k = 0; k < geometry->N_z/INTERP_FACTOR; k++)
-				{
-					DATA_TYPE buffer;
-					fread((unsigned char*)(&buffer), sizeof(DATA_TYPE), 1, Fp);
-					//Voxel replicate
-					for(uint16_t p=0 ; p <INTERP_FACTOR;p++)
-					for(uint16_t q=0 ; q <INTERP_FACTOR;q++)
-					for(uint16_t r=0 ; r <INTERP_FACTOR;r++)
-					{
-					geometry->Object->d[INTERP_FACTOR*k+p][INTERP_FACTOR*j+q][INTERP_FACTOR*i+r] = buffer;
-					}
-				}
-			}
-		}
-	}
-	else
-	{
+    //If we need to interpolate
+    std::cout << input->InterpFlag << std::endl;
+    if('1' == input->InterpFlag)
+    {
+      for (uint16_t i = 0; i < geometry->N_y / INTERP_FACTOR; i++)
+      {
+        for (uint16_t j = 0; j < geometry->N_x / INTERP_FACTOR; j++)
+        {
+          for (uint16_t k = 0; k < geometry->N_z / INTERP_FACTOR; k++)
+          {
+            DATA_TYPE buffer;
+            fread((unsigned char*)(&buffer), sizeof(DATA_TYPE), 1, Fp);
+            //Voxel replicate
+            for (uint16_t p = 0; p < INTERP_FACTOR; p++)
+              for (uint16_t q = 0; q < INTERP_FACTOR; q++)
+                for (uint16_t r = 0; r < INTERP_FACTOR; r++)
+                {
+                  geometry->Object->d[INTERP_FACTOR * k + p][INTERP_FACTOR * j + q][INTERP_FACTOR * i + r] = buffer;
+                }
+          }
+        }
+      }
+    }
+    else
+    {
+      for (uint16_t i = 0; i < geometry->N_y; i++)
+      {
+        for (uint16_t j = 0; j < geometry->N_x; j++)
+        {
+          for (uint16_t k = 0; k < geometry->N_z; k++)
+          {
+            DATA_TYPE buffer;
+            fread((unsigned char*)(&buffer), sizeof(DATA_TYPE), 1, Fp);
+            geometry->Object->d[k][j][i] = buffer;
+          }
+        }
+      }
+    }
+    fclose(Fp);
+    notify("Done Reading Initial Reconstruction", 0, UpdateProgressMessage);
+    notify("Writng Upsampled File....", 0, UpdateProgressMessage);
     for (uint16_t i = 0; i < geometry->N_y; i++)
     {
       for (uint16_t j = 0; j < geometry->N_x; j++)
       {
         for (uint16_t k = 0; k < geometry->N_z; k++)
         {
-          DATA_TYPE buffer;
-          fread((unsigned char*)(&buffer), sizeof(DATA_TYPE), 1, Fp);
-          geometry->Object->d[k][j][i] = buffer;
+          DATA_TYPE buffer = geometry->Object->d[k][j][i];
+          fwrite(&buffer, sizeof(double), 1, Fp2);
         }
       }
     }
-	}
-    fclose(Fp);
-    notify("Done Reading Initial Reconstruction", 0, UpdateProgressMessage);
-	  for (uint16_t i = 0; i < geometry->N_y; i++)
-	  {
-		  for (uint16_t j = 0; j < geometry->N_x; j++)
-		  {
-			  for (uint16_t k = 0; k < geometry->N_z; k++)
-			  {
-				  DATA_TYPE buffer=geometry->Object->d[k][j][i];
-				  fwrite(&buffer, sizeof(double), 1, Fp2);
-			  }
-		  }
-	  }
-	  fclose(Fp2);
+    fclose(Fp2);
   }
 }
 
