@@ -2861,7 +2861,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         VisitCount->d[j][k] = 0;
       }
     }
-     std::cout << indent <<"Number of voxels to update: "<<NumVoxelsToUpdate<<std::endl;
+     std::cout << indent <<"Number of voxel lines to update: "<<NumVoxelsToUpdate<<std::endl;
 #endif
 
     START_TIMER;
@@ -2955,8 +2955,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                       }
                       else
                       {
-            NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object->d[j_new][k_new][i];//So that influence is zero
-                        BOUNDARYFLAG[p + 1][q + 1][r + 1] = 0;
+                         BOUNDARYFLAG[p + 1][q + 1][r + 1] = 0;
                       }
                     }
                   }
@@ -3187,7 +3186,7 @@ void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax,DATA_TY
   for(i=0;i<3;i++)
     for (j=0; j < 3; j++)
       for(k=0; k < 3;k++)
-        if(i != 1 || j !=1 || k != 1)
+        if ((i != 1 || j !=1 || k != 1) &&  BOUNDARYFLAG[i][j][k] == 1)
       /*  {
           Delta0 = V - NEIGHBORHOOD[i][j][k];
           DeltaMin = umin - NEIGHBORHOOD[i][j][k];
@@ -3255,7 +3254,7 @@ DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
     for (j=0; j < 3; j++)
       for(k=0; k < 3; k++)
       {
-        if((i != 1 || j != 1 || k != 1))
+        if((i != 1 || j != 1 || k != 1) && BOUNDARYFLAG[i][j][k] == 1)
         /*{
           temp1 += FILTER[i][j][k]*QGGMRF_Params[count][1];
           temp2 += FILTER[i][j][k]*QGGMRF_Params[count][0];
@@ -3267,7 +3266,6 @@ DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
           temp2 += temp_const;
           count++;
         }
-
       }
   u=(temp1+ (THETA2*V) - THETA1)/(temp2 + THETA2);
 

@@ -41,14 +41,14 @@
 
 #include <string>
 //#define FORWARD_PROJECT_MODE
-#define EXTEND_OBJECT
+//#define EXTEND_OBJECT
 #define X_SHRINK_FACTOR 0.6
 //#define TARGET_GAIN 7872950.013398
 
 #define X_STRETCH 1
 #define Z_STRETCH 2
 
-#define INTERPOLATE_FACTOR 24
+#define INTERPOLATE_FACTOR 8
 //#define DEBUG ,
 #define PROFILE_RESOLUTION 1536
 //#define PI 4*atan(1)//3.14159265
@@ -67,7 +67,7 @@
 #define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
 #define SURROGATE_FUNCTION
 #define QGGMRF
-#define QGGMRF_ITER 4
+#define QGGMRF_ITER 3
 //#define DISTANCE_DRIVEN
 //#define CORRECTION
 //#define WRITE_INTERMEDIATE_RESULTS
