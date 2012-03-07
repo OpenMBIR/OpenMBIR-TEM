@@ -3181,6 +3181,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 //Function to compute parameters of thesurrogate function
 void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax,DATA_TYPE RefValue)
 {
+
   DATA_TYPE Delta0,DeltaMin,DeltaMax,T,Derivative_Delta0;
   DATA_TYPE AbsDelta0,AbsDeltaMin,AbsDeltaMax;
   uint8_t i,j,k,count=0;
@@ -3235,7 +3236,6 @@ void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax,DATA_TY
           //QGGMRF_Params[count][1] = CE_QGGMRF_Value(Delta0) - (Delta0/2)*CE_QGGMRF_Derivative(Delta0);
           count++;
         }
-
 
 }
 

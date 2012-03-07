@@ -65,9 +65,15 @@
 #define STOPPING_THRESHOLD_Delta_k 0.001
 #define STOPPING_THRESHOLD_Var_k 0.001
 #define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
+<<<<<<< HEAD
 //#define SURROGATE_FUNCTION
 //#define QGGMRF
 //#define QGGMRF_ITER 1
+=======
+#define SURROGATE_FUNCTION
+#define QGGMRF
+#define QGGMRF_ITER 4
+>>>>>>> f323b1b310234cbd11ea92382401f18d6432a304
 //#define DISTANCE_DRIVEN
 //#define CORRECTION
 //#define WRITE_INTERMEDIATE_RESULTS
