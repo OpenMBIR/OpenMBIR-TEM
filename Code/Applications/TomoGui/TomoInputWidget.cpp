@@ -102,7 +102,7 @@ void TomoInputWidget::readSettings(QSettings &prefs)
   qint32 i;
   double d;
   prefs.beginGroup(interationIndex->text());
-  std::cout << "Reading Settings for Index " << interationIndex->text().toStdString() << std::endl;
+ // std::cout << "Reading Settings for Index " << interationIndex->text().toStdString() << std::endl;
 
 
   READ_STRING_SETTING(prefs, interationIndex, "");
@@ -113,7 +113,8 @@ void TomoInputWidget::readSettings(QSettings &prefs)
   READ_SETTING(prefs, mrf, ok, d, 0.00001, Double)
   READ_SETTING(prefs, xyPixelMultiple, ok, i, 1, Int)
   READ_SETTING(prefs, xzPixelMultiple, ok, i, 1, Int)
-
+  READ_BOOL_SETTING(prefs, useDefaultOffset, false)
+  READ_STRING_SETTING(prefs, defaultOffset, "0")
   prefs.endGroup();
 }
 
@@ -123,12 +124,12 @@ void TomoInputWidget::readSettings(QSettings &prefs)
 void TomoInputWidget::writeSettings(QSettings &prefs)
 {
   QString val;
-//  bool ok;
+  bool ok;
 //  qint32 i;
 //  double d;
 
   prefs.beginGroup(interationIndex->text());
-  std::cout << "Writing Settings for Index " << interationIndex->text().toStdString() << std::endl;
+  //std::cout << "Writing Settings for Index " << interationIndex->text().toStdString() << std::endl;
 
 
   WRITE_STRING_SETTING(prefs, interationIndex);
@@ -139,7 +140,8 @@ void TomoInputWidget::writeSettings(QSettings &prefs)
   WRITE_SETTING(prefs, mrf)
   WRITE_SETTING(prefs, xyPixelMultiple)
   WRITE_SETTING(prefs, xzPixelMultiple)
-
+  WRITE_BOOL_SETTING(prefs, useDefaultOffset, useDefaultOffset->isChecked())
+  WRITE_STRING_SETTING(prefs, defaultOffset)
   prefs.endGroup();
 }
 
@@ -161,6 +163,9 @@ void TomoInputWidget::setupGui()
 
   QDoubleValidator* sigVal = new QDoubleValidator(this);
   sigmaX->setValidator(sigVal);
+
+  QDoubleValidator* offsetVal = new QDoubleValidator(this);
+  defaultOffset->setValidator(offsetVal);
 
 }
 
@@ -239,5 +244,14 @@ int TomoInputWidget::getXYPixelMultiple()
 int TomoInputWidget::getXZPixelMultiple()
 {
   return xzPixelMultiple->value();
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+double TomoInputWidget::getDefaultOffset()
+{
+  bool ok = false;
+  return defaultOffset->text().toDouble(&ok);
 }
 

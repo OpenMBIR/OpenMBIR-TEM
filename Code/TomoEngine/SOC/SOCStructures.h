@@ -153,6 +153,8 @@ namespace SOC {
     DATA_TYPE delta_xy;//Voxel size in the x-y plane
 
     DATA_TYPE targetGain;
+    DATA_TYPE defaultOffset;
+
     /* These are input files */
     std::string sinoFile; /* .mrc formatted files are accepted currently */
     std::string initialReconFile;

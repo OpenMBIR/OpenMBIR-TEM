@@ -177,6 +177,7 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
    v->delta_xz = 0;
    v->delta_xy = 0;
    v->tiltSelection = SOC::A_Tilt;
+   v->defaultOffset = 0.0;
 }
 
 // -----------------------------------------------------------------------------

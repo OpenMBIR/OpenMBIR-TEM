@@ -199,7 +199,7 @@ void TomoGui::readSettings(QSettings &prefs)
   QString val;
   bool ok;
   qint32 i;
-  double d;
+ // double d;
   prefs.beginGroup("Parameters");
 
 
@@ -726,6 +726,7 @@ void TomoGui::initializeSOCEngine()
       inputs->p = tiw->getMRF();
       inputs->delta_xy = tiw->getXYPixelMultiple();
       inputs->delta_xz = tiw->getXZPixelMultiple();
+      inputs->defaultOffset = tiw->getDefaultOffset();
 
       QString path;
 
