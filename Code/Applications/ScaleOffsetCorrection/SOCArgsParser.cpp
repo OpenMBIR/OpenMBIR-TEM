@@ -158,6 +158,9 @@ int SOCArgsParser::parseArguments(int argc, char **argv, TomoInputs* inputs, Tom
   TCLAP::ValueArg<std::string> in_Offsets("", "offsets", "Initial Offsets to use.", false, "", "");
   cmd.add(in_Offsets);
 
+  TCLAP::ValueArg<double> in_DefaultOffset("", "defaultOffset", "Default offset for all Tilts", false, 0.0, "");
+  cmd.add(in_DefaultOffset);
+
   TCLAP::ValueArg<std::string> in_Variance("", "variance", "Initial Variance to use.", false, "", "");
   cmd.add(in_Variance);
 
@@ -271,6 +274,15 @@ int SOCArgsParser::parseArguments(int argc, char **argv, TomoInputs* inputs, Tom
       bf_inputs->yEnd = subvolumeValues[4];
       bf_inputs->zStart = subvolumeValues[2];
       bf_inputs->zEnd = subvolumeValues[5];
+    }
+
+    for(int i = 0; i < argc; ++i)
+    {
+      if ( ::strncmp(argv[i], "--defaultOffset", 15) == 0)
+      {
+        inputs->useDefaultOffset = true;
+        inputs->defaultOffset = in_DefaultOffset.getValue();
+      }
     }
 
     inputs->delta_xz = xz_size.getValue();
