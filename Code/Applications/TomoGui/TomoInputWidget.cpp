@@ -102,7 +102,7 @@ void TomoInputWidget::readSettings(QSettings &prefs)
   qint32 i;
   double d;
   prefs.beginGroup(interationIndex->text());
- // std::cout << "Reading Settings for Index " << interationIndex->text().toStdString() << std::endl;
+  std::cout << "Reading Settings for Index " << interationIndex->text().toStdString() << std::endl;
 
 
   READ_STRING_SETTING(prefs, interationIndex, "");
@@ -249,9 +249,16 @@ int TomoInputWidget::getXZPixelMultiple()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-double TomoInputWidget::getDefaultOffset()
+double TomoInputWidget::getUserDefinedOffset()
 {
   bool ok = false;
   return defaultOffset->text().toDouble(&ok);
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+bool TomoInputWidget::useDefinedOffset()
+{
+  return useDefaultOffset->isChecked();
+}

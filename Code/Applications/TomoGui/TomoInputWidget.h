@@ -76,7 +76,8 @@ class TomoInputWidget : public QWidget, private Ui::TomoInputWidget
     double getMRF();
     int getXYPixelMultiple();
     int getXZPixelMultiple();
-    double getDefaultOffset();
+    double getUserDefinedOffset();
+    bool useDefinedOffset();
 
   protected slots:
 

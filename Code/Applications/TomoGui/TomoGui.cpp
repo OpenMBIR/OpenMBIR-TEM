@@ -236,19 +236,19 @@ void TomoGui::readSettings(QSettings &prefs)
 
   if (nRes > 0)
   {
-    TomoInputWidget* tiw = qobject_cast<TomoInputWidget*>(m_TomoInputs.at(0));
-    if (NULL != tiw)
+    // We start at 1 because setupGui has already placed a widget in the Layout
+    for(int i = 1; i < nRes; ++i)
     {
-      tiw->readSettings(prefs);
+      on_addResolution_clicked();
     }
-  }
-  for(int i = 1; i < nRes; ++i)
-  {
-    on_addResolution_clicked();
-    TomoInputWidget* tiw = qobject_cast<TomoInputWidget*>(m_TomoInputs.at(i));
-    if (NULL != tiw)
+    // Now that all the widgets are in the layout, have each one read from the prefs
+    for(int i = 0; i < nRes; ++i)
     {
-      tiw->readSettings(prefs);
+      TomoInputWidget* tiw = qobject_cast<TomoInputWidget*>(m_TomoInputs.at(i));
+      if (NULL != tiw)
+      {
+        tiw->readSettings(prefs);
+      }
     }
   }
 
@@ -726,7 +726,8 @@ void TomoGui::initializeSOCEngine()
       inputs->p = tiw->getMRF();
       inputs->delta_xy = tiw->getXYPixelMultiple();
       inputs->delta_xz = tiw->getXZPixelMultiple();
-      inputs->defaultOffset = tiw->getDefaultOffset();
+      inputs->defaultOffset = tiw->getUserDefinedOffset();
+      inputs->useDefaultOffset = tiw->useDefinedOffset();
 
       QString path;
 
@@ -759,7 +760,7 @@ void TomoGui::initializeSOCEngine()
       }
 
       inputs->LengthZ = sampleThickness->text().toDouble(&ok);
-      inputs->targetGain = targetGain->text().toInt(&ok);
+      inputs->targetGain = targetGain->text().toDouble(&ok);
 
       std::vector<uint8_t> viewMasks;
       QVector<bool> excludedViews = m_GainsOffsetsTableModel->getExcludedTilts();
