@@ -102,7 +102,7 @@ class DerivOfCostFunc
       //scanf("Enter value %d\n",&k);
       value = THETA1 + THETA2 * (u - V) + (temp / SIGMA_X_P);
 
-      return value;
+		return value;
     }
 
   protected:

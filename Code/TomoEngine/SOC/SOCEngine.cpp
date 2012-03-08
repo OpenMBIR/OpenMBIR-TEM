@@ -549,7 +549,7 @@ void SOCEngine::execute()
   SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
 #else
   MRF_P = 2;
-  MRF_Q = 1.2;
+  MRF_Q = 1.0;
   MRF_C = 0.01;
   MRF_ALPHA = 1.5;
   SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
@@ -3272,7 +3272,7 @@ DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
     if(Iter < QGGMRF_ITER-1)
       RefValue = Clip(RefValue + MRF_ALPHA*(u-RefValue),umin,umax);
     else {
-      RefValue = Clip(u, umin, umax);
+		RefValue = Clip(u, umin, umax);
     }
 
   }
