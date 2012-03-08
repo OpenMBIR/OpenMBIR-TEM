@@ -106,9 +106,9 @@ namespace ScaleOffsetCorrection
   const std::string FilteredMagMapFile("FilteredMagMap.bin");
   const std::string MagnitudeMapFile("MagnitudeMap.bin");
 
-  const std::string VtkGeometryFile("ReconstructedData.vtk");
-  const std::string ReconstructedSinogramFile("ReconstructedVolume.bin");
-  //const std::string ReconstructedVolumeFile("ReconstructedVolume.mrc");
+  const std::string ReconstructedVtkFile("ReconstructedVolume.vtk");
+  const std::string ReconstructedBinFile("ReconstructedVolume.bin");
+  const std::string ReconstructedMrcFile("ReconstructedVolume.mrc");
 
   namespace VTK
   {

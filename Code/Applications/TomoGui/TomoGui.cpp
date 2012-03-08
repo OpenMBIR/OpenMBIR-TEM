@@ -407,7 +407,7 @@ void TomoGui::setupGui()
 
   m_TomoInputs.push_back(tomoInputWidget);
 
-
+  outputFilePath->setText("");
 
 
   QMenu* zoomMenu = new QMenu(this);
@@ -738,11 +738,12 @@ void TomoGui::initializeSOCEngine()
       path = QDir::toNativeSeparators(inputMRCFilePath->text());
       inputs->sinoFile = path.toStdString();
 
-      path = QDir::toNativeSeparators(initialReconstructionPath->text());
+    //  path = QDir::toNativeSeparators(initialReconstructionPath->text());
     //  inputs->initialReconFile = path.toStdString();
 
       path = QDir::toNativeSeparators(tempDirPath->text());
       inputs->tempDir = path.toStdString();
+
 
       bool ok = false;
 

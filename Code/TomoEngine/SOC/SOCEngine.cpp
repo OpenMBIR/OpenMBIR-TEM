@@ -1741,7 +1741,7 @@ void SOCEngine::execute()
 
 
   std::string vtkFile(m_TomoInputs->tempDir);
-  vtkFile = vtkFile.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::VtkGeometryFile);
+  vtkFile = vtkFile.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedVtkFile);
 
   VTKStructuredPointsFileWriter vtkWriter;
   vtkWriter.setWriteBinaryFiles(true);
