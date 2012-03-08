@@ -103,7 +103,7 @@ void InitialReconstructionInitializer::execute()
 
 
   DATA_TYPE sum=0,max;
-	
+
 	//uint16_t interpolation_factor=24;//TODO: Need to Remove this
 	//DATA_TYPE res=3;
 
@@ -114,14 +114,14 @@ void InitialReconstructionInitializer::execute()
 
 #ifndef FORWARD_PROJECT_MODE
     input->LengthZ *= Z_STRETCH;
-	input->LengthZ/=INTERPOLATE_FACTOR;
+	input->LengthZ/=input->interpolateFactor;
 	//interpolation_factor;
-	input->LengthZ=round(input->LengthZ)*INTERPOLATE_FACTOR;//interpolation_factor;
+	input->LengthZ=round(input->LengthZ)*input->interpolateFactor;//interpolation_factor;
 
 #ifdef EXTEND_OBJECT
   geometry->LengthX = X_SHRINK_FACTOR*((sinogram->N_r * sinogram->delta_r)/cos(max*M_PI/180)) + input->LengthZ*tan(max*M_PI/180) ;
-  geometry->LengthX/=INTERPOLATE_FACTOR;
-  geometry->LengthX=round(geometry->LengthX)*INTERPOLATE_FACTOR;
+  geometry->LengthX/=input->interpolateFactor;
+  geometry->LengthX=round(geometry->LengthX)*input->interpolateFactor;
 #else
   geometry->LengthX = ((sinogram->N_r * sinogram->delta_r));
 #endif //Extend object endif
@@ -140,13 +140,13 @@ void InitialReconstructionInitializer::execute()
 	printf("Geometry->LengthX=%lf nm \n",geometry->LengthX);
 	printf("Geometry->LengthY=%lf nm \n",geometry->LengthY);
 	printf("Geometry->LengthZ=%lf nm \n",input->LengthZ);
-	
-	
+
+
   printf("Geometry->Nz=%d\n",geometry->N_z);
   printf("Geometry->Nx=%d\n",geometry->N_x);
   printf("Geometry->Ny=%d\n",geometry->N_y);
-	
-	
+
+
 
   size_t dims[3] = {geometry->N_z, geometry->N_x, geometry->N_y};
   geometry->Object  = RealVolumeType::New(dims);

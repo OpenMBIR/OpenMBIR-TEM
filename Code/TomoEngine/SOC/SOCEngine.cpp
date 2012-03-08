@@ -155,6 +155,7 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
    v->offsetsInputFile = "";
    v->varianceInputFile = "";
    v->InterpFlag=0;
+   v->interpolateFactor=1.0;
    v->reconstructedOutputFile = "";
    v->tempDir = "";
    v->NumIter = 0;

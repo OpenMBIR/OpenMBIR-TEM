@@ -165,8 +165,8 @@ int SOCArgsParser::parseArguments(int argc, char **argv, TomoInputs* inputs, Tom
   cmd.add(in_Variance);
 
   //Whether to interpolate initial file or not
-  TCLAP::ValueArg<uint8_t> in_InterpFlag("", "interpolate", "Iterpolate Initial Reconstruction", false, 0, "");
-  cmd.add(in_InterpFlag);
+  TCLAP::ValueArg<double> in_InterpFactor("", "interpFactor", "Interpolate Factor", false, 0.0, "");
+  cmd.add(in_InterpFactor);
 
   TCLAP::ValueArg<std::string> in_outputFile("o", "outputfile", "The Output File", true, "", "");
   cmd.add(in_outputFile);
@@ -224,7 +224,16 @@ int SOCArgsParser::parseArguments(int argc, char **argv, TomoInputs* inputs, Tom
     inputs->reconstructedOutputFile = in_outputDir.getValue() + MXADir::getSeparator() + in_outputFile.getValue();
     inputs->sinoFile = in_sinoFile.getValue();
     inputs->initialReconFile = in_InitialRecon.getValue();
-    inputs->InterpFlag = in_InterpFlag.getValue();
+
+    if (in_InterpFactor.getValue() == 0)
+    {
+      inputs->InterpFlag = 0;
+    }
+    else
+    {
+      inputs->InterpFlag = 1;
+      inputs->interpolateFactor = in_InterpFactor.getValue();
+    }
 
     bf_inputs->sinoFile = in_BrightField.getValue();
 

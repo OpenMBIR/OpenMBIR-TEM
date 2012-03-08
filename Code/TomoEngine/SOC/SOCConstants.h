@@ -49,7 +49,7 @@
 #define Z_STRETCH 2
 
 
-#define INTERPOLATE_FACTOR 24 //8 times the final desired resolution multilple
+//#define INTERPOLATE_FACTOR 8 //8 times the final desired resolution multilple
 
 //#define DEBUG ,
 #define PROFILE_RESOLUTION 1536

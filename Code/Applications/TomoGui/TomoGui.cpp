@@ -711,6 +711,7 @@ void TomoGui::initializeSOCEngine()
   std::vector<TomoInputsPtr> inputVector;
 
   // Loop over all of the Input Resolution Widgets and gather the values
+  double interpolationFactor = 1.0;
   int count = m_TomoInputs.count();
   for (int i = 0; i < count; ++i)
   {
@@ -728,6 +729,8 @@ void TomoGui::initializeSOCEngine()
       inputs->delta_xz = tiw->getXZPixelMultiple();
       inputs->defaultOffset = tiw->getUserDefinedOffset();
       inputs->useDefaultOffset = tiw->useDefinedOffset();
+      if (inputs->delta_xy > interpolationFactor) { interpolationFactor = inputs->delta_xy;}
+      inputs->interpolateFactor = interpolationFactor;
 
       QString path;
 
