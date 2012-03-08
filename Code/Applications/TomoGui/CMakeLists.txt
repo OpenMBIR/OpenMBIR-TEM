@@ -45,7 +45,7 @@ include_directories( ${EIMTomo_BINARY_DIR}/QtSupport )
 
 set(CLASS_NAME "MultiResolutionSOC")
 SET(ENGINE_INCLUDE_PATH "TomoEngine/SOC")
-configure_file( ${PROJECT_CODE_DIR}/QtSupport/QFilterPipelineWrapper.h.in
+configure_file( ${PROJECT_CODE_DIR}/QtSupport/QObserverWrapper.h.in
                 ${TomoGui_BINARY_DIR}/Q${CLASS_NAME}.h @ONLY IMMEDIATE)
                 
 # --------------------------------------------------------------------

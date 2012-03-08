@@ -1,5 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2010, Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -12,9 +13,10 @@
  * list of conditions and the following disclaimer in the documentation and/or
  * other materials provided with the distribution.
  *
- * Neither the name of Michael A. Jackson nor the names of its contributors may
- * be used to endorse or promote products derived from this software without
- * specific prior written permission.
+ * Neither the name of Singanallur Venkatakrishnan, Michael A. Jackson, the Pudue
+ * Univeristy, BlueQuartz Software nor the names of its contributors may be used
+ * to endorse or promote products derived from this software without specific
+ * prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -26,69 +28,48 @@
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- //
- //  This code was written under United States Air Force Contract number
- //                           FA8650-07-D-5800
- //
+ *
+ *  This code was written under United States Air Force Contract number
+ *                           FA8650-07-D-5800
+ *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-#ifndef TOMOINPUTWIDGET_H_
-#define TOMOINPUTWIDGET_H_
 
 
-#include <QtCore/QObject>
-#include <QtCore/QSettings>
-#include <QtGui/QWidget>
-
-#include "ui_TomoInputWidget.h"
+#ifndef COMPUTEGAINSOFFETS_H_
+#define COMPUTEGAINSOFFETS_H_
 
 
-
+#include "MXA/MXA.h"
+#include "MXA/Common/MXASetGetMacros.h"
+#include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Filters/TomoFilter.h"
+#include "TomoEngine/SOC/SOCStructures.h"
+#include "TomoEngine/Common/allocate.h"
+#include "TomoEngine/Common/EIMMath.h"
+#include "TomoEngine/SOC/SOCConstants.h"
 
 /*
  *
  */
-class TomoInputWidget : public QWidget, private Ui::TomoInputWidget
+class TomoEngine_EXPORT ComputeInitialOffsets : public TomoFilter
 {
-  Q_OBJECT;
-
   public:
-    TomoInputWidget(QWidget *parent = 0);
-    virtual ~TomoInputWidget();
+    MXA_SHARED_POINTERS(ComputeInitialOffsets)
+    MXA_STATIC_NEW_MACRO(ComputeInitialOffsets);
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, ComputeInitialOffsets);
+    MXA_TYPE_MACRO_SUPER(ComputeInitialOffsets, TomoFilter)
 
-    /**
-     * @brief Reads the Preferences from the users pref file
-     */
-    void readSettings(QSettings &prefs);
+    virtual ~ComputeInitialOffsets();
 
-    /**
-     * @brief Writes the preferences to the users pref file
-     */
-    void writeSettings(QSettings &prefs);
-
-    void setResolutionMultiple(int x);
-    void setIndexLabel(int i);
-
-    double getStopThreshold();
-    int getOuterIterations();
-    int getInnerIterations();
-    double getSigmaX();
-    double getMRF();
-    int getXYPixelMultiple();
-    int getXZPixelMultiple();
-    double getUserDefinedOffset();
-    bool useDefinedOffset();
-
-  protected slots:
+    virtual void execute();
 
 
   protected:
-    void setupGui();
-
+    ComputeInitialOffsets();
 
   private:
-    TomoInputWidget(const TomoInputWidget&); // Copy Constructor Not Implemented
-    void operator=(const TomoInputWidget&); // Operator '=' Not Implemented
+    ComputeInitialOffsets(const ComputeInitialOffsets&); // Copy Constructor Not Implemented
+    void operator=(const ComputeInitialOffsets&); // Operator '=' Not Implemented
 };
 
-#endif /* TOMOINPUTWIDGET_H_ */
+#endif /* COMPUTEGAINSOFFETS_H_ */

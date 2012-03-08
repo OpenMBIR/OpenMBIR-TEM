@@ -180,19 +180,19 @@ if (EIMTomo_BUILD_GUI)
    # this command finds Qt4 libraries and sets all required variables
    # note that it's Qt4, not QT4 or qt4
     FIND_PACKAGE( Qt4 REQUIRED )
-    message(STATUS "QT_INCLUDE_DIR: ${QT_INCLUDE_DIR}")
-    message(STATUS "QT_USE_FRAMEWORKS: ${QT_USE_FRAMEWORKS}")
+  #  message(STATUS "QT_INCLUDE_DIR: ${QT_INCLUDE_DIR}")
+  #  message(STATUS "QT_USE_FRAMEWORKS: ${QT_USE_FRAMEWORKS}")
     IF (QT4_FOUND)
         CMP_COPY_QT4_RUNTIME_LIBRARIES( "QtCore;QtGui")
         CMP_QT_LIBRARIES_INSTALL_RULES("QtCore;QtGui" ".")
     endif()
-    message(STATUS "QT_INCLUDE_DIR: ${QT_INCLUDE_DIR}")
+ #   message(STATUS "QT_INCLUDE_DIR: ${QT_INCLUDE_DIR}")
     # add some useful macros and variables
     # (QT_USE_FILE is a variable defined by FIND_PACKAGE( Qt4 ) that 
     # contains a path to CMake script)
     INCLUDE( ${QT_USE_FILE} )
-    message(STATUS "QT_INCLUDE_DIR: ${QT_INCLUDE_DIR}")
-    message(STATUS "QT_USE_FRAMEWORKS: ${QT_USE_FRAMEWORKS}")
+ #   message(STATUS "QT_INCLUDE_DIR: ${QT_INCLUDE_DIR}")
+ #   message(STATUS "QT_USE_FRAMEWORKS: ${QT_USE_FRAMEWORKS}")
     # Append the locations of the Qt libraries to our Library Search Paths
     list(APPEND CMP_LIB_SEARCH_DIRS ${QT_BINARY_DIR} ${QT_LIBRARY_DIR} )
    

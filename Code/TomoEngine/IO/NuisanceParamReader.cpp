@@ -1,6 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2011 Michael A. Jackson (BlueQuartz Software)
- * Copyright (c) 2011 Singanallur Venkatakrishnan (Purdue University)
+ * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -35,136 +35,87 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-
-#include "NuisanceParamWriter.h"
+#include "NuisanceParamReader.h"
 
 #include <stdio.h>
 
 #include <string>
-#include <sstream>
 
 #include "MXA/Utilities/MXADir.h"
 
-#include "TomoEngine/SOC/SOCConstants.h"
 
 
 
-#define MAKE_OUTPUT_FILE(Fp, err, outdir, filename)\
-    {\
-    std::string filepath(outdir);\
-    filepath = filepath.append(MXADir::getSeparator()).append(filename);\
-    errno = 0;\
-    err = 0;\
-    Fp = fopen(filepath.c_str(),"wb");\
-    if (Fp == NULL) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl; err = -1; }\
-    }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-NuisanceParamWriter::NuisanceParamWriter() :
-m_WriteBinary(true),
-m_NuisanceParams(NULL)
+NuisanceParamReader::NuisanceParamReader()
 {
+
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-NuisanceParamWriter::~NuisanceParamWriter()
+NuisanceParamReader::~NuisanceParamReader()
 {
+
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void NuisanceParamWriter::execute()
+void NuisanceParamReader::execute()
 {
-  std::stringstream ss;
-  if(NULL == getTomoInputs())
-  {
-    setErrorCondition(-1);
-    setErrorMessage("NuisanceBinWriter::TomoInputs not initialized Correctly");
-    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-    return;
-  }
   if(NULL == getSinogram())
-  {
-    setErrorCondition(-1);
-    setErrorMessage("NuisanceBinWriter::Sinogram not initialized Correctly");
-    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-    return;
-  }
-  if(NULL == m_NuisanceParams)
-  {
-    setErrorCondition(-1);
-    setErrorMessage("NuisanceBinWriter:: NuisanceParams not initialized Correctly");
-    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-    return;
-  }
+   {
+     setErrorCondition(-1);
+     setErrorMessage("NuisanceParamReader::Sinogram not initialized Correctly");
+     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+     return;
+   }
 
 //  std::string filepath(getTomoInputs()->tempDir);
 //  filepath = filepath.append(MXADir::getSeparator()).append(m_FileName);
 
-  FILE* file = fopen(m_FileName.c_str(), "wb");
-  if(file == 0)
+  if (m_Data->getNDims() != 1)
   {
-    ss.str("");
-    ss << "NuisanceBinWriter: Error opening output file for writing. '" <<
-        m_FileName << "'";
     setErrorCondition(-1);
-    setErrorMessage(ss.str());
+    setErrorMessage("NuisanceParamReader: DataArray should only have 1 dimension.");
+    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+    return;
+  }
+  if ( *(m_Data->getDims()) != getSinogram()->N_theta)
+  {
+    setErrorCondition(-1);
+    setErrorMessage("NuisanceParamReader: DataArray does not have the correct size. It should be SingoGram->N_theta length.");
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
 
-  RealArrayType::Pointer src = RealArrayType::NullPointer();
-  std::string printTitle("UNKNOWN DATA");
-  switch(m_DataToWrite)
-  {
-    case Nuisance_I_O:
-      src = m_NuisanceParams->I_0;
-      printTitle = "Gains";
-      break;
-    case Nuisance_mu:
-      src = m_NuisanceParams->mu;
-      printTitle = "Offsets";
-      break;
-    case Nuisance_alpha:
-      src = m_NuisanceParams->alpha;
-      printTitle = "Variances";
-      break;
-    default:
-      break;
-  }
-  if(NULL == src.get() || NULL == src->d)
+  FILE* file = fopen(m_FileName.c_str(), "rb");
+  if(file == 0)
   {
     setErrorCondition(-1);
-    setErrorMessage("NuisanceBinWriter: The array to write was NULL");
+    setErrorMessage("NuisanceParamReader:  Error opening output file for writing");
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
-  if(m_WriteBinary == true)
+
+  size_t nItems = fread(m_Data->getPointer(), m_Data->getTypeSize(), getSinogram()->N_theta, file);
+  fclose(file);
+
+  if (nItems != getSinogram()->N_theta)
   {
-    fwrite(src->d, sizeof(DATA_TYPE), getSinogram()->N_theta, file);
+    setErrorCondition(-1);
+    setErrorMessage("NuisanceParamReader: Error Reading Values from file");
+    notify(getErrorMessage().c_str(), 0, Observable::UpdateErrorMessage);
   }
   else
   {
-    for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
-    {
-      fprintf(file, "%lf\n", src->d[i_theta]);
-    }
+    setErrorCondition(0);
+    setErrorMessage("");
+    notify("Done Reading the NuisanceParameters", 0, UpdateProgressMessage);
   }
-  fclose(file);
-#if 0
-  std::cout << "************* " << printTitle << " ***************" << std::endl;
-  for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
-  {
-    printf("%d  %lf\n", i_theta, src->d[i_theta]);
-  }
-  std::cout << "****************************" << std::endl;
-#endif
-  setErrorCondition(0);
-  setErrorMessage("");
-  notify("Done Writing the NuisanceParameters to a Binary File", 0, UpdateProgressMessage);
 }

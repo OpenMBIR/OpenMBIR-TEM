@@ -41,14 +41,16 @@
 
 #include <string>
 //#define FORWARD_PROJECT_MODE
-#define EXTEND_OBJECT
+//#define EXTEND_OBJECT
 #define X_SHRINK_FACTOR 0.6
 //#define TARGET_GAIN 7872950.013398
 
 #define X_STRETCH 1
 #define Z_STRETCH 2
 
+
 #define INTERPOLATE_FACTOR 24 //8 times the final desired resolution multilple
+
 //#define DEBUG ,
 #define PROFILE_RESOLUTION 1536
 //#define PI 4*atan(1)//3.14159265
@@ -65,6 +67,7 @@
 #define STOPPING_THRESHOLD_Delta_k 0.001
 #define STOPPING_THRESHOLD_Var_k 0.001
 #define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
+
 #define SURROGATE_FUNCTION
 #define QGGMRF
 #define QGGMRF_ITER 3
@@ -96,14 +99,16 @@ namespace ScaleOffsetCorrection
   const std::string FinalGainParametersFile("FinalGainParameters.bin");
   const std::string FinalOffsetParametersFile("FinalOffsetParameters.bin");
   const std::string FinalVariancesFile("FinalVariances.bin");
-  const std::string ReconstructedSinogramFile("ReconstructedSino.bin");
+
   const std::string VoxelProfileFile("VoxelProfile.bin");
   const std::string ForwardProjectedObjectFile("ForwardProjectedObject.bin");
   const std::string CostFunctionCoefficientsFile("CostFunctionCoefficients.bin");
   const std::string FilteredMagMapFile("FilteredMagMap.bin");
   const std::string MagnitudeMapFile("MagnitudeMap.bin");
+
   const std::string VtkGeometryFile("ReconstructedData.vtk");
-  const std::string ReconstructedVolumeFile("ReconstructedVolume.mrc");
+  const std::string ReconstructedSinogramFile("ReconstructedVolume.bin");
+  //const std::string ReconstructedVolumeFile("ReconstructedVolume.mrc");
 
   namespace VTK
   {

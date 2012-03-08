@@ -102,7 +102,7 @@ namespace SOC {
 
     RealArrayType::Pointer InitialGain;//Reads in the initial value for the gain for each view
     RealArrayType::Pointer InitialOffset;
-	RealArrayType::Pointer InitialVariance;
+    RealArrayType::Pointer InitialVariance;
 
   } Sinogram;
 
@@ -153,6 +153,9 @@ namespace SOC {
     DATA_TYPE delta_xy;//Voxel size in the x-y plane
 
     DATA_TYPE targetGain;
+    bool useDefaultOffset;
+    DATA_TYPE defaultOffset;
+
     /* These are input files */
     std::string sinoFile; /* .mrc formatted files are accepted currently */
     std::string initialReconFile;
@@ -187,7 +190,7 @@ namespace SOC {
   typedef struct
   {
 
-    RealArrayType::Pointer I_0; //Scale
+    RealArrayType::Pointer I_0; //Gains
     RealArrayType::Pointer mu; //Offset
     RealArrayType::Pointer alpha;//Noise variance refinement factor
   } ScaleOffsetParams;

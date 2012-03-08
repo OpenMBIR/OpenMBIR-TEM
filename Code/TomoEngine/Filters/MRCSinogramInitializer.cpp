@@ -72,7 +72,7 @@ void MRCSinogramInitializer::execute()
   MRCReader::Pointer reader = MRCReader::New(true);
   MRCHeader header;
   int err = reader->readHeader(inputs->sinoFile, &header);
-  reader->printHeader(&header, std::cout);
+  //reader->printHeader(&header, std::cout);
 	if (err < 0)
   {
   }

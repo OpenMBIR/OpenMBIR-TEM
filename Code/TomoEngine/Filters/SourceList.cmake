@@ -13,7 +13,7 @@ set (TomoEngine_Filters_SRCS
     ${TomoEngine_SOURCE_DIR}/Filters/InitialReconstructionInitializer.cpp
     ${TomoEngine_SOURCE_DIR}/Filters/InitialReconstructionBinReader.cpp
     ${TomoEngine_SOURCE_DIR}/Filters/TomoFilter.cpp
-    ${TomoEngine_SOURCE_DIR}/Filters/ComputeGainsOffsets.cpp
+    ${TomoEngine_SOURCE_DIR}/Filters/ComputeInitialOffsets.cpp
     ${TomoEngine_SOURCE_DIR}/Filters/DetectorResponse.cpp
     ${TomoEngine_SOURCE_DIR}/Filters/DetectorResponseWriter.cpp
 )
@@ -27,7 +27,7 @@ set (TomoEngine_Filters_HDRS
     ${TomoEngine_SOURCE_DIR}/Filters/InitialReconstructionInitializer.h
     ${TomoEngine_SOURCE_DIR}/Filters/InitialReconstructionBinReader.h
     ${TomoEngine_SOURCE_DIR}/Filters/TomoFilter.h
-    ${TomoEngine_SOURCE_DIR}/Filters/ComputeGainsOffsets.h 
+    ${TomoEngine_SOURCE_DIR}/Filters/ComputeInitialOffsets.h 
     ${TomoEngine_SOURCE_DIR}/Filters/DetectorResponse.h
     ${TomoEngine_SOURCE_DIR}/Filters/DetectorResponseWriter.h
 )
