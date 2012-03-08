@@ -152,6 +152,7 @@ namespace SOC {
     DATA_TYPE delta_xz;//Voxel size in the x-z plane (assuming square shaped voxels in the x-z plane)
     DATA_TYPE delta_xy;//Voxel size in the x-y plane
 
+	bool extendObject; //In case the sinogram data corresponding to voxels outside it
     DATA_TYPE interpolateFactor;
     DATA_TYPE targetGain;
     bool useDefaultOffset;

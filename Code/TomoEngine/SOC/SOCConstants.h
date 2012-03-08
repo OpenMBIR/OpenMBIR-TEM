@@ -41,7 +41,7 @@
 
 #include <string>
 //#define FORWARD_PROJECT_MODE
-#define EXTEND_OBJECT
+//#define EXTEND_OBJECT
 #define X_SHRINK_FACTOR 0.6
 //#define TARGET_GAIN 7872950.013398
 
@@ -70,7 +70,7 @@
 
 #define SURROGATE_FUNCTION
 #define QGGMRF
-#define QGGMRF_ITER 3
+#define QGGMRF_ITER 1
 //#define DISTANCE_DRIVEN
 //#define CORRECTION
 //#define WRITE_INTERMEDIATE_RESULTS
