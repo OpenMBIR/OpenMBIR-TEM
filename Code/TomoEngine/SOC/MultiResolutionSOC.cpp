@@ -155,7 +155,7 @@ void MultiResolutionSOC::execute()
   prevInputs->varianceOutputFile = ss.str();
 
   ss.str("");
-  ss << prevInputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedVolumeFile;
+  ss << prevInputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedSinogramFile;
   prevInputs->reconstructedOutputFile = ss.str();
 
 
@@ -219,7 +219,7 @@ void MultiResolutionSOC::execute()
     inputs->varianceOutputFile = ss.str();
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedVolumeFile;
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedSinogramFile;
     inputs->reconstructedOutputFile = ss.str();
 
     soc = SOCEngine::New();

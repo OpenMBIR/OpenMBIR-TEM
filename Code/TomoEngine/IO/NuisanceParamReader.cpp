@@ -76,8 +76,8 @@ void NuisanceParamReader::execute()
      return;
    }
 
-  std::string filepath(getTomoInputs()->tempDir);
-  filepath = filepath.append(MXADir::getSeparator()).append(m_FileName);
+//  std::string filepath(getTomoInputs()->tempDir);
+//  filepath = filepath.append(MXADir::getSeparator()).append(m_FileName);
 
   if (m_Data->getNDims() != 1)
   {
@@ -94,7 +94,7 @@ void NuisanceParamReader::execute()
     return;
   }
 
-  FILE* file = fopen(filepath.c_str(), "wb");
+  FILE* file = fopen(m_FileName.c_str(), "rb");
   if(file == 0)
   {
     setErrorCondition(-1);

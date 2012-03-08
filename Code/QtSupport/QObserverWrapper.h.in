@@ -69,10 +69,15 @@ class Q@CLASS_NAME@ : public QObject, public @CLASS_NAME@
      * @param message The message to print
      * @param progress The progress of the GrainGenerator normalized to a value between 0 and 100
      */
-    virtual void updateProgressAndMessage(const char* message, int value)
+    virtual void updateProgressAndMessage(const char* message, int progress)
     {
-      emit updateProgress(value);
+      emit updateProgress(progress);
       emit progressMessage(QString(message));
+    }
+    
+    virtual void updateProgressAndMessage(const std::string &msg, int progress)
+    {
+      updateProgressAndMessage(msg.c_str(), progress);
     }
 
     /**
@@ -95,6 +100,10 @@ class Q@CLASS_NAME@ : public QObject, public @CLASS_NAME@
     {
       emit progressMessage(QString(message));
     }
+    virtual void pipelineProgressMessage(const std::string &msg)
+    {
+      pipelineProgressMessage(msg.c_str());
+    }
     
     /**
      * @brief This message reports some human readable message suitable for display
@@ -105,6 +114,10 @@ class Q@CLASS_NAME@ : public QObject, public @CLASS_NAME@
     {
       emit warningMessage(QString(message));
     }
+    virtual void pipelineWarningMessage(const std::string &msg)
+    {
+      pipelineWarningMessage(msg.c_str());
+    }
     
     /**
      * @brief This message reports some human readable message suitable for display
@@ -114,6 +127,10 @@ class Q@CLASS_NAME@ : public QObject, public @CLASS_NAME@
     virtual void pipelineErrorMessage(const char* message)
     {
       emit errorMessage(QString(message));
+    }
+    virtual void pipelineErrorMessage(const std::string &msg)
+    {
+      pipelineErrorMessage(msg.c_str());
     }
     
     /**

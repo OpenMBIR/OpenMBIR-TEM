@@ -41,6 +41,7 @@
 #include <stdio.h>
 
 #include <string>
+#include <sstream>
 
 #include "MXA/Utilities/MXADir.h"
 
@@ -79,6 +80,7 @@ NuisanceParamWriter::~NuisanceParamWriter()
 // -----------------------------------------------------------------------------
 void NuisanceParamWriter::execute()
 {
+  std::stringstream ss;
   if(NULL == getTomoInputs())
   {
     setErrorCondition(-1);
@@ -101,14 +103,17 @@ void NuisanceParamWriter::execute()
     return;
   }
 
-  std::string filepath(getTomoInputs()->tempDir);
-  filepath = filepath.append(MXADir::getSeparator()).append(m_FileName);
+//  std::string filepath(getTomoInputs()->tempDir);
+//  filepath = filepath.append(MXADir::getSeparator()).append(m_FileName);
 
-  FILE* file = fopen(filepath.c_str(), "wb");
+  FILE* file = fopen(m_FileName.c_str(), "wb");
   if(file == 0)
   {
+    ss.str("");
+    ss << "NuisanceBinWriter: Error opening output file for writing. '" <<
+        m_FileName << "'";
     setErrorCondition(-1);
-    setErrorMessage("NuisanceBinWriter: Error opening output file for writing");
+    setErrorMessage(ss.str());
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
@@ -151,14 +156,14 @@ void NuisanceParamWriter::execute()
     }
   }
   fclose(file);
-
+#if 0
   std::cout << "************* " << printTitle << " ***************" << std::endl;
   for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
   {
     printf("%d  %lf\n", i_theta, src->d[i_theta]);
   }
   std::cout << "****************************" << std::endl;
-
+#endif
   setErrorCondition(0);
   setErrorMessage("");
   notify("Done Writing the NuisanceParameters to a Binary File", 0, UpdateProgressMessage);

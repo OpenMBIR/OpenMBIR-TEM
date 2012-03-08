@@ -98,14 +98,16 @@ namespace ScaleOffsetCorrection
   const std::string FinalGainParametersFile("FinalGainParameters.bin");
   const std::string FinalOffsetParametersFile("FinalOffsetParameters.bin");
   const std::string FinalVariancesFile("FinalVariances.bin");
-  const std::string ReconstructedSinogramFile("ReconstructedSino.bin");
+
   const std::string VoxelProfileFile("VoxelProfile.bin");
   const std::string ForwardProjectedObjectFile("ForwardProjectedObject.bin");
   const std::string CostFunctionCoefficientsFile("CostFunctionCoefficients.bin");
   const std::string FilteredMagMapFile("FilteredMagMap.bin");
   const std::string MagnitudeMapFile("MagnitudeMap.bin");
+
   const std::string VtkGeometryFile("ReconstructedData.vtk");
-  const std::string ReconstructedVolumeFile("ReconstructedVolume.mrc");
+  const std::string ReconstructedSinogramFile("ReconstructedVolume.bin");
+  //const std::string ReconstructedVolumeFile("ReconstructedVolume.mrc");
 
   namespace VTK
   {

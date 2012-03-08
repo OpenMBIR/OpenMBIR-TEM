@@ -569,6 +569,16 @@ void SOCEngine::execute()
       // This will read the values from a binary file
       geomInitializer = InitialReconstructionBinReader::NewInitialReconstructionInitializer();
     }
+    else if (extension.compare(".mrc") == 0)
+    {
+      notify("We are not dealing with mrc volume files. The program will now end.", 0, Observable::UpdateErrorMessage);
+      return;
+    }
+    else
+    {
+      notify("Could not find a compatible reader for the initial reconstruction data file. The program will now end.", 0, Observable::UpdateErrorMessage);
+      return;
+    }
     geomInitializer->setSinogram(m_Sinogram);
     geomInitializer->setTomoInputs(m_TomoInputs);
     geomInitializer->setGeometry(m_Geometry);
@@ -1676,6 +1686,13 @@ void SOCEngine::execute()
   }
 #endif//Noise Model
 
+  std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
+  for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
+  {
+    std::cout << i_theta << NuisanceParams->I_0->d[i_theta] <<
+        "\t" << NuisanceParams->mu->d[i_theta] <<
+        "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
+  }
 
   START_TIMER;
   //calculates Ax and returns a pointer to the memory block
