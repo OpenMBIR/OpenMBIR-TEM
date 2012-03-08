@@ -430,7 +430,7 @@ int SOCEngine::mapicdReconstruct()
 
 	int fileError = 0;
 
-	MAKE_OUTPUT_FILE(Fp1, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::ReconstructedSinogramFile);
+	MAKE_OUTPUT_FILE(Fp1, fileError, m_Inputs->outputDir, ScaleOffsetCorrection::ReconstructedBinFile);
 	if (fileError == 1)
 	{
 

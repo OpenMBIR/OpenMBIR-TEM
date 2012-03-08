@@ -44,7 +44,7 @@ namespace ScaleOffsetCorrection
   const std::string FinalGainParametersFile("FinalGainParameters.bin");
   const std::string FinalOffsetParametersFile("FinalOffsetParameters.bin");
   const std::string FinalVariancesFile("FinalVariances.bin");
-  const std::string ReconstructedSinogramFile("ReconstructedSino.bin");
+  const std::string ReconstructedBinFile("ReconstructedSino.bin");
   const std::string VoxelProfileFile("VoxelProfile.bin");
   const std::string ForwardProjectedObjectFile("ForwardProjectedObject.bin");
   const std::string CostFunctionCoefficientsFile("CostFunctionCoefficients.bin");

@@ -49,7 +49,7 @@
 #define Z_STRETCH 2
 
 
-#define INTERPOLATE_FACTOR 24 //8 times the final desired resolution multilple
+//#define INTERPOLATE_FACTOR 8 //8 times the final desired resolution multilple
 
 //#define DEBUG ,
 #define PROFILE_RESOLUTION 1536
@@ -106,9 +106,9 @@ namespace ScaleOffsetCorrection
   const std::string FilteredMagMapFile("FilteredMagMap.bin");
   const std::string MagnitudeMapFile("MagnitudeMap.bin");
 
-  const std::string VtkGeometryFile("ReconstructedData.vtk");
-  const std::string ReconstructedSinogramFile("ReconstructedVolume.bin");
-  //const std::string ReconstructedVolumeFile("ReconstructedVolume.mrc");
+  const std::string ReconstructedVtkFile("ReconstructedVolume.vtk");
+  const std::string ReconstructedBinFile("ReconstructedVolume.bin");
+  const std::string ReconstructedMrcFile("ReconstructedVolume.mrc");
 
   namespace VTK
   {

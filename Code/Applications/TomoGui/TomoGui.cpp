@@ -407,7 +407,7 @@ void TomoGui::setupGui()
 
   m_TomoInputs.push_back(tomoInputWidget);
 
-
+  outputFilePath->setText("");
 
 
   QMenu* zoomMenu = new QMenu(this);
@@ -711,6 +711,7 @@ void TomoGui::initializeSOCEngine()
   std::vector<TomoInputsPtr> inputVector;
 
   // Loop over all of the Input Resolution Widgets and gather the values
+  double interpolationFactor = 1.0;
   int count = m_TomoInputs.count();
   for (int i = 0; i < count; ++i)
   {
@@ -728,6 +729,8 @@ void TomoGui::initializeSOCEngine()
       inputs->delta_xz = tiw->getXZPixelMultiple();
       inputs->defaultOffset = tiw->getUserDefinedOffset();
       inputs->useDefaultOffset = tiw->useDefinedOffset();
+      if (inputs->delta_xy > interpolationFactor) { interpolationFactor = inputs->delta_xy;}
+      inputs->interpolateFactor = interpolationFactor;
 
       QString path;
 
@@ -738,11 +741,12 @@ void TomoGui::initializeSOCEngine()
       path = QDir::toNativeSeparators(inputMRCFilePath->text());
       inputs->sinoFile = path.toStdString();
 
-      path = QDir::toNativeSeparators(initialReconstructionPath->text());
+    //  path = QDir::toNativeSeparators(initialReconstructionPath->text());
     //  inputs->initialReconFile = path.toStdString();
 
       path = QDir::toNativeSeparators(tempDirPath->text());
       inputs->tempDir = path.toStdString();
+
 
       bool ok = false;
 

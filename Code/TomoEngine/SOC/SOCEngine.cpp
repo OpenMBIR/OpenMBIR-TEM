@@ -155,6 +155,7 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
    v->offsetsInputFile = "";
    v->varianceInputFile = "";
    v->InterpFlag=0;
+   v->interpolateFactor=1.0;
    v->reconstructedOutputFile = "";
    v->tempDir = "";
    v->NumIter = 0;
@@ -1741,7 +1742,7 @@ void SOCEngine::execute()
 
 
   std::string vtkFile(m_TomoInputs->tempDir);
-  vtkFile = vtkFile.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::VtkGeometryFile);
+  vtkFile = vtkFile.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedVtkFile);
 
   VTKStructuredPointsFileWriter vtkWriter;
   vtkWriter.setWriteBinaryFiles(true);
