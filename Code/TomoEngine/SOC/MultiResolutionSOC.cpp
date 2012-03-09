@@ -61,7 +61,9 @@ m_MRFShapeParameter(1.1),
 m_DefaultOffsetValue(0.0f),
 m_UseDefaultOffset(false),
 m_FinalResolution(1),
+m_ExtendObject(true),
 m_TiltSelection(SOC::A_Tilt)
+
 {
 
 }
@@ -131,97 +133,6 @@ void MultiResolutionSOC::execute()
   std::stringstream ss;
 
 
-#if 0
-
-  //Run the First resolution to prime the pipeline
-  TomoInputsPtr prevInputs = TomoInputsPtr(new TomoInputs);
-  SOCEngine::InitializeTomoInputs(prevInputs);
-
-  prevInputs->interpolateFactor = pow(2, m_NumberResolutions-1) * m_FinalResolution;
-
-  prevInputs->sinoFile = m_InputFile;
-  prevInputs->tempDir = m_TempDir + MXADir::Separator + StringUtils::numToString(prevInputs->interpolateFactor) + std::string("x");
-  if (m_NumberResolutions == 1)
-  {
-    prevInputs->reconstructedOutputFile = m_OutputFile;
-  }
-  else
-  {
-    ss.str("");
-    ss << prevInputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedBinFile;
-    prevInputs->reconstructedOutputFile = ss.str();
-  }
-
-  //Make sure the directory is created:
-  bool success = MXADir::mkdir(prevInputs->tempDir, true);
-  if (!success)
-  {
-    std::cout << "Could not create path: " << prevInputs->tempDir << std::endl;
-  }
-
-  ss.str("");
-  ss << prevInputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
-  prevInputs->gainsOutputFile = ss.str();
-
-  ss.str("");
-  ss << prevInputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalOffsetParametersFile;
-  prevInputs->offsetsOutputFile = ss.str();
-
-  ss.str("");
-  ss << prevInputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalVariancesFile;
-  prevInputs->varianceOutputFile = ss.str();
-
-
-  prevInputs->StopThreshold = getStopThreshold();
-  prevInputs->NumOuterIter = getOuterIterations();
-  prevInputs->NumIter = getInnerIterations();
-  prevInputs->SigmaX = getSigmaX();
-  prevInputs->p = getMRFShapeParameter();
-  prevInputs->delta_xy = pow(2, getNumberResolutions()-1);
-  prevInputs->delta_xz = pow(2, getNumberResolutions()-1);
-  prevInputs->defaultOffset = getDefaultOffsetValue();
-  prevInputs->useDefaultOffset = getUseDefaultOffset();
-  prevInputs->LengthZ = m_SampleThickness;
-  prevInputs->targetGain = m_TargetGain;
-  prevInputs->tiltSelection = m_TiltSelection;
-  if(m_Subvolume.size() > 0)
-  {
-    prevInputs->useSubvolume = true;
-    prevInputs->xStart = m_Subvolume[0];
-    prevInputs->xEnd = m_Subvolume[3];
-    prevInputs->yStart = m_Subvolume[1];
-    prevInputs->yEnd = m_Subvolume[4];
-    prevInputs->zStart = m_Subvolume[2];
-    prevInputs->zEnd = m_Subvolume[5];
-  }
-  prevInputs->excludedViews = m_ViewMasks;
-
-
-  SOCEngine::Pointer soc = SOCEngine::New();
-  soc->setTomoInputs(prevInputs);
-
-  // Now initialize the other structures that we need for this run
-  SinogramPtr sinogram = SinogramPtr(new Sinogram);
-  SOCEngine::InitializeSinogram(sinogram);
-  soc->setSinogram(sinogram);
-
-  GeometryPtr geometry = GeometryPtr(new Geometry);
-  SOCEngine::InitializeGeometry(geometry);
-  soc->setGeometry(geometry);
-
-  ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
-  SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
-  soc->setNuisanceParams(nuisanceParams);
-
-  // We need to get messages to the gui or command line
-  soc->addObserver(this);
-
-  printInputs(prevInputs, std::cout);
-
-  soc->execute();
-  // Make sure any memory that can be cleaned up is cleaned up.
-  soc = SOCEngine::NullPointer();
-#endif
   TomoInputsPtr prevInputs = TomoInputsPtr(new TomoInputs);
   SOCEngine::InitializeTomoInputs(prevInputs);
 
@@ -231,7 +142,7 @@ void MultiResolutionSOC::execute()
     SOCEngine::InitializeTomoInputs(inputs);
 
     /* ******* this is bad. Remove this for production work ****** */
-    inputs->extendObject = false;
+    inputs->extendObject = getExtendObject();
 
     /* Get our input files from the last resolution iteration */
     inputs->gainsInputFile = prevInputs->gainsOutputFile;

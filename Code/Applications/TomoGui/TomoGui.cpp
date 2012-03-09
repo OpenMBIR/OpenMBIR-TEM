@@ -202,10 +202,17 @@ void TomoGui::readSettings(QSettings &prefs)
  // double d;
   prefs.beginGroup("Parameters");
 
+  READ_STRING_SETTING(prefs, inputMRCFilePath, "");
+  // This will auto load the MRC File
+  on_inputMRCFilePath_textChanged(inputMRCFilePath->text());
 
   READ_STRING_SETTING(prefs, outputFilePath, "");
   READ_STRING_SETTING(prefs, tempDirPath, "");
   READ_STRING_SETTING(prefs, initialReconstructionPath, "");
+
+  READ_SETTING(prefs, numResolutions, ok, i, 1, Int);
+  READ_SETTING(prefs, outerIterations, ok, i, 1, Int);
+  READ_SETTING(prefs, innerIterations, ok, i, 1, Int);
   READ_STRING_SETTING(prefs, targetGain, "0")
   READ_STRING_SETTING(prefs, sampleThickness, "");
   READ_BOOL_SETTING(prefs, useSubVolume, false);
@@ -216,14 +223,7 @@ void TomoGui::readSettings(QSettings &prefs)
   READ_STRING_SETTING(prefs, zMin, "0");
   READ_STRING_SETTING(prefs, zMax, "0");
   READ_STRING_SETTING(prefs, sigmaX, ".00000045");
-
-  READ_STRING_SETTING(prefs, inputMRCFilePath, "");
-  READ_SETTING(prefs, numResolutions, ok, i, 1, Int);
-  READ_SETTING(prefs, outerIterations, ok, i, 1, Int);
-  READ_SETTING(prefs, innerIterations, ok, i, 1, Int);
-
-  // This will auto load the MRC File
-  on_inputMRCFilePath_textChanged(inputMRCFilePath->text());
+  READ_BOOL_SETTING(prefs, extendObject, false);
 
   ok = false;
   i = prefs.value("tiltSelection").toInt(&ok);
@@ -255,6 +255,7 @@ void TomoGui::writeSettings(QSettings &prefs)
   WRITE_SETTING(prefs, numResolutions);
   WRITE_SETTING(prefs, outerIterations);
   WRITE_SETTING(prefs, innerIterations);
+  WRITE_CHECKBOX_SETTING(prefs, extendObject);
 
  // prefs.setValue("m_GainsFile" , m_GainsFile);
   prefs.setValue("tiltSelection", tiltSelection->currentIndex());
@@ -682,8 +683,6 @@ void TomoGui::on_m_GoBtn_clicked()
 // -----------------------------------------------------------------------------
 void TomoGui::initializeSOCEngine()
 {
-
-
   QString path;
   path = QDir::toNativeSeparators(inputMRCFilePath->text());
   m_MultiResSOC->setInputFile(path.toStdString());
@@ -708,7 +707,7 @@ void TomoGui::initializeSOCEngine()
   m_MultiResSOC->setDefaultOffsetValue(defaultOffset->text().toFloat(&ok));
   m_MultiResSOC->setUseDefaultOffset(useDefaultOffset->isChecked());
   m_MultiResSOC->setTiltSelection(static_cast<SOC::TiltSelection>(tiltSelection->currentIndex()));
-
+  m_MultiResSOC->setExtendObject(extendObject->isChecked());
 
   if(useSubVolume->isChecked())
   {
@@ -722,8 +721,6 @@ void TomoGui::initializeSOCEngine()
     m_MultiResSOC->setSubvolume(subvolume);
   }
 
-
-
   std::vector<uint8_t> viewMasks;
   QVector<bool> excludedViews = m_GainsOffsetsTableModel->getExcludedTilts();
   for (int i = 0; i < excludedViews.size(); ++i)
@@ -734,83 +731,6 @@ void TomoGui::initializeSOCEngine()
     }
   }
   m_MultiResSOC->setViewMasks(viewMasks);
-
-#if 0
-  std::vector<TomoInputsPtr> inputVector;
-  // Loop over all of the Input Resolution Widgets and gather the values
-  double interpolationFactor = 1.0;
-  int count = m_TomoInputs.count();
-  for (int i = 0; i < count; ++i)
-  {
-    TomoInputWidget* tiw = qobject_cast<TomoInputWidget*>(m_TomoInputs.at(i));
-    if(NULL != tiw)
-    {
-      TomoInputsPtr inputs = TomoInputsPtr(new TomoInputs);
-      SOCEngine::InitializeTomoInputs(inputs);
-      inputs->StopThreshold = tiw->getStopThreshold();
-      inputs->NumOuterIter = tiw->getOuterIterations();
-      inputs->NumIter = tiw->getInnerIterations();
-      inputs->SigmaX = tiw->getSigmaX();
-      inputs->p = tiw->getMRF();
-      inputs->delta_xy = tiw->getXYPixelMultiple();
-      inputs->delta_xz = tiw->getXZPixelMultiple();
-      inputs->defaultOffset = tiw->getUserDefinedOffset();
-      inputs->useDefaultOffset = tiw->useDefinedOffset();
-      if (inputs->delta_xy > interpolationFactor) { interpolationFactor = inputs->delta_xy;}
-      inputs->interpolateFactor = interpolationFactor;
-
-      QString path;
-
-    //  path = tempDirPath->text()  + QDir::separator() + outputFilePath->text();
-    //  path = QDir::toNativeSeparators(path);
-    //  inputs->reconstructedOutputFile = path.toStdString();
-
-      path = QDir::toNativeSeparators(inputMRCFilePath->text());
-      inputs->sinoFile = path.toStdString();
-
-    //  path = QDir::toNativeSeparators(initialReconstructionPath->text());
-    //  inputs->initialReconFile = path.toStdString();
-
-      path = QDir::toNativeSeparators(tempDirPath->text());
-      inputs->tempDir = path.toStdString();
-
-
-      bool ok = false;
-
-      inputs->tiltSelection = static_cast<SOC::TiltSelection>(tiltSelection->currentIndex());
-      inputs->useSubvolume = useSubVolume->isChecked();
-      if(useSubVolume->isChecked())
-      {
-        inputs->useSubvolume = true;
-        inputs->xStart = xMin->text().toUShort(&ok);
-        inputs->xEnd = xMax->text().toUShort(&ok);
-        inputs->yStart = yMin->text().toUShort(&ok);
-        inputs->yEnd = yMax->text().toUShort(&ok);
-        inputs->zStart = zMin->text().toUShort(&ok);
-        inputs->zEnd = zMax->text().toUShort(&ok);
-      }
-
-      inputs->LengthZ = sampleThickness->text().toDouble(&ok);
-      inputs->targetGain = targetGain->text().toDouble(&ok);
-
-      std::vector<uint8_t> viewMasks;
-      QVector<bool> excludedViews = m_GainsOffsetsTableModel->getExcludedTilts();
-      for (int i = 0; i < excludedViews.size(); ++i)
-      {
-        if(excludedViews[i] == true)
-        {
-          viewMasks.push_back(i);
-        }
-      }
-      inputs->excludedViews = viewMasks;
-
-      inputVector.push_back(inputs);
-    }
-  }
-
-  m_MultiResSOC->setTomoInputs(inputVector);
-
-#endif
 
 }
 

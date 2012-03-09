@@ -72,6 +72,7 @@ class MultiResolutionSOC : public FilterPipeline
     MXA_INSTANCE_PROPERTY(float, DefaultOffsetValue);
     MXA_INSTANCE_PROPERTY(bool, UseDefaultOffset);
     MXA_INSTANCE_PROPERTY(int, FinalResolution);
+    MXA_INSTANCE_PROPERTY(bool, ExtendObject);
 
     MXA_INSTANCE_PROPERTY(SOC::TiltSelection, TiltSelection);
 
