@@ -3011,40 +3011,40 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 #ifdef RANDOM_ORDER_UPDATES
         //RandomNumber=init_genrand(Iter);
         //int32_t Index = (genrand_int31(RandomNumber)) % ArraySize;
-    uint32_t Index = (genrand_int31(RandomNumber)) % ArraySize;
-//    int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
-//        int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
-    int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
-    int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
-     // std::cout<<k_new<<","<<j_new<<std::endl;
+        uint32_t Index = (genrand_int31(RandomNumber)) % ArraySize;
+//      int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
+//      int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
+        int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
+        int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
+        // std::cout<<k_new<<","<<j_new<<std::endl;
         //memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
         //TODO: Instead just swap the value in Index with the one in ArraySize
         Counter->d[Index] = Counter->d[ArraySize - 1];
         VisitCount->d[j_new][k_new] = 1;
         ArraySize--;
-    Index = j_new*m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to
-      //the voxel line (j_new,k_new)
+        Index = j_new * m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to
+        //the voxel line (j_new,k_new)
 #else
         int32_t j_new=j;
         int32_t k_new=k;
-      uint32_t Index = j_new*m_Geometry->N_x + k_new;
+        uint32_t Index = j_new*m_Geometry->N_x + k_new;
 #endif //Random order updates
-     //   AMatrixCol* TempMemBlock = TempCol[j_new][k_new]; //Remove this
+        //   AMatrixCol* TempMemBlock = TempCol[j_new][k_new]; //Remove this
 
         int shouldInitNeighborhood = 0;
 
         if(updateType == NonHomogeniousUpdate && MagUpdateMask->d[j_new][k_new] == 1 && TempCol[Index]->count > 0)
         {
-        ++shouldInitNeighborhood;
+          ++shouldInitNeighborhood;
         }
-  if(updateType == HomogeniousUpdate  && TempCol[Index]->count > 0)
-  {
-        ++shouldInitNeighborhood;
-  }
-  if(updateType == RegularRandomOrderUpdate && TempCol[Index]->count > 0)
-    {
-      ++shouldInitNeighborhood;
-    }
+        if(updateType == HomogeniousUpdate && TempCol[Index]->count > 0)
+        {
+          ++shouldInitNeighborhood;
+        }
+        if(updateType == RegularRandomOrderUpdate && TempCol[Index]->count > 0)
+        {
+          ++shouldInitNeighborhood;
+        }
 
         if(shouldInitNeighborhood > 0)
         //After this should ideally call UpdateVoxelLine(j_new,k_new) ie put everything in this "if" inside a method called UpdateVoxelLine
@@ -3065,15 +3065,17 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             }
 #ifdef CIRCULAR_BOUNDARY_CONDITION
             for(p = -1; p <=1; p++)
-            for(q = -1; q <= 1; q++)
-            for(r = -1; r <= 1;r++)
             {
-              tempindex_x = mod(r+k_new,m_Geometry->N_x);
-              tempindex_y =mod(p+i,m_Geometry->N_y);
-              tempindex_z = mod(q+j_new,m_Geometry->N_z);
-              NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object->d[tempindex_z][tempindex_x][tempindex_y];
-              BOUNDARYFLAG[p+1][q+1][r+1]=1;
-            }
+              for(q = -1; q <= 1; q++)
+              {
+                for(r = -1; r <= 1;r++)
+                {
+                  tempindex_x = mod(r+k_new,m_Geometry->N_x);
+                  tempindex_y =mod(p+i,m_Geometry->N_y);
+                  tempindex_z = mod(q+j_new,m_Geometry->N_z);
+                  NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object->d[tempindex_z][tempindex_x][tempindex_y];
+                  BOUNDARYFLAG[p+1][q+1][r+1]=1;
+                }}}
 #else
             //For a given (i,j,k) store its 26 point neighborhood
             for (int32_t p = -1; p <= 1; p++)
@@ -3093,7 +3095,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                       }
                       else
                       {
-                         BOUNDARYFLAG[p + 1][q + 1][r + 1] = 0;
+                        BOUNDARYFLAG[p + 1][q + 1][r + 1] = 0;
                       }
                     }
                   }
@@ -3101,7 +3103,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
               }
             }
 #endif//circular boundary condition check
-        NEIGHBORHOOD[1][1][1] = 0.0;
+            NEIGHBORHOOD[1][1][1] = 0.0;
 #ifndef NDEBUG
             if(i == 0 && j == 31 && k == 31)
             {
@@ -3124,7 +3126,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             THETA1 = 0.0;
             THETA2 = 0.0;
 
-
             //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
             for (uint32_t q = 0; q < TempCol[Index]->count; q++)
             {
@@ -3133,20 +3134,18 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
               uint16_t VoxelLineAccessCounter = 0;
               for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
               {
-          DATA_TYPE ProjectionEntry = NuisanceParams->I_0->d[i_theta]*VoxelLineResponse[i].values[VoxelLineAccessCounter] * (TempCol[Index]->values[q]);
-          THETA2 += (ProjectionEntry*ProjectionEntry*Weight->d[i_theta][i_r][i_t]);
-          THETA1 +=  (ErrorSino->d[i_theta][i_r][i_t]*ProjectionEntry* Weight->d[i_theta][i_r][i_t]);
-                  VoxelLineAccessCounter++;
+                DATA_TYPE ProjectionEntry = NuisanceParams->I_0->d[i_theta] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (TempCol[Index]->values[q]);
+                THETA2 += (ProjectionEntry * ProjectionEntry * Weight->d[i_theta][i_r][i_t]);
+                THETA1 += (ErrorSino->d[i_theta][i_r][i_t] * ProjectionEntry * Weight->d[i_theta][i_r][i_t]);
+                VoxelLineAccessCounter++;
               }
             }
-
 
             THETA1 *= -1;
             minMax(&low, &high);
 
 #ifdef DEBUG
-            if(i == 0 && j == 31 && k == 31)
-        printf("(%lf,%lf,%lf) \n", low, high, V - (THETA1 / THETA2));
+            if(i == 0 && j == 31 && k == 31) printf("(%lf,%lf,%lf) \n", low, high, V - (THETA1 / THETA2));
 #endif
 
             //Solve the 1-D optimization problem
@@ -3155,18 +3154,17 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             //TODO : What if theta1 = 0 ? Then this will give error
 
             DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
-      UpdatedVoxelValue = (DATA_TYPE)solve<DerivOfCostFunc>(&docf, (double)low, (double)high, (double)accuracy, &errorcode,binarysearch_count);
+            UpdatedVoxelValue = (DATA_TYPE)solve<DerivOfCostFunc>(&docf, (double)low, (double)high, (double)accuracy, &errorcode,binarysearch_count);
 
-      //std::cout<<low<<","<<high<<","<<UpdatedVoxelValue<<std::endl;
+            //std::cout<<low<<","<<high<<","<<UpdatedVoxelValue<<std::endl;
 #else
-            errorcode=0;
+            errorcode = 0;
 #ifdef QGGMRF
-            UpdatedVoxelValue = CE_FunctionalSubstitution(low,high);
+            UpdatedVoxelValue = CE_FunctionalSubstitution(low, high);
 #else
             SurrogateUpdate = surrogateFunctionBasedMin();
             UpdatedVoxelValue = SurrogateUpdate;
 #endif //QGGMRF
-
 #endif//Surrogate function
             //printf("%lf\n",SurrogateUpdate);
             if(errorcode == 0)
@@ -3182,20 +3180,19 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             }
             else
             {
-              if(THETA1 == 0 && low == 0 && high == 0)
-          UpdatedVoxelValue = 0;
+              if(THETA1 == 0 && low == 0 && high == 0) UpdatedVoxelValue = 0;
               else
               {
-               // printf("Error \n");
-               // printf("%d %d\n", j_new, k_new);
+                // printf("Error \n");
+                // printf("%d %d\n", j_new, k_new);
               }
             }
 
             //TODO Print appropriate error messages for other values of error code
             m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
-      //#ifdef NHICD
+            //#ifdef NHICD
             MagUpdateMap->d[j_new][k_new] += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
-      //#endif
+            //#endif
 
 #ifdef ROI
             if(Mask->d[j_new][k_new] == 1)
@@ -3220,7 +3217,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
               }
             }
 
-
             Idx++;
           }
         }
@@ -3229,7 +3225,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
           continue;
         }
 
-    }
+      }
     }
     STOP_TIMER;
     PRINT_TIME("Voxel Update");

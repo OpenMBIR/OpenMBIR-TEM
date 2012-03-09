@@ -147,8 +147,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     void on_layersPalette_clicked();
     void on_originCB_currentIndexChanged(int i);
 
-    void on_addResolution_clicked();
-    void on_removeResolution_clicked();
+//    void on_addResolution_clicked();
+//    void on_removeResolution_clicked();
 
 
     /**
@@ -273,7 +273,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
 
     QList<QWidget*> m_WidgetList;
     QList<QWidget*> m_ImageWidgets;
-    QVector<QWidget*>     m_TomoInputs;
+  //  QVector<QWidget*>     m_TomoInputs;
     bool                  m_StopAnimation;     // Trigger to stop a running animation
     QTimer*               m_AnimationTimer;
     QVector<QRgb>         m_ColorTable;
