@@ -52,8 +52,8 @@ int main(int argc, char **argv)
   TomoInputsPtr inputs = TomoInputsPtr(new TomoInputs);
   SOCEngine::InitializeTomoInputs(inputs);
 
-	TomoInputsPtr bf_inputs = TomoInputsPtr(new TomoInputs);
-	SOCEngine::InitializeTomoInputs(bf_inputs);
+  TomoInputsPtr bf_inputs = TomoInputsPtr(new TomoInputs);
+  SOCEngine::InitializeTomoInputs(bf_inputs);
 
   SOCArgsParser argParser;
   int err = argParser.parseArguments(argc, argv, inputs.get(), bf_inputs.get());
@@ -98,8 +98,8 @@ int main(int argc, char **argv)
   SOCEngine::InitializeSinogram(sinogram);
   SOCEngine::InitializeGeometry(geometry);
   SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
-
   SOCEngine::InitializeSinogram(bf_sinogram);
+	
 
   SOCEngine::Pointer engine = SOCEngine::New();
   engine->setTomoInputs(inputs);
