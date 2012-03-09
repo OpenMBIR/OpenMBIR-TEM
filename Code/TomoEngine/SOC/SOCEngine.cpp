@@ -1237,7 +1237,7 @@ void SOCEngine::execute()
 				}
 			
 			sum2/=(m_Sinogram->N_r * m_Sinogram->N_t*m_Sinogram->targetGain);
-			sum1 += ((sum2 * cosine->d[i_theta])/(120));	  
+			sum1 += ((sum2 * cosine->d[i_theta])/(m_TomoInputs->LengthZ/Z_STRETCH));	  
 		}
 				
 		sum1/=m_Sinogram->N_theta;		
