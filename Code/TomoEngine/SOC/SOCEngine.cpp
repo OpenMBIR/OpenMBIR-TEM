@@ -1203,7 +1203,51 @@ void SOCEngine::execute()
 
 #ifdef FORWARD_PROJECT_MODE
   return 0;//exit the program once we finish forward projecting the object
-#endif
+#endif//Forward Project mode
+	
+
+	{
+	/************************************Start Of Target Gain and Sigma Calc***********************************************/
+		//Calculating estimtes for sigma_f and \bar{I}
+	   DATA_TYPE sum1=0;
+		DATA_TYPE TargetGainEstimate=0;
+		DATA_TYPE TargetMin=1e100;
+		DATA_TYPE TargetMax=-100;
+		for(uint16_t i_theta=0; i_theta < m_Sinogram->N_theta; i_theta++)
+			for(uint16_t i_r =0; i_r < m_Sinogram->N_r; i_r++)
+				for(uint16_t i_t =0; i_t < m_Sinogram->N_t; i_t++)	  
+				{
+					if(m_Sinogram->counts->d[i_theta][i_r][i_t] > TargetMax)
+						TargetMax = m_Sinogram->counts->d[i_theta][i_r][i_t];
+					if(m_Sinogram->counts->d[i_theta][i_r][i_t] < TargetMin)
+						TargetMin = m_Sinogram->counts->d[i_theta][i_r][i_t];
+				}
+		
+        TargetGainEstimate = (TargetMax-TargetMin)*10;
+		std::cout<<"Default Target Gain ="<<TargetGainEstimate<<std::endl;
+		
+		
+		for(uint16_t i_theta=0; i_theta < m_Sinogram->N_theta; i_theta++)
+		{
+			DATA_TYPE sum2=0;
+			for(uint16_t i_r =0; i_r < m_Sinogram->N_r; i_r++)
+				for(uint16_t i_t =0; i_t < m_Sinogram->N_t; i_t++)	  
+				{
+					sum2 += (m_Sinogram->counts->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta]);
+				}
+			
+			sum2/=(m_Sinogram->N_r * m_Sinogram->N_t*m_Sinogram->targetGain);
+			sum1 += ((sum2 * cosine->d[i_theta])/(120));	  
+		}
+				
+		sum1/=m_Sinogram->N_theta;		
+		std::cout<<"Calculated average projected scatter ="<<sum1<<std::endl;
+		std::cout<<"Default value for sigma_x="<<sum1/100<<std::endl;
+		
+	/************************************End Of Target Gain and Sigma Calc***********************************************/
+	}
+
+	
 
 #ifdef COST_CALCULATE
   DATA_TYPE cost_value;
@@ -1233,8 +1277,12 @@ void SOCEngine::execute()
   {
     ss.str(""); // Clear the string stream
     indent = "";
+	  
+	//The first time we may need to update voxels multiple times and then on just optimize over I,d,\sigma,f once each outer loop
     if(OuterIter != 0)
     m_TomoInputs->NumIter = 1;
+	  
+	 	  
 
 
 
