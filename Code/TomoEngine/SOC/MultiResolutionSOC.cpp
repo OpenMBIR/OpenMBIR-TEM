@@ -230,6 +230,9 @@ void MultiResolutionSOC::execute()
     TomoInputsPtr inputs = TomoInputsPtr(new TomoInputs);
     SOCEngine::InitializeTomoInputs(inputs);
 
+    /* ******* this is bad. Remove this for production work ****** */
+    inputs->extendObject = false;
+
     /* Get our input files from the last resolution iteration */
     inputs->gainsInputFile = prevInputs->gainsOutputFile;
     inputs->offsetsInputFile = prevInputs->offsetsOutputFile;
@@ -238,7 +241,7 @@ void MultiResolutionSOC::execute()
     if (i > 0) { inputs->InterpFlag = 1; }
 
     /* Now set the output files for this resolution */
-    inputs->interpolateFactor = pow(2, getNumberResolutions()-i-1) * m_FinalResolution;
+    inputs->interpolateFactor = pow(2, getNumberResolutions()-1) * m_FinalResolution;
 
     inputs->sinoFile = m_InputFile;
     inputs->tempDir = m_TempDir + MXADir::Separator + StringUtils::numToString(inputs->interpolateFactor) + std::string("x");
@@ -273,14 +276,31 @@ void MultiResolutionSOC::execute()
     ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalVariancesFile;
     inputs->varianceOutputFile = ss.str();
 
-    inputs->StopThreshold = getStopThreshold()/2.0f;
     inputs->NumOuterIter = getOuterIterations();
-    inputs->NumIter = getInnerIterations();
-    /** SIGMA_X needs to be calculated here based on some formula**/
-    inputs->SigmaX = getSigmaX();
+//    if(i == 0)
+//    {
+//      inputs->NumIter = 30;
+//      inputs->NumIter = 1;
+//    }
+//    else
+    {
+      inputs->NumIter = getInnerIterations();
+    }
     inputs->p = getMRFShapeParameter();
-    inputs->delta_xy = pow(2, getNumberResolutions()-i-1);
-    inputs->delta_xz = pow(2, getNumberResolutions()-i-1);
+
+    inputs->StopThreshold = getStopThreshold();
+    if (i >= 2)
+    {
+      inputs->StopThreshold = getStopThreshold()/2.0f;
+    }
+    /** SIGMA_X needs to be calculated here based on some formula**/
+    inputs->SigmaX =pow(2,(getNumberResolutions()-1-i)*(1-3/inputs->p)) * getSigmaX();;
+//    inputs->SigmaX = getSigmaX();
+
+
+    inputs->delta_xy = pow(2, getNumberResolutions()-i-1)*m_FinalResolution;
+    inputs->delta_xz = pow(2, getNumberResolutions()-i-1)*m_FinalResolution;
+
     if (i == 0)
     {
       inputs->defaultOffset = getDefaultOffsetValue();

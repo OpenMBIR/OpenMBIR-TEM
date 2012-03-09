@@ -215,6 +215,7 @@ void TomoGui::readSettings(QSettings &prefs)
   READ_STRING_SETTING(prefs, yMax, "0");
   READ_STRING_SETTING(prefs, zMin, "0");
   READ_STRING_SETTING(prefs, zMax, "0");
+  READ_STRING_SETTING(prefs, sigmaX, ".00000045");
 
   READ_STRING_SETTING(prefs, inputMRCFilePath, "");
   READ_SETTING(prefs, numResolutions, ok, i, 1, Int);
@@ -250,6 +251,7 @@ void TomoGui::writeSettings(QSettings &prefs)
   WRITE_STRING_SETTING(prefs, yMax);
   WRITE_STRING_SETTING(prefs, zMin);
   WRITE_STRING_SETTING(prefs, zMax);
+  WRITE_STRING_SETTING(prefs, sigmaX);
   WRITE_SETTING(prefs, numResolutions);
   WRITE_SETTING(prefs, outerIterations);
   WRITE_SETTING(prefs, innerIterations);
