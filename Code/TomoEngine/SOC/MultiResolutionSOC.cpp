@@ -164,9 +164,12 @@ void MultiResolutionSOC::execute()
       std::cout << "Could not create path: " << inputs->tempDir << std::endl;
     }
 
-    if (m_NumberResolutions-1 == i)
+	  /***************TO DO - Fix This*********************/
+   if (m_NumberResolutions-1 == i)
     {
-      inputs->reconstructedOutputFile = m_OutputFile;
+		ss.str("");
+		ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedBinFile;
+      inputs->reconstructedOutputFile = ss.str();
     }
     else
     {
@@ -174,6 +177,7 @@ void MultiResolutionSOC::execute()
       ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedBinFile;
       inputs->reconstructedOutputFile = ss.str();
     }
+	/************************************/
 
     ss.str("");
     ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
@@ -200,7 +204,7 @@ void MultiResolutionSOC::execute()
     inputs->StopThreshold = getStopThreshold();
     if (i >= 2)
     {
-      inputs->StopThreshold = getStopThreshold()/2.0f;
+      inputs->StopThreshold = getStopThreshold()*2.0f;
     }
     /** SIGMA_X needs to be calculated here based on some formula**/
     inputs->SigmaX =pow(2,(getNumberResolutions()-1-i)*(1-3/inputs->p)) * getSigmaX();

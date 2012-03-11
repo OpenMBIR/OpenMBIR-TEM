@@ -69,6 +69,10 @@ void RawGeometryWriter::execute()
   }
   DATA_TYPE buffer;
 
+	std::cout<<getFilePath().c_str()<<std::endl;
+	std::cout<<"Writing the Binary file"<<std::endl;
+	std::cout<<geometry->N_y<<","<<geometry->N_z<<","<<geometry->N_x<<std::endl;
+	
   for (uint16_t i = 0; i < geometry->N_y; ++i)
   {
     for (uint16_t j = 0; j < geometry->N_x; ++j)
