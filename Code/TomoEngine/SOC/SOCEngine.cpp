@@ -679,7 +679,7 @@ void SOCEngine::execute()
   SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
 #else
   MRF_P = 2;
-  MRF_Q = 1.0;
+  MRF_Q = 1.2;
   MRF_C = 0.01;
   MRF_ALPHA = 1.5;
   SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
@@ -1142,11 +1142,12 @@ void SOCEngine::execute()
   {
     std::cout << "\rComputing Weights for Tilt Index " << zz<< "/" << m_Sinogram->N_theta<<std::endl;
     NuisanceParams->alpha->d[zz] = m_Sinogram->InitialVariance->d[zz]; //Initialize the refinement parameters from any previous run
-
+    std::cout <<"Alpha"<< NuisanceParams->alpha->d[zz] <<std::endl;
   for (uint16_t xx = 0; xx < m_Sinogram->N_r; xx++)
     {
       for (uint16_t yy = 0; yy < m_Sinogram->N_t; yy++)
       {
+		
         if(m_Sinogram->counts->d[zz][xx][yy] != 0)
         {
 #ifdef BRIGHT_FIELD
@@ -1155,6 +1156,10 @@ void SOCEngine::execute()
       Weight->d[zz][xx][yy] = 1.0 / (m_Sinogram->counts->d[zz][xx][yy] * NuisanceParams->alpha->d[zz]); //The variance for each view ~=averagecounts in that view
 #endif
         }
+		  else {
+			  Weight->d[zz][xx][yy]=0;
+		  }
+
       }
     }
   }
@@ -1193,6 +1198,9 @@ void SOCEngine::execute()
         temp=Y_Est->d[i_theta][i_r][i_t]/NuisanceParams->I_0->d[i_theta];
         fwrite(&temp,sizeof(DATA_TYPE),1,Fp6);
 #endif
+		  if(Weight->d[i_theta][i_r][i_t] < 0)
+			  std::cout<<m_Sinogram->counts->d[i_theta][i_r][i_t]<<"    "<<NuisanceParams->alpha->d[i_theta]<<std::endl;
+		  
         checksum += Weight->d[i_theta][i_r][i_t];
       }
     }

@@ -89,22 +89,23 @@ void InitialReconstructionBinReader::initializeData()
   {
     //If we need to interpolate
     std::cout << input->InterpFlag << std::endl;
-    if('1' == input->InterpFlag)
+    if(1 == input->InterpFlag)
     {
-      for (uint16_t i = 0; i < geometry->N_y / INTERP_FACTOR; i++)
+	  std::cout<<"Iterpolating the initial input file by a factor of 2"<<std::endl;
+      for (uint16_t i = 0; i < geometry->N_y/2; i++)
       {
-        for (uint16_t j = 0; j < geometry->N_x / INTERP_FACTOR; j++)
+        for (uint16_t j = 0; j < geometry->N_x/2; j++)
         {
-          for (uint16_t k = 0; k < geometry->N_z / INTERP_FACTOR; k++)
+          for (uint16_t k = 0; k < geometry->N_z/2; k++)
           {
             DATA_TYPE buffer;
             fread((unsigned char*)(&buffer), sizeof(DATA_TYPE), 1, Fp);
             //Voxel replicate
-            for (uint16_t p = 0; p < INTERP_FACTOR; p++)
-              for (uint16_t q = 0; q < INTERP_FACTOR; q++)
-                for (uint16_t r = 0; r < INTERP_FACTOR; r++)
+            for (uint16_t p = 0; p < 2; p++)
+              for (uint16_t q = 0; q < 2; q++)
+                for (uint16_t r = 0; r < 2; r++)
                 {
-                  geometry->Object->d[INTERP_FACTOR * k + p][INTERP_FACTOR * j + q][INTERP_FACTOR * i + r] = buffer;
+                  geometry->Object->d[2 * k + p][2 * j + q][2 * i + r] = buffer;
                 }
           }
         }

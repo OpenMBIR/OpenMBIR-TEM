@@ -155,7 +155,7 @@ void MultiResolutionSOC::execute()
     inputs->interpolateFactor = pow(2, getNumberResolutions()-1) * m_FinalResolution;
 
     inputs->sinoFile = m_InputFile;
-    inputs->tempDir = m_TempDir + MXADir::Separator + StringUtils::numToString(inputs->interpolateFactor) + std::string("x");
+    inputs->tempDir  = m_TempDir + MXADir::Separator + StringUtils::numToString(inputs->interpolateFactor/(pow(2,i))) + std::string("x");
 
     //Make sure the directory is created:
     bool success = MXADir::mkdir(inputs->tempDir, true);
@@ -188,26 +188,24 @@ void MultiResolutionSOC::execute()
     inputs->varianceOutputFile = ss.str();
 
     inputs->NumOuterIter = getOuterIterations();
-//    if(i == 0)
-//    {
-//      inputs->NumIter = 30;
-//      inputs->NumIter = 1;
-//    }
-//    else
+    if(i == 0)
+    {
+      inputs->NumIter = 30;
+    }
+    else
     {
       inputs->NumIter = getInnerIterations();
     }
     inputs->p = getMRFShapeParameter();
-
     inputs->StopThreshold = getStopThreshold();
     if (i >= 2)
     {
       inputs->StopThreshold = getStopThreshold()/2.0f;
     }
     /** SIGMA_X needs to be calculated here based on some formula**/
-    inputs->SigmaX =pow(2,(getNumberResolutions()-1-i)*(1-3/inputs->p)) * getSigmaX();;
+    inputs->SigmaX =pow(2,(getNumberResolutions()-1-i)*(1-3/inputs->p)) * getSigmaX();
+	std::cout<<"SigmaX="<<inputs->SigmaX;
 //    inputs->SigmaX = getSigmaX();
-
 
     inputs->delta_xy = pow(2, getNumberResolutions()-i-1)*m_FinalResolution;
     inputs->delta_xz = pow(2, getNumberResolutions()-i-1)*m_FinalResolution;

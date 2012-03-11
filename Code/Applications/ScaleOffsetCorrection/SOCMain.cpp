@@ -106,8 +106,8 @@ int main(int argc, char **argv)
   engine->setSinogram(sinogram);
   engine->setGeometry(geometry);
   engine->setNuisanceParams(nuisanceParams);
-	engine->setBFTomoInputs(bf_inputs);
-	engine->setBFSinogram(bf_sinogram);
+  engine->setBFTomoInputs(bf_inputs);
+  engine->setBFSinogram(bf_sinogram);
 	Observer observer;
 	engine->addObserver(&observer);
 
