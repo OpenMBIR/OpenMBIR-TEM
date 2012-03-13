@@ -1,0 +1,166 @@
+/* ============================================================================
+ * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright notice, this
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
+ *
+ * Neither the name of Singanallur Venkatakrishnan, Michael A. Jackson, the Pudue
+ * Univeristy, BlueQuartz Software nor the names of its contributors may be used
+ * to endorse or promote products derived from this software without specific
+ * prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *  This code was written under United States Air Force Contract number
+ *                           FA8650-07-D-5800
+ *
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+
+
+#include "TargetGainSigmaXEstimation.h"
+
+#include <limits>
+
+#include "TomoEngine/Common/EIMMath.h"
+#include "TomoEngine/IO/MRCHeader.h"
+#include "TomoEngine/IO/MRCReader.h"
+#include "TomoEngine/SOC/SOCConstants.h"
+
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+TargetGainSigmaXEstimation::TargetGainSigmaXEstimation() :
+m_SigmaXEstimate(0.0),
+m_TargetGainEstimate(0.0),
+m_SampleThickness(100.0),
+m_DefaultOffset(0.0),
+m_TiltAngles(0)
+{
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+TargetGainSigmaXEstimation::~TargetGainSigmaXEstimation()
+{
+
+}
+
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TargetGainSigmaXEstimation::execute()
+{
+
+  MRCHeader header;
+  MRCReader::Pointer reader = MRCReader::New(true);
+  int err = reader->readHeader(m_InputFile, &header);
+  if (err < 0)
+  {
+    notify("Error reading the MRC input file", 0, Observable::UpdateErrorMessage);
+    setErrorCondition(-1);
+    return;
+  }
+
+  // Loop over each tilt angle to compute the Target Gain Estimation
+  int voxelMin[3] = { 0, 0, 0};
+  int voxelMax[3] = { header.nx, header.ny, 0};
+  DATA_TYPE sum1 = 0;
+  DATA_TYPE targetMin = std::numeric_limits<DATA_TYPE>::max();
+  DATA_TYPE targetMax = std::numeric_limits<DATA_TYPE>::min();
+
+  std::vector<DATA_TYPE> sum2s(header.nz);
+
+  float progress = 0.0;
+
+
+  for(int i_theta = 0; i_theta < header.nz; ++i_theta)
+  {
+    voxelMin[2] = i_theta;
+    voxelMax[2] = i_theta;
+    err = reader->read(m_InputFile, voxelMin, voxelMax);
+    if(err < 0)
+    {
+
+    }
+    progress = (i_theta/header.nz) * 100;
+
+    DATA_TYPE min = std::numeric_limits<DATA_TYPE>::max();
+    DATA_TYPE max = std::numeric_limits<DATA_TYPE>::min();
+    DATA_TYPE sum2 = 0;
+    switch(header.mode)
+    {
+      case 0:
+        calcMinMax<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), header.nx * header.ny, min, max, sum2);
+        break;
+      case 1:
+        calcMinMax<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), header.nx * header.ny, min, max, sum2);
+        break;
+      case 2:
+        calcMinMax<float>(static_cast<float*>(reader->getDataPointer()), header.nx * header.ny, min, max, sum2);
+        break;
+      case 3:
+        break;
+      case 4:
+        break;
+      case 6:
+        calcMinMax<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), header.nx * header.ny, min, max, sum2);
+        break;
+      case 16:
+        break;
+    }
+    if (min < targetMin) { targetMin = min; }
+    if (max > targetMax) { targetMax = max; }
+    sum2s[i_theta] = sum2;
+    notify("Estimating Target Gain and Sigma X from Data. ", (int)progress, Observable::UpdateProgressValueAndMessage);
+  }
+  m_TargetGainEstimate = (targetMax - targetMin) * 10;
+
+  // Now Calculate the Sigma X estimation
+  for(int i_theta = 0; i_theta < header.nz; ++i_theta)
+  {
+    sum2s[i_theta] /= header.nx * header.ny * m_TargetGainEstimate;
+    DATA_TYPE cosine = 0.0;
+    if (m_TiltAngles == 0)
+    {
+      cosine = cos(header.feiHeaders[i_theta].a_tilt);
+    }
+    else
+    {
+      cosine = cos(header.feiHeaders[i_theta].b_tilt);
+    }
+    sum1 += ( sum2s[i_theta] * cosine) / (m_SampleThickness / Z_STRETCH);
+  }
+
+  m_SigmaXEstimate = sum1/header.nz/100.0;
+
+//  std::cout << "Estimated Target Gain: " << m_TargetGainEstimate << std::endl;
+//  std::cout << "Estimated Sigma X: " << m_SigmaXEstimate << std::endl;
+
+  notify("Estimating Target Gain and Sigma X Complete ", 100, Observable::UpdateProgressValueAndMessage);
+
+}

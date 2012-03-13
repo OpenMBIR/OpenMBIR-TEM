@@ -72,7 +72,8 @@
 #include "TomoEngine/IO/MRCHeader.h"
 #include "TomoEngine/IO/MRCReader.h"
 #include "TomoEngine/Filters/GainsOffsetsReader.h"
-//
+#include "TomoEngine/Filters/TargetGainSigmaXEstimation.h"
+
 #include "License/LicenseFiles.h"
 
 #include "CheckBoxDelegate.h"
@@ -1773,6 +1774,47 @@ void TomoGui::displayDialogBox(QString title, QString text, QMessageBox::Icon ic
   msgBox.setDefaultButton(QMessageBox::Ok);
   msgBox.setIcon(icon);
   msgBox.exec();
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_estimateGainSigma_clicked()
+{
+ // std::cout << "on_estimateGainSigma_clicked" << std::endl;
+  bool ok = false;
+  TargetGainSigmaXEstimation::Pointer estimate = TargetGainSigmaXEstimation::New();
+  estimate->setInputFile(inputMRCFilePath->text().toStdString());
+  estimate->setSampleThickness(sampleThickness->text().toDouble(&ok));
+  estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
+  estimate->setTiltAngles(tiltSelection->currentIndex());
+  estimate->addObserver(this);
+  estimate->execute();
+  this->progressBar->setValue(0);
+  targetGain->setText(QString::number(estimate->getTargetGainEstimate()));
+  sigmaX->setText(QString::number(estimate->getSigmaXEstimate()));
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::updateProgressAndMessage(const char* message, int progress)
+{
+  this->progressBar->setValue(progress);
+  if (NULL != this->statusBar()) {
+    this->statusBar()->showMessage(message);
+  }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::updateProgressAndMessage(const std::string &msg, int progress)
+{
+  this->progressBar->setValue(progress);
+  if (NULL != this->statusBar()) {
+    this->statusBar()->showMessage(msg.c_str());
+  }
 }
 
 #if 0
