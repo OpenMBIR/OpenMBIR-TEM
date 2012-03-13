@@ -679,7 +679,7 @@ void SOCEngine::execute()
   SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
 #else
   MRF_P = 2;
-  MRF_Q = 1.2;
+  MRF_Q = m_TomoInputs->p;
   MRF_C = 0.01;
   MRF_ALPHA = 1.5;
   SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
