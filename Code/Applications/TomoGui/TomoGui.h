@@ -52,6 +52,7 @@ class GainsOffsetsTableModel;
 #include "QMultiResolutionSOC.h"
 
 #include "TomoEngine/IO/MRCHeader.h"
+#include "TomoEngine/Common/Observer.h"
 
 
 /**
@@ -62,7 +63,7 @@ class GainsOffsetsTableModel;
  * @date Dec 26, 2011
  * @version 1.0
  */
-class TomoGui :  public QMainWindow, private Ui::TomoGui
+class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 {
     Q_OBJECT;
 
@@ -104,6 +105,16 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
 
     bool sanityCheckOutputDirectory(QLineEdit* le, QString msgTitle);
 
+    /**
+      * @brief Either prints a message or sends the message to the User Interface
+      * @param message The message to print
+      * @param progress The progress of the GrainGenerator normalized to a value between 0 and 100
+      */
+     virtual void updateProgressAndMessage(const char* message, int progress);
+     virtual void updateProgressAndMessage(const std::string &msg, int progress);
+
+
+
   public slots:
 
   // Manual hookup slots to get signals from the graphics view
@@ -134,6 +145,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     /* slots for the buttons in the GUI */
     void on_m_GoBtn_clicked();
 
+    void on_estimateGainSigma_clicked();
+
     void z10_triggered();
     void z25_triggered();
     void z50_triggered();
@@ -146,10 +159,6 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui
     void on_fitToWindow_clicked();
     void on_layersPalette_clicked();
     void on_originCB_currentIndexChanged(int i);
-
-//    void on_addResolution_clicked();
-//    void on_removeResolution_clicked();
-
 
     /**
      * @brief Qt Slot that fires in response to a click on a "Recent File' Menu entry.
