@@ -1709,6 +1709,8 @@ void SOCEngine::execute()
     // Write the output File
   }
 #endif
+	
+#ifdef JOINT_ESTIMATION
 
 /* Write the Gains and Offsets to an output file */
   NuisanceParamWriter::Pointer nuisanceBinWriter = NuisanceParamWriter::New();
@@ -1733,6 +1735,7 @@ void SOCEngine::execute()
    setErrorCondition(-1);
    notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
   }
+#endif
 
 #ifdef NOISE_MODEL
   nuisanceBinWriter->setFileName(m_TomoInputs->varianceOutputFile);
