@@ -143,6 +143,8 @@ void MultiResolutionSOC::execute()
 
     /* ******* this is bad. Remove this for production work ****** */
     inputs->extendObject = getExtendObject();
+	
+	  std::cout<<"Extend Object Flag"<<inputs->extendObject<<std::endl;
 
     /* Get our input files from the last resolution iteration */
     inputs->gainsInputFile = prevInputs->gainsOutputFile;
