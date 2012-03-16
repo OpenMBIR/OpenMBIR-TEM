@@ -69,6 +69,7 @@
 #include "TomoEngine/IO/RawGeometryWriter.h"
 #include "TomoEngine/IO/MRCHeader.h"
 #include "TomoEngine/IO/MRCReader.h"
+#include "TomoEngine/IO/MRCWriter.h"
 #include "TomoEngine/IO/RawGeometryWriter.h"
 #include "TomoEngine/IO/NuisanceParamWriter.h"
 #include "TomoEngine/IO/NuisanceParamReader.h"
@@ -1762,7 +1763,6 @@ void SOCEngine::execute()
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-
         Final_Sinogram->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - ErrorSino->d[i_theta][i_r][i_t];
       }
     }
@@ -1822,6 +1822,16 @@ void SOCEngine::execute()
   {
     std::cout << "Error writing vtk file '" << vtkFile << "'" << std::endl;
   }
+
+
+  /* Write the output to the MRC File */
+  std::string mrcFile (m_TomoInputs->tempDir);
+  mrcFile = mrcFile.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedMrcFile);
+  MRCWriter::Pointer mrcWriter = MRCWriter::New();
+  mrcWriter->setOutputFile(mrcFile);
+  mrcWriter->setGeometry(m_Geometry);
+  mrcWriter->write();
+
 
   std::cout << "Final Dimensions of Object: " << std::endl;
   std::cout << "  Nx = " << m_Geometry->N_x << std::endl;

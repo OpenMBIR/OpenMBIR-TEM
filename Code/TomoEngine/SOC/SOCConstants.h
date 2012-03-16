@@ -108,7 +108,7 @@ namespace ScaleOffsetCorrection
 
   const std::string ReconstructedVtkFile("ReconstructedVolume.vtk");
   const std::string ReconstructedBinFile("ReconstructedVolume.bin");
-  const std::string ReconstructedMrcFile("ReconstructedVolume.mrc");
+  const std::string ReconstructedMrcFile("ReconstructedVolume.rec");
 
   namespace VTK
   {
