@@ -177,9 +177,10 @@ int MRCWriter::write()
   double*** d = m_Geometry->Object->d;
   for(uint16_t z = 0; z < m_Geometry->N_z; ++z)
   {
-    for(uint16_t x = 0; x < m_Geometry->N_x; ++z)
+    std::cout << "Writing Z=" << z << " Layer" << std::endl;
+    for(uint16_t x = 0; x < m_Geometry->N_x; ++x)
     {
-      for(uint16_t y = 0; y < m_Geometry->N_y; ++z)
+      for(uint16_t y = 0; y < m_Geometry->N_y; ++y)
       {
         index = (m_Geometry->N_y * m_Geometry->N_x * 0) + (m_Geometry->N_y * x) + y;
         slice[index] = (uint16_t)(d[z][x][y]);
