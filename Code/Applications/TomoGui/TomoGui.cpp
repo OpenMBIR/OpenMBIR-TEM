@@ -207,15 +207,27 @@ void TomoGui::readSettings(QSettings &prefs)
   // This will auto load the MRC File
   on_inputMRCFilePath_textChanged(inputMRCFilePath->text());
 
-  READ_STRING_SETTING(prefs, outputFilePath, "");
-  READ_STRING_SETTING(prefs, tempDirPath, "");
+
   READ_STRING_SETTING(prefs, initialReconstructionPath, "");
+  READ_STRING_SETTING(prefs, tempDirPath, "");
+  READ_STRING_SETTING(prefs, outputFilePath, "");
+
+  READ_STRING_SETTING(prefs, sampleThickness, "");
+  READ_STRING_SETTING(prefs, targetGain, "0")
+  READ_STRING_SETTING(prefs, sigmaX, ".00000045");
 
   READ_SETTING(prefs, numResolutions, ok, i, 1, Int);
+  READ_SETTING(prefs, finalResolution, ok, i, 1, Int);
   READ_SETTING(prefs, outerIterations, ok, i, 1, Int);
   READ_SETTING(prefs, innerIterations, ok, i, 1, Int);
-  READ_STRING_SETTING(prefs, targetGain, "0")
-  READ_STRING_SETTING(prefs, sampleThickness, "");
+
+  READ_BOOL_SETTING(prefs, useDefaultOffset, false);
+  READ_STRING_SETTING(prefs, defaultOffset, "0");
+  READ_STRING_SETTING(prefs, stopThreshold, "0.001");
+  READ_SETTING(prefs, mrf, ok, i, 1.2, Double);
+  READ_BOOL_SETTING(prefs, extendObject, false);
+
+
   READ_BOOL_SETTING(prefs, useSubVolume, false);
   READ_STRING_SETTING(prefs, xMin, "0");
   READ_STRING_SETTING(prefs, xMax, "0");
@@ -223,8 +235,8 @@ void TomoGui::readSettings(QSettings &prefs)
   READ_STRING_SETTING(prefs, yMax, "0");
   READ_STRING_SETTING(prefs, zMin, "0");
   READ_STRING_SETTING(prefs, zMax, "0");
-  READ_STRING_SETTING(prefs, sigmaX, ".00000045");
-  READ_BOOL_SETTING(prefs, extendObject, false);
+
+
 
   ok = false;
   i = prefs.value("tiltSelection").toInt(&ok);
@@ -240,11 +252,26 @@ void TomoGui::writeSettings(QSettings &prefs)
 {
   prefs.beginGroup("Parameters");
   WRITE_STRING_SETTING(prefs, inputMRCFilePath);
-  WRITE_STRING_SETTING(prefs, outputFilePath);
-  WRITE_STRING_SETTING(prefs, tempDirPath);
+
   WRITE_STRING_SETTING(prefs, initialReconstructionPath);
+  WRITE_STRING_SETTING(prefs, tempDirPath);
+  WRITE_STRING_SETTING(prefs, outputFilePath);
+
   WRITE_STRING_SETTING(prefs, sampleThickness);
   WRITE_STRING_SETTING(prefs, targetGain)
+  WRITE_STRING_SETTING(prefs, sigmaX);
+  WRITE_SETTING(prefs, numResolutions);
+  WRITE_SETTING(prefs, finalResolution);
+  WRITE_SETTING(prefs, outerIterations);
+  WRITE_SETTING(prefs, innerIterations);
+
+  WRITE_CHECKBOX_SETTING(prefs, useDefaultOffset);
+  WRITE_STRING_SETTING(prefs, defaultOffset);
+  WRITE_STRING_SETTING(prefs, stopThreshold);
+
+  WRITE_SETTING(prefs, mrf);
+  WRITE_CHECKBOX_SETTING(prefs, extendObject);
+
   WRITE_BOOL_SETTING(prefs, useSubVolume, useSubVolume->isChecked());
   WRITE_STRING_SETTING(prefs, xMin);
   WRITE_STRING_SETTING(prefs, xMax);
@@ -252,13 +279,8 @@ void TomoGui::writeSettings(QSettings &prefs)
   WRITE_STRING_SETTING(prefs, yMax);
   WRITE_STRING_SETTING(prefs, zMin);
   WRITE_STRING_SETTING(prefs, zMax);
-  WRITE_STRING_SETTING(prefs, sigmaX);
-  WRITE_SETTING(prefs, numResolutions);
-  WRITE_SETTING(prefs, outerIterations);
-  WRITE_SETTING(prefs, innerIterations);
-  WRITE_CHECKBOX_SETTING(prefs, extendObject);
 
- // prefs.setValue("m_GainsFile" , m_GainsFile);
+
   prefs.setValue("tiltSelection", tiltSelection->currentIndex());
 
   prefs.endGroup();
