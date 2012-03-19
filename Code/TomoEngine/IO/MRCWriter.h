@@ -39,8 +39,7 @@
 
 
 #include "TomoEngine/TomoEngine.h"
-#include "TomoEngine/IO/MRCHeader.h"
-
+#include "TomoEngine/SOC/SOCStructures.h"
 
 /**
  * @class MRCReader MRCReader.h EIMTomo/IO/MRCWriter.h
@@ -53,9 +52,9 @@ class TomoEngine_EXPORT MRCWriter
 {
   public:
     MXA_SHARED_POINTERS(MRCWriter);
-    static Pointer New(bool deleteMemory = true)
+    static Pointer New()
     {
-      Pointer sharedPtr (new MRCWriter(deleteMemory));
+      Pointer sharedPtr (new MRCWriter);
       return sharedPtr;
     }
 
@@ -64,8 +63,8 @@ class TomoEngine_EXPORT MRCWriter
     virtual ~MRCWriter();
 
     MXA_INSTANCE_PROPERTY(bool, DeleteMemory);
-    MXA_INSTANCE_PROPERTY(MRCHeader*, MRCHeader);
-    MXA_INSTANCE_STRING_PROPERTY(OutputFile)
+    MXA_INSTANCE_STRING_PROPERTY(OutputFile);
+    MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry);
 
     /**
      * @brief This method ONLY reads the header section of the file
@@ -80,13 +79,12 @@ class TomoEngine_EXPORT MRCWriter
 
   protected:
 
-    MRCWriter();
     /**
      * @brief Constructur
      * @param deleteMemory Should this class delete the memory allocated to hold
      * the voxel data.
      */
-    explicit MRCWriter(bool deleteMemory);
+    explicit MRCWriter();
 
   private:
     MRCWriter(const MRCWriter&); // Copy Constructor Not Implemented
