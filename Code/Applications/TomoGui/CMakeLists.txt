@@ -54,22 +54,22 @@ SET( TomoGui_SRCS
   ${TomoGui_SOURCE_DIR}/main.cpp
   ${TomoGui_SOURCE_DIR}/TomoGui.cpp
   ${TomoGui_SOURCE_DIR}/TomoGuiGraphicsView.cpp
-  ${TomoGui_SOURCE_DIR}/TomoInputWidget.cpp
   ${TomoGui_SOURCE_DIR}/LayersDockWidget.cpp
   ${TomoGui_SOURCE_DIR}/GainsOffsetsTableModel.cpp
   ${TomoGui_SOURCE_DIR}/CheckBoxDelegate.cpp
-  )
+  ${TomoGui_SOURCE_DIR}/ReconstructionArea.cpp
+)
 
 # another list, this time it includes all header files that should 
 #  be treated with moc
 SET( TomoGui_MOC_HDRS
   ${TomoGui_SOURCE_DIR}/TomoGui.h
   ${TomoGui_SOURCE_DIR}/TomoGuiGraphicsView.h
-  ${TomoGui_SOURCE_DIR}/TomoInputWidget.h
   ${TomoGui_SOURCE_DIR}/LayersDockWidget.h
   ${TomoGui_SOURCE_DIR}/GainsOffsetsItemDelegate.h
   ${TomoGui_SOURCE_DIR}/GainsOffsetsTableModel.h
   ${TomoGui_SOURCE_DIR}/CheckBoxDelegate.h
+  ${TomoGui_SOURCE_DIR}/ReconstructionArea.h
 )
 cmp_IDE_SOURCE_PROPERTIES(TomoGui "${TomoGui_MOC_HDRS}" "${TomoGui_SRCS}" "0")
 
@@ -79,7 +79,6 @@ cmp_IDE_SOURCE_PROPERTIES(TomoGui "${TomoGui_MOC_HDRS}" "${TomoGui_SRCS}" "0")
 SET( TomoGui_UIS
  ${TomoGui_SOURCE_DIR}/UI_Files/TomoGui.ui
  ${TomoGui_SOURCE_DIR}/UI_Files/LayersDockWidget.ui
- ${TomoGui_SOURCE_DIR}/UI_Files/TomoInputWidget.ui
 )
 cmp_IDE_SOURCE_PROPERTIES(TomoGui/UI_Files "${TomoGui_UIS}" "" "0")
 

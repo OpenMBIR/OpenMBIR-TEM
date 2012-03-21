@@ -39,6 +39,7 @@
 #include <QtGui/QRubberBand>
 
 class TomoGui;
+class ReconstructionArea;
 
 namespace TomoGui_Constants {
 
@@ -59,6 +60,7 @@ enum CompositeType
 
 }
 
+
 class TomoGuiGraphicsView : public QGraphicsView
 {
     Q_OBJECT;
@@ -69,6 +71,8 @@ class TomoGuiGraphicsView : public QGraphicsView
 
 
     void setTomoGui(TomoGui* gui);
+
+    void setAddUserArea(bool b);
 
     /**
     * @brief Over-riding implementation from base class
@@ -105,7 +109,8 @@ class TomoGuiGraphicsView : public QGraphicsView
 
     QImage& blend(QImage& src, QImage& dst, float opacity);
 
-
+    void addNewInitArea(ReconstructionArea* userInitArea);
+    void createNewUserInitArea(const QRectF brect);
 
   public slots:
     void zoomIn();
@@ -113,8 +118,6 @@ class TomoGuiGraphicsView : public QGraphicsView
     void zoomOut();
 
     void setOverlayTransparency(float f);
-
-
 
     void setZoomIndex(int index);
 
@@ -128,12 +131,14 @@ class TomoGuiGraphicsView : public QGraphicsView
 
     void updateDisplay();
 
+    void userInitAreaUpdated(ReconstructionArea* uia);
 
   signals:
    void fireBaseMRCFileLoaded();
    void fireOverlayImageFileLoaded(const QString &filename);
 
-
+   void fireUserInitAreaAdded(ReconstructionArea* uia);
+   void fireUserInitAreaLostFocus();
   protected:
 
 
@@ -149,10 +154,12 @@ class TomoGuiGraphicsView : public QGraphicsView
    float          m_ZoomFactors[10];
 
    TomoGui*      m_MainGui;
-   TomoGui_Constants::ImageDisplayType           m_ImageDisplayType;
-   bool           m_ShowOverlayImage;
-   QPainter::CompositionMode m_composition_mode;
-   float          m_OverlayTransparency;
+   TomoGui_Constants::ImageDisplayType  m_ImageDisplayType;
+   bool                                 m_ShowOverlayImage;
+   QPainter::CompositionMode            m_composition_mode;
+   float                                m_OverlayTransparency;
+
+   ReconstructionArea*                  m_ReconstructionArea;
 
    TomoGuiGraphicsView(const TomoGuiGraphicsView&); // Copy Constructor Not Implemented
    void operator=(const TomoGuiGraphicsView&); // Operator '=' Not Implemented

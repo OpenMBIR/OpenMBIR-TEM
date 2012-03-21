@@ -42,6 +42,13 @@
 #include <QtGui/QGraphicsPolygonItem>
 
 #include "TomoGui.h"
+#include "ReconstructionArea.h"
+
+namespace UIA
+{
+  const static int Alpha = 155;
+}
+
 
 
 // -----------------------------------------------------------------------------
@@ -49,11 +56,12 @@
 // -----------------------------------------------------------------------------
 TomoGuiGraphicsView::TomoGuiGraphicsView(QWidget *parent)
 : QGraphicsView(parent),
-  m_ImageGraphicsItem(NULL)
+  m_ImageGraphicsItem(NULL),
+  m_ReconstructionArea(NULL)
 {
   setAcceptDrops(true);
   setDragMode(RubberBandDrag);
-  m_AddUserInitArea = false;
+  m_AddUserInitArea = true;
 
   m_ZoomFactors[0] = 0.1f;
   m_ZoomFactors[1] = 0.25f;
@@ -124,6 +132,16 @@ void TomoGuiGraphicsView::setZoomIndex(int index)
   }
 
 }
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGuiGraphicsView::userInitAreaUpdated(ReconstructionArea* uia)
+{
+  updateDisplay();
+}
+
 
 // -----------------------------------------------------------------------------
 //
@@ -356,21 +374,37 @@ void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
   }
   else
   {
-    setScene(NULL);
-    gScene->deleteLater();
-    gScene = new QGraphicsScene(this);
-    setScene(gScene);
-    delete m_ImageGraphicsItem;
-    m_ImageGraphicsItem = NULL;
+//    setScene(NULL);
+//    gScene->deleteLater();
+//    gScene = new QGraphicsScene(this);
+//    setScene(gScene);
+//    delete m_ImageGraphicsItem;
+//    m_ImageGraphicsItem = NULL;
+
+    gScene->removeItem(m_ImageGraphicsItem);
   }
-  if (NULL == m_ImageGraphicsItem) {
+
+  if (NULL != m_ReconstructionArea)
+  {
+    m_ReconstructionArea->setParentItem(NULL);
+  }
+
+
+//  if (NULL == m_ImageGraphicsItem)
+  {
     m_ImageGraphicsItem = gScene->addPixmap(QPixmap::fromImage(m_BaseImage));
+    if (NULL != m_ReconstructionArea)
+        m_ReconstructionArea->setParentItem(m_ImageGraphicsItem);
   }
+
+
   m_ImageGraphicsItem->setAcceptDrops(true);
   m_ImageGraphicsItem->setZValue(-1);
   QRectF rect = m_ImageGraphicsItem->boundingRect();
   gScene->setSceneRect(rect);
-  //centerOn(m_ImageGraphicsItem);
+
+  //createNewUserInitArea(userArea);
+
   this->updateDisplay();
   emit fireBaseMRCFileLoaded();
 }
@@ -457,27 +491,31 @@ QImage TomoGuiGraphicsView::getOverlayImage()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-//void TomoGuiGraphicsView::setOverlayImage(QImage image)
-//{
-//  m_OverlayImage = image;
-//}
+void TomoGuiGraphicsView::setAddUserArea(bool b)
+{
+  m_AddUserInitArea = b;
+}
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
 void TomoGuiGraphicsView::mousePressEvent(QMouseEvent *event)
 {
-  if (m_AddUserInitArea == true)
-  {
-    m_MouseClickOrigin = event->pos();
-    if (!m_RubberBand) m_RubberBand = new QRubberBand(QRubberBand::Rectangle, this);
-    m_RubberBand->setGeometry(QRect(m_MouseClickOrigin, QSize()));
-    m_RubberBand->show();
-  }
-  else
-  {
-    QGraphicsView::mousePressEvent(event);
-  }
+ // std::cout << "TomoGuiGraphicsView::mousePressEvent accepted:" << (int)(event->isAccepted()) << std::endl;
+
+  m_AddUserInitArea = true;
+  QGraphicsView::mousePressEvent(event);
+
+
+   // std::cout << "    event->accepted() == false" << std::endl;
+    if (m_AddUserInitArea == true)
+    {
+      m_MouseClickOrigin = event->pos();
+      if (!m_RubberBand) m_RubberBand = new QRubberBand(QRubberBand::Rectangle, this);
+      m_RubberBand->setGeometry(QRect(m_MouseClickOrigin, QSize()));
+      m_RubberBand->show();
+    }
+
 }
 
 
@@ -500,8 +538,81 @@ void TomoGuiGraphicsView::mouseMoveEvent(QMouseEvent *event)
 // -----------------------------------------------------------------------------
 void TomoGuiGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 {
-
+  if (m_AddUserInitArea == true)
+  {
+    m_RubberBand->hide();
+    QRect box = QRect(m_MouseClickOrigin, event->pos()).normalized();
+    QPolygonF sceneBox = mapToScene(box);
+    createNewUserInitArea(sceneBox.boundingRect());
+    m_AddUserInitArea = false;
+  }
+  else
+  {
+    QGraphicsView::mouseReleaseEvent(event);
+    if (scene())
+    {
+      QList<QGraphicsItem *> selected;
+      selected = scene()->selectedItems();
+      if (selected.count() == 0)
+      {
+        emit fireUserInitAreaLostFocus();
+      }
+    }
+  }
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGuiGraphicsView::createNewUserInitArea(const QRectF brect)
+{
+  ReconstructionArea* userInitArea = new ReconstructionArea( brect);
+  userInitArea->setGraphicsView(this);
+  // Line Color
+  userInitArea->setPen(QPen(QColor(225, 225, 225, UIA::Alpha)));
+  // Fill Color
+  userInitArea->setBrush(QBrush(QColor(28, 28, 200, UIA::Alpha)));
+  userInitArea->setZValue(1);
+  userInitArea->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+
+  addNewInitArea(userInitArea);
+}
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGuiGraphicsView::addNewInitArea(ReconstructionArea* userInitArea)
+{
+ // std::cout << "EMMPMGraphicsView::addNewInitArea()" << std::endl;
+
+
+  // Set the Parent Item
+  userInitArea->setParentItem(m_ImageGraphicsItem);
+  // Add it to the vector of UserInitAreas
+  if (m_ReconstructionArea != NULL)
+  {
+    m_ReconstructionArea->deleteLater();
+  }
+  m_ReconstructionArea = userInitArea;
+
+  // Hook up the signals and slots
+  connect (userInitArea, SIGNAL(fireUserInitAreaAboutToDelete(ReconstructionArea*)),
+           m_MainGui, SLOT(deleteUserInitArea(ReconstructionArea*)), Qt::DirectConnection);
+
+  connect (userInitArea, SIGNAL (fireUserInitAreaUpdated(ReconstructionArea*)),
+           m_MainGui, SLOT(userInitAreaUpdated(ReconstructionArea*)), Qt::QueuedConnection);
+
+  connect (userInitArea, SIGNAL(fireUserInitAreaSelected(ReconstructionArea*)),
+           m_MainGui, SLOT(userInitAreaSelected(ReconstructionArea*)), Qt::QueuedConnection);
+
+  connect (userInitArea, SIGNAL (fireUserInitAreaUpdated(ReconstructionArea*)),
+           this, SLOT(userInitAreaUpdated(ReconstructionArea*)), Qt::QueuedConnection);
+
+
+  emit fireUserInitAreaAdded(userInitArea);
+}
+
 
 // -----------------------------------------------------------------------------
 //

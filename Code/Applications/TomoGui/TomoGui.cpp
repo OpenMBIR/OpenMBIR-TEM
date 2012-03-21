@@ -79,6 +79,8 @@
 #include "CheckBoxDelegate.h"
 #include "LayersDockWidget.h"
 #include "GainsOffsetsTableModel.h"
+#include "ReconstructionArea.h"
+
 
 #define GRAY_SCALE 1
 
@@ -480,7 +482,11 @@ void TomoGui::setupGui()
 //  connect (m_GraphicsView, SIGNAL(fireBaseImageFileLoaded(const QString &)),
 //           this, SLOT(baseImageFileLoaded(const QString &)), Qt::QueuedConnection);
 
-  connect(m_GraphicsView, SIGNAL(fireOverlayImageFileLoaded(const QString &)), this, SLOT(overlayImageFileLoaded(const QString &)), Qt::QueuedConnection);
+  connect(m_GraphicsView, SIGNAL(fireOverlayImageFileLoaded(const QString &)),
+          this, SLOT(overlayImageFileLoaded(const QString &)), Qt::QueuedConnection);
+
+  connect(m_GraphicsView, SIGNAL(fireUserInitAreaAdded(ReconstructionArea*)),
+          this, SLOT(userInitAreaAdded(ReconstructionArea*)), Qt::QueuedConnection);
 
   connect(zoomIn, SIGNAL(clicked()), m_GraphicsView, SLOT(zoomIn()), Qt::QueuedConnection);
   connect(zoomOut, SIGNAL(clicked()), m_GraphicsView, SLOT(zoomOut()), Qt::QueuedConnection);
@@ -501,6 +507,8 @@ void TomoGui::setupGui()
   m_ImageWidgets << zoomIn << zoomOut << fitToWindow << layersPalette;
   setImageWidgetsEnabled(false);
 
+  m_GainsOffsetsTableModel = NULL;
+#if 0
   // Setup the TableView and Table Models
   QHeaderView* headerView = new QHeaderView(Qt::Horizontal, gainsOffsetsTableView);
   headerView->setResizeMode(QHeaderView::Interactive);
@@ -519,6 +527,8 @@ void TomoGui::setupGui()
 
   QAbstractItemDelegate* cbDelegate = new CheckBoxDelegate;
   gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Exclude, cbDelegate);
+#endif
+
 }
 
 // -----------------------------------------------------------------------------
@@ -745,6 +755,7 @@ void TomoGui::initializeSOCEngine()
   }
 
   std::vector<uint8_t> viewMasks;
+  if (NULL != m_GainsOffsetsTableModel) {
   QVector<bool> excludedViews = m_GainsOffsetsTableModel->getExcludedTilts();
   for (int i = 0; i < excludedViews.size(); ++i)
   {
@@ -752,6 +763,7 @@ void TomoGui::initializeSOCEngine()
     {
       viewMasks.push_back(i);
     }
+  }
   }
   m_MultiResSOC->setViewMasks(viewMasks);
 
@@ -1363,7 +1375,7 @@ void TomoGui::loadMRCTiltImage(QString filepath, int tiltIndex)
     }
   }
 
-  drawOrigin(m_CurrentImage);
+//  drawOrigin(m_CurrentImage);
 
 
   // Be sure to properly orient the image which will in turn load the image into
@@ -1838,6 +1850,62 @@ void TomoGui::updateProgressAndMessage(const std::string &msg, int progress)
     this->statusBar()->showMessage(msg.c_str());
   }
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::deleteUserInitArea(ReconstructionArea* recon)
+{
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::userInitAreaAdded(ReconstructionArea* recon)
+{
+  unsigned int xmin, ymin;
+  recon->getUpperLeft(xmin, ymin);
+
+  unsigned int xmax, ymax;
+  recon->getLowerRight(xmax, ymax);
+
+  xMin->setText(QString::number(xmin));
+  xMax->setText(QString::number(xmax));
+
+  yMin->setText(QString::number(ymin));
+  yMax->setText(QString::number(ymax));
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::userInitAreaUpdated(ReconstructionArea* recon)
+{
+
+  unsigned int xmin, ymin;
+  recon->getUpperLeft(xmin, ymin);
+
+  unsigned int xmax, ymax;
+  recon->getLowerRight(xmax, ymax);
+
+  xMin->setText(QString::number(xmin));
+  xMax->setText(QString::number(xmax));
+
+  yMin->setText(QString::number(ymin));
+  yMax->setText(QString::number(ymax));
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::userInitAreaSelected(ReconstructionArea* recon)
+{
+
+}
+
+
 
 #if 0
 // -----------------------------------------------------------------------------
