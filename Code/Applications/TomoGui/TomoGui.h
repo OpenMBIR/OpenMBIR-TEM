@@ -45,7 +45,7 @@
 
 class LayersDockWidget;
 class GainsOffsetsTableModel;
-
+class ReconstructionArea;
 
 //-- UIC generated Header
 #include <ui_TomoGui.h>
@@ -120,6 +120,10 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
   // Manual hookup slots to get signals from the graphics view
     void overlayImageFileLoaded(const QString &filename);
 
+    void deleteUserInitArea(ReconstructionArea* recon);
+    void userInitAreaUpdated(ReconstructionArea* recon);
+    void userInitAreaSelected(ReconstructionArea* recon);
+    void userInitAreaAdded(ReconstructionArea* recon);
 
   protected slots:
   //Manual Hookup Menu Actions
@@ -189,8 +193,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     void on_currentTiltIndex_valueChanged(int i);
 
-//    void on_importGainsOffsetsBtn_clicked();
-//    void on_exportGainsOffsets_clicked();
+
 
   protected:
 
