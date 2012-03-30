@@ -188,9 +188,9 @@ QVariant GainsOffsetsTableModel::headerData(int section, Qt::Orientation orienta
       case TiltIndex:
         return QVariant(QString("Index"));
       case A_Tilt:
-        return QVariant(QString("A Tilts"));
+        return QVariant(QString("X Tilts"));
       case B_Tilt:
-        return QVariant(QString("B Tilts"));
+        return QVariant(QString("Y Tilts"));
       case Exclude:
         return QVariant(QString("Exclude Tilt"));
         break;

@@ -125,6 +125,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void userInitAreaSelected(ReconstructionArea* recon);
     void userInitAreaAdded(ReconstructionArea* recon);
 
+
   protected slots:
   //Manual Hookup Menu Actions
   // File Menu
@@ -150,6 +151,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void on_m_GoBtn_clicked();
 
     void on_estimateGainSigma_clicked();
+
+    void on_singleSliceReconstruction_clicked();
 
     void z10_triggered();
     void z25_triggered();
@@ -235,7 +238,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     */
     bool verifyOutputPathParentExists(QString outFilePath, QLineEdit* lineEdit);
 
-    void initializeSOCEngine();
+    void initializeSOCEngine(bool fullReconstruction);
 
     qint32 initImageViews();
 
@@ -278,6 +281,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     /* Reconstruction Thread communicates throught these methods */
     virtual void pipelineComplete();
     virtual void pipelineProgress(int value);
+    virtual void singleSliceComplete();
 
   private:
     LayersDockWidget*  m_LayersPalette;
