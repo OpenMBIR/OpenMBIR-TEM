@@ -374,13 +374,6 @@ void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
   }
   else
   {
-//    setScene(NULL);
-//    gScene->deleteLater();
-//    gScene = new QGraphicsScene(this);
-//    setScene(gScene);
-//    delete m_ImageGraphicsItem;
-//    m_ImageGraphicsItem = NULL;
-
     gScene->removeItem(m_ImageGraphicsItem);
   }
 
@@ -394,7 +387,7 @@ void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
   {
     m_ImageGraphicsItem = gScene->addPixmap(QPixmap::fromImage(m_BaseImage));
     if (NULL != m_ReconstructionArea)
-        m_ReconstructionArea->setParentItem(m_ImageGraphicsItem);
+        {m_ReconstructionArea->setParentItem(m_ImageGraphicsItem);}
   }
 
 
@@ -403,7 +396,16 @@ void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
   QRectF rect = m_ImageGraphicsItem->boundingRect();
   gScene->setSceneRect(rect);
 
-  //createNewUserInitArea(userArea);
+  // Line Color
+  m_XZLine.setPen(QPen(QColor(255, 255, 0, UIA::Alpha)));
+  // Fill Color
+  m_XZLine.setBrush(QBrush(QColor(255, 255, 0, UIA::Alpha)));
+  m_XZLine.setZValue(1);
+  m_XZLine.setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+  m_XZLine.setVisible(m_XZLine.isVisible());
+  if (scene()->items().contains(&m_XZLine) == false) {
+    scene()->addItem(&m_XZLine);
+  }
 
   this->updateDisplay();
   emit fireBaseMRCFileLoaded();
@@ -501,20 +503,18 @@ void TomoGuiGraphicsView::setAddUserArea(bool b)
 // -----------------------------------------------------------------------------
 void TomoGuiGraphicsView::mousePressEvent(QMouseEvent *event)
 {
- // std::cout << "TomoGuiGraphicsView::mousePressEvent accepted:" << (int)(event->isAccepted()) << std::endl;
-
+  // std::cout << "TomoGuiGraphicsView::mousePressEvent accepted:" << (int)(event->isAccepted()) << std::endl;
   m_AddUserInitArea = true;
   QGraphicsView::mousePressEvent(event);
 
-
-   // std::cout << "    event->accepted() == false" << std::endl;
-    if (m_AddUserInitArea == true)
-    {
-      m_MouseClickOrigin = event->pos();
-      if (!m_RubberBand) m_RubberBand = new QRubberBand(QRubberBand::Rectangle, this);
-      m_RubberBand->setGeometry(QRect(m_MouseClickOrigin, QSize()));
-      m_RubberBand->show();
-    }
+  // std::cout << "    event->accepted() == false" << std::endl;
+  if(m_AddUserInitArea == true)
+  {
+    m_MouseClickOrigin = event->pos();
+    if(!m_RubberBand) m_RubberBand = new QRubberBand(QRubberBand::Rectangle, this);
+    m_RubberBand->setGeometry(QRect(m_MouseClickOrigin, QSize()));
+    m_RubberBand->show();
+  }
 
 }
 
@@ -524,13 +524,14 @@ void TomoGuiGraphicsView::mousePressEvent(QMouseEvent *event)
 // -----------------------------------------------------------------------------
 void TomoGuiGraphicsView::mouseMoveEvent(QMouseEvent *event)
 {
- if (m_AddUserInitArea == true && m_RubberBand != NULL) {
-   m_RubberBand->setGeometry(QRect(m_MouseClickOrigin, event->pos()).normalized());
- }
- else
- {
- QGraphicsView::mouseMoveEvent(event);
- }
+  if(m_AddUserInitArea == true && m_RubberBand != NULL)
+  {
+    m_RubberBand->setGeometry(QRect(m_MouseClickOrigin, event->pos()).normalized());
+  }
+  else
+  {
+    QGraphicsView::mouseMoveEvent(event);
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -538,7 +539,28 @@ void TomoGuiGraphicsView::mouseMoveEvent(QMouseEvent *event)
 // -----------------------------------------------------------------------------
 void TomoGuiGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 {
-  if (m_AddUserInitArea == true)
+
+  if (event->modifiers() == Qt::ShiftModifier)
+  {
+    std::cout << "Shift Key held down during mouse click" << std::endl;
+
+    QRectF sr = sceneRect();
+
+
+    QPointF p0 = mapToScene(QPoint(0, m_MouseClickOrigin.y()));
+    QPointF p1 = mapToScene(QPoint(sr.width(), m_MouseClickOrigin.y()) );
+
+
+  //  std::cout << "SceneRect: " << sr.x() << ", " << sr.y() << "  " << sr.width() << ", " << sr.height() << std::endl;
+    QVector<QPointF> line;
+    line.push_back(p0);
+    line.push_back(p1);
+    QPolygonF polygon(line);
+
+    m_XZLine.setPolygon(polygon);
+    m_XZLine.setVisible(true);
+  }
+  else if (m_AddUserInitArea == true)
   {
     m_RubberBand->hide();
     QRect box = QRect(m_MouseClickOrigin, event->pos()).normalized();
@@ -559,6 +581,18 @@ void TomoGuiGraphicsView::mouseReleaseEvent(QMouseEvent *event)
       }
     }
   }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QLineF TomoGuiGraphicsView::getXZPlane()
+{
+ QPointF p0 = m_XZLine.polygon().at(0);
+ QPointF p1 = m_XZLine.polygon().at(1);
+
+ QLineF line(p0, p1);
+ return line;
 }
 
 // -----------------------------------------------------------------------------

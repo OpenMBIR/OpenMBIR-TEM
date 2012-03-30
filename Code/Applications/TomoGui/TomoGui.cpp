@@ -230,13 +230,13 @@ void TomoGui::readSettings(QSettings &prefs)
   READ_BOOL_SETTING(prefs, extendObject, false);
 
 
-  READ_BOOL_SETTING(prefs, useSubVolume, false);
+//  READ_BOOL_SETTING(prefs, useSubVolume, false);
   READ_STRING_SETTING(prefs, xMin, "0");
   READ_STRING_SETTING(prefs, xMax, "0");
   READ_STRING_SETTING(prefs, yMin, "0");
   READ_STRING_SETTING(prefs, yMax, "0");
-  READ_STRING_SETTING(prefs, zMin, "0");
-  READ_STRING_SETTING(prefs, zMax, "0");
+//  READ_STRING_SETTING(prefs, zMin, "0");
+//  READ_STRING_SETTING(prefs, zMax, "0");
 
 
 
@@ -274,13 +274,13 @@ void TomoGui::writeSettings(QSettings &prefs)
   WRITE_SETTING(prefs, mrf);
   WRITE_CHECKBOX_SETTING(prefs, extendObject);
 
-  WRITE_BOOL_SETTING(prefs, useSubVolume, useSubVolume->isChecked());
+//  WRITE_BOOL_SETTING(prefs, useSubVolume, useSubVolume->isChecked());
   WRITE_STRING_SETTING(prefs, xMin);
   WRITE_STRING_SETTING(prefs, xMax);
   WRITE_STRING_SETTING(prefs, yMin);
   WRITE_STRING_SETTING(prefs, yMax);
-  WRITE_STRING_SETTING(prefs, zMin);
-  WRITE_STRING_SETTING(prefs, zMax);
+//  WRITE_STRING_SETTING(prefs, zMin);
+//  WRITE_STRING_SETTING(prefs, zMax);
 
 
   prefs.setValue("tiltSelection", tiltSelection->currentIndex());
@@ -508,7 +508,7 @@ void TomoGui::setupGui()
   setImageWidgetsEnabled(false);
 
   m_GainsOffsetsTableModel = NULL;
-#if 0
+#if 1
   // Setup the TableView and Table Models
   QHeaderView* headerView = new QHeaderView(Qt::Horizontal, gainsOffsetsTableView);
   headerView->setResizeMode(QHeaderView::Interactive);
@@ -588,6 +588,74 @@ bool TomoGui::sanityCheckOutputDirectory(QLineEdit* le, QString msgTitle)
   }
   verifyPathExists(le->text(), le);
   return true;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_singleSliceReconstruction_clicked()
+{
+  // First make sure we are not already running a reconstruction
+  if(singleSliceReconstruction->text().compare("Cancel") == 0)
+  {
+    if(m_MultiResSOC != NULL)
+    {
+      std::cout << "canceling from GUI...." << std::endl;
+      emit cancelPipeline();
+    }
+    return;
+  }
+
+  // Create a Worker Thread that will run the Reconstruction
+    if(m_WorkerThread != NULL)
+    {
+      m_WorkerThread->wait(); // Wait until the thread is complete
+      delete m_WorkerThread; // Kill the thread
+      m_WorkerThread = NULL;
+    }
+    m_WorkerThread = new QThread(); // Create a new Thread Resource
+
+    m_MultiResSOC = new QMultiResolutionSOC(NULL);
+
+    // Move the Reconstruction object into the thread that we just created.
+    m_MultiResSOC->moveToThread(m_WorkerThread);
+    initializeSOCEngine(false);
+
+    /* Connect the signal 'started()' from the QThread to the 'run' slot of the
+     * SOCEngine object. Since the SOCEngine object has been moved to another
+     * thread of execution and the actual QThread lives in *this* thread then the
+     * type of connection will be a Queued connection.
+     */
+    // When the thread starts its event loop, start the Reconstruction going
+    connect(m_WorkerThread, SIGNAL(started()), m_MultiResSOC, SLOT(run()));
+
+    // When the Reconstruction ends then tell the QThread to stop its event loop
+    connect(m_MultiResSOC, SIGNAL(finished() ), m_WorkerThread, SLOT(quit()));
+
+    // When the QThread finishes, tell this object that it has finished.
+    connect(m_WorkerThread, SIGNAL(finished()), this, SLOT( singleSliceComplete() ));
+
+    // If the use clicks on the "Cancel" button send a message to the Reconstruction object
+    // We need a Direct Connection so the
+    connect(this, SIGNAL(cancelPipeline() ), m_MultiResSOC, SLOT (on_CancelWorker() ), Qt::DirectConnection);
+
+    // Send Progress from the Reconstruction to this object for display
+    connect(m_MultiResSOC, SIGNAL (updateProgress(int)), this, SLOT(pipelineProgress(int) ));
+
+    // Send progress messages from Reconstruction to this object for display
+    connect(m_MultiResSOC, SIGNAL (progressMessage(QString)), this, SLOT(addProgressMessage(QString) ));
+
+    // Send progress messages from Reconstruction to this object for display
+    connect(m_MultiResSOC, SIGNAL (warningMessage(QString)), this, SLOT(addWarningMessage(QString) ));
+
+    // Send progress messages from Reconstruction to this object for display
+    connect(m_MultiResSOC, SIGNAL (errorMessage(QString)), this, SLOT(addErrorMessage(QString) ));
+
+    setWidgetListEnabled(false);
+    emit pipelineStarted();
+    m_WorkerThread->start();
+    singleSliceReconstruction->setText("Cancel");
+
 }
 
 
@@ -672,7 +740,7 @@ void TomoGui::on_m_GoBtn_clicked()
 
   // Move the Reconstruction object into the thread that we just created.
   m_MultiResSOC->moveToThread(m_WorkerThread);
-  initializeSOCEngine();
+  initializeSOCEngine(true);
 
   /* Connect the signal 'started()' from the QThread to the 'run' slot of the
    * SOCEngine object. Since the SOCEngine object has been moved to another
@@ -714,7 +782,7 @@ void TomoGui::on_m_GoBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::initializeSOCEngine()
+void TomoGui::initializeSOCEngine(bool fullReconstruction)
 {
   QString path;
   path = QDir::toNativeSeparators(inputMRCFilePath->text());
@@ -728,7 +796,14 @@ void TomoGui::initializeSOCEngine()
 
 
   bool ok = false;
-  m_MultiResSOC->setNumberResolutions(numResolutions->value());
+  if (fullReconstruction == true)
+  {
+    m_MultiResSOC->setNumberResolutions(numResolutions->value());
+  }
+  else
+  {
+    m_MultiResSOC->setNumberResolutions(1);
+  }
   m_MultiResSOC->setFinalResolution(finalResolution->value());
   m_MultiResSOC->setSampleThickness(sampleThickness->text().toFloat(&ok));
   m_MultiResSOC->setTargetGain(targetGain->text().toFloat(&ok));
@@ -742,28 +817,45 @@ void TomoGui::initializeSOCEngine()
   m_MultiResSOC->setTiltSelection(static_cast<SOC::TiltSelection>(tiltSelection->currentIndex()));
   m_MultiResSOC->setExtendObject(extendObject->isChecked());
 
-  if(useSubVolume->isChecked())
+  std::vector<uint16_t> subvolume(6);
+  subvolume[2] = 0;
+  subvolume[5] = m_nTilts->text().toUShort(&ok);
+  if (fullReconstruction == true)
   {
-    std::vector<uint16_t> subvolume(6);
     subvolume[0] = xMin->text().toUShort(&ok);
     subvolume[3] = xMax->text().toUShort(&ok);
     subvolume[1] = yMin->text().toUShort(&ok);
     subvolume[4] = yMax->text().toUShort(&ok);
-    subvolume[2] = zMin->text().toUShort(&ok);
-    subvolume[5] = zMax->text().toUShort(&ok);
     m_MultiResSOC->setSubvolume(subvolume);
   }
+  else
+  {
+    QLineF line = m_GraphicsView->getXZPlane();
+    std::cout << "p1: " << line.p1().x() << ", " << line.p1().y()
+     << "p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
+
+    unsigned short x = m_XDim->text().toUShort(&ok);
+    // Only reconstruct the middle section of data along the x axis
+    subvolume[0] = 0 + x/4;
+    subvolume[3] = x - x/4;
+
+    int ySlices = 3 * finalResolution->value();
+    // Try and center on the line best we can
+    subvolume[1] = line.p1().y() - (ySlices/2);
+    subvolume[4] = subvolume[1] + ySlices;
+  }
+  m_MultiResSOC->setSubvolume(subvolume);
 
   std::vector<uint8_t> viewMasks;
   if (NULL != m_GainsOffsetsTableModel) {
   QVector<bool> excludedViews = m_GainsOffsetsTableModel->getExcludedTilts();
   for (int i = 0; i < excludedViews.size(); ++i)
   {
-    if(excludedViews[i] == true)
-    {
-      viewMasks.push_back(i);
+      if(excludedViews[i] == true)
+      {
+        viewMasks.push_back(i);
+      }
     }
-  }
   }
   m_MultiResSOC->setViewMasks(viewMasks);
 
@@ -772,15 +864,28 @@ void TomoGui::initializeSOCEngine()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::pipelineComplete()
+void TomoGui::singleSliceComplete()
 {
- // std::cout << "ReconstructionWidget::threadFinished()" << std::endl;
-  m_GoBtn->setText("Reconstruct");
+  std::cout << "TomoGui::singleSliceComplete" << std::endl;
+  singleSliceReconstruction->setText("Single Slice Reconstruction");
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
   emit pipelineEnded();
   m_MultiResSOC->deleteLater();
+}
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::pipelineComplete()
+{
+  // std::cout << "ReconstructionWidget::threadFinished()" << std::endl;
+  m_GoBtn->setText("Reconstruct");
+  setWidgetListEnabled(true);
+  this->progressBar->setValue(0);
+  emit
+  pipelineEnded();
+  m_MultiResSOC->deleteLater();
 
 #if 0
   if (m_LayersPalette != NULL)
@@ -795,9 +900,9 @@ void TomoGui::pipelineComplete()
   }
 #endif
 
-    setCurrentImageFile (inputMRCFilePath->text());
-    setCurrentProcessedFile(outputFilePath->text());
-    m_GraphicsView->loadOverlayImageFile(outputFilePath->text());
+  setCurrentImageFile(inputMRCFilePath->text());
+  setCurrentProcessedFile(outputFilePath->text());
+  m_GraphicsView->loadOverlayImageFile(outputFilePath->text());
 //    m_LayersPalette->getSegmentedImageCheckBox()->setChecked(true);
 
   setWindowTitle(m_CurrentImageFile);
@@ -1267,11 +1372,8 @@ void TomoGui::readMRCHeader(QString filepath)
 
   xMin->setText("0");
   yMin->setText("0");
-  zMin->setText("0");
   xMax->setText(QString::number(header.nx-1));
   yMax->setText(QString::number(header.ny-1));
-  zMax->setText(QString::number(header.nz-1));
-
 
   // If we have the FEI headers get that information
   if(header.feiHeaders != NULL)

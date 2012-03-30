@@ -70,6 +70,7 @@ class TomoGuiGraphicsView : public QGraphicsView
     TomoGuiGraphicsView( QWidget *parent = NULL);
 
 
+
     void setTomoGui(TomoGui* gui);
 
     void setAddUserArea(bool b);
@@ -112,6 +113,9 @@ class TomoGuiGraphicsView : public QGraphicsView
     void addNewInitArea(ReconstructionArea* userInitArea);
     void createNewUserInitArea(const QRectF brect);
 
+
+    QLineF getXZPlane();
+
   public slots:
     void zoomIn();
 
@@ -152,6 +156,7 @@ class TomoGuiGraphicsView : public QGraphicsView
    QRubberBand*   m_RubberBand;
    QPoint         m_MouseClickOrigin;
    float          m_ZoomFactors[10];
+   QGraphicsPolygonItem m_XZLine;
 
    TomoGui*      m_MainGui;
    TomoGui_Constants::ImageDisplayType  m_ImageDisplayType;

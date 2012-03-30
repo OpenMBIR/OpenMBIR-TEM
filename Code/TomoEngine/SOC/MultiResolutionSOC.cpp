@@ -196,7 +196,8 @@ void MultiResolutionSOC::execute()
     inputs->NumOuterIter = getOuterIterations();
     if(i == 0)
     {
-      inputs->NumIter = 20;
+//      inputs->NumIter = 20;
+      inputs->NumIter = getInnerIterations();
     }
     else
     {
