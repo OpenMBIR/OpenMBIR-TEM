@@ -211,7 +211,7 @@ void MultiResolutionSOC::execute()
     }
     /** SIGMA_X needs to be calculated here based on some formula**/
     inputs->SigmaX =pow(2,(getNumberResolutions()-1-i)*(1-3/inputs->p)) * getSigmaX();
-	std::cout<<"SigmaX="<<inputs->SigmaX;
+	  std::cout<<"SigmaX="<<inputs->SigmaX;
 //    inputs->SigmaX = getSigmaX();
 
     inputs->delta_xy = pow(2, getNumberResolutions()-i-1)*m_FinalResolution;
