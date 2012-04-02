@@ -819,7 +819,7 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
 
   std::vector<uint16_t> subvolume(6);
   subvolume[2] = 0;
-  subvolume[5] = m_nTilts->text().toUShort(&ok);
+  subvolume[5] = m_nTilts->text().toUShort(&ok) - 1;
   if (fullReconstruction == true)
   {
     subvolume[0] = xMin->text().toUShort(&ok);
