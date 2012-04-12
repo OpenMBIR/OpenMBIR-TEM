@@ -186,6 +186,7 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
    v->useNoiseModel = false;
    v->useBrightField = false;
    v->useGeometricMeanConstraint = false;
+   v->useCostCalculation = true;
 }
 
 // -----------------------------------------------------------------------------
@@ -284,7 +285,7 @@ void SOCEngine::execute()
 
   int16_t i,j,k,Idx;
   size_t dims[3];
-  int16_t index_delta_t;
+
 
   Int32ArrayType::Pointer Counter;
   UInt8ImageType::Pointer VisitCount;
@@ -294,14 +295,14 @@ void SOCEngine::execute()
   uint16_t MaxNumberOfDetectorElts;
   uint8_t status;//set to 1 if ICD has converged
 
-  DATA_TYPE center_t,delta_t;
-  DATA_TYPE w3,w4;
-  DATA_TYPE checksum = 0,temp;
+
+
+  DATA_TYPE checksum = 0;
 
   RealImageType::Pointer VoxelProfile;
   RealVolumeType::Pointer detectorResponse;
   RealVolumeType::Pointer H_t;
-  DATA_TYPE ProfileCenterT;
+
 
 
   RealVolumeType::Pointer Y_Est;//Estimated Sinogram
@@ -375,25 +376,25 @@ void SOCEngine::execute()
 //      return;
 //    }
 
-  err = initializeGainsData();
+  err = prepareInitialGainsData();
   if (err < 0)
   {
     return;
   }
-  err = initializeOffsetsData();
+  err = prepareInitialOffsetsData();
   if (err < 0)
   {
     return;
   }
-  err = initializeVariancesData();
+  err = prepareInitialVariancesData();
   if (err < 0)
   {
     return;
   }
-#if 1
+
   // If you wanted to create a file you could pass in the fstream instead
   outputGainOffsetVarianceData(std::cout);
-#endif
+
 
   // Initialize the Geometry data from a rough reconstruction
   err = initialzeRoughReconstructionData();
@@ -408,13 +409,8 @@ void SOCEngine::execute()
   NuisanceParams->mu = RealArrayType::NullPointer();
   NuisanceParams->alpha = RealArrayType::NullPointer();
 
-//  DATA_TYPE numerator_sum =0;
-//  DATA_TYPE denominator_sum = 0;
   DATA_TYPE x,z;
   DATA_TYPE sum;
-//  DATA_TYPE a,b,c,d,e;
-//  DATA_TYPE determinant;
-//  DATA_TYPE LagrangeMultiplier;
   //This is used to store the projection of the object for each view
   dims[1] = m_Sinogram->N_t;
   dims[0] = m_Sinogram->N_r;
@@ -428,7 +424,7 @@ void SOCEngine::execute()
   NuisanceParams->mu = RealArrayType::New(dims);
   NuisanceParams->mu->setName("NuisanceParams->mu");
 
- if(m_TomoInputs->useNoiseModel == true)
+  if(m_TomoInputs->useNoiseModel == true)
   {
     //alpha is the noise variance adjustment factor
     NuisanceParams->alpha = RealArrayType::New(dims);
@@ -453,12 +449,10 @@ void SOCEngine::execute()
   DATA_TYPE EllipseA,EllipseB;
 #endif
 
-#ifdef COST_CALCULATE
-  //cost=(DATA_TYPE*)get_spc((m_TomoInputs->NumIter+1)*m_TomoInputs->NumOuterIter*3,sizeof(DATA_TYPE));//the factor 3 is in there to ensure we can store 3 costs per iteration one after update x, then mu and then I
-  dims[0] = (m_TomoInputs->NumIter+1)*m_TomoInputs->NumOuterIter*3;
-//  cost = RealArrayType::New(dims);
-//  cost->setName("cost");
-#endif
+  if(m_TomoInputs->useCostCalculation == true)
+  {
+    dims[0] = (m_TomoInputs->NumIter + 1) * m_TomoInputs->NumOuterIter * 3;
+  }
 
   dims[0] = m_Sinogram->N_theta;
   dims[1] = m_Sinogram->N_r;
@@ -512,9 +506,9 @@ void SOCEngine::execute()
   QuadraticParameters->setName("QuadraticParameters");
   //  Qk_cost=(DATA_TYPE**)get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE));
   Qk_cost = RealImageType::New(dims);
-    Qk_cost->setName("Qk_cost");
+  Qk_cost->setName("Qk_cost");
 //  bk_cost=(DATA_TYPE**)get_img(2, m_Sinogram->N_theta, sizeof(DATA_TYPE));
-    dims[1] = 2;
+  dims[1] = 2;
   bk_cost = RealImageType::New(dims);
   bk_cost->setName("bk_cost");
 
@@ -526,10 +520,8 @@ void SOCEngine::execute()
   NumOfViews = m_Sinogram->N_theta;
   LogGain = m_Sinogram->N_theta*log(m_Sinogram->targetGain);
   dims[0] = m_Sinogram->N_theta;
-//  d1=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
   d1 = RealArrayType::New(dims);
   d1->setName("d1");
-//  d2=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
   d2 = RealArrayType::New(dims);
   d2->setName("d2");
 
@@ -573,29 +565,16 @@ void SOCEngine::execute()
     return;
   }
 
-  dims[0] = 1;
-  dims[1] = m_Sinogram->N_theta;
-  dims[2] = DETECTOR_RESPONSE_BINS;
 
-  H_t = RealVolumeType::New(dims);
-  H_t->setName("H_t");
 
 #ifdef RANDOM_ORDER_UPDATES
-
-  //VisitCount=(uint8_t **)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
   dims[0] = m_Geometry->N_z;
   dims[1] = m_Geometry->N_x;
+  dims[2] = DETECTOR_RESPONSE_BINS;
   VisitCount = UInt8ImageType::New(dims);
   VisitCount->setName("VisitCount");
 // Initialize the Array to zero
   ::memset( VisitCount->d[0], 0, dims[0] * dims[1] * sizeof(uint8_t));
-//  for (i = 0; i < m_Geometry->N_z; i++)
-//  {
-//    for (j = 0; j < m_Geometry->N_x; j++)
-//    {
-//      VisitCount->d[i][j] = 0;
-//    }
-//  }
 #endif//Random update
 
 
@@ -608,7 +587,7 @@ void SOCEngine::execute()
   MagUpdateMap->setName("Update Map for voxel lines");
 
   FiltMagUpdateMap = RealImageType::New(dims);
-  FiltMagUpdateMap->setName("Update Map for voxel lines");
+  FiltMagUpdateMap->setName("Update Map for filtered voxel lines");
 
   MagUpdateMask = Uint8ImageType::New(dims);
   MagUpdateMask->setName("Update Mask for selecting voxel lines NHICD");
@@ -645,135 +624,18 @@ void SOCEngine::execute()
 #endif
   //m_Sinogram->targetGain=20000;
 
-if (m_TomoInputs->useBrightField == true )
+  if(m_TomoInputs->useBrightField == true)
   {
-    //Take log of the data and subtract log(Dosage) from it
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    { //slice index
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-          m_Sinogram->counts->d[i_theta][i_r][i_t] = log(m_Sinogram->counts->d[i_theta][i_r][i_t]) - log(m_Sinogram->InitialGain->d[i_theta]);
-        }
-      }
-    }
-
+    initializeSinogramForBrightField();
   }
 
-  //Scale and Offset Parameters Initialization
-  sum = 0;
-  temp = 0;
-  for(k=0 ; k < m_Sinogram->N_theta;k++)
-  {
-    // Gains
-    NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k];
-    // Offsets
-    NuisanceParams->mu->d[k] = m_Sinogram->InitialOffset->d[k];
-    if(m_TomoInputs->useGeometricMeanConstraint == true)
-    {
-      sum += log(NuisanceParams->I_0->d[k]);
-    }
-    else
-    {
-      sum += NuisanceParams->I_0->d[k];
-    }
-  }
-  sum/=m_Sinogram->N_theta;
-  if(m_TomoInputs->useGeometricMeanConstraint == true)
-  {
-    sum = exp(sum);
-    printf("The geometric mean of the gains is %lf\n", sum);
-    //Checking if the input parameters satisfy the target geometric mean
-    if(fabs(sum - m_Sinogram->targetGain) > 1e-5)
-    {
-      printf("The input paramters dont meet the constraint..Renormalizing\n");
-      temp = exp(log(m_Sinogram->targetGain) - log(sum));
-      for (k = 0; k < m_Sinogram->N_theta; k++)
-      {
-        NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k] * temp;
-      }
-    }
-  }
-  else
-  {
-    printf("The Arithmetic mean of the constraint is %lf\n", sum);
-    if(sum - m_Sinogram->targetGain > 1e-5)
-    {
-      printf("Arithmetic Mean Constraint not met..renormalizing\n");
-      temp = m_Sinogram->targetGain / sum;
-      for (k = 0; k < m_Sinogram->N_theta; k++)
-      {
-        NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k] * temp;
-      }
-    }
-  }
+  //Gains and Offset Parameters Initialization
+  initializeGainsOffsetsParameters(NuisanceParams);
 
+  // Initialize the H_t data
+  initializeHt(H_t);
 
-  for(k = 0 ; k <m_Sinogram->N_theta; k++)
-  {
-    for (i = 0; i < DETECTOR_RESPONSE_BINS; i++)
-    {
-      ProfileCenterT = i * OffsetT;
-      if(m_TomoInputs->delta_xy >= m_Sinogram->delta_t)
-      {
-        if(ProfileCenterT <= ((m_TomoInputs->delta_xy / 2) - (m_Sinogram->delta_t / 2)))
-    {
-      H_t->d[0][k][i] = m_Sinogram->delta_t;
-      //Need to weight this by the appropriate kernel along t-direction
-    /*  sum=0;
-      for(uint16_t j=0; j < BEAM_RESOLUTION; j++)
-        sum+=BeamProfile->d[j];
-
-      H_t->d[0][k][i]*=(sum/m_Sinogram->delta_t);
-    */
-
-    }
-        else
-        {
-          H_t->d[0][k][i] = -1 * ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
-      //Need to weight this number by the appropriate kernel along t-direction
-    /*  sum=0;
-      int16_t OverlapIndex = int16_t(((H_t->d[0][k][i]/m_Sinogram->delta_t)*BEAM_RESOLUTION));
-      for(int16_t j=0; j < OverlapIndex; j++)
-        sum+=BeamProfile->d[j];
-
-      H_t->d[0][k][i]*=(sum/m_Sinogram->delta_t);
-     */
-
-        }
-        if(H_t->d[0][k][i] < 0)
-        {
-          H_t->d[0][k][i] = 0;
-        }
-
-      }
-      else
-      {
-        if(ProfileCenterT <= m_Sinogram->delta_t / 2 - m_TomoInputs->delta_xy / 2)
-        {
-          H_t->d[0][k][i] = m_TomoInputs->delta_xy;
-        }
-        else
-        {
-          H_t->d[0][k][i] = -ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
-        }
-
-        if(H_t->d[0][k][i] < 0)
-        {
-          H_t->d[0][k][i] = 0;
-        }
-
-      }
-    }
-  }
-
-  /*for(i=0;i<Sinogram->N_theta;i++)
-    for(j=0;j< PROFILE_RESOLUTION;j++)
-      checksum+=VoxelProfile[i][j];
-    printf("CHK SUM%lf\n",checksum);
-*/
-    checksum=0;
+  checksum=0;
 
   //Allocate space for storing columns the A-matrix; an array of pointers to columns
   //AMatrixCol** AMatrix=(AMatrixCol **)get_spc(Geometry->N_x*Geometry->N_z,sizeof(AMatrixCol*));
@@ -784,18 +646,13 @@ if (m_TomoInputs->useBrightField == true )
   AMatrixCol**** AMatrix = (AMatrixCol ****)multialloc(sizeof(AMatrixCol*),3,m_Geometry->N_y,m_Geometry->N_z,m_Geometry->N_x);
 #else
 
-  //TODO: All this needs to be deallocated at some point
-  DATA_TYPE y;
-  DATA_TYPE t,tmin,tmax,ProfileThickness;
-  int16_t slice_index_min,slice_index_max;
-//  AMatrixCol*** TempCol = (AMatrixCol***)multialloc(sizeof(AMatrixCol*),2,m_Geometry->N_z,m_Geometry->N_x);//stores 2-D forward projector
+
   AMatrixCol** TempCol = (AMatrixCol**)get_spc(m_Geometry->N_x*m_Geometry->N_z, sizeof(AMatrixCol*));
-//  AMatrixCol* Aj;
-//  AMatrixCol* TempMemBlock;
   //T-direction response
   AMatrixCol* VoxelLineResponse=(AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));
   MaxNumberOfDetectorElts = (uint16_t)((m_TomoInputs->delta_xy/m_Sinogram->delta_t)+2);
-  for (i=0; i < m_Geometry->N_y; i++) {
+  for (i=0; i < m_Geometry->N_y; i++)
+  {
     VoxelLineResponse[i].count=0;
     VoxelLineResponse[i].values=(DATA_TYPE*)get_spc(MaxNumberOfDetectorElts, sizeof(DATA_TYPE));
     VoxelLineResponse[i].index=(uint32_t*)get_spc(MaxNumberOfDetectorElts, sizeof(uint32_t));
@@ -825,100 +682,42 @@ if (m_TomoInputs->useBrightField == true )
       }}}
   printf("Stored A matrix\n");
 #else
-  temp = 0;
+  DATA_TYPE temp = 0;
   uint32_t voxel_count=0;
   for (j = 0; j < m_Geometry->N_z; j++)
   {
     for (k = 0; k < m_Geometry->N_x; k++)
     {
       //TempCol[j][k] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
-    TempCol[voxel_count] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
+      TempCol[voxel_count] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
 //      temp += TempCol[j][k].count;`
-    temp += TempCol[voxel_count]->count;
-    if(0 == TempCol[voxel_count]->count)
-    {
-      //If this line is never hit and the Object is badly initialized
-      //set it to zero
-      for (i=0; i < m_Geometry->N_y; i++) {
-        m_Geometry->Object->d[j][k][i]=0;
+      temp += TempCol[voxel_count]->count;
+      if(0 == TempCol[voxel_count]->count)
+      {
+        //If this line is never hit and the Object is badly initialized
+        //set it to zero
+        for (i = 0; i < m_Geometry->N_y; i++)
+        {
+          m_Geometry->Object->d[j][k][i] = 0;
+        }
       }
-    }
-    voxel_count++;
+      voxel_count++;
     }
   }
 #endif
-
-  //Storing the response along t-direction for each voxel line
-  notify("Storing the response along Y-direction for each voxel line", 0, Observable::UpdateProgressMessage);
-  for (i =0; i < m_Geometry->N_y; i++)
-  {
-    y = ((DATA_TYPE)i + 0.5) * m_TomoInputs->delta_xy + m_Geometry->y0;
-    t = y;
-    tmin = (t - m_TomoInputs->delta_xy / 2) > m_Sinogram->T0 ? t - m_TomoInputs->delta_xy / 2 : m_Sinogram->T0;
-    tmax = (t + m_TomoInputs->delta_xy / 2) <= m_Sinogram->TMax ? t + m_TomoInputs->delta_xy / 2 : m_Sinogram->TMax;
-
-    slice_index_min = static_cast<uint16_t>(floor((tmin - m_Sinogram->T0) / m_Sinogram->delta_t));
-    slice_index_max = static_cast<uint16_t>(floor((tmax - m_Sinogram->T0) / m_Sinogram->delta_t));
-
-    if(slice_index_min < 0)
-    {
-      slice_index_min = 0;
-    }
-    if(slice_index_max >= m_Sinogram->N_t)
-    {
-      slice_index_max = m_Sinogram->N_t - 1;
-    }
-
-    //printf("%d %d\n",slice_index_min,slice_index_max);
-
-    for (int i_t = slice_index_min; i_t <= slice_index_max; i_t++)
-    {
-      center_t = ((DATA_TYPE)i_t + 0.5) * m_Sinogram->delta_t + m_Sinogram->T0;
-      delta_t = fabs(center_t - t);
-      index_delta_t = static_cast<uint16_t>(floor(delta_t / OffsetT));
-      if(index_delta_t < DETECTOR_RESPONSE_BINS)
-      {
-        w3 = delta_t - (DATA_TYPE)(index_delta_t) * OffsetT;
-        w4 = ((DATA_TYPE)index_delta_t + 1) * OffsetT - delta_t;
-        ProfileThickness = (w4 / OffsetT) * H_t->d[0][0][index_delta_t]
-            + (w3 / OffsetT) * H_t->d[0][0][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
-    //  ProfileThickness = (w4 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t]
-    //  + (w3 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
-    }
-      else
-      {
-        ProfileThickness = 0;
-      }
-
-      if(ProfileThickness != 0) //Store the response of this slice
-      {
-        printf("%d %lf\n", i_t, ProfileThickness);
-        VoxelLineResponse[i].values[VoxelLineResponse[i].count] = ProfileThickness;
-        VoxelLineResponse[i].index[VoxelLineResponse[i].count++] = i_t;
-      }
-    }
-  }
-
-
   printf("Number of non zero entries of the forward projector is %lf\n",temp);
   printf("Geometry-Z %d\n",m_Geometry->N_z);
 
+  //Storing the response along t-direction for each voxel line
+  calculateTLineVoxelResponse(VoxelLineResponse);
 
-  //Forward Project Geometry->Object one slice at a time and compute the  Sinogram for each slice
   //is Y_Est initailized to zero?
-  for (i = 0; i < m_Sinogram->N_theta; i++)
-  {
-    for (j = 0; j < m_Sinogram->N_r; j++)
-    {
-      for (k = 0; k < m_Sinogram->N_t; k++)
-      {
-        Y_Est->d[i][j][k] = 0.0;
-      }
-    }
-  }
+  initializeVolumeData(0.0, Y_Est);
 
 
   RandomNumber=init_genrand(1ul);
+
+  //Forward Project Geometry->Object one slice at a time and compute the  Sinogram for each slice
 
   notify("Starting Forward Projection", 10, Observable::UpdateProgressValueAndMessage);
   START_TIMER;
@@ -940,10 +739,9 @@ if (m_TomoInputs->useBrightField == true )
 #if TomoEngine_USE_PARALLEL_ALGORITHMS
     g->run(ForwardProject(m_Sinogram, m_Geometry, TempCol,VoxelLineResponse,Y_Est, &NuisanceParams, t));
 #else
-    ForwardProject fp(m_Sinogram.get(), m_Geometry.get(), TempCol,VoxelLineResponse,Y_Est, NuisanceParams.get(), t);
+    ForwardProject fp(m_Sinogram.get(), m_Geometry.get(), TempCol, VoxelLineResponse, Y_Est, NuisanceParams.get(), t);
     fp();
 #endif
-
   }
 #if TomoEngine_USE_PARALLEL_ALGORITHMS
   g->wait(); // Wait for all the threads to complete before moving on.
@@ -954,36 +752,41 @@ if (m_TomoInputs->useBrightField == true )
   PRINT_TIME("Forward Project Time");
 
 
+
+
+
   //Calculate Error Sinogram - Can this be combined with previous loop?
   //Also compute weights of the diagonal covariance matrix
   if (m_TomoInputs->useNoiseModel == true )
   {
+  //  calculateMeasurementWeight(Weight, NuisanceParams);
     START_TIMER;
 
     //TODO: This can be parallelized  for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
-    for (int16_t zz = 0; zz < m_Sinogram->N_theta; zz++) //slice index
+    for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
     {
-      std::cout << "\rComputing Weights for Tilt Index " << zz << "/" << m_Sinogram->N_theta << std::endl;
-      NuisanceParams->alpha->d[zz] = m_Sinogram->InitialVariance->d[zz]; //Initialize the refinement parameters from any previous run
-      std::cout << "Alpha" << NuisanceParams->alpha->d[zz] << std::endl;
-      for (uint16_t xx = 0; xx < m_Sinogram->N_r; xx++)
+      std::cout << "\rComputing Weights for Tilt Index " << i_theta << "/" << m_Sinogram->N_theta << std::endl;
+      NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
+      std::cout << "Alpha" << NuisanceParams->alpha->d[i_theta] << std::endl;
+      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
       {
-        for (uint16_t yy = 0; yy < m_Sinogram->N_t; yy++)
+        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
-          if(m_Sinogram->counts->d[zz][xx][yy] != 0)
+          if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
           {
             if(m_TomoInputs->useBrightField == true)
             {
-              Weight->d[zz][xx][yy] = m_Sinogram->counts->d[zz][xx][yy];
+              Weight->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
             }
             else
             {
-              Weight->d[zz][xx][yy] = 1.0 / (m_Sinogram->counts->d[zz][xx][yy] * NuisanceParams->alpha->d[zz]); //The variance for each view ~=averagecounts in that view
+              //The variance for each view ~=averagecounts in that view
+              Weight->d[i_theta][i_r][i_t] = 1.0 / (m_Sinogram->counts->d[i_theta][i_r][i_t] * NuisanceParams->alpha->d[i_theta]);
             }
           }
           else
           {
-            Weight->d[zz][xx][yy] = 0;
+            Weight->d[i_theta][i_r][i_t] = 0;
           }
         }
       }
@@ -1010,10 +813,12 @@ if (m_TomoInputs->useBrightField == true )
         {
           if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
           {
-            if (m_TomoInputs->useBrightField == true )
+            if(m_TomoInputs->useBrightField == true)
             {
               Weight->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
-            } else {
+            }
+            else
+            {
               Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
             }
           }
@@ -1044,74 +849,16 @@ if (m_TomoInputs->useBrightField == true )
   return 0;//exit the program once we finish forward projecting the object
 #endif//Forward Project mode
 
-
-#if 0
-   This code has been moved into its own Filter class
-	{
-    /************************************Start Of Target Gain and Sigma Calc***********************************************/
-    //Calculating estimtes for sigma_f and \bar{I}
-    DATA_TYPE sum1 = 0;
-    DATA_TYPE TargetGainEstimate = 0;
-    DATA_TYPE TargetMin = 1e100;
-    DATA_TYPE TargetMax = -100;
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-          if(m_Sinogram->counts->d[i_theta][i_r][i_t] > TargetMax) TargetMax = m_Sinogram->counts->d[i_theta][i_r][i_t];
-          if(m_Sinogram->counts->d[i_theta][i_r][i_t] < TargetMin) TargetMin = m_Sinogram->counts->d[i_theta][i_r][i_t];
-        }
-      }
-    }
-    TargetGainEstimate = (TargetMax - TargetMin) * 10;
-    std::cout << "Default Target Gain =" << TargetGainEstimate << std::endl;
-
-
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      DATA_TYPE sum2 = 0;
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-          sum2 += (m_Sinogram->counts->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta]);
-        }
-      }
-      sum2 /= (m_Sinogram->N_r * m_Sinogram->N_t * m_Sinogram->targetGain);
-      sum1 += ((sum2 * cosine->d[i_theta]) / (m_TomoInputs->LengthZ / Z_STRETCH));
-    }
-
-    sum1 /= m_Sinogram->N_theta;
-    std::cout << "Calculated average projected scatter =" << sum1 << std::endl;
-    std::cout << "Default value for sigma_x=" << sum1 / 100 << std::endl;
-
-    /************************************End Of Target Gain and Sigma Calc***********************************************/
-  }
-#endif
-
-
-#ifdef COST_CALCULATE
-  DATA_TYPE cost_value;
   std::string filepath(m_TomoInputs->tempDir);
   filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::CostFunctionFile);
-
   CostData::Pointer cost = CostData::New();
   cost->initOutputFile(filepath);
 
-  /*********************Cost Calculation*************************************/
-  cost_value = computeCost(ErrorSino, Weight);
-  std::cout<<cost_value<<std::endl;
-  int increase = cost->addCostValue(cost_value);
-  if (increase ==1)
+  if (m_TomoInputs->useCostCalculation == true)
   {
-    //Only one cost so dont worry about increase
- //   std::cout << "Cost just increased!" << std::endl;
+    calculateCost(ErrorSino, Weight, cost);
   }
-  cost->writeCostValue(cost_value);
-  /**************************************************************************/
-#endif //Cost calculation endif
+
 
 //  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
   std::stringstream ss;
@@ -1126,10 +873,7 @@ if (m_TomoInputs->useBrightField == true )
     m_TomoInputs->NumIter = 1;
 
 
-
-
-
-     for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
+   for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
     {
       indent = "  ";
 //      ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
@@ -1354,22 +1098,15 @@ if (m_TomoInputs->useBrightField == true )
      printf("%lf\n",NuisanceParams->I_0->d[i_theta]);
      }*/
 
-#ifdef COST_CALCULATE
-
-    /*********************Cost Calculation*************************************/
-    DATA_TYPE cost_value = computeCost(ErrorSino, Weight);
-    std::cout<<cost_value<<std::endl;
-    int increase = cost->addCostValue(cost_value);
-    if (increase ==1)
+    if (m_TomoInputs->useCostCalculation == true)
     {
-      std::cout << "Cost just increased after gains+offset update!" << std::endl;
-      break;
+      int increase = calculateCost(ErrorSino, Weight, cost);
+      if (increase ==1)
+      {
+        std::cout << "Cost just increased after gains+offset update!" << std::endl;
+        break;
+      }
     }
-    cost->writeCostValue(cost_value);
-    /**************************************************************************/
-
-#endif
-
 
     printf("Offsets\n");
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
@@ -1525,16 +1262,17 @@ if (m_TomoInputs->useBrightField == true )
   }
 #endif
 
-#ifdef NOISE_MODEL
-  nuisanceBinWriter->setFileName(m_TomoInputs->varianceOutputFile);
-  nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_alpha);
-  nuisanceBinWriter->execute();
-  if (nuisanceBinWriter->getErrorCondition() < 0)
+  if(m_TomoInputs->useNoiseModel == true)
   {
-    setErrorCondition(-1);
-    notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
+    nuisanceBinWriter->setFileName(m_TomoInputs->varianceOutputFile);
+    nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_alpha);
+    nuisanceBinWriter->execute();
+    if(nuisanceBinWriter->getErrorCondition() < 0)
+    {
+      setErrorCondition(-1);
+      notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
+    }
   }
-#endif//Noise Model
 
   std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
   for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
@@ -3133,7 +2871,7 @@ int SOCEngine::initializeBrightFieldData()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int SOCEngine::initializeGainsData()
+int SOCEngine::prepareInitialGainsData()
 {
   /* ********************* Initialize the Gains Array **************************/
   size_t gains_dims[1] =
@@ -3176,7 +2914,7 @@ int SOCEngine::initializeGainsData()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int SOCEngine::initializeOffsetsData()
+int SOCEngine::prepareInitialOffsetsData()
 {
   /* ********************* Initialize the Offsets Array **************************/
   size_t offsets_dims[1] =
@@ -3230,7 +2968,7 @@ int SOCEngine::initializeOffsetsData()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int SOCEngine::initializeVariancesData()
+int SOCEngine::prepareInitialVariancesData()
 {
   /* ********************* Initialize the Variances Array **************************/
   size_t variance_dims[1] =
@@ -3509,6 +3247,292 @@ void SOCEngine::calculateArithmeticMeanConstraints(ScaleOffsetParamsPtr Nuisance
   std::cout<<"Ratio of change in I_k "<<I_kRatio<<std::endl;
   std::cout<<"Ratio of change in Delta_k "<<Delta_kRatio<<std::endl;
 
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+int SOCEngine::calculateCost(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight, CostData::Pointer cost)
+{
+  DATA_TYPE cost_value;
+  /*********************Cost Calculation*************************************/
+  cost_value = computeCost(ErrorSino, Weight);
+  std::cout << cost_value << std::endl;
+  int increase = cost->addCostValue(cost_value);
+  cost->writeCostValue(cost_value);
+  /**************************************************************************/
+  return increase;
+}
+
+// -----------------------------------------------------------------------------
+// Take log of the data and subtract log(Dosage) from it
+// -----------------------------------------------------------------------------
+void SOCEngine::initializeSinogramForBrightField()
+{
+
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  { //slice index
+    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+    {
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+        m_Sinogram->counts->d[i_theta][i_r][i_t] = log(m_Sinogram->counts->d[i_theta][i_r][i_t]) - log(m_Sinogram->InitialGain->d[i_theta]);
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Gains and Offset Parameters Initialization
+// -----------------------------------------------------------------------------
+void SOCEngine::initializeGainsOffsetsParameters(ScaleOffsetParamsPtr NuisanceParams)
+{
+  DATA_TYPE sum = 0.0;
+  DATA_TYPE temp = 0.0;
+  for(uint16_t k=0 ; k < m_Sinogram->N_theta;k++)
+  {
+    // Gains
+    NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k];
+    // Offsets
+    NuisanceParams->mu->d[k] = m_Sinogram->InitialOffset->d[k];
+    if(m_TomoInputs->useGeometricMeanConstraint == true)
+    {
+      sum += log(NuisanceParams->I_0->d[k]);
+    }
+    else
+    {
+      sum += NuisanceParams->I_0->d[k];
+    }
+  }
+  sum/=m_Sinogram->N_theta;
+  temp = 0;
+  if(m_TomoInputs->useGeometricMeanConstraint == true)
+  {
+    sum = exp(sum);
+    printf("The geometric mean of the gains is %lf\n", sum);
+    //Checking if the input parameters satisfy the target geometric mean
+    if(fabs(sum - m_Sinogram->targetGain) > 1e-5)
+    {
+      printf("The input paramters dont meet the constraint..Renormalizing\n");
+      temp = exp(log(m_Sinogram->targetGain) - log(sum));
+      for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
+      {
+        NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k] * temp;
+      }
+    }
+  }
+  else
+  {
+    printf("The Arithmetic mean of the constraint is %lf\n", sum);
+    if(sum - m_Sinogram->targetGain > 1e-5)
+    {
+      printf("Arithmetic Mean Constraint not met..renormalizing\n");
+      temp = m_Sinogram->targetGain / sum;
+      for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
+      {
+        NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k] * temp;
+      }
+    }
+  }
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::initializeHt(RealVolumeType::Pointer H_t)
+{
+  DATA_TYPE ProfileCenterT = 0.0;
+
+  for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
+  {
+    for (int i = 0; i < DETECTOR_RESPONSE_BINS; i++)
+    {
+      ProfileCenterT = i * OffsetT;
+      if(m_TomoInputs->delta_xy >= m_Sinogram->delta_t)
+      {
+        if(ProfileCenterT <= ((m_TomoInputs->delta_xy / 2) - (m_Sinogram->delta_t / 2)))
+        {
+          H_t->d[0][k][i] = m_Sinogram->delta_t;
+          //Need to weight this by the appropriate kernel along t-direction
+          /*  sum=0;
+           for(uint16_t j=0; j < BEAM_RESOLUTION; j++)
+           sum+=BeamProfile->d[j];
+
+           H_t->d[0][k][i]*=(sum/m_Sinogram->delta_t);
+           */
+
+        }
+        else
+        {
+          H_t->d[0][k][i] = -1 * ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
+          //Need to weight this number by the appropriate kernel along t-direction
+          /*  sum=0;
+           int16_t OverlapIndex = int16_t(((H_t->d[0][k][i]/m_Sinogram->delta_t)*BEAM_RESOLUTION));
+           for(int16_t j=0; j < OverlapIndex; j++)
+           sum+=BeamProfile->d[j];
+
+           H_t->d[0][k][i]*=(sum/m_Sinogram->delta_t);
+           */
+
+        }
+        if(H_t->d[0][k][i] < 0)
+        {
+          H_t->d[0][k][i] = 0;
+        }
+
+      }
+      else
+      {
+        if(ProfileCenterT <= m_Sinogram->delta_t / 2 - m_TomoInputs->delta_xy / 2)
+        {
+          H_t->d[0][k][i] = m_TomoInputs->delta_xy;
+        }
+        else
+        {
+          H_t->d[0][k][i] = -ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
+        }
+
+        if(H_t->d[0][k][i] < 0)
+        {
+          H_t->d[0][k][i] = 0;
+        }
+
+      }
+    }
+  }
+}
+
+
+// -----------------------------------------------------------------------------
+// Storing the response along t-direction for each voxel line
+// -----------------------------------------------------------------------------
+void SOCEngine::calculateTLineVoxelResponse(AMatrixCol* VoxelLineResponse)
+{
+  DATA_TYPE ProfileThickness;
+  DATA_TYPE y;
+  DATA_TYPE t,tmin,tmax;
+  int16_t slice_index_min;
+  int16_t slice_index_max;
+  DATA_TYPE center_t,delta_t;
+  int16_t index_delta_t;
+  DATA_TYPE w3,w4;
+  size_t dims[3];
+  dims[0] = 1;
+  dims[1] = m_Sinogram->N_theta;
+  dims[2] = DETECTOR_RESPONSE_BINS;
+
+  RealVolumeType::Pointer H_t = RealVolumeType::New(dims);
+  H_t->setName("H_t");
+
+  notify("Storing the response along Y-direction for each voxel line", 0, Observable::UpdateProgressMessage);
+  for (uint16_t i = 0; i < m_Geometry->N_y; i++)
+  {
+    y = ((DATA_TYPE)i + 0.5) * m_TomoInputs->delta_xy + m_Geometry->y0;
+    t = y;
+    tmin = (t - m_TomoInputs->delta_xy / 2) > m_Sinogram->T0 ? t - m_TomoInputs->delta_xy / 2 : m_Sinogram->T0;
+    tmax = (t + m_TomoInputs->delta_xy / 2) <= m_Sinogram->TMax ? t + m_TomoInputs->delta_xy / 2 : m_Sinogram->TMax;
+
+    slice_index_min = static_cast<uint16_t>(floor((tmin - m_Sinogram->T0) / m_Sinogram->delta_t));
+    slice_index_max = static_cast<uint16_t>(floor((tmax - m_Sinogram->T0) / m_Sinogram->delta_t));
+
+    if(slice_index_min < 0)
+    {
+      slice_index_min = 0;
+    }
+    if(slice_index_max >= m_Sinogram->N_t)
+    {
+      slice_index_max = m_Sinogram->N_t - 1;
+    }
+
+    //printf("%d %d\n",slice_index_min,slice_index_max);
+
+    for (int i_t = slice_index_min; i_t <= slice_index_max; i_t++)
+    {
+      center_t = ((DATA_TYPE)i_t + 0.5) * m_Sinogram->delta_t + m_Sinogram->T0;
+      delta_t = fabs(center_t - t);
+      index_delta_t = static_cast<uint16_t>(floor(delta_t / OffsetT));
+      if(index_delta_t < DETECTOR_RESPONSE_BINS)
+      {
+        w3 = delta_t - (DATA_TYPE)(index_delta_t) * OffsetT;
+        w4 = ((DATA_TYPE)index_delta_t + 1) * OffsetT - delta_t;
+        ProfileThickness = (w4 / OffsetT) * H_t->d[0][0][index_delta_t]
+            + (w3 / OffsetT) * H_t->d[0][0][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
+        //  ProfileThickness = (w4 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t]
+        //  + (w3 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
+      }
+      else
+      {
+        ProfileThickness = 0;
+      }
+
+      if(ProfileThickness != 0) //Store the response of this slice
+      {
+        printf("%d %lf\n", i_t, ProfileThickness);
+        VoxelLineResponse[i].values[VoxelLineResponse[i].count] = ProfileThickness;
+        VoxelLineResponse[i].index[VoxelLineResponse[i].count++] = i_t;
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::initializeVolumeData(DATA_TYPE value, RealVolumeType::Pointer p)
+{
+  for (uint16_t i = 0; i < m_Sinogram->N_theta; i++)
+  {
+    for (uint16_t j = 0; j < m_Sinogram->N_r; j++)
+    {
+      for (uint16_t k = 0; k < m_Sinogram->N_t; k++)
+      {
+        p->d[i][j][k] = 0.0;
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight, ScaleOffsetParamsPtr NuisanceParams)
+{
+  START_TIMER;
+
+  //TODO: This can be parallelized  for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
+  for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
+  {
+    std::cout << "\rComputing Weights for Tilt Index " << i_theta << "/" << m_Sinogram->N_theta << std::endl;
+    NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
+    std::cout << "Alpha" << NuisanceParams->alpha->d[i_theta] << std::endl;
+    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+    {
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+        if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
+        {
+          if(m_TomoInputs->useBrightField == true)
+          {
+            Weight->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
+          }
+          else
+          {
+            //The variance for each view ~=averagecounts in that view
+            Weight->d[i_theta][i_r][i_t] = 1.0 / (m_Sinogram->counts->d[i_theta][i_r][i_t] * NuisanceParams->alpha->d[i_theta]);
+          }
+        }
+        else
+        {
+          Weight->d[i_theta][i_r][i_t] = 0;
+        }
+      }
+    }
+  }
+  STOP_TIMER;
+  std::cout << std::endl;
+  std::string indent(" ");
+  PRINT_TIME("Computing Weights");
 }
 
 // -----------------------------------------------------------------------------

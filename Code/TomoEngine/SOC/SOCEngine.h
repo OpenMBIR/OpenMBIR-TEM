@@ -116,13 +116,22 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 
     int initializeBrightFieldData();
     int initializeInputData();
-    int initializeGainsData();
-    int initializeOffsetsData();
-    int initializeVariancesData();
+    int prepareInitialGainsData();
+    int prepareInitialOffsetsData();
+    int prepareInitialVariancesData();
+
+    void initializeSinogramForBrightField();
+    void initializeGainsOffsetsParameters(ScaleOffsetParamsPtr NuisanceParams);
+
     void outputGainOffsetVarianceData(std::ostream &out);
     int initialzeRoughReconstructionData();
     void calculateGeometricMeanConstraint(ScaleOffsetParamsPtr NuisanceParams);
     void calculateArithmeticMeanConstraints(ScaleOffsetParamsPtr NuisanceParams);
+    int calculateCost(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight, CostData::Pointer cost);
+    void calculateTLineVoxelResponse(AMatrixCol* VoxelLineResponse);
+    void initializeHt(RealVolumeType::Pointer H_t);
+    void initializeVolumeData(DATA_TYPE value, RealVolumeType::Pointer p);
+    void calculateMeasurementWeight(RealVolumeType::Pointer Weight, ScaleOffsetParamsPtr NuisanceParams);
 
 #ifdef QGGMRF
     DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE umin, DATA_TYPE umax);

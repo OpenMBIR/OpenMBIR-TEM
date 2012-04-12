@@ -137,6 +137,7 @@ namespace SOC {
     bool useNoiseModel;
     bool useBrightField;
     bool useGeometricMeanConstraint;
+    bool useCostCalculation;
 
     bool useSubvolume;
     uint16_t xStart;
