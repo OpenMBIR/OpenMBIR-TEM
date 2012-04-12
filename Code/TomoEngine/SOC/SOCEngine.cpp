@@ -3410,7 +3410,7 @@ int SOCEngine::initializeVariancesData()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::outputGainOffsetVarianceData(const std::ostream &out)
+void SOCEngine::outputGainOffsetVarianceData(std::ostream &out)
 {
   // Print out the Initial Gains, Offsets, Variances
   out << "Tilt\tGain\tOffset\tVariance" << std::endl;

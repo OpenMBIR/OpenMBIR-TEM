@@ -122,7 +122,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     int initializeGainsData();
     int initializeOffsetsData();
     int initializeVariancesData();
-    void outputGainOffsetVarianceData(const std::ostream &out);
+    void outputGainOffsetVarianceData(std::ostream &out);
     int initialzeRoughReconstructionData();
 
 
