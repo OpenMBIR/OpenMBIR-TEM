@@ -116,6 +116,17 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
                       RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight,
                       AMatrixCol* VoxelLineResponse, ScaleOffsetParams* NuisanceParams,
                       UInt8ImageType::Pointer Mask, CostData::Pointer cost);
+
+    int initializeBrightFieldData();
+    int initializeInputData();
+    int initializeGainsData();
+    int initializeOffsetsData();
+    int initializeVariancesData();
+    void outputGainOffsetVarianceData(const std::ostream &out);
+    int initialzeRoughReconstructionData();
+
+
+
 #ifdef QGGMRF
 	DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax);
 	void CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax,DATA_TYPE RefValue);

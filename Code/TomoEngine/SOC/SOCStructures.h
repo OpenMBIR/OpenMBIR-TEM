@@ -134,6 +134,8 @@ namespace SOC {
     DATA_TYPE StopThreshold;
     uint8_t   InterpFlag;
 
+    bool useNoiseModel;
+
     bool useSubvolume;
     uint16_t xStart;
     uint16_t xEnd;
