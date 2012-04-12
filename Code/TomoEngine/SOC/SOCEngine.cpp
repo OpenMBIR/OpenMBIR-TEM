@@ -757,75 +757,31 @@ void SOCEngine::execute()
 
   //Calculate Error Sinogram - Can this be combined with previous loop?
   //Also compute weights of the diagonal covariance matrix
-  if (m_TomoInputs->useNoiseModel == true )
-  {
-  //  calculateMeasurementWeight(Weight, NuisanceParams);
-    START_TIMER;
-
-    //TODO: This can be parallelized  for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
-    for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
-    {
-      std::cout << "\rComputing Weights for Tilt Index " << i_theta << "/" << m_Sinogram->N_theta << std::endl;
-      NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
-      std::cout << "Alpha" << NuisanceParams->alpha->d[i_theta] << std::endl;
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-          if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
-          {
-            if(m_TomoInputs->useBrightField == true)
-            {
-              Weight->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
-            }
-            else
-            {
-              //The variance for each view ~=averagecounts in that view
-              Weight->d[i_theta][i_r][i_t] = 1.0 / (m_Sinogram->counts->d[i_theta][i_r][i_t] * NuisanceParams->alpha->d[i_theta]);
-            }
-          }
-          else
-          {
-            Weight->d[i_theta][i_r][i_t] = 0;
-          }
-        }
-      }
-    }
-    STOP_TIMER;
-    std::cout << std::endl;
-    PRINT_TIME("Computing Weights");
-  }
-
-
+  START_TIMER;
   for (int16_t i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
   {
+    if (m_TomoInputs->useNoiseModel == true )
+    {
+      NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
+    }
     checksum = 0;
     for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-        // checksum+=Y_Est->d[i][j][k];
         ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - Y_Est->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];
-        //  if(fabs(ErrorSino->d[i_theta][i_r][i_t]) > 20000)
-        //    printf("%d %d %d %lf %lf %lf\n",i_theta,i_r,i_t,ErrorSino->d[i_theta][i_r][i_t],Weight->d[i_theta][i_r][i_t],Y_Est->d[i_theta][i_r][i_t]);
 
-        if(m_TomoInputs->useNoiseModel == true)
+        if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
         {
-          if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
+          Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
+          if(m_TomoInputs->useNoiseModel == true)
           {
-            if(m_TomoInputs->useBrightField == true)
-            {
-              Weight->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
-            }
-            else
-            {
-              Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
-            }
+            Weight->d[i_theta][i_r][i_t] /= NuisanceParams->alpha->d[i_theta];
           }
-          else
-          {
-            Weight->d[i_theta][i_r][i_t] = 0;
-          }
+        }
+        else
+        {
+          Weight->d[i_theta][i_r][i_t] = 0;
         }
 
 #ifdef FORWARD_PROJECT_MODE
@@ -841,8 +797,10 @@ void SOCEngine::execute()
       }
     }
     printf("Check sum of Diagonal Covariance Matrix= %lf\n", checksum);
-
   }
+  STOP_TIMER;
+  std::cout << std::endl;
+  PRINT_TIME("Computing Weights");
 
 
 #ifdef FORWARD_PROJECT_MODE
@@ -3543,8 +3501,8 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight, Scale
 void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax,DATA_TYPE RefValue)
 {
 
-  DATA_TYPE Delta0,DeltaMin,DeltaMax,T,Derivative_Delta0;
-  DATA_TYPE AbsDelta0,AbsDeltaMin,AbsDeltaMax;
+  DATA_TYPE Delta0;
+ // DATA_TYPE AbsDelta0,AbsDeltaMin,AbsDeltaMax;
   uint8_t i,j,k,count=0;
   for(i=0;i<3;i++)
     for (j=0; j < 3; j++)
