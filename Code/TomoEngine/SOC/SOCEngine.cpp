@@ -184,7 +184,6 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
    v->useDefaultOffset = false;
 
    v->useNoiseModel = false;
-   v->useBrightField = false;
    v->useGeometricMeanConstraint = false;
    v->useCostCalculation = true;
 }
@@ -393,7 +392,7 @@ void SOCEngine::execute()
   }
 
   // If you wanted to create a file you could pass in the fstream instead
-  outputGainOffsetVarianceData(std::cout);
+  outputInitialGainOffsetVarianceData(std::cout);
 
 
   // Initialize the Geometry data from a rough reconstruction
@@ -624,11 +623,6 @@ void SOCEngine::execute()
 #endif
   //m_Sinogram->targetGain=20000;
 
-  if(m_TomoInputs->useBrightField == true)
-  {
-    initializeSinogramForBrightField();
-  }
-
   //Gains and Offset Parameters Initialization
   initializeGainsOffsetsParameters(NuisanceParams);
 
@@ -752,56 +746,9 @@ void SOCEngine::execute()
   PRINT_TIME("Forward Project Time");
 
 
-
-
-
-  //Calculate Error Sinogram - Can this be combined with previous loop?
-  //Also compute weights of the diagonal covariance matrix
-  START_TIMER;
-  for (int16_t i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
-  {
-    if (m_TomoInputs->useNoiseModel == true )
-    {
-      NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
-    }
-    checksum = 0;
-    for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-    {
-      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-      {
-        ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - Y_Est->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];
-
-        if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
-        {
-          Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
-          if(m_TomoInputs->useNoiseModel == true)
-          {
-            Weight->d[i_theta][i_r][i_t] /= NuisanceParams->alpha->d[i_theta];
-          }
-        }
-        else
-        {
-          Weight->d[i_theta][i_r][i_t] = 0;
-        }
-
-#ifdef FORWARD_PROJECT_MODE
-        temp=Y_Est->d[i_theta][i_r][i_t]/NuisanceParams->I_0->d[i_theta];
-        fwrite(&temp,sizeof(DATA_TYPE),1,Fp6);
-#endif
-        if(Weight->d[i_theta][i_r][i_t] < 0)
-        {
-          std::cout << m_Sinogram->counts->d[i_theta][i_r][i_t] << "    " << NuisanceParams->alpha->d[i_theta] << std::endl;
-        }
-
-        checksum += Weight->d[i_theta][i_r][i_t];
-      }
-    }
-    printf("Check sum of Diagonal Covariance Matrix= %lf\n", checksum);
-  }
-  STOP_TIMER;
-  std::cout << std::endl;
-  PRINT_TIME("Computing Weights");
-
+  // Calculate Error Sinogram
+  // Also compute weights of the diagonal covariance matrix
+  calculateMeasurementWeight(Weight, NuisanceParams, ErrorSino, Y_Est);
 
 #ifdef FORWARD_PROJECT_MODE
   return 0;//exit the program once we finish forward projecting the object
@@ -886,43 +833,13 @@ void SOCEngine::execute()
       {
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
-      //Y_Est->d[i_theta][i_r][i_t]=0;
-          Y_Est->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - ErrorSino->d[i_theta][i_r][i_t]-NuisanceParams->mu->d[i_theta];
-      Y_Est->d[i_theta][i_r][i_t] /=NuisanceParams->I_0->d[i_theta];
+          //Y_Est->d[i_theta][i_r][i_t]=0;
+          Y_Est->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - ErrorSino->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];
+          Y_Est->d[i_theta][i_r][i_t] /= NuisanceParams->I_0->d[i_theta];
         }
       }
     }
 
-    /* Forward Projection
-    for (j = 0; j < m_Geometry->N_z; j++)
-    {
-      for (k = 0; k < m_Geometry->N_x; k++)
-      {
-        if(TempCol[j][k]->count > 0)
-        {
-          for (i = 0; i < m_Geometry->N_y; i++) //slice index
-          {
-
-            for (uint32_t q = 0; q < TempCol[j][k]->count; q++)
-            {
-              //calculating the footprint of the voxel in the t-direction
-
-              uint16_t i_theta = int16_t(floor(static_cast<float>(TempCol[j][k]->index[q] / (m_Sinogram->N_r))));
-              uint16_t i_r = (TempCol[j][k]->index[q] % (m_Sinogram->N_r));
-
-              uint16_t VoxelLineAccessCounter = 0;
-              for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
-              {
-                Y_Est->d[i_theta][i_r][i_t] += ((TempCol[j][k]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object->d[j][k][i]));
-              }
-            }
-
-          }
-        }
-
-      }
-    }
-     */
 
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
@@ -1043,19 +960,6 @@ void SOCEngine::execute()
       }
     }
 
-    //Printing the gain and offset after updating
-    /*
-     printf("Offsets\n");
-     for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
-     {
-     printf("%lf\n",NuisanceParams->mu->d[i_theta]);
-     }
-     printf("Gain\n");
-     for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
-     {
-     printf("%lf\n",NuisanceParams->I_0->d[i_theta]);
-     }*/
-
     if (m_TomoInputs->useCostCalculation == true)
     {
       int increase = calculateCost(ErrorSino, Weight, cost);
@@ -1066,18 +970,8 @@ void SOCEngine::execute()
       }
     }
 
-    printf("Offsets\n");
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      printf("%lf\n", NuisanceParams->mu->d[i_theta]);
-    }
-    printf("Gain\n");
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      printf("%lf\n", NuisanceParams->I_0->d[i_theta]);
-    }
-
-
+    // Output some debugging information
+    outputGainsOffsets(std::cout, NuisanceParams);
 
 #endif//Joint estimation endif
 
@@ -1093,16 +987,24 @@ void SOCEngine::execute()
         sum = 0;
         //Factoring out the variance parameter from the Weight matrix
         for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+        {
           for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+          {
             if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
             {
               Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
               NumNonZeroEntries++;
             }
+          }
+        }
 
         for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+        {
           for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+          {
             sum += (ErrorSino->d[i_theta][i_r][i_t] * ErrorSino->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]); //Changed to only account for the counts
+          }
+        }
         sum /= NumNonZeroEntries; //(m_Sinogram->N_r*m_Sinogram->N_t);
 
         AverageMagVar += fabs(NuisanceParams->alpha->d[i_theta]);
@@ -1134,21 +1036,15 @@ void SOCEngine::execute()
       DATA_TYPE VarRatio = AverageVarUpdate / AverageMagVar;
       std::cout << "Ratio of change in Variance " << VarRatio << std::endl;
 
-#ifdef COST_CALCULATE
-
-      /*********************Cost Calculation*************************************/
-      cost_value = computeCost(ErrorSino, Weight);
-      std::cout << cost_value << std::endl;
-      increase = cost->addCostValue(cost_value);
-      if(increase == 1)
+      if(m_TomoInputs->useCostCalculation == true)
       {
-        std::cout << "Cost just increased after variance update!" << std::endl;
-        break;
+        int increase = calculateCost(ErrorSino, Weight, cost);
+        if(increase == 1)
+        {
+          std::cout << "Cost just increased after gains+offset update!" << std::endl;
+          break;
+        }
       }
-      cost->writeCostValue(cost_value);
-      /**************************************************************************/
-
-#endif//cost
     }
 
     //Stopping Criteria for the algorithm is the relative change in parameters is less than a threshold
@@ -2966,15 +2862,26 @@ int SOCEngine::prepareInitialVariancesData()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::outputGainOffsetVarianceData(std::ostream &out)
+void SOCEngine::outputInitialGainOffsetVarianceData(std::ostream &out)
 {
   // Print out the Initial Gains, Offsets, Variances
   out << "Tilt\tGain\tOffset\tVariance" << std::endl;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
-
     out << i_theta << "\t" << m_Sinogram->InitialGain->d[i_theta] << "\t" << m_Sinogram->InitialOffset->d[i_theta] << "\t"
         << m_Sinogram->InitialVariance->d[i_theta] << std::endl;
+  }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::outputGainsOffsets(std::ostream &out, ScaleOffsetParamsPtr NuisanceParams)
+{
+  printf("Offsets\tGain\n");
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
+    printf("%lf\t%lf\n", NuisanceParams->mu->d[i_theta], NuisanceParams->I_0->d[i_theta]);
   }
 }
 
@@ -3452,40 +3359,55 @@ void SOCEngine::initializeVolumeData(DATA_TYPE value, RealVolumeType::Pointer p)
 }
 
 // -----------------------------------------------------------------------------
-//
+// Calculate Error Sinogram
+// Also compute weights of the diagonal covariance matrix
 // -----------------------------------------------------------------------------
-void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight, ScaleOffsetParamsPtr NuisanceParams)
+void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
+                                           ScaleOffsetParamsPtr NuisanceParams,
+                                           RealVolumeType::Pointer ErrorSino,
+                                           RealVolumeType::Pointer Y_Est)
 {
+  DATA_TYPE checksum = 0;
   START_TIMER;
-
-  //TODO: This can be parallelized  for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
   for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
   {
-    std::cout << "\rComputing Weights for Tilt Index " << i_theta << "/" << m_Sinogram->N_theta << std::endl;
-    NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
-    std::cout << "Alpha" << NuisanceParams->alpha->d[i_theta] << std::endl;
-    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+    if(m_TomoInputs->useNoiseModel == true)
+    {
+      NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
+    }
+    checksum = 0;
+    for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
+        ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - Y_Est->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];
+
         if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
         {
-          if(m_TomoInputs->useBrightField == true)
+          Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
+          if(m_TomoInputs->useNoiseModel == true)
           {
-            Weight->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
-          }
-          else
-          {
-            //The variance for each view ~=averagecounts in that view
-            Weight->d[i_theta][i_r][i_t] = 1.0 / (m_Sinogram->counts->d[i_theta][i_r][i_t] * NuisanceParams->alpha->d[i_theta]);
+            Weight->d[i_theta][i_r][i_t] /= NuisanceParams->alpha->d[i_theta];
           }
         }
         else
         {
           Weight->d[i_theta][i_r][i_t] = 0;
         }
+
+#ifdef FORWARD_PROJECT_MODE
+        temp=Y_Est->d[i_theta][i_r][i_t]/NuisanceParams->I_0->d[i_theta];
+        fwrite(&temp,sizeof(DATA_TYPE),1,Fp6);
+#endif
+        if(Weight->d[i_theta][i_r][i_t] < 0)
+        {
+          std::cout << m_Sinogram->counts->d[i_theta][i_r][i_t] << "    " << NuisanceParams->alpha->d[i_theta] << std::endl;
+        }
+
+        checksum += Weight->d[i_theta][i_r][i_t];
       }
     }
+    printf("Check sum of Diagonal Covariance Matrix= %lf\n", checksum);
   }
   STOP_TIMER;
   std::cout << std::endl;
