@@ -1,4 +1,13 @@
+#--////////////////////////////////////////////////////////////////////////////
+#--
+#--  Copyright (c) 2011, Michael A. Jackson. BlueQuartz Software
 
+#--  All rights reserved.
+#--  BSD License: http://www.opensource.org/licenses/bsd-license.html
+#--
+#-- This code was partly written under US Air Force Contract FA8650-07-D-5800
+#--
+#--////////////////////////////////////////////////////////////////////////////
 
 project(TomoEngine)
 cmake_minimum_required(VERSION 2.8)
@@ -38,6 +47,20 @@ set (CMP_LIB_SEARCH_DIRS "")
 set (CMP_GENERATE_VERSION_STRING 1)
 INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
 
+OPTION (EIMTomo_TIFF_SUPPORT "Add libTiff Support" ON)
+FIND_PACKAGE(Tiff)
+IF (NOT TIFF_FOUND)
+      MESSAGE (FATAL_ERROR " Tiff Library was NOT Found and is needed.")
+ENDIF (NOT TIFF_FOUND)
+set (EMMPMLib_TIFF_SUPPORT "1")
+INCLUDE_DIRECTORIES(${TIFF_INCLUDE_DIRS})
+# Copy DLL libraries into the correct build location on MSVC platforms
+if (HAVE_TIFF_DLL)
+    CMP_COPY_DEPENDENT_LIBRARIES ("tiff")
+    CMP_LIBRARIES_INSTALL_RULES ("tiff" "." )
+endif()
+
+
 
 # --------------------------------------------------------------------
 # Should we use Intel Threading Building Blocks
@@ -64,20 +87,6 @@ endif()
 # --------------------------------------------------------------------
 # Generate a Header file with Compile Version variables
 # --------------------------------------------------------------------
-if (0)
-    set (VERSION_GEN_NAME "TomoEngine")
-    set (VERSION_GEN_NAMESPACE "TomoEngine")
-    set (PROJECT_PREFIX "TomoEngine")
-    set (VERSION_GEN_COMPLETE  "1.0.0")
-    set (VERSION_GEN_VER_MAJOR "1")
-    set (VERSION_GEN_VER_MINOR "0")
-    set (VERSION_GEN_VER_PATCH "0")
-    
-    configure_file(${CMP_CONFIGURED_FILES_SOURCE_DIR}/cmpVersion.h.in   
-                   ${TomoEngine_BINARY_DIR}/TomoEngineVersion.h  )
-endif()
-
-
 configure_file(${TomoEngine_SOURCE_DIR}/TomoEngineConfiguration.h.in
                ${TomoEngine_BINARY_DIR}/${CMP_TOP_HEADER_FILE})   
 
@@ -89,26 +98,30 @@ include_directories(${TomoEngine_BINARY_DIR})
 # --------------------------------------------------------------------
 # Gather all the source files that will be put into the library
 set(Project_SRCS "")
-Macro(D3DCompileDir DirName)
+Macro(CMP_CompileDir DirName)
     include(${TomoEngine_SOURCE_DIR}/${DirName}/SourceList.cmake)
     set (Project_SRCS ${Project_SRCS} ${TomoEngine_${DirName}_SRCS} ${TomoEngine_${DirName}_HDRS})
 endMacro()
 
 
-D3DCompileDir(Common)
-D3DCompileDir(Filters)
-D3DCompileDir(IO)
-D3DCompileDir(mt)
-D3DCompileDir(SOC)
+CMP_CompileDir(Common)
+CMP_CompileDir(Filters)
+CMP_CompileDir(IO)
+CMP_CompileDir(mt)
+CMP_CompileDir(SOC)
+if (EIMTomo_TIFF_SUPPORT)
+    CMP_CompileDir(Tiff)
+    INCLUDE_DIRECTORIES(${TIFF_INCLUDE_DIRS})
+endif()
 
 
 # --------------------------------------------------------------------
 # Add the TomoEngine Library
 add_library(${PROJECT_NAME}  ${LIB_TYPE} ${Project_SRCS})
 if (EIMTomo_USE_PARALLEL_ALGORITHMS)
-    target_link_libraries(${PROJECT_NAME} MXA  ${TBB_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} MXA ${TIFF_LIBRARIES} ${TBB_LIBRARIES})
 else()
-    target_link_libraries(${PROJECT_NAME} MXA )
+    target_link_libraries(${PROJECT_NAME} MXA ${TIFF_LIBRARIES} )
 endif()
 LibraryProperties( ${PROJECT_NAME}  ${EXE_DEBUG_EXTENSION} )
 

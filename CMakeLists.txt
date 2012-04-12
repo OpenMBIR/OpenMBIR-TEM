@@ -52,18 +52,8 @@ SET (PROJECT_INSTALL_EXECUTABLES "1")
 # project.
 #------------------------------------------------------------------------------- 
 set (CMP_HEADER_DIR ${EIMTomo_BINARY_DIR}/DONOTUSE)
-#set (CMP_CONFIGURATION_FILE_NAME "EIMTomoConfiguration.h")
-#set (CMP_TYPES_FILE_NAME "EIMTomoTypes.h")
-#set (CMP_VERSION_HEADER_FILE_NAME "EIMTomoVersion.h")
-#set (CMP_TOP_HEADER_FILE "EIMTomo.h")
-#set (CMP_PROJECT_NAMESPACE "${PROJECT_NAME}")
-#set (CMP_PROJECT_NAME "${PROJECT_NAME}")
-#set (CMP_ENABLE_PLUGINS "0")
-#set (CMP_LIB_SEARCH_DIRS "")
-#set (CMP_GENERATE_VERSION_STRING 1)
 set (CMP_INSTALL_FILES 1)
 set (CMP_CONFIGURED_FILES_SOURCE_DIR ${CMP_SOURCE_DIR}/ConfiguredFiles)
-#INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
 
 # We need to add the binary directory to our list of include directories so the source files
 # can find the generated header files
@@ -90,7 +80,6 @@ IF (BUILD_SHARED_LIBS)
   ENDIF (WIN32)
 ENDIF (BUILD_SHARED_LIBS)
 
-OPTION (EIMTomo_TIFF_SUPPORT "Add libTiff Support" ON)
 OPTION (EIMTomo_HDF5_SUPPORT "Add HDF5 Support" OFF)
 OPTION (EIMTomo_USE_MERSENNE_TWISTER "Use the Mersenne Twister RNG" ON)
 
@@ -128,7 +117,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
 if (MSVC)
- add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 
 # --------------------------------------------------------------------
