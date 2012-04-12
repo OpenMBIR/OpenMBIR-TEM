@@ -135,6 +135,8 @@ namespace SOC {
     uint8_t   InterpFlag;
 
     bool useNoiseModel;
+    bool useBrightField;
+    bool useGeometricMeanConstraint;
 
     bool useSubvolume;
     uint16_t xStart;

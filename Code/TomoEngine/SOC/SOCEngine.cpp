@@ -182,7 +182,10 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
    v->tiltSelection = SOC::A_Tilt;
    v->defaultOffset = 0.0;
    v->useDefaultOffset = false;
+
    v->useNoiseModel = false;
+   v->useBrightField = false;
+   v->useGeometricMeanConstraint = false;
 }
 
 // -----------------------------------------------------------------------------
@@ -642,16 +645,21 @@ void SOCEngine::execute()
 #endif
   //m_Sinogram->targetGain=20000;
 
-#ifdef BRIGHT_FIELD //Take log of the data and subtract log(Dosage) from it
-  for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++) {//slice index
-    for(i_r = 0; i_r < m_Sinogram->N_r;i_r++) {
-      for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
+if (m_TomoInputs->useBrightField == true )
+  {
+    //Take log of the data and subtract log(Dosage) from it
+    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+    { //slice index
+      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
       {
+        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+        {
+          m_Sinogram->counts->d[i_theta][i_r][i_t] = log(m_Sinogram->counts->d[i_theta][i_r][i_t]) - log(m_Sinogram->InitialGain->d[i_theta]);
+        }
+      }
+    }
 
-        m_Sinogram->counts->d[i_theta][i_r][i_t] = log(m_Sinogram->counts->d[i_theta][i_r][i_t])-log(m_Sinogram->InitialGain[i_theta]);
-      }}}
-
-#endif//Bright Field
+  }
 
   //Scale and Offset Parameters Initialization
   sum = 0;
@@ -659,40 +667,47 @@ void SOCEngine::execute()
   for(k=0 ; k < m_Sinogram->N_theta;k++)
   {
     // Gains
-  NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k];
+    NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k];
     // Offsets
     NuisanceParams->mu->d[k] = m_Sinogram->InitialOffset->d[k];
-#ifdef GEOMETRIC_MEAN_CONSTRAINT
-    sum+=log(NuisanceParams->I_0->d[k]);
-#else
-    sum+=NuisanceParams->I_0->d[k];
-#endif
+    if(m_TomoInputs->useGeometricMeanConstraint == true)
+    {
+      sum += log(NuisanceParams->I_0->d[k]);
+    }
+    else
+    {
+      sum += NuisanceParams->I_0->d[k];
+    }
   }
   sum/=m_Sinogram->N_theta;
-#ifdef GEOMETRIC_MEAN_CONSTRAINT
-  sum=exp(sum);
-  printf("The geometric mean of the gains is %lf\n",sum);
-
-  //Checking if the input parameters satisfy the target geometric mean
-  if(fabs(sum - m_Sinogram->targetGain) > 1e-5)
+  if(m_TomoInputs->useGeometricMeanConstraint == true)
   {
-    printf("The input paramters dont meet the constraint..Renormalizing\n");
-    temp = exp(log(m_Sinogram->targetGain) - log(sum));
-    for (k = 0 ; k < m_Sinogram->N_theta; k++) {
-      NuisanceParams->I_0->d[k]=m_Sinogram->InitialGain->d[k]*temp;
+    sum = exp(sum);
+    printf("The geometric mean of the gains is %lf\n", sum);
+    //Checking if the input parameters satisfy the target geometric mean
+    if(fabs(sum - m_Sinogram->targetGain) > 1e-5)
+    {
+      printf("The input paramters dont meet the constraint..Renormalizing\n");
+      temp = exp(log(m_Sinogram->targetGain) - log(sum));
+      for (k = 0; k < m_Sinogram->N_theta; k++)
+      {
+        NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k] * temp;
+      }
     }
   }
-#else
-  printf("The Arithmetic mean of the constraint is %lf\n",sum);
-  if(sum - m_Sinogram->targetGain > 1e-5)
+  else
   {
-    printf("Arithmetic Mean Constraint not met..renormalizing\n");
-    temp = m_Sinogram->targetGain/sum;
-    for (k = 0 ; k < m_Sinogram->N_theta; k++) {
-      NuisanceParams->I_0->d[k]=m_Sinogram->InitialGain->d[k]*temp;
+    printf("The Arithmetic mean of the constraint is %lf\n", sum);
+    if(sum - m_Sinogram->targetGain > 1e-5)
+    {
+      printf("Arithmetic Mean Constraint not met..renormalizing\n");
+      temp = m_Sinogram->targetGain / sum;
+      for (k = 0; k < m_Sinogram->N_theta; k++)
+      {
+        NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k] * temp;
+      }
     }
   }
-#endif
 
 
   for(k = 0 ; k <m_Sinogram->N_theta; k++)
@@ -957,11 +972,14 @@ void SOCEngine::execute()
         {
           if(m_Sinogram->counts->d[zz][xx][yy] != 0)
           {
-  #ifdef BRIGHT_FIELD
-            Weight->d[zz][xx][yy] = m_Sinogram->counts->d[zz][xx][yy];
-  #else
-            Weight->d[zz][xx][yy] = 1.0 / (m_Sinogram->counts->d[zz][xx][yy] * NuisanceParams->alpha->d[zz]); //The variance for each view ~=averagecounts in that view
-  #endif
+            if(m_TomoInputs->useBrightField == true)
+            {
+              Weight->d[zz][xx][yy] = m_Sinogram->counts->d[zz][xx][yy];
+            }
+            else
+            {
+              Weight->d[zz][xx][yy] = 1.0 / (m_Sinogram->counts->d[zz][xx][yy] * NuisanceParams->alpha->d[zz]); //The variance for each view ~=averagecounts in that view
+            }
           }
           else
           {
@@ -992,11 +1010,12 @@ void SOCEngine::execute()
         {
           if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
           {
-#ifdef BRIGHT_FIELD
-            Weight->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
-#else
-            Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
-#endif //bright field check
+            if (m_TomoInputs->useBrightField == true )
+            {
+              Weight->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
+            } else {
+              Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
+            }
           }
           else
           {
@@ -1149,15 +1168,9 @@ void SOCEngine::execute()
       }
 
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
+
+
 #ifdef JOINT_ESTIMATION
-
-    DATA_TYPE AverageI_kUpdate=0;//absolute sum of the gain updates
-    DATA_TYPE AverageMagI_k=0;//absolute sum of the initial gains
-
-    DATA_TYPE AverageDelta_kUpdate=0; //absolute sum of the offsets
-    DATA_TYPE AverageMagDelta_k=0;//abs sum of the initial offset
-
-
 
     //high=5e 100;//this maintains the max and min bracket values for rooting lambda
     DATA_TYPE high = std::numeric_limits<DATA_TYPE>::max();
@@ -1279,58 +1292,16 @@ void SOCEngine::execute()
     printf("The value of the data match error prior to updating the I and mu =%lf\n", sum);
 
     /********************************************************************************************/
-
-#ifdef GEOMETRIC_MEAN_CONSTRAINT
-    calculateGeometricMeanConstraint();
-#else
-    DATA_TYPE sum1 = 0;
-    DATA_TYPE sum2 = 0;
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+    if(m_TomoInputs->useGeometricMeanConstraint == true)
     {
-      sum1 += (1.0 / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]));
-      sum2 += ((bk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d1->d[i_theta]) / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]));
+      calculateGeometricMeanConstraint(NuisanceParams);
     }
-    DATA_TYPE LagrangeMultiplier = (-m_Sinogram->N_theta * m_Sinogram->targetGain + sum2) / sum1;
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+    else
     {
-
-    AverageMagI_k += fabs(NuisanceParams->I_0->d[i_theta]);//store the sum of the vector of gains
-
-    DATA_TYPE NewI_k = (-1 * LagrangeMultiplier - Qk_cost->d[i_theta][1] * d1->d[i_theta] + bk_cost->d[i_theta][0])
-    / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]);
-
-    AverageI_kUpdate += fabs(NewI_k-NuisanceParams->I_0->d[i_theta]);
-
-    NuisanceParams->I_0->d[i_theta]=NewI_k;
-/*      NuisanceParams->I_0->d[i_theta] = (-1 * LagrangeMultiplier - Qk_cost->d[i_theta][1] * d1->d[i_theta] + bk_cost->d[i_theta][0])
-      / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]);
-*/
-      //Postivity Constraint on the gains
-
-      if (NuisanceParams->I_0->d[i_theta] < 0)
-      {
-        NuisanceParams->I_0->d[i_theta]*=1;
-      }
-    AverageMagDelta_k += fabs(NuisanceParams->mu->d[i_theta]);
-
-
-//      NuisanceParams->mu->d[i_theta] = d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
-
-    DATA_TYPE NewDelta_k= d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
-    AverageDelta_kUpdate += fabs(NewDelta_k - NuisanceParams->mu->d[i_theta]);
-    NuisanceParams->mu->d[i_theta] = NewDelta_k;
-    //Postivity Constraing on the offsets
-
-    if (NuisanceParams->mu->d[i_theta] < 0)
-    {
-      NuisanceParams->mu->d[i_theta]*=1;
-     }
+      calculateArithmeticMeanConstraints(NuisanceParams);
     }
 
 
-
-
-#endif //Type of constraing Geometric or arithmetic
     //Re normalization
 
     /*sum=0;
@@ -1398,7 +1369,7 @@ void SOCEngine::execute()
     /**************************************************************************/
 
 #endif
-    printf("Lagrange Multiplier = %lf\n", LagrangeMultiplier);
+
 
     printf("Offsets\n");
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
@@ -1412,90 +1383,93 @@ void SOCEngine::execute()
     }
 
 
-    DATA_TYPE I_kRatio=AverageI_kUpdate/AverageMagI_k;
-    DATA_TYPE Delta_kRatio = AverageDelta_kUpdate/AverageMagDelta_k;
-    std::cout<<"Ratio of change in I_k "<<I_kRatio<<std::endl;
-    std::cout<<"Ratio of change in Delta_k "<<Delta_kRatio<<std::endl;
+
 #endif//Joint estimation endif
 
-#ifdef NOISE_MODEL
-    //Updating the Weights
-    DATA_TYPE AverageVarUpdate=0;//absolute sum of the gain updates
-    DATA_TYPE AverageMagVar=0;//absolute sum of the initial gains
-
-    for(uint16_t i_theta=0;i_theta < m_Sinogram->N_theta;i_theta++)
+    if (m_TomoInputs->useNoiseModel == true)
     {
-      uint32_t NumNonZeroEntries=0;
-      sum=0;
-      //Factoring out the variance parameter from the Weight matrix
-      for(uint16_t i_r=0; i_r < m_Sinogram->N_r; i_r++)
-        for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-          if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
-          {
-          Weight->d[i_theta][i_r][i_t] = 1.0/m_Sinogram->counts->d[i_theta][i_r][i_t];
-            NumNonZeroEntries++;
-          }
+      //Updating the Weights
+      DATA_TYPE AverageVarUpdate = 0; //absolute sum of the gain updates
+      DATA_TYPE AverageMagVar = 0; //absolute sum of the initial gains
 
-
-      for(uint16_t i_r=0; i_r < m_Sinogram->N_r; i_r++)
-        for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-          sum+=(ErrorSino->d[i_theta][i_r][i_t]*ErrorSino->d[i_theta][i_r][i_t]*Weight->d[i_theta][i_r][i_t]);//Changed to only account for the counts
-      sum/=NumNonZeroEntries;//(m_Sinogram->N_r*m_Sinogram->N_t);
-
-      AverageMagVar += fabs(NuisanceParams->alpha->d[i_theta]);
-      AverageVarUpdate += fabs(sum - NuisanceParams->alpha->d[i_theta]);
-      NuisanceParams->alpha->d[i_theta]=sum;
-      //Update the weight for ICD updates
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+      for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
       {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-          if(NuisanceParams->alpha->d[i_theta] != 0 && m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
-          {
-            Weight->d[i_theta][i_r][i_t] = 1.0/(m_Sinogram->counts->d[i_theta][i_r][i_t]*NuisanceParams->alpha->d[i_theta]);
-          }
-          else {
-            Weight->d[i_theta][i_r][i_t]= 0;
-          }
+        uint32_t NumNonZeroEntries = 0;
+        sum = 0;
+        //Factoring out the variance parameter from the Weight matrix
+        for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+          for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+            if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
+            {
+              Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
+              NumNonZeroEntries++;
+            }
 
+        for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+          for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+            sum += (ErrorSino->d[i_theta][i_r][i_t] * ErrorSino->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]); //Changed to only account for the counts
+        sum /= NumNonZeroEntries; //(m_Sinogram->N_r*m_Sinogram->N_t);
+
+        AverageMagVar += fabs(NuisanceParams->alpha->d[i_theta]);
+        AverageVarUpdate += fabs(sum - NuisanceParams->alpha->d[i_theta]);
+        NuisanceParams->alpha->d[i_theta] = sum;
+        //Update the weight for ICD updates
+        for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+        {
+          for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+          {
+            if(NuisanceParams->alpha->d[i_theta] != 0 && m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
+            {
+              Weight->d[i_theta][i_r][i_t] = 1.0 / (m_Sinogram->counts->d[i_theta][i_r][i_t] * NuisanceParams->alpha->d[i_theta]);
+            }
+            else
+            {
+              Weight->d[i_theta][i_r][i_t] = 0;
+            }
+
+          }
         }
+
+      }
+      for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+      {
+        printf("%lf\n", NuisanceParams->alpha->d[i_theta]);
       }
 
-    }
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      printf("%lf\n", NuisanceParams->alpha->d[i_theta]);
-    }
-
-    DATA_TYPE VarRatio = AverageVarUpdate/AverageMagVar;
-    std::cout<<"Ratio of change in Variance "<<VarRatio<<std::endl;
+      DATA_TYPE VarRatio = AverageVarUpdate / AverageMagVar;
+      std::cout << "Ratio of change in Variance " << VarRatio << std::endl;
 
 #ifdef COST_CALCULATE
 
-    /*********************Cost Calculation*************************************/
-    cost_value = computeCost(ErrorSino, Weight);
-    std::cout<<cost_value<<std::endl;
-    increase = cost->addCostValue(cost_value);
-    if (increase ==1)
-    {
-      std::cout << "Cost just increased after variance update!" << std::endl;
-      break;
-    }
-    cost->writeCostValue(cost_value);
-    /**************************************************************************/
+      /*********************Cost Calculation*************************************/
+      cost_value = computeCost(ErrorSino, Weight);
+      std::cout << cost_value << std::endl;
+      increase = cost->addCostValue(cost_value);
+      if(increase == 1)
+      {
+        std::cout << "Cost just increased after variance update!" << std::endl;
+        break;
+      }
+      cost->writeCostValue(cost_value);
+      /**************************************************************************/
 
 #endif//cost
-
-#endif//NOISE_MODEL
+    }
 
     //Stopping Criteria for the algorithm is the relative change in parameters is less than a threshold
-#ifdef NOISE_MODEL
-    if(0 == status && OuterIter >= 1)//&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
-      break;
-#else
-    if(0 == status)//&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
-      break;
-#endif //Noise Model
+    if(m_TomoInputs->useNoiseModel == true)
+    {
+      if(0 == status && OuterIter >= 1) {//&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+        break;
+      }
+    }
+    else
+    {
+      if(0 == status)
+      { //&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+        break;
+      }
+    } //Noise Model
 
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
 
@@ -2446,41 +2420,44 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
 // -----------------------------------------------------------------------------
 double SOCEngine::surrogateFunctionBasedMin()
 {
-  double numerator_sum=0;
-  double denominator_sum=0;
-  double alpha,update=0;
-  double product=1;
-  uint8_t i,j,k;
+  double numerator_sum = 0;
+  double denominator_sum = 0;
+  double alpha, update = 0;
+  double product = 1;
+  uint8_t i, j, k;
 
-  for (i = 0;i < 3;i++)
-    for (j = 0; j <3; j++)
-      for (k = 0;k < 3; k++)
+  for (i = 0; i < 3; i++)
+  {
+    for (j = 0; j < 3; j++)
+    {
+      for (k = 0; k < 3; k++)
       {
-        if( V != NEIGHBORHOOD[i][j][k])
+        if(V != NEIGHBORHOOD[i][j][k])
         {
-        product=((double)FILTER[i][j][k]*pow(fabs(V-NEIGHBORHOOD[i][j][k]),(MRF_P-2.0)));
-        numerator_sum+=(product*(V-NEIGHBORHOOD[i][j][k]));
-        denominator_sum+=product;
+          product = ((double)FILTER[i][j][k] * pow(fabs(V - NEIGHBORHOOD[i][j][k]), (MRF_P - 2.0)));
+          numerator_sum += (product * (V - NEIGHBORHOOD[i][j][k]));
+          denominator_sum += product;
         }
       }
-  numerator_sum/=SIGMA_X_P;
-  denominator_sum/=SIGMA_X_P;
+    }
+  }
+  numerator_sum /= SIGMA_X_P;
+  denominator_sum /= SIGMA_X_P;
 
-  numerator_sum+=THETA1;
-  denominator_sum+=THETA2;
+  numerator_sum += THETA1;
+  denominator_sum += THETA2;
 
   if(THETA2 > 0)
   {
-    alpha=(-1*numerator_sum)/(denominator_sum);
-    update = V+Clip(alpha, -V, std::numeric_limits<float>::infinity() );
+    alpha = (-1 * numerator_sum) / (denominator_sum);
+    update = V + Clip(alpha, -V, std::numeric_limits<float>::infinity());
   }
   else
   {
-    update=0;
+    update = 0;
   }
 
-  if(update > 70000)
-    printf("%lf\n",update);
+  if(update > 70000) printf("%lf\n", update);
 
   return update;
 
@@ -2502,125 +2479,6 @@ DATA_TYPE SOCEngine::absMaxArray(std::vector<DATA_TYPE> &Array)
 
 }
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams)
-{
-
-  DATA_TYPE low,high,dist;
-  DATA_TYPE perturbation=1e-30;//perturbs the rooting range
-  uint16_t rooting_attempt_counter;
-  int32_t errorcode=-1;
-  DATA_TYPE LagrangeMultiplier;
-  DATA_TYPE LambdaRootingAccuracy=1e-10;//accuracy for rooting Lambda
-  uint16_t MaxNumRootingAttempts = 1000;//for lambda this corresponds to a distance of 2^1000
-  DATA_TYPE* root;
-  DATA_TYPE a,b;
-  DATA_TYPE temp_mu;
-
-//TODO: Fix these initializations
-  high = 0;
-  low = 0;
-  dist = 0;
-  //Root the expression using the derived quadratic parameters. Need to choose min and max values
-     printf("Rooting the equation to solve for the optimal Lagrange multiplier\n");
-
-     if(high != std::numeric_limits<DATA_TYPE>::max())
-     {
-       high-=perturbation; //Since the high value is set to make all discriminants exactly >=0 there are some issues when it is very close due to round off issues. So we get sqrt(-6e-20) for example. So subtract an arbitrary value like 0.5
-       //we need to find a window within which we need to root the expression . the upper bound is clear but lower bound we need to look for one
-       //low=high;
-       dist=-1;
-     }
-     else if (low != std::numeric_limits<DATA_TYPE>::min())
-     {
-       low +=perturbation;
-       //high=low;
-       dist=1;
-     }
-
-     /*  fa=CE_ConstraintEquation(high);
-      signa=fa>0;
-      fb=CE_ConstraintEquation(low);
-      signb = fb>0;
-      dist=1;
-      while (signb != signa )
-      {
-      low = low - dist;
-      fb=CE_ConstraintEquation(low);
-      signb = fb>0;
-      dist*=2;
-      }*/
-     rooting_attempt_counter=0;
-     errorcode=-1;
-     CE_ConstraintEquation ce(NumOfViews, QuadraticParameters, d1, d2, Qk_cost, bk_cost, ck_cost, LogGain);
-
-     while(errorcode != 0 && low <= high && rooting_attempt_counter < MaxNumRootingAttempts) //0 implies the signof the function at low and high is the same
-     {
-     uint32_t iter_count;
-       LagrangeMultiplier=solve<CE_ConstraintEquation>(&ce, low, high, LambdaRootingAccuracy, &errorcode,iter_count);
-       low=low+dist;
-       dist*=2;
-       rooting_attempt_counter++;
-     }
-
-     //Something went wrong and the algorithm was unable to bracket the root within the given interval
-     if(rooting_attempt_counter == MaxNumRootingAttempts && errorcode != 0)
-     {
-       printf("The rooting for lambda was unsuccesful\n");
-       printf("Low = %lf High = %lf\n",low,high);
-       printf("Quadratic Parameters\n");
-       for(int i_theta =0; i_theta < m_Sinogram->N_theta;i_theta++)
-       {
-         printf("%lf %lf %lf\n",QuadraticParameters->d[i_theta][0],QuadraticParameters->d[i_theta][1],QuadraticParameters->d[i_theta][2]);
-       }
- #ifdef DEBUG_CONSTRAINT_OPT
-
-       //for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
-       //{
-       fwrite(&Qk_cost->d[0][0], sizeof(DATA_TYPE), m_Sinogram->N_theta*3, Fp8);
-       //}
-       //for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
-       //{
-       fwrite(&bk_cost->d[0][0], sizeof(DATA_TYPE), m_Sinogram->N_theta*2, Fp8);
-       //}
-       fwrite(&ck_cost->d[0], sizeof(DATA_TYPE), m_Sinogram->N_theta, Fp8);
- #endif
-
-       return;
-     }
-
-     CE_ConstraintEquation conEqn(NumOfViews, QuadraticParameters, d1, d2, Qk_cost, bk_cost, ck_cost, LogGain);
-
-     //Based on the optimal lambda compute the optimal mu and I0 values
-     for (int i_theta =0; i_theta < m_Sinogram->N_theta; i_theta++)
-     {
-
-       root = conEqn.CE_RootsOfQuadraticFunction(QuadraticParameters->d[i_theta][0],QuadraticParameters->d[i_theta][1],LagrangeMultiplier); //returns the 2 roots of the quadratic parameterized by a,b,c
-       a=root[0];
-       b=root[0];
-       if(root[0] >= 0 && root[1] >= 0)
-       {
-         temp_mu = d1->d[i_theta] - root[0]*d2->d[i_theta]; //for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-         a = (Qk_cost->d[i_theta][0]*root[0]*root[0] + 2*Qk_cost->d[i_theta][1]*root[0]*temp_mu + temp_mu*temp_mu*Qk_cost->d[i_theta][2] - 2*(bk_cost->d[i_theta][0]*root[0] + temp_mu*bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]);//evaluating the cost function
-
-         temp_mu = d1->d[i_theta] - root[1]*d2->d[i_theta];//for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-         b = (Qk_cost->d[i_theta][0]*root[1]*root[1] + 2*Qk_cost->d[i_theta][1]*root[1]*temp_mu + temp_mu*temp_mu*Qk_cost->d[i_theta][2] - 2*(bk_cost->d[i_theta][0]*root[1] + temp_mu*bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]);//evaluating the cost function
-       }
-
-       if(a == Minimum(a, b))
-       NuisanceParams->I_0->d[i_theta] = root[0];
-       else
-       {
-         NuisanceParams->I_0->d[i_theta] = root[1];
-       }
-
-       free(root); //freeing the memory holding the roots of the quadratic equation
-
-       NuisanceParams->mu->d[i_theta] = d1->d[i_theta] - d2->d[i_theta]*NuisanceParams->I_0->d[i_theta];//some function of I_0[i_theta]
-     }
-}
 
 // -----------------------------------------------------------------------------
 //
@@ -2677,68 +2535,70 @@ void SOCEngine::ComputeVSC()
   fclose(Fp);
 }
 
-
+// -----------------------------------------------------------------------------
 //Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
+// -----------------------------------------------------------------------------
 DATA_TYPE SOCEngine::SetNonHomThreshold()
 {
-  size_t dims[2]={m_Geometry->N_z*m_Geometry->N_x,0};
-  RealArrayType::Pointer TempMagMap=RealArrayType::New(dims);
+  size_t dims[2] =
+  { m_Geometry->N_z * m_Geometry->N_x, 0 };
+  RealArrayType::Pointer TempMagMap = RealArrayType::New(dims);
   //TempMagMap->setName("TempMagMap");
 
-  uint32_t ArrLength=m_Geometry->N_z*m_Geometry->N_x;
+  uint32_t ArrLength = m_Geometry->N_z * m_Geometry->N_x;
   DATA_TYPE threshold;
 
   //Copy into a linear list for easier partial sorting
-  for (uint32_t i=0; i < m_Geometry->N_z; i++)
-      for (uint32_t j=0; j < m_Geometry->N_x; j++)
+  for (uint32_t i = 0; i < m_Geometry->N_z; i++)
+    for (uint32_t j = 0; j < m_Geometry->N_x; j++)
     {
       //TempMagMap->d[i*m_Geometry->N_x+j]=i*m_Geometry->N_x+j;
-          TempMagMap->d[i*(uint32_t)m_Geometry->N_x+j]=MagUpdateMap->d[i][j];
+      TempMagMap->d[i * (uint32_t)m_Geometry->N_x + j] = MagUpdateMap->d[i][j];
     }
 
-  uint16_t percentile_index=ArrLength/NUM_NON_HOMOGENOUS_ITER;
+  uint16_t percentile_index = ArrLength / NUM_NON_HOMOGENOUS_ITER;
   //Partial selection sort
 
   DATA_TYPE max;
   uint32_t max_index;
-  for(uint32_t i=0; i <= percentile_index;i++)
+  for (uint32_t i = 0; i <= percentile_index; i++)
+  {
+    max = TempMagMap->d[i];
+    max_index = i;
+    for (uint32_t j = i + 1; j < ArrLength; j++)
     {
-      max=TempMagMap->d[i];
-      max_index=i;
-      for(uint32_t j=i+1;j<ArrLength;j++)
-        {
-    if(TempMagMap->d[j] > max)
+      if(TempMagMap->d[j] > max)
       {
-                  max=TempMagMap->d[j];
-                  max_index=j;
+        max = TempMagMap->d[j];
+        max_index = j;
       }
-        }
-      DATA_TYPE temp=TempMagMap->d[i];
-      TempMagMap->d[i]=TempMagMap->d[max_index];
-      TempMagMap->d[max_index]=temp;
     }
+    DATA_TYPE temp = TempMagMap->d[i];
+    TempMagMap->d[i] = TempMagMap->d[max_index];
+    TempMagMap->d[max_index] = temp;
+  }
 
   //Insertion sort
   /*
-  int32_t j;
-  DATA_TYPE key;
-  for (uint32_t i=1 ; i < ArrLength; i++)
-  {
-    j=i-1;
-    key=TempMagMap->d[i];
-    while( j>=0 && TempMagMap->d[j] < key)
-    {
-      TempMagMap->d[j+1]=TempMagMap->d[j];
-        j--;
-    }
-    TempMagMap->d[j+1]=key;
-  }
+   int32_t j;
+   DATA_TYPE key;
+   for (uint32_t i=1 ; i < ArrLength; i++)
+   {
+   j=i-1;
+   key=TempMagMap->d[i];
+   while( j>=0 && TempMagMap->d[j] < key)
+   {
+   TempMagMap->d[j+1]=TempMagMap->d[j];
+   j--;
+   }
+   TempMagMap->d[j+1]=key;
+   }
 
-  //TempMagMap is a local variable and will clean up its own memory when this method exits
-  uint16_t percentile_index=ArrLength/NUM_NON_HOMOGENOUS_ITER;
-  std::cout<<ArrLength<<" "<<percentile_index<<std::endl;
-  */
-threshold = TempMagMap->d[percentile_index];
+   //TempMagMap is a local variable and will clean up its own memory when this method exits
+   uint16_t percentile_index=ArrLength/NUM_NON_HOMOGENOUS_ITER;
+   std::cout<<ArrLength<<" "<<percentile_index<<std::endl;
+   */
+  threshold = TempMagMap->d[percentile_index];
   return threshold;
 }
 
@@ -3464,6 +3324,192 @@ int SOCEngine::initialzeRoughReconstructionData()
   return 1;
 }
 
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParamsPtr NuisanceParams)
+{
+
+  DATA_TYPE low, high, dist;
+  DATA_TYPE perturbation = 1e-30; //perturbs the rooting range
+  uint16_t rooting_attempt_counter;
+  int32_t errorcode = -1;
+
+  DATA_TYPE LagrangeMultiplier = 0.0;
+  DATA_TYPE LambdaRootingAccuracy = 1e-10; //accuracy for rooting Lambda
+  uint16_t MaxNumRootingAttempts = 1000; //for lambda this corresponds to a distance of 2^1000
+  DATA_TYPE* root;
+  DATA_TYPE a, b;
+  DATA_TYPE temp_mu;
+
+//TODO: Fix these initializations
+  high = 0;
+  low = 0;
+  dist = 0;
+  //Root the expression using the derived quadratic parameters. Need to choose min and max values
+  printf("Rooting the equation to solve for the optimal Lagrange multiplier\n");
+
+  if(high != std::numeric_limits<DATA_TYPE>::max())
+  {
+    high -= perturbation; //Since the high value is set to make all discriminants exactly >=0 there are some issues when it is very close due to round off issues. So we get sqrt(-6e-20) for example. So subtract an arbitrary value like 0.5
+    //we need to find a window within which we need to root the expression . the upper bound is clear but lower bound we need to look for one
+    //low=high;
+    dist = -1;
+  }
+  else if(low != std::numeric_limits<DATA_TYPE>::min())
+  {
+    low += perturbation;
+    //high=low;
+    dist = 1;
+  }
+
+  /*  fa=CE_ConstraintEquation(high);
+   signa=fa>0;
+   fb=CE_ConstraintEquation(low);
+   signb = fb>0;
+   dist=1;
+   while (signb != signa )
+   {
+   low = low - dist;
+   fb=CE_ConstraintEquation(low);
+   signb = fb>0;
+   dist*=2;
+   }*/
+  rooting_attempt_counter = 0;
+  errorcode = -1;
+  CE_ConstraintEquation ce(NumOfViews, QuadraticParameters, d1, d2, Qk_cost, bk_cost, ck_cost, LogGain);
+
+  while (errorcode != 0 && low <= high && rooting_attempt_counter < MaxNumRootingAttempts) //0 implies the signof the function at low and high is the same
+  {
+    uint32_t iter_count;
+    LagrangeMultiplier = solve<CE_ConstraintEquation>(&ce, low, high, LambdaRootingAccuracy, &errorcode, iter_count);
+    low = low + dist;
+    dist *= 2;
+    rooting_attempt_counter++;
+  }
+
+  //Something went wrong and the algorithm was unable to bracket the root within the given interval
+  if(rooting_attempt_counter == MaxNumRootingAttempts && errorcode != 0)
+  {
+    printf("The rooting for lambda was unsuccesful\n");
+    printf("Low = %lf High = %lf\n", low, high);
+    printf("Quadratic Parameters\n");
+    for (int i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+    {
+      printf("%lf %lf %lf\n", QuadraticParameters->d[i_theta][0], QuadraticParameters->d[i_theta][1], QuadraticParameters->d[i_theta][2]);
+    }
+#ifdef DEBUG_CONSTRAINT_OPT
+
+    //for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
+    //{
+    fwrite(&Qk_cost->d[0][0], sizeof(DATA_TYPE), m_Sinogram->N_theta*3, Fp8);
+    //}
+    //for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
+    //{
+    fwrite(&bk_cost->d[0][0], sizeof(DATA_TYPE), m_Sinogram->N_theta*2, Fp8);
+    //}
+    fwrite(&ck_cost->d[0], sizeof(DATA_TYPE), m_Sinogram->N_theta, Fp8);
+#endif
+
+    return;
+  }
+
+  CE_ConstraintEquation conEqn(NumOfViews, QuadraticParameters, d1, d2, Qk_cost, bk_cost, ck_cost, LogGain);
+
+  //Based on the optimal lambda compute the optimal mu and I0 values
+  for (int i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
+
+    root = conEqn.CE_RootsOfQuadraticFunction(QuadraticParameters->d[i_theta][0], QuadraticParameters->d[i_theta][1], LagrangeMultiplier); //returns the 2 roots of the quadratic parameterized by a,b,c
+    a = root[0];
+    b = root[0];
+    if(root[0] >= 0 && root[1] >= 0)
+    {
+      temp_mu = d1->d[i_theta] - root[0] * d2->d[i_theta]; //for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
+      a = (Qk_cost->d[i_theta][0] * root[0] * root[0] + 2 * Qk_cost->d[i_theta][1] * root[0] * temp_mu + temp_mu * temp_mu * Qk_cost->d[i_theta][2]
+          - 2 * (bk_cost->d[i_theta][0] * root[0] + temp_mu * bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]); //evaluating the cost function
+
+      temp_mu = d1->d[i_theta] - root[1] * d2->d[i_theta]; //for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
+      b = (Qk_cost->d[i_theta][0] * root[1] * root[1] + 2 * Qk_cost->d[i_theta][1] * root[1] * temp_mu + temp_mu * temp_mu * Qk_cost->d[i_theta][2]
+          - 2 * (bk_cost->d[i_theta][0] * root[1] + temp_mu * bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]); //evaluating the cost function
+    }
+
+    if(a == Minimum(a, b)) NuisanceParams->I_0->d[i_theta] = root[0];
+    else
+    {
+      NuisanceParams->I_0->d[i_theta] = root[1];
+    }
+
+    free(root); //freeing the memory holding the roots of the quadratic equation
+
+    NuisanceParams->mu->d[i_theta] = d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
+  }
+
+  printf("Lagrange Multiplier = %lf\n", LagrangeMultiplier);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::calculateArithmeticMeanConstraints(ScaleOffsetParamsPtr NuisanceParams)
+{
+
+  DATA_TYPE AverageI_kUpdate = 0.0;//absolute sum of the gain updates
+  DATA_TYPE AverageMagI_k = 0.0;//absolute sum of the initial gains
+  DATA_TYPE AverageDelta_kUpdate = 0.0; //absolute sum of the offsets
+  DATA_TYPE AverageMagDelta_k = 0.0;//abs sum of the initial offset
+  DATA_TYPE LagrangeMultiplier = 0.0;
+
+  DATA_TYPE sum1 = 0;
+  DATA_TYPE sum2 = 0;
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
+    sum1 += (1.0 / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]));
+    sum2 += ((bk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d1->d[i_theta]) / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]));
+  }
+  LagrangeMultiplier = (-m_Sinogram->N_theta * m_Sinogram->targetGain + sum2) / sum1;
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
+
+    AverageMagI_k += fabs(NuisanceParams->I_0->d[i_theta]); //store the sum of the vector of gains
+
+    DATA_TYPE NewI_k = (-1 * LagrangeMultiplier - Qk_cost->d[i_theta][1] * d1->d[i_theta] + bk_cost->d[i_theta][0])
+        / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]);
+
+    AverageI_kUpdate += fabs(NewI_k - NuisanceParams->I_0->d[i_theta]);
+
+    NuisanceParams->I_0->d[i_theta] = NewI_k;
+    /*      NuisanceParams->I_0->d[i_theta] = (-1 * LagrangeMultiplier - Qk_cost->d[i_theta][1] * d1->d[i_theta] + bk_cost->d[i_theta][0])
+     / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]);
+     */
+    //Postivity Constraint on the gains
+    if(NuisanceParams->I_0->d[i_theta] < 0)
+    {
+      NuisanceParams->I_0->d[i_theta] *= 1;
+    }
+    AverageMagDelta_k += fabs(NuisanceParams->mu->d[i_theta]);
+
+//      NuisanceParams->mu->d[i_theta] = d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
+
+    DATA_TYPE NewDelta_k = d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
+    AverageDelta_kUpdate += fabs(NewDelta_k - NuisanceParams->mu->d[i_theta]);
+    NuisanceParams->mu->d[i_theta] = NewDelta_k;
+    //Postivity Constraing on the offsets
+
+    if(NuisanceParams->mu->d[i_theta] < 0)
+    {
+      NuisanceParams->mu->d[i_theta] *= 1;
+    }
+  }
+
+  printf("Lagrange Multiplier = %lf\n", LagrangeMultiplier);
+  DATA_TYPE I_kRatio=AverageI_kUpdate/AverageMagI_k;
+  DATA_TYPE Delta_kRatio = AverageDelta_kUpdate/AverageMagDelta_k;
+  std::cout<<"Ratio of change in I_k "<<I_kRatio<<std::endl;
+  std::cout<<"Ratio of change in Delta_k "<<Delta_kRatio<<std::endl;
+
+}
 
 // -----------------------------------------------------------------------------
 //
