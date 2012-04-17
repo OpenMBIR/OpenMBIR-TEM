@@ -276,7 +276,7 @@ void SOCEngine::initVariables()
 void SOCEngine::execute()
 {
    uint64_t totalTime = EIMTOMO_getMilliSeconds();
-
+   int32_t err = 0;
 
   int16_t i,j,k,Idx;
   size_t dims[3];
@@ -333,228 +333,58 @@ void SOCEngine::execute()
   }
 
 
-
   // Read the Input data from the supplied data file
-  // We are scoping here so the various readers are automatically cleaned up before
-  // the code goes any farther
+  err = readInputData();
+  if (err < 0)
   {
-    TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
-    std::string extension = MXAFileInfo::extension(m_TomoInputs->sinoFile);
-    if(extension.compare("mrc") == 0 || extension.compare("ali") == 0)
-    {
-      dataReader = MRCSinogramInitializer::NewTomoFilter();
-    }
-    else if(extension.compare("bin") == 0)
-    {
-      dataReader = RawSinogramInitializer::NewTomoFilter();
-    }
-    else
-    {
-      setErrorCondition(-1);
-      notify("A supported file reader for the input file was not found.", 100, Observable::UpdateProgressValueAndMessage);
-      return;
-    }
-    dataReader->setTomoInputs(m_TomoInputs);
-    dataReader->setSinogram(m_Sinogram);
-    dataReader->setObservers(getObservers());
-    dataReader->execute();
-    if(dataReader->getErrorCondition() < 0)
-    {
-      notify("Error reading Input Sinogram Data file", 100, Observable::UpdateProgressValueAndMessage);
-      setErrorCondition(dataReader->getErrorCondition());
-      return;
-    }
+    return;
   }
 
-
-
-  if (m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->sinoFile.empty()== false)
+  err = initializeBrightFieldData();
+  if (err < 0)
   {
-    TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
-    std::string extension = MXAFileInfo::extension(m_BFTomoInputs->sinoFile);
-    if(extension.compare("mrc") == 0 || extension.compare("ali") == 0)
-    {
-      dataReader = MRCSinogramInitializer::NewTomoFilter();
-    }
-    else
-    {
-      setErrorCondition(-1);
-      notify("A supported file reader for the Bright Field file was not found.", 100, Observable::UpdateProgressValueAndMessage);
-      return;
-    }
-    dataReader->setTomoInputs(m_BFTomoInputs);
-    dataReader->setSinogram(m_BFSinogram);
-    dataReader->setObservers(getObservers());
-    dataReader->execute();
-    if(dataReader->getErrorCondition() < 0)
-    {
-      notify("Error reading Input Sinogram Data file", 100, Observable::UpdateProgressValueAndMessage);
-      setErrorCondition(dataReader->getErrorCondition());
-      return;
-    }
-
-    //Normalize the HAADF image
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    { //slice index
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-          //1000 is for Marc De Graef data which needed to multiplied
-          m_Sinogram->counts->d[i_theta][i_r][i_t] /= (m_BFSinogram->counts->d[i_theta][i_r][i_t] * 1000);
-        }
-      }
-    }
+    return;
   }
 
+  err = initializeGainsData();
+  if (err < 0)
+  {
+    return;
+  }
+  err = initializeOffsetsData();
+  if (err < 0)
+  {
+    return;
+  }
+  err = initializeVariancesData();
+  if (err < 0)
+  {
+    return;
+  }
 
-// Now read or generate the Gains and Offsets data.
-//    TomoFilter::Pointer gainsOffsetsInitializer = TomoFilter::NullPointer();
-//
-//    if(m_TomoInputs->offsetsInputFile.empty() == false) // Calculate the initial Offsets in case nothing is specified
-//    {
-//      gainsOffsetsInitializer = ComputeGainsOffsets::NewTomoFilter();
-//    }
-//    else
-//    {
-//      gainsOffsetsInitializer = GainsOffsetsReader::NewTomoFilter();
-//    }
-//    gainsOffsetsInitializer->setSinogram(m_Sinogram);
-//    gainsOffsetsInitializer->setTomoInputs(m_TomoInputs);
-//    gainsOffsetsInitializer->setObservers(getObservers());
-//    gainsOffsetsInitializer->execute();
-//    if(gainsOffsetsInitializer->getErrorCondition() < 0)
-//    {
-//      notify("Error initializing Input Gains and Offsets Data file", 100, Observable::UpdateProgressValueAndMessage);
-//      setErrorCondition(gainsOffsetsInitializer->getErrorCondition());
-//      return;
-//    }
-
-/* ********************* Initialize the Gains Array **************************/
-    size_t gains_dims[1] = {m_Sinogram->N_theta};
-    m_Sinogram->InitialGain = RealArrayType::New(gains_dims);
-    if (m_TomoInputs->gainsInputFile.empty() == false)
-    {
-      // Read the initial Gains from a File
-      NuisanceParamReader::Pointer gainsInitializer = NuisanceParamReader::New();
-      gainsInitializer->setFileName(m_TomoInputs->gainsInputFile);
-      gainsInitializer->setData(m_Sinogram->InitialGain);
-      gainsInitializer->setSinogram(m_Sinogram);
-      gainsInitializer->setTomoInputs(m_TomoInputs);
-      gainsInitializer->setGeometry(m_Geometry);
-      gainsInitializer->setObservers(getObservers());
-      gainsInitializer->execute();
-      if(gainsInitializer->getErrorCondition() < 0)
-      {
-        notify("Error initializing Input Gains from Data file", 100, Observable::UpdateProgressValueAndMessage);
-        setErrorCondition(gainsInitializer->getErrorCondition());
-        return;
-      }
-    }
-    else
-    {
-      // Set the values to the target gain value set by the user
-      for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-      {
-        m_Sinogram->InitialGain->d[i_theta] = m_TomoInputs->targetGain;
-      }
-    }
-    /********************REMOVE************************/
-    std::cout << "HARD WIRED TARGET GAIN" << std::endl;
-    m_Sinogram->targetGain = m_TomoInputs->targetGain; //TARGET_GAIN;
-    std::cout << "Target Gain: " << m_Sinogram->targetGain << std::endl;
-    /*************************************************/
-
-
-/* ********************* Initialize the Offsets Array **************************/
-    size_t offsets_dims[1] = {m_Sinogram->N_theta};
-    m_Sinogram->InitialOffset = RealArrayType::New(offsets_dims);
-    m_Sinogram->InitialOffset->setName("sinogram->InitialOffset");
-    if (m_TomoInputs->offsetsInputFile.empty() == false)
-    {
-      // Read the initial offsets from a File
-      NuisanceParamReader::Pointer offsetsInitializer = NuisanceParamReader::New();
-      offsetsInitializer->setFileName(m_TomoInputs->offsetsInputFile);
-      offsetsInitializer->setData(m_Sinogram->InitialOffset);
-      offsetsInitializer->setSinogram(m_Sinogram);
-      offsetsInitializer->setTomoInputs(m_TomoInputs);
-      offsetsInitializer->setGeometry(m_Geometry);
-      offsetsInitializer->setObservers(getObservers());
-      offsetsInitializer->execute();
-      if(offsetsInitializer->getErrorCondition() < 0)
-      {
-        notify("Error initializing Input Offsets from Data file", 100, Observable::UpdateProgressValueAndMessage);
-        setErrorCondition(offsetsInitializer->getErrorCondition());
-        return;
-      }
-    }
-    else if (m_TomoInputs->useDefaultOffset == true)
-    {
-      // Set the values to the default offset value set by the user
-      for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-      {
-        m_Sinogram->InitialOffset->d[i_theta] = m_TomoInputs->defaultOffset;
-      }
-    }
-    else
-    {
-      // Compute the initial offset values from the data
-      ComputeInitialOffsets::Pointer initializer = ComputeInitialOffsets::New();
-      initializer->setSinogram(m_Sinogram);
-      initializer->setTomoInputs(m_TomoInputs);
-      initializer->setObservers(getObservers());
-      initializer->execute();
-      if(initializer->getErrorCondition() < 0)
-      {
-        notify("Error initializing Input Gains and Offsets Data file", 100, Observable::UpdateProgressValueAndMessage);
-        setErrorCondition(initializer->getErrorCondition());
-        return;
-      }
-    }
-
-/* ********************* Initialize the Variances Array **************************/
-    size_t variance_dims[1] = {m_Sinogram->N_theta};
-    m_Sinogram->InitialVariance = RealArrayType::New(variance_dims);
-    m_Sinogram->InitialVariance->setName("sinogram->InitialVariance");
-    if(m_TomoInputs->varianceInputFile.empty() == false)
-    {
-      // Read the initial variances from a File
-      NuisanceParamReader::Pointer variancesInitializer = NuisanceParamReader::New();
-      variancesInitializer->setFileName(m_TomoInputs->varianceInputFile);
-      variancesInitializer->setData(m_Sinogram->InitialVariance);
-      variancesInitializer->setSinogram(m_Sinogram);
-      variancesInitializer->setTomoInputs(m_TomoInputs);
-      variancesInitializer->setGeometry(m_Geometry);
-      variancesInitializer->setObservers(getObservers());
-      variancesInitializer->execute();
-      if(variancesInitializer->getErrorCondition() < 0)
-      {
-        notify("Error initializing Input Offsets from Data file", 100, Observable::UpdateProgressValueAndMessage);
-        setErrorCondition(variancesInitializer->getErrorCondition());
-        return;
-      }
-    }
-    else
-    {
-      //  std::cout << "------------Initial Variance-----------" << std::endl;
-      for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-      {
-        m_Sinogram->InitialVariance->d[i_theta] = 1;
-        // std::cout << "Tilt: " << i_theta << "  Variance: " << sinogram->InitialVariance->d[i_theta] << std::endl;
-      }
-    }
 
 
 #if 1
 // Print out the Initial Gains, Offsets, Variances
-    std::cout << "Tilt\tGain\tOffset\tVariance" << std::endl;
+  std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
+    std::cout << "Tilt\tGain\tOffset" << std::endl;
+
+    if (NULL != m_Sinogram->InitialVariance.get())
+    {
+      std::cout << "\tVariance";
+    }
+    std::cout << std::endl;
+
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
 
-       std::cout << i_theta << "\t" << m_Sinogram->InitialGain->d[i_theta]
-                                    << "\t" << m_Sinogram->InitialOffset->d[i_theta]
-                                    << "\t" << m_Sinogram->InitialVariance->d[i_theta] << std::endl;
+    std::cout << i_theta << "\t" << m_Sinogram->InitialGain->d[i_theta] << "\t" << m_Sinogram->InitialOffset->d[i_theta];
+    if(NULL != m_Sinogram->InitialVariance.get())
+    {
+      std::cout << "\t" << m_Sinogram->InitialVariance->d[i_theta];
     }
+    std::cout << std::endl;
+  }
 #endif
 
   // Initialize the Geometry data from a rough reconstruction
@@ -1710,7 +1540,7 @@ void SOCEngine::execute()
     // Write the output File
   }
 #endif
-	
+
 #ifdef JOINT_ESTIMATION
 
 /* Write the Gains and Offsets to an output file */
@@ -3513,4 +3343,7 @@ DATA_TYPE SOCEngine::CE_QGGMRF_SecondDerivative(DATA_TYPE delta)
 }
 
 #endif //QGGMRF
+
+#include "SOCEngine_Extra.cpp"
+
 

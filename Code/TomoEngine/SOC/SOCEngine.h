@@ -116,13 +116,21 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
                       RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight,
                       AMatrixCol* VoxelLineResponse, ScaleOffsetParams* NuisanceParams,
                       UInt8ImageType::Pointer Mask, CostData::Pointer cost);
-#ifdef QGGMRF
-	DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax);
-	void CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax,DATA_TYPE RefValue);
-	DATA_TYPE CE_QGGMRF_Value(DATA_TYPE delta);
-	DATA_TYPE CE_QGGMRF_Derivative(DATA_TYPE delta);
-	DATA_TYPE CE_QGGMRF_SecondDerivative(DATA_TYPE delta);
-#endif //QGGMRF
+
+
+    int readInputData();
+    int initializeBrightFieldData();
+    int initializeGainsData();
+    int initializeOffsetsData();
+    int initializeVariancesData();
+
+  #ifdef QGGMRF
+    DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax);
+    void CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax,DATA_TYPE RefValue);
+    DATA_TYPE CE_QGGMRF_Value(DATA_TYPE delta);
+    DATA_TYPE CE_QGGMRF_Derivative(DATA_TYPE delta);
+    DATA_TYPE CE_QGGMRF_SecondDerivative(DATA_TYPE delta);
+  #endif //QGGMRF
 
 
   private:
