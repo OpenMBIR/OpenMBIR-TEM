@@ -66,9 +66,14 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     ;MXA_STATIC_NEW_MACRO(SOCEngine)
     ;
 
-  MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams)
+  MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
+    MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)
+    MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
+    MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams)
 
-  MXA_INSTANCE_PROPERTY(bool, UseBrightFieldData)MXA_INSTANCE_PROPERTY(TomoInputsPtr, BFTomoInputs)MXA_INSTANCE_PROPERTY(SinogramPtr, BFSinogram)
+  MXA_INSTANCE_PROPERTY(bool, UseBrightFieldData)
+  MXA_INSTANCE_PROPERTY(TomoInputsPtr, BFTomoInputs)
+  MXA_INSTANCE_PROPERTY(SinogramPtr, BFSinogram)
 
     static void InitializeTomoInputs(TomoInputsPtr);
     static void InitializeSinogram(SinogramPtr);
@@ -100,6 +105,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      * @brief This is to be implemented at some point
      */
     void updateVoxelValues_NHICD();
+
 
     uint8_t updateVoxels(int16_t OuterIter,
                          int16_t Iter,
@@ -138,6 +144,16 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
                                     ScaleOffsetParamsPtr NuisanceParams,
                                     RealVolumeType::Pointer ErrorSino,
                                     RealVolumeType::Pointer Y_Est);
+    int jointEstimationCalculation(RealVolumeType::Pointer Y_Est,
+                                    ScaleOffsetParamsPtr NuisanceParams,
+                                    RealVolumeType::Pointer ErrorSino,
+                                    RealVolumeType::Pointer Weight,
+                                    CostData::Pointer cost);
+    int updateNoiseModelWeights(RealVolumeType::Pointer Y_Est,
+                                           ScaleOffsetParamsPtr NuisanceParams,
+                                           RealVolumeType::Pointer ErrorSino,
+                                           RealVolumeType::Pointer Weight,
+                                           CostData::Pointer cost);
 
 #ifdef QGGMRF
     DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE umin, DATA_TYPE umax);

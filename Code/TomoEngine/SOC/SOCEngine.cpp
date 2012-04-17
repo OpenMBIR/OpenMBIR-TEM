@@ -765,7 +765,6 @@ void SOCEngine::execute()
   }
 
 
-//  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
   std::stringstream ss;
   //Loop through every voxel updating it by solving a cost function
   for(int16_t OuterIter = 0; OuterIter < m_TomoInputs->NumOuterIter; OuterIter++)
@@ -773,12 +772,10 @@ void SOCEngine::execute()
     ss.str(""); // Clear the string stream
     indent = "";
 
-	//The first time we may need to update voxels multiple times and then on just optimize over I,d,\sigma,f once each outer loop
-    if(OuterIter != 0)
-    m_TomoInputs->NumIter = 1;
+    //The first time we may need to update voxels multiple times and then on just optimize over I,d,\sigma,f once each outer loop
+    if(OuterIter != 0) { m_TomoInputs->NumIter = 1; }
 
-
-   for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
+    for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
     {
       indent = "  ";
 //      ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
@@ -800,9 +797,8 @@ void SOCEngine::execute()
 #else
 
 #endif//NHICD end if
-
       // This could contain multiple Subloops also
-       status =
+      status =
           updateVoxels(OuterIter, Iter, updateType, VisitCount, RandomNumber, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost);
 
       if(status == 0)
@@ -818,246 +814,29 @@ void SOCEngine::execute()
 
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
 
-
 #ifdef JOINT_ESTIMATION
-
-    //high=5e 100;//this maintains the max and min bracket values for rooting lambda
-    DATA_TYPE high = std::numeric_limits<DATA_TYPE>::max();
-    DATA_TYPE low = std::numeric_limits<DATA_TYPE>::min();
-    //Joint Scale And Offset Estimation
-
-    //forward project
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+    if (jointEstimationCalculation(Y_Est, NuisanceParams, ErrorSino, Weight, cost) < 0)
     {
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-          //Y_Est->d[i_theta][i_r][i_t]=0;
-          Y_Est->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - ErrorSino->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];
-          Y_Est->d[i_theta][i_r][i_t] /= NuisanceParams->I_0->d[i_theta];
-        }
-      }
+      break;
     }
-
-
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      DATA_TYPE a = 0;
-      DATA_TYPE b = 0;
-      DATA_TYPE c = 0;
-      DATA_TYPE d = 0;
-//   /   DATA_TYPE e = 0;
-      DATA_TYPE numerator_sum = 0;
-      DATA_TYPE denominator_sum = 0;
-
-      //compute the parameters of the quadratic for each view
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-
-          numerator_sum += (m_Sinogram->counts->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
-          denominator_sum += (Weight->d[i_theta][i_r][i_t]);
-
-          a += (Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
-          b += (Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t] * m_Sinogram->counts->d[i_theta][i_r][i_t]);
-          c += (m_Sinogram->counts->d[i_theta][i_r][i_t] * m_Sinogram->counts->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
-          d += (Y_Est->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
-
-        }
-      }
-
-      bk_cost->d[i_theta][1] = numerator_sum; //yt*\lambda*1
-      bk_cost->d[i_theta][0] = b; //yt*\lambda*(Ax)
-      ck_cost->d[i_theta] = c; //yt*\lambda*y
-      Qk_cost->d[i_theta][2] = denominator_sum;
-      Qk_cost->d[i_theta][1] = a;
-      Qk_cost->d[i_theta][0] = d;
-
-      d1->d[i_theta] = numerator_sum / denominator_sum;
-      d2->d[i_theta] = a / denominator_sum;
-
-      a = 0;
-      b = 0;
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-          a += ((Y_Est->d[i_theta][i_r][i_t] - d2->d[i_theta]) * Weight->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t]);
-          b -= ((m_Sinogram->counts->d[i_theta][i_r][i_t] - d1->d[i_theta]) * Weight->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t]);
-        }
-      }
-      QuadraticParameters->d[i_theta][0] = a;
-      QuadraticParameters->d[i_theta][1] = b;
-
-      temp = (QuadraticParameters->d[i_theta][1] * QuadraticParameters->d[i_theta][1]) / (4 * QuadraticParameters->d[i_theta][0]);
-
-      if(temp > 0 && temp < high) high = temp; //high holds the maximum value for the rooting operation. beyond this value discriminants become negative. Basically high = min{b^2/4*a}
-      else if(temp < 0 && temp > low) low = temp;
-
-    }
-    //compute cost
-    /********************************************************************************************/
-    sum = 0;
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      sum += (Qk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta]
-          + 2 * Qk_cost->d[i_theta][1] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta]
-          + NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->d[i_theta][2]
-          - 2 * (bk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]); //evaluating the cost function
-    }
-    sum /= 2;
-    printf("The value of the data match error prior to updating the I and mu =%lf\n", sum);
-
-    /********************************************************************************************/
-    if(m_TomoInputs->useGeometricMeanConstraint == true)
-    {
-      calculateGeometricMeanConstraint(NuisanceParams);
-    }
-    else
-    {
-      calculateArithmeticMeanConstraints(NuisanceParams);
-    }
-
-
-    //Re normalization
-
-    /*sum=0;
-     for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
-     sum+=(log(NuisanceParams->I_0->d[i_theta]));
-     sum/=Sinogram->N_theta;
-     temp=exp(sum) - Sinogram->targetGain;
-
-     printf("%lf\n",temp);*/
-
-    /********************************************************************************************/
-    //checking to see if the cost went down
-    sum = 0;
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      sum += (Qk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta]
-          + 2 * Qk_cost->d[i_theta][1] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta]
-          + NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->d[i_theta][2]
-          - 2 * (bk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]); //evaluating the cost function
-    }
-    sum /= 2;
-
-    printf("The value of the data match error after updating the I and mu =%lf\n", sum);
-
-    /*****************************************************************************************************/
-
-    //Reproject to compute Error Sinogram for ICD
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-          ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta]
-          - (NuisanceParams->I_0->d[i_theta] * Y_Est->d[i_theta][i_r][i_t]);
-        }
-      }
-    }
-
-    if (m_TomoInputs->useCostCalculation == true)
-    {
-      int increase = calculateCost(ErrorSino, Weight, cost);
-      if (increase ==1)
-      {
-        std::cout << "Cost just increased after gains+offset update!" << std::endl;
-        break;
-      }
-    }
-
-    // Output some debugging information
-    outputGainsOffsets(std::cout, NuisanceParams);
-
 #endif//Joint estimation endif
 
-    if (m_TomoInputs->useNoiseModel == true)
-    {
-      //Updating the Weights
-      DATA_TYPE AverageVarUpdate = 0; //absolute sum of the gain updates
-      DATA_TYPE AverageMagVar = 0; //absolute sum of the initial gains
-
-      for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-      {
-        uint32_t NumNonZeroEntries = 0;
-        sum = 0;
-        //Factoring out the variance parameter from the Weight matrix
-        for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-        {
-          for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-          {
-            if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
-            {
-              Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
-              NumNonZeroEntries++;
-            }
-          }
-        }
-
-        for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-        {
-          for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-          {
-            sum += (ErrorSino->d[i_theta][i_r][i_t] * ErrorSino->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]); //Changed to only account for the counts
-          }
-        }
-        sum /= NumNonZeroEntries; //(m_Sinogram->N_r*m_Sinogram->N_t);
-
-        AverageMagVar += fabs(NuisanceParams->alpha->d[i_theta]);
-        AverageVarUpdate += fabs(sum - NuisanceParams->alpha->d[i_theta]);
-        NuisanceParams->alpha->d[i_theta] = sum;
-        //Update the weight for ICD updates
-        for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-        {
-          for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-          {
-            if(NuisanceParams->alpha->d[i_theta] != 0 && m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
-            {
-              Weight->d[i_theta][i_r][i_t] = 1.0 / (m_Sinogram->counts->d[i_theta][i_r][i_t] * NuisanceParams->alpha->d[i_theta]);
-            }
-            else
-            {
-              Weight->d[i_theta][i_r][i_t] = 0;
-            }
-
-          }
-        }
-
-      }
-      for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-      {
-        printf("%lf\n", NuisanceParams->alpha->d[i_theta]);
-      }
-
-      DATA_TYPE VarRatio = AverageVarUpdate / AverageMagVar;
-      std::cout << "Ratio of change in Variance " << VarRatio << std::endl;
-
-      if(m_TomoInputs->useCostCalculation == true)
-      {
-        int increase = calculateCost(ErrorSino, Weight, cost);
-        if(increase == 1)
-        {
-          std::cout << "Cost just increased after gains+offset update!" << std::endl;
-          break;
-        }
-      }
-    }
-
-    //Stopping Criteria for the algorithm is the relative change in parameters is less than a threshold
     if(m_TomoInputs->useNoiseModel == true)
     {
-      if(0 == status && OuterIter >= 1) {//&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+      if (updateNoiseModelWeights(Y_Est, NuisanceParams, ErrorSino, Weight, cost) < 0)
+      {
+        break;
+      }
+      if(0 == status && OuterIter >= 1)
+      {
         break;
       }
     }
     else
     {
+      //Stopping Criteria for the algorithm is the relative change in parameters is less than a threshold
       if(0 == status)
-      { //&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+      {
         break;
       }
     } //Noise Model
@@ -2577,22 +2356,22 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     }
 #endif
 
-#ifdef COST_CALCULATE
-
-    /*********************Cost Calculation*************************************/
-    DATA_TYPE cost_value = computeCost(ErrorSino, Weight);
-    std::cout<<cost_value<<std::endl;
-    int increase = cost->addCostValue(cost_value);
-    if (increase ==1)
-    {
-      std::cout << "Cost just increased after ICD!" << std::endl;
-      break;
-    }
-    cost->writeCostValue(cost_value);
-    /**************************************************************************/
-#else
-    printf("%d\n",Iter);
-#endif //Cost calculation endif
+  if (m_TomoInputs->useCostCalculation == true)
+  {
+      /*********************Cost Calculation*************************************/
+      DATA_TYPE cost_value = computeCost(ErrorSino, Weight);
+      std::cout<<cost_value<<std::endl;
+      int increase = cost->addCostValue(cost_value);
+      if (increase ==1)
+      {
+        std::cout << "Cost just increased after ICD!" << std::endl;
+        break;
+      }
+      cost->writeCostValue(cost_value);
+      /**************************************************************************/
+  } else {
+      printf("%d\n",Iter);
+  } //Cost calculation endif
 #ifdef ROI
     if(AverageMagnitudeOfRecon > 0)
     {
@@ -2641,6 +2420,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
   return exit_status;
 
 }
+
 
 // -----------------------------------------------------------------------------
 //
@@ -3413,6 +3193,251 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
   std::cout << std::endl;
   std::string indent(" ");
   PRINT_TIME("Computing Weights");
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+int SOCEngine::jointEstimationCalculation(RealVolumeType::Pointer Y_Est,
+                                           ScaleOffsetParamsPtr NuisanceParams,
+                                           RealVolumeType::Pointer ErrorSino,
+                                           RealVolumeType::Pointer Weight,
+                                           CostData::Pointer cost)
+{
+
+  //high=5e 100;//this maintains the max and min bracket values for rooting lambda
+  DATA_TYPE high = std::numeric_limits<DATA_TYPE>::max();
+  DATA_TYPE low = std::numeric_limits<DATA_TYPE>::min();
+  //Joint Scale And Offset Estimation
+
+  //forward project
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
+    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+    {
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+        //Y_Est->d[i_theta][i_r][i_t]=0;
+        Y_Est->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - ErrorSino->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];
+        Y_Est->d[i_theta][i_r][i_t] /= NuisanceParams->I_0->d[i_theta];
+      }
+    }
+  }
+
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
+    DATA_TYPE a = 0;
+    DATA_TYPE b = 0;
+    DATA_TYPE c = 0;
+    DATA_TYPE d = 0;
+//   /   DATA_TYPE e = 0;
+    DATA_TYPE numerator_sum = 0;
+    DATA_TYPE denominator_sum = 0;
+    DATA_TYPE temp;
+    //compute the parameters of the quadratic for each view
+    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+    {
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+
+        numerator_sum += (m_Sinogram->counts->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
+        denominator_sum += (Weight->d[i_theta][i_r][i_t]);
+
+        a += (Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
+        b += (Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t] * m_Sinogram->counts->d[i_theta][i_r][i_t]);
+        c += (m_Sinogram->counts->d[i_theta][i_r][i_t] * m_Sinogram->counts->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
+        d += (Y_Est->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
+
+      }
+    }
+
+    bk_cost->d[i_theta][1] = numerator_sum; //yt*\lambda*1
+    bk_cost->d[i_theta][0] = b; //yt*\lambda*(Ax)
+    ck_cost->d[i_theta] = c; //yt*\lambda*y
+    Qk_cost->d[i_theta][2] = denominator_sum;
+    Qk_cost->d[i_theta][1] = a;
+    Qk_cost->d[i_theta][0] = d;
+
+    d1->d[i_theta] = numerator_sum / denominator_sum;
+    d2->d[i_theta] = a / denominator_sum;
+
+    a = 0;
+    b = 0;
+    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+    {
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+        a += ((Y_Est->d[i_theta][i_r][i_t] - d2->d[i_theta]) * Weight->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t]);
+        b -= ((m_Sinogram->counts->d[i_theta][i_r][i_t] - d1->d[i_theta]) * Weight->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t]);
+      }
+    }
+    QuadraticParameters->d[i_theta][0] = a;
+    QuadraticParameters->d[i_theta][1] = b;
+
+    temp = (QuadraticParameters->d[i_theta][1] * QuadraticParameters->d[i_theta][1]) / (4 * QuadraticParameters->d[i_theta][0]);
+
+    if(temp > 0 && temp < high) high = temp; //high holds the maximum value for the rooting operation. beyond this value discriminants become negative. Basically high = min{b^2/4*a}
+    else if(temp < 0 && temp > low) low = temp;
+
+  }
+  //compute cost
+  /********************************************************************************************/
+
+  DATA_TYPE sum = 0;
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
+    sum += (Qk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta]
+        + 2 * Qk_cost->d[i_theta][1] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta]
+        + NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->d[i_theta][2]
+        - 2 * (bk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]); //evaluating the cost function
+  }
+  sum /= 2;
+  printf("The value of the data match error prior to updating the I and mu =%lf\n", sum);
+
+  /********************************************************************************************/
+  if(m_TomoInputs->useGeometricMeanConstraint == true)
+  {
+    calculateGeometricMeanConstraint(NuisanceParams);
+  }
+  else
+  {
+    calculateArithmeticMeanConstraints(NuisanceParams);
+  }
+
+  //Re normalization
+
+  /*sum=0;
+   for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+   sum+=(log(NuisanceParams->I_0->d[i_theta]));
+   sum/=Sinogram->N_theta;
+   temp=exp(sum) - Sinogram->targetGain;
+
+   printf("%lf\n",temp);*/
+
+  /********************************************************************************************/
+  //checking to see if the cost went down
+  sum = 0;
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
+    sum += (Qk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta]
+        + 2 * Qk_cost->d[i_theta][1] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta]
+        + NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->d[i_theta][2]
+        - 2 * (bk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]); //evaluating the cost function
+  }
+  sum /= 2;
+
+  printf("The value of the data match error after updating the I and mu =%lf\n", sum);
+
+  /*****************************************************************************************************/
+
+  //Reproject to compute Error Sinogram for ICD
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
+    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+    {
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+        ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta]
+            - (NuisanceParams->I_0->d[i_theta] * Y_Est->d[i_theta][i_r][i_t]);
+      }
+    }
+  }
+
+  if(m_TomoInputs->useCostCalculation == true)
+  {
+    int increase = calculateCost(ErrorSino, Weight, cost);
+    if(increase == 1)
+    {
+      std::cout << "Cost just increased after gains+offset update!" << std::endl;
+      return -1;
+    }
+  }
+
+  // Output some debugging information
+  outputGainsOffsets(std::cout, NuisanceParams);
+  return 0;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+int SOCEngine::updateNoiseModelWeights(RealVolumeType::Pointer Y_Est,
+                                       ScaleOffsetParamsPtr NuisanceParams,
+                                       RealVolumeType::Pointer ErrorSino,
+                                       RealVolumeType::Pointer Weight,
+                                       CostData::Pointer cost)
+{
+
+  //Updating the Weights
+  DATA_TYPE AverageVarUpdate = 0; //absolute sum of the gain updates
+  DATA_TYPE AverageMagVar = 0; //absolute sum of the initial gains
+  DATA_TYPE sum = 0.0;
+
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
+    uint32_t NumNonZeroEntries = 0;
+    sum = 0;
+    //Factoring out the variance parameter from the Weight matrix
+    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+    {
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+        if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
+        {
+          Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
+          NumNonZeroEntries++;
+        }
+      }
+    }
+
+    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+    {
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+        sum += (ErrorSino->d[i_theta][i_r][i_t] * ErrorSino->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]); //Changed to only account for the counts
+      }
+    }
+    sum /= NumNonZeroEntries; //(m_Sinogram->N_r*m_Sinogram->N_t);
+
+    AverageMagVar += fabs(NuisanceParams->alpha->d[i_theta]);
+    AverageVarUpdate += fabs(sum - NuisanceParams->alpha->d[i_theta]);
+    NuisanceParams->alpha->d[i_theta] = sum;
+    //Update the weight for ICD updates
+    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+    {
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+        if(NuisanceParams->alpha->d[i_theta] != 0 && m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
+        {
+          Weight->d[i_theta][i_r][i_t] = 1.0 / (m_Sinogram->counts->d[i_theta][i_r][i_t] * NuisanceParams->alpha->d[i_theta]);
+        }
+        else
+        {
+          Weight->d[i_theta][i_r][i_t] = 0;
+        }
+
+      }
+    }
+
+  }
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
+    printf("%lf\n", NuisanceParams->alpha->d[i_theta]);
+  }
+
+  DATA_TYPE VarRatio = AverageVarUpdate / AverageMagVar;
+  std::cout << "Ratio of change in Variance " << VarRatio << std::endl;
+
+  if(m_TomoInputs->useCostCalculation == true)
+  {
+    int increase = calculateCost(ErrorSino, Weight, cost);
+    if(increase == 1)
+    {
+      std::cout << "Cost just increased after gains+offset update!" << std::endl;
+      return -1;
+    }
+  }
+
 }
 
 // -----------------------------------------------------------------------------
