@@ -546,37 +546,12 @@ void TomoGuiGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 
     QRectF sr = sceneRect();
 
-    std::cout << "SceneRect: " << sr.width() << " x " << sr.height() << std::endl;
-    std::cout << "Mouse Hit: " << m_MouseClickOrigin.x() << " x " << m_MouseClickOrigin.y() << std::endl;
 
-    QRectF rect = m_ImageGraphicsItem->boundingRect();
-    std::cout << "ImageRect: " << rect.width() << " x " << rect.height() << std::endl;
-
-    QPointF p0 = (QPoint(0, m_MouseClickOrigin.y()));
-    QPointF p1 = (QPoint(sr.width(), m_MouseClickOrigin.y()) );
-    std::cout << "p0: " << p0.x() << ", " << p0.y() << std::endl;
-
-     p0 = mapToScene(QPoint(0, m_MouseClickOrigin.y()));
-     p1 = mapToScene(QPoint(sr.width(), m_MouseClickOrigin.y()) );
+    QPointF p0 = mapToScene(QPoint(0, m_MouseClickOrigin.y()));
+    QPointF p1 = mapToScene(QPoint(sr.width(), m_MouseClickOrigin.y()) );
 
 
-    // Clamp the dropped line to be between the mapped y value of the image
-    if (p0.y() < 0)
-    {
-      p0.setY(0.0);
-      p1.setY(0.0);
-    }
-    else if (p0.y() >= sr.height())
-    {
-      p0.setY(sr.height() - 1);
-      p1.setY(sr.height() - 1);
-    }
-
-    p0.setX(0);
-    p1.setX(sr.width());
-    std::cout << "p0: " << p0.x() << ", " << p0.y() << std::endl;
-
-
+  //  std::cout << "SceneRect: " << sr.x() << ", " << sr.y() << "  " << sr.width() << ", " << sr.height() << std::endl;
     QVector<QPointF> line;
     line.push_back(p0);
     line.push_back(p1);
@@ -584,7 +559,6 @@ void TomoGuiGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 
     m_XZLine.setPolygon(polygon);
     m_XZLine.setVisible(true);
-
   }
   else if (m_AddUserInitArea == true)
   {

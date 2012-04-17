@@ -34,6 +34,8 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+
+
 #ifndef COMPUTATIONENGINE_H_
 #define COMPUTATIONENGINE_H_
 
@@ -50,6 +52,7 @@
 #include "TomoEngine/Filters/CostData.h"
 #include "TomoEngine/SOC/SOCConstants.h"
 
+
 /**
  * @class SOCEngine SOCEngine.h TomoEngine/SOC/SOCEngine.h
  * @brief
@@ -61,10 +64,9 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 {
 
   public:
-    MXA_SHARED_POINTERS(SOCEngine)
-    MXA_TYPE_MACRO(SOCEngine)
-    MXA_STATIC_NEW_MACRO(SOCEngine)
-
+    MXA_SHARED_POINTERS(SOCEngine);
+    MXA_TYPE_MACRO(SOCEngine);
+    MXA_STATIC_NEW_MACRO(SOCEngine);
 
     MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
     MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)
@@ -82,9 +84,10 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 
     virtual ~SOCEngine();
 
-    enum VoxelUpdateType
-    {
-      RegularRandomOrderUpdate = 0, HomogeniousUpdate = 1, NonHomogeniousUpdate = 2
+    enum VoxelUpdateType {
+      RegularRandomOrderUpdate = 0,
+      HomogeniousUpdate = 1,
+      NonHomogeniousUpdate = 2
     };
 
     /**
@@ -101,67 +104,26 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 
     void initVariables();
 
+    void calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams);
+
     /**
      * @brief This is to be implemented at some point
      */
     void updateVoxelValues_NHICD();
 
-
-    uint8_t updateVoxels(int16_t OuterIter,
-                         int16_t Iter,
-                         VoxelUpdateType updateType,
-                         UInt8ImageType::Pointer VisitCount,
-                         RNGVars* RandomNumber,
-                         AMatrixCol** TempCol,
-                         RealVolumeType::Pointer ErrorSino,
-                         RealVolumeType::Pointer Weight,
-                         AMatrixCol* VoxelLineResponse,
-                         ScaleOffsetParams* NuisanceParams,
-                         UInt8ImageType::Pointer Mask,
-                         CostData::Pointer cost);
-
-    int initializeBrightFieldData();
-    int initializeInputData();
-    int prepareInitialGainsData();
-    int prepareInitialOffsetsData();
-    int prepareInitialVariancesData();
-
-    void initializeSinogramForBrightField();
-    void initializeGainsOffsetsParameters(ScaleOffsetParamsPtr NuisanceParams);
-
-    void outputInitialGainOffsetVarianceData(std::ostream &out);
-    void outputGainsOffsets(std::ostream &out, ScaleOffsetParamsPtr NuisanceParams);
-
-
-    int initialzeRoughReconstructionData();
-    void calculateGeometricMeanConstraint(ScaleOffsetParamsPtr NuisanceParams);
-    void calculateArithmeticMeanConstraints(ScaleOffsetParamsPtr NuisanceParams);
-    int calculateCost(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight, CostData::Pointer cost);
-    void calculateTLineVoxelResponse(AMatrixCol* VoxelLineResponse);
-    void initializeHt(RealVolumeType::Pointer H_t);
-    void initializeVolumeData(DATA_TYPE value, RealVolumeType::Pointer p);
-    void calculateMeasurementWeight(RealVolumeType::Pointer Weight,
-                                    ScaleOffsetParamsPtr NuisanceParams,
-                                    RealVolumeType::Pointer ErrorSino,
-                                    RealVolumeType::Pointer Y_Est);
-    int jointEstimationCalculation(RealVolumeType::Pointer Y_Est,
-                                    ScaleOffsetParamsPtr NuisanceParams,
-                                    RealVolumeType::Pointer ErrorSino,
-                                    RealVolumeType::Pointer Weight,
-                                    CostData::Pointer cost);
-    int updateNoiseModelWeights(RealVolumeType::Pointer Y_Est,
-                                           ScaleOffsetParamsPtr NuisanceParams,
-                                           RealVolumeType::Pointer ErrorSino,
-                                           RealVolumeType::Pointer Weight,
-                                           CostData::Pointer cost);
-
+    uint8_t updateVoxels(int16_t OuterIter, int16_t Iter, VoxelUpdateType updateType, UInt8ImageType::Pointer VisitCount,
+                      RNGVars* RandomNumber, AMatrixCol** TempCol,
+                      RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight,
+                      AMatrixCol* VoxelLineResponse, ScaleOffsetParams* NuisanceParams,
+                      UInt8ImageType::Pointer Mask, CostData::Pointer cost);
 #ifdef QGGMRF
-    DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE umin, DATA_TYPE umax);
-    void CE_ComputeQGGMRFParameters(DATA_TYPE umin, DATA_TYPE umax, DATA_TYPE RefValue);
-    DATA_TYPE CE_QGGMRF_Value(DATA_TYPE delta);
-    DATA_TYPE CE_QGGMRF_Derivative(DATA_TYPE delta);
-    DATA_TYPE CE_QGGMRF_SecondDerivative(DATA_TYPE delta);
+	DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax);
+	void CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax,DATA_TYPE RefValue);
+	DATA_TYPE CE_QGGMRF_Value(DATA_TYPE delta);
+	DATA_TYPE CE_QGGMRF_Derivative(DATA_TYPE delta);
+	DATA_TYPE CE_QGGMRF_SecondDerivative(DATA_TYPE delta);
 #endif //QGGMRF
+
 
   private:
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
@@ -177,11 +139,11 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     DATA_TYPE SIGMA_X_P;
 #ifdef QGGMRF
     //QGGMRF extras
-    DATA_TYPE MRF_Q, MRF_C;
+    DATA_TYPE MRF_Q,MRF_C;
     DATA_TYPE QGGMRF_Params[26][3];
     DATA_TYPE MRF_ALPHA;
-    DATA_TYPE SIGMA_X_P_Q;
-    DATA_TYPE SIGMA_X_Q;
+	DATA_TYPE SIGMA_X_P_Q;
+	DATA_TYPE SIGMA_X_Q;
 #endif //QGGMRF
     //used to store cosine and sine of all angles through which sample is tilted
     RealArrayType::Pointer cosine;
@@ -193,9 +155,9 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 
     RealImageType::Pointer QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
 
-    RealImageType::Pointer MagUpdateMap; //Hold the magnitude of the reconstuction along each voxel line
-    RealImageType::Pointer FiltMagUpdateMap; //Filters the above to compute threshold
-    Uint8ImageType::Pointer MagUpdateMask; //Masks only the voxels of interest
+    RealImageType::Pointer MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
+    RealImageType::Pointer FiltMagUpdateMap;//Filters the above to compute threshold
+    Uint8ImageType::Pointer MagUpdateMask;//Masks only the voxels of interest
 
     RealImageType::Pointer Qk_cost;
     RealImageType::Pointer bk_cost;
@@ -207,8 +169,6 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 
     uint64_t startm;
     uint64_t stopm;
-
-
 
     /**
      * @brief
@@ -247,7 +207,8 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      * @param slice
      * @param VoxelProfile
      */
-    // void* calculateAMatrixColumn(uint16_t row, uint16_t col, uint16_t slice, DATA_TYPE** VoxelProfile);
+   // void* calculateAMatrixColumn(uint16_t row, uint16_t col, uint16_t slice, DATA_TYPE** VoxelProfile);
+
     /**
      * @brief
      * @param ErrorSino
@@ -263,7 +224,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      * @param slice
      * @param DetectorResponse
      */
-    void* calculateAMatrixColumnPartial(uint16_t row, uint16_t col, uint16_t slice, RealVolumeType::Pointer DetectorResponse);
+    void* calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, RealVolumeType::Pointer DetectorResponse);
 
     /**
      * @brief
@@ -271,33 +232,35 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      */
     double surrogateFunctionBasedMin();
 
-    //Updates a single line of voxels along y-axis
-    void UpdateVoxelLine(uint16_t j_new, uint16_t k_new);
+	//Updates a single line of voxels along y-axis
+	void UpdateVoxelLine(uint16_t j_new,uint16_t k_new);
 
-    /**
+
+	/**
      * Code to take the magnitude map and filter it with a hamming window
      * Returns the filtered magnitude map
      */
     void ComputeVSC();
 
-    //Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
-    DATA_TYPE SetNonHomThreshold();
+	//Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
+	DATA_TYPE SetNonHomThreshold();
 
     /**
      *Code to return the threshold corresponding to the top T percentage of magnitude
-     */
+    */
 
     DATA_TYPE ComputeThreshold(RealImageType::Pointer FilteredMagnitudeMap);
 
     template<typename T>
-    double solve(T* f, double a, double b, double err, int32_t *code, uint32_t iteration_count)
+    double solve(T* f, double a, double b, double err, int32_t *code,uint32_t iteration_count)
 
     {
 
       int signa, signb, signc;
       double fa, fb, fc, c, signaling_nan();
       double dist;
-      uint32_t num_iter = 0;
+	  uint32_t num_iter=0;
+
 
       fa = f->execute(a);
       signa = fa > 0;
@@ -316,9 +279,9 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
       /* half interval search */
       if((dist = b - a) < 0) dist = -dist;
 
-      while (num_iter < iteration_count) //(dist > err)
+      while (num_iter < iteration_count)//(dist > err)
       {
-        num_iter++;
+		num_iter++;
         c = (b + a) / 2;
         fc = f->execute(c);
         signc = fc > 0;
