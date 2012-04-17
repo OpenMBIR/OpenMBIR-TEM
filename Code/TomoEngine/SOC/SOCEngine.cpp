@@ -346,17 +346,17 @@ void SOCEngine::execute()
     return;
   }
 
-  err = initializeGainsData();
+  err = createInitialGainsData();
   if (err < 0)
   {
     return;
   }
-  err = initializeOffsetsData();
+  err = createInitialOffsetsData();
   if (err < 0)
   {
     return;
   }
-  err = initializeVariancesData();
+  err = createInitialVariancesData();
   if (err < 0)
   {
     return;
@@ -367,7 +367,7 @@ void SOCEngine::execute()
 #if 1
 // Print out the Initial Gains, Offsets, Variances
   std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
-    std::cout << "Tilt\tGain\tOffset" << std::endl;
+    std::cout << "Tilt\tGain\tOffset";
 
     if (NULL != m_Sinogram->InitialVariance.get())
     {
@@ -388,63 +388,15 @@ void SOCEngine::execute()
 #endif
 
   // Initialize the Geometry data from a rough reconstruction
+  err = initializeRoughReconstructionData();
+  if (err < 0)
   {
-    InitialReconstructionInitializer::Pointer geomInitializer = InitialReconstructionInitializer::NullPointer();
-    std::string extension = MXAFileInfo::extension(m_TomoInputs->initialReconFile);
-    if (m_TomoInputs->initialReconFile.empty() == true)
-    {
-      // This will just initialize all the values to Zero (0)
-      geomInitializer = InitialReconstructionInitializer::New();
-    }
-    else if (extension.compare("bin") == 0 )
-    {
-      // This will read the values from a binary file
-      geomInitializer = InitialReconstructionBinReader::NewInitialReconstructionInitializer();
-    }
-    else if (extension.compare(".mrc") == 0)
-    {
-      notify("We are not dealing with mrc volume files. The program will now end.", 0, Observable::UpdateErrorMessage);
-      return;
-    }
-    else
-    {
-      notify("Could not find a compatible reader for the initial reconstruction data file. The program will now end.", 0, Observable::UpdateErrorMessage);
-      return;
-    }
-    geomInitializer->setSinogram(m_Sinogram);
-    geomInitializer->setTomoInputs(m_TomoInputs);
-    geomInitializer->setGeometry(m_Geometry);
-    geomInitializer->setObservers(getObservers());
-    geomInitializer->execute();
-
-    if(geomInitializer->getErrorCondition() < 0)
-    {
-      notify("Error reading Initial Reconstruction Data from File", 100, Observable::UpdateProgressValueAndMessage);
-      setErrorCondition(geomInitializer->getErrorCondition());
-      return;
-    }
+    return;
   }
 
   //Gain, Offset and Variance Parameter Structures
   ScaleOffsetParamsPtr NuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
-  NuisanceParams->I_0 = RealArrayType::NullPointer();
-  NuisanceParams->mu = RealArrayType::NullPointer();
-  NuisanceParams->alpha = RealArrayType::NullPointer();
-
-//  DATA_TYPE numerator_sum =0;
-//  DATA_TYPE denominator_sum = 0;
-  DATA_TYPE x,z;
-  DATA_TYPE sum;
-//  DATA_TYPE a,b,c,d,e;
-//  DATA_TYPE determinant;
-//  DATA_TYPE LagrangeMultiplier;
-  //This is used to store the projection of the object for each view
   dims[1] = m_Sinogram->N_t;
-  dims[0] = m_Sinogram->N_r;
-  RealImageType::Pointer MicroscopeImage = RealImageType::New(dims);
-  MicroscopeImage->setName("MicroscopeImage");
-
-
   dims[0] = m_Sinogram->N_theta;
   NuisanceParams->I_0 = RealArrayType::New(dims);
   NuisanceParams->I_0->setName("NuisanceParams->I_0");
@@ -454,7 +406,18 @@ void SOCEngine::execute()
   //alpha is the noise variance adjustment factor
   NuisanceParams->alpha = RealArrayType::New(dims);
   NuisanceParams->alpha->setName("NuisanceParams->alpha");
+#else
+  NuisanceParams->alpha = RealArrayType::NullPointer();
 #endif
+
+ // DATA_TYPE x,z;
+  DATA_TYPE sum;
+
+  //This is used to store the projection of the object for each view
+  dims[1] = m_Sinogram->N_t;
+  dims[0] = m_Sinogram->N_r;
+  RealImageType::Pointer MicroscopeImage = RealImageType::New(dims);
+  MicroscopeImage->setName("MicroscopeImage");
 
   // initialize variables
   Idx = 0;
@@ -471,24 +434,18 @@ void SOCEngine::execute()
 
 #ifdef ROI
   UInt8ImageType::Pointer Mask;
-  DATA_TYPE EllipseA,EllipseB;
+//  DATA_TYPE EllipseA,EllipseB;
 #endif
 
 #ifdef COST_CALCULATE
-  //cost=(DATA_TYPE*)get_spc((m_TomoInputs->NumIter+1)*m_TomoInputs->NumOuterIter*3,sizeof(DATA_TYPE));//the factor 3 is in there to ensure we can store 3 costs per iteration one after update x, then mu and then I
   dims[0] = (m_TomoInputs->NumIter+1)*m_TomoInputs->NumOuterIter*3;
-//  cost = RealArrayType::New(dims);
-//  cost->setName("cost");
 #endif
 
   dims[0] = m_Sinogram->N_theta;
   dims[1] = m_Sinogram->N_r;
   dims[2] = m_Sinogram->N_t;
 
-  //  Y_Est=(RealVolumeType::Pointer )get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
-  //  ErrorSino=(RealVolumeType::Pointer )get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
-  //  Weight=(RealVolumeType::Pointer )get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
-  //
+
   Y_Est = RealVolumeType::New(dims);
   Y_Est->setName("Y_Est");
   ErrorSino = RealVolumeType::New(dims);
@@ -516,10 +473,6 @@ void SOCEngine::execute()
   SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
   SIGMA_X_P_Q = pow(m_TomoInputs->SigmaX, (MRF_P - MRF_Q));
   SIGMA_X_Q = pow(m_TomoInputs->SigmaX,MRF_Q);
-  /*for(i=0;i < 3;i++) {
-    for(j=0; j < 3;j++) {
-      for(k=0; k < 3;k++) {
-        FILTER[i][j][k]*=(1.0/SIGMA_X_P); }}}*/
 #endif //QGGMRF
 
   //globals assosiated with finding the optimal gain and offset parameters
@@ -533,9 +486,9 @@ void SOCEngine::execute()
   QuadraticParameters->setName("QuadraticParameters");
   //  Qk_cost=(DATA_TYPE**)get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE));
   Qk_cost = RealImageType::New(dims);
-    Qk_cost->setName("Qk_cost");
+  Qk_cost->setName("Qk_cost");
 //  bk_cost=(DATA_TYPE**)get_img(2, m_Sinogram->N_theta, sizeof(DATA_TYPE));
-    dims[1] = 2;
+  dims[1] = 2;
   bk_cost = RealImageType::New(dims);
   bk_cost->setName("bk_cost");
 
@@ -547,10 +500,8 @@ void SOCEngine::execute()
   NumOfViews = m_Sinogram->N_theta;
   LogGain = m_Sinogram->N_theta*log(m_Sinogram->targetGain);
   dims[0] = m_Sinogram->N_theta;
-//  d1=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
   d1 = RealArrayType::New(dims);
   d1->setName("d1");
-//  d2=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
   d2 = RealArrayType::New(dims);
   d2->setName("d2");
 
@@ -602,25 +553,15 @@ void SOCEngine::execute()
   H_t->setName("H_t");
 
 #ifdef RANDOM_ORDER_UPDATES
-
-  //VisitCount=(uint8_t **)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
   dims[0] = m_Geometry->N_z;
   dims[1] = m_Geometry->N_x;
   VisitCount = UInt8ImageType::New(dims);
   VisitCount->setName("VisitCount");
 // Initialize the Array to zero
   ::memset( VisitCount->d[0], 0, dims[0] * dims[1] * sizeof(uint8_t));
-//  for (i = 0; i < m_Geometry->N_z; i++)
-//  {
-//    for (j = 0; j < m_Geometry->N_x; j++)
-//    {
-//      VisitCount->d[i][j] = 0;
-//    }
-//  }
 #endif//Random update
 
 
-  //#ifdef NHICD
   dims[0]=m_Geometry->N_z;//height
   dims[1]=m_Geometry->N_x;//width
   dims[2]=0;
@@ -633,7 +574,6 @@ void SOCEngine::execute()
 
   MagUpdateMask = Uint8ImageType::New(dims);
   MagUpdateMask->setName("Update Mask for selecting voxel lines NHICD");
-  //#endif
 
 
 #ifdef ROI
@@ -642,39 +582,22 @@ void SOCEngine::execute()
   dims[1] = m_Geometry->N_x;
   Mask = UInt8ImageType::New(dims);
   Mask->setName("Mask");
-  EllipseA = m_Geometry->LengthX/2;
-  EllipseB = m_TomoInputs->LengthZ/2;
-  for (i = 0; i < m_Geometry->N_z ; i++)
-  {
-    for (j = 0; j < m_Geometry->N_x; j++)
-    {
-      x = m_Geometry->x0 + ((DATA_TYPE)j + 0.5)*m_TomoInputs->delta_xz;
-      z = m_Geometry->z0 + ((DATA_TYPE)i + 0.5)*m_TomoInputs->delta_xz;
-      if (x >= -(m_Sinogram->N_r*m_Sinogram->delta_r)/2
-          && x <= (m_Sinogram->N_r*m_Sinogram->delta_r)/2
-          && z >= -m_TomoInputs->LengthZ/2
-          && z <= m_TomoInputs->LengthZ/2)
-      {
-        Mask->d[i][j] = 1;
-      }
-      else
-      {
-        Mask->d[i][j] = 0;
-      }
-    }
-  }
+  initializeROIMask(Mask);
 #endif
   //m_Sinogram->targetGain=20000;
 
 #ifdef BRIGHT_FIELD //Take log of the data and subtract log(Dosage) from it
-  for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++) {//slice index
-    for(i_r = 0; i_r < m_Sinogram->N_r;i_r++) {
+  for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)
+  { //slice index
+    for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
+    {
       for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
       {
 
         m_Sinogram->counts->d[i_theta][i_r][i_t] = log(m_Sinogram->counts->d[i_theta][i_r][i_t])-log(m_Sinogram->InitialGain[i_theta]);
-      }}}
-
+      }
+    }
+  }
 #endif//Bright Field
 
   //Scale and Offset Parameters Initialization

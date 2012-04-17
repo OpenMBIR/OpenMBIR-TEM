@@ -121,7 +121,7 @@ int SOCEngine::initializeBrightFieldData()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int SOCEngine::initializeGainsData()
+int SOCEngine::createInitialGainsData()
 {
   /* ********************* Initialize the Gains Array **************************/
   size_t gains_dims[1] =
@@ -165,7 +165,7 @@ int SOCEngine::initializeGainsData()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int SOCEngine::initializeOffsetsData()
+int SOCEngine::createInitialOffsetsData()
 {
   /* ********************* Initialize the Offsets Array **************************/
   size_t offsets_dims[1] =
@@ -219,7 +219,7 @@ int SOCEngine::initializeOffsetsData()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int SOCEngine::initializeVariancesData()
+int SOCEngine::createInitialVariancesData()
 {
 
   /* ********************* Initialize the Variances Array **************************/
@@ -257,3 +257,73 @@ int SOCEngine::initializeVariancesData()
 
   return 0;
 }
+
+
+// -----------------------------------------------------------------------------
+// Initialize the Geometry data from a rough reconstruction
+// -----------------------------------------------------------------------------
+int SOCEngine::initializeRoughReconstructionData()
+{
+  InitialReconstructionInitializer::Pointer geomInitializer = InitialReconstructionInitializer::NullPointer();
+  std::string extension = MXAFileInfo::extension(m_TomoInputs->initialReconFile);
+  if (m_TomoInputs->initialReconFile.empty() == true)
+  {
+    // This will just initialize all the values to Zero (0)
+    geomInitializer = InitialReconstructionInitializer::New();
+  }
+  else if (extension.compare("bin") == 0 )
+  {
+    // This will read the values from a binary file
+    geomInitializer = InitialReconstructionBinReader::NewInitialReconstructionInitializer();
+  }
+  else if (extension.compare(".mrc") == 0)
+  {
+    notify("We are not dealing with mrc volume files. The program will now end.", 0, Observable::UpdateErrorMessage);
+    return -1;
+  }
+  else
+  {
+    notify("Could not find a compatible reader for the initial reconstruction data file. The program will now end.", 0, Observable::UpdateErrorMessage);
+    return -1;
+  }
+  geomInitializer->setSinogram(m_Sinogram);
+  geomInitializer->setTomoInputs(m_TomoInputs);
+  geomInitializer->setGeometry(m_Geometry);
+  geomInitializer->setObservers(getObservers());
+  geomInitializer->execute();
+
+  if(geomInitializer->getErrorCondition() < 0)
+  {
+    notify("Error reading Initial Reconstruction Data from File", 100, Observable::UpdateProgressValueAndMessage);
+    setErrorCondition(geomInitializer->getErrorCondition());
+    return -1;
+  }
+  return 0;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::initializeROIMask(UInt8ImageType::Pointer Mask)
+{
+  DATA_TYPE x = 0.0;
+  DATA_TYPE z = 0.0;
+  for (uint16_t i = 0; i < m_Geometry->N_z; i++)
+  {
+    for (uint16_t j = 0; j < m_Geometry->N_x; j++)
+    {
+      x = m_Geometry->x0 + ((DATA_TYPE)j + 0.5) * m_TomoInputs->delta_xz;
+      z = m_Geometry->z0 + ((DATA_TYPE)i + 0.5) * m_TomoInputs->delta_xz;
+      if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && z >= -m_TomoInputs->LengthZ / 2
+          && z <= m_TomoInputs->LengthZ / 2)
+      {
+        Mask->d[i][j] = 1;
+      }
+      else
+      {
+        Mask->d[i][j] = 0;
+      }
+    }
+  }
+}
+

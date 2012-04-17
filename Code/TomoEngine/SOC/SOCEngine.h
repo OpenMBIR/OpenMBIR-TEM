@@ -120,9 +120,12 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 
     int readInputData();
     int initializeBrightFieldData();
-    int initializeGainsData();
-    int initializeOffsetsData();
-    int initializeVariancesData();
+    int createInitialGainsData();
+    int createInitialOffsetsData();
+    int createInitialVariancesData();
+    int initializeRoughReconstructionData();
+    void initializeROIMask(UInt8ImageType::Pointer Mask);
+
 
   #ifdef QGGMRF
     DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax);
