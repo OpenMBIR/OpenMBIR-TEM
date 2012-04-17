@@ -125,6 +125,9 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     int createInitialVariancesData();
     int initializeRoughReconstructionData();
     void initializeROIMask(UInt8ImageType::Pointer Mask);
+    void gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams);
+    void initializeHt(RealVolumeType::Pointer H_t);
+
 
 
   #ifdef QGGMRF

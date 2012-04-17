@@ -327,3 +327,100 @@ void SOCEngine::initializeROIMask(UInt8ImageType::Pointer Mask)
   }
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams)
+{
+  DATA_TYPE sum = 0;
+  DATA_TYPE temp = 0;
+  for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
+  {
+    // Gains
+    NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k];
+    // Offsets
+    NuisanceParams->mu->d[k] = m_Sinogram->InitialOffset->d[k];
+#ifdef GEOMETRIC_MEAN_CONSTRAINT
+    sum += log(NuisanceParams->I_0->d[k]);
+#else
+    sum += NuisanceParams->I_0->d[k];
+#endif
+  }
+  sum /= m_Sinogram->N_theta;
+
+#ifdef GEOMETRIC_MEAN_CONSTRAINT
+  sum=exp(sum);
+  printf("The geometric mean of the gains is %lf\n",sum);
+
+  //Checking if the input parameters satisfy the target geometric mean
+  if(fabs(sum - m_Sinogram->targetGain) > 1e-5)
+  {
+    printf("The input paramters dont meet the constraint..Renormalizing\n");
+    temp = exp(log(m_Sinogram->targetGain) - log(sum));
+    for (k = 0; k < m_Sinogram->N_theta; k++)
+    {
+      NuisanceParams->I_0->d[k]=m_Sinogram->InitialGain->d[k]*temp;
+    }
+  }
+#else
+  printf("The Arithmetic mean of the constraint is %lf\n", sum);
+  if(sum - m_Sinogram->targetGain > 1e-5)
+  {
+    printf("Arithmetic Mean Constraint not met..renormalizing\n");
+    temp = m_Sinogram->targetGain / sum;
+    for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
+    {
+      NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k] * temp;
+    }
+  }
+#endif
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::initializeHt(RealVolumeType::Pointer H_t)
+{
+  DATA_TYPE ProfileCenterT;
+  for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
+  {
+    for (int i = 0; i < DETECTOR_RESPONSE_BINS; i++)
+    {
+      ProfileCenterT = i * OffsetT;
+      if(m_TomoInputs->delta_xy >= m_Sinogram->delta_t)
+      {
+        if(ProfileCenterT <= ((m_TomoInputs->delta_xy / 2) - (m_Sinogram->delta_t / 2)))
+        {
+          H_t->d[0][k][i] = m_Sinogram->delta_t;
+        }
+        else
+        {
+          H_t->d[0][k][i] = -1 * ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
+        }
+        if(H_t->d[0][k][i] < 0)
+        {
+          H_t->d[0][k][i] = 0;
+        }
+
+      }
+      else
+      {
+        if(ProfileCenterT <= m_Sinogram->delta_t / 2 - m_TomoInputs->delta_xy / 2)
+        {
+          H_t->d[0][k][i] = m_TomoInputs->delta_xy;
+        }
+        else
+        {
+          H_t->d[0][k][i] = -ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
+        }
+
+        if(H_t->d[0][k][i] < 0)
+        {
+          H_t->d[0][k][i] = 0;
+        }
+
+      }
+    }
+  }
+}

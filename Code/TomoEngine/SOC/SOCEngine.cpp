@@ -297,7 +297,7 @@ void SOCEngine::execute()
   RealImageType::Pointer VoxelProfile;
   RealVolumeType::Pointer detectorResponse;
   RealVolumeType::Pointer H_t;
-  DATA_TYPE ProfileCenterT;
+ // DATA_TYPE ProfileCenterT;
 
 
   RealVolumeType::Pointer Y_Est;//Estimated Sinogram
@@ -545,16 +545,12 @@ void SOCEngine::execute()
     return;
   }
 
-  dims[0] = 1;
-  dims[1] = m_Sinogram->N_theta;
-  dims[2] = DETECTOR_RESPONSE_BINS;
 
-  H_t = RealVolumeType::New(dims);
-  H_t->setName("H_t");
 
 #ifdef RANDOM_ORDER_UPDATES
   dims[0] = m_Geometry->N_z;
   dims[1] = m_Geometry->N_x;
+  dims[2] = 0;
   VisitCount = UInt8ImageType::New(dims);
   VisitCount->setName("VisitCount");
 // Initialize the Array to zero
@@ -600,116 +596,20 @@ void SOCEngine::execute()
   }
 #endif//Bright Field
 
-  //Scale and Offset Parameters Initialization
-  sum = 0;
-  temp = 0;
-  for(k=0 ; k < m_Sinogram->N_theta;k++)
-  {
-    // Gains
-  NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k];
-    // Offsets
-    NuisanceParams->mu->d[k] = m_Sinogram->InitialOffset->d[k];
-#ifdef GEOMETRIC_MEAN_CONSTRAINT
-    sum+=log(NuisanceParams->I_0->d[k]);
-#else
-    sum+=NuisanceParams->I_0->d[k];
-#endif
-  }
-  sum/=m_Sinogram->N_theta;
-#ifdef GEOMETRIC_MEAN_CONSTRAINT
-  sum=exp(sum);
-  printf("The geometric mean of the gains is %lf\n",sum);
 
-  //Checking if the input parameters satisfy the target geometric mean
-  if(fabs(sum - m_Sinogram->targetGain) > 1e-5)
-  {
-    printf("The input paramters dont meet the constraint..Renormalizing\n");
-    temp = exp(log(m_Sinogram->targetGain) - log(sum));
-    for (k = 0 ; k < m_Sinogram->N_theta; k++) {
-      NuisanceParams->I_0->d[k]=m_Sinogram->InitialGain->d[k]*temp;
-    }
-  }
-#else
-  printf("The Arithmetic mean of the constraint is %lf\n",sum);
-  if(sum - m_Sinogram->targetGain > 1e-5)
-  {
-    printf("Arithmetic Mean Constraint not met..renormalizing\n");
-    temp = m_Sinogram->targetGain/sum;
-    for (k = 0 ; k < m_Sinogram->N_theta; k++) {
-      NuisanceParams->I_0->d[k]=m_Sinogram->InitialGain->d[k]*temp;
-    }
-  }
-#endif
+  //Gain and Offset Parameters Initialization
+  gainAndOffsetInitialization(NuisanceParams);
+
+  // Initialize H_t volume
+  dims[0] = 1;
+  dims[1] = m_Sinogram->N_theta;
+  dims[2] = DETECTOR_RESPONSE_BINS;
+  H_t = RealVolumeType::New(dims);
+  H_t->setName("H_t");
+  initializeHt(H_t);
 
 
-  for(k = 0 ; k <m_Sinogram->N_theta; k++)
-  {
-    for (i = 0; i < DETECTOR_RESPONSE_BINS; i++)
-    {
-      ProfileCenterT = i * OffsetT;
-      if(m_TomoInputs->delta_xy >= m_Sinogram->delta_t)
-      {
-        if(ProfileCenterT <= ((m_TomoInputs->delta_xy / 2) - (m_Sinogram->delta_t / 2)))
-    {
-      H_t->d[0][k][i] = m_Sinogram->delta_t;
-      //Need to weight this by the appropriate kernel along t-direction
-    /*  sum=0;
-      for(uint16_t j=0; j < BEAM_RESOLUTION; j++)
-        sum+=BeamProfile->d[j];
-
-      H_t->d[0][k][i]*=(sum/m_Sinogram->delta_t);
-    */
-
-    }
-        else
-        {
-          H_t->d[0][k][i] = -1 * ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
-      //Need to weight this number by the appropriate kernel along t-direction
-    /*  sum=0;
-      int16_t OverlapIndex = int16_t(((H_t->d[0][k][i]/m_Sinogram->delta_t)*BEAM_RESOLUTION));
-      for(int16_t j=0; j < OverlapIndex; j++)
-        sum+=BeamProfile->d[j];
-
-      H_t->d[0][k][i]*=(sum/m_Sinogram->delta_t);
-     */
-
-        }
-        if(H_t->d[0][k][i] < 0)
-        {
-          H_t->d[0][k][i] = 0;
-        }
-
-      }
-      else
-      {
-        if(ProfileCenterT <= m_Sinogram->delta_t / 2 - m_TomoInputs->delta_xy / 2)
-        {
-          H_t->d[0][k][i] = m_TomoInputs->delta_xy;
-        }
-        else
-        {
-          H_t->d[0][k][i] = -ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
-        }
-
-        if(H_t->d[0][k][i] < 0)
-        {
-          H_t->d[0][k][i] = 0;
-        }
-
-      }
-    }
-  }
-
-  /*for(i=0;i<Sinogram->N_theta;i++)
-    for(j=0;j< PROFILE_RESOLUTION;j++)
-      checksum+=VoxelProfile[i][j];
-    printf("CHK SUM%lf\n",checksum);
-*/
-    checksum=0;
-
-  //Allocate space for storing columns the A-matrix; an array of pointers to columns
-  //AMatrixCol** AMatrix=(AMatrixCol **)get_spc(Geometry->N_x*Geometry->N_z,sizeof(AMatrixCol*));
-//  DetectorResponse = CE_DetectorResponse(0,0,Sinogram,Geometry,VoxelProfile);//System response
+  checksum=0;
 
 #ifdef STORE_A_MATRIX
 
@@ -718,19 +618,20 @@ void SOCEngine::execute()
 
   //TODO: All this needs to be deallocated at some point
   DATA_TYPE y;
-  DATA_TYPE t,tmin,tmax,ProfileThickness;
-  int16_t slice_index_min,slice_index_max;
+  DATA_TYPE t, tmin, tmax, ProfileThickness;
+  int16_t slice_index_min, slice_index_max;
 //  AMatrixCol*** TempCol = (AMatrixCol***)multialloc(sizeof(AMatrixCol*),2,m_Geometry->N_z,m_Geometry->N_x);//stores 2-D forward projector
-  AMatrixCol** TempCol = (AMatrixCol**)get_spc(m_Geometry->N_x*m_Geometry->N_z, sizeof(AMatrixCol*));
+  AMatrixCol** TempCol = (AMatrixCol**)get_spc(m_Geometry->N_x * m_Geometry->N_z, sizeof(AMatrixCol*));
 //  AMatrixCol* Aj;
 //  AMatrixCol* TempMemBlock;
   //T-direction response
-  AMatrixCol* VoxelLineResponse=(AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));
-  MaxNumberOfDetectorElts = (uint16_t)((m_TomoInputs->delta_xy/m_Sinogram->delta_t)+2);
-  for (i=0; i < m_Geometry->N_y; i++) {
-    VoxelLineResponse[i].count=0;
-    VoxelLineResponse[i].values=(DATA_TYPE*)get_spc(MaxNumberOfDetectorElts, sizeof(DATA_TYPE));
-    VoxelLineResponse[i].index=(uint32_t*)get_spc(MaxNumberOfDetectorElts, sizeof(uint32_t));
+  AMatrixCol* VoxelLineResponse = (AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));
+  MaxNumberOfDetectorElts = (uint16_t)((m_TomoInputs->delta_xy / m_Sinogram->delta_t) + 2);
+  for (i = 0; i < m_Geometry->N_y; i++)
+  {
+    VoxelLineResponse[i].count = 0;
+    VoxelLineResponse[i].values = (DATA_TYPE*)get_spc(MaxNumberOfDetectorElts, sizeof(DATA_TYPE));
+    VoxelLineResponse[i].index = (uint32_t*)get_spc(MaxNumberOfDetectorElts, sizeof(uint32_t));
   }
 #endif
 
@@ -743,14 +644,17 @@ void SOCEngine::execute()
   //q = 0;
 
 #ifdef STORE_A_MATRIX
-  for(i = 0;i < m_Geometry->N_y; i++){
-    for(j = 0;j < m_Geometry->N_z; j++){
+  for(i = 0;i < m_Geometry->N_y; i++)
+  {
+    for(j = 0;j < m_Geometry->N_z; j++)
+    {
       for (k = 0; k < m_Geometry->N_x; k++)
       {
         //  AMatrix[q++]=CE_CalculateAMatrixColumn(i,j,Sinogram,Geometry,VoxelProfile);
         AMatrix[i][j][k]=calculateAMatrixColumn(j,k,i,m_Sinogram,m_Geometry,VoxelProfile);//row,col,slice
 
-        for(p = 0; p < AMatrix[i][j][k]->count; p++) {
+        for(p = 0; p < AMatrix[i][j][k]->count; p++)
+        {
           checksum += AMatrix[i][j][k]->values[p];}
         //   printf("(%d,%d,%d) %lf \n",i,j,k,AMatrix[i][j][k]->values);
         checksum = 0;
@@ -758,24 +662,25 @@ void SOCEngine::execute()
   printf("Stored A matrix\n");
 #else
   temp = 0;
-  uint32_t voxel_count=0;
+  uint32_t voxel_count = 0;
   for (j = 0; j < m_Geometry->N_z; j++)
   {
     for (k = 0; k < m_Geometry->N_x; k++)
     {
       //TempCol[j][k] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
-    TempCol[voxel_count] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
+      TempCol[voxel_count] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
 //      temp += TempCol[j][k].count;`
-    temp += TempCol[voxel_count]->count;
-    if(0 == TempCol[voxel_count]->count)
-    {
-      //If this line is never hit and the Object is badly initialized
-      //set it to zero
-      for (i=0; i < m_Geometry->N_y; i++) {
-        m_Geometry->Object->d[j][k][i]=0;
+      temp += TempCol[voxel_count]->count;
+      if(0 == TempCol[voxel_count]->count)
+      {
+        //If this line is never hit and the Object is badly initialized
+        //set it to zero
+        for (i = 0; i < m_Geometry->N_y; i++)
+        {
+          m_Geometry->Object->d[j][k][i] = 0;
+        }
       }
-    }
-    voxel_count++;
+      voxel_count++;
     }
   }
 #endif
