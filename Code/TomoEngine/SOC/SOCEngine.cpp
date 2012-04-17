@@ -627,6 +627,12 @@ void SOCEngine::execute()
   initializeGainsOffsetsParameters(NuisanceParams);
 
   // Initialize the H_t data
+  dims[0] = 1;
+  dims[1] = m_Sinogram->N_theta;
+  dims[2] = DETECTOR_RESPONSE_BINS;
+
+  H_t = RealVolumeType::New(dims);
+  H_t->setName("H_t");
   initializeHt(H_t);
 
   checksum=0;
@@ -911,8 +917,12 @@ void SOCEngine::execute()
   for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
   {
     std::cout << i_theta << NuisanceParams->I_0->d[i_theta] <<
-        "\t" << NuisanceParams->mu->d[i_theta] <<
-        "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
+        "\t" << NuisanceParams->mu->d[i_theta];
+    if (NuisanceParams->alpha.get() != NULL)
+    {
+      std::cout << "\t" << NuisanceParams->alpha->d[i_theta];
+    }
+    std::cout << std::endl;
   }
 
   START_TIMER;
@@ -2004,13 +2014,13 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                              UInt8ImageType::Pointer Mask,
                              CostData::Pointer cost)
 {
-  uint8_t exit_status=1;//Indicates normal exit ; else indicates to stop inner iterations
+  uint8_t exit_status = 1; //Indicates normal exit ; else indicates to stop inner iterations
   uint16_t subIterations = 1;
   std::string indent("    ");
   uint8_t err = 0;
   DATA_TYPE UpdatedVoxelValue;
   DATA_TYPE accuracy = 1e-9; //This is the rooting accuracy for x
-  uint32_t binarysearch_count=10;//Accuracy is 1/(2^10)
+  uint32_t binarysearch_count = 10; //Accuracy is 1/(2^10)
   int32_t errorcode = -1;
   int16_t Idx;
 
@@ -2054,9 +2064,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
       ComputeVSC();
       START_TIMER;
       NH_Threshold = SetNonHomThreshold();
-      STOP_TIMER;
-      PRINT_TIME("  SetNonHomThreshold");
-      std::cout << indent <<"NHICD Threshold: "<<NH_Threshold<<std::endl;
+      STOP_TIMER;PRINT_TIME("  SetNonHomThreshold");
+      std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
       //Use  FiltMagUpdateMap  to find MagnitudeUpdateMask
       //std::cout << "Completed Calculation of filtered magnitude" << std::endl;
       //Calculate the threshold for the top ? % of voxel updates
@@ -2079,7 +2088,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     {
       Counter->d[j_new] = j_new;
     }
-    uint32_t NumVoxelsToUpdate=0;
+    uint32_t NumVoxelsToUpdate = 0;
     for (int32_t j = 0; j < m_Geometry->N_z; j++)
     {
       for (int32_t k = 0; k < m_Geometry->N_x; k++)
@@ -2111,7 +2120,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         VisitCount->d[j][k] = 0;
       }
     }
-     std::cout << indent <<"Number of voxel lines to update: "<<NumVoxelsToUpdate<<std::endl;
+    std::cout << indent << "Number of voxel lines to update: " << NumVoxelsToUpdate << std::endl;
 
 #endif
 
@@ -2331,15 +2340,15 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             }
 
             Idx++;
-          }
+          } /* End of N_y loop **************** */
         }
         else
         {
           continue;
         }
 
-      }
-    }
+      } /* End of N_x Loop ********************************** */
+    } /* End of N_z Loop ********************************** */
     STOP_TIMER;
     PRINT_TIME("Voxel Update");
 
@@ -2356,39 +2365,40 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     }
 #endif
 
-  if (m_TomoInputs->useCostCalculation == true)
-  {
+    if(m_TomoInputs->useCostCalculation == true)
+    {
       /*********************Cost Calculation*************************************/
       DATA_TYPE cost_value = computeCost(ErrorSino, Weight);
-      std::cout<<cost_value<<std::endl;
+      std::cout << cost_value << std::endl;
       int increase = cost->addCostValue(cost_value);
-      if (increase ==1)
+      if(increase == 1)
       {
         std::cout << "Cost just increased after ICD!" << std::endl;
         break;
       }
       cost->writeCostValue(cost_value);
       /**************************************************************************/
-  } else {
-      printf("%d\n",Iter);
-  } //Cost calculation endif
+    }
+    else
+    {
+      printf("%d\n", Iter);
+    } //Cost calculation endif
 #ifdef ROI
     if(AverageMagnitudeOfRecon > 0)
     {
       printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);
 
-    //Use the stopping criteria if we are performing a full update of all voxels
+      //Use the stopping criteria if we are performing a full update of all voxels
       if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != NonHomogeniousUpdate)
       {
         printf("This is the terminating point %d\n", Iter);
         m_TomoInputs->StopThreshold *= THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
-    std::cout<<"New threshold"<<m_TomoInputs->StopThreshold<<std::endl;
-      exit_status=0;
+        std::cout << "New threshold" << m_TomoInputs->StopThreshold << std::endl;
+        exit_status = 0;
         break;
       }
     }
 #endif//ROI end
-
 #ifdef WRITE_INTERMEDIATE_RESULTS
 
     if(Iter == NumOfWrites*WriteCount)

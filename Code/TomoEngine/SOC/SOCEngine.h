@@ -62,18 +62,18 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 
   public:
     MXA_SHARED_POINTERS(SOCEngine)
-    ;MXA_TYPE_MACRO(SOCEngine)
-    ;MXA_STATIC_NEW_MACRO(SOCEngine)
-    ;
+    MXA_TYPE_MACRO(SOCEngine)
+    MXA_STATIC_NEW_MACRO(SOCEngine)
 
-  MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
+
+    MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
     MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)
     MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
     MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams)
 
-  MXA_INSTANCE_PROPERTY(bool, UseBrightFieldData)
-  MXA_INSTANCE_PROPERTY(TomoInputsPtr, BFTomoInputs)
-  MXA_INSTANCE_PROPERTY(SinogramPtr, BFSinogram)
+    MXA_INSTANCE_PROPERTY(bool, UseBrightFieldData)
+    MXA_INSTANCE_PROPERTY(TomoInputsPtr, BFTomoInputs)
+    MXA_INSTANCE_PROPERTY(SinogramPtr, BFSinogram)
 
     static void InitializeTomoInputs(TomoInputsPtr);
     static void InitializeSinogram(SinogramPtr);
