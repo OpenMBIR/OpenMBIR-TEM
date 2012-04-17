@@ -202,7 +202,7 @@ void TomoGui::readSettings(QSettings &prefs)
   QString val;
   bool ok;
   qint32 i;
- // double d;
+  double d;
   prefs.beginGroup("Parameters");
 
   READ_STRING_SETTING(prefs, inputMRCFilePath, "");
@@ -226,7 +226,7 @@ void TomoGui::readSettings(QSettings &prefs)
   READ_BOOL_SETTING(prefs, useDefaultOffset, false);
   READ_STRING_SETTING(prefs, defaultOffset, "0");
   READ_STRING_SETTING(prefs, stopThreshold, "0.001");
-  READ_SETTING(prefs, mrf, ok, i, 1.2, Double);
+  READ_SETTING(prefs, mrf, ok, d, 1.2, Double);
   READ_BOOL_SETTING(prefs, extendObject, false);
 
 
