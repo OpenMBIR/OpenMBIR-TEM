@@ -169,8 +169,8 @@ void MRCSinogramInitializer::execute()
   size_t dims[3] = {sinogram->N_theta,
   inputs->xEnd - inputs->xStart+1,
   inputs->yEnd - inputs->yStart+1};
-  sinogram->counts = RealVolumeType::New(dims);
-  sinogram->counts->setName("Sinogram.counts");
+  sinogram->counts = RealVolumeType::New(dims, "Sinogram.counts");
+
 
 	//If the bright field image is included initialize space for it
 	/*if(inputs->BrightFieldFile != NULL)
@@ -228,6 +228,7 @@ void MRCSinogramInitializer::execute()
 
   printf("Size of the Masked Sinogram N_r =%d N_t = %d N_theta=%d\n",sinogram->N_r,sinogram->N_t,sinogram->N_theta);
 
+#ifdef DEBUG
       //check sum calculation
   for(uint16_t i=0;i<sinogram->N_theta;i++)
   {
@@ -242,7 +243,7 @@ void MRCSinogramInitializer::execute()
     printf("Sinogram Checksum %d: %f\n", i, sum);
   }
   //end ofcheck sum
-
+#endif
 
   setErrorCondition(0);
   setErrorMessage("");

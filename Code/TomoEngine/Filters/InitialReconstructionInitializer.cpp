@@ -108,8 +108,8 @@ void InitialReconstructionInitializer::execute()
   //DATA_TYPE res=3;
   input->LengthZ/= (sinogram->delta_r);
   sinogram->delta_r = 1;//These lines are added because the user inputs a multiple of this as the final voxel size
-  sinogram->delta_t = 1;//These lines are added because the user inputs a multiple of this as the final voxel size 
-	
+  sinogram->delta_t = 1;//These lines are added because the user inputs a multiple of this as the final voxel size
+
   input->delta_xz=sinogram->delta_r*input->delta_xz;
   input->delta_xy=input->delta_xz;
   //Find the maximum absolute tilt angle
@@ -121,15 +121,15 @@ void InitialReconstructionInitializer::execute()
 	//interpolation_factor;
 	input->LengthZ=round(input->LengthZ)*input->interpolateFactor;//interpolation_factor;
 	if(1 == input->extendObject)
-	{	
+	{
 		std::cout<<"KNOWN BUG FIX NEEDED HERE IF MAX = 90 degrees"<<std::endl;
 		geometry->LengthX = X_SHRINK_FACTOR*((sinogram->N_r * sinogram->delta_r)/cos(max*M_PI/180)) + input->LengthZ*tan(max*M_PI/180) ;
 		geometry->LengthX/=input->interpolateFactor;
 		geometry->LengthX=round(geometry->LengthX)*input->interpolateFactor;
 	}
-	else 
+	else
 	{
-         geometry->LengthX = ((sinogram->N_r * sinogram->delta_r));		
+         geometry->LengthX = ((sinogram->N_r * sinogram->delta_r));
 	}
 
 #else
@@ -155,8 +155,8 @@ void InitialReconstructionInitializer::execute()
 
 
   size_t dims[3] = {geometry->N_z, geometry->N_x, geometry->N_y};
-  geometry->Object  = RealVolumeType::New(dims);
-  geometry->Object->setName("Geometry.Object");
+  geometry->Object  = RealVolumeType::New(dims, "Geometry.Object");
+
  // geometry->Object = (DATA_TYPE ***)get_3D(geometry->N_z, geometry->N_x, geometry->N_y, sizeof(DATA_TYPE));//Allocate space for the 3-D object
 //Coordinates of the left corner of the x-z object
   geometry->x0 = -geometry->LengthX/2;

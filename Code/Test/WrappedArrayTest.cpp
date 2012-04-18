@@ -28,7 +28,7 @@ int main(int argc, char **argv)
   std::cout << "X, Y, Z: " << x << " " << y << " " << z << std::endl;
   std::cout << "-----------------Testing 3D Array------------------" << std::endl;
   {
-    Int32VolumeType::Pointer object = Int32VolumeType::New(dims);
+    Int32VolumeType::Pointer object = Int32VolumeType::New(dims, "Test3D");
 
     int32_t*** data = object->d;
 
@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 
   {
 
-    RealImageType::Pointer object = RealImageType::New(dims);
+    RealImageType::Pointer object = RealImageType::New(dims, "Test2D");
 
     DATA_TYPE** data = reinterpret_cast<double**>(object->getPointer());
     printf("Array to Hold Pointers to start of each Row: %p \n", data);
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 
   std::cout << "-----------------Testing 1D Array------------------" << std::endl;
   {
-    RealArrayType::Pointer object = RealArrayType::New(dims);
+    RealArrayType::Pointer object = RealArrayType::New(dims, "1D");
     DATA_TYPE* data = object->getPointer();
     printf("Array to Hold Pointers to start of Data: Address=%p Num.Elements: %lud\n", data, x);
 

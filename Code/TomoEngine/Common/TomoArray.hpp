@@ -52,18 +52,21 @@ class TomoArray
       return Pointer(static_cast<TomoArray<T, Ptr, SIZE>*>(0));
     }
 
-    static Pointer New(size_t* dims)
+    static Pointer New(size_t* dims, const std::string &name)
     {
       Pointer sharedPtr(new TomoArray<T, Ptr, SIZE>(dims));
+      sharedPtr->setName(name);
       return sharedPtr;
     }
 
     virtual ~TomoArray()
     {
+#if 0
       if (m_Name.empty() == false)
       {
         std::cout << "Deallocating TomoArray " << m_Name << std::endl;
       }
+#endif
       if (SIZE == 1)
       {
         free(d);

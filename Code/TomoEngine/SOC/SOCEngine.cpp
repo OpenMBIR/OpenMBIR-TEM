@@ -280,24 +280,21 @@ void SOCEngine::execute()
 
   int16_t i,j,k,Idx;
   size_t dims[3];
-  int16_t index_delta_t;
 
   Int32ArrayType::Pointer Counter;
   UInt8ImageType::Pointer VisitCount;
 
-  //uint16_t cost_counter=0;
 
   uint16_t MaxNumberOfDetectorElts;
   uint8_t status;//set to 1 if ICD has converged
 
-  DATA_TYPE center_t,delta_t;
-  DATA_TYPE w3,w4;
+
   DATA_TYPE checksum = 0,temp;
 
   RealImageType::Pointer VoxelProfile;
   RealVolumeType::Pointer detectorResponse;
   RealVolumeType::Pointer H_t;
- // DATA_TYPE ProfileCenterT;
+
 
 
   RealVolumeType::Pointer Y_Est;//Estimated Sinogram
@@ -306,6 +303,15 @@ void SOCEngine::execute()
   RealVolumeType::Pointer Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
   RNGVars* RandomNumber;
   std::string indent("");
+
+#ifdef COST_CALCULATE
+  std::string filepath(m_TomoInputs->tempDir);
+  filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::CostFunctionFile);
+
+  CostData::Pointer cost = CostData::New();
+  cost->initOutputFile(filepath);
+#endif
+
 
 #if TomoEngine_USE_PARALLEL_ALGORITHMS
   tbb::task_scheduler_init init;
@@ -364,7 +370,7 @@ void SOCEngine::execute()
 
 
 
-#if 1
+#ifdef DEBUG
 // Print out the Initial Gains, Offsets, Variances
   std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
     std::cout << "Tilt\tGain\tOffset";
@@ -398,14 +404,11 @@ void SOCEngine::execute()
   ScaleOffsetParamsPtr NuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
   dims[1] = m_Sinogram->N_t;
   dims[0] = m_Sinogram->N_theta;
-  NuisanceParams->I_0 = RealArrayType::New(dims);
-  NuisanceParams->I_0->setName("NuisanceParams->I_0");
-  NuisanceParams->mu = RealArrayType::New(dims);
-  NuisanceParams->mu->setName("NuisanceParams->mu");
+  NuisanceParams->I_0 = RealArrayType::New(dims, "NuisanceParams->I_0");
+  NuisanceParams->mu = RealArrayType::New(dims, "NuisanceParams->mu");
 #ifdef NOISE_MODEL
   //alpha is the noise variance adjustment factor
-  NuisanceParams->alpha = RealArrayType::New(dims);
-  NuisanceParams->alpha->setName("NuisanceParams->alpha");
+  NuisanceParams->alpha = RealArrayType::New(dims, "NuisanceParams->alpha");
 #else
   NuisanceParams->alpha = RealArrayType::NullPointer();
 #endif
@@ -416,8 +419,7 @@ void SOCEngine::execute()
   //This is used to store the projection of the object for each view
   dims[1] = m_Sinogram->N_t;
   dims[0] = m_Sinogram->N_r;
-  RealImageType::Pointer MicroscopeImage = RealImageType::New(dims);
-  MicroscopeImage->setName("MicroscopeImage");
+  RealImageType::Pointer MicroscopeImage = RealImageType::New(dims, "MicroscopeImage");
 
   // initialize variables
   Idx = 0;
@@ -446,14 +448,10 @@ void SOCEngine::execute()
   dims[2] = m_Sinogram->N_t;
 
 
-  Y_Est = RealVolumeType::New(dims);
-  Y_Est->setName("Y_Est");
-  ErrorSino = RealVolumeType::New(dims);
-  ErrorSino->setName("ErrorSino");
-  Weight = RealVolumeType::New(dims);
-  Weight->setName("Weight");
-  Final_Sinogram = RealVolumeType::New(dims);
-  Y_Est->setName("Final Sinogram");
+  Y_Est = RealVolumeType::New(dims, "Y_Est");
+  ErrorSino = RealVolumeType::New(dims, "ErrorSino");
+  Weight = RealVolumeType::New(dims, "Weight");
+  Final_Sinogram = RealVolumeType::New(dims, "Final Sinogram");
 
   //Setting the value of all the private members
   OffsetR = ((m_TomoInputs->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
@@ -481,29 +479,19 @@ void SOCEngine::execute()
   dims[1] = 3;
   dims[2] = 0;
   //Hold the coefficients of a quadratic equation
-  //  QuadraticParameters = (DATA_TYPE**)(get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE)));
-  QuadraticParameters = RealImageType::New(dims);
-  QuadraticParameters->setName("QuadraticParameters");
-  //  Qk_cost=(DATA_TYPE**)get_img(3, m_Sinogram->N_theta, sizeof(DATA_TYPE));
-  Qk_cost = RealImageType::New(dims);
-  Qk_cost->setName("Qk_cost");
-//  bk_cost=(DATA_TYPE**)get_img(2, m_Sinogram->N_theta, sizeof(DATA_TYPE));
+  QuadraticParameters = RealImageType::New(dims, "QuadraticParameters");
+  Qk_cost = RealImageType::New(dims, "Qk_cost");
   dims[1] = 2;
-  bk_cost = RealImageType::New(dims);
-  bk_cost->setName("bk_cost");
+  bk_cost = RealImageType::New(dims, "bk_cost");
 
   dims[0] = m_Sinogram->N_theta;
-  ck_cost = RealArrayType::New(dims);
-  ck_cost->setName("ck_cost");
-//  ck_cost=(DATA_TYPE*)get_spc(m_Sinogram->N_theta, sizeof(DATA_TYPE));
+  ck_cost = RealArrayType::New(dims, "ck_cost");
 
   NumOfViews = m_Sinogram->N_theta;
   LogGain = m_Sinogram->N_theta*log(m_Sinogram->targetGain);
   dims[0] = m_Sinogram->N_theta;
-  d1 = RealArrayType::New(dims);
-  d1->setName("d1");
-  d2 = RealArrayType::New(dims);
-  d2->setName("d2");
+  d1 = RealArrayType::New(dims, "d1");
+  d2 = RealArrayType::New(dims, "d2");
 
   //calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram Structure are converted to radians
   VoxelProfile = calculateVoxelProfile(); //Verified with ML
@@ -545,14 +533,11 @@ void SOCEngine::execute()
     return;
   }
 
-
-
 #ifdef RANDOM_ORDER_UPDATES
   dims[0] = m_Geometry->N_z;
   dims[1] = m_Geometry->N_x;
   dims[2] = 0;
-  VisitCount = UInt8ImageType::New(dims);
-  VisitCount->setName("VisitCount");
+  VisitCount = UInt8ImageType::New(dims, "VisitCount");
 // Initialize the Array to zero
   ::memset( VisitCount->d[0], 0, dims[0] * dims[1] * sizeof(uint8_t));
 #endif//Random update
@@ -562,22 +547,15 @@ void SOCEngine::execute()
   dims[1]=m_Geometry->N_x;//width
   dims[2]=0;
 
-  MagUpdateMap = RealImageType::New(dims);
-  MagUpdateMap->setName("Update Map for voxel lines");
-
-  FiltMagUpdateMap = RealImageType::New(dims);
-  FiltMagUpdateMap->setName("Update Map for voxel lines");
-
-  MagUpdateMask = Uint8ImageType::New(dims);
-  MagUpdateMask->setName("Update Mask for selecting voxel lines NHICD");
-
+  MagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
+  FiltMagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
+  MagUpdateMask = Uint8ImageType::New(dims, "Update Mask for selecting voxel lines NHICD");
 
 #ifdef ROI
   //Mask = (uint8_t**)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
   dims[0] = m_Geometry->N_z;
   dims[1] = m_Geometry->N_x;
-  Mask = UInt8ImageType::New(dims);
-  Mask->setName("Mask");
+  Mask = UInt8ImageType::New(dims, "Mask");
   initializeROIMask(Mask);
 #endif
   //m_Sinogram->targetGain=20000;
@@ -604,8 +582,7 @@ void SOCEngine::execute()
   dims[0] = 1;
   dims[1] = m_Sinogram->N_theta;
   dims[2] = DETECTOR_RESPONSE_BINS;
-  H_t = RealVolumeType::New(dims);
-  H_t->setName("H_t");
+  H_t = RealVolumeType::New(dims, "H_t");
   initializeHt(H_t);
 
 
@@ -617,14 +594,10 @@ void SOCEngine::execute()
 #else
 
   //TODO: All this needs to be deallocated at some point
-  DATA_TYPE y;
-  DATA_TYPE t, tmin, tmax, ProfileThickness;
-  int16_t slice_index_min, slice_index_max;
-//  AMatrixCol*** TempCol = (AMatrixCol***)multialloc(sizeof(AMatrixCol*),2,m_Geometry->N_z,m_Geometry->N_x);//stores 2-D forward projector
+//  DATA_TYPE y;
+//  DATA_TYPE t, tmin, tmax, ProfileThickness;
+//  int16_t slice_index_min, slice_index_max;
   AMatrixCol** TempCol = (AMatrixCol**)get_spc(m_Geometry->N_x * m_Geometry->N_z, sizeof(AMatrixCol*));
-//  AMatrixCol* Aj;
-//  AMatrixCol* TempMemBlock;
-  //T-direction response
   AMatrixCol* VoxelLineResponse = (AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));
   MaxNumberOfDetectorElts = (uint16_t)((m_TomoInputs->delta_xy / m_Sinogram->delta_t) + 2);
   for (i = 0; i < m_Geometry->N_y; i++)
@@ -667,9 +640,7 @@ void SOCEngine::execute()
   {
     for (k = 0; k < m_Geometry->N_x; k++)
     {
-      //TempCol[j][k] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
       TempCol[voxel_count] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
-//      temp += TempCol[j][k].count;`
       temp += TempCol[voxel_count]->count;
       if(0 == TempCol[voxel_count]->count)
       {
@@ -685,57 +656,8 @@ void SOCEngine::execute()
   }
 #endif
 
-  //Storing the response along t-direction for each voxel line
-  notify("Storing the response along Y-direction for each voxel line", 0, Observable::UpdateProgressMessage);
-  for (i =0; i < m_Geometry->N_y; i++)
-  {
-    y = ((DATA_TYPE)i + 0.5) * m_TomoInputs->delta_xy + m_Geometry->y0;
-    t = y;
-    tmin = (t - m_TomoInputs->delta_xy / 2) > m_Sinogram->T0 ? t - m_TomoInputs->delta_xy / 2 : m_Sinogram->T0;
-    tmax = (t + m_TomoInputs->delta_xy / 2) <= m_Sinogram->TMax ? t + m_TomoInputs->delta_xy / 2 : m_Sinogram->TMax;
 
-    slice_index_min = static_cast<uint16_t>(floor((tmin - m_Sinogram->T0) / m_Sinogram->delta_t));
-    slice_index_max = static_cast<uint16_t>(floor((tmax - m_Sinogram->T0) / m_Sinogram->delta_t));
-
-    if(slice_index_min < 0)
-    {
-      slice_index_min = 0;
-    }
-    if(slice_index_max >= m_Sinogram->N_t)
-    {
-      slice_index_max = m_Sinogram->N_t - 1;
-    }
-
-    //printf("%d %d\n",slice_index_min,slice_index_max);
-
-    for (int i_t = slice_index_min; i_t <= slice_index_max; i_t++)
-    {
-      center_t = ((DATA_TYPE)i_t + 0.5) * m_Sinogram->delta_t + m_Sinogram->T0;
-      delta_t = fabs(center_t - t);
-      index_delta_t = static_cast<uint16_t>(floor(delta_t / OffsetT));
-      if(index_delta_t < DETECTOR_RESPONSE_BINS)
-      {
-        w3 = delta_t - (DATA_TYPE)(index_delta_t) * OffsetT;
-        w4 = ((DATA_TYPE)index_delta_t + 1) * OffsetT - delta_t;
-        ProfileThickness = (w4 / OffsetT) * H_t->d[0][0][index_delta_t]
-            + (w3 / OffsetT) * H_t->d[0][0][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
-    //  ProfileThickness = (w4 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t]
-    //  + (w3 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
-    }
-      else
-      {
-        ProfileThickness = 0;
-      }
-
-      if(ProfileThickness != 0) //Store the response of this slice
-      {
-        printf("%d %lf\n", i_t, ProfileThickness);
-        VoxelLineResponse[i].values[VoxelLineResponse[i].count] = ProfileThickness;
-        VoxelLineResponse[i].index[VoxelLineResponse[i].count++] = i_t;
-      }
-    }
-  }
-
+  storeVoxelResponse(H_t, VoxelLineResponse);
 
   printf("Number of non zero entries of the forward projector is %lf\n",temp);
   printf("Geometry-Z %d\n",m_Geometry->N_z);
@@ -743,17 +665,7 @@ void SOCEngine::execute()
 
   //Forward Project Geometry->Object one slice at a time and compute the  Sinogram for each slice
   //is Y_Est initailized to zero?
-  for (i = 0; i < m_Sinogram->N_theta; i++)
-  {
-    for (j = 0; j < m_Sinogram->N_r; j++)
-    {
-      for (k = 0; k < m_Sinogram->N_t; k++)
-      {
-        Y_Est->d[i][j][k] = 0.0;
-      }
-    }
-  }
-
+  initializeVolume(Y_Est, 0.0);
 
   RandomNumber=init_genrand(1ul);
 
@@ -793,77 +705,7 @@ void SOCEngine::execute()
 
   //Calculate Error Sinogram - Can this be combined with previous loop?
   //Also compute weights of the diagonal covariance matrix
-#ifdef NOISE_MODEL
-  START_TIMER;
-
-  //TODO: This can be parallelized  for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
-  for (int16_t zz = 0; zz < m_Sinogram->N_theta; zz++) //slice index
-  {
-    std::cout << "\rComputing Weights for Tilt Index " << zz << "/" << m_Sinogram->N_theta << std::endl;
-    NuisanceParams->alpha->d[zz] = m_Sinogram->InitialVariance->d[zz]; //Initialize the refinement parameters from any previous run
-    std::cout << "Alpha" << NuisanceParams->alpha->d[zz] << std::endl;
-    for (uint16_t xx = 0; xx < m_Sinogram->N_r; xx++)
-    {
-      for (uint16_t yy = 0; yy < m_Sinogram->N_t; yy++)
-      {
-        if(m_Sinogram->counts->d[zz][xx][yy] != 0)
-        {
-#ifdef BRIGHT_FIELD
-          Weight->d[zz][xx][yy] = m_Sinogram->counts->d[zz][xx][yy];
-#else
-          Weight->d[zz][xx][yy] = 1.0 / (m_Sinogram->counts->d[zz][xx][yy] * NuisanceParams->alpha->d[zz]); //The variance for each view ~=averagecounts in that view
-#endif
-        }
-        else
-        {
-          Weight->d[zz][xx][yy] = 0;
-        }
-      }
-    }
-  }
-  STOP_TIMER;
-  std::cout << std::endl;
-  PRINT_TIME("Computing Weights");
-#endif//Noise model
-
-
-  for (int16_t i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)//slice index
-  {
-    checksum = 0;
-    for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-    {
-      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-      {
-        // checksum+=Y_Est->d[i][j][k];
-        ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - Y_Est->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];
-        //  if(fabs(ErrorSino->d[i_theta][i_r][i_t]) > 20000)
-        //    printf("%d %d %d %lf %lf %lf\n",i_theta,i_r,i_t,ErrorSino->d[i_theta][i_r][i_t],Weight->d[i_theta][i_r][i_t],Y_Est->d[i_theta][i_r][i_t]);
-
-#ifndef NOISE_MODEL
-        if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
-        {
-#ifdef BRIGHT_FIELD
-          Weight->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t];
-#else
-          Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
-#endif //bright field check
-        }
-        else Weight->d[i_theta][i_r][i_t] = 0;
-#endif//Noise model
-#ifdef FORWARD_PROJECT_MODE
-        temp=Y_Est->d[i_theta][i_r][i_t]/NuisanceParams->I_0->d[i_theta];
-        fwrite(&temp,sizeof(DATA_TYPE),1,Fp6);
-#endif
-        if(Weight->d[i_theta][i_r][i_t] < 0) {
-          std::cout << m_Sinogram->counts->d[i_theta][i_r][i_t] << "    " << NuisanceParams->alpha->d[i_theta] << std::endl;
-        }
-
-        checksum += Weight->d[i_theta][i_r][i_t];
-      }
-    }
-    printf("Check sum of Diagonal Covariance Matrix= %lf\n", checksum);
-
-  }
+  calculateMeasurementWeight(Weight, NuisanceParams, ErrorSino, Y_Est);
 
 
 #ifdef FORWARD_PROJECT_MODE
@@ -871,72 +713,8 @@ void SOCEngine::execute()
 #endif//Forward Project mode
 
 
-#if 0
-   This code has been moved into its own Filter class
-	{
-    /************************************Start Of Target Gain and Sigma Calc***********************************************/
-    //Calculating estimtes for sigma_f and \bar{I}
-    DATA_TYPE sum1 = 0;
-    DATA_TYPE TargetGainEstimate = 0;
-    DATA_TYPE TargetMin = 1e100;
-    DATA_TYPE TargetMax = -100;
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-          if(m_Sinogram->counts->d[i_theta][i_r][i_t] > TargetMax) TargetMax = m_Sinogram->counts->d[i_theta][i_r][i_t];
-          if(m_Sinogram->counts->d[i_theta][i_r][i_t] < TargetMin) TargetMin = m_Sinogram->counts->d[i_theta][i_r][i_t];
-        }
-      }
-    }
-    TargetGainEstimate = (TargetMax - TargetMin) * 10;
-    std::cout << "Default Target Gain =" << TargetGainEstimate << std::endl;
-
-
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      DATA_TYPE sum2 = 0;
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-          sum2 += (m_Sinogram->counts->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta]);
-        }
-      }
-      sum2 /= (m_Sinogram->N_r * m_Sinogram->N_t * m_Sinogram->targetGain);
-      sum1 += ((sum2 * cosine->d[i_theta]) / (m_TomoInputs->LengthZ / Z_STRETCH));
-    }
-
-    sum1 /= m_Sinogram->N_theta;
-    std::cout << "Calculated average projected scatter =" << sum1 << std::endl;
-    std::cout << "Default value for sigma_x=" << sum1 / 100 << std::endl;
-
-    /************************************End Of Target Gain and Sigma Calc***********************************************/
-  }
-#endif
-
-
 #ifdef COST_CALCULATE
-  DATA_TYPE cost_value;
-  std::string filepath(m_TomoInputs->tempDir);
-  filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::CostFunctionFile);
-
-  CostData::Pointer cost = CostData::New();
-  cost->initOutputFile(filepath);
-
-  /*********************Cost Calculation*************************************/
-  cost_value = computeCost(ErrorSino, Weight);
-  std::cout<<cost_value<<std::endl;
-  int increase = cost->addCostValue(cost_value);
-  if (increase ==1)
-  {
-    //Only one cost so dont worry about increase
- //   std::cout << "Cost just increased!" << std::endl;
-  }
-  cost->writeCostValue(cost_value);
-  /**************************************************************************/
+  err = calculateCost(cost, Weight, ErrorSino);
 #endif //Cost calculation endif
 
 //  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
@@ -949,11 +727,9 @@ void SOCEngine::execute()
 
 	//The first time we may need to update voxels multiple times and then on just optimize over I,d,\sigma,f once each outer loop
     if(OuterIter != 0)
-    m_TomoInputs->NumIter = 1;
-
-
-
-
+    {
+      m_TomoInputs->NumIter = 1;
+    }
 
      for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
     {
@@ -1022,37 +798,6 @@ void SOCEngine::execute()
         }
       }
     }
-
-    /* Forward Projection
-    for (j = 0; j < m_Geometry->N_z; j++)
-    {
-      for (k = 0; k < m_Geometry->N_x; k++)
-      {
-        if(TempCol[j][k]->count > 0)
-        {
-          for (i = 0; i < m_Geometry->N_y; i++) //slice index
-          {
-
-            for (uint32_t q = 0; q < TempCol[j][k]->count; q++)
-            {
-              //calculating the footprint of the voxel in the t-direction
-
-              uint16_t i_theta = int16_t(floor(static_cast<float>(TempCol[j][k]->index[q] / (m_Sinogram->N_r))));
-              uint16_t i_r = (TempCol[j][k]->index[q] % (m_Sinogram->N_r));
-
-              uint16_t VoxelLineAccessCounter = 0;
-              for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
-              {
-                Y_Est->d[i_theta][i_r][i_t] += ((TempCol[j][k]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object->d[j][k][i]));
-              }
-            }
-
-          }
-        }
-
-      }
-    }
-     */
 
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
@@ -1229,33 +974,24 @@ void SOCEngine::execute()
      }*/
 
 #ifdef COST_CALCULATE
-
-    /*********************Cost Calculation*************************************/
-    DATA_TYPE cost_value = computeCost(ErrorSino, Weight);
-    std::cout<<cost_value<<std::endl;
-    int increase = cost->addCostValue(cost_value);
-    if (increase ==1)
+    err = calculateCost(cost, Weight, ErrorSino);
+    if (err < 0)
     {
-      std::cout << "Cost just increased after gains+offset update!" << std::endl;
       break;
     }
-    cost->writeCostValue(cost_value);
-    /**************************************************************************/
-
 #endif
+
     printf("Lagrange Multiplier = %lf\n", LagrangeMultiplier);
 
-    printf("Offsets\n");
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+#ifdef DEBUG
+    std::cout << "Tilt\tGains\tOffsets\tVariance" << std::endl;
+    for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
     {
-      printf("%lf\n", NuisanceParams->mu->d[i_theta]);
+      std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
+          "\t" << NuisanceParams->mu->d[i_theta] <<
+          "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
     }
-    printf("Gain\n");
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      printf("%lf\n", NuisanceParams->I_0->d[i_theta]);
-    }
-
+#endif
 
     DATA_TYPE I_kRatio=AverageI_kUpdate/AverageMagI_k;
     DATA_TYPE Delta_kRatio = AverageDelta_kUpdate/AverageMagDelta_k;
@@ -1264,77 +1000,14 @@ void SOCEngine::execute()
 #endif//Joint estimation endif
 
 #ifdef NOISE_MODEL
-    //Updating the Weights
-    DATA_TYPE AverageVarUpdate=0;//absolute sum of the gain updates
-    DATA_TYPE AverageMagVar=0;//absolute sum of the initial gains
-
-    for(uint16_t i_theta=0;i_theta < m_Sinogram->N_theta;i_theta++)
-    {
-      uint32_t NumNonZeroEntries=0;
-      sum=0;
-      //Factoring out the variance parameter from the Weight matrix
-      for(uint16_t i_r=0; i_r < m_Sinogram->N_r; i_r++)
-        for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-          if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
-          {
-          Weight->d[i_theta][i_r][i_t] = 1.0/m_Sinogram->counts->d[i_theta][i_r][i_t];
-            NumNonZeroEntries++;
-          }
-
-
-      for(uint16_t i_r=0; i_r < m_Sinogram->N_r; i_r++)
-        for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-          sum+=(ErrorSino->d[i_theta][i_r][i_t]*ErrorSino->d[i_theta][i_r][i_t]*Weight->d[i_theta][i_r][i_t]);//Changed to only account for the counts
-      sum/=NumNonZeroEntries;//(m_Sinogram->N_r*m_Sinogram->N_t);
-
-      AverageMagVar += fabs(NuisanceParams->alpha->d[i_theta]);
-      AverageVarUpdate += fabs(sum - NuisanceParams->alpha->d[i_theta]);
-      NuisanceParams->alpha->d[i_theta]=sum;
-      //Update the weight for ICD updates
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-          if(NuisanceParams->alpha->d[i_theta] != 0 && m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
-          {
-            Weight->d[i_theta][i_r][i_t] = 1.0/(m_Sinogram->counts->d[i_theta][i_r][i_t]*NuisanceParams->alpha->d[i_theta]);
-          }
-          else {
-            Weight->d[i_theta][i_r][i_t]= 0;
-          }
-
-        }
-      }
-
-    }
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      printf("%lf\n", NuisanceParams->alpha->d[i_theta]);
-    }
-
-    DATA_TYPE VarRatio = AverageVarUpdate/AverageMagVar;
-    std::cout<<"Ratio of change in Variance "<<VarRatio<<std::endl;
-
+    updateWeights(Weight, NuisanceParams, ErrorSino);
 #ifdef COST_CALCULATE
-
-    /*********************Cost Calculation*************************************/
-    cost_value = computeCost(ErrorSino, Weight);
-    std::cout<<cost_value<<std::endl;
-    increase = cost->addCostValue(cost_value);
-    if (increase ==1)
+    err = calculateCost(cost, Weight, ErrorSino);
+    if (err < 0)
     {
-      std::cout << "Cost just increased after variance update!" << std::endl;
       break;
     }
-    cost->writeCostValue(cost_value);
-    /**************************************************************************/
-
 #endif//cost
-
-#endif//NOISE_MODEL
-
-    //Stopping Criteria for the algorithm is the relative change in parameters is less than a threshold
-#ifdef NOISE_MODEL
     if(0 == status && OuterIter >= 1)//&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
       break;
 #else
@@ -1345,8 +1018,9 @@ void SOCEngine::execute()
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
 
   indent = "";
+#ifdef DEBUG
   cost->printCosts(std::cout);
-
+#endif
 
 #ifdef FORWARD_PROJECT_MODE
   int fileError=0;
@@ -1369,48 +1043,14 @@ void SOCEngine::execute()
   }
 #endif
 
-#ifdef JOINT_ESTIMATION
 
 /* Write the Gains and Offsets to an output file */
-  NuisanceParamWriter::Pointer nuisanceBinWriter = NuisanceParamWriter::New();
-  nuisanceBinWriter->setSinogram(m_Sinogram);
-  nuisanceBinWriter->setTomoInputs(m_TomoInputs);
-  nuisanceBinWriter->setObservers(getObservers());
-  nuisanceBinWriter->setNuisanceParams(NuisanceParams.get());
-  nuisanceBinWriter->setFileName(m_TomoInputs->gainsOutputFile);
-  nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_I_O);
-  nuisanceBinWriter->execute();
-  if (nuisanceBinWriter->getErrorCondition() < 0)
-  {
-    setErrorCondition(-1);
-    notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
-  }
-
-  nuisanceBinWriter->setFileName(m_TomoInputs->offsetsOutputFile);
-  nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_mu);
-  nuisanceBinWriter->execute();
-  if (nuisanceBinWriter->getErrorCondition() < 0)
-  {
-   setErrorCondition(-1);
-   notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
-  }
-#endif
-
-#ifdef NOISE_MODEL
-  nuisanceBinWriter->setFileName(m_TomoInputs->varianceOutputFile);
-  nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_alpha);
-  nuisanceBinWriter->execute();
-  if (nuisanceBinWriter->getErrorCondition() < 0)
-  {
-    setErrorCondition(-1);
-    notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
-  }
-#endif//Noise Model
+  writeNuisanceParameters(NuisanceParams);
 
   std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
   for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
   {
-    std::cout << i_theta << NuisanceParams->I_0->d[i_theta] <<
+    std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
         "\t" << NuisanceParams->mu->d[i_theta] <<
         "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
   }
@@ -1432,66 +1072,11 @@ void SOCEngine::execute()
   STOP_TIMER;
   PRINT_TIME("Forward Project");
 
-  // Write the Sinogram out to a file
-  SinogramBinWriter::Pointer sinogramWriter = SinogramBinWriter::New();
-  sinogramWriter->setSinogram(m_Sinogram);
-  sinogramWriter->setTomoInputs(m_TomoInputs);
-  sinogramWriter->setObservers(getObservers());
-  sinogramWriter->setNuisanceParams(NuisanceParams);
-  sinogramWriter->setData(Final_Sinogram);
-  sinogramWriter->execute();
-  if (sinogramWriter->getErrorCondition() < 0)
-  {
-    setErrorCondition(-1);
-    notify(sinogramWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
-  }
+  writeSinogramFile(NuisanceParams, Final_Sinogram);
+  writeReconstructionFile();
+  writeVtkFile();
+  writeMRCFile();
 
-  // Write the Reconstruction out to a file
-  RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
-  writer->setGeometry(m_Geometry);
-  writer->setFilePath(m_TomoInputs->reconstructedOutputFile);
-  writer->setObservers(getObservers());
-  writer->execute();
-  if (writer->getErrorCondition() < 0)
-  {
-    setErrorCondition(writer->getErrorCondition());
-    notify("Error Writing the Raw Geometry", 100, Observable::UpdateProgressValueAndMessage);
-  }
-
-
-  std::string vtkFile(m_TomoInputs->tempDir);
-  vtkFile = vtkFile.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedVtkFile);
-
-  VTKStructuredPointsFileWriter vtkWriter;
-  vtkWriter.setWriteBinaryFiles(true);
-  DimsAndRes dimsAndRes;
-  dimsAndRes.dim0 = m_Geometry->N_x;
-  dimsAndRes.dim1 = m_Geometry->N_y;
-  dimsAndRes.dim2 = m_Geometry->N_z;
-  dimsAndRes.resx = 1.0f;
-  dimsAndRes.resy = 1.0f;
-  dimsAndRes.resz = 1.0f;
-
-  std::vector<VtkScalarWriter*> scalarsToWrite;
-
-  VtkScalarWriter* w0 = static_cast<VtkScalarWriter*>(new TomoOutputScalarWriter(m_Geometry.get()));
-  w0->setWriteBinaryFiles(true);
-  scalarsToWrite.push_back(w0);
-
-  int error = vtkWriter.write<DimsAndRes>(vtkFile, &dimsAndRes, scalarsToWrite);
-  if (error < 0)
-  {
-    std::cout << "Error writing vtk file '" << vtkFile << "'" << std::endl;
-  }
-
-
-  /* Write the output to the MRC File */
-  std::string mrcFile (m_TomoInputs->tempDir);
-  mrcFile = mrcFile.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedMrcFile);
-  MRCWriter::Pointer mrcWriter = MRCWriter::New();
-  mrcWriter->setOutputFile(mrcFile);
-  mrcWriter->setGeometry(m_Geometry);
-  mrcWriter->write();
 
 
   std::cout << "Final Dimensions of Object: " << std::endl;
@@ -1561,8 +1146,7 @@ RealImageType::Pointer SOCEngine::calculateVoxelProfile()
   DATA_TYPE temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
 //  DATA_TYPE** VoxProfile = (DATA_TYPE**)multialloc(sizeof(DATA_TYPE),2,m_Sinogram->N_theta,PROFILE_RESOLUTION);
   size_t dims[2] = {m_Sinogram->N_theta,PROFILE_RESOLUTION};
-  RealImageType::Pointer VoxProfile = RealImageType::New(dims);
-  VoxProfile->setName("VoxelProfile");
+  RealImageType::Pointer VoxProfile = RealImageType::New(dims, "VoxelProfile");
 
   DATA_TYPE checksum=0;
   uint16_t i,j;
@@ -1637,12 +1221,9 @@ RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer Detect
   int16_t index_min,index_max,slice_index_min,slice_index_max,i_r,i_t,i_theta;
   int16_t i,j,k;
   int16_t index_delta_t,index_delta_r;
-  RealVolumeType::Pointer Y_Est;
   size_t dims[3] =
   { m_Sinogram->N_theta, m_Sinogram->N_r, m_Sinogram->N_t };
-  Y_Est = RealVolumeType::New(dims);
-  Y_Est->setName("Y_Est");
-//  Y_Est=(RealVolumeType::Pointer )get_3D(m_Sinogram->N_theta,m_Sinogram->N_r,m_Sinogram->N_t,sizeof(DATA_TYPE));
+  RealVolumeType::Pointer  Y_Est = RealVolumeType::New(dims, "Y_Est");
 
   for (j = 0; j < m_Geometry->N_z; j++)
   {
@@ -1743,10 +1324,8 @@ void SOCEngine::calculateSinCos()
 {
   uint16_t i;
   size_t dims[1] = { m_Sinogram->N_theta };
-  cosine = RealArrayType::New(dims);
-  cosine->setName("cosine");
-  sine = RealArrayType::New(dims);
-  sine->setName("sine");
+  cosine = RealArrayType::New(dims, "cosine");
+  sine = RealArrayType::New(dims, "sine");
 
   for(i=0;i<m_Sinogram->N_theta;i++)
   {
@@ -1761,7 +1340,7 @@ void SOCEngine::initializeBeamProfile()
   DATA_TYPE sum=0,W;
 //  BeamProfile=(DATA_TYPE*)get_spc(BEAM_RESOLUTION,sizeof(DATA_TYPE));
   size_t dims[1] = { BEAM_RESOLUTION };
-  BeamProfile = RealArrayType::New(dims);
+  BeamProfile = RealArrayType::New(dims, "BeamProfile");
   W=BEAM_WIDTH/2;
   for (i=0; i < BEAM_RESOLUTION ;i++)
   {
@@ -2528,8 +2107,7 @@ void SOCEngine::ComputeVSC()
 DATA_TYPE SOCEngine::SetNonHomThreshold()
 {
   size_t dims[2]={m_Geometry->N_z*m_Geometry->N_x,0};
-  RealArrayType::Pointer TempMagMap=RealArrayType::New(dims);
-  //TempMagMap->setName("TempMagMap");
+  RealArrayType::Pointer TempMagMap=RealArrayType::New(dims, "TempMagMap");
 
   uint32_t ArrLength=m_Geometry->N_z*m_Geometry->N_x;
   DATA_TYPE threshold;
@@ -2624,8 +2202,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
   std::string indent("    ");
   uint8_t err = 0;
   DATA_TYPE UpdatedVoxelValue;
-  DATA_TYPE accuracy = 1e-9; //This is the rooting accuracy for x
-  uint32_t binarysearch_count=10;//Accuracy is 1/(2^10)
+//  DATA_TYPE accuracy = 1e-9; //This is the rooting accuracy for x
+//  uint32_t binarysearch_count=10;//Accuracy is 1/(2^10)
   int32_t errorcode = -1;
   int16_t Idx;
 
@@ -2688,7 +2266,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     int32_t ArraySize = m_Geometry->N_x * m_Geometry->N_z;
     size_t dims[3] =
     { ArraySize, 0, 0 };
-    Int32ArrayType::Pointer Counter = Int32ArrayType::New(dims);
+    Int32ArrayType::Pointer Counter = Int32ArrayType::New(dims, "Counter");
 
     for (int32_t j_new = 0; j_new < ArraySize; j_new++)
     {

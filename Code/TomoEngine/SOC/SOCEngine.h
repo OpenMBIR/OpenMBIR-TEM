@@ -127,7 +127,24 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     void initializeROIMask(UInt8ImageType::Pointer Mask);
     void gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams);
     void initializeHt(RealVolumeType::Pointer H_t);
+    void storeVoxelResponse(RealVolumeType::Pointer H_t, AMatrixCol* VoxelLineResponse);
+    void initializeVolume(RealVolumeType::Pointer Y_Est, double value);
+    void calculateMeasurementWeight(RealVolumeType::Pointer Weight,
+                                               ScaleOffsetParamsPtr NuisanceParams,
+                                               RealVolumeType::Pointer ErrorSino,
+                                               RealVolumeType::Pointer Y_Est);
+    int calculateCost(CostData::Pointer cost,
+                      RealVolumeType::Pointer Weight,
+                      RealVolumeType::Pointer ErrorSino);
+    void updateWeights(RealVolumeType::Pointer Weight,
+                       ScaleOffsetParamsPtr NuisanceParams,
+                       RealVolumeType::Pointer ErrorSino);
+    void writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams);
 
+    void writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram);
+    void writeReconstructionFile();
+    void writeVtkFile();
+    void writeMRCFile();
 
 
   #ifdef QGGMRF

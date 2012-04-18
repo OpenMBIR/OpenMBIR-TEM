@@ -126,7 +126,7 @@ int SOCEngine::createInitialGainsData()
   /* ********************* Initialize the Gains Array **************************/
   size_t gains_dims[1] =
   { m_Sinogram->N_theta };
-  m_Sinogram->InitialGain = RealArrayType::New(gains_dims);
+  m_Sinogram->InitialGain = RealArrayType::New(gains_dims, "sinogram->InitialGain");
   if(m_TomoInputs->gainsInputFile.empty() == false)
   {
     // Read the initial Gains from a File
@@ -170,8 +170,7 @@ int SOCEngine::createInitialOffsetsData()
   /* ********************* Initialize the Offsets Array **************************/
   size_t offsets_dims[1] =
   { m_Sinogram->N_theta };
-  m_Sinogram->InitialOffset = RealArrayType::New(offsets_dims);
-  m_Sinogram->InitialOffset->setName("sinogram->InitialOffset");
+  m_Sinogram->InitialOffset = RealArrayType::New(offsets_dims, "sinogram->InitialOffset");
   if(m_TomoInputs->offsetsInputFile.empty() == false)
   {
     // Read the initial offsets from a File
@@ -225,8 +224,7 @@ int SOCEngine::createInitialVariancesData()
   /* ********************* Initialize the Variances Array **************************/
   size_t variance_dims[1] =
   { m_Sinogram->N_theta };
-  m_Sinogram->InitialVariance = RealArrayType::New(variance_dims);
-  m_Sinogram->InitialVariance->setName("sinogram->InitialVariance");
+  m_Sinogram->InitialVariance = RealArrayType::New(variance_dims, "sinogram->InitialVariance");
   if(m_TomoInputs->varianceInputFile.empty() == false)
   {
     // Read the initial variances from a File
@@ -423,4 +421,369 @@ void SOCEngine::initializeHt(RealVolumeType::Pointer H_t)
       }
     }
   }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::initializeVolume(RealVolumeType::Pointer Y_Est, double value)
+{
+  for (uint16_t i = 0; i < m_Sinogram->N_theta; i++)
+  {
+    for (uint16_t j = 0; j < m_Sinogram->N_r; j++)
+    {
+      for (uint16_t k = 0; k < m_Sinogram->N_t; k++)
+      {
+        Y_Est->d[i][j][k] = value;
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,  AMatrixCol* VoxelLineResponse)
+{
+  DATA_TYPE ProfileThickness = 0.0;
+  DATA_TYPE y = 0.0;
+  DATA_TYPE t = 0.0;
+  DATA_TYPE tmin;
+  DATA_TYPE tmax;
+  int16_t slice_index_min, slice_index_max;
+  DATA_TYPE center_t,delta_t;
+  int16_t index_delta_t;
+  DATA_TYPE w3,w4;
+
+  //Storing the response along t-direction for each voxel line
+  notify("Storing the response along Y-direction for each voxel line", 0, Observable::UpdateProgressMessage);
+  for (uint16_t i =0; i < m_Geometry->N_y; i++)
+  {
+    y = ((DATA_TYPE)i + 0.5) * m_TomoInputs->delta_xy + m_Geometry->y0;
+    t = y;
+    tmin = (t - m_TomoInputs->delta_xy / 2) > m_Sinogram->T0 ? t - m_TomoInputs->delta_xy / 2 : m_Sinogram->T0;
+    tmax = (t + m_TomoInputs->delta_xy / 2) <= m_Sinogram->TMax ? t + m_TomoInputs->delta_xy / 2 : m_Sinogram->TMax;
+
+    slice_index_min = static_cast<uint16_t>(floor((tmin - m_Sinogram->T0) / m_Sinogram->delta_t));
+    slice_index_max = static_cast<uint16_t>(floor((tmax - m_Sinogram->T0) / m_Sinogram->delta_t));
+
+    if(slice_index_min < 0)
+    {
+      slice_index_min = 0;
+    }
+    if(slice_index_max >= m_Sinogram->N_t)
+    {
+      slice_index_max = m_Sinogram->N_t - 1;
+    }
+
+    //printf("%d %d\n",slice_index_min,slice_index_max);
+
+    for (int i_t = slice_index_min; i_t <= slice_index_max; i_t++)
+    {
+      center_t = ((DATA_TYPE)i_t + 0.5) * m_Sinogram->delta_t + m_Sinogram->T0;
+      delta_t = fabs(center_t - t);
+      index_delta_t = static_cast<uint16_t>(floor(delta_t / OffsetT));
+      if(index_delta_t < DETECTOR_RESPONSE_BINS)
+      {
+        w3 = delta_t - (DATA_TYPE)(index_delta_t) * OffsetT;
+        w4 = ((DATA_TYPE)index_delta_t + 1) * OffsetT - delta_t;
+        ProfileThickness = (w4 / OffsetT) * H_t->d[0][0][index_delta_t]
+            + (w3 / OffsetT) * H_t->d[0][0][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
+    //  ProfileThickness = (w4 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t]
+    //  + (w3 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
+    }
+      else
+      {
+        ProfileThickness = 0;
+      }
+
+      if(ProfileThickness != 0) //Store the response of this slice
+      {
+#ifdef DEBUG
+        printf("%d %lf\n", i_t, ProfileThickness);
+#endif
+        VoxelLineResponse[i].values[VoxelLineResponse[i].count] = ProfileThickness;
+        VoxelLineResponse[i].index[VoxelLineResponse[i].count++] = i_t;
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Calculate Error Sinogram
+// Also compute weights of the diagonal covariance matrix
+// -----------------------------------------------------------------------------
+void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
+                                           ScaleOffsetParamsPtr NuisanceParams,
+                                           RealVolumeType::Pointer ErrorSino,
+                                           RealVolumeType::Pointer Y_Est)
+{
+  DATA_TYPE checksum = 0;
+  START_TIMER;
+  for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
+  {
+#ifdef NOISE_MODEL
+    {
+      NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
+    }
+#endif
+    checksum = 0;
+    for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+    {
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+        ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - Y_Est->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];
+
+        if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
+        {
+          Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
+#ifdef NOISE_MODEL
+          {
+            Weight->d[i_theta][i_r][i_t] /= NuisanceParams->alpha->d[i_theta];
+          }
+#endif
+        }
+        else
+        {
+          Weight->d[i_theta][i_r][i_t] = 0;
+        }
+
+#ifdef FORWARD_PROJECT_MODE
+        temp=Y_Est->d[i_theta][i_r][i_t]/NuisanceParams->I_0->d[i_theta];
+        fwrite(&temp,sizeof(DATA_TYPE),1,Fp6);
+#endif
+        if(Weight->d[i_theta][i_r][i_t] < 0)
+        {
+          std::cout << m_Sinogram->counts->d[i_theta][i_r][i_t] << "    " << NuisanceParams->alpha->d[i_theta] << std::endl;
+        }
+
+        checksum += Weight->d[i_theta][i_r][i_t];
+      }
+    }
+#ifdef DEBUG
+    printf("Check sum of Diagonal Covariance Matrix= %lf\n", checksum);
+#endif
+  }
+  STOP_TIMER;
+  std::cout << std::endl;
+  std::string indent(" ");
+  PRINT_TIME("Computing Weights");
+}
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+int SOCEngine::calculateCost(CostData::Pointer cost,
+                             RealVolumeType::Pointer Weight,
+                             RealVolumeType::Pointer ErrorSino)
+{
+  DATA_TYPE cost_value = computeCost(ErrorSino, Weight);
+  std::cout << "cost_value: " << cost_value << std::endl;
+  int increase = cost->addCostValue(cost_value);
+  if(increase == 1)
+  {
+    return -1;
+  }
+  cost->writeCostValue(cost_value);
+  return 0;
+}
+
+// -----------------------------------------------------------------------------
+// Updating the Weights for Noise Model
+// -----------------------------------------------------------------------------
+void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
+                              ScaleOffsetParamsPtr NuisanceParams,
+                              RealVolumeType::Pointer ErrorSino)
+{
+  DATA_TYPE AverageVarUpdate = 0; //absolute sum of the gain updates
+  DATA_TYPE AverageMagVar = 0; //absolute sum of the initial gains
+  DATA_TYPE sum = 0;
+
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
+    uint32_t NumNonZeroEntries = 0;
+    sum = 0;
+    //Factoring out the variance parameter from the Weight matrix
+    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+    {
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+        if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
+        {
+          Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
+          NumNonZeroEntries++;
+        }
+      }
+    }
+
+    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+    {
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+        sum += (ErrorSino->d[i_theta][i_r][i_t] * ErrorSino->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]); //Changed to only account for the counts
+      }
+    }
+    sum /= NumNonZeroEntries; //(m_Sinogram->N_r*m_Sinogram->N_t);
+
+    AverageMagVar += fabs(NuisanceParams->alpha->d[i_theta]);
+    AverageVarUpdate += fabs(sum - NuisanceParams->alpha->d[i_theta]);
+    NuisanceParams->alpha->d[i_theta] = sum;
+    //Update the weight for ICD updates
+    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+    {
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+        if(NuisanceParams->alpha->d[i_theta] != 0 && m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
+        {
+          Weight->d[i_theta][i_r][i_t] = 1.0 / (m_Sinogram->counts->d[i_theta][i_r][i_t] * NuisanceParams->alpha->d[i_theta]);
+        }
+        else
+        {
+          Weight->d[i_theta][i_r][i_t] = 0;
+        }
+
+      }
+    }
+
+  }
+
+#ifdef DEBUG
+  std::cout << "Noise Model Weights:" << std::endl;
+  std::cout << "Tilt\tWeight" << std::endl;
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
+    std::cout << i_theta << "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
+  }
+#endif
+  DATA_TYPE VarRatio = AverageVarUpdate / AverageMagVar;
+  std::cout << "Ratio of change in Variance " << VarRatio << std::endl;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams)
+{
+  NuisanceParamWriter::Pointer nuisanceBinWriter = NuisanceParamWriter::New();
+  nuisanceBinWriter->setSinogram(m_Sinogram);
+  nuisanceBinWriter->setTomoInputs(m_TomoInputs);
+  nuisanceBinWriter->setObservers(getObservers());
+  nuisanceBinWriter->setNuisanceParams(NuisanceParams.get());
+#ifdef JOINT_ESTIMATION
+  nuisanceBinWriter->setFileName(m_TomoInputs->gainsOutputFile);
+  nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_I_O);
+  nuisanceBinWriter->execute();
+  if (nuisanceBinWriter->getErrorCondition() < 0)
+  {
+    setErrorCondition(-1);
+    notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
+  }
+
+  nuisanceBinWriter->setFileName(m_TomoInputs->offsetsOutputFile);
+  nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_mu);
+  nuisanceBinWriter->execute();
+  if (nuisanceBinWriter->getErrorCondition() < 0)
+  {
+   setErrorCondition(-1);
+   notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
+  }
+#endif
+
+#ifdef NOISE_MODEL
+  nuisanceBinWriter->setFileName(m_TomoInputs->varianceOutputFile);
+  nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_alpha);
+  nuisanceBinWriter->execute();
+  if (nuisanceBinWriter->getErrorCondition() < 0)
+  {
+    setErrorCondition(-1);
+    notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
+  }
+#endif//Noise Model
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram)
+{
+  // Write the Sinogram out to a file
+  SinogramBinWriter::Pointer sinogramWriter = SinogramBinWriter::New();
+  sinogramWriter->setSinogram(m_Sinogram);
+  sinogramWriter->setTomoInputs(m_TomoInputs);
+  sinogramWriter->setObservers(getObservers());
+  sinogramWriter->setNuisanceParams(NuisanceParams);
+  sinogramWriter->setData(Final_Sinogram);
+  sinogramWriter->execute();
+  if (sinogramWriter->getErrorCondition() < 0)
+  {
+    setErrorCondition(-1);
+    notify(sinogramWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
+  }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::writeReconstructionFile()
+{
+  // Write the Reconstruction out to a file
+  RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
+  writer->setGeometry(m_Geometry);
+  writer->setFilePath(m_TomoInputs->reconstructedOutputFile);
+  writer->setObservers(getObservers());
+  writer->execute();
+  if (writer->getErrorCondition() < 0)
+  {
+    setErrorCondition(writer->getErrorCondition());
+    notify("Error Writing the Raw Geometry", 100, Observable::UpdateProgressValueAndMessage);
+  }
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::writeVtkFile()
+{
+  std::string vtkFile(m_TomoInputs->tempDir);
+  vtkFile = vtkFile.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedVtkFile);
+
+  VTKStructuredPointsFileWriter vtkWriter;
+  vtkWriter.setWriteBinaryFiles(true);
+  DimsAndRes dimsAndRes;
+  dimsAndRes.dim0 = m_Geometry->N_x;
+  dimsAndRes.dim1 = m_Geometry->N_y;
+  dimsAndRes.dim2 = m_Geometry->N_z;
+  dimsAndRes.resx = 1.0f;
+  dimsAndRes.resy = 1.0f;
+  dimsAndRes.resz = 1.0f;
+
+  std::vector<VtkScalarWriter*> scalarsToWrite;
+
+  VtkScalarWriter* w0 = static_cast<VtkScalarWriter*>(new TomoOutputScalarWriter(m_Geometry.get()));
+  w0->setWriteBinaryFiles(true);
+  scalarsToWrite.push_back(w0);
+
+  int error = vtkWriter.write<DimsAndRes>(vtkFile, &dimsAndRes, scalarsToWrite);
+  if (error < 0)
+  {
+    std::cout << "Error writing vtk file '" << vtkFile << "'" << std::endl;
+  }
+  delete w0;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::writeMRCFile()
+{
+  /* Write the output to the MRC File */
+   std::string mrcFile (m_TomoInputs->tempDir);
+   mrcFile = mrcFile.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedMrcFile);
+   MRCWriter::Pointer mrcWriter = MRCWriter::New();
+   mrcWriter->setOutputFile(mrcFile);
+   mrcWriter->setGeometry(m_Geometry);
+   mrcWriter->write();
 }

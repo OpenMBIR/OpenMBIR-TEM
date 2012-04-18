@@ -91,7 +91,7 @@ void GainsOffsetsReader::execute()
 		// Allocate the proper amount of memory for the gains and offsets
 		//The normalization and offset parameters for the views
 		size_t dims[1] = {sinogram->N_theta};
-		sinogram->InitialGain = RealArrayType::New(dims);
+		sinogram->InitialGain = RealArrayType::New(dims, "InitialGain");
 
 		// Copy just the values of the gains we need from the data read
 		// from the file. The indices into the fileGains array are stored
@@ -127,7 +127,7 @@ void GainsOffsetsReader::execute()
 		std::cout<<"Setting Gains to the default value="<<inputs->targetGain<<std::endl;
 		std::cout<<"**************************"<<std::endl;
 		size_t dims[1] = {sinogram->N_theta};
-		sinogram->InitialGain = RealArrayType::New(dims);
+		sinogram->InitialGain = RealArrayType::New(dims, "InitialGain");
 		for(uint16_t i_theta=0; i_theta < inputs->goodViews.size(); i_theta++)
 			sinogram->InitialGain->d[i_theta]=inputs->targetGain;
 		/*setErrorCondition(-1);
@@ -155,7 +155,7 @@ void GainsOffsetsReader::execute()
 		// Allocate the proper amount of memory for the gains and offsets
 		//The normalization and offset parameters for the views
 		size_t dims[1] = {sinogram->N_theta};
-		sinogram->InitialOffset = RealArrayType::New(dims);
+		sinogram->InitialOffset = RealArrayType::New(dims, "InitialOffset");
 
 		// Copy just the values of the gains and offsets we need from the data read
 		// from the file. The indices into the fileGains/fileOffsets array are stored
@@ -212,7 +212,7 @@ void GainsOffsetsReader::execute()
 		// Allocate the proper amount of memory for the gains and offsets
 		//The normalization and offset parameters for the views
 		size_t dims[1] = {sinogram->N_theta};
-		sinogram->InitialVariance = RealArrayType::New(dims);
+		sinogram->InitialVariance = RealArrayType::New(dims, "InitialVariance");
 
 		// Copy just the values of the gains and offsets we need from the data read
 		// from the file. The indices into the fileGains/fileOffsets array are stored
@@ -244,7 +244,7 @@ void GainsOffsetsReader::execute()
 		std::cout<<"Setting Variance to the default value=1"<<std::endl;
 		std::cout<<"**************************"<<std::endl;
 		size_t dims[1] = {sinogram->N_theta};
-		sinogram->InitialVariance = RealArrayType::New(dims);
+		sinogram->InitialVariance = RealArrayType::New(dims, "InitialVariance");
 		for(uint16_t i_theta=0; i_theta < inputs->goodViews.size(); i_theta++)
 			sinogram->InitialVariance->d[i_theta]=1;
 		/*

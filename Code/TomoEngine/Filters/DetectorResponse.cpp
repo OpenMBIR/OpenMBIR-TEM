@@ -70,8 +70,7 @@ void DetectorResponse::execute()
   TomoInputsPtr inputs = getTomoInputs();
 
   size_t dims[3] = {1, sinogram->N_theta,DETECTOR_RESPONSE_BINS};
-  RealVolumeType::Pointer H = RealVolumeType::New(dims);
-  H->setName("DetectorResponse");
+  RealVolumeType::Pointer H = RealVolumeType::New(dims, "DetectorResponse");
 
   //H = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//change from 1 to DETECTOR_RESPONSE_BINS
   TempConst=(PROFILE_RESOLUTION)/(2*inputs->delta_xz);
