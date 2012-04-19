@@ -47,6 +47,13 @@ class TomoArray
     typedef boost::shared_ptr<const Self> ConstPointer;
     typedef boost::weak_ptr<TomoArray<T, Ptr, SIZE> > WeakPointer;
     typedef boost::weak_ptr<TomoArray<T, Ptr, SIZE> > ConstWeakPointer;
+
+    /** This is the raw pointer to the data. For multi-dimensional data one can
+     * use [][][] notation to get the value
+     */
+    Ptr d;
+
+
     static Pointer NullPointer(void)
     {
       return Pointer(static_cast<TomoArray<T, Ptr, SIZE>*>(0));
@@ -74,6 +81,52 @@ class TomoArray
       else {
         deallocate((T*)d,SIZE);
       }
+    }
+
+    inline size_t calcIndex(size_t z, size_t y, size_t x)
+    {
+      assert(SIZE == 3);
+      return (m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x);
+    }
+
+    inline size_t calcIndex(size_t y, size_t x)
+    {
+      assert(SIZE == 2);
+      return (m_Dims[1]*y) + (x);
+    }
+
+    inline T getValue(size_t z, size_t y, size_t x)
+    {
+      assert(SIZE == 3);
+      return d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)];
+    }
+
+    inline T getValue(size_t y, size_t x)
+    {
+      assert(SIZE == 2);
+      return d[(m_Dims[1]*y) + (x)];
+    }
+
+    inline T getValue(size_t x)
+    {
+      return d[x];
+    }
+
+    inline void setValue(T v, size_t z, size_t y, size_t x)
+    {
+      assert(SIZE == 3);
+      d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)] = v;
+    }
+
+    inline void setValue(T v, size_t y, size_t x)
+    {
+      assert(SIZE == 2);
+      d[(m_Dims[1]*y) + (x)] = v;
+    }
+
+    inline void setValue(T v, size_t x)
+    {
+      d[x] = v;
     }
 
     void setName(const std::string &name) { m_Name = name;}
@@ -203,10 +256,7 @@ class TomoArray
 
     TomoArray(const TomoArray&); // Copy Constructor Not Implemented
     void operator=(const TomoArray&); // Operator '=' Not Implemented
-  public:
- //   T* GUARD_0;
-    Ptr d;
- //   T* GUARD_1;
+
 };
 
 
