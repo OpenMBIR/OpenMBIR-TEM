@@ -55,6 +55,12 @@ DetectorResponse::DetectorResponse()
 }
 
 
+#define MAKE_2D_INDEX(index, dim1, idx0, idx1)\
+  index = ((dim1) * (idx0)) + (idx1);
+
+#define MAKE_3D_INDEX(index, dim1, dim2, idx0, idx1, idx2) \
+    index = ((dim1)*(dim2)*(idx0)) + ((dim2)*(idx1)) +(idx2);
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------

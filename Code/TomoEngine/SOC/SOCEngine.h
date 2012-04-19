@@ -105,6 +105,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     void initVariables();
 
     void calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams);
+    void calculateArithmeticMean();
 
     /**
      * @brief This is to be implemented at some point
@@ -133,6 +134,11 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
                                                ScaleOffsetParamsPtr NuisanceParams,
                                                RealVolumeType::Pointer ErrorSino,
                                                RealVolumeType::Pointer Y_Est);
+    int jointEstimation(RealVolumeType::Pointer Weight,
+                         ScaleOffsetParamsPtr NuisanceParams,
+                         RealVolumeType::Pointer ErrorSino,
+                         RealVolumeType::Pointer Y_Est,
+                         CostData::Pointer cost);
     int calculateCost(CostData::Pointer cost,
                       RealVolumeType::Pointer Weight,
                       RealVolumeType::Pointer ErrorSino);

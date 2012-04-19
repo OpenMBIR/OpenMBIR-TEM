@@ -247,7 +247,6 @@ SOCEngine::~SOCEngine()
 // -----------------------------------------------------------------------------
 void SOCEngine::initVariables()
 {
-
   FILTER[0][0][0] = 0.0302; FILTER[0][0][1] = 0.0370; FILTER[0][0][2] = 0.0302;
   FILTER[0][1][0] = 0.0370; FILTER[0][1][1] = 0.0523; FILTER[0][1][2] = 0.0370;
   FILTER[0][2][0] = 0.0302; FILTER[0][2][1] = 0.0370; FILTER[0][2][2] = 0.0302;
@@ -266,8 +265,6 @@ void SOCEngine::initVariables()
   HAMMING_WINDOW[2][0]= 0.0159;HAMMING_WINDOW[2][1]=0.1076;HAMMING_WINDOW[2][2]=0.1993;HAMMING_WINDOW[2][3]=0.1076;HAMMING_WINDOW[2][4]=0.0159;
   HAMMING_WINDOW[3][0]= 0.0013;HAMMING_WINDOW[3][1]=0.0086;HAMMING_WINDOW[3][2]=0.0159;HAMMING_WINDOW[3][3]=0.0086;HAMMING_WINDOW[3][4]=0.0013;
   HAMMING_WINDOW[4][0]= 0.0086;HAMMING_WINDOW[4][1]=0.0581;HAMMING_WINDOW[4][2]=0.1076;HAMMING_WINDOW[4][3]=0.0581;HAMMING_WINDOW[4][4]=0.0086;
-
-
 }
 
 // -----------------------------------------------------------------------------
@@ -368,21 +365,19 @@ void SOCEngine::execute()
     return;
   }
 
-
-
 #ifdef DEBUG
 // Print out the Initial Gains, Offsets, Variances
   std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
-    std::cout << "Tilt\tGain\tOffset";
+  std::cout << "Tilt\tGain\tOffset";
 
-    if (NULL != m_Sinogram->InitialVariance.get())
-    {
-      std::cout << "\tVariance";
-    }
-    std::cout << std::endl;
+  if(NULL != m_Sinogram->InitialVariance.get())
+  {
+    std::cout << "\tVariance";
+  }
+  std::cout << std::endl;
 
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
 
     std::cout << i_theta << "\t" << m_Sinogram->InitialGain->d[i_theta] << "\t" << m_Sinogram->InitialOffset->d[i_theta];
     if(NULL != m_Sinogram->InitialVariance.get())
@@ -412,9 +407,6 @@ void SOCEngine::execute()
 #else
   NuisanceParams->alpha = RealArrayType::NullPointer();
 #endif
-
- // DATA_TYPE x,z;
-  DATA_TYPE sum;
 
   //This is used to store the projection of the object for each view
   dims[1] = m_Sinogram->N_t;
@@ -731,7 +723,7 @@ void SOCEngine::execute()
       m_TomoInputs->NumIter = 1;
     }
 
-     for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
+    for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
     {
       indent = "  ";
 //      ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
@@ -771,232 +763,11 @@ void SOCEngine::execute()
 
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
 #ifdef JOINT_ESTIMATION
-
-    DATA_TYPE AverageI_kUpdate=0;//absolute sum of the gain updates
-    DATA_TYPE AverageMagI_k=0;//absolute sum of the initial gains
-
-    DATA_TYPE AverageDelta_kUpdate=0; //absolute sum of the offsets
-    DATA_TYPE AverageMagDelta_k=0;//abs sum of the initial offset
-
-
-
-    //high=5e 100;//this maintains the max and min bracket values for rooting lambda
-    DATA_TYPE high = std::numeric_limits<DATA_TYPE>::max();
-    DATA_TYPE low = std::numeric_limits<DATA_TYPE>::min();
-    //Joint Scale And Offset Estimation
-
-    //forward project
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-      //Y_Est->d[i_theta][i_r][i_t]=0;
-          Y_Est->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - ErrorSino->d[i_theta][i_r][i_t]-NuisanceParams->mu->d[i_theta];
-      Y_Est->d[i_theta][i_r][i_t] /=NuisanceParams->I_0->d[i_theta];
-        }
-      }
-    }
-
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      DATA_TYPE a = 0;
-      DATA_TYPE b = 0;
-      DATA_TYPE c = 0;
-      DATA_TYPE d = 0;
-//   /   DATA_TYPE e = 0;
-      DATA_TYPE numerator_sum = 0;
-      DATA_TYPE denominator_sum = 0;
-
-      //compute the parameters of the quadratic for each view
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-
-          numerator_sum += (m_Sinogram->counts->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
-          denominator_sum += (Weight->d[i_theta][i_r][i_t]);
-
-          a += (Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
-          b += (Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t] * m_Sinogram->counts->d[i_theta][i_r][i_t]);
-          c += (m_Sinogram->counts->d[i_theta][i_r][i_t] * m_Sinogram->counts->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
-          d += (Y_Est->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
-
-        }
-      }
-
-      bk_cost->d[i_theta][1] = numerator_sum; //yt*\lambda*1
-      bk_cost->d[i_theta][0] = b; //yt*\lambda*(Ax)
-      ck_cost->d[i_theta] = c; //yt*\lambda*y
-      Qk_cost->d[i_theta][2] = denominator_sum;
-      Qk_cost->d[i_theta][1] = a;
-      Qk_cost->d[i_theta][0] = d;
-
-      d1->d[i_theta] = numerator_sum / denominator_sum;
-      d2->d[i_theta] = a / denominator_sum;
-
-      a = 0;
-      b = 0;
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-          a += ((Y_Est->d[i_theta][i_r][i_t] - d2->d[i_theta]) * Weight->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t]);
-          b -= ((m_Sinogram->counts->d[i_theta][i_r][i_t] - d1->d[i_theta]) * Weight->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t]);
-        }
-      }
-      QuadraticParameters->d[i_theta][0] = a;
-      QuadraticParameters->d[i_theta][1] = b;
-
-      temp = (QuadraticParameters->d[i_theta][1] * QuadraticParameters->d[i_theta][1]) / (4 * QuadraticParameters->d[i_theta][0]);
-
-      if(temp > 0 && temp < high) high = temp; //high holds the maximum value for the rooting operation. beyond this value discriminants become negative. Basically high = min{b^2/4*a}
-      else if(temp < 0 && temp > low) low = temp;
-
-    }
-    //compute cost
-    /********************************************************************************************/
-    sum = 0;
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      sum += (Qk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta]
-          + 2 * Qk_cost->d[i_theta][1] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta]
-          + NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->d[i_theta][2]
-          - 2 * (bk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]); //evaluating the cost function
-    }
-    sum /= 2;
-    printf("The value of the data match error prior to updating the I and mu =%lf\n", sum);
-
-    /********************************************************************************************/
-
-#ifdef GEOMETRIC_MEAN_CONSTRAINT
-    calculateGeometricMeanConstraint();
-#else
-    DATA_TYPE sum1 = 0;
-    DATA_TYPE sum2 = 0;
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      sum1 += (1.0 / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]));
-      sum2 += ((bk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d1->d[i_theta]) / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]));
-    }
-    DATA_TYPE LagrangeMultiplier = (-m_Sinogram->N_theta * m_Sinogram->targetGain + sum2) / sum1;
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-
-    AverageMagI_k += fabs(NuisanceParams->I_0->d[i_theta]);//store the sum of the vector of gains
-
-    DATA_TYPE NewI_k = (-1 * LagrangeMultiplier - Qk_cost->d[i_theta][1] * d1->d[i_theta] + bk_cost->d[i_theta][0])
-    / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]);
-
-    AverageI_kUpdate += fabs(NewI_k-NuisanceParams->I_0->d[i_theta]);
-
-    NuisanceParams->I_0->d[i_theta]=NewI_k;
-/*      NuisanceParams->I_0->d[i_theta] = (-1 * LagrangeMultiplier - Qk_cost->d[i_theta][1] * d1->d[i_theta] + bk_cost->d[i_theta][0])
-      / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]);
-*/
-      //Postivity Constraint on the gains
-
-      if (NuisanceParams->I_0->d[i_theta] < 0)
-      {
-        NuisanceParams->I_0->d[i_theta]*=1;
-      }
-    AverageMagDelta_k += fabs(NuisanceParams->mu->d[i_theta]);
-
-
-//      NuisanceParams->mu->d[i_theta] = d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
-
-    DATA_TYPE NewDelta_k= d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
-    AverageDelta_kUpdate += fabs(NewDelta_k - NuisanceParams->mu->d[i_theta]);
-    NuisanceParams->mu->d[i_theta] = NewDelta_k;
-    //Postivity Constraing on the offsets
-
-    if (NuisanceParams->mu->d[i_theta] < 0)
-    {
-      NuisanceParams->mu->d[i_theta]*=1;
-     }
-    }
-
-
-
-
-#endif //Type of constraing Geometric or arithmetic
-    //Re normalization
-
-    /*sum=0;
-     for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
-     sum+=(log(NuisanceParams->I_0->d[i_theta]));
-     sum/=Sinogram->N_theta;
-     temp=exp(sum) - Sinogram->targetGain;
-
-     printf("%lf\n",temp);*/
-
-    /********************************************************************************************/
-    //checking to see if the cost went down
-    sum = 0;
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      sum += (Qk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta]
-          + 2 * Qk_cost->d[i_theta][1] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta]
-          + NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->d[i_theta][2]
-          - 2 * (bk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]); //evaluating the cost function
-    }
-    sum /= 2;
-
-    printf("The value of the data match error after updating the I and mu =%lf\n", sum);
-
-    /*****************************************************************************************************/
-
-    //Reproject to compute Error Sinogram for ICD
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-        {
-          ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta]
-          - (NuisanceParams->I_0->d[i_theta] * Y_Est->d[i_theta][i_r][i_t]);
-        }
-      }
-    }
-
-    //Printing the gain and offset after updating
-    /*
-     printf("Offsets\n");
-     for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
+     err = jointEstimation(Weight, NuisanceParams, ErrorSino, Y_Est, cost);
+     if (err < 0)
      {
-     printf("%lf\n",NuisanceParams->mu->d[i_theta]);
+       break;
      }
-     printf("Gain\n");
-     for(i_theta = 0 ; i_theta < Sinogram->N_theta; i_theta++)
-     {
-     printf("%lf\n",NuisanceParams->I_0->d[i_theta]);
-     }*/
-
-#ifdef COST_CALCULATE
-    err = calculateCost(cost, Weight, ErrorSino);
-    if (err < 0)
-    {
-      break;
-    }
-#endif
-
-    printf("Lagrange Multiplier = %lf\n", LagrangeMultiplier);
-
-#ifdef DEBUG
-    std::cout << "Tilt\tGains\tOffsets\tVariance" << std::endl;
-    for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
-    {
-      std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
-          "\t" << NuisanceParams->mu->d[i_theta] <<
-          "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
-    }
-#endif
-
-    DATA_TYPE I_kRatio=AverageI_kUpdate/AverageMagI_k;
-    DATA_TYPE Delta_kRatio = AverageDelta_kUpdate/AverageMagDelta_k;
-    std::cout<<"Ratio of change in I_k "<<I_kRatio<<std::endl;
-    std::cout<<"Ratio of change in Delta_k "<<Delta_kRatio<<std::endl;
 #endif//Joint estimation endif
 
 #ifdef NOISE_MODEL
@@ -1047,6 +818,7 @@ void SOCEngine::execute()
 /* Write the Gains and Offsets to an output file */
   writeNuisanceParameters(NuisanceParams);
 
+#ifdef DEBUG
   std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
   for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
   {
@@ -1054,9 +826,10 @@ void SOCEngine::execute()
         "\t" << NuisanceParams->mu->d[i_theta] <<
         "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
   }
+#endif
 
-  START_TIMER;
-  //calculates Ax and returns a pointer to the memory block
+
+ //calculates Ax and returns a pointer to the memory block
  // Final_Sinogram=forwardProject(detectorResponse, H_t);
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
@@ -1069,8 +842,7 @@ void SOCEngine::execute()
     }
   }
 
-  STOP_TIMER;
-  PRINT_TIME("Forward Project");
+
 
   writeSinogramFile(NuisanceParams, Final_Sinogram);
   writeReconstructionFile();
@@ -1144,7 +916,6 @@ RealImageType::Pointer SOCEngine::calculateVoxelProfile()
 {
   DATA_TYPE angle,MaxValLineIntegral;
   DATA_TYPE temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
-//  DATA_TYPE** VoxProfile = (DATA_TYPE**)multialloc(sizeof(DATA_TYPE),2,m_Sinogram->N_theta,PROFILE_RESOLUTION);
   size_t dims[2] = {m_Sinogram->N_theta,PROFILE_RESOLUTION};
   RealImageType::Pointer VoxProfile = RealImageType::New(dims, "VoxelProfile");
 
@@ -1930,126 +1701,6 @@ DATA_TYPE SOCEngine::absMaxArray(std::vector<DATA_TYPE> &Array)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams)
-{
-
-  DATA_TYPE low,high,dist;
-  DATA_TYPE perturbation=1e-30;//perturbs the rooting range
-  uint16_t rooting_attempt_counter;
-  int32_t errorcode=-1;
-  DATA_TYPE LagrangeMultiplier;
-  DATA_TYPE LambdaRootingAccuracy=1e-10;//accuracy for rooting Lambda
-  uint16_t MaxNumRootingAttempts = 1000;//for lambda this corresponds to a distance of 2^1000
-  DATA_TYPE* root;
-  DATA_TYPE a,b;
-  DATA_TYPE temp_mu;
-
-//TODO: Fix these initializations
-  high = 0;
-  low = 0;
-  dist = 0;
-  //Root the expression using the derived quadratic parameters. Need to choose min and max values
-     printf("Rooting the equation to solve for the optimal Lagrange multiplier\n");
-
-     if(high != std::numeric_limits<DATA_TYPE>::max())
-     {
-       high-=perturbation; //Since the high value is set to make all discriminants exactly >=0 there are some issues when it is very close due to round off issues. So we get sqrt(-6e-20) for example. So subtract an arbitrary value like 0.5
-       //we need to find a window within which we need to root the expression . the upper bound is clear but lower bound we need to look for one
-       //low=high;
-       dist=-1;
-     }
-     else if (low != std::numeric_limits<DATA_TYPE>::min())
-     {
-       low +=perturbation;
-       //high=low;
-       dist=1;
-     }
-
-     /*  fa=CE_ConstraintEquation(high);
-      signa=fa>0;
-      fb=CE_ConstraintEquation(low);
-      signb = fb>0;
-      dist=1;
-      while (signb != signa )
-      {
-      low = low - dist;
-      fb=CE_ConstraintEquation(low);
-      signb = fb>0;
-      dist*=2;
-      }*/
-     rooting_attempt_counter=0;
-     errorcode=-1;
-     CE_ConstraintEquation ce(NumOfViews, QuadraticParameters, d1, d2, Qk_cost, bk_cost, ck_cost, LogGain);
-
-     while(errorcode != 0 && low <= high && rooting_attempt_counter < MaxNumRootingAttempts) //0 implies the signof the function at low and high is the same
-     {
-     uint32_t iter_count;
-       LagrangeMultiplier=solve<CE_ConstraintEquation>(&ce, low, high, LambdaRootingAccuracy, &errorcode,iter_count);
-       low=low+dist;
-       dist*=2;
-       rooting_attempt_counter++;
-     }
-
-     //Something went wrong and the algorithm was unable to bracket the root within the given interval
-     if(rooting_attempt_counter == MaxNumRootingAttempts && errorcode != 0)
-     {
-       printf("The rooting for lambda was unsuccesful\n");
-       printf("Low = %lf High = %lf\n",low,high);
-       printf("Quadratic Parameters\n");
-       for(int i_theta =0; i_theta < m_Sinogram->N_theta;i_theta++)
-       {
-         printf("%lf %lf %lf\n",QuadraticParameters->d[i_theta][0],QuadraticParameters->d[i_theta][1],QuadraticParameters->d[i_theta][2]);
-       }
- #ifdef DEBUG_CONSTRAINT_OPT
-
-       //for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
-       //{
-       fwrite(&Qk_cost->d[0][0], sizeof(DATA_TYPE), m_Sinogram->N_theta*3, Fp8);
-       //}
-       //for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
-       //{
-       fwrite(&bk_cost->d[0][0], sizeof(DATA_TYPE), m_Sinogram->N_theta*2, Fp8);
-       //}
-       fwrite(&ck_cost->d[0], sizeof(DATA_TYPE), m_Sinogram->N_theta, Fp8);
- #endif
-
-       return;
-     }
-
-     CE_ConstraintEquation conEqn(NumOfViews, QuadraticParameters, d1, d2, Qk_cost, bk_cost, ck_cost, LogGain);
-
-     //Based on the optimal lambda compute the optimal mu and I0 values
-     for (int i_theta =0; i_theta < m_Sinogram->N_theta; i_theta++)
-     {
-
-       root = conEqn.CE_RootsOfQuadraticFunction(QuadraticParameters->d[i_theta][0],QuadraticParameters->d[i_theta][1],LagrangeMultiplier); //returns the 2 roots of the quadratic parameterized by a,b,c
-       a=root[0];
-       b=root[0];
-       if(root[0] >= 0 && root[1] >= 0)
-       {
-         temp_mu = d1->d[i_theta] - root[0]*d2->d[i_theta]; //for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-         a = (Qk_cost->d[i_theta][0]*root[0]*root[0] + 2*Qk_cost->d[i_theta][1]*root[0]*temp_mu + temp_mu*temp_mu*Qk_cost->d[i_theta][2] - 2*(bk_cost->d[i_theta][0]*root[0] + temp_mu*bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]);//evaluating the cost function
-
-         temp_mu = d1->d[i_theta] - root[1]*d2->d[i_theta];//for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-         b = (Qk_cost->d[i_theta][0]*root[1]*root[1] + 2*Qk_cost->d[i_theta][1]*root[1]*temp_mu + temp_mu*temp_mu*Qk_cost->d[i_theta][2] - 2*(bk_cost->d[i_theta][0]*root[1] + temp_mu*bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]);//evaluating the cost function
-       }
-
-       if(a == Minimum(a, b))
-       NuisanceParams->I_0->d[i_theta] = root[0];
-       else
-       {
-         NuisanceParams->I_0->d[i_theta] = root[1];
-       }
-
-       free(root); //freeing the memory holding the roots of the quadratic equation
-
-       NuisanceParams->mu->d[i_theta] = d1->d[i_theta] - d2->d[i_theta]*NuisanceParams->I_0->d[i_theta];//some function of I_0[i_theta]
-     }
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 void SOCEngine::ComputeVSC()
 {
   DATA_TYPE filter_op = 0;
@@ -2431,18 +2082,20 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             V = m_Geometry->Object->d[j_new][k_new][i]; //Store the present value of the voxel
             THETA1 = 0.0;
             THETA2 = 0.0;
-
+            DATA_TYPE tt;
             //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
             for (uint32_t q = 0; q < TempCol[Index]->count; q++)
             {
               uint16_t i_theta = floor(static_cast<float>(TempCol[Index]->index[q] / (m_Sinogram->N_r)));
               uint16_t i_r = (TempCol[Index]->index[q] % (m_Sinogram->N_r));
               uint16_t VoxelLineAccessCounter = 0;
+              DATA_TYPE ttmp = NuisanceParams->I_0->d[i_theta]  * TempCol[Index]->values[q];
               for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
               {
-                DATA_TYPE ProjectionEntry = NuisanceParams->I_0->d[i_theta] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (TempCol[Index]->values[q]);
-                THETA2 += (ProjectionEntry * ProjectionEntry * Weight->d[i_theta][i_r][i_t]);
-                THETA1 += (ErrorSino->d[i_theta][i_r][i_t] * ProjectionEntry * Weight->d[i_theta][i_r][i_t]);
+                DATA_TYPE ProjectionEntry = ttmp * VoxelLineResponse[i].values[VoxelLineAccessCounter];
+                tt = Weight->d[i_theta][i_r][i_t] * ProjectionEntry;
+                THETA2 += (tt * ProjectionEntry);
+                THETA1 += (tt * ErrorSino->d[i_theta][i_r][i_t] );
                 VoxelLineAccessCounter++;
               }
             }
@@ -2514,11 +2167,12 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
               uint16_t i_theta = floor(static_cast<float>(TempCol[Index]->index[q] / (m_Sinogram->N_r)));
               uint16_t i_r = (TempCol[Index]->index[q] % (m_Sinogram->N_r));
               uint16_t VoxelLineAccessCounter = 0;
-              for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
+              uint32_t index = VoxelLineResponse[i].index[0];
+              uint32_t count = VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count;
+              for (uint32_t i_t = index; i_t < count; i_t++)
               //for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
               {
-                ErrorSino->d[i_theta][i_r][i_t] -= (NuisanceParams->I_0->d[i_theta]
-                    * (TempCol[Index]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
+                ErrorSino->d[i_theta][i_r][i_t] -= (NuisanceParams->I_0->d[i_theta] * (TempCol[Index]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
                 VoxelLineAccessCounter++;
               }
             }
