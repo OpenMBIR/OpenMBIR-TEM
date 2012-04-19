@@ -279,7 +279,7 @@ void SOCEngine::execute()
   size_t dims[3];
 
   Int32ArrayType::Pointer Counter;
-  UInt8ImageType::Pointer VisitCount;
+  UInt8Image_t::Pointer VisitCount;
 
 
   uint16_t MaxNumberOfDetectorElts;
@@ -288,7 +288,7 @@ void SOCEngine::execute()
 
   DATA_TYPE checksum = 0,temp;
 
-  RealImageType::Pointer VoxelProfile;
+  RealImage_t::Pointer VoxelProfile;
   RealVolumeType::Pointer detectorResponse;
   RealVolumeType::Pointer H_t;
 
@@ -411,7 +411,7 @@ void SOCEngine::execute()
   //This is used to store the projection of the object for each view
   dims[1] = m_Sinogram->N_t;
   dims[0] = m_Sinogram->N_r;
-  RealImageType::Pointer MicroscopeImage = RealImageType::New(dims, "MicroscopeImage");
+  RealImage_t::Pointer MicroscopeImage = RealImage_t::New(dims, "MicroscopeImage");
 
   // initialize variables
   Idx = 0;
@@ -427,7 +427,7 @@ void SOCEngine::execute()
 #endif
 
 #ifdef ROI
-  UInt8ImageType::Pointer Mask;
+  UInt8Image_t::Pointer Mask;
 //  DATA_TYPE EllipseA,EllipseB;
 #endif
 
@@ -471,10 +471,10 @@ void SOCEngine::execute()
   dims[1] = 3;
   dims[2] = 0;
   //Hold the coefficients of a quadratic equation
-  QuadraticParameters = RealImageType::New(dims, "QuadraticParameters");
-  Qk_cost = RealImageType::New(dims, "Qk_cost");
+  QuadraticParameters = RealImage_t::New(dims, "QuadraticParameters");
+  Qk_cost = RealImage_t::New(dims, "Qk_cost");
   dims[1] = 2;
-  bk_cost = RealImageType::New(dims, "bk_cost");
+  bk_cost = RealImage_t::New(dims, "bk_cost");
 
   dims[0] = m_Sinogram->N_theta;
   ck_cost = RealArrayType::New(dims, "ck_cost");
@@ -529,9 +529,9 @@ void SOCEngine::execute()
   dims[0] = m_Geometry->N_z;
   dims[1] = m_Geometry->N_x;
   dims[2] = 0;
-  VisitCount = UInt8ImageType::New(dims, "VisitCount");
+  VisitCount = UInt8Image_t::New(dims, "VisitCount");
 // Initialize the Array to zero
-  ::memset( VisitCount->d[0], 0, dims[0] * dims[1] * sizeof(uint8_t));
+  ::memset( VisitCount->d, 0, dims[0] * dims[1] * sizeof(uint8_t));
 #endif//Random update
 
 
@@ -539,15 +539,15 @@ void SOCEngine::execute()
   dims[1]=m_Geometry->N_x;//width
   dims[2]=0;
 
-  MagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
-  FiltMagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
-  MagUpdateMask = Uint8ImageType::New(dims, "Update Mask for selecting voxel lines NHICD");
+  MagUpdateMap = RealImage_t::New(dims, "Update Map for voxel lines");
+  FiltMagUpdateMap = RealImage_t::New(dims, "Update Map for voxel lines");
+  MagUpdateMask = Uint8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");
 
 #ifdef ROI
   //Mask = (uint8_t**)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
   dims[0] = m_Geometry->N_z;
   dims[1] = m_Geometry->N_x;
-  Mask = UInt8ImageType::New(dims, "Mask");
+  Mask = UInt8Image_t::New(dims, "Mask");
   initializeROIMask(Mask);
 #endif
   //m_Sinogram->targetGain=20000;
@@ -908,17 +908,16 @@ void SOCEngine::minMax(DATA_TYPE *low,DATA_TYPE *high)
   }
 }
 
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-RealImageType::Pointer SOCEngine::calculateVoxelProfile()
+RealImage_t::Pointer SOCEngine::calculateVoxelProfile()
 {
   DATA_TYPE angle,MaxValLineIntegral;
   DATA_TYPE temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
   size_t dims[2] = {m_Sinogram->N_theta,PROFILE_RESOLUTION};
-  RealImageType::Pointer VoxProfile = RealImageType::New(dims, "VoxelProfile");
-
+  RealImage_t::Pointer VoxProfile = RealImage_t::New(dims, "VoxelProfile");
+  size_t idx = 0;
   DATA_TYPE checksum=0;
   uint16_t i,j;
   FILE* Fp = NULL;
@@ -958,17 +957,18 @@ RealImageType::Pointer SOCEngine::calculateVoxelProfile()
     for(j = 0;j<PROFILE_RESOLUTION;j++)
     {
       t = 2.0*j / PROFILE_RESOLUTION;//2 is the normalized length of the profile (basically equl to 2*delta_xz)
-      if(t <= LeftCorner || t >= RightCorner)
-        VoxProfile->d[i][j] = 0;
-      else if(t > RightNear)
-        VoxProfile->d[i][j] = MaxValLineIntegral*(RightCorner-t)/(RightCorner-RightNear);
-      else if(t >= LeftNear)
-        VoxProfile->d[i][j] = MaxValLineIntegral;
-      else
-        VoxProfile->d[i][j] = MaxValLineIntegral*(t-LeftCorner)/(LeftNear-LeftCorner);
-
-      fwrite(&(VoxProfile->d[i][j]),sizeof(DATA_TYPE),1,Fp);
-      checksum+=VoxProfile->d[i][j];
+      idx = MAKE_2D_INDEX(VoxProfile->dims[1], i, j)
+      if(t <= LeftCorner || t >= RightCorner) {
+        VoxProfile->d[idx] =  0;
+      }else if(t > RightNear){
+        VoxProfile->d[idx] = MaxValLineIntegral*(RightCorner-t)/(RightCorner-RightNear);
+      }else if(t >= LeftNear){
+        VoxProfile->d[idx] = MaxValLineIntegral;
+      }else{
+        VoxProfile->d[idx] = MaxValLineIntegral*(t-LeftCorner)/(LeftNear-LeftCorner);
+      }
+      fwrite(&(VoxProfile->d[idx]),sizeof(DATA_TYPE),1,Fp);
+      checksum+=VoxProfile->d[idx];
     }
 
   }
@@ -1703,6 +1703,8 @@ DATA_TYPE SOCEngine::absMaxArray(std::vector<DATA_TYPE> &Array)
 // -----------------------------------------------------------------------------
 void SOCEngine::ComputeVSC()
 {
+  size_t idx = 0;
+  size_t idx2 = 0;
   DATA_TYPE filter_op = 0;
   int err = 0;
   FILE *Fp = NULL;
@@ -1711,7 +1713,7 @@ void SOCEngine::ComputeVSC()
   {
 
   }
-  fwrite(&(MagUpdateMap->d[0][0]), m_Geometry->N_x * m_Geometry->N_z, sizeof(DATA_TYPE), Fp);
+  fwrite( MagUpdateMap->d, m_Geometry->N_x * m_Geometry->N_z, sizeof(DATA_TYPE), Fp);
   fclose(Fp);
 
   // std::cout<<"Starting to filter the magnitude"<<std::endl;
@@ -1727,11 +1729,13 @@ void SOCEngine::ComputeVSC()
         {
           if(i + p >= 0 && i + p < m_Geometry->N_z && j + q >= 0 && j + q < m_Geometry->N_x)
           {
-            filter_op += HAMMING_WINDOW[p + 2][q + 2] * MagUpdateMap->d[i + p][j + q];
+            idx = MAKE_2D_INDEX(MagUpdateMap->dims[1], i + p, j + q);
+            filter_op += HAMMING_WINDOW[p + 2][q + 2] * MagUpdateMap->d[idx];
           }
         }
       }
-      FiltMagUpdateMap->d[i][j] = filter_op;
+      idx = MAKE_2D_INDEX(FiltMagUpdateMap->dims[1], i, j);
+      FiltMagUpdateMap->d[idx] = filter_op;
 
     }
   }
@@ -1740,7 +1744,9 @@ void SOCEngine::ComputeVSC()
   {
     for (int16_t j = 0; j < m_Geometry->N_x; j++)
     {
-     MagUpdateMap->d[i][j]=FiltMagUpdateMap->d[i][j];
+      idx = MAKE_2D_INDEX(MagUpdateMap->dims[1], i, j);
+      idx2 = MAKE_2D_INDEX(FiltMagUpdateMap->dims[1], i, j);
+     MagUpdateMap->d[idx]=FiltMagUpdateMap->d[idx2];
     }
   }
 
@@ -1749,71 +1755,55 @@ void SOCEngine::ComputeVSC()
   {
 
   }
-  fwrite(&(FiltMagUpdateMap->d[0][0]), m_Geometry->N_x * m_Geometry->N_z, sizeof(DATA_TYPE), Fp);
+  fwrite( FiltMagUpdateMap->d, m_Geometry->N_x * m_Geometry->N_z, sizeof(DATA_TYPE), Fp);
   fclose(Fp);
 }
 
-
-//Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
+// -----------------------------------------------------------------------------
+// Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
+// -----------------------------------------------------------------------------
 DATA_TYPE SOCEngine::SetNonHomThreshold()
 {
-  size_t dims[2]={m_Geometry->N_z*m_Geometry->N_x,0};
-  RealArrayType::Pointer TempMagMap=RealArrayType::New(dims, "TempMagMap");
+  size_t idx = 0;
 
-  uint32_t ArrLength=m_Geometry->N_z*m_Geometry->N_x;
+  size_t dims[2] =
+  { m_Geometry->N_z * m_Geometry->N_x, 0 };
+  RealArrayType::Pointer TempMagMap = RealArrayType::New(dims, "TempMagMap");
+
+  uint32_t ArrLength = m_Geometry->N_z * m_Geometry->N_x;
   DATA_TYPE threshold;
 
   //Copy into a linear list for easier partial sorting
-  for (uint32_t i=0; i < m_Geometry->N_z; i++)
-      for (uint32_t j=0; j < m_Geometry->N_x; j++)
+  for (uint32_t i = 0; i < m_Geometry->N_z; i++)
+  {
+    for (uint32_t j = 0; j < m_Geometry->N_x; j++)
     {
-      //TempMagMap->d[i*m_Geometry->N_x+j]=i*m_Geometry->N_x+j;
-          TempMagMap->d[i*(uint32_t)m_Geometry->N_x+j]=MagUpdateMap->d[i][j];
+      idx = MAKE_2D_INDEX(MagUpdateMap->dims[1], i, j);
+      TempMagMap->d[i * (uint32_t)m_Geometry->N_x + j] = MagUpdateMap->d[idx];
     }
-
-  uint16_t percentile_index=ArrLength/NUM_NON_HOMOGENOUS_ITER;
+  }
+  uint16_t percentile_index = ArrLength / NUM_NON_HOMOGENOUS_ITER;
   //Partial selection sort
 
   DATA_TYPE max;
   uint32_t max_index;
-  for(uint32_t i=0; i <= percentile_index;i++)
-    {
-      max=TempMagMap->d[i];
-      max_index=i;
-      for(uint32_t j=i+1;j<ArrLength;j++)
-        {
-    if(TempMagMap->d[j] > max)
-      {
-                  max=TempMagMap->d[j];
-                  max_index=j;
-      }
-        }
-      DATA_TYPE temp=TempMagMap->d[i];
-      TempMagMap->d[i]=TempMagMap->d[max_index];
-      TempMagMap->d[max_index]=temp;
-    }
-
-  //Insertion sort
-  /*
-  int32_t j;
-  DATA_TYPE key;
-  for (uint32_t i=1 ; i < ArrLength; i++)
+  for (uint32_t i = 0; i <= percentile_index; i++)
   {
-    j=i-1;
-    key=TempMagMap->d[i];
-    while( j>=0 && TempMagMap->d[j] < key)
+    max = TempMagMap->d[i];
+    max_index = i;
+    for (uint32_t j = i + 1; j < ArrLength; j++)
     {
-      TempMagMap->d[j+1]=TempMagMap->d[j];
-        j--;
+      if(TempMagMap->d[j] > max)
+      {
+        max = TempMagMap->d[j];
+        max_index = j;
+      }
     }
-    TempMagMap->d[j+1]=key;
+    DATA_TYPE temp = TempMagMap->d[i];
+    TempMagMap->d[i] = TempMagMap->d[max_index];
+    TempMagMap->d[max_index] = temp;
   }
-
-  //TempMagMap is a local variable and will clean up its own memory when this method exits
-  uint16_t percentile_index=ArrLength/NUM_NON_HOMOGENOUS_ITER;
-  std::cout<<ArrLength<<" "<<percentile_index<<std::endl;
-  */
-threshold = TempMagMap->d[percentile_index];
+  threshold = TempMagMap->d[percentile_index];
   return threshold;
 }
 
@@ -1838,16 +1828,17 @@ threshold = TempMagMap->d[percentile_index];
 
 uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                              VoxelUpdateType updateType,
-                             UInt8ImageType::Pointer VisitCount,
+                             UInt8Image_t::Pointer VisitCount,
                              RNGVars* RandomNumber,
                              AMatrixCol** TempCol,
                              RealVolumeType::Pointer ErrorSino,
                              RealVolumeType::Pointer Weight,
                              AMatrixCol* VoxelLineResponse,
                              ScaleOffsetParams* NuisanceParams,
-                             UInt8ImageType::Pointer Mask,
+                             UInt8Image_t::Pointer Mask,
                              CostData::Pointer cost)
 {
+  size_t idx = 0;
   uint8_t exit_status=1;//Indicates normal exit ; else indicates to stop inner iterations
   uint16_t subIterations = 1;
   std::string indent("    ");
@@ -1930,29 +1921,34 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
       {
         if(updateType == NonHomogeniousUpdate)
         {
-          if(MagUpdateMap->d[j][k] > NH_Threshold)
+          idx = MAKE_2D_INDEX(MagUpdateMap->dims[1], j, k);
+          if(MagUpdateMap->d[idx] > NH_Threshold)
           {
-            MagUpdateMask->d[j][k] = 1;
-            MagUpdateMap->d[j][k] = 0;
+            MagUpdateMap->d[idx] = 0;
+            idx = MAKE_2D_INDEX(MagUpdateMask->dims[1], j, k);
+            MagUpdateMask->d[idx] = 1;
             NumVoxelsToUpdate++;
           }
           else
           {
-            MagUpdateMask->d[j][k] = 0;
+            idx = MAKE_2D_INDEX(MagUpdateMask->dims[1], j, k);
+            MagUpdateMask->d[idx] = 0;
           }
         }
         else if(updateType == HomogeniousUpdate)
         {
-          MagUpdateMap->d[j][k] = 0;
+          idx = MAKE_2D_INDEX(MagUpdateMap->dims[1], j, k);
+          MagUpdateMap->d[idx] = 0;
           NumVoxelsToUpdate++;
         }
         else if(updateType == RegularRandomOrderUpdate)
         {
-          MagUpdateMap->d[j][k] = 0;
+          idx = MAKE_2D_INDEX(MagUpdateMap->dims[1], j, k);
+          MagUpdateMap->d[idx] = 0;
           NumVoxelsToUpdate++;
         }
-
-        VisitCount->d[j][k] = 0;
+        idx = MAKE_2D_INDEX(VisitCount->dims[1], j, k);
+        VisitCount->d[idx] = 0;
       }
     }
      std::cout << indent <<"Number of voxel lines to update: "<<NumVoxelsToUpdate<<std::endl;
@@ -1977,7 +1973,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         //memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
         //TODO: Instead just swap the value in Index with the one in ArraySize
         Counter->d[Index] = Counter->d[ArraySize - 1];
-        VisitCount->d[j_new][k_new] = 1;
+        idx = MAKE_2D_INDEX(VisitCount->dims[1], j_new, k_new);
+        VisitCount->d[idx] = 1;
         ArraySize--;
         Index = j_new * m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to
         //the voxel line (j_new,k_new)
@@ -1989,8 +1986,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         //   AMatrixCol* TempMemBlock = TempCol[j_new][k_new]; //Remove this
 
         int shouldInitNeighborhood = 0;
-
-        if(updateType == NonHomogeniousUpdate && MagUpdateMask->d[j_new][k_new] == 1 && TempCol[Index]->count > 0)
+        idx = MAKE_2D_INDEX(MagUpdateMask->dims[1], j_new, k_new);
+        if(updateType == NonHomogeniousUpdate && MagUpdateMask->d[idx] == 1 && TempCol[Index]->count > 0)
         {
           ++shouldInitNeighborhood;
         }
@@ -2150,11 +2147,13 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             //TODO Print appropriate error messages for other values of error code
             m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
             //#ifdef NHICD
-            MagUpdateMap->d[j_new][k_new] += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+            idx = MAKE_2D_INDEX(MagUpdateMap->dims[1], j_new, k_new);
+            MagUpdateMap->d[idx] += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
             //#endif
 
 #ifdef ROI
-            if(Mask->d[j_new][k_new] == 1)
+            idx = MAKE_2D_INDEX(Mask->dims[1], j_new, k_new);
+            if(Mask->d[idx] == 1)
             {
               AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
               AverageMagnitudeOfRecon += fabs(V); //computing the percentage update =(Change in mag/Initial magnitude)
@@ -2195,7 +2194,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     { //Row index
       for (int k = 0; k < m_Geometry->N_x; k++)
       { //Column index
-        if(VisitCount->d[j][k] == 0)
+        idx = MAKE_2D_INDEX(VisitCount->dims[1], j, k);
+        if(VisitCount->d[idx] == 0)
         {
           printf("Pixel (%d %d) not visited\n", j, k);
         }
