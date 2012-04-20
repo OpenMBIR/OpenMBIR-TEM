@@ -121,7 +121,7 @@ class CE_ConstraintEquation
 
       for (i_theta = 0; i_theta < NumOfViews; i_theta++)
       {
-        idx = MAKE_2D_INDEX(QuadraticParameters->dims[1], i_theta, 0);
+        idx = QuadraticParameters->calcIndex(i_theta, 0);
         //temp=((QuadraticParameters->d[i_theta][1]*QuadraticParameters->d[i_theta][1])-4*QuadraticParameters->d[i_theta][0]*lambda);
         root = CE_RootsOfQuadraticFunction(QuadraticParameters->d[idx], QuadraticParameters->d[idx+1], lambda);
         //Evaluate which root results in a lower cost function
@@ -129,8 +129,8 @@ class CE_ConstraintEquation
         {
           if(root[i] > 0) // If the value of I0[k] is positive
           {
-            idx = MAKE_2D_INDEX(Qk_cost->dims[1], i_theta, 0);
-            idx2 = MAKE_2D_INDEX(bk_cost->dims[1], i_theta, 0);
+            idx = Qk_cost->calcIndex(i_theta, 0);
+            idx2 = bk_cost->calcIndex(i_theta, 0);
             temp_mu = d1->d[i_theta] - root[i] * d2->d[i_theta]; //for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
             temp_cost = (Qk_cost->d[idx] * root[i] * root[i] + 2 * Qk_cost->d[idx+1] * root[i] * temp_mu
                 + temp_mu * temp_mu * Qk_cost->d[idx+2] - 2 * (bk_cost->d[idx2] * root[i] + temp_mu * bk_cost->d[idx2+1]) + ck_cost->d[i_theta]); //evaluating the cost function

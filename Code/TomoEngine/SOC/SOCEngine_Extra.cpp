@@ -311,7 +311,7 @@ void SOCEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
   {
     for (uint16_t j = 0; j < m_Geometry->N_x; j++)
     {
-      idx = MAKE_2D_INDEX(Mask->dims[1], i, j);
+      idx = Mask->calcIndex(i, j);
 
       x = m_Geometry->x0 + ((DATA_TYPE)j + 0.5) * m_TomoInputs->delta_xz;
       z = m_Geometry->z0 + ((DATA_TYPE)i + 0.5) * m_TomoInputs->delta_xz;
@@ -573,7 +573,7 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
        printf("Quadratic Parameters\n");
        for(int i_theta =0; i_theta < m_Sinogram->N_theta;i_theta++)
        {
-         idx = MAKE_2D_INDEX(QuadraticParameters->dims[1], i_theta, 0);
+         idx = QuadraticParameters->calcIndex(i_theta, 0);
          printf("%lf %lf %lf\n",QuadraticParameters->d[idx],QuadraticParameters->d[idx+1],QuadraticParameters->d[idx+2]);
        }
  #ifdef DEBUG_CONSTRAINT_OPT
@@ -597,12 +597,12 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
      //Based on the optimal lambda compute the optimal mu and I0 values
      for (int i_theta =0; i_theta < m_Sinogram->N_theta; i_theta++)
      {
-       idx = MAKE_2D_INDEX(QuadraticParameters->dims[1], i_theta, 0);
+       idx = QuadraticParameters->calcIndex(i_theta, 0);
        root = conEqn.CE_RootsOfQuadraticFunction(QuadraticParameters->d[idx],QuadraticParameters->d[idx+1],LagrangeMultiplier); //returns the 2 roots of the quadratic parameterized by a,b,c
        a=root[0];
        b=root[0];
-       idx = MAKE_2D_INDEX(Qk_cost->dims[1], i_theta, 0);
-       idx2 =  MAKE_2D_INDEX(bk_cost->dims[1], i_theta, 0);
+       idx = Qk_cost->calcIndex(i_theta, 0);
+       idx2 =  bk_cost->calcIndex(i_theta, 0);
        if(root[0] >= 0 && root[1] >= 0)
        {
          temp_mu = d1->d[i_theta] - root[0]*d2->d[i_theta]; //for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
@@ -702,12 +702,12 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
       }
     }
 
-    idx = MAKE_2D_INDEX(bk_cost->dims[1], i_theta, 0);
+    idx = bk_cost->calcIndex(i_theta, 0);
 
     bk_cost->d[idx+1] = numerator_sum; //yt*\lambda*1
     bk_cost->d[idx] = b; //yt*\lambda*(Ax)
     ck_cost->d[i_theta] = c; //yt*\lambda*y
-    idx = MAKE_2D_INDEX(Qk_cost->dims[1], i_theta, 0);
+    idx = Qk_cost->calcIndex(i_theta, 0);
     Qk_cost->d[idx+2] = denominator_sum;
     Qk_cost->d[idx+1] = a;
     Qk_cost->d[idx] = d;
@@ -725,7 +725,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
         b -= ((m_Sinogram->counts->d[i_theta][i_r][i_t] - d1->d[i_theta]) * Weight->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t]);
       }
     }
-    idx = MAKE_2D_INDEX(QuadraticParameters->dims[1], i_theta, 0);
+    idx = QuadraticParameters->calcIndex(i_theta, 0);
     QuadraticParameters->d[idx] = a;
     QuadraticParameters->d[idx+1] = b;
 
@@ -751,8 +751,8 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   sum = 0;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
-    idx = MAKE_2D_INDEX(Qk_cost->dims[1], i_theta, 0);
-    idx2 = MAKE_2D_INDEX(bk_cost->dims[1], i_theta, 0);
+    idx = Qk_cost->calcIndex(i_theta, 0);
+    idx2 = bk_cost->calcIndex(i_theta, 0);
     sum += (Qk_cost->d[idx] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta]
         + 2 * Qk_cost->d[idx+1] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta]
         + NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->d[idx+2]
@@ -770,8 +770,8 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   DATA_TYPE sum2 = 0;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
-    idx = MAKE_2D_INDEX(Qk_cost->dims[1], i_theta, 0);
-    idx2 = MAKE_2D_INDEX(bk_cost->dims[1], i_theta, 0);
+    idx = Qk_cost->calcIndex(i_theta, 0);
+    idx2 = bk_cost->calcIndex(i_theta, 0);
     sum1 += (1.0 / (Qk_cost->d[idx] - Qk_cost->d[idx+1] * d2->d[i_theta]));
     sum2 += ((bk_cost->d[idx2] - Qk_cost->d[idx2+1] * d1->d[i_theta]) / (Qk_cost->d[idx] - Qk_cost->d[idx+1] * d2->d[i_theta]));
   }
@@ -781,8 +781,8 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
 
     AverageMagI_k += fabs(NuisanceParams->I_0->d[i_theta]); //store the sum of the vector of gains
 
-    idx = MAKE_2D_INDEX(Qk_cost->dims[1], i_theta, 0);
-    idx2 = MAKE_2D_INDEX(bk_cost->dims[1], i_theta, 0);
+    idx = Qk_cost->calcIndex(i_theta, 0);
+    idx2 = bk_cost->calcIndex(i_theta, 0);
 
     DATA_TYPE NewI_k = (-1 * LagrangeMultiplier - Qk_cost->d[idx+1] * d1->d[i_theta] + bk_cost->d[idx2])
         / (Qk_cost->d[idx] - Qk_cost->d[idx+1] * d2->d[i_theta]);
@@ -815,8 +815,8 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   sum = 0;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
-    idx = MAKE_2D_INDEX(Qk_cost->dims[1], i_theta, 0);
-    idx2 = MAKE_2D_INDEX(bk_cost->dims[1], i_theta, 0);
+    idx = Qk_cost->calcIndex(i_theta, 0);
+    idx2 = bk_cost->calcIndex(i_theta, 0);
     sum += (Qk_cost->d[idx] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta])
         + (2 * Qk_cost->d[idx+1] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta])
         + (NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->d[idx+2])
