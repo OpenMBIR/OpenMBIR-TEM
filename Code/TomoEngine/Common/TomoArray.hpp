@@ -37,14 +37,6 @@
 
 #include <boost/shared_ptr.hpp>
 
-#if 0
-#define MAKE_2D_INDEX( fast_dim, slow_idx, fast_idx)\
-   (((fast_dim) * (slow_idx)) + (fast_idx))
-
-#define MAKE_3D_INDEX(index, dim1, dim2, idx0, idx1, idx2) \
-    index = ((dim1)*(dim2)*(idx0)) + ((dim2)*(idx1)) +(idx2)
-#endif
-
 
 template<typename T, typename Ptr, int SIZE>
 class TomoArray
@@ -60,16 +52,16 @@ class TomoArray
      * use [][][] notation to get the value
      */
     Ptr d;
-    size_t dims[SIZE];
+
 
     static Pointer NullPointer(void)
     {
       return Pointer(static_cast<TomoArray<T, Ptr, SIZE>*>(0));
     }
 
-    static Pointer New(size_t* dimensions, const std::string &name)
+    static Pointer New(size_t* dims, const std::string &name)
     {
-      Pointer sharedPtr(new TomoArray<T, Ptr, SIZE>(dimensions));
+      Pointer sharedPtr(new TomoArray<T, Ptr, SIZE>(dims));
       sharedPtr->setName(name);
       return sharedPtr;
     }
@@ -82,7 +74,7 @@ class TomoArray
         std::cout << "Deallocating TomoArray " << m_Name << std::endl;
       }
 #endif
-      if (SIZE < 3)
+      if (SIZE == 1)
       {
         free(d);
       }
@@ -91,49 +83,45 @@ class TomoArray
       }
     }
 
-#if 1
     inline size_t calcIndex(size_t z, size_t y, size_t x)
     {
       assert(SIZE == 3);
-      return (dims[1]*dims[2]*z) + (dims[2]*y) + (x);
+      return (m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x);
+    }
+
+    inline size_t calcIndex(size_t y, size_t x)
+    {
+      assert(SIZE == 2);
+      return (m_Dims[1]*y) + (x);
     }
 
     inline T getValue(size_t z, size_t y, size_t x)
     {
       assert(SIZE == 3);
-      return d[(dims[1]*dims[2]*z) + (dims[2]*y) + (x)];
+      return d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)];
+    }
+
+    inline T getValue(size_t y, size_t x)
+    {
+      assert(SIZE == 2);
+      return d[(m_Dims[1]*y) + (x)];
+    }
+
+    inline T getValue(size_t x)
+    {
+      return d[x];
     }
 
     inline void setValue(T v, size_t z, size_t y, size_t x)
     {
       assert(SIZE == 3);
-      d[(dims[1]*dims[2]*z) + (dims[2]*y) + (x)] = v;
+      d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)] = v;
     }
 
-#endif
-
-    inline size_t calcIndex(size_t slow, size_t fast)
+    inline void setValue(T v, size_t y, size_t x)
     {
       assert(SIZE == 2);
-      return ((dims[1]) * (slow)) + (fast);
-    }
-
-    inline T getValue(size_t slow, size_t fast)
-    {
-      assert(SIZE == 2);
-      return d[((dims[1]) * (slow)) + (fast)];
-    }
-
-    inline void setValue(T v, size_t slow, size_t fast)
-    {
-      assert(SIZE == 2);
-      d[((dims[1]) * (slow)) + (fast)] = v;
-    }
-
-
-    inline T getValue(size_t x)
-    {
-      return d[x];
+      d[(m_Dims[1]*y) + (x)] = v;
     }
 
     inline void setValue(T v, size_t x)
@@ -143,30 +131,30 @@ class TomoArray
 
     void setName(const std::string &name) { m_Name = name;}
     Ptr getPointer() { return d; }
-    size_t* getDims() {return dims; }
+    size_t* getDims() {return m_Dims; }
     int getNDims() { return m_NDims; }
     int getTypeSize() { return sizeof(T); }
 
   protected:
-    TomoArray(size_t* dimensions)
+    TomoArray(size_t* dims) // :
+//      GUARD_0(NULL),
+//      GUARD_1(NULL)
     {
-      size_t total = 1;
       for(size_t i = 0; i < SIZE; ++i){
-        dims[i] = dimensions[i];
-        total = total * dimensions[i];
+        m_Dims[i] = dims[i];
       }
-      if (SIZE < 3)
+      if (SIZE == 1)
       {
-        d = reinterpret_cast<Ptr>(malloc(sizeof(T) * total));
+        d = reinterpret_cast<Ptr>(malloc(sizeof(T) * m_Dims[0]));
       }
       else {
-        d = reinterpret_cast<Ptr>(allocate(sizeof(T), SIZE, dims));
+        d = reinterpret_cast<Ptr>(allocate(sizeof(T), SIZE, m_Dims));
       }
       m_NDims = SIZE;
     }
 
   private:
-
+    size_t m_Dims[SIZE];
     int  m_NDims;
     std::string m_Name;
 

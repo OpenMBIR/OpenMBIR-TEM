@@ -55,6 +55,11 @@ DetectorResponse::DetectorResponse()
 }
 
 
+#define MAKE_2D_INDEX(index, dim1, idx0, idx1)\
+  index = ((dim1) * (idx0)) + (idx1);
+
+#define MAKE_3D_INDEX(index, dim1, dim2, idx0, idx1, idx2) \
+    index = ((dim1)*(dim2)*(idx0)) + ((dim2)*(idx1)) +(idx2);
 
 // -----------------------------------------------------------------------------
 //
@@ -102,8 +107,7 @@ void DetectorResponse::execute()
           {
             ProfileIndex = PROFILE_RESOLUTION - 1;
           }
-          //sum += (m_VoxelProfile->d[k][ProfileIndex] * m_BeamProfile->d[p]);
-          sum += (m_VoxelProfile->getValue(k,ProfileIndex) * m_BeamProfile->d[p]);
+          sum += (m_VoxelProfile->d[k][ProfileIndex] * m_BeamProfile->d[p]);//;*BeamProfile[l]);
         }
         H->d[j][k][i] = sum;
       }

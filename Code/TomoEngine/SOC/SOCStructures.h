@@ -46,18 +46,18 @@ typedef double DATA_TYPE;
 #include "TomoEngine/Common/TomoArray.hpp"
 
 typedef TomoArray<uint8_t, uint8_t***, 3> UInt8VolumeType;
-typedef TomoArray<uint8_t, uint8_t*, 2> UInt8Image_t;
+typedef TomoArray<uint8_t, uint8_t**, 2> UInt8ImageType;
 typedef TomoArray<uint8_t, uint8_t*, 1> UInt8;
 
 
 typedef TomoArray<int32_t, int32_t***, 3> Int32VolumeType;
-typedef TomoArray<int32_t, int32_t*, 2> Int32Image_t;
+typedef TomoArray<int32_t, int32_t**, 2> Int32ImageType;
 typedef TomoArray<int32_t, int32_t*, 1> Int32ArrayType;
 
-typedef TomoArray<uint8_t, uint8_t*, 2> Uint8Image_t;
+typedef TomoArray<uint8_t, uint8_t**, 2> Uint8ImageType;
 
 typedef TomoArray<DATA_TYPE, DATA_TYPE***, 3> RealVolumeType;
-typedef TomoArray<DATA_TYPE, DATA_TYPE*, 2> RealImage_t;
+typedef TomoArray<DATA_TYPE, DATA_TYPE**, 2> RealImageType;
 typedef TomoArray<DATA_TYPE, DATA_TYPE*, 1> RealArrayType;
 
 

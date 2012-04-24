@@ -302,27 +302,24 @@ int SOCEngine::initializeRoughReconstructionData()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
+void SOCEngine::initializeROIMask(UInt8ImageType::Pointer Mask)
 {
   DATA_TYPE x = 0.0;
   DATA_TYPE z = 0.0;
-  size_t idx = 0;
   for (uint16_t i = 0; i < m_Geometry->N_z; i++)
   {
     for (uint16_t j = 0; j < m_Geometry->N_x; j++)
     {
-      idx = Mask->calcIndex(i, j);
-
       x = m_Geometry->x0 + ((DATA_TYPE)j + 0.5) * m_TomoInputs->delta_xz;
       z = m_Geometry->z0 + ((DATA_TYPE)i + 0.5) * m_TomoInputs->delta_xz;
       if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && z >= -m_TomoInputs->LengthZ / 2
           && z <= m_TomoInputs->LengthZ / 2)
       {
-        Mask->d[idx] = 1;
+        Mask->d[i][j] = 1;
       }
       else
       {
-        Mask->d[idx] = 0;
+        Mask->d[i][j] = 0;
       }
     }
   }
@@ -528,8 +525,6 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
   DATA_TYPE* root;
   DATA_TYPE a,b;
   DATA_TYPE temp_mu;
-  size_t idx = 0;
-  size_t idx2 = 0;
 
 //TODO: Fix these initializations
   high = 0;
@@ -573,8 +568,7 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
        printf("Quadratic Parameters\n");
        for(int i_theta =0; i_theta < m_Sinogram->N_theta;i_theta++)
        {
-         idx = QuadraticParameters->calcIndex(i_theta, 0);
-         printf("%lf %lf %lf\n",QuadraticParameters->d[idx],QuadraticParameters->d[idx+1],QuadraticParameters->d[idx+2]);
+         printf("%lf %lf %lf\n",QuadraticParameters->d[i_theta][0],QuadraticParameters->d[i_theta][1],QuadraticParameters->d[i_theta][2]);
        }
  #ifdef DEBUG_CONSTRAINT_OPT
 
@@ -597,19 +591,17 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
      //Based on the optimal lambda compute the optimal mu and I0 values
      for (int i_theta =0; i_theta < m_Sinogram->N_theta; i_theta++)
      {
-       idx = QuadraticParameters->calcIndex(i_theta, 0);
-       root = conEqn.CE_RootsOfQuadraticFunction(QuadraticParameters->d[idx],QuadraticParameters->d[idx+1],LagrangeMultiplier); //returns the 2 roots of the quadratic parameterized by a,b,c
+
+       root = conEqn.CE_RootsOfQuadraticFunction(QuadraticParameters->d[i_theta][0],QuadraticParameters->d[i_theta][1],LagrangeMultiplier); //returns the 2 roots of the quadratic parameterized by a,b,c
        a=root[0];
        b=root[0];
-       idx = Qk_cost->calcIndex(i_theta, 0);
-       idx2 =  bk_cost->calcIndex(i_theta, 0);
        if(root[0] >= 0 && root[1] >= 0)
        {
          temp_mu = d1->d[i_theta] - root[0]*d2->d[i_theta]; //for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-         a = (Qk_cost->d[idx]*root[0]*root[0] + 2*Qk_cost->d[idx+1]*root[0]*temp_mu + temp_mu*temp_mu*Qk_cost->d[idx+2] - 2*(bk_cost->d[idx2]*root[0] + temp_mu*bk_cost->d[idx2+1]) + ck_cost->d[i_theta]);//evaluating the cost function
+         a = (Qk_cost->d[i_theta][0]*root[0]*root[0] + 2*Qk_cost->d[i_theta][1]*root[0]*temp_mu + temp_mu*temp_mu*Qk_cost->d[i_theta][2] - 2*(bk_cost->d[i_theta][0]*root[0] + temp_mu*bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]);//evaluating the cost function
 
          temp_mu = d1->d[i_theta] - root[1]*d2->d[i_theta];//for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-         b = (Qk_cost->d[idx]*root[1]*root[1] + 2*Qk_cost->d[idx+1]*root[1]*temp_mu + temp_mu*temp_mu*Qk_cost->d[idx+2] - 2*(bk_cost->d[idx2]*root[1] + temp_mu*bk_cost->d[idx2+1]) + ck_cost->d[i_theta]);//evaluating the cost function
+         b = (Qk_cost->d[i_theta][0]*root[1]*root[1] + 2*Qk_cost->d[i_theta][1]*root[1]*temp_mu + temp_mu*temp_mu*Qk_cost->d[i_theta][2] - 2*(bk_cost->d[i_theta][0]*root[1] + temp_mu*bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]);//evaluating the cost function
        }
 
        if(a == Minimum(a, b))
@@ -653,7 +645,6 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   DATA_TYPE sum = 0;
   int err = 0;
   uint64_t startm, stopm;
-  size_t idx = 0;
 
   //DATA_TYPE high = std::numeric_limits<DATA_TYPE>::max();
   //DATA_TYPE low = std::numeric_limits<DATA_TYPE>::min();
@@ -702,15 +693,12 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
       }
     }
 
-    idx = bk_cost->calcIndex(i_theta, 0);
-
-    bk_cost->d[idx+1] = numerator_sum; //yt*\lambda*1
-    bk_cost->d[idx] = b; //yt*\lambda*(Ax)
+    bk_cost->d[i_theta][1] = numerator_sum; //yt*\lambda*1
+    bk_cost->d[i_theta][0] = b; //yt*\lambda*(Ax)
     ck_cost->d[i_theta] = c; //yt*\lambda*y
-    idx = Qk_cost->calcIndex(i_theta, 0);
-    Qk_cost->d[idx+2] = denominator_sum;
-    Qk_cost->d[idx+1] = a;
-    Qk_cost->d[idx] = d;
+    Qk_cost->d[i_theta][2] = denominator_sum;
+    Qk_cost->d[i_theta][1] = a;
+    Qk_cost->d[i_theta][0] = d;
 
     d1->d[i_theta] = numerator_sum / denominator_sum;
     d2->d[i_theta] = a / denominator_sum;
@@ -725,9 +713,8 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
         b -= ((m_Sinogram->counts->d[i_theta][i_r][i_t] - d1->d[i_theta]) * Weight->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t]);
       }
     }
-    idx = QuadraticParameters->calcIndex(i_theta, 0);
-    QuadraticParameters->d[idx] = a;
-    QuadraticParameters->d[idx+1] = b;
+    QuadraticParameters->d[i_theta][0] = a;
+    QuadraticParameters->d[i_theta][1] = b;
 
 #if 0
     temp = (QuadraticParameters->d[i_theta][1] * QuadraticParameters->d[i_theta][1]) / (4 * QuadraticParameters->d[i_theta][0]);
@@ -746,17 +733,14 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   PRINT_TIME("Joint Estimation Loops Time");
 
   //compute cost
-  size_t idx2 = 0;
   /********************************************************************************************/
   sum = 0;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
-    idx = Qk_cost->calcIndex(i_theta, 0);
-    idx2 = bk_cost->calcIndex(i_theta, 0);
-    sum += (Qk_cost->d[idx] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta]
-        + 2 * Qk_cost->d[idx+1] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta]
-        + NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->d[idx+2]
-        - 2 * (bk_cost->d[idx2] * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->d[idx2+1]) + ck_cost->d[i_theta]); //evaluating the cost function
+    sum += (Qk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta]
+        + 2 * Qk_cost->d[i_theta][1] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta]
+        + NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->d[i_theta][2]
+        - 2 * (bk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]); //evaluating the cost function
   }
   sum /= 2;
   printf("The value of the data match error prior to updating the I and mu =%lf\n", sum);
@@ -770,10 +754,8 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   DATA_TYPE sum2 = 0;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
-    idx = Qk_cost->calcIndex(i_theta, 0);
-    idx2 = bk_cost->calcIndex(i_theta, 0);
-    sum1 += (1.0 / (Qk_cost->d[idx] - Qk_cost->d[idx+1] * d2->d[i_theta]));
-    sum2 += ((bk_cost->d[idx2] - Qk_cost->d[idx2+1] * d1->d[i_theta]) / (Qk_cost->d[idx] - Qk_cost->d[idx+1] * d2->d[i_theta]));
+    sum1 += (1.0 / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]));
+    sum2 += ((bk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d1->d[i_theta]) / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]));
   }
   DATA_TYPE LagrangeMultiplier = (-m_Sinogram->N_theta * m_Sinogram->targetGain + sum2) / sum1;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
@@ -781,11 +763,8 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
 
     AverageMagI_k += fabs(NuisanceParams->I_0->d[i_theta]); //store the sum of the vector of gains
 
-    idx = Qk_cost->calcIndex(i_theta, 0);
-    idx2 = bk_cost->calcIndex(i_theta, 0);
-
-    DATA_TYPE NewI_k = (-1 * LagrangeMultiplier - Qk_cost->d[idx+1] * d1->d[i_theta] + bk_cost->d[idx2])
-        / (Qk_cost->d[idx] - Qk_cost->d[idx+1] * d2->d[i_theta]);
+    DATA_TYPE NewI_k = (-1 * LagrangeMultiplier - Qk_cost->d[i_theta][1] * d1->d[i_theta] + bk_cost->d[i_theta][0])
+        / (Qk_cost->d[i_theta][0] - Qk_cost->d[i_theta][1] * d2->d[i_theta]);
 
     AverageI_kUpdate += fabs(NewI_k - NuisanceParams->I_0->d[i_theta]);
 
@@ -815,12 +794,10 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   sum = 0;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
-    idx = Qk_cost->calcIndex(i_theta, 0);
-    idx2 = bk_cost->calcIndex(i_theta, 0);
-    sum += (Qk_cost->d[idx] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta])
-        + (2 * Qk_cost->d[idx+1] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta])
-        + (NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->d[idx+2])
-        - (2 * (bk_cost->d[idx2] * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->d[idx2+1]) + ck_cost->d[i_theta]); //evaluating the cost function
+    sum += (Qk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta])
+        + (2 * Qk_cost->d[i_theta][1] * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta])
+        + (NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->d[i_theta][2])
+        - (2 * (bk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]); //evaluating the cost function
   }
   sum /= 2;
 
