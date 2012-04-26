@@ -193,7 +193,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     RealImage_t::Pointer QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
 
     RealImage_t::Pointer MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
-    RealImageType::Pointer FiltMagUpdateMap;//Filters the above to compute threshold
+    RealImage_t::Pointer FiltMagUpdateMap;//Filters the above to compute threshold
     UInt8Image_t::Pointer MagUpdateMask;//Masks only the voxels of interest
 
     RealImageType::Pointer Qk_cost;

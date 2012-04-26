@@ -540,7 +540,7 @@ void SOCEngine::execute()
   dims[2]=0;
 
   MagUpdateMap = RealImage_t::New(dims, "Update Map for voxel lines");
-  FiltMagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
+  FiltMagUpdateMap = RealImage_t::New(dims, "Update Map for voxel lines");
   MagUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");
 
 #ifdef ROI
@@ -1729,13 +1729,11 @@ void SOCEngine::ComputeVSC()
         {
           if(i + p >= 0 && i + p < m_Geometry->N_z && j + q >= 0 && j + q < m_Geometry->N_x)
           {
-//            filter_op += HAMMING_WINDOW[p + 2][q + 2] * MagUpdateMap->d[i + p][j + q];
             filter_op += HAMMING_WINDOW[p + 2][q + 2] * MagUpdateMap->getValue(i + p, j + q);
           }
         }
       }
-      FiltMagUpdateMap->d[i][j] = filter_op;
-
+      FiltMagUpdateMap->setValue(filter_op, i, j);
     }
   }
 
@@ -1744,7 +1742,7 @@ void SOCEngine::ComputeVSC()
     for (int16_t j = 0; j < m_Geometry->N_x; j++)
     {
      //MagUpdateMap->d[i][j]=FiltMagUpdateMap->d[i][j];
-      MagUpdateMap->setValue(FiltMagUpdateMap->d[i][j], i, j);
+      MagUpdateMap->setValue(FiltMagUpdateMap->getValue(i, j), i, j);
     }
   }
 
@@ -1753,7 +1751,7 @@ void SOCEngine::ComputeVSC()
   {
 
   }
-  fwrite(&(FiltMagUpdateMap->d[0][0]), m_Geometry->N_x * m_Geometry->N_z, sizeof(DATA_TYPE), Fp);
+  fwrite( FiltMagUpdateMap->getPointer(0, 0), m_Geometry->N_x * m_Geometry->N_z, sizeof(DATA_TYPE), Fp);
   fclose(Fp);
 }
 
