@@ -471,7 +471,7 @@ void SOCEngine::execute()
   dims[1] = 3;
   dims[2] = 0;
   //Hold the coefficients of a quadratic equation
-  QuadraticParameters = RealImageType::New(dims, "QuadraticParameters");
+  QuadraticParameters = RealImage_t::New(dims, "QuadraticParameters");
   Qk_cost = RealImageType::New(dims, "Qk_cost");
   dims[1] = 2;
   bk_cost = RealImageType::New(dims, "bk_cost");

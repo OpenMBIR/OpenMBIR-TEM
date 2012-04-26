@@ -570,7 +570,7 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
        printf("Quadratic Parameters\n");
        for(int i_theta =0; i_theta < m_Sinogram->N_theta;i_theta++)
        {
-         printf("%lf %lf %lf\n",QuadraticParameters->d[i_theta][0],QuadraticParameters->d[i_theta][1],QuadraticParameters->d[i_theta][2]);
+         printf("%lf %lf %lf\n",QuadraticParameters->getValue(i_theta, 0),QuadraticParameters->getValue(i_theta, 1),QuadraticParameters->getValue(i_theta, 2));
        }
  #ifdef DEBUG_CONSTRAINT_OPT
 
@@ -594,7 +594,7 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
      for (int i_theta =0; i_theta < m_Sinogram->N_theta; i_theta++)
      {
 
-       root = conEqn.CE_RootsOfQuadraticFunction(QuadraticParameters->d[i_theta][0],QuadraticParameters->d[i_theta][1],LagrangeMultiplier); //returns the 2 roots of the quadratic parameterized by a,b,c
+       root = conEqn.CE_RootsOfQuadraticFunction(QuadraticParameters->getValue(i_theta, 0),QuadraticParameters->getValue(i_theta, 1),LagrangeMultiplier); //returns the 2 roots of the quadratic parameterized by a,b,c
        a=root[0];
        b=root[0];
        if(root[0] >= 0 && root[1] >= 0)
@@ -715,11 +715,11 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
         b -= ((m_Sinogram->counts->d[i_theta][i_r][i_t] - d1->d[i_theta]) * Weight->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t]);
       }
     }
-    QuadraticParameters->d[i_theta][0] = a;
-    QuadraticParameters->d[i_theta][1] = b;
+    QuadraticParameters->setValue(a, i_theta, 0);
+    QuadraticParameters->setValue(b, i_theta, 1);
 
 #if 0
-    temp = (QuadraticParameters->d[i_theta][1] * QuadraticParameters->d[i_theta][1]) / (4 * QuadraticParameters->d[i_theta][0]);
+    temp = (QuadraticParameters->getValue(i_theta, 1) * QuadraticParameters->getValue(i_theta, 1)) / (4 * QuadraticParameters->getValue(i_theta, 0));
 
     if(temp > 0 && temp < high)
     {

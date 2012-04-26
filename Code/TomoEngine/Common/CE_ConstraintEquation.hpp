@@ -52,7 +52,7 @@ class CE_ConstraintEquation
 {
   public:
     CE_ConstraintEquation(uint16_t NumOfViews,
-                          RealImageType::Pointer QuadraticParameters,
+                          RealImage_t::Pointer QuadraticParameters,
                           RealArrayType::Pointer d1,
                           RealArrayType::Pointer d2,
                           RealImageType::Pointer Qk_cost,
@@ -120,7 +120,7 @@ class CE_ConstraintEquation
       for (i_theta = 0; i_theta < NumOfViews; i_theta++)
       {
     //    root = CE_RootsOfQuadraticFunction(QuadraticParameters->getValue(i_theta,0), QuadraticParameters->getValue(i_theta,1), lambda);
-        root = CE_RootsOfQuadraticFunction(QuadraticParameters->d[i_theta][0], QuadraticParameters->d[i_theta][1], lambda);
+        root = CE_RootsOfQuadraticFunction(QuadraticParameters->getValue(i_theta, 0), QuadraticParameters->getValue(i_theta, 1), lambda);
         //Evaluate which root results in a lower cost function
         for (i = 0; i < 2; i++)
         {
@@ -168,7 +168,7 @@ class CE_ConstraintEquation
 
   private:
     uint16_t NumOfViews;
-    RealImageType::Pointer  QuadraticParameters;
+    RealImage_t::Pointer QuadraticParameters;
     RealArrayType::Pointer d1;
     RealArrayType::Pointer d2; //hold the intermediate values needed to compute optimal mu_k
     RealImageType::Pointer Qk_cost;
