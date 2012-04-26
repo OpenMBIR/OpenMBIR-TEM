@@ -539,7 +539,7 @@ void SOCEngine::execute()
   dims[1]=m_Geometry->N_x;//width
   dims[2]=0;
 
-  MagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
+  MagUpdateMap = RealImage_t::New(dims, "Update Map for voxel lines");
   FiltMagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
   MagUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");
 
@@ -1713,7 +1713,7 @@ void SOCEngine::ComputeVSC()
   {
 
   }
-  fwrite(&(MagUpdateMap->d[0][0]), m_Geometry->N_x * m_Geometry->N_z, sizeof(DATA_TYPE), Fp);
+  fwrite( MagUpdateMap->getPointer(0, 0), m_Geometry->N_x * m_Geometry->N_z, sizeof(DATA_TYPE), Fp);
   fclose(Fp);
 
   // std::cout<<"Starting to filter the magnitude"<<std::endl;
@@ -1729,7 +1729,8 @@ void SOCEngine::ComputeVSC()
         {
           if(i + p >= 0 && i + p < m_Geometry->N_z && j + q >= 0 && j + q < m_Geometry->N_x)
           {
-            filter_op += HAMMING_WINDOW[p + 2][q + 2] * MagUpdateMap->d[i + p][j + q];
+//            filter_op += HAMMING_WINDOW[p + 2][q + 2] * MagUpdateMap->d[i + p][j + q];
+            filter_op += HAMMING_WINDOW[p + 2][q + 2] * MagUpdateMap->getValue(i + p, j + q);
           }
         }
       }
@@ -1742,7 +1743,8 @@ void SOCEngine::ComputeVSC()
   {
     for (int16_t j = 0; j < m_Geometry->N_x; j++)
     {
-     MagUpdateMap->d[i][j]=FiltMagUpdateMap->d[i][j];
+     //MagUpdateMap->d[i][j]=FiltMagUpdateMap->d[i][j];
+      MagUpdateMap->setValue(FiltMagUpdateMap->d[i][j], i, j);
     }
   }
 
@@ -1770,7 +1772,7 @@ DATA_TYPE SOCEngine::SetNonHomThreshold()
       for (uint32_t j=0; j < m_Geometry->N_x; j++)
     {
       //TempMagMap->d[i*m_Geometry->N_x+j]=i*m_Geometry->N_x+j;
-          TempMagMap->d[i*(uint32_t)m_Geometry->N_x+j]=MagUpdateMap->d[i][j];
+      TempMagMap->d[i*(uint32_t)m_Geometry->N_x+j] = MagUpdateMap->getValue(i, j);
     }
 
   uint16_t percentile_index=ArrLength/NUM_NON_HOMOGENOUS_ITER;
@@ -1932,10 +1934,10 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
       {
         if(updateType == NonHomogeniousUpdate)
         {
-          if(MagUpdateMap->d[j][k] > NH_Threshold)
+          if(MagUpdateMap->getValue(j, k) > NH_Threshold)
           {
             MagUpdateMask->setValue(1, j, k);
-            MagUpdateMap->d[j][k] = 0;
+            MagUpdateMap->setValue(0, j, k);
             NumVoxelsToUpdate++;
           }
           else
@@ -1945,12 +1947,12 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         }
         else if(updateType == HomogeniousUpdate)
         {
-          MagUpdateMap->d[j][k] = 0;
+          MagUpdateMap->setValue(0, j, k);
           NumVoxelsToUpdate++;
         }
         else if(updateType == RegularRandomOrderUpdate)
         {
-          MagUpdateMap->d[j][k] = 0;
+          MagUpdateMap->setValue(0, j, k);
           NumVoxelsToUpdate++;
         }
         VisitCount->setValue(0, j, k);
@@ -2153,7 +2155,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             //TODO Print appropriate error messages for other values of error code
             m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
             //#ifdef NHICD
-            MagUpdateMap->d[j_new][k_new] += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+            DATA_TYPE intermediate = MagUpdateMap->getValue(j_new, k_new) + fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+            MagUpdateMap->setValue(intermediate, j_new, k_new);
             //#endif
 
 #ifdef ROI
