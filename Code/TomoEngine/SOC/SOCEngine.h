@@ -112,7 +112,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      */
     void updateVoxelValues_NHICD();
 
-    uint8_t updateVoxels(int16_t OuterIter, int16_t Iter, VoxelUpdateType updateType, UInt8ImageType::Pointer VisitCount,
+    uint8_t updateVoxels(int16_t OuterIter, int16_t Iter, VoxelUpdateType updateType, UInt8Image_t::Pointer VisitCount,
                       RNGVars* RandomNumber, AMatrixCol** TempCol,
                       RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight,
                       AMatrixCol* VoxelLineResponse, ScaleOffsetParams* NuisanceParams,
@@ -194,7 +194,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 
     RealImageType::Pointer MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
     RealImageType::Pointer FiltMagUpdateMap;//Filters the above to compute threshold
-    Uint8ImageType::Pointer MagUpdateMask;//Masks only the voxels of interest
+    UInt8ImageType::Pointer MagUpdateMask;//Masks only the voxels of interest
 
     RealImageType::Pointer Qk_cost;
     RealImageType::Pointer bk_cost;
@@ -235,7 +235,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     /**
      * @brief
      */
-    RealImageType::Pointer calculateVoxelProfile();
+    RealImage_t::Pointer calculateVoxelProfile();
 
     /**
      * @brief

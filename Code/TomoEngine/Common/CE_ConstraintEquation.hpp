@@ -119,7 +119,7 @@ class CE_ConstraintEquation
 
       for (i_theta = 0; i_theta < NumOfViews; i_theta++)
       {
-        //temp=((QuadraticParameters->d[i_theta][1]*QuadraticParameters->d[i_theta][1])-4*QuadraticParameters->d[i_theta][0]*lambda);
+    //    root = CE_RootsOfQuadraticFunction(QuadraticParameters->getValue(i_theta,0), QuadraticParameters->getValue(i_theta,1), lambda);
         root = CE_RootsOfQuadraticFunction(QuadraticParameters->d[i_theta][0], QuadraticParameters->d[i_theta][1], lambda);
         //Evaluate which root results in a lower cost function
         for (i = 0; i < 2; i++)
@@ -127,8 +127,19 @@ class CE_ConstraintEquation
           if(root[i] > 0) // If the value of I0[k] is positive
           {
             temp_mu = d1->d[i_theta] - root[i] * d2->d[i_theta]; //for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-            temp_cost = (Qk_cost->d[i_theta][0] * root[i] * root[i] + 2 * Qk_cost->d[i_theta][1] * root[i] * temp_mu
-                + temp_mu * temp_mu * Qk_cost->d[i_theta][2] - 2 * (bk_cost->d[i_theta][0] * root[i] + temp_mu * bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]); //evaluating the cost function
+
+//            temp_cost = (Qk_cost->getValue(i_theta, 0) * root[i] * root[i]
+//                        +  2 * Qk_cost->getValue(i_theta, 1) * root[i] * temp_mu
+//                        +  temp_mu * temp_mu * Qk_cost->getValue(i_theta, 2)
+//                        - 2 * (bk_cost->getValue(i_theta, 0) * root[i] + temp_mu * bk_cost->getValue(i_theta, 1))
+//                        + ck_cost->d[i_theta]); //evaluating the cost function
+
+
+            temp_cost = (Qk_cost->d[i_theta][0] * root[i] * root[i]
+                        +  2 * Qk_cost->d[i_theta][1] * root[i] * temp_mu
+                        +  temp_mu * temp_mu * Qk_cost->d[i_theta][2]
+                        - 2 * (bk_cost->d[i_theta][0] * root[i] + temp_mu * bk_cost->d[i_theta][1])
+                        + ck_cost->d[i_theta]); //evaluating the cost function
             if(temp_cost < min)
             {
               min = temp_cost;

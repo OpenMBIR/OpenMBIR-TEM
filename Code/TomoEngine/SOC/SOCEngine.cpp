@@ -279,7 +279,7 @@ void SOCEngine::execute()
   size_t dims[3];
 
   Int32ArrayType::Pointer Counter;
-  UInt8ImageType::Pointer VisitCount;
+  UInt8Image_t::Pointer VisitCount;
 
 
   uint16_t MaxNumberOfDetectorElts;
@@ -288,7 +288,7 @@ void SOCEngine::execute()
 
   DATA_TYPE checksum = 0,temp;
 
-  RealImageType::Pointer VoxelProfile;
+  RealImage_t::Pointer VoxelProfile;
   RealVolumeType::Pointer detectorResponse;
   RealVolumeType::Pointer H_t;
 
@@ -529,9 +529,9 @@ void SOCEngine::execute()
   dims[0] = m_Geometry->N_z;
   dims[1] = m_Geometry->N_x;
   dims[2] = 0;
-  VisitCount = UInt8ImageType::New(dims, "VisitCount");
+  VisitCount = UInt8Image_t::New(dims, "VisitCount");
 // Initialize the Array to zero
-  ::memset( VisitCount->d[0], 0, dims[0] * dims[1] * sizeof(uint8_t));
+  ::memset( VisitCount->d, 0, dims[0] * dims[1] * sizeof(uint8_t));
 #endif//Random update
 
 
@@ -541,7 +541,7 @@ void SOCEngine::execute()
 
   MagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
   FiltMagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
-  MagUpdateMask = Uint8ImageType::New(dims, "Update Mask for selecting voxel lines NHICD");
+  MagUpdateMask = UInt8ImageType::New(dims, "Update Mask for selecting voxel lines NHICD");
 
 #ifdef ROI
   //Mask = (uint8_t**)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
@@ -912,12 +912,12 @@ void SOCEngine::minMax(DATA_TYPE *low,DATA_TYPE *high)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-RealImageType::Pointer SOCEngine::calculateVoxelProfile()
+RealImage_t::Pointer SOCEngine::calculateVoxelProfile()
 {
   DATA_TYPE angle,MaxValLineIntegral;
   DATA_TYPE temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
-  size_t dims[2] = {m_Sinogram->N_theta,PROFILE_RESOLUTION};
-  RealImageType::Pointer VoxProfile = RealImageType::New(dims, "VoxelProfile");
+  size_t dims[2] = {m_Sinogram->N_theta , PROFILE_RESOLUTION};
+  RealImage_t::Pointer VoxProfile = RealImage_t::New(dims, "VoxelProfile");
 
   DATA_TYPE checksum=0;
   uint16_t i,j;
@@ -959,16 +959,16 @@ RealImageType::Pointer SOCEngine::calculateVoxelProfile()
     {
       t = 2.0*j / PROFILE_RESOLUTION;//2 is the normalized length of the profile (basically equl to 2*delta_xz)
       if(t <= LeftCorner || t >= RightCorner)
-        VoxProfile->d[i][j] = 0;
+        VoxProfile->setValue(0, i, j);
       else if(t > RightNear)
-        VoxProfile->d[i][j] = MaxValLineIntegral*(RightCorner-t)/(RightCorner-RightNear);
+        VoxProfile->setValue(MaxValLineIntegral*(RightCorner-t)/(RightCorner-RightNear), i, j);
       else if(t >= LeftNear)
-        VoxProfile->d[i][j] = MaxValLineIntegral;
+        VoxProfile->setValue(MaxValLineIntegral, i, j);
       else
-        VoxProfile->d[i][j] = MaxValLineIntegral*(t-LeftCorner)/(LeftNear-LeftCorner);
+        VoxProfile->setValue(MaxValLineIntegral*(t-LeftCorner)/(LeftNear-LeftCorner), i, j);
 
-      fwrite(&(VoxProfile->d[i][j]),sizeof(DATA_TYPE),1,Fp);
-      checksum+=VoxProfile->d[i][j];
+      fwrite( VoxProfile->getPointer(i, j), sizeof(DATA_TYPE),1,Fp);
+      checksum+=VoxProfile->getValue(i, j);
     }
 
   }
@@ -981,7 +981,8 @@ RealImageType::Pointer SOCEngine::calculateVoxelProfile()
 /*******************************************************************
  Forwards Projects the Object and stores it in a 3-D matrix
  ********************************************************************/
-RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer DetectorResponse, RealVolumeType::Pointer H_t)
+RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer DetectorResponse,
+                                                  RealVolumeType::Pointer H_t)
 {
   notify("Executing Forward Projection", 50, Observable::UpdateProgressValueAndMessage);
 
@@ -1838,7 +1839,7 @@ threshold = TempMagMap->d[percentile_index];
 
 uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                              VoxelUpdateType updateType,
-                             UInt8ImageType::Pointer VisitCount,
+                             UInt8Image_t::Pointer VisitCount,
                              RNGVars* RandomNumber,
                              AMatrixCol** TempCol,
                              RealVolumeType::Pointer ErrorSino,
@@ -1951,8 +1952,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
           MagUpdateMap->d[j][k] = 0;
           NumVoxelsToUpdate++;
         }
-
-        VisitCount->d[j][k] = 0;
+        VisitCount->setValue(0, j, k);
+       // VisitCount->d[j][k] = 0;
       }
     }
      std::cout << indent <<"Number of voxel lines to update: "<<NumVoxelsToUpdate<<std::endl;
@@ -1977,7 +1978,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         //memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
         //TODO: Instead just swap the value in Index with the one in ArraySize
         Counter->d[Index] = Counter->d[ArraySize - 1];
-        VisitCount->d[j_new][k_new] = 1;
+//        VisitCount->d[j_new][k_new] = 1;
+        VisitCount->setValue(1, j_new, k_new);
         ArraySize--;
         Index = j_new * m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to
         //the voxel line (j_new,k_new)
@@ -2195,7 +2197,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     { //Row index
       for (int k = 0; k < m_Geometry->N_x; k++)
       { //Column index
-        if(VisitCount->d[j][k] == 0)
+        //if(VisitCount->d[j][k] == 0)
+        if (VisitCount->getValue(j,k) == 0)
         {
           printf("Pixel (%d %d) not visited\n", j, k);
         }

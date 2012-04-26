@@ -107,7 +107,8 @@ void DetectorResponse::execute()
           {
             ProfileIndex = PROFILE_RESOLUTION - 1;
           }
-          sum += (m_VoxelProfile->d[k][ProfileIndex] * m_BeamProfile->d[p]);//;*BeamProfile[l]);
+          sum += m_VoxelProfile->getValue(k, ProfileIndex) * m_BeamProfile->d[p];
+//          sum += (m_VoxelProfile->d[k][ProfileIndex] * m_BeamProfile->d[p]);//;*BeamProfile[l]);
         }
         H->d[j][k][i] = sum;
       }

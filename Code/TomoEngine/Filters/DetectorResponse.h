@@ -59,7 +59,7 @@ class TomoEngine_EXPORT DetectorResponse : public TomoFilter
     MXA_INSTANCE_PROPERTY(DATA_TYPE, BeamWidth);
     MXA_INSTANCE_PROPERTY(DATA_TYPE, OffsetR);
     MXA_INSTANCE_PROPERTY(DATA_TYPE, OffsetT);
-    MXA_INSTANCE_PROPERTY(RealImageType::Pointer, VoxelProfile);
+    MXA_INSTANCE_PROPERTY(RealImage_t::Pointer, VoxelProfile);
     MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, BeamProfile);
     MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Response);
 
