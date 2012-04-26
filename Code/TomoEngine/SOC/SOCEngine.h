@@ -194,7 +194,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 
     RealImageType::Pointer MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
     RealImageType::Pointer FiltMagUpdateMap;//Filters the above to compute threshold
-    UInt8ImageType::Pointer MagUpdateMask;//Masks only the voxels of interest
+    UInt8Image_t::Pointer MagUpdateMask;//Masks only the voxels of interest
 
     RealImageType::Pointer Qk_cost;
     RealImageType::Pointer bk_cost;

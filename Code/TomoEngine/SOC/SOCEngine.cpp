@@ -541,7 +541,7 @@ void SOCEngine::execute()
 
   MagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
   FiltMagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
-  MagUpdateMask = UInt8ImageType::New(dims, "Update Mask for selecting voxel lines NHICD");
+  MagUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");
 
 #ifdef ROI
   //Mask = (uint8_t**)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
@@ -1934,13 +1934,13 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         {
           if(MagUpdateMap->d[j][k] > NH_Threshold)
           {
-            MagUpdateMask->d[j][k] = 1;
+            MagUpdateMask->setValue(1, j, k);
             MagUpdateMap->d[j][k] = 0;
             NumVoxelsToUpdate++;
           }
           else
           {
-            MagUpdateMask->d[j][k] = 0;
+            MagUpdateMask->setValue(0, j, k);
           }
         }
         else if(updateType == HomogeniousUpdate)
@@ -1993,7 +1993,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 
         int shouldInitNeighborhood = 0;
 
-        if(updateType == NonHomogeniousUpdate && MagUpdateMask->d[j_new][k_new] == 1 && TempCol[Index]->count > 0)
+        if(updateType == NonHomogeniousUpdate && MagUpdateMask->getValue(j_new, k_new) == 1 && TempCol[Index]->count > 0)
         {
           ++shouldInitNeighborhood;
         }
