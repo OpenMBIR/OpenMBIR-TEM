@@ -427,7 +427,7 @@ void SOCEngine::execute()
 #endif
 
 #ifdef ROI
-  UInt8ImageType::Pointer Mask;
+  UInt8Image_t::Pointer Mask;
 //  DATA_TYPE EllipseA,EllipseB;
 #endif
 
@@ -547,7 +547,7 @@ void SOCEngine::execute()
   //Mask = (uint8_t**)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
   dims[0] = m_Geometry->N_z;
   dims[1] = m_Geometry->N_x;
-  Mask = UInt8ImageType::New(dims, "Mask");
+  Mask = UInt8Image_t::New(dims, "Mask");
   initializeROIMask(Mask);
 #endif
   //m_Sinogram->targetGain=20000;
@@ -748,7 +748,8 @@ void SOCEngine::execute()
 
       // This could contain multiple Subloops also
        status =
-          updateVoxels(OuterIter, Iter, updateType, VisitCount, RandomNumber, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost);
+          updateVoxels(OuterIter, Iter, updateType, VisitCount, RandomNumber,
+                       TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost);
 
       if(status == 0)
       {
@@ -1846,7 +1847,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                              RealVolumeType::Pointer Weight,
                              AMatrixCol* VoxelLineResponse,
                              ScaleOffsetParams* NuisanceParams,
-                             UInt8ImageType::Pointer Mask,
+                             UInt8Image_t::Pointer Mask,
                              CostData::Pointer cost)
 {
   uint8_t exit_status=1;//Indicates normal exit ; else indicates to stop inner iterations
@@ -2156,7 +2157,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             //#endif
 
 #ifdef ROI
-            if(Mask->d[j_new][k_new] == 1)
+            //if(Mask->d[j_new][k_new] == 1)
+            if (Mask->getValue(j_new, k_new) == 1)
             {
               AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
               AverageMagnitudeOfRecon += fabs(V); //computing the percentage update =(Change in mag/Initial magnitude)

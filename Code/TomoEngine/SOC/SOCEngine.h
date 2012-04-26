@@ -116,7 +116,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
                       RNGVars* RandomNumber, AMatrixCol** TempCol,
                       RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight,
                       AMatrixCol* VoxelLineResponse, ScaleOffsetParams* NuisanceParams,
-                      UInt8ImageType::Pointer Mask, CostData::Pointer cost);
+                      UInt8Image_t::Pointer Mask, CostData::Pointer cost);
 
 
     int readInputData();
@@ -125,7 +125,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     int createInitialOffsetsData();
     int createInitialVariancesData();
     int initializeRoughReconstructionData();
-    void initializeROIMask(UInt8ImageType::Pointer Mask);
+    void initializeROIMask(UInt8Image_t::Pointer Mask);
     void gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams);
     void initializeHt(RealVolumeType::Pointer H_t);
     void storeVoxelResponse(RealVolumeType::Pointer H_t, AMatrixCol* VoxelLineResponse);

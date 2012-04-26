@@ -302,7 +302,7 @@ int SOCEngine::initializeRoughReconstructionData()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::initializeROIMask(UInt8ImageType::Pointer Mask)
+void SOCEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
 {
   DATA_TYPE x = 0.0;
   DATA_TYPE z = 0.0;
@@ -315,11 +315,13 @@ void SOCEngine::initializeROIMask(UInt8ImageType::Pointer Mask)
       if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && z >= -m_TomoInputs->LengthZ / 2
           && z <= m_TomoInputs->LengthZ / 2)
       {
-        Mask->d[i][j] = 1;
+        //Mask->d[i][j] = 1;
+        Mask->setValue(1, i, j);
       }
       else
       {
-        Mask->d[i][j] = 0;
+        //Mask->d[i][j] = 0;
+        Mask->setValue(0, i, j);
       }
     }
   }
