@@ -408,11 +408,6 @@ void SOCEngine::execute()
   NuisanceParams->alpha = RealArrayType::NullPointer();
 #endif
 
-  //This is used to store the projection of the object for each view
-  dims[1] = m_Sinogram->N_t;
-  dims[0] = m_Sinogram->N_r;
-  RealImageType::Pointer MicroscopeImage = RealImageType::New(dims, "MicroscopeImage");
-
   // initialize variables
   Idx = 0;
 
@@ -474,7 +469,7 @@ void SOCEngine::execute()
   QuadraticParameters = RealImage_t::New(dims, "QuadraticParameters");
   Qk_cost = RealImage_t::New(dims, "Qk_cost");
   dims[1] = 2;
-  bk_cost = RealImageType::New(dims, "bk_cost");
+  bk_cost = RealImage_t::New(dims, "bk_cost");
 
   dims[0] = m_Sinogram->N_theta;
   ck_cost = RealArrayType::New(dims, "ck_cost");

@@ -600,10 +600,10 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
        if(root[0] >= 0 && root[1] >= 0)
        {
          temp_mu = d1->d[i_theta] - root[0]*d2->d[i_theta]; //for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-         a = (Qk_cost->getValue(i_theta, 0)*root[0]*root[0] + 2*Qk_cost->getValue(i_theta, 1)*root[0]*temp_mu + temp_mu*temp_mu*Qk_cost->getValue(i_theta, 2) - 2*(bk_cost->d[i_theta][0]*root[0] + temp_mu*bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]);//evaluating the cost function
+         a = (Qk_cost->getValue(i_theta, 0)*root[0]*root[0] + 2*Qk_cost->getValue(i_theta, 1)*root[0]*temp_mu + temp_mu*temp_mu*Qk_cost->getValue(i_theta, 2) - 2*(bk_cost->getValue(i_theta, 0)*root[0] + temp_mu*bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]);//evaluating the cost function
 
          temp_mu = d1->d[i_theta] - root[1]*d2->d[i_theta];//for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-         b = (Qk_cost->getValue(i_theta, 0)*root[1]*root[1] + 2*Qk_cost->getValue(i_theta, 1)*root[1]*temp_mu + temp_mu*temp_mu*Qk_cost->getValue(i_theta, 2) - 2*(bk_cost->d[i_theta][0]*root[1] + temp_mu*bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]);//evaluating the cost function
+         b = (Qk_cost->getValue(i_theta, 0)*root[1]*root[1] + 2*Qk_cost->getValue(i_theta, 1)*root[1]*temp_mu + temp_mu*temp_mu*Qk_cost->getValue(i_theta, 2) - 2*(bk_cost->getValue(i_theta, 0)*root[1] + temp_mu*bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]);//evaluating the cost function
        }
 
        if(a == Minimum(a, b))
@@ -695,8 +695,8 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
       }
     }
 
-    bk_cost->d[i_theta][1] = numerator_sum; //yt*\lambda*1
-    bk_cost->d[i_theta][0] = b; //yt*\lambda*(Ax)
+    bk_cost->setValue(numerator_sum, i_theta, 1); //yt*\lambda*1
+    bk_cost->setValue(b, i_theta, 0); //yt*\lambda*(Ax)
     ck_cost->d[i_theta] = c; //yt*\lambda*y
     Qk_cost->setValue(denominator_sum, i_theta, 2);
     Qk_cost->setValue(a, i_theta, 1);
@@ -742,7 +742,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
     sum += (Qk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta]
         + 2 * Qk_cost->getValue(i_theta, 1) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta]
         + NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->getValue(i_theta, 2)
-        - 2 * (bk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]); //evaluating the cost function
+        - 2 * (bk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]); //evaluating the cost function
   }
   sum /= 2;
   printf("The value of the data match error prior to updating the I and mu =%lf\n", sum);
@@ -757,7 +757,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
     sum1 += (1.0 / (Qk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d2->d[i_theta]));
-    sum2 += ((bk_cost->d[i_theta][0] - Qk_cost->getValue(i_theta, 1) * d1->d[i_theta]) / (Qk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d2->d[i_theta]));
+    sum2 += ((bk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d1->d[i_theta]) / (Qk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d2->d[i_theta]));
   }
   DATA_TYPE LagrangeMultiplier = (-m_Sinogram->N_theta * m_Sinogram->targetGain + sum2) / sum1;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
@@ -765,7 +765,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
 
     AverageMagI_k += fabs(NuisanceParams->I_0->d[i_theta]); //store the sum of the vector of gains
 
-    DATA_TYPE NewI_k = (-1 * LagrangeMultiplier - Qk_cost->getValue(i_theta, 1) * d1->d[i_theta] + bk_cost->d[i_theta][0])
+    DATA_TYPE NewI_k = (-1 * LagrangeMultiplier - Qk_cost->getValue(i_theta, 1) * d1->d[i_theta] + bk_cost->getValue(i_theta, 0))
         / (Qk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d2->d[i_theta]);
 
     AverageI_kUpdate += fabs(NewI_k - NuisanceParams->I_0->d[i_theta]);
@@ -799,7 +799,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
     sum += (Qk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta])
         + (2 * Qk_cost->getValue(i_theta, 1) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta])
         + (NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->getValue(i_theta, 2))
-        - (2 * (bk_cost->d[i_theta][0] * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->d[i_theta][1]) + ck_cost->d[i_theta]); //evaluating the cost function
+        - (2 * (bk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]); //evaluating the cost function
   }
   sum /= 2;
 

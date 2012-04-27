@@ -56,7 +56,7 @@ class CE_ConstraintEquation
                           RealArrayType::Pointer d1,
                           RealArrayType::Pointer d2,
                           RealImage_t::Pointer Qk_cost,
-                          RealImageType::Pointer bk_cost,
+                          RealImage_t::Pointer bk_cost,
                           RealArrayType::Pointer ck_cost,
                           DATA_TYPE LogGain) :
         NumOfViews(NumOfViews),
@@ -138,7 +138,7 @@ class CE_ConstraintEquation
             temp_cost = (Qk_cost->getValue(i_theta, 0) * root[i] * root[i]
                         +  2 * Qk_cost->getValue(i_theta, 1) * root[i] * temp_mu
                         +  temp_mu * temp_mu * Qk_cost->getValue(i_theta, 2)
-                        - 2 * (bk_cost->d[i_theta][0] * root[i] + temp_mu * bk_cost->d[i_theta][1])
+                        - 2 * (bk_cost->getValue(i_theta, 0) * root[i] + temp_mu * bk_cost->getValue(i_theta, 1))
                         + ck_cost->d[i_theta]); //evaluating the cost function
             if(temp_cost < min)
             {
@@ -172,7 +172,7 @@ class CE_ConstraintEquation
     RealArrayType::Pointer d1;
     RealArrayType::Pointer d2; //hold the intermediate values needed to compute optimal mu_k
     RealImage_t::Pointer Qk_cost;
-    RealImageType::Pointer bk_cost;
+    RealImage_t::Pointer bk_cost;
     RealArrayType::Pointer ck_cost; //these are the terms of the quadratic cost function
     DATA_TYPE LogGain;
     CE_ConstraintEquation(const CE_ConstraintEquation&); // Copy Constructor Not Implemented

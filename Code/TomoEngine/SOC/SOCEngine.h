@@ -197,7 +197,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     UInt8Image_t::Pointer MagUpdateMask;//Masks only the voxels of interest
 
     RealImage_t::Pointer Qk_cost;
-    RealImageType::Pointer bk_cost;
+    RealImage_t::Pointer bk_cost;
     RealArrayType::Pointer ck_cost; //these are the terms of the quadratic cost function
     RealArrayType::Pointer d1;
     RealArrayType::Pointer d2; //hold the intermediate values needed to compute optimal mu_k
@@ -282,11 +282,6 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 	//Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
 	DATA_TYPE SetNonHomThreshold();
 
-    /**
-     *Code to return the threshold corresponding to the top T percentage of magnitude
-    */
-
-    DATA_TYPE ComputeThreshold(RealImageType::Pointer FilteredMagnitudeMap);
 
     template<typename T>
     double solve(T* f, double a, double b, double err, int32_t *code,uint32_t iteration_count)

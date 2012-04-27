@@ -52,11 +52,11 @@ typedef TomoArray<uint8_t, uint8_t*, 1> UInt8;
 
 
 typedef TomoArray<int32_t, int32_t***, 3> Int32VolumeType;
-typedef TomoArray<int32_t, int32_t**, 2> Int32ImageType;
+//typedef TomoArray<int32_t, int32_t**, 2> Int32ImageType;
 typedef TomoArray<int32_t, int32_t*, 1> Int32ArrayType;
 
 typedef TomoArray<DATA_TYPE, DATA_TYPE***, 3> RealVolumeType;
-typedef TomoArray<DATA_TYPE, DATA_TYPE**, 2> RealImageType;
+//typedef TomoArray<DATA_TYPE, DATA_TYPE**, 2> RealImageType;
 typedef TomoArray<DATA_TYPE, DATA_TYPE*, 1> RealArrayType;
 
 
