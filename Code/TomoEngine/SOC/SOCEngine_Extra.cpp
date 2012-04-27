@@ -304,14 +304,14 @@ int SOCEngine::initializeRoughReconstructionData()
 // -----------------------------------------------------------------------------
 void SOCEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
 {
-  DATA_TYPE x = 0.0;
-  DATA_TYPE z = 0.0;
+  Real_t x = 0.0;
+  Real_t z = 0.0;
   for (uint16_t i = 0; i < m_Geometry->N_z; i++)
   {
     for (uint16_t j = 0; j < m_Geometry->N_x; j++)
     {
-      x = m_Geometry->x0 + ((DATA_TYPE)j + 0.5) * m_TomoInputs->delta_xz;
-      z = m_Geometry->z0 + ((DATA_TYPE)i + 0.5) * m_TomoInputs->delta_xz;
+      x = m_Geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
+      z = m_Geometry->z0 + ((Real_t)i + 0.5) * m_TomoInputs->delta_xz;
       if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && z >= -m_TomoInputs->LengthZ / 2
           && z <= m_TomoInputs->LengthZ / 2)
       {
@@ -332,8 +332,8 @@ void SOCEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
 // -----------------------------------------------------------------------------
 void SOCEngine::gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams)
 {
-  DATA_TYPE sum = 0;
-  DATA_TYPE temp = 0;
+  Real_t sum = 0;
+  Real_t temp = 0;
   for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
   {
     // Gains
@@ -382,7 +382,7 @@ void SOCEngine::gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams)
 // -----------------------------------------------------------------------------
 void SOCEngine::initializeHt(RealVolumeType::Pointer H_t)
 {
-  DATA_TYPE ProfileCenterT;
+  Real_t ProfileCenterT;
   for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
   {
     for (int i = 0; i < DETECTOR_RESPONSE_BINS; i++)
@@ -447,21 +447,21 @@ void SOCEngine::initializeVolume(RealVolumeType::Pointer Y_Est, double value)
 // -----------------------------------------------------------------------------
 void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,  AMatrixCol* VoxelLineResponse)
 {
-  DATA_TYPE ProfileThickness = 0.0;
-  DATA_TYPE y = 0.0;
-  DATA_TYPE t = 0.0;
-  DATA_TYPE tmin;
-  DATA_TYPE tmax;
+  Real_t ProfileThickness = 0.0;
+  Real_t y = 0.0;
+  Real_t t = 0.0;
+  Real_t tmin;
+  Real_t tmax;
   int16_t slice_index_min, slice_index_max;
-  DATA_TYPE center_t,delta_t;
+  Real_t center_t,delta_t;
   int16_t index_delta_t;
-  DATA_TYPE w3,w4;
+  Real_t w3,w4;
 
   //Storing the response along t-direction for each voxel line
   notify("Storing the response along Y-direction for each voxel line", 0, Observable::UpdateProgressMessage);
   for (uint16_t i =0; i < m_Geometry->N_y; i++)
   {
-    y = ((DATA_TYPE)i + 0.5) * m_TomoInputs->delta_xy + m_Geometry->y0;
+    y = ((Real_t)i + 0.5) * m_TomoInputs->delta_xy + m_Geometry->y0;
     t = y;
     tmin = (t - m_TomoInputs->delta_xy / 2) > m_Sinogram->T0 ? t - m_TomoInputs->delta_xy / 2 : m_Sinogram->T0;
     tmax = (t + m_TomoInputs->delta_xy / 2) <= m_Sinogram->TMax ? t + m_TomoInputs->delta_xy / 2 : m_Sinogram->TMax;
@@ -482,13 +482,13 @@ void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,  AMatrixCol* Vox
 
     for (int i_t = slice_index_min; i_t <= slice_index_max; i_t++)
     {
-      center_t = ((DATA_TYPE)i_t + 0.5) * m_Sinogram->delta_t + m_Sinogram->T0;
+      center_t = ((Real_t)i_t + 0.5) * m_Sinogram->delta_t + m_Sinogram->T0;
       delta_t = fabs(center_t - t);
       index_delta_t = static_cast<uint16_t>(floor(delta_t / OffsetT));
       if(index_delta_t < DETECTOR_RESPONSE_BINS)
       {
-        w3 = delta_t - (DATA_TYPE)(index_delta_t) * OffsetT;
-        w4 = ((DATA_TYPE)index_delta_t + 1) * OffsetT - delta_t;
+        w3 = delta_t - (Real_t)(index_delta_t) * OffsetT;
+        w4 = ((Real_t)index_delta_t + 1) * OffsetT - delta_t;
         ProfileThickness = (w4 / OffsetT) * H_t->d[0][0][index_delta_t]
             + (w3 / OffsetT) * H_t->d[0][0][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
     //  ProfileThickness = (w4 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t]
@@ -517,16 +517,16 @@ void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,  AMatrixCol* Vox
 void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams)
 {
 
-  DATA_TYPE low,high,dist;
-  DATA_TYPE perturbation=1e-30;//perturbs the rooting range
+  Real_t low,high,dist;
+  Real_t perturbation=1e-30;//perturbs the rooting range
   uint16_t rooting_attempt_counter;
   int32_t errorcode=-1;
-  DATA_TYPE LagrangeMultiplier;
-  DATA_TYPE LambdaRootingAccuracy=1e-10;//accuracy for rooting Lambda
+  Real_t LagrangeMultiplier;
+  Real_t LambdaRootingAccuracy=1e-10;//accuracy for rooting Lambda
   uint16_t MaxNumRootingAttempts = 1000;//for lambda this corresponds to a distance of 2^1000
-  DATA_TYPE* root;
-  DATA_TYPE a,b;
-  DATA_TYPE temp_mu;
+  Real_t* root;
+  Real_t a,b;
+  Real_t temp_mu;
 
 //TODO: Fix these initializations
   high = 0;
@@ -535,14 +535,14 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
   //Root the expression using the derived quadratic parameters. Need to choose min and max values
      printf("Rooting the equation to solve for the optimal Lagrange multiplier\n");
 
-     if(high != std::numeric_limits<DATA_TYPE>::max())
+     if(high != std::numeric_limits<Real_t>::max())
      {
        high-=perturbation; //Since the high value is set to make all discriminants exactly >=0 there are some issues when it is very close due to round off issues. So we get sqrt(-6e-20) for example. So subtract an arbitrary value like 0.5
        //we need to find a window within which we need to root the expression . the upper bound is clear but lower bound we need to look for one
        //low=high;
        dist=-1;
      }
-     else if (low != std::numeric_limits<DATA_TYPE>::min())
+     else if (low != std::numeric_limits<Real_t>::min())
      {
        low +=perturbation;
        //high=low;
@@ -576,13 +576,13 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
 
        //for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
        //{
-       fwrite(&Qk_cost->d[0][0], sizeof(DATA_TYPE), m_Sinogram->N_theta*3, Fp8);
+       fwrite(&Qk_cost->d[0][0], sizeof(Real_t), m_Sinogram->N_theta*3, Fp8);
        //}
        //for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
        //{
-       fwrite(&bk_cost->d[0][0], sizeof(DATA_TYPE), m_Sinogram->N_theta*2, Fp8);
+       fwrite(&bk_cost->d[0][0], sizeof(Real_t), m_Sinogram->N_theta*2, Fp8);
        //}
-       fwrite(&ck_cost->d[0], sizeof(DATA_TYPE), m_Sinogram->N_theta, Fp8);
+       fwrite(&ck_cost->d[0], sizeof(Real_t), m_Sinogram->N_theta, Fp8);
  #endif
 
        return;
@@ -638,13 +638,13 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
 {
   std::string indent("  ");
 
-  DATA_TYPE AverageI_kUpdate=0;//absolute sum of the gain updates
-  DATA_TYPE AverageMagI_k=0;//absolute sum of the initial gains
+  Real_t AverageI_kUpdate=0;//absolute sum of the gain updates
+  Real_t AverageMagI_k=0;//absolute sum of the initial gains
 
-  DATA_TYPE AverageDelta_kUpdate=0; //absolute sum of the offsets
-  DATA_TYPE AverageMagDelta_k=0;//abs sum of the initial offset
+  Real_t AverageDelta_kUpdate=0; //absolute sum of the offsets
+  Real_t AverageMagDelta_k=0;//abs sum of the initial offset
 
-  DATA_TYPE sum = 0;
+  Real_t sum = 0;
   int err = 0;
   uint64_t startm, stopm;
 
@@ -669,13 +669,13 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   START_TIMER;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
-    DATA_TYPE a = 0;
-    DATA_TYPE b = 0;
-    DATA_TYPE c = 0;
-    DATA_TYPE d = 0;
+    Real_t a = 0;
+    Real_t b = 0;
+    Real_t c = 0;
+    Real_t d = 0;
 //  DATA_TYPE e = 0;
-    DATA_TYPE numerator_sum = 0;
-    DATA_TYPE denominator_sum = 0;
+    Real_t numerator_sum = 0;
+    Real_t denominator_sum = 0;
 //  DATA_TYPE temp = 0.0;
 
     //compute the parameters of the quadratic for each view
@@ -752,20 +752,20 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
 #ifdef GEOMETRIC_MEAN_CONSTRAINT
   calculateGeometricMeanConstraint();
 #else
-  DATA_TYPE sum1 = 0;
-  DATA_TYPE sum2 = 0;
+  Real_t sum1 = 0;
+  Real_t sum2 = 0;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
     sum1 += (1.0 / (Qk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d2->d[i_theta]));
     sum2 += ((bk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d1->d[i_theta]) / (Qk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d2->d[i_theta]));
   }
-  DATA_TYPE LagrangeMultiplier = (-m_Sinogram->N_theta * m_Sinogram->targetGain + sum2) / sum1;
+  Real_t LagrangeMultiplier = (-m_Sinogram->N_theta * m_Sinogram->targetGain + sum2) / sum1;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
 
     AverageMagI_k += fabs(NuisanceParams->I_0->d[i_theta]); //store the sum of the vector of gains
 
-    DATA_TYPE NewI_k = (-1 * LagrangeMultiplier - Qk_cost->getValue(i_theta, 1) * d1->d[i_theta] + bk_cost->getValue(i_theta, 0))
+    Real_t NewI_k = (-1 * LagrangeMultiplier - Qk_cost->getValue(i_theta, 1) * d1->d[i_theta] + bk_cost->getValue(i_theta, 0))
         / (Qk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d2->d[i_theta]);
 
     AverageI_kUpdate += fabs(NewI_k - NuisanceParams->I_0->d[i_theta]);
@@ -779,7 +779,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
     }
     AverageMagDelta_k += fabs(NuisanceParams->mu->d[i_theta]);
 
-    DATA_TYPE NewDelta_k = d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
+    Real_t NewDelta_k = d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
     AverageDelta_kUpdate += fabs(NewDelta_k - NuisanceParams->mu->d[i_theta]);
     NuisanceParams->mu->d[i_theta] = NewDelta_k;
     //Postivity Constraing on the offsets
@@ -840,8 +840,8 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   }
 #endif
 
-  DATA_TYPE I_kRatio=AverageI_kUpdate/AverageMagI_k;
-  DATA_TYPE Delta_kRatio = AverageDelta_kUpdate/AverageMagDelta_k;
+  Real_t I_kRatio=AverageI_kUpdate/AverageMagI_k;
+  Real_t Delta_kRatio = AverageDelta_kUpdate/AverageMagDelta_k;
   std::cout<<"Ratio of change in I_k "<<I_kRatio<<std::endl;
   std::cout<<"Ratio of change in Delta_k "<<Delta_kRatio<<std::endl;
 
@@ -856,7 +856,7 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
                                            RealVolumeType::Pointer ErrorSino,
                                            RealVolumeType::Pointer Y_Est)
 {
-  DATA_TYPE checksum = 0;
+  Real_t checksum = 0;
   START_TIMER;
   for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
   {
@@ -888,7 +888,7 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
 
 #ifdef FORWARD_PROJECT_MODE
         temp=Y_Est->d[i_theta][i_r][i_t]/NuisanceParams->I_0->d[i_theta];
-        fwrite(&temp,sizeof(DATA_TYPE),1,Fp6);
+        fwrite(&temp,sizeof(Real_t),1,Fp6);
 #endif
         if(Weight->d[i_theta][i_r][i_t] < 0)
         {
@@ -916,7 +916,7 @@ int SOCEngine::calculateCost(CostData::Pointer cost,
                              RealVolumeType::Pointer Weight,
                              RealVolumeType::Pointer ErrorSino)
 {
-  DATA_TYPE cost_value = computeCost(ErrorSino, Weight);
+  Real_t cost_value = computeCost(ErrorSino, Weight);
   std::cout << "cost_value: " << cost_value << std::endl;
   int increase = cost->addCostValue(cost_value);
   if(increase == 1)
@@ -934,9 +934,9 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
                               ScaleOffsetParamsPtr NuisanceParams,
                               RealVolumeType::Pointer ErrorSino)
 {
-  DATA_TYPE AverageVarUpdate = 0; //absolute sum of the gain updates
-  DATA_TYPE AverageMagVar = 0; //absolute sum of the initial gains
-  DATA_TYPE sum = 0;
+  Real_t AverageVarUpdate = 0; //absolute sum of the gain updates
+  Real_t AverageMagVar = 0; //absolute sum of the initial gains
+  Real_t sum = 0;
 
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
@@ -994,7 +994,7 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
     std::cout << i_theta << "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
   }
 #endif
-  DATA_TYPE VarRatio = AverageVarUpdate / AverageMagVar;
+  Real_t VarRatio = AverageVarUpdate / AverageMagVar;
   std::cout << "Ratio of change in Variance " << VarRatio << std::endl;
 }
 

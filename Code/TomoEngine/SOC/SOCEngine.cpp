@@ -286,7 +286,7 @@ void SOCEngine::execute()
   uint8_t status;//set to 1 if ICD has converged
 
 
-  DATA_TYPE checksum = 0,temp;
+  Real_t checksum = 0,temp;
 
   RealImage_t::Pointer VoxelProfile;
   RealVolumeType::Pointer detectorResponse;
@@ -412,8 +412,8 @@ void SOCEngine::execute()
   Idx = 0;
 
 #ifdef WRITE_INTERMEDIATE_RESULTS
-  DATA_TYPE Fraction = 0.1;//write this fraction of the iterations
-  int16_t NumOfWrites = floor((DATA_TYPE)(m_TomoInputs->NumIter)*Fraction);
+  Real_t Fraction = 0.1;//write this fraction of the iterations
+  int16_t NumOfWrites = floor((Real_t)(m_TomoInputs->NumIter)*Fraction);
   int16_t WriteCount = 0;
   char Filename[100];
   char buffer[20];
@@ -590,7 +590,7 @@ void SOCEngine::execute()
   for (i = 0; i < m_Geometry->N_y; i++)
   {
     VoxelLineResponse[i].count = 0;
-    VoxelLineResponse[i].values = (DATA_TYPE*)get_spc(MaxNumberOfDetectorElts, sizeof(DATA_TYPE));
+    VoxelLineResponse[i].values = (Real_t*)get_spc(MaxNumberOfDetectorElts, sizeof(Real_t));
     VoxelLineResponse[i].index = (uint32_t*)get_spc(MaxNumberOfDetectorElts, sizeof(uint32_t));
   }
 #endif
@@ -871,7 +871,7 @@ void SOCEngine::execute()
  //Finds the min and max of the neighborhood . This is required prior to calling
  solve()
  *****************************************************************************/
-void SOCEngine::minMax(DATA_TYPE *low,DATA_TYPE *high)
+void SOCEngine::minMax(Real_t *low,Real_t *high)
 {
   uint8_t i,j,k;
   *low=NEIGHBORHOOD[0][0][0];
@@ -910,12 +910,12 @@ void SOCEngine::minMax(DATA_TYPE *low,DATA_TYPE *high)
 // -----------------------------------------------------------------------------
 RealImage_t::Pointer SOCEngine::calculateVoxelProfile()
 {
-  DATA_TYPE angle,MaxValLineIntegral;
-  DATA_TYPE temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
+  Real_t angle,MaxValLineIntegral;
+  Real_t temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
   size_t dims[2] = {m_Sinogram->N_theta , PROFILE_RESOLUTION};
   RealImage_t::Pointer VoxProfile = RealImage_t::New(dims, "VoxelProfile");
 
-  DATA_TYPE checksum=0;
+  Real_t checksum=0;
   uint16_t i,j;
   FILE* Fp = NULL;
   int fileError = 0;
@@ -963,7 +963,7 @@ RealImage_t::Pointer SOCEngine::calculateVoxelProfile()
       else
         VoxProfile->setValue(MaxValLineIntegral*(t-LeftCorner)/(LeftNear-LeftCorner), i, j);
 
-      fwrite( VoxProfile->getPointer(i, j), sizeof(DATA_TYPE),1,Fp);
+      fwrite( VoxProfile->getPointer(i, j), sizeof(Real_t),1,Fp);
       checksum+=VoxProfile->getValue(i, j);
     }
 
@@ -982,10 +982,10 @@ RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer Detect
 {
   notify("Executing Forward Projection", 50, Observable::UpdateProgressValueAndMessage);
 
-  DATA_TYPE x,z,y;
-  DATA_TYPE r,rmin,rmax,t,tmin,tmax;
-  DATA_TYPE w1,w2,f1,f2;
-  DATA_TYPE center_r,delta_r,center_t,delta_t;
+  Real_t x,z,y;
+  Real_t r,rmin,rmax,t,tmin,tmax;
+  Real_t w1,w2,f1,f2;
+  Real_t center_r,delta_r,center_t,delta_t;
   int16_t index_min,index_max,slice_index_min,slice_index_max,i_r,i_t,i_theta;
   int16_t i,j,k;
   int16_t index_delta_t,index_delta_r;
@@ -997,8 +997,8 @@ RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer Detect
   {
     for (k=0; k < m_Geometry->N_x; k++)
     {
-      x = m_Geometry->x0 + ((DATA_TYPE)k+0.5)*m_TomoInputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-      z = m_Geometry->z0 + ((DATA_TYPE)j+0.5)*m_TomoInputs->delta_xz;//0.5 is for center of voxel. z_0 is the left corner
+      x = m_Geometry->x0 + ((Real_t)k+0.5)*m_TomoInputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+      z = m_Geometry->z0 + ((Real_t)j+0.5)*m_TomoInputs->delta_xz;//0.5 is for center of voxel. z_0 is the left corner
 
       for (i = 0; i < m_Geometry->N_y ; i++)
       {
@@ -1105,7 +1105,7 @@ void SOCEngine::calculateSinCos()
 void SOCEngine::initializeBeamProfile()
 {
   uint16_t i;
-  DATA_TYPE sum=0,W;
+  Real_t sum=0,W;
 //  BeamProfile=(DATA_TYPE*)get_spc(BEAM_RESOLUTION,sizeof(DATA_TYPE));
   size_t dims[1] = { BEAM_RESOLUTION };
   BeamProfile = RealArrayType::New(dims, "BeamProfile");
@@ -1135,10 +1135,10 @@ void SOCEngine::initializeBeamProfile()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-DATA_TYPE SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::Pointer Weight)
+Real_t SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::Pointer Weight)
 {
-  DATA_TYPE cost=0,temp=0;
-  DATA_TYPE delta;
+  Real_t cost=0,temp=0;
+  Real_t delta;
   int16_t i,j,k;
 #ifdef QGGMRF
   //DATA_TYPE MRF_C_TIMES_SIGMA_P_Q= MRF_C*SIGMA_X_P_Q;
@@ -1462,20 +1462,20 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
                                                RealVolumeType::Pointer DetectorResponse)
 {
   int32_t j,k,sliceidx;
-  DATA_TYPE x,z,y;
-  DATA_TYPE r;//this is used to find where does the ray passing through the voxel at certain angle hit the detector
-  DATA_TYPE t; //this is similar to r but along the y direction
-  DATA_TYPE tmin,tmax;
-  DATA_TYPE rmax,rmin;//stores the start and end points of the pixel profile on the detector
-  DATA_TYPE R_Center,TempConst,checksum = 0,delta_r;
+  Real_t x,z,y;
+  Real_t r;//this is used to find where does the ray passing through the voxel at certain angle hit the detector
+  Real_t t; //this is similar to r but along the y direction
+  Real_t tmin,tmax;
+  Real_t rmax,rmin;//stores the start and end points of the pixel profile on the detector
+  Real_t R_Center,TempConst,checksum = 0,delta_r;
 //  DATA_TYPE Integral = 0;
-  DATA_TYPE T_Center,delta_t;
-  DATA_TYPE MaximumSpacePerColumn;//we will use this to allocate space
-  DATA_TYPE AvgNumXElements,AvgNumYElements;//This is a measure of the expected amount of space per Amatrixcolumn. We will make a overestimate to avoid seg faults
+  Real_t T_Center,delta_t;
+  Real_t MaximumSpacePerColumn;//we will use this to allocate space
+  Real_t AvgNumXElements,AvgNumYElements;//This is a measure of the expected amount of space per Amatrixcolumn. We will make a overestimate to avoid seg faults
 //  DATA_TYPE ProfileThickness,stepsize;
 
   //interpolation variables
-  DATA_TYPE w1,w2,w3,w4,f1,InterpolatedValue,ContributionAlongT;
+  Real_t w1,w2,w3,w4,f1,InterpolatedValue,ContributionAlongT;
 //  DATA_TYPE f2;
   int32_t index_min,index_max,slice_index_min,slice_index_max,index_delta_r,index_delta_t;//stores the detector index in which the profile lies
   int32_t BaseIndex,FinalIndex;
@@ -1488,9 +1488,9 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
   AMatrixCol* Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
   AMatrixCol* Temp = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));//This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
 
-  x = m_Geometry->x0 + ((DATA_TYPE)col+0.5)*m_TomoInputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-  z = m_Geometry->z0 + ((DATA_TYPE)row+0.5)*m_TomoInputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-  y = m_Geometry->y0 + ((DATA_TYPE)slice + 0.5)*m_TomoInputs->delta_xy;
+  x = m_Geometry->x0 + ((Real_t)col+0.5)*m_TomoInputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+  z = m_Geometry->z0 + ((Real_t)row+0.5)*m_TomoInputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+  y = m_Geometry->y0 + ((Real_t)slice + 0.5)*m_TomoInputs->delta_xy;
 
   TempConst=(PROFILE_RESOLUTION)/(2*m_TomoInputs->delta_xz);
 
@@ -1499,7 +1499,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
   AvgNumYElements = ceil(3*m_TomoInputs->delta_xy/m_Sinogram->delta_t);
   MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*m_Sinogram->N_theta;
 
-  Temp->values = (DATA_TYPE*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(DATA_TYPE));
+  Temp->values = (Real_t*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(Real_t));
   Temp->index  = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(uint32_t));
 
 
@@ -1545,7 +1545,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
     {
 
       //Accounting for Beam width
-      R_Center = (m_Sinogram->R0 + (((DATA_TYPE)j) + 0.5) *(m_Sinogram->delta_r));//the 0.5 is to get to the center of the detector
+      R_Center = (m_Sinogram->R0 + (((Real_t)j) + 0.5) *(m_Sinogram->delta_r));//the 0.5 is to get to the center of the detector
 
       //Find the difference between the center of detector and center of projection and compute the Index to look up into
       delta_r = fabs(r - R_Center);
@@ -1557,7 +1557,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
 
     //    for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++)
     //    {
-          T_Center = (m_Sinogram->T0 + (((DATA_TYPE)sliceidx) + 0.5) *(m_Sinogram->delta_t));
+          T_Center = (m_Sinogram->T0 + (((Real_t)sliceidx) + 0.5) *(m_Sinogram->delta_t));
           delta_t = fabs(t - T_Center);
           index_delta_t = 0;//floor(delta_t/OffsetT);
 
@@ -1610,7 +1610,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
 #endif
 
 
-  Ai->values=(DATA_TYPE*)get_spc(count,sizeof(DATA_TYPE));
+  Ai->values=(Real_t*)get_spc(count,sizeof(Real_t));
   Ai->index=(uint32_t*)get_spc(count,sizeof(uint32_t));
   k=0;
   for(uint32_t i = 0; i < count; i++)
@@ -1683,10 +1683,10 @@ double SOCEngine::surrogateFunctionBasedMin()
 // -----------------------------------------------------------------------------
 //Finds the maximum of absolute value elements in an array
 // -----------------------------------------------------------------------------
-DATA_TYPE SOCEngine::absMaxArray(std::vector<DATA_TYPE> &Array)
+Real_t SOCEngine::absMaxArray(std::vector<Real_t> &Array)
 {
   uint16_t i;
-  DATA_TYPE max;
+  Real_t max;
   max = fabs(Array[0]);
   for(i =1; i < Array.size();i++)
     if(fabs(Array[i]) > max)
@@ -1700,7 +1700,7 @@ DATA_TYPE SOCEngine::absMaxArray(std::vector<DATA_TYPE> &Array)
 // -----------------------------------------------------------------------------
 void SOCEngine::ComputeVSC()
 {
-  DATA_TYPE filter_op = 0;
+  Real_t filter_op = 0;
   int err = 0;
   FILE *Fp = NULL;
   MAKE_OUTPUT_FILE(Fp, err, m_TomoInputs->tempDir, ScaleOffsetCorrection::MagnitudeMapFile);
@@ -1708,7 +1708,7 @@ void SOCEngine::ComputeVSC()
   {
 
   }
-  fwrite( MagUpdateMap->getPointer(0, 0), m_Geometry->N_x * m_Geometry->N_z, sizeof(DATA_TYPE), Fp);
+  fwrite( MagUpdateMap->getPointer(0, 0), m_Geometry->N_x * m_Geometry->N_z, sizeof(Real_t), Fp);
   fclose(Fp);
 
   // std::cout<<"Starting to filter the magnitude"<<std::endl;
@@ -1746,19 +1746,19 @@ void SOCEngine::ComputeVSC()
   {
 
   }
-  fwrite( FiltMagUpdateMap->getPointer(0, 0), m_Geometry->N_x * m_Geometry->N_z, sizeof(DATA_TYPE), Fp);
+  fwrite( FiltMagUpdateMap->getPointer(0, 0), m_Geometry->N_x * m_Geometry->N_z, sizeof(Real_t), Fp);
   fclose(Fp);
 }
 
 
 //Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
-DATA_TYPE SOCEngine::SetNonHomThreshold()
+Real_t SOCEngine::SetNonHomThreshold()
 {
   size_t dims[2]={m_Geometry->N_z*m_Geometry->N_x,0};
   RealArrayType::Pointer TempMagMap=RealArrayType::New(dims, "TempMagMap");
 
   uint32_t ArrLength=m_Geometry->N_z*m_Geometry->N_x;
-  DATA_TYPE threshold;
+  Real_t threshold;
 
   //Copy into a linear list for easier partial sorting
   for (uint32_t i=0; i < m_Geometry->N_z; i++)
@@ -1771,7 +1771,7 @@ DATA_TYPE SOCEngine::SetNonHomThreshold()
   uint16_t percentile_index=ArrLength/NUM_NON_HOMOGENOUS_ITER;
   //Partial selection sort
 
-  DATA_TYPE max;
+  Real_t max;
   uint32_t max_index;
   for(uint32_t i=0; i <= percentile_index;i++)
     {
@@ -1785,7 +1785,7 @@ DATA_TYPE SOCEngine::SetNonHomThreshold()
                   max_index=j;
       }
         }
-      DATA_TYPE temp=TempMagMap->d[i];
+      Real_t temp=TempMagMap->d[i];
       TempMagMap->d[i]=TempMagMap->d[max_index];
       TempMagMap->d[max_index]=temp;
     }
@@ -1849,14 +1849,14 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
   uint16_t subIterations = 1;
   std::string indent("    ");
   uint8_t err = 0;
-  DATA_TYPE UpdatedVoxelValue;
+  Real_t UpdatedVoxelValue;
 //  DATA_TYPE accuracy = 1e-9; //This is the rooting accuracy for x
 //  uint32_t binarysearch_count=10;//Accuracy is 1/(2^10)
   int32_t errorcode = -1;
   int16_t Idx;
 
   //FIXME: Where are these Initialized? Or what values should they be initialized to?
-  DATA_TYPE low = 0.0, high = 0.0;
+  Real_t low = 0.0, high = 0.0;
 
   if(updateType == RegularRandomOrderUpdate)
   {
@@ -1877,7 +1877,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     return exit_status;
   }
 
-  DATA_TYPE NH_Threshold = 0.0;
+  Real_t NH_Threshold = 0.0;
   std::stringstream ss;
   int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
 
@@ -1906,8 +1906,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     //printf("Iter %d\n",Iter);
 #ifdef ROI
     //variables used to stop the process
-    DATA_TYPE AverageUpdate = 0;
-    DATA_TYPE AverageMagnitudeOfRecon = 0;
+    Real_t AverageUpdate = 0;
+    Real_t AverageMagnitudeOfRecon = 0;
 #endif
 
 #ifdef RANDOM_ORDER_UPDATES
@@ -2080,17 +2080,17 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             V = m_Geometry->Object->d[j_new][k_new][i]; //Store the present value of the voxel
             THETA1 = 0.0;
             THETA2 = 0.0;
-            DATA_TYPE tt;
+            Real_t tt;
             //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
             for (uint32_t q = 0; q < TempCol[Index]->count; q++)
             {
               uint16_t i_theta = floor(static_cast<float>(TempCol[Index]->index[q] / (m_Sinogram->N_r)));
               uint16_t i_r = (TempCol[Index]->index[q] % (m_Sinogram->N_r));
               uint16_t VoxelLineAccessCounter = 0;
-              DATA_TYPE ttmp = NuisanceParams->I_0->d[i_theta]  * TempCol[Index]->values[q];
+              Real_t ttmp = NuisanceParams->I_0->d[i_theta]  * TempCol[Index]->values[q];
               for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
               {
-                DATA_TYPE ProjectionEntry = ttmp * VoxelLineResponse[i].values[VoxelLineAccessCounter];
+                Real_t ProjectionEntry = ttmp * VoxelLineResponse[i].values[VoxelLineAccessCounter];
                 tt = Weight->d[i_theta][i_r][i_t] * ProjectionEntry;
                 THETA2 += (tt * ProjectionEntry);
                 THETA1 += (tt * ErrorSino->d[i_theta][i_r][i_t] );
@@ -2111,7 +2111,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             //TODO : What if theta1 = 0 ? Then this will give error
 
             DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
-            UpdatedVoxelValue = (DATA_TYPE)solve<DerivOfCostFunc>(&docf, (double)low, (double)high, (double)accuracy, &errorcode,binarysearch_count);
+            UpdatedVoxelValue = (Real_t)solve<DerivOfCostFunc>(&docf, (double)low, (double)high, (double)accuracy, &errorcode,binarysearch_count);
 
             //std::cout<<low<<","<<high<<","<<UpdatedVoxelValue<<std::endl;
 #else
@@ -2148,7 +2148,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             //TODO Print appropriate error messages for other values of error code
             m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
             //#ifdef NHICD
-            DATA_TYPE intermediate = MagUpdateMap->getValue(j_new, k_new) + fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+            Real_t intermediate = MagUpdateMap->getValue(j_new, k_new) + fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
             MagUpdateMap->setValue(intermediate, j_new, k_new);
             //#endif
 
@@ -2207,7 +2207,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 #ifdef COST_CALCULATE
 
     /*********************Cost Calculation*************************************/
-    DATA_TYPE cost_value = computeCost(ErrorSino, Weight);
+    Real_t cost_value = computeCost(ErrorSino, Weight);
     std::cout<<cost_value<<std::endl;
     int increase = cost->addCostValue(cost_value);
     if (increase ==1)
@@ -2251,7 +2251,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
       //    for (j=0; j < Geometry->N_z; j++)
       //      for (k=0; k < Geometry->N_x; k++)
       TempPointer = m_Geometry->Object;
-      NumOfBytesWritten=fwrite(&(m_Geometry->Object->d[0][0][0]), sizeof(DATA_TYPE),m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z, Fp3);
+      NumOfBytesWritten=fwrite(&(m_Geometry->Object->d[0][0][0]), sizeof(Real_t),m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z, Fp3);
       printf("%d\n",NumOfBytesWritten);
 
       fclose(Fp3);
@@ -2272,10 +2272,10 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 
 #ifdef QGGMRF
 //Function to compute parameters of thesurrogate function
-void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax,DATA_TYPE RefValue)
+void SOCEngine::CE_ComputeQGGMRFParameters(Real_t umin,Real_t umax,Real_t RefValue)
 {
 //  DATA_TYPE DeltaMin,DeltaMax,T,Derivative_Delta0;
-   DATA_TYPE Delta0;
+   Real_t Delta0;
 //  DATA_TYPE AbsDelta0,AbsDeltaMin,AbsDeltaMax;
   uint8_t i,j,k,count=0;
   for(i=0;i<3;i++)
@@ -2332,9 +2332,9 @@ void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax,DATA_TY
 
 }
 
-DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
+Real_t SOCEngine::CE_FunctionalSubstitution(Real_t umin,Real_t umax)
 {
-  DATA_TYPE u,temp1=0,temp2=0,temp_const,RefValue=0;
+  Real_t u,temp1=0,temp2=0,temp_const,RefValue=0;
   uint8_t i,j,k,count=0;
 #ifdef POSITIVITY_CONSTRAINT
   if(umin < 0)
@@ -2379,14 +2379,14 @@ DATA_TYPE SOCEngine::CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax)
 
 
 
-DATA_TYPE SOCEngine::CE_QGGMRF_Value(DATA_TYPE delta)
+Real_t SOCEngine::CE_QGGMRF_Value(Real_t delta)
 {
   return ((pow(fabs(delta),MRF_P)/SIGMA_X_P)/(MRF_C + pow(fabs(delta),MRF_P - MRF_Q)/SIGMA_X_P_Q));
 }
 
-DATA_TYPE SOCEngine::CE_QGGMRF_Derivative(DATA_TYPE delta)
+Real_t SOCEngine::CE_QGGMRF_Derivative(Real_t delta)
 {
-  DATA_TYPE temp1,temp2,temp3;
+  Real_t temp1,temp2,temp3;
   temp1=pow(fabs(delta),MRF_P - MRF_Q)/(SIGMA_X_P_Q);
   temp2=pow(fabs(delta),MRF_P - 1);
   temp3 = MRF_C + temp1;
@@ -2398,7 +2398,7 @@ DATA_TYPE SOCEngine::CE_QGGMRF_Derivative(DATA_TYPE delta)
   }
 }
 
-DATA_TYPE SOCEngine::CE_QGGMRF_SecondDerivative(DATA_TYPE delta)
+Real_t SOCEngine::CE_QGGMRF_SecondDerivative(Real_t delta)
 {
   return MRF_P/(SIGMA_X_P*MRF_C);
 }

@@ -58,7 +58,7 @@ class CE_ConstraintEquation
                           RealImage_t::Pointer Qk_cost,
                           RealImage_t::Pointer bk_cost,
                           RealArrayType::Pointer ck_cost,
-                          DATA_TYPE LogGain) :
+                          Real_t LogGain) :
         NumOfViews(NumOfViews),
         QuadraticParameters(QuadraticParameters),
         d1(d1),
@@ -81,10 +81,10 @@ class CE_ConstraintEquation
      * @param c
      * @return
      */
-    DATA_TYPE* CE_RootsOfQuadraticFunction(DATA_TYPE a, DATA_TYPE b, DATA_TYPE c)
+    Real_t* CE_RootsOfQuadraticFunction(Real_t a, Real_t b, Real_t c)
     {
-      DATA_TYPE* temp = (DATA_TYPE*)get_spc(2, sizeof(double));
-      DATA_TYPE value = 0, discriminant;
+      Real_t* temp = (Real_t*)get_spc(2, sizeof(double));
+      Real_t value = 0, discriminant;
       temp[0] = -1;
       temp[1] = -1;
       discriminant = b * b - 4 * a * c;
@@ -108,11 +108,11 @@ class CE_ConstraintEquation
      * @param lamda
      * @return
      */
-    double execute(DATA_TYPE lambda)
+    double execute(Real_t lambda)
     {
       double sum = 0, temp_cost = 0, min = std::numeric_limits<double>::max();
       double value = 0;
-      DATA_TYPE* root;
+      Real_t* root;
       double temp_mu;
       uint8_t i, min_index = 0;
       uint16_t i_theta;
@@ -174,7 +174,7 @@ class CE_ConstraintEquation
     RealImage_t::Pointer Qk_cost;
     RealImage_t::Pointer bk_cost;
     RealArrayType::Pointer ck_cost; //these are the terms of the quadratic cost function
-    DATA_TYPE LogGain;
+    Real_t LogGain;
     CE_ConstraintEquation(const CE_ConstraintEquation&); // Copy Constructor Not Implemented
     void operator=(const CE_ConstraintEquation&); // Operator '=' Not Implemented
 };

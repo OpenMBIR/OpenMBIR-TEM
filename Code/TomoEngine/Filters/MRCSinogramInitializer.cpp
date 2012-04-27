@@ -67,7 +67,7 @@ void MRCSinogramInitializer::execute()
  // int16_t i,j,k;
  // uint16_t TotalNumMaskedViews;
 
-  DATA_TYPE sum=0;
+  Real_t sum=0;
 
   MRCReader::Pointer reader = MRCReader::New(true);
   MRCHeader header;

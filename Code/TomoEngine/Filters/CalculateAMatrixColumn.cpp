@@ -60,16 +60,16 @@ void CalculateAMatrixColumn::execute()
 {
 
   int32_t j,k,sliceidx;
-  DATA_TYPE x,z,y;
-  DATA_TYPE r;//this is used to find where does the ray passing through the voxel at certain angle hit the detector
-  DATA_TYPE t; //this is similar to r but along the y direction
-  DATA_TYPE tmin,tmax;
-  DATA_TYPE rmax,rmin;//stores the start and end points of the pixel profile on the detector
-  DATA_TYPE RTemp,TempConst,checksum = 0,Integral = 0;
-  DATA_TYPE LeftEndOfBeam;
-  DATA_TYPE MaximumSpacePerColumn;//we will use this to allocate space
-  DATA_TYPE AvgNumXElements,AvgNumYElements;//This is a measure of the expected amount of space per Amatrixcolumn. We will make a overestimate to avoid seg faults
-  DATA_TYPE ProfileThickness;
+  Real_t x,z,y;
+  Real_t r;//this is used to find where does the ray passing through the voxel at certain angle hit the detector
+  Real_t t; //this is similar to r but along the y direction
+  Real_t tmin,tmax;
+  Real_t rmax,rmin;//stores the start and end points of the pixel profile on the detector
+  Real_t RTemp,TempConst,checksum = 0,Integral = 0;
+  Real_t LeftEndOfBeam;
+  Real_t MaximumSpacePerColumn;//we will use this to allocate space
+  Real_t AvgNumXElements,AvgNumYElements;//This is a measure of the expected amount of space per Amatrixcolumn. We will make a overestimate to avoid seg faults
+  Real_t ProfileThickness;
   int32_t index_min,index_max,slice_index_min,slice_index_max;//stores the detector index in which the profile lies
   int32_t BaseIndex,FinalIndex,ProfileIndex=0;
   uint32_t count = 0;
@@ -85,7 +85,7 @@ void CalculateAMatrixColumn::execute()
 #endif
 
 #ifdef DISTANCE_DRIVEN
-  DATA_TYPE d1,d2; //These are the values of the detector boundaries
+  Real_t d1,d2; //These are the values of the detector boundaries
 #endif
 
   Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
@@ -96,9 +96,9 @@ void CalculateAMatrixColumn::execute()
   //Temp->index = (uint32_t*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(uint32_t));
   //Temp->values = (DATA_TYPE*)multialloc(sizeof(DATA_TYPE),1,Sinogram->N_r*Sinogram->N_theta);//makes the values =0
 
-  x = geometry->x0 + ((DATA_TYPE)col+0.5)*inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-  z = geometry->z0 + ((DATA_TYPE)row+0.5)*inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-  y = geometry->y0 + ((DATA_TYPE)slice + 0.5)*inputs->delta_xy;
+  x = geometry->x0 + ((Real_t)col+0.5)*inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+  z = geometry->z0 + ((Real_t)row+0.5)*inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
+  y = geometry->y0 + ((Real_t)slice + 0.5)*inputs->delta_xy;
 
   TempConst=(PROFILE_RESOLUTION)/(2*inputs->delta_xz);
 
@@ -110,7 +110,7 @@ void CalculateAMatrixColumn::execute()
   AvgNumYElements = ceil(3*inputs->delta_xy/sinogram->delta_t);
   MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*sinogram->N_theta;
 
-  Temp->values = (DATA_TYPE*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(DATA_TYPE));
+  Temp->values = (Real_t*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(Real_t));
   Temp->index  = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(uint32_t));
 
   //printf("%lf",Temp->values[10]);
@@ -166,7 +166,7 @@ void CalculateAMatrixColumn::execute()
       Integral = 0.0;
 
       //Accounting for Beam width
-      RTemp = (sinogram->R0 + (((DATA_TYPE)j) + 0.5) *(sinogram->delta_r));//the 0.5 is to get to the center of the detector
+      RTemp = (sinogram->R0 + (((Real_t)j) + 0.5) *(sinogram->delta_r));//the 0.5 is to get to the center of the detector
 
       LeftEndOfBeam = RTemp - (BEAM_WIDTH/2);//Consider pre storing the divide by 2
 
@@ -177,7 +177,7 @@ void CalculateAMatrixColumn::execute()
       for(k=0; k < BEAM_RESOLUTION; k++)
       {
 
-        RTemp = LeftEndOfBeam + ((((DATA_TYPE)k)*(BEAM_WIDTH))/BEAM_RESOLUTION);
+        RTemp = LeftEndOfBeam + ((((Real_t)k)*(BEAM_WIDTH))/BEAM_RESOLUTION);
 
         if (RTemp-rmin >= 0.0)
         {
@@ -320,7 +320,7 @@ void CalculateAMatrixColumn::execute()
 
     for(j = index_min;j <= index_max; j++)//Check
     {
-      d1  = ((DATA_TYPE)j)*sinogram->delta_r + sinogram->R0;
+      d1  = ((Real_t)j)*sinogram->delta_r + sinogram->R0;
       d2 =  d1 + sinogram->delta_r;
 
       if(rmax < d1)
@@ -393,7 +393,7 @@ void CalculateAMatrixColumn::execute()
 #endif
   // printf("Final Space allocation for column %d %d\n",row,col);
 
-  Ai->values=(DATA_TYPE*)get_spc(count,sizeof(DATA_TYPE));
+  Ai->values=(Real_t*)get_spc(count,sizeof(Real_t));
   Ai->index=(uint32_t*)get_spc(count,sizeof(uint32_t));
   k=0;
   for(uint32_t i = 0; i < count; i++)

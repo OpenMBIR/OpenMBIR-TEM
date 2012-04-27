@@ -58,10 +58,10 @@ InitialReconstructionInitializer::~InitialReconstructionInitializer()
 // -----------------------------------------------------------------------------
 //Finds the maximum of absolute value elements in an array
 // -----------------------------------------------------------------------------
-DATA_TYPE InitialReconstructionInitializer::absMaxArray(std::vector<DATA_TYPE> &Array)
+Real_t InitialReconstructionInitializer::absMaxArray(std::vector<Real_t> &Array)
 {
   uint16_t i;
-  DATA_TYPE max;
+  Real_t max;
   max = fabs(Array[0]);
   for(i =1; i < Array.size();i++)
     if(fabs(Array[i]) > max)
@@ -102,7 +102,7 @@ void InitialReconstructionInitializer::execute()
   GeometryPtr geometry = getGeometry();
 
 
-  DATA_TYPE sum=0,max;
+  Real_t sum=0,max;
 
   //uint16_t interpolation_factor=24;//TODO: Need to Remove this
   //DATA_TYPE res=3;

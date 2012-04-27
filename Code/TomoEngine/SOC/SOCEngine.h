@@ -96,7 +96,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      */
     void execute();
 
-    DATA_TYPE absMaxArray(std::vector<DATA_TYPE> &Array);
+    Real_t absMaxArray(std::vector<Real_t> &Array);
 
   protected:
     // Protect this constructor because we want to force the use of the other
@@ -154,11 +154,11 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 
 
   #ifdef QGGMRF
-    DATA_TYPE CE_FunctionalSubstitution(DATA_TYPE umin,DATA_TYPE umax);
-    void CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax,DATA_TYPE RefValue);
-    DATA_TYPE CE_QGGMRF_Value(DATA_TYPE delta);
-    DATA_TYPE CE_QGGMRF_Derivative(DATA_TYPE delta);
-    DATA_TYPE CE_QGGMRF_SecondDerivative(DATA_TYPE delta);
+    Real_t CE_FunctionalSubstitution(Real_t umin,Real_t umax);
+    void CE_ComputeQGGMRFParameters(Real_t umin,Real_t umax,Real_t RefValue);
+    Real_t CE_QGGMRF_Value(Real_t delta);
+    Real_t CE_QGGMRF_Derivative(Real_t delta);
+    Real_t CE_QGGMRF_SecondDerivative(Real_t delta);
   #endif //QGGMRF
 
 
@@ -166,29 +166,29 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
     uint8_t BOUNDARYFLAG[3][3][3];
     //Markov Random Field Prior parameters - Globals DATA_TYPE
-    DATA_TYPE FILTER[3][3][3];
-    DATA_TYPE HAMMING_WINDOW[5][5];
-    DATA_TYPE THETA1;
-    DATA_TYPE THETA2;
-    DATA_TYPE NEIGHBORHOOD[3][3][3];
-    DATA_TYPE V;
-    DATA_TYPE MRF_P;
-    DATA_TYPE SIGMA_X_P;
+    Real_t FILTER[3][3][3];
+    Real_t HAMMING_WINDOW[5][5];
+    Real_t THETA1;
+    Real_t THETA2;
+    Real_t NEIGHBORHOOD[3][3][3];
+    Real_t V;
+    Real_t MRF_P;
+    Real_t SIGMA_X_P;
 #ifdef QGGMRF
     //QGGMRF extras
-    DATA_TYPE MRF_Q,MRF_C;
-    DATA_TYPE QGGMRF_Params[26][3];
-    DATA_TYPE MRF_ALPHA;
-	DATA_TYPE SIGMA_X_P_Q;
-	DATA_TYPE SIGMA_X_Q;
+    Real_t MRF_Q,MRF_C;
+    Real_t QGGMRF_Params[26][3];
+    Real_t MRF_ALPHA;
+	Real_t SIGMA_X_P_Q;
+	Real_t SIGMA_X_Q;
 #endif //QGGMRF
     //used to store cosine and sine of all angles through which sample is tilted
     RealArrayType::Pointer cosine;
     RealArrayType::Pointer sine;
     RealArrayType::Pointer BeamProfile; //used to store the shape of the e-beam
-    DATA_TYPE BEAM_WIDTH;
-    DATA_TYPE OffsetR;
-    DATA_TYPE OffsetT;
+    Real_t BEAM_WIDTH;
+    Real_t OffsetR;
+    Real_t OffsetT;
 
     RealImage_t::Pointer QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
 
@@ -202,7 +202,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     RealArrayType::Pointer d1;
     RealArrayType::Pointer d2; //hold the intermediate values needed to compute optimal mu_k
     uint16_t NumOfViews; //this is kind of redundant but in order to avoid repeatedly send this info to the rooting function we save number of views
-    DATA_TYPE LogGain; //again these information  are available but to prevent repeatedly sending it to the rooting functions we store it in a variable
+    Real_t LogGain; //again these information  are available but to prevent repeatedly sending it to the rooting functions we store it in a variable
 
     uint64_t startm;
     uint64_t stopm;
@@ -230,7 +230,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      * @param low
      * @param high
      */
-    void minMax(DATA_TYPE *low, DATA_TYPE *high);
+    void minMax(Real_t *low, Real_t *high);
 
     /**
      * @brief
@@ -252,7 +252,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      * @param Weight
      * @return
      */
-    DATA_TYPE computeCost(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight);
+    Real_t computeCost(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight);
 
     /**
      * @brief
@@ -280,7 +280,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     void ComputeVSC();
 
 	//Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
-	DATA_TYPE SetNonHomThreshold();
+	Real_t SetNonHomThreshold();
 
 
     template<typename T>

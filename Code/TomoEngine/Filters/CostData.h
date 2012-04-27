@@ -54,9 +54,9 @@ class TomoEngine_EXPORT CostData
 
     int initOutputFile(const std::string &filepath);
 
-    int writeCostValue(DATA_TYPE value);
+    int writeCostValue(Real_t value);
 
-    int addCostValue(DATA_TYPE value);
+    int addCostValue(Real_t value);
 
     int numberOfCosts();
 
@@ -66,7 +66,7 @@ class TomoEngine_EXPORT CostData
     CostData();
 
   private:
-    std::vector<DATA_TYPE>  m_Cost;
+    std::vector<Real_t>  m_Cost;
     FILE* m_File;
 
     CostData(const CostData&); // Copy Constructor Not Implemented

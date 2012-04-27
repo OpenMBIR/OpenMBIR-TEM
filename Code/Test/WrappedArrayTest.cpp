@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 
     RealImage_t::Pointer object = RealImage_t::New(dims, "Test2D");
 
-    DATA_TYPE* data = reinterpret_cast<double*>(object->getPointer());
+    Real_t* data = reinterpret_cast<Real_t*>(object->getPointer());
     printf("Array to Hold Pointers to start of each Row: %p \n", data);
     for(size_t i = 0; i < y; ++i)
     {
@@ -94,7 +94,7 @@ int main(int argc, char **argv)
   std::cout << "-----------------Testing 1D Array------------------" << std::endl;
   {
     RealArrayType::Pointer object = RealArrayType::New(dims, "1D");
-    DATA_TYPE* data = object->getPointer();
+    Real_t* data = object->getPointer();
     printf("Array to Hold Pointers to start of Data: Address=%p Num.Elements: %lud\n", data, x);
 
   }

@@ -74,15 +74,15 @@ void ComputeInitialOffsets::execute()
 //  sinogram->InitialVariance = RealArrayType::New(dims);
 //  sinogram->InitialVariance->setName("sinogram->InitialVariance");
   //Form the average Gain per view
-  std::vector<DATA_TYPE> AverageGain(sinogram->N_theta, 0);
-  std::vector<DATA_TYPE> TargetGain(sinogram->N_theta, 0);
+  std::vector<Real_t> AverageGain(sinogram->N_theta, 0);
+  std::vector<Real_t> TargetGain(sinogram->N_theta, 0);
 //	std::vector<std::vector<DATA_TYPE>>LS_Matrix(sinogram->N_theta, std::vector<DATA_TYPE> (2));
-  DATA_TYPE** LS_Matrix = (DATA_TYPE**)get_img(2, sinogram->N_theta, sizeof(DATA_TYPE));
-  std::vector<DATA_TYPE> LS_Estimates(2, 0);
+  Real_t** LS_Matrix = (Real_t**)get_img(2, sinogram->N_theta, sizeof(Real_t));
+  std::vector<Real_t> LS_Estimates(2, 0);
 
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
   {
-    DATA_TYPE sum = 0;
+    Real_t sum = 0;
     for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
     {
       for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
@@ -113,7 +113,7 @@ void ComputeInitialOffsets::execute()
 //	DATA_TYPE min_elt=*min_element(AverageGain.begin(), AverageGain.end());
 
   //Compute A^t * A
-  DATA_TYPE ProdMatrix[2][2];
+  Real_t ProdMatrix[2][2];
 
   for (uint8_t i = 0; i < 2; i++) {
     for (uint8_t j = 0; j < 2; j++)
@@ -127,8 +127,8 @@ void ComputeInitialOffsets::execute()
   }
 
   //Compute T1=(A^t*A)^-1
-  DATA_TYPE determinant = ProdMatrix[0][0] * ProdMatrix[1][1] - (ProdMatrix[0][1] * ProdMatrix[0][1]);
-  DATA_TYPE InverseProdMatrix[2][2];
+  Real_t determinant = ProdMatrix[0][0] * ProdMatrix[1][1] - (ProdMatrix[0][1] * ProdMatrix[0][1]);
+  Real_t InverseProdMatrix[2][2];
 
   InverseProdMatrix[0][0] = ProdMatrix[1][1] / determinant;
   InverseProdMatrix[1][1] = ProdMatrix[0][0] / determinant;
@@ -136,7 +136,7 @@ void ComputeInitialOffsets::execute()
   InverseProdMatrix[1][0] = -ProdMatrix[0][1] / determinant;
 
   //Compute T2=A^t*Y
-  std::vector<DATA_TYPE> TempVector(2, 0);
+  std::vector<Real_t> TempVector(2, 0);
   for (uint8_t j = 0; j < 2; j++)
   {
     for (uint8_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)

@@ -56,16 +56,16 @@ class TomoEngine_EXPORT CalculateAMatrixColumn : public TomoFilter
     virtual ~CalculateAMatrixColumn();
 
 
-    MXA_INSTANCE_PROPERTY_OLD(DATA_TYPE*, Cosine, cosine);
-    MXA_INSTANCE_PROPERTY_OLD(DATA_TYPE*, Sine, sine);
+    MXA_INSTANCE_PROPERTY_OLD(Real_t*, Cosine, cosine);
+    MXA_INSTANCE_PROPERTY_OLD(Real_t*, Sine, sine);
 
-    MXA_INSTANCE_PROPERTY_OLD(DATA_TYPE, BeamWidth, BEAM_WIDTH);
+    MXA_INSTANCE_PROPERTY_OLD(Real_t, BeamWidth, BEAM_WIDTH);
     MXA_INSTANCE_PROPERTY_OLD(uint16_t, row, row);
     MXA_INSTANCE_PROPERTY_OLD(uint16_t, col, col);
     MXA_INSTANCE_PROPERTY_OLD(uint16_t, Slice, slice);
-    MXA_INSTANCE_PROPERTY_OLD(DATA_TYPE**, VoxelProfile, VoxelProfile);
-    MXA_INSTANCE_PROPERTY_OLD(DATA_TYPE*, D1, d1);
-    MXA_INSTANCE_PROPERTY_OLD(DATA_TYPE*, D2, d2);
+    MXA_INSTANCE_PROPERTY_OLD(Real_t**, VoxelProfile, VoxelProfile);
+    MXA_INSTANCE_PROPERTY_OLD(Real_t*, D1, d1);
+    MXA_INSTANCE_PROPERTY_OLD(Real_t*, D2, d2);
     MXA_INSTANCE_PROPERTY_OLD(AMatrixCol*, AMatrixCol, Ai)
 
 

@@ -144,7 +144,7 @@ void NuisanceParamWriter::execute()
   }
   if(m_WriteBinary == true)
   {
-    fwrite(src->d, sizeof(DATA_TYPE), getSinogram()->N_theta, file);
+    fwrite(src->d, sizeof(Real_t), getSinogram()->N_theta, file);
   }
   else
   {

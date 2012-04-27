@@ -64,7 +64,7 @@ int CostData::numberOfCosts()
 void CostData::printCosts(std::ostream &out)
 {
   out << "Cost Values -----------------------------" << std::endl;
-  for(std::vector<DATA_TYPE>::size_type ii = 0 ; ii < m_Cost.size(); ii++)
+  for(std::vector<Real_t>::size_type ii = 0 ; ii < m_Cost.size(); ii++)
   {
     out << m_Cost[ii] << std::endl;
   }
@@ -86,7 +86,7 @@ int CostData::initOutputFile(const std::string &filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int CostData::addCostValue(DATA_TYPE value)
+int CostData::addCostValue(Real_t value)
 {
   m_Cost.push_back(value);
   if(m_Cost[m_Cost.size() - 1] - m_Cost[m_Cost.size() - 2] > 0)
@@ -99,10 +99,10 @@ int CostData::addCostValue(DATA_TYPE value)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int CostData::writeCostValue(DATA_TYPE value)
+int CostData::writeCostValue(Real_t value)
 {
   if (m_File != NULL) {
-    fwrite(&(value), sizeof(DATA_TYPE), 1, m_File);
+    fwrite(&(value), sizeof(Real_t), 1, m_File);
     return 1;
   }
   return -1;

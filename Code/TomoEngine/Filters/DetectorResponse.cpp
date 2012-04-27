@@ -68,9 +68,9 @@ void DetectorResponse::execute()
 {
 
 
-  DATA_TYPE r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,tmin;
-  DATA_TYPE r0 = -(m_BeamWidth)/2;
-  DATA_TYPE StepSize = m_BeamWidth/BEAM_RESOLUTION;
+  Real_t r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,tmin;
+  Real_t r0 = -(m_BeamWidth)/2;
+  Real_t StepSize = m_BeamWidth/BEAM_RESOLUTION;
   int16_t i,j,k,p,ProfileIndex;
   SinogramPtr sinogram = getSinogram();
   TomoInputsPtr inputs = getTomoInputs();
