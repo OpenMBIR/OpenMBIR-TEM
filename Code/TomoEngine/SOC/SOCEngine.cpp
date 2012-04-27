@@ -472,7 +472,7 @@ void SOCEngine::execute()
   dims[2] = 0;
   //Hold the coefficients of a quadratic equation
   QuadraticParameters = RealImage_t::New(dims, "QuadraticParameters");
-  Qk_cost = RealImageType::New(dims, "Qk_cost");
+  Qk_cost = RealImage_t::New(dims, "Qk_cost");
   dims[1] = 2;
   bk_cost = RealImageType::New(dims, "bk_cost");
 
@@ -2279,9 +2279,9 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 //Function to compute parameters of thesurrogate function
 void SOCEngine::CE_ComputeQGGMRFParameters(DATA_TYPE umin,DATA_TYPE umax,DATA_TYPE RefValue)
 {
-
-  DATA_TYPE Delta0,DeltaMin,DeltaMax,T,Derivative_Delta0;
-  DATA_TYPE AbsDelta0,AbsDeltaMin,AbsDeltaMax;
+//  DATA_TYPE DeltaMin,DeltaMax,T,Derivative_Delta0;
+   DATA_TYPE Delta0;
+//  DATA_TYPE AbsDelta0,AbsDeltaMin,AbsDeltaMax;
   uint8_t i,j,k,count=0;
   for(i=0;i<3;i++)
     for (j=0; j < 3; j++)

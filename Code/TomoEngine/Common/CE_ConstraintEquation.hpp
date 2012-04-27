@@ -55,7 +55,7 @@ class CE_ConstraintEquation
                           RealImage_t::Pointer QuadraticParameters,
                           RealArrayType::Pointer d1,
                           RealArrayType::Pointer d2,
-                          RealImageType::Pointer Qk_cost,
+                          RealImage_t::Pointer Qk_cost,
                           RealImageType::Pointer bk_cost,
                           RealArrayType::Pointer ck_cost,
                           DATA_TYPE LogGain) :
@@ -135,9 +135,9 @@ class CE_ConstraintEquation
 //                        + ck_cost->d[i_theta]); //evaluating the cost function
 
 
-            temp_cost = (Qk_cost->d[i_theta][0] * root[i] * root[i]
-                        +  2 * Qk_cost->d[i_theta][1] * root[i] * temp_mu
-                        +  temp_mu * temp_mu * Qk_cost->d[i_theta][2]
+            temp_cost = (Qk_cost->getValue(i_theta, 0) * root[i] * root[i]
+                        +  2 * Qk_cost->getValue(i_theta, 1) * root[i] * temp_mu
+                        +  temp_mu * temp_mu * Qk_cost->getValue(i_theta, 2)
                         - 2 * (bk_cost->d[i_theta][0] * root[i] + temp_mu * bk_cost->d[i_theta][1])
                         + ck_cost->d[i_theta]); //evaluating the cost function
             if(temp_cost < min)
@@ -171,7 +171,7 @@ class CE_ConstraintEquation
     RealImage_t::Pointer QuadraticParameters;
     RealArrayType::Pointer d1;
     RealArrayType::Pointer d2; //hold the intermediate values needed to compute optimal mu_k
-    RealImageType::Pointer Qk_cost;
+    RealImage_t::Pointer Qk_cost;
     RealImageType::Pointer bk_cost;
     RealArrayType::Pointer ck_cost; //these are the terms of the quadratic cost function
     DATA_TYPE LogGain;

@@ -196,7 +196,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     RealImage_t::Pointer FiltMagUpdateMap;//Filters the above to compute threshold
     UInt8Image_t::Pointer MagUpdateMask;//Masks only the voxels of interest
 
-    RealImageType::Pointer Qk_cost;
+    RealImage_t::Pointer Qk_cost;
     RealImageType::Pointer bk_cost;
     RealArrayType::Pointer ck_cost; //these are the terms of the quadratic cost function
     RealArrayType::Pointer d1;
