@@ -85,7 +85,7 @@ class TomoArray
         std::cout << "Deallocating TomoArray " << m_Name << std::endl;
       }
 #endif
-      if (SIZE == 1)
+      if (SIZE == 1 || SIZE == 2)
       {
         free(d);
       }
@@ -112,7 +112,7 @@ class TomoArray
       assert(SIZE == 3);
       d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)] = v;
     }
-
+#endif
 
     inline size_t calcIndex(size_t slow, size_t fast)
     {
@@ -153,7 +153,7 @@ class TomoArray
     {
       return d + offset;
     }
-#endif
+
 
     void setName(const std::string &name) { m_Name = name;}
     Ptr getPointer() { return d; }
@@ -169,7 +169,7 @@ class TomoArray
         m_Dims[i] = dims[i];
         total *= m_Dims[i];
       }
-      if (SIZE == 1 )
+      if (SIZE == 1 || SIZE == 2)
       {
         d = reinterpret_cast<Ptr>(malloc(sizeof(T) * total));
       }
