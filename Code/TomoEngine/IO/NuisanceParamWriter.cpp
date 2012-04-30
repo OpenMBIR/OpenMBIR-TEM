@@ -103,9 +103,6 @@ void NuisanceParamWriter::execute()
     return;
   }
 
-//  std::string filepath(getTomoInputs()->tempDir);
-//  filepath = filepath.append(MXADir::getSeparator()).append(m_FileName);
-
   FILE* file = fopen(m_FileName.c_str(), "wb");
   if(file == 0)
   {
@@ -117,6 +114,7 @@ void NuisanceParamWriter::execute()
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
+  std::cout << "Writing Nuisance Parameter to File: " << m_FileName << std::endl;
 
   RealArrayType::Pointer src = RealArrayType::NullPointer();
   std::string printTitle("UNKNOWN DATA");
@@ -146,7 +144,7 @@ void NuisanceParamWriter::execute()
   }
   if(m_WriteBinary == true)
   {
-    fwrite(src->d, sizeof(DATA_TYPE), getSinogram()->N_theta, file);
+    fwrite(src->d, sizeof(Real_t), getSinogram()->N_theta, file);
   }
   else
   {
@@ -156,7 +154,7 @@ void NuisanceParamWriter::execute()
     }
   }
   fclose(file);
-#if 0
+#ifdef DEBUG
   std::cout << "************* " << printTitle << " ***************" << std::endl;
   for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
   {

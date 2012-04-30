@@ -57,7 +57,7 @@ class TomoEngine_EXPORT InitialReconstructionInitializer : public TomoFilter
 
     virtual ~InitialReconstructionInitializer();
 
-    DATA_TYPE absMaxArray(std::vector<DATA_TYPE> &Array);
+    Real_t absMaxArray(std::vector<Real_t> &Array);
 
     virtual void execute();
 

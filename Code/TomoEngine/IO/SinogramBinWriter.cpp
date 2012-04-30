@@ -108,7 +108,7 @@ void SinogramBinWriter::execute()
   uint16_t thetaSize = getSinogram()->N_theta;
   uint16_t rSize = getSinogram()->N_r;
   uint16_t tSize = getSinogram()->N_t;
-  DATA_TYPE value;
+  Real_t value;
   for (uint16_t i_theta = 0; i_theta < thetaSize; i_theta++) // Depth
   {
     for (uint16_t i_r = 0; i_r < rSize; i_r++) // Width
@@ -118,7 +118,7 @@ void SinogramBinWriter::execute()
         value = m_Data->d[i_theta][i_r][i_t];
         value *= m_NuisanceParams->I_0->d[i_theta];
         value += m_NuisanceParams->mu->d[i_theta];
-        fwrite(&value, sizeof(DATA_TYPE), 1, file);
+        fwrite(&value, sizeof(Real_t), 1, file);
       }
     }
   }

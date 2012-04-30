@@ -197,12 +197,12 @@ int SOCArgsParser::parseArguments(int argc, char **argv, TomoInputs* inputs, Tom
   TCLAP::ValueArg<int> NumOuterIter("O", "outer", "NumOuterIter", true, 1, "1");
   cmd.add(NumOuterIter);
 
-  TCLAP::ValueArg<DATA_TYPE> xz_size("", "xz_size", "Size in nm of output pixel xz plane", true, 1, "1");
+  TCLAP::ValueArg<Real_t> xz_size("", "xz_size", "Size in nm of output pixel xz plane", true, 1, "1");
   cmd.add(xz_size);
-  TCLAP::ValueArg<DATA_TYPE> xy_size("", "xy_size", "Size in nm of output pixel xy plane", true, 1, "1");
+  TCLAP::ValueArg<Real_t> xy_size("", "xy_size", "Size in nm of output pixel xy plane", true, 1, "1");
   cmd.add(xy_size);
 
-  TCLAP::ValueArg<DATA_TYPE> thickness("", "thickness", "Thickness of sample in nm", true, 0, "");
+  TCLAP::ValueArg<Real_t> thickness("", "thickness", "Thickness of sample in nm", true, 0, "");
   cmd.add(thickness);
 
   TCLAP::ValueArg<std::string> viewMask("", "exclude_views", "Comma separated list of tilts to exclude by index", false, "", "");

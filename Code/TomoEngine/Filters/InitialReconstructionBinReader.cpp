@@ -75,7 +75,7 @@ void InitialReconstructionBinReader::initializeData()
 {
   TomoInputsPtr input = getTomoInputs();
   GeometryPtr geometry = getGeometry();
-	uint16_t INTERP_FACTOR=2;
+//	uint16_t INTERP_FACTOR=2;
   //Read the Initial Reconstruction data into a 3-D matrix
   //If Interpolate flag is set then the input has only half the
   //number of voxels along each dimension as the output
@@ -98,8 +98,8 @@ void InitialReconstructionBinReader::initializeData()
         {
           for (uint16_t k = 0; k < geometry->N_z/2; k++)
           {
-            DATA_TYPE buffer;
-            fread((unsigned char*)(&buffer), sizeof(DATA_TYPE), 1, Fp);
+            Real_t buffer;
+            fread((unsigned char*)(&buffer), sizeof(Real_t), 1, Fp);
             //Voxel replicate
             for (uint16_t p = 0; p < 2; p++)
               for (uint16_t q = 0; q < 2; q++)
@@ -119,8 +119,8 @@ void InitialReconstructionBinReader::initializeData()
         {
           for (uint16_t k = 0; k < geometry->N_z; k++)
           {
-            DATA_TYPE buffer;
-            fread((unsigned char*)(&buffer), sizeof(DATA_TYPE), 1, Fp);
+            Real_t buffer;
+            fread((unsigned char*)(&buffer), sizeof(Real_t), 1, Fp);
             geometry->Object->d[k][j][i] = buffer;
           }
         }
@@ -135,7 +135,7 @@ void InitialReconstructionBinReader::initializeData()
       {
         for (uint16_t k = 0; k < geometry->N_z; k++)
         {
-          DATA_TYPE buffer = geometry->Object->d[k][j][i];
+          Real_t buffer = geometry->Object->d[k][j][i];
           fwrite(&buffer, sizeof(double), 1, Fp2);
         }
       }

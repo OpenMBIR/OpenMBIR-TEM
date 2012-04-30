@@ -89,11 +89,11 @@ void TargetGainSigmaXEstimation::execute()
   // Loop over each tilt angle to compute the Target Gain Estimation
   int voxelMin[3] = { 0, 0, 0};
   int voxelMax[3] = { header.nx, header.ny, 0};
-  DATA_TYPE sum1 = 0;
-  DATA_TYPE targetMin = std::numeric_limits<DATA_TYPE>::max();
-  DATA_TYPE targetMax = std::numeric_limits<DATA_TYPE>::min();
+  Real_t sum1 = 0;
+  Real_t targetMin = std::numeric_limits<Real_t>::max();
+  Real_t targetMax = std::numeric_limits<Real_t>::min();
 
-  std::vector<DATA_TYPE> sum2s(header.nz);
+  std::vector<Real_t> sum2s(header.nz);
 
   float progress = 0.0;
 
@@ -109,9 +109,9 @@ void TargetGainSigmaXEstimation::execute()
     }
     progress = (i_theta/header.nz) * 100;
 
-    DATA_TYPE min = std::numeric_limits<DATA_TYPE>::max();
-    DATA_TYPE max = std::numeric_limits<DATA_TYPE>::min();
-    DATA_TYPE sum2 = 0;
+    Real_t min = std::numeric_limits<Real_t>::max();
+    Real_t max = std::numeric_limits<Real_t>::min();
+    Real_t sum2 = 0;
     switch(header.mode)
     {
       case 0:
@@ -144,7 +144,7 @@ void TargetGainSigmaXEstimation::execute()
   for(int i_theta = 0; i_theta < header.nz; ++i_theta)
   {
     sum2s[i_theta] /= header.nx * header.ny * m_TargetGainEstimate;
-    DATA_TYPE cosine = 0.0;
+    Real_t cosine = 0.0;
     if (m_TiltAngles == 0)
     {
       cosine = cos(header.feiHeaders[i_theta].a_tilt);

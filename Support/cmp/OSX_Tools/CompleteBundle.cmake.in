@@ -10,7 +10,7 @@
 # -----------------------------------------------------------------------------------
 
 message (STATUS "#------------ Starting OS X Bundle Fixup --------------------------")
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.6)
 
 #-- Need this for link line stuff?
 if(COMMAND cmake_policy)

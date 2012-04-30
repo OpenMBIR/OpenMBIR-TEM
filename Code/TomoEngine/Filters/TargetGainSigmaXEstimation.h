@@ -66,10 +66,10 @@ class TomoEngine_EXPORT TargetGainSigmaXEstimation : public TomoFilter
     virtual ~TargetGainSigmaXEstimation();
 
     MXA_INSTANCE_STRING_PROPERTY(InputFile);
-    MXA_INSTANCE_PROPERTY(DATA_TYPE, SigmaXEstimate);
-    MXA_INSTANCE_PROPERTY(DATA_TYPE, TargetGainEstimate);
-    MXA_INSTANCE_PROPERTY(DATA_TYPE, SampleThickness);
-    MXA_INSTANCE_PROPERTY(DATA_TYPE, DefaultOffset);
+    MXA_INSTANCE_PROPERTY(Real_t, SigmaXEstimate);
+    MXA_INSTANCE_PROPERTY(Real_t, TargetGainEstimate);
+    MXA_INSTANCE_PROPERTY(Real_t, SampleThickness);
+    MXA_INSTANCE_PROPERTY(Real_t, DefaultOffset);
     MXA_INSTANCE_PROPERTY(unsigned int, TiltAngles);
 
     virtual void execute();
@@ -81,7 +81,7 @@ class TomoEngine_EXPORT TargetGainSigmaXEstimation : public TomoFilter
 
 
     template<typename T>
-    void calcMinMax(T* data, int total, DATA_TYPE &min, DATA_TYPE &max, DATA_TYPE &sum2)
+    void calcMinMax(T* data, int total, Real_t &min, Real_t &max, Real_t &sum2)
     {
       for (int i = 0; i < total; i++)
       {

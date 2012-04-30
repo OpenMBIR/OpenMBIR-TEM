@@ -143,11 +143,11 @@ macro(Add_Algorithm name)
 endmacro()
 # Add our executables
 
-Add_Algorithm(JointEstimationAlgorithm)
-Add_Algorithm(NonHomogeniousICD)
-Add_Algorithm(BasicReconstructionAlgorithm)
+#Add_Algorithm(JointEstimationAlgorithm)
+#Add_Algorithm(NonHomogeniousICD)
+#Add_Algorithm(BasicReconstructionAlgorithm)
 #Add_Algorithm(ScaleOffsetCorrectionAlgorithm)
-Add_Algorithm(ScaleOffsetMotionCorrectionAlgorithm)
+#Add_Algorithm(ScaleOffsetMotionCorrectionAlgorithm)
 
 
 add_subdirectory(${PROJECT_CODE_DIR}/Test ${PROJECT_BINARY_DIR}/Test)

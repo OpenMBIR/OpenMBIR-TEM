@@ -27,8 +27,8 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-#ifndef TOMOARRAY_HPP_
-#define TOMOARRAY_HPP_
+#ifndef TOMOARRAY2D_HPP_
+#define TOMOARRAY2D_HPP_
 
 #include <assert.h>
 #include <stdio.h>
@@ -40,14 +40,14 @@
 
 
 template<typename T, typename Ptr, int SIZE>
-class TomoArray
+class TomoArray2D
 {
   public:
-    typedef TomoArray<T, Ptr, SIZE> Self;
+    typedef TomoArray2D<T, Ptr, SIZE> Self;
     typedef boost::shared_ptr<Self> Pointer;
     typedef boost::shared_ptr<const Self> ConstPointer;
-    typedef boost::weak_ptr<TomoArray<T, Ptr, SIZE> > WeakPointer;
-    typedef boost::weak_ptr<TomoArray<T, Ptr, SIZE> > ConstWeakPointer;
+    typedef boost::weak_ptr<TomoArray2D<T, Ptr, SIZE> > WeakPointer;
+    typedef boost::weak_ptr<TomoArray2D<T, Ptr, SIZE> > ConstWeakPointer;
 
     /** This is the raw pointer to the data. For multi-dimensional data one can
      * use [][][] notation to get the value
@@ -60,7 +60,7 @@ class TomoArray
      */
     static Pointer NullPointer(void)
     {
-      return Pointer(static_cast<TomoArray<T, Ptr, SIZE>*>(0));
+      return Pointer(static_cast<TomoArray2D<T, Ptr, SIZE>*>(0));
     }
 
     /**
@@ -69,20 +69,42 @@ class TomoArray
      * in the first (zero) slot and continuing to the FASTEST moving dimension.
      * @param name The human name for the array. This can be helpful for debugging
      * @return Shared Pointer to the data
+     *
+     * Example: If you have a 2D array that you would like to allocate and the
+     * dimensions are a width (X) of 512 pixels and a height (Y) of 256 pixels
+     * and you want the data laid out so that when traversing the array one would
+     * walk the width of the image FIRST then the heigth then you would create
+     * a TomoArray2D like the following:
+     * @code
+     *  size_t dims[2] = { 256, 512 };
+     *  TomoArray2D<int, int*, 2>::Pointer image = TomoArray2D<int, int*, 2>::New(dims, "Image);
+     *
+     *    Width (X) --->
+     *    - - - - - - - - -
+     * H | | | | | | | | | |
+     * e  - - - - - - - - -
+     * i | | | | | | | | | |
+     * g  - - - - - - - - -
+     * h | | | | | | | | | |
+     * t  - - - - - - - - -
+     *   | | | | | | | | | |
+     * Y  - - - - - - - - -
+
+     * @endcode
      */
     static Pointer New(size_t* dims, const std::string &name)
     {
-      Pointer sharedPtr(new TomoArray<T, Ptr, SIZE>(dims));
+      Pointer sharedPtr(new TomoArray2D<T, Ptr, SIZE>(dims));
       sharedPtr->setName(name);
       return sharedPtr;
     }
 
-    virtual ~TomoArray()
+    virtual ~TomoArray2D()
     {
 #if 0
       if (m_Name.empty() == false)
       {
-        std::cout << "Deallocating TomoArray " << m_Name << std::endl;
+        std::cout << "Deallocating TomoArray2D " << m_Name << std::endl;
       }
 #endif
       if (SIZE == 1 || SIZE == 2)
@@ -154,7 +176,6 @@ class TomoArray
       return d + offset;
     }
 
-
     void setName(const std::string &name) { m_Name = name;}
     Ptr getPointer() { return d; }
     size_t* getDims() {return m_Dims; }
@@ -162,7 +183,7 @@ class TomoArray
     int getTypeSize() { return sizeof(T); }
 
   protected:
-    TomoArray(size_t* dims)
+    TomoArray2D(size_t* dims)
     {
       size_t total = 1;
       for(size_t i = 0; i < SIZE; ++i){
@@ -280,10 +301,10 @@ class TomoArray
       }
     }
 
-    TomoArray(const TomoArray&); // Copy Constructor Not Implemented
-    void operator=(const TomoArray&); // Operator '=' Not Implemented
+    TomoArray2D(const TomoArray2D&); // Copy Constructor Not Implemented
+    void operator=(const TomoArray2D&); // Operator '=' Not Implemented
 
 };
 
 
-#endif /* TOMOARRAY_HPP_ */
+#endif /* TOMOARRAY2D_HPP_ */

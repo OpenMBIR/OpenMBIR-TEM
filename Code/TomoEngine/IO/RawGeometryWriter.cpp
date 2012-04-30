@@ -67,7 +67,7 @@ void RawGeometryWriter::execute()
     notify(getErrorMessage().c_str(), 100, UpdateErrorMessage);
     return;
   }
-  DATA_TYPE buffer;
+  Real_t buffer;
 
 	std::cout<<getFilePath().c_str()<<std::endl;
 	std::cout<<"Writing the Binary file"<<std::endl;
@@ -81,7 +81,7 @@ void RawGeometryWriter::execute()
       {
       //  std::cout << k << std::endl;
         buffer = geometry->Object->d[k][j][i];
-        fwrite(&buffer, sizeof(DATA_TYPE), 1, Fp);
+        fwrite(&buffer, sizeof(Real_t), 1, Fp);
       }
     }
   }

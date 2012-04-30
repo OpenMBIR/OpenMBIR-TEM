@@ -48,13 +48,13 @@ class DerivOfCostFunc
 
   public:
     DerivOfCostFunc(uint8_t _BOUNDARYFLAG[3][3][3],
-                    DATA_TYPE _NEIGHBORHOOD[3][3][3],
-                    DATA_TYPE _FILTER[3][3][3],
-                    DATA_TYPE _V,
-                    DATA_TYPE _THETA1,
-                    DATA_TYPE _THETA2,
-                    DATA_TYPE _SIGMA_X_P,
-                    DATA_TYPE _MRF_P) :
+                    Real_t _NEIGHBORHOOD[3][3][3],
+                    Real_t _FILTER[3][3][3],
+                    Real_t _V,
+                    Real_t _THETA1,
+                    Real_t _THETA2,
+                    Real_t _SIGMA_X_P,
+                    Real_t _MRF_P) :
 
                       V(_V),
                       THETA1(_THETA1),
@@ -81,7 +81,7 @@ class DerivOfCostFunc
     {
     }
 
-    double execute(DATA_TYPE u) const
+    double execute(Real_t u) const
     {
       double temp = 0;
       double value = 0;
@@ -110,13 +110,13 @@ class DerivOfCostFunc
 
   private:
     uint8_t BOUNDARYFLAG[3][3][3];
-    DATA_TYPE NEIGHBORHOOD[3][3][3];
-    DATA_TYPE FILTER[3][3][3];
-    DATA_TYPE V;
-    DATA_TYPE THETA1;
-    DATA_TYPE THETA2;
-    DATA_TYPE SIGMA_X_P;
-    DATA_TYPE MRF_P;
+    Real_t NEIGHBORHOOD[3][3][3];
+    Real_t FILTER[3][3][3];
+    Real_t V;
+    Real_t THETA1;
+    Real_t THETA2;
+    Real_t SIGMA_X_P;
+    Real_t MRF_P;
 
     DerivOfCostFunc(const DerivOfCostFunc&); // Copy Constructor Not Implemented
     void operator=(const DerivOfCostFunc&); // Operator '=' Not Implemented

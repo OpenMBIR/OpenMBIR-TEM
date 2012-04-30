@@ -10,7 +10,7 @@
 #--////////////////////////////////////////////////////////////////////////////
 
 project(TomoEngine)
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.6)
 SET (TomoEngine_BUILT_AS_DYNAMIC_LIB)
 IF (BUILD_SHARED_LIBS)
     SET (TomoEngine_BUILT_AS_DYNAMIC_LIB 1)

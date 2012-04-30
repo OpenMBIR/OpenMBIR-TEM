@@ -84,7 +84,7 @@ int MRCWriter::write()
   {
     return -1;
   }
-
+  std::cout << "Writing MRC file: " << m_OutputFile << std::endl;
   MRCHeader header;
   header.nx = m_Geometry->N_x;
   header.ny = m_Geometry->N_y;
@@ -174,10 +174,10 @@ int MRCWriter::write()
   size_t size = sizeof(uint16_t) * m_Geometry->N_x * m_Geometry->N_y;
   uint16_t* slice = (uint16_t*)(malloc(size));
   size_t index = 0;
-  double*** d = m_Geometry->Object->d;
+  Real_t*** d = m_Geometry->Object->d;
   for(uint16_t z = 0; z < m_Geometry->N_z; ++z)
   {
-    std::cout << "Writing Z=" << z << " Layer" << std::endl;
+  //  std::cout << "Writing Z=" << z << " Layer" << std::endl;
     for(uint16_t x = 0; x < m_Geometry->N_x; ++x)
     {
       for(uint16_t y = 0; y < m_Geometry->N_y; ++y)
@@ -190,6 +190,7 @@ int MRCWriter::write()
   }
   free(slice);
 
+  std::cout << "Done Writing MRC file." << std::endl;
 
   return err;
 }
