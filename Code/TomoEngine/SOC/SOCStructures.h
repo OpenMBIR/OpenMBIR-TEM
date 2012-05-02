@@ -40,7 +40,7 @@
 #include <string>
 #include <vector>
 
-typedef float Real_t;
+typedef double Real_t;
 
 #include "TomoEngine/TomoEngine.h"
 #include "TomoEngine/Common/TomoArray.hpp"

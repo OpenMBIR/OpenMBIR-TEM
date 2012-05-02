@@ -711,15 +711,19 @@ void SOCEngine::execute()
   {
     ss.str(""); // Clear the string stream
     indent = "";
-
+	
 	//The first time we may need to update voxels multiple times and then on just optimize over I,d,\sigma,f once each outer loop
     if(OuterIter != 0)
     {
       m_TomoInputs->NumIter = 1;
     }
+	  
+	  
 
     for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
     {
+	
+	  std::cout<<OuterIter<<"/"<<m_TomoInputs->NumOuterIter<<" "<<Iter<<"/"<<m_TomoInputs->NumIter<<std::endl; 
       indent = "  ";
 //      ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
 //      ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
@@ -772,11 +776,15 @@ void SOCEngine::execute()
     err = calculateCost(cost, Weight, ErrorSino);
     if (err < 0)
     {
+	  std::cout<<"Cost went up after variance update"<<std::endl;	
       break;
     }
 #endif//cost
     if(0 == status && OuterIter >= 1)//&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+	{
+	 std::cout<<"Exiting the code because status =0"<<std::endl;	
       break;
+	}
 #else
     if(0 == status)//&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
       break;

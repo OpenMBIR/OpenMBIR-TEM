@@ -824,13 +824,14 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   err = calculateCost(cost, Weight, ErrorSino);
   if (err < 0)
   {
-    return -1;
+	std::cout<<"Cost went up after Gain+Offset update"<<std::endl;  
+   // return -1;
   }
 #endif
 
   printf("Lagrange Multiplier = %lf\n", LagrangeMultiplier);
 
-#ifdef DEBUG
+//#ifdef DEBUG
   std::cout << "Tilt\tGains\tOffsets\tVariance" << std::endl;
   for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
   {
@@ -838,7 +839,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
         "\t" << NuisanceParams->mu->d[i_theta] <<
         "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
   }
-#endif
+//#endif
 
   Real_t I_kRatio=AverageI_kUpdate/AverageMagI_k;
   Real_t Delta_kRatio = AverageDelta_kUpdate/AverageMagDelta_k;
