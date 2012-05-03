@@ -873,28 +873,36 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
       {
         ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - Y_Est->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];
 
+#ifndef IDENTITY_NOISE_MODEL  
         if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
         {
           Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
-#ifdef NOISE_MODEL
-          {
-            Weight->d[i_theta][i_r][i_t] /= NuisanceParams->alpha->d[i_theta];
-          }
-#endif
         }
         else
         {
-          Weight->d[i_theta][i_r][i_t] = 0;
+          Weight->d[i_theta][i_r][i_t] = 1.0; //Set the weight to some small number 
+		  //TODO: Make this something resonable
         }
+#else
+		  Weight->d[i_theta][i_r][i_t] = 1.0;  
+#endif //IDENTITY_NOISE_MODEL endif
 
 #ifdef FORWARD_PROJECT_MODE
         temp=Y_Est->d[i_theta][i_r][i_t]/NuisanceParams->I_0->d[i_theta];
         fwrite(&temp,sizeof(Real_t),1,Fp6);
 #endif
+#ifdef DEBUG	  
         if(Weight->d[i_theta][i_r][i_t] < 0)
         {
           std::cout << m_Sinogram->counts->d[i_theta][i_r][i_t] << "    " << NuisanceParams->alpha->d[i_theta] << std::endl;
         }
+#endif//Debug
+
+#ifdef NOISE_MODEL
+          {
+			  Weight->d[i_theta][i_r][i_t] /= NuisanceParams->alpha->d[i_theta];
+          }
+#endif
 
         checksum += Weight->d[i_theta][i_r][i_t];
       }
@@ -941,20 +949,28 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
 
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
-    uint32_t NumNonZeroEntries = 0;
     sum = 0;
     //Factoring out the variance parameter from the Weight matrix
     for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
+#ifndef IDENTITY_NOISE_MATRIX
         if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
         {
           Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
-          NumNonZeroEntries++;
         }
+		else 
+		{
+			Weight->d[i_theta][i_r][i_t] = 1.0;
+		  }
+#else
+		  Weight->d[i_theta][i_r][i_t] = 1.0;
+#endif//Identity noise Model
+
       }
     }
+  
 
     for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
     {
@@ -963,7 +979,7 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
         sum += (ErrorSino->d[i_theta][i_r][i_t] * ErrorSino->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]); //Changed to only account for the counts
       }
     }
-    sum /= NumNonZeroEntries; //(m_Sinogram->N_r*m_Sinogram->N_t);
+    sum /=(m_Sinogram->N_r*m_Sinogram->N_t);
 
     AverageMagVar += fabs(NuisanceParams->alpha->d[i_theta]);
     AverageVarUpdate += fabs(sum - NuisanceParams->alpha->d[i_theta]);
@@ -973,14 +989,18 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
+#ifndef IDENTITY_NOISE_MATRIX
         if(NuisanceParams->alpha->d[i_theta] != 0 && m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
         {
           Weight->d[i_theta][i_r][i_t] = 1.0 / (m_Sinogram->counts->d[i_theta][i_r][i_t] * NuisanceParams->alpha->d[i_theta]);
         }
         else
         {
-          Weight->d[i_theta][i_r][i_t] = 0;
+          Weight->d[i_theta][i_r][i_t] = 1.0;
         }
+#else
+		Weight->d[i_theta][i_r][i_t] = 1.0/NuisanceParams->alpha->d[i_theta];
+#endif //IDENTITY_NOISE_MODEL endif
 
       }
     }
