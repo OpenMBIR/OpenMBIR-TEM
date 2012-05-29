@@ -159,6 +159,8 @@ namespace SOC {
     Real_t targetGain;
     bool useDefaultOffset;
     Real_t defaultOffset;
+	Real_t defaultInitialRecon; 
+	Real_t defaultVariance;
 
     /* These are input files */
     std::string sinoFile; /* .mrc formatted files are accepted currently */

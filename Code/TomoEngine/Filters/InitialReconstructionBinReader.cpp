@@ -84,7 +84,8 @@ void InitialReconstructionBinReader::initializeData()
 	FILE* Fp2=fopen(outPath.str().c_str(),"wb");
   FILE* Fp=fopen(input->initialReconFile.c_str(),"r");
   std::cout<<"Reading Geom"<<std::endl;
-
+  //If there is a input file provided either interpolate or use it as it is 
+  //else set the object to a constant value 
   if(NULL != Fp)
   {
     //If we need to interpolate
@@ -142,5 +143,18 @@ void InitialReconstructionBinReader::initializeData()
     }
     fclose(Fp2);
   }
+	else {
+		for (uint16_t i = 0; i < geometry->N_y; i++)
+		{
+			for (uint16_t j = 0; j < geometry->N_x; j++)
+			{
+				for (uint16_t k = 0; k < geometry->N_z; k++)
+				{
+					geometry->Object->d[k][j][i] = input->defaultInitialRecon;
+				}
+			}
+		}
+	}
+
 }
 

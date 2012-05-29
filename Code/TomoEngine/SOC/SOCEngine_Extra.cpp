@@ -248,7 +248,7 @@ int SOCEngine::createInitialVariancesData()
     //  std::cout << "------------Initial Variance-----------" << std::endl;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      m_Sinogram->InitialVariance->d[i_theta] = 1;
+      m_Sinogram->InitialVariance->d[i_theta] = m_TomoInputs->defaultVariance;
       // std::cout << "Tilt: " << i_theta << "  Variance: " << sinogram->InitialVariance->d[i_theta] << std::endl;
     }
   }
