@@ -106,26 +106,24 @@ void InitialReconstructionInitializer::execute()
 
   //uint16_t interpolation_factor=24;//TODO: Need to Remove this
   //DATA_TYPE res=3;
-  input->LengthZ/= (sinogram->delta_r);
-  sinogram->delta_r = 1;//These lines are added because the user inputs a multiple of this as the final voxel size
-  sinogram->delta_t = 1;//These lines are added because the user inputs a multiple of this as the final voxel size
 
+
+
+#ifndef FORWARD_PROJECT_MODE
   input->delta_xz=sinogram->delta_r*input->delta_xz;
   input->delta_xy=input->delta_xz;
   //Find the maximum absolute tilt angle
   max= absMaxArray(sinogram->angles);
-
-#ifndef FORWARD_PROJECT_MODE
     input->LengthZ *= Z_STRETCH;
-	input->LengthZ/=input->interpolateFactor;
+	input->LengthZ/=(input->interpolateFactor*sinogram->delta_r);
 	//interpolation_factor;
-	input->LengthZ=round(input->LengthZ)*input->interpolateFactor;//interpolation_factor;
+	input->LengthZ=round(input->LengthZ)*input->interpolateFactor*sinogram->delta_r;//interpolation_factor;
 	if(1 == input->extendObject)
 	{
 		std::cout<<"KNOWN BUG FIX NEEDED HERE IF MAX = 90 degrees"<<std::endl;
 		geometry->LengthX = X_SHRINK_FACTOR*((sinogram->N_r * sinogram->delta_r)/cos(max*M_PI/180)) + input->LengthZ*tan(max*M_PI/180) ;
-		geometry->LengthX/=input->interpolateFactor;
-		geometry->LengthX=round(geometry->LengthX)*input->interpolateFactor;
+		geometry->LengthX/=(input->interpolateFactor*sinogram->delta_r);
+		geometry->LengthX=round(geometry->LengthX)*input->interpolateFactor*sinogram->delta_r;
 	}
 	else
 	{
@@ -164,7 +162,10 @@ void InitialReconstructionInitializer::execute()
  // Geometry->y0 = -(sinogram->N_t * sinogram->delta_t)/2 + Geometry->StartSlice*Geometry->delta_xy;
   geometry->y0 = -(geometry->LengthY)/2 ;
 
-
+	printf("Geometry->X0=%lf\n",geometry->x0);
+	printf("Geometry->Y0=%lf\n",geometry->y0);
+	printf("Geometry->Z0=%lf\n",geometry->z0);
+	
   // Now we actually initialize the data to something. If a subclass is involved
   // then the subclasses version of initializeData() will be used instead
   initializeData();

@@ -711,15 +711,19 @@ void SOCEngine::execute()
   {
     ss.str(""); // Clear the string stream
     indent = "";
-
+	
 	//The first time we may need to update voxels multiple times and then on just optimize over I,d,\sigma,f once each outer loop
     if(OuterIter != 0)
     {
       m_TomoInputs->NumIter = 1;
     }
+	  
+	  
 
     for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
     {
+	
+	  std::cout<<OuterIter<<"/"<<m_TomoInputs->NumOuterIter<<" "<<Iter<<"/"<<m_TomoInputs->NumIter<<std::endl; 
       indent = "  ";
 //      ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
 //      ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
@@ -772,11 +776,15 @@ void SOCEngine::execute()
     err = calculateCost(cost, Weight, ErrorSino);
     if (err < 0)
     {
+	  std::cout<<"Cost went up after variance update"<<std::endl;	
       break;
     }
 #endif//cost
     if(0 == status && OuterIter >= 1)//&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+	{
+	 std::cout<<"Exiting the code because status =0"<<std::endl;	
       break;
+	}
 #else
     if(0 == status)//&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
       break;
@@ -1849,9 +1857,12 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
   uint16_t subIterations = 1;
   std::string indent("    ");
   uint8_t err = 0;
+  uint32_t zero_count = 0;
   Real_t UpdatedVoxelValue;
-//  DATA_TYPE accuracy = 1e-9; //This is the rooting accuracy for x
-//  uint32_t binarysearch_count=10;//Accuracy is 1/(2^10)
+//  Real_t accuracy=1e-8;
+//  uint16_t binarysearch_count 	
+  Real_t accuracy = 1e-9; //This is the rooting accuracy for x
+  uint32_t binarysearch_count=10;//Accuracy is 1/(2^10)
   int32_t errorcode = -1;
   int16_t Idx;
 
@@ -2080,6 +2091,29 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             V = m_Geometry->Object->d[j_new][k_new][i]; //Store the present value of the voxel
             THETA1 = 0.0;
             THETA2 = 0.0;
+#ifdef ZERO_SKIPPING
+			  //Zero Skipping Algorithm
+			  bool ZSFlag=true;    
+			  if(V == 0.0 && (Iter > 0 || OuterIter > 0))
+			  {			
+				  for(uint8_t p = 0; p <=2; p++)
+					  for(uint8_t q = 0; q <= 2; q++)
+						  for(uint8_t r = 0; r <= 2;r++)
+							  if(NEIGHBORHOOD[p][q][r] > 0.0)
+							  {						  
+								  ZSFlag = false;
+								  break;						  
+							  }
+			  }
+			  else 
+			  {
+				  ZSFlag = false;//First time dont care for zero skipping
+			  }	
+#else
+			  bool ZSFlag = false; //do ICD on all voxels
+#endif //Zero skipping
+			  if(ZSFlag == false)
+			{
             Real_t tt;
             //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
             for (uint32_t q = 0; q < TempCol[Index]->count; q++)
@@ -2176,8 +2210,12 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                 VoxelLineAccessCounter++;
               }
             }
+		  }
+			  else {
+				  zero_count++;
+			  }
 
-            Idx++;
+//            Idx++;
           }
         }
         else
@@ -2265,6 +2303,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     }
 
   }
+	
+	std::cout<<"Number of zeroed out entries="<<zero_count<<std::endl;
   return exit_status;
 
 }

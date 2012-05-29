@@ -201,7 +201,7 @@ void MultiResolutionSOC::execute()
     }
     else
     {
-      inputs->NumIter = getInnerIterations();
+		inputs->NumIter = 1;//getInnerIterations();
     }
     inputs->p = getMRFShapeParameter();
     inputs->StopThreshold = getStopThreshold();
