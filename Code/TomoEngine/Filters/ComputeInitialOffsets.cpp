@@ -54,7 +54,7 @@ ComputeInitialOffsets::~ComputeInitialOffsets()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-/*
+//Initialize offsets via least squares fit
 void ComputeInitialOffsets::execute()
 {
   // If an error occurs, clean up any memory, call "setErrorCondition(-1)" and
@@ -169,7 +169,7 @@ void ComputeInitialOffsets::execute()
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
   {
     sinogram->InitialOffset->d[i_theta] = LS_Estimates[1];
-  //  std::cout << "Tilt: " << i_theta << "  Offset: " << sinogram->InitialOffset->d[i_theta] << std::endl;
+    std::cout << "Tilt: " << i_theta << "  Offset: " << sinogram->InitialOffset->d[i_theta] << std::endl;
   }
 //  std::cout << "------------Initial Variance-----------" << std::endl;
 //  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
@@ -182,8 +182,10 @@ void ComputeInitialOffsets::execute()
   setErrorMessage("");
   notify("Done ComputeInitialOffsets", 0, UpdateProgressMessage);
 }
-*/
-void ComputeInitialOffsets::execute()
+
+
+/* Initialize offset to minimum of the data set
+ void ComputeInitialOffsets::execute()
 {
 	// If an error occurs, clean up any memory, call "setErrorCondition(-1)" and
 	// also setErrorMessage("Something went wrong"); and then return
@@ -228,3 +230,4 @@ void ComputeInitialOffsets::execute()
 	setErrorMessage("");
 	notify("Done ComputeInitialOffsets", 0, UpdateProgressMessage);
 }
+*/
