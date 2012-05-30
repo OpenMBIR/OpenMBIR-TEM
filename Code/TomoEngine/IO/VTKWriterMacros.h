@@ -100,7 +100,7 @@
     for (int i = ptr->N_z -1; i >= 0; i--) {\
      for (int j = 0; j < ptr->N_y; ++j) {\
       for (int k = 0; k < ptr->N_x; k++) {\
-          t = static_cast<float>(ptr->Object->d[i][k][j]);\
+          t = static_cast<float>(ptr->Object->getValue(i, k, j) );\
           MXA::Endian::FromSystemToBig::convert<float>(t); \
           fwrite(&t, sizeof(float), 1, f);\
         }\
@@ -115,7 +115,7 @@
     for (int z = 0; z < ptr->N_z; z++) {\
       for (int x = 0; x < ptr->N_x; x++) {\
         for (int y = 0; y < ptr->N_y; y++) {\
-          fprintf(f, "%0.6f ", ptr->Object->d[z][x][y]);\
+          fprintf(f, "%0.6f ", ptr->Object->getValue(z, x, y) );\
         }\
         fprintf(f, "\n");\
       }\

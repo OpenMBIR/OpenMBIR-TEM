@@ -56,7 +56,7 @@ class TomoEngine_EXPORT DetectorResponseWriter : public TomoFilter
 
     virtual ~DetectorResponseWriter();
 
-    MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Response);
+    MXA_INSTANCE_PROPERTY(Real3DType::Pointer, Response);
 
     virtual void execute();
 

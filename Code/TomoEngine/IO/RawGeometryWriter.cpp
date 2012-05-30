@@ -72,7 +72,7 @@ void RawGeometryWriter::execute()
 	std::cout<<getFilePath().c_str()<<std::endl;
 	std::cout<<"Writing the Binary file"<<std::endl;
 	std::cout<<geometry->N_y<<","<<geometry->N_z<<","<<geometry->N_x<<std::endl;
-	
+
   for (uint16_t i = 0; i < geometry->N_y; ++i)
   {
     for (uint16_t j = 0; j < geometry->N_x; ++j)
@@ -80,7 +80,7 @@ void RawGeometryWriter::execute()
       for (uint16_t k = 0; k < geometry->N_z; k++)
       {
       //  std::cout << k << std::endl;
-        buffer = geometry->Object->d[k][j][i];
+        buffer = geometry->Object->getValue(k, j, i);
         fwrite(&buffer, sizeof(Real_t), 1, Fp);
       }
     }

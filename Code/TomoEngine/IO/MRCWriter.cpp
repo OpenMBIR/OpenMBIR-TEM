@@ -174,7 +174,7 @@ int MRCWriter::write()
   size_t size = sizeof(uint16_t) * m_Geometry->N_x * m_Geometry->N_y;
   uint16_t* slice = (uint16_t*)(malloc(size));
   size_t index = 0;
-  Real_t*** d = m_Geometry->Object->d;
+  Real_t* d = m_Geometry->Object->d;
   for(uint16_t z = 0; z < m_Geometry->N_z; ++z)
   {
   //  std::cout << "Writing Z=" << z << " Layer" << std::endl;
@@ -183,7 +183,8 @@ int MRCWriter::write()
       for(uint16_t y = 0; y < m_Geometry->N_y; ++y)
       {
         index = (m_Geometry->N_y * m_Geometry->N_x * 0) + (m_Geometry->N_y * x) + y;
-        slice[index] = (uint16_t)(d[z][x][y]);
+        size_t idx = m_Geometry->Object->calcIndex(z, x, y);
+        slice[index] = (uint16_t)(d[idx]);
       }
     }
     writer.write(reinterpret_cast<char*>(slice), size);

@@ -109,7 +109,8 @@ int SOCEngine::initializeBrightFieldData()
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
           //1000 is for Marc De Graef data which needed to multiplied
-          m_Sinogram->counts->d[i_theta][i_r][i_t] /= (m_BFSinogram->counts->d[i_theta][i_r][i_t] * 1000);
+          Real_t ttmp = (m_BFSinogram->counts->getValue(i_theta, i_r, i_t) * 1000);
+          m_Sinogram->counts->divideByValue(ttmp, i_theta, i_r, i_t);
         }
       }
     }
@@ -380,7 +381,7 @@ void SOCEngine::gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::initializeHt(RealVolumeType::Pointer H_t)
+void SOCEngine::initializeHt(Real3DType::Pointer H_t)
 {
   Real_t ProfileCenterT;
   for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
@@ -392,15 +393,15 @@ void SOCEngine::initializeHt(RealVolumeType::Pointer H_t)
       {
         if(ProfileCenterT <= ((m_TomoInputs->delta_xy / 2) - (m_Sinogram->delta_t / 2)))
         {
-          H_t->d[0][k][i] = m_Sinogram->delta_t;
+          H_t->setValue(m_Sinogram->delta_t, 0, k, i);
         }
         else
         {
-          H_t->d[0][k][i] = -1 * ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
+          H_t->setValue(-1 * ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2, 0, k, i);
         }
-        if(H_t->d[0][k][i] < 0)
+        if(H_t->getValue(0, k, i) < 0)
         {
-          H_t->d[0][k][i] = 0;
+          H_t->setValue(0, 0, k, i);
         }
 
       }
@@ -408,16 +409,16 @@ void SOCEngine::initializeHt(RealVolumeType::Pointer H_t)
       {
         if(ProfileCenterT <= m_Sinogram->delta_t / 2 - m_TomoInputs->delta_xy / 2)
         {
-          H_t->d[0][k][i] = m_TomoInputs->delta_xy;
+          H_t->setValue(m_TomoInputs->delta_xy, 0, k, i);
         }
         else
         {
-          H_t->d[0][k][i] = -ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2;
+          H_t->setValue(-ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2, 0, k, i);
         }
 
-        if(H_t->d[0][k][i] < 0)
+        if(H_t->getValue(0, k, i) < 0)
         {
-          H_t->d[0][k][i] = 0;
+          H_t->setValue(0, 0, k, i);
         }
 
       }
@@ -428,7 +429,7 @@ void SOCEngine::initializeHt(RealVolumeType::Pointer H_t)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::initializeVolume(RealVolumeType::Pointer Y_Est, double value)
+void SOCEngine::initializeVolume(Real3DType::Pointer Y_Est, double value)
 {
   for (uint16_t i = 0; i < m_Sinogram->N_theta; i++)
   {
@@ -436,7 +437,7 @@ void SOCEngine::initializeVolume(RealVolumeType::Pointer Y_Est, double value)
     {
       for (uint16_t k = 0; k < m_Sinogram->N_t; k++)
       {
-        Y_Est->d[i][j][k] = value;
+        Y_Est->setValue(value, i, j, k);
       }
     }
   }
@@ -445,7 +446,7 @@ void SOCEngine::initializeVolume(RealVolumeType::Pointer Y_Est, double value)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,  AMatrixCol* VoxelLineResponse)
+void SOCEngine::storeVoxelResponse(Real3DType::Pointer H_t,  AMatrixCol* VoxelLineResponse)
 {
   Real_t ProfileThickness = 0.0;
   Real_t y = 0.0;
@@ -489,8 +490,9 @@ void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,  AMatrixCol* Vox
       {
         w3 = delta_t - (Real_t)(index_delta_t) * OffsetT;
         w4 = ((Real_t)index_delta_t + 1) * OffsetT - delta_t;
-        ProfileThickness = (w4 / OffsetT) * H_t->d[0][0][index_delta_t]
-            + (w3 / OffsetT) * H_t->d[0][0][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
+        uint16_t ttmp = index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1;
+        ProfileThickness = (w4 / OffsetT) * H_t->getValue(0, 0, index_delta_t)
+            + (w3 / OffsetT) * H_t->getValue(0, 0, ttmp);
     //  ProfileThickness = (w4 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t]
     //  + (w3 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
     }
@@ -630,10 +632,10 @@ void SOCEngine::calculateArithmeticMean()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
+int SOCEngine::jointEstimation(Real3DType::Pointer Weight,
                                 ScaleOffsetParamsPtr NuisanceParams,
-                                RealVolumeType::Pointer ErrorSino,
-                                RealVolumeType::Pointer Y_Est,
+                                Real3DType::Pointer ErrorSino,
+                                Real3DType::Pointer Y_Est,
                                 CostData::Pointer cost)
 {
   std::string indent("  ");
@@ -660,8 +662,9 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
     //Y_Est->d[i_theta][i_r][i_t]=0;
-        Y_Est->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - ErrorSino->d[i_theta][i_r][i_t]-NuisanceParams->mu->d[i_theta];
-        Y_Est->d[i_theta][i_r][i_t] /=NuisanceParams->I_0->d[i_theta];
+        Real_t ttmp = m_Sinogram->counts->getValue(i_theta, i_r, i_t) - ErrorSino->getValue(i_theta, i_r, i_t)-NuisanceParams->mu->d[i_theta];
+        Y_Est->setValue(ttmp, i_theta, i_r, i_t);
+        Y_Est->divideByValue(NuisanceParams->I_0->d[i_theta], i_theta, i_r, i_t);
       }
     }
   }
@@ -683,14 +686,17 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
+        size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
+        size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
+        size_t yest_idx = Y_Est->calcIndex(i_theta, i_r, i_t);
 
-        numerator_sum += (m_Sinogram->counts->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
-        denominator_sum += (Weight->d[i_theta][i_r][i_t]);
+        numerator_sum += (m_Sinogram->counts->d[counts_idx] * Weight->d[weight_idx]);
+        denominator_sum += (Weight->d[weight_idx]);
 
-        a += (Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
-        b += (Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t] * m_Sinogram->counts->d[i_theta][i_r][i_t]);
-        c += (m_Sinogram->counts->d[i_theta][i_r][i_t] * m_Sinogram->counts->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
-        d += (Y_Est->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]);
+        a += (Y_Est->d[yest_idx] * Weight->d[weight_idx]);
+        b += (Y_Est->d[yest_idx] * Weight->d[weight_idx] * m_Sinogram->counts->d[counts_idx]);
+        c += (m_Sinogram->counts->d[counts_idx] * m_Sinogram->counts->d[counts_idx] * Weight->d[weight_idx]);
+        d += (Y_Est->d[yest_idx] * Y_Est->d[yest_idx] * Weight->d[weight_idx]);
 
       }
     }
@@ -711,8 +717,12 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-        a += ((Y_Est->d[i_theta][i_r][i_t] - d2->d[i_theta]) * Weight->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t]);
-        b -= ((m_Sinogram->counts->d[i_theta][i_r][i_t] - d1->d[i_theta]) * Weight->d[i_theta][i_r][i_t] * Y_Est->d[i_theta][i_r][i_t]);
+        size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
+        size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
+        size_t yest_idx = Y_Est->calcIndex(i_theta, i_r, i_t);
+
+        a += ((Y_Est->d[yest_idx] - d2->d[i_theta]) * Weight->d[weight_idx] * Y_Est->d[yest_idx]);
+        b -= ((m_Sinogram->counts->d[counts_idx] - d1->d[i_theta]) * Weight->d[weight_idx] * Y_Est->d[yest_idx]);
       }
     }
     QuadraticParameters->setValue(a, i_theta, 0);
@@ -813,8 +823,12 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-        ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] -
-            NuisanceParams->mu->d[i_theta] - (NuisanceParams->I_0->d[i_theta] * Y_Est->d[i_theta][i_r][i_t]);
+        size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
+        size_t yest_idx = Y_Est->calcIndex(i_theta, i_r, i_t);
+        size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
+
+        ErrorSino->d[error_idx] = m_Sinogram->counts->d[counts_idx] -
+            NuisanceParams->mu->d[i_theta] - (NuisanceParams->I_0->d[i_theta] * Y_Est->d[yest_idx]);
       }
     }
   }
@@ -852,10 +866,10 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
 // Calculate Error Sinogram
 // Also compute weights of the diagonal covariance matrix
 // -----------------------------------------------------------------------------
-void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
+void SOCEngine::calculateMeasurementWeight(Real3DType::Pointer Weight,
                                            ScaleOffsetParamsPtr NuisanceParams,
-                                           RealVolumeType::Pointer ErrorSino,
-                                           RealVolumeType::Pointer Y_Est)
+                                           Real3DType::Pointer ErrorSino,
+                                           Real3DType::Pointer Y_Est)
 {
   Real_t checksum = 0;
   START_TIMER;
@@ -871,40 +885,45 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-        ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - Y_Est->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];
+        size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
+        size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
+        size_t yest_idx = Y_Est->calcIndex(i_theta, i_r, i_t);
+        size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
+
+        ErrorSino->d[error_idx] = m_Sinogram->counts->d[weight_idx] - Y_Est->d[weight_idx] - NuisanceParams->mu->d[i_theta];
 
 #ifndef IDENTITY_NOISE_MODEL
-        if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
+        if(m_Sinogram->counts->d[weight_idx] != 0)
         {
-          Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
+          Weight->d[weight_idx] = 1.0 / m_Sinogram->counts->d[weight_idx];
         }
         else
         {
-          Weight->d[i_theta][i_r][i_t] = 1.0; //Set the weight to some small number
+          Weight->d[weight_idx] = 1.0; //Set the weight to some small number
 		  //TODO: Make this something resonable
         }
 #else
-		  Weight->d[i_theta][i_r][i_t] = 1.0;
+		  Weight->d[weight_idx] = 1.0;
 #endif //IDENTITY_NOISE_MODEL endif
 
 #ifdef FORWARD_PROJECT_MODE
-        temp=Y_Est->d[i_theta][i_r][i_t]/NuisanceParams->I_0->d[i_theta];
+        temp=Y_Est->d[weight_idx]/NuisanceParams->I_0->d[i_theta];
         fwrite(&temp,sizeof(Real_t),1,Fp6);
 #endif
 #ifdef DEBUG
-        if(Weight->d[i_theta][i_r][i_t] < 0)
+        if(Weight->d[weight_idx] < 0)
         {
-          std::cout << m_Sinogram->counts->d[i_theta][i_r][i_t] << "    " << NuisanceParams->alpha->d[i_theta] << std::endl;
+          std::cout << m_Sinogram->counts->d[weight_idx] << "    " << NuisanceParams->alpha->d[i_theta] << std::endl;
         }
 #endif//Debug
 
 #ifdef NOISE_MODEL
           {
-			  Weight->d[i_theta][i_r][i_t] /= NuisanceParams->alpha->d[i_theta];
+			  Weight->d[weight_idx] /= NuisanceParams->alpha->d[i_theta];
           }
 #endif
 
-        checksum += Weight->d[i_theta][i_r][i_t];
+        checksum += Weight->d[weight_idx];
       }
     }
 #ifdef DEBUG
@@ -922,8 +941,8 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
 //
 // -----------------------------------------------------------------------------
 int SOCEngine::calculateCost(CostData::Pointer cost,
-                             RealVolumeType::Pointer Weight,
-                             RealVolumeType::Pointer ErrorSino)
+                             Real3DType::Pointer Weight,
+                             Real3DType::Pointer ErrorSino)
 {
   Real_t cost_value = computeCost(ErrorSino, Weight);
   std::cout << "cost_value: " << cost_value << std::endl;
@@ -939,9 +958,9 @@ int SOCEngine::calculateCost(CostData::Pointer cost,
 // -----------------------------------------------------------------------------
 // Updating the Weights for Noise Model
 // -----------------------------------------------------------------------------
-void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
+void SOCEngine::updateWeights(Real3DType::Pointer Weight,
                               ScaleOffsetParamsPtr NuisanceParams,
-                              RealVolumeType::Pointer ErrorSino)
+                              Real3DType::Pointer ErrorSino)
 {
   Real_t AverageVarUpdate = 0; //absolute sum of the gain updates
   Real_t AverageMagVar = 0; //absolute sum of the initial gains
@@ -955,19 +974,22 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
+        size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
+   //     size_t yest_idx = Y_Est->calcIndex(i_theta, i_r, i_t);
+    //    size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MATRIX
-        if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
+        size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
+        if(m_Sinogram->counts->d[counts_idx] != 0)
         {
-          Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
+          Weight->d[weight_idx] = 1.0 / m_Sinogram->counts->d[counts_idx];
         }
-		else
-		{
-			Weight->d[i_theta][i_r][i_t] = 1.0;
-		  }
+        else
+        {
+          Weight->d[weight_idx] = 1.0;
+        }
 #else
-		  Weight->d[i_theta][i_r][i_t] = 1.0;
+        Weight->d[i_theta][i_r][i_t] = 1.0;
 #endif//Identity noise Model
-
       }
     }
 
@@ -976,7 +998,9 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-        sum += (ErrorSino->d[i_theta][i_r][i_t] * ErrorSino->d[i_theta][i_r][i_t] * Weight->d[i_theta][i_r][i_t]); //Changed to only account for the counts
+        size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
+        size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
+        sum += (ErrorSino->d[error_idx] * ErrorSino->d[error_idx] * Weight->d[weight_idx]); //Changed to only account for the counts
       }
     }
     sum /=(m_Sinogram->N_r*m_Sinogram->N_t);
@@ -990,13 +1014,16 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
 #ifndef IDENTITY_NOISE_MATRIX
-        if(NuisanceParams->alpha->d[i_theta] != 0 && m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
+        size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
+        size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
+
+        if(NuisanceParams->alpha->d[i_theta] != 0 && m_Sinogram->counts->d[counts_idx] != 0)
         {
-          Weight->d[i_theta][i_r][i_t] = 1.0 / (m_Sinogram->counts->d[i_theta][i_r][i_t] * NuisanceParams->alpha->d[i_theta]);
+          Weight->d[weight_idx] = 1.0 / (m_Sinogram->counts->d[counts_idx] * NuisanceParams->alpha->d[i_theta]);
         }
         else
         {
-          Weight->d[i_theta][i_r][i_t] = 1.0;
+          Weight->d[weight_idx] = 1.0;
         }
 #else
 		Weight->d[i_theta][i_r][i_t] = 1.0/NuisanceParams->alpha->d[i_theta];

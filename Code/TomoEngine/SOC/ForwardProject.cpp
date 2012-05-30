@@ -46,7 +46,7 @@
 // -----------------------------------------------------------------------------
 ForwardProject::ForwardProject(Sinogram* sinogram, Geometry* geometry,
                                AMatrixCol** tempCol, AMatrixCol* voxelLineResponse,
-                               RealVolumeType::Pointer yEst,
+                               Real3DType::Pointer yEst,
                                ScaleOffsetParams* nuisanceParams,
                                uint16_t tilt) :
                   m_Sinogram(sinogram),
@@ -75,9 +75,11 @@ void ForwardProject::operator()() const
   uint32_t j = m_Tilt;
   uint16_t VoxelLineAccessCounter;
   uint32_t Index;
+  Real_t ttmp = 0.0;
+
   for (uint32_t k = 0; k < m_Geometry->N_x; k++)
   {
-	Index = j*m_Geometry->N_x + k;  
+	Index = j*m_Geometry->N_x + k;
     if(TempCol[Index]->count > 0)
     {
       for (uint32_t i = 0; i < m_Geometry->N_y; i++) //slice index
@@ -90,7 +92,11 @@ void ForwardProject::operator()() const
           VoxelLineAccessCounter = 0;
           for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++) //CHANGED from <= to <
           {
-            Y_Est->d[i_theta][i_r][i_t] += (NuisanceParams->I_0->d[i_theta] * (TempCol[Index]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object->d[j][k][i]));
+            ttmp = (NuisanceParams->I_0->d[i_theta] *
+                (TempCol[Index]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++]
+                * m_Geometry->Object->getValue(j, k, i) ) );
+
+            Y_Est->addToValue(ttmp, i_theta, i_r, i_t);
 
           }
         }

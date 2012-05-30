@@ -194,7 +194,7 @@ void SOCEngine::InitializeSinogram(SinogramPtr v)
   v->N_theta = 0.0;
   v->delta_r = 0.0;
   v->delta_t = 0.0;
-  v->counts = RealVolumeType::NullPointer();
+  v->counts = Real3DType::NullPointer();
   v->R0 = 0.0;
   v->RMax = 0.0;
   v->T0 = 0.0;
@@ -209,7 +209,7 @@ void SOCEngine::InitializeSinogram(SinogramPtr v)
 // -----------------------------------------------------------------------------
 void SOCEngine::InitializeGeometry(GeometryPtr v)
 {
-  v->Object = RealVolumeType::NullPointer();
+  v->Object = Real3DType::NullPointer();
 
   v->LengthX = 0.0;
   v->LengthY = 0.0;
@@ -275,7 +275,7 @@ void SOCEngine::execute()
    uint64_t totalTime = EIMTOMO_getMilliSeconds();
    int32_t err = 0;
 
-  int16_t i,j,k,Idx;
+ // int16_t i,j,k,Idx;
   size_t dims[3];
 
   Int32ArrayType::Pointer Counter;
@@ -289,15 +289,15 @@ void SOCEngine::execute()
   Real_t checksum = 0,temp;
 
   RealImage_t::Pointer VoxelProfile;
-  RealVolumeType::Pointer detectorResponse;
-  RealVolumeType::Pointer H_t;
+  Real3DType::Pointer detectorResponse;
+  Real3DType::Pointer H_t;
 
 
 
-  RealVolumeType::Pointer Y_Est;//Estimated Sinogram
+  Real3DType::Pointer Y_Est;//Estimated Sinogram
   Real3DType::Pointer Final_Sinogram;//To store and write the final sinogram resulting from our reconstruction
-  RealVolumeType::Pointer ErrorSino;//Error Sinogram
-  RealVolumeType::Pointer Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
+  Real3DType::Pointer ErrorSino;//Error Sinogram
+  Real3DType::Pointer Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
   RNGVars* RandomNumber;
   std::string indent("");
 
@@ -409,7 +409,7 @@ void SOCEngine::execute()
 #endif
 
   // initialize variables
-  Idx = 0;
+  uint16_t Idx = 0;
 
 #ifdef WRITE_INTERMEDIATE_RESULTS
   Real_t Fraction = 0.1;//write this fraction of the iterations
@@ -435,9 +435,9 @@ void SOCEngine::execute()
   dims[2] = m_Sinogram->N_t;
 
 
-  Y_Est = RealVolumeType::New(dims, "Y_Est");
-  ErrorSino = RealVolumeType::New(dims, "ErrorSino");
-  Weight = RealVolumeType::New(dims, "Weight");
+  Y_Est = Real3DType::New(dims, "Y_Est");
+  ErrorSino = Real3DType::New(dims, "ErrorSino");
+  Weight = Real3DType::New(dims, "Weight");
   Final_Sinogram = Real3DType::New(dims, "Final Sinogram");
 
   //Setting the value of all the private members
@@ -569,7 +569,7 @@ void SOCEngine::execute()
   dims[0] = 1;
   dims[1] = m_Sinogram->N_theta;
   dims[2] = DETECTOR_RESPONSE_BINS;
-  H_t = RealVolumeType::New(dims, "H_t");
+  H_t = Real3DType::New(dims, "H_t");
   initializeHt(H_t);
 
 
@@ -587,7 +587,7 @@ void SOCEngine::execute()
   AMatrixCol** TempCol = (AMatrixCol**)get_spc(m_Geometry->N_x * m_Geometry->N_z, sizeof(AMatrixCol*));
   AMatrixCol* VoxelLineResponse = (AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));
   MaxNumberOfDetectorElts = (uint16_t)((m_TomoInputs->delta_xy / m_Sinogram->delta_t) + 2);
-  for (i = 0; i < m_Geometry->N_y; i++)
+  for (uint16_t i = 0; i < m_Geometry->N_y; i++)
   {
     VoxelLineResponse[i].count = 0;
     VoxelLineResponse[i].values = (Real_t*)get_spc(MaxNumberOfDetectorElts, sizeof(Real_t));
@@ -604,11 +604,11 @@ void SOCEngine::execute()
   //q = 0;
 
 #ifdef STORE_A_MATRIX
-  for(i = 0;i < m_Geometry->N_y; i++)
+  for(uint16_t i = 0;i < m_Geometry->N_y; i++)
   {
-    for(j = 0;j < m_Geometry->N_z; j++)
+    for(uint16_t j = 0;j < m_Geometry->N_z; j++)
     {
-      for (k = 0; k < m_Geometry->N_x; k++)
+      for (uint16_t k = 0; k < m_Geometry->N_x; k++)
       {
         //  AMatrix[q++]=CE_CalculateAMatrixColumn(i,j,Sinogram,Geometry,VoxelProfile);
         AMatrix[i][j][k]=calculateAMatrixColumn(j,k,i,m_Sinogram,m_Geometry,VoxelProfile);//row,col,slice
@@ -623,19 +623,20 @@ void SOCEngine::execute()
 #else
   temp = 0;
   uint32_t voxel_count = 0;
-  for (j = 0; j < m_Geometry->N_z; j++)
+  for (uint16_t z = 0; z < m_Geometry->N_z; z++)
   {
-    for (k = 0; k < m_Geometry->N_x; k++)
+    for (uint16_t x = 0; x < m_Geometry->N_x; x++)
     {
-      TempCol[voxel_count] = (AMatrixCol*)calculateAMatrixColumnPartial(j, k, 0, detectorResponse);
+      TempCol[voxel_count] = (AMatrixCol*)calculateAMatrixColumnPartial(z, x, 0, detectorResponse);
       temp += TempCol[voxel_count]->count;
       if(0 == TempCol[voxel_count]->count)
       {
         //If this line is never hit and the Object is badly initialized
         //set it to zero
-        for (i = 0; i < m_Geometry->N_y; i++)
+        for (uint16_t y = 0; y < m_Geometry->N_y; y++)
         {
-          m_Geometry->Object->d[j][k][i] = 0;
+          //m_Geometry->Object->d[z][x][y] = 0;
+          m_Geometry->Object->setValue(0.0, z, x, y);
         }
       }
       voxel_count++;
@@ -842,9 +843,9 @@ void SOCEngine::execute()
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-        temp_final = m_Sinogram->counts->d[i_theta][i_r][i_t] - ErrorSino->d[i_theta][i_r][i_t];
+//        temp_final = m_Sinogram->counts->d[i_theta][i_r][i_t] - ErrorSino->d[i_theta][i_r][i_t];
+        temp_final = m_Sinogram->counts->getValue(i_theta, i_r, i_t) - ErrorSino->getValue(i_theta, i_r, i_t);
         //Final_Sinogram->d[i_theta][i_r][i_t] = temp;
-
         Final_Sinogram->setValue(temp_final, i_theta, i_r, i_t);
       }
     }
@@ -989,102 +990,96 @@ RealImage_t::Pointer SOCEngine::calculateVoxelProfile()
 /*******************************************************************
  Forwards Projects the Object and stores it in a 3-D matrix
  ********************************************************************/
-RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer DetectorResponse,
-                                                  RealVolumeType::Pointer H_t)
+Real3DType::Pointer SOCEngine::forwardProject(Real3DType::Pointer DetectorResponse,
+                                                  Real3DType::Pointer H_t)
 {
   notify("Executing Forward Projection", 50, Observable::UpdateProgressValueAndMessage);
 
-  Real_t x,z,y;
-  Real_t r,rmin,rmax,t,tmin,tmax;
-  Real_t w1,w2,f1,f2;
-  Real_t center_r,delta_r,center_t,delta_t;
-  int16_t index_min,index_max,slice_index_min,slice_index_max,i_r,i_t,i_theta;
-  int16_t i,j,k;
-  int16_t index_delta_t,index_delta_r;
+  Real_t x, z, y;
+  Real_t r, rmin, rmax, t, tmin, tmax;
+  Real_t w1, w2, f1, f2;
+  Real_t center_r, delta_r, center_t, delta_t;
+  int16_t index_min, index_max, slice_index_min, slice_index_max, i_r, i_t;
+
+  int16_t index_delta_t, index_delta_r;
   size_t dims[3] =
   { m_Sinogram->N_theta, m_Sinogram->N_r, m_Sinogram->N_t };
-  RealVolumeType::Pointer  Y_Est = RealVolumeType::New(dims, "Y_Est");
+  Real3DType::Pointer Y_Est = Real3DType::New(dims, "Y_Est");
 
-  for (j = 0; j < m_Geometry->N_z; j++)
+  for (int16_t j = 0; j < m_Geometry->N_z; j++)
   {
-    for (k=0; k < m_Geometry->N_x; k++)
+    for (int16_t k = 0; k < m_Geometry->N_x; k++)
     {
-      x = m_Geometry->x0 + ((Real_t)k+0.5)*m_TomoInputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-      z = m_Geometry->z0 + ((Real_t)j+0.5)*m_TomoInputs->delta_xz;//0.5 is for center of voxel. z_0 is the left corner
+      x = m_Geometry->x0 + ((Real_t)k + 0.5) * m_TomoInputs->delta_xz; //0.5 is for center of voxel. x_0 is the left corner
+      z = m_Geometry->z0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz; //0.5 is for center of voxel. z_0 is the left corner
 
-      for (i = 0; i < m_Geometry->N_y ; i++)
+      for (int16_t i = 0; i < m_Geometry->N_y; i++)
       {
-        for(i_theta = 0;i_theta < m_Sinogram->N_theta;i_theta++)
+        for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
         {
-          r = x*cosine->d[i_theta] - z*sine->d[i_theta];
+          r = x * cosine->d[i_theta] - z * sine->d[i_theta];
           rmin = r - m_TomoInputs->delta_xz;
           rmax = r + m_TomoInputs->delta_xz;
 
-          if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax)
-            continue;
+          if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax) continue;
 
-          index_min = static_cast<uint16_t>(floor(((rmin - m_Sinogram->R0)/m_Sinogram->delta_r)));
-          index_max = static_cast<uint16_t>(floor((rmax - m_Sinogram->R0)/m_Sinogram->delta_r));
+          index_min = static_cast<uint16_t>(floor(((rmin - m_Sinogram->R0) / m_Sinogram->delta_r)));
+          index_max = static_cast<uint16_t>(floor((rmax - m_Sinogram->R0) / m_Sinogram->delta_r));
 
-          if(index_max >= m_Sinogram->N_r)
-            index_max = m_Sinogram->N_r - 1;
+          if(index_max >= m_Sinogram->N_r) index_max = m_Sinogram->N_r - 1;
 
-          if(index_min < 0)
-            index_min = 0;
+          if(index_min < 0) index_min = 0;
 
-          y = m_Geometry->y0 + ((double)i+ 0.5)*m_TomoInputs->delta_xy;
+          y = m_Geometry->y0 + ((double)i + 0.5) * m_TomoInputs->delta_xy;
           t = y;
 
+          tmin = (t - m_TomoInputs->delta_xy / 2) > m_Sinogram->T0 ? t - m_TomoInputs->delta_xy / 2 : m_Sinogram->T0;
+          tmax = (t + m_TomoInputs->delta_xy / 2) <= m_Sinogram->TMax ? t + m_TomoInputs->delta_xy / 2 : m_Sinogram->TMax;
 
-          tmin = (t - m_TomoInputs->delta_xy/2) > m_Sinogram->T0 ? t-m_TomoInputs->delta_xy/2 : m_Sinogram->T0;
-          tmax = (t + m_TomoInputs->delta_xy/2) <= m_Sinogram->TMax? t + m_TomoInputs->delta_xy/2 : m_Sinogram->TMax;
+          slice_index_min = static_cast<uint16_t>(floor((tmin - m_Sinogram->T0) / m_Sinogram->delta_t));
+          slice_index_max = static_cast<uint16_t>(floor((tmax - m_Sinogram->T0) / m_Sinogram->delta_t));
 
-          slice_index_min = static_cast<uint16_t>(floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t));
-          slice_index_max = static_cast<uint16_t>(floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t));
-
-          if(slice_index_min < 0)
-            slice_index_min = 0;
-          if(slice_index_max >= m_Sinogram->N_t)
-            slice_index_max = m_Sinogram->N_t-1;
+          if(slice_index_min < 0) slice_index_min = 0;
+          if(slice_index_max >= m_Sinogram->N_t) slice_index_max = m_Sinogram->N_t - 1;
 
           for (i_r = index_min; i_r <= index_max; i_r++)
           {
-            center_r = m_Sinogram->R0 + ((double)i_r + 0.5)*m_Sinogram->delta_r ;
+            center_r = m_Sinogram->R0 + ((double)i_r + 0.5) * m_Sinogram->delta_r;
             delta_r = fabs(center_r - r);
-            index_delta_r = static_cast<uint16_t>(floor((delta_r/OffsetR)));
+            index_delta_r = static_cast<uint16_t>(floor((delta_r / OffsetR)));
 
             if(index_delta_r < DETECTOR_RESPONSE_BINS)
             {
-              w1 = delta_r - index_delta_r*OffsetR;
-              w2 = (index_delta_r+1)*OffsetR - delta_r;
-              f1 = (w2/OffsetR)*DetectorResponse->d[0][i_theta][index_delta_r] + (w1/OffsetR)*DetectorResponse->d[0][i_theta][index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
+              w1 = delta_r - index_delta_r * OffsetR;
+              w2 = (index_delta_r + 1) * OffsetR - delta_r;
+              uint16_t iidx = index_delta_r + 1 < DETECTOR_RESPONSE_BINS ? index_delta_r + 1 : DETECTOR_RESPONSE_BINS - 1;
+              f1 = (w2 / OffsetR) * DetectorResponse->getValue(0, i_theta, index_delta_r)
+                  +(w1 / OffsetR) * DetectorResponse->getValue(0, i_theta, iidx);
             }
             else
             {
-              f1=0;
+              f1 = 0;
             }
 
-
-
-            for (i_t = slice_index_min; i_t <= slice_index_max; i_t ++)
+            for (i_t = slice_index_min; i_t <= slice_index_max; i_t++)
             {
-              center_t = m_Sinogram->T0 + ((double)i_t + 0.5)*m_Sinogram->delta_t;
+              center_t = m_Sinogram->T0 + ((double)i_t + 0.5) * m_Sinogram->delta_t;
               delta_t = fabs(center_t - t);
-              index_delta_t = static_cast<uint16_t>(floor((delta_t/OffsetT)));
+              index_delta_t = static_cast<uint16_t>(floor((delta_t / OffsetT)));
 
               if(index_delta_t < DETECTOR_RESPONSE_BINS)
               {
-                w1 = delta_t - index_delta_t*OffsetT;
-                w2 = (index_delta_t+1)*OffsetT - delta_t;
-                f2 = (w2/OffsetT)*H_t->d[0][i_theta][index_delta_t] + (w1/OffsetT)*H_t->d[0][i_theta][index_delta_t+1 < DETECTOR_RESPONSE_BINS ? index_delta_t+1:DETECTOR_RESPONSE_BINS-1];
+                w1 = delta_t - index_delta_t * OffsetT;
+                w2 = (index_delta_t + 1) * OffsetT - delta_t;
+                uint16_t iidx = index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1;
+                f2 = (w2 / OffsetT) * H_t->getValue(0, i_theta, index_delta_t) + (w1 / OffsetT) * H_t->getValue(0, i_theta, iidx);
               }
               else
               {
                 f2 = 0;
               }
-
-              Y_Est->d[i_theta][i_r][i_t]+=(f1*f2*m_Geometry->Object->d[j][k][i]);
-
+              //Y_Est->d[i_theta][i_r][i_t] += f1*f2*m_Geometry->Object->getValue(j, k, i);
+              Y_Est->addToValue(f1 * f2 * m_Geometry->Object->getValue(j, k, i), i_theta, i_r, i_t);
             }
           }
         }
@@ -1147,24 +1142,25 @@ void SOCEngine::initializeBeamProfile()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Real_t SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::Pointer Weight)
+Real_t SOCEngine::computeCost(Real3DType::Pointer ErrorSino,Real3DType::Pointer Weight)
 {
   Real_t cost=0,temp=0;
   Real_t delta;
-  int16_t i,j,k;
+  Real_t errSinoValue = 0.0;
 #ifdef QGGMRF
   //DATA_TYPE MRF_C_TIMES_SIGMA_P_Q= MRF_C*SIGMA_X_P_Q;
 #endif
 //  int16_t p,q,r;
 
 //Data Mismatch Error
-  for (i = 0; i < m_Sinogram->N_theta; i++)
+  for (int16_t i = 0; i < m_Sinogram->N_theta; i++)
   {
-    for (j = 0; j < m_Sinogram->N_r; j++)
+    for (int16_t j = 0; j < m_Sinogram->N_r; j++)
     {
-      for (k = 0; k < m_Sinogram->N_t; k++)
+      for (int16_t k = 0; k < m_Sinogram->N_t; k++)
       {
-        cost += (ErrorSino->d[i][j][k] * ErrorSino->d[i][j][k] * Weight->d[i][j][k]);
+        errSinoValue = ErrorSino->getValue(i, j, k);
+        cost += (errSinoValue * errSinoValue * Weight->getValue(i, j, k) );
       }
     }
   }
@@ -1338,101 +1334,103 @@ Real_t SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::
         }
       }
       cost+=(temp/SIGMA_X_Q);*/
-  for (i = 0; i < m_Geometry->N_z; i++)
-    for (j = 0; j < m_Geometry->N_x; j++)
-      for(k = 0; k < m_Geometry->N_y; k++)
+  for (int16_t i = 0; i < m_Geometry->N_z; i++)
+  {
+    for (int16_t j = 0; j < m_Geometry->N_x; j++)
+    {
+      for (int16_t k = 0; k < m_Geometry->N_y; k++)
       {
 
-        if(k+1 <  m_Geometry->N_y)
+        if(k + 1 < m_Geometry->N_y)
         {
-          delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j][k+1];
-          temp += FILTER[2][1][1]*CE_QGGMRF_Value(delta);
+          delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j, k + 1);
+          temp += FILTER[2][1][1] * CE_QGGMRF_Value(delta);
 
         }
 
-        if(j+1 < m_Geometry->N_x)
+        if(j + 1 < m_Geometry->N_x)
         {
-          if(k-1 >= 0)
+          if(k - 1 >= 0)
           {
-            delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k-1];
-            temp += FILTER[0][1][2]*CE_QGGMRF_Value(delta);
+            delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k - 1);
+            temp += FILTER[0][1][2] * CE_QGGMRF_Value(delta);
           }
 
-          delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k];
-          temp += FILTER[1][1][2]*CE_QGGMRF_Value(delta);
+          delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k);
+          temp += FILTER[1][1][2] * CE_QGGMRF_Value(delta);
 
-
-          if(k+1 < m_Geometry->N_y)
+          if(k + 1 < m_Geometry->N_y)
           {
-            delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k+1];
-            temp += FILTER[2][1][2]*CE_QGGMRF_Value(delta);
+            delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k + 1);
+            temp += FILTER[2][1][2] * CE_QGGMRF_Value(delta);
           }
 
         }
 
-        if(i+1 < m_Geometry->N_z)
+        if(i + 1 < m_Geometry->N_z)
         {
 
-          if(j-1 >= 0)
+          if(j - 1 >= 0)
           {
-            delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k];
-            temp += FILTER[1][2][0]*CE_QGGMRF_Value(delta);
+            delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k);
+            temp += FILTER[1][2][0] * CE_QGGMRF_Value(delta);
           }
 
-          delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k];
-          temp += FILTER[1][2][1]*CE_QGGMRF_Value(delta);
+          delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k);
+          temp += FILTER[1][2][1] * CE_QGGMRF_Value(delta);
 
-          if(j+1 < m_Geometry->N_x)
+          if(j + 1 < m_Geometry->N_x)
           {
-            delta=m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k];
-            temp += FILTER[1][2][2]*CE_QGGMRF_Value(delta);
+            delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k);
+            temp += FILTER[1][2][2] * CE_QGGMRF_Value(delta);
           }
 
-
-          if(j-1 >= 0)
+          if(j - 1 >= 0)
           {
-            if(k-1 >= 0)
+            if(k - 1 >= 0)
             {
-              delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k-1];
-              temp += FILTER[0][2][0]*CE_QGGMRF_Value(delta);
+              delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k - 1);
+              temp += FILTER[0][2][0] * CE_QGGMRF_Value(delta);
             }
 
-            if(k+1 < m_Geometry->N_y)
+            if(k + 1 < m_Geometry->N_y)
             {
-              delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k+1];
-              temp += FILTER[2][2][0]*CE_QGGMRF_Value(delta);
+              delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k + 1);
+              temp += FILTER[2][2][0] * CE_QGGMRF_Value(delta);
             }
 
           }
 
-          if(k-1 >= 0)
+          if(k - 1 >= 0)
           {
-            delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k-1];
-            temp += FILTER[0][2][1]*CE_QGGMRF_Value(delta);
+            delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k - 1);
+            temp += FILTER[0][2][1] * CE_QGGMRF_Value(delta);
           }
 
-          if(j+1 < m_Geometry->N_x)
+          if(j + 1 < m_Geometry->N_x)
           {
-            if(k-1 >= 0)
+            if(k - 1 >= 0)
             {
-              delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k-1];
-              temp += FILTER[0][2][2]*CE_QGGMRF_Value(delta);
+              delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k - 1);
+              temp += FILTER[0][2][2] * CE_QGGMRF_Value(delta);
             }
 
-            if(k+1 < m_Geometry->N_y)
+            if(k + 1 < m_Geometry->N_y)
             {
-              delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k+1];
-              temp+= FILTER[2][2][2]*CE_QGGMRF_Value(delta);
+              delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k + 1);
+              temp += FILTER[2][2][2] * CE_QGGMRF_Value(delta);
             }
           }
 
-          if(k+1 < m_Geometry->N_y)
+          if(k + 1 < m_Geometry->N_y)
           {
-            delta = m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k+1];
-            temp+= FILTER[2][2][1]*CE_QGGMRF_Value(delta);
+            delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k + 1);
+            temp += FILTER[2][2][1] * CE_QGGMRF_Value(delta);
           }
         }
       }
+    }
+  }
   cost+=(temp);
 #endif //QGGMRF
 
@@ -1450,14 +1448,14 @@ Real_t SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::
     }
   }
   temp *= ((m_Sinogram->N_r * m_Sinogram->N_t) / 2);*/
-  for (i = 0; i < m_Sinogram->N_theta; i++)
+  for (int16_t i = 0; i < m_Sinogram->N_theta; i++)
   {
-    for (j = 0; j < m_Sinogram->N_r; j++)
+    for (int16_t j = 0; j < m_Sinogram->N_r; j++)
     {
-      for (k = 0; k < m_Sinogram->N_t; k++)
+      for (int16_t k = 0; k < m_Sinogram->N_t; k++)
       {
-        if(Weight->d[i][j][k] != 0)
-        temp+= log(2 * M_PI * (1.0/Weight->d[i][j][k]));
+        if(Weight->getValue(i, j, k) != 0)
+        temp+= log(2 * M_PI * (1.0/Weight->getValue(i, j, k)));
       }
     }
   }
@@ -1471,7 +1469,7 @@ Real_t SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::
 //
 // -----------------------------------------------------------------------------
 void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice,
-                                               RealVolumeType::Pointer DetectorResponse)
+                                               Real3DType::Pointer DetectorResponse)
 {
   int32_t j,k,sliceidx;
   Real_t x,z,y;
@@ -1585,8 +1583,9 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
             w3 = delta_t - index_delta_t*OffsetT;
             w4 = (index_delta_r+1)*OffsetT - delta_t;
 
-
-            f1 = (w2/OffsetR)*DetectorResponse->d[index_delta_t][i][index_delta_r] + (w1/OffsetR)*DetectorResponse->d[index_delta_t][i][index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
+            uint16_t iidx = index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1;
+            f1 = (w2/OffsetR)*DetectorResponse->getValue(index_delta_t, i, index_delta_r)
+               + (w1/OffsetR)*DetectorResponse->getValue(index_delta_t, i, iidx);
             //  f2 = (w2/OffsetR)*DetectorResponse[index_delta_t+1 < DETECTOR_RESPONSE_BINS ?index_delta_t+1 : DETECTOR_RESPONSE_BINS-1][i][index_delta_r] + (w1/OffsetR)*DetectorResponse[index_delta_t+1 < DETECTOR_RESPONSE_BINS? index_delta_t+1:DETECTOR_RESPONSE_BINS][i][index_delta_r+1 < DETECTOR_RESPONSE_BINS? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
 
             if(sliceidx == slice_index_min)
@@ -1850,8 +1849,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                              UInt8Image_t::Pointer VisitCount,
                              RNGVars* RandomNumber,
                              AMatrixCol** TempCol,
-                             RealVolumeType::Pointer ErrorSino,
-                             RealVolumeType::Pointer Weight,
+                             Real3DType::Pointer ErrorSino,
+                             Real3DType::Pointer Weight,
                              AMatrixCol* VoxelLineResponse,
                              ScaleOffsetParams* NuisanceParams,
                              UInt8Image_t::Pointer Mask,
@@ -2060,7 +2059,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                     {
                       if(k_new + r >= 0 && k_new + r < m_Geometry->N_x)
                       {
-                        NEIGHBORHOOD[p + 1][q + 1][r + 1] = m_Geometry->Object->d[q + j_new][r + k_new][p + i];
+                        NEIGHBORHOOD[p + 1][q + 1][r + 1] = m_Geometry->Object->getValue(q + j_new, r + k_new, p + i);
                         BOUNDARYFLAG[p + 1][q + 1][r + 1] = 1;
                       }
                       else
@@ -2078,7 +2077,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             if(i == 0 && j == 31 && k == 31)
             {
               printf("***************************\n");
-              printf("Geom %lf\n", m_Geometry->Object->d[i][31][31]);
+              printf("Geom %lf\n", m_Geometry->Object->getValue(i, 31, 31) );
               for (int p = 0; p <= 2; p++)
               {
                 for (int q = 0; q <= 2; q++)
@@ -2092,7 +2091,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             }
 #endif
             //Compute theta1 and theta2
-            V = m_Geometry->Object->d[j_new][k_new][i]; //Store the present value of the voxel
+            V = m_Geometry->Object->getValue(j_new, k_new, i); //Store the present value of the voxel
             THETA1 = 0.0;
             THETA2 = 0.0;
 #ifdef ZERO_SKIPPING
@@ -2129,9 +2128,9 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
               for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
               {
                 Real_t ProjectionEntry = ttmp * VoxelLineResponse[i].values[VoxelLineAccessCounter];
-                tt = Weight->d[i_theta][i_r][i_t] * ProjectionEntry;
+                tt = Weight->getValue(i_theta, i_r, i_t) * ProjectionEntry;
                 THETA2 += (tt * ProjectionEntry);
-                THETA1 += (tt * ErrorSino->d[i_theta][i_r][i_t] );
+                THETA1 += (tt * ErrorSino->getValue(i_theta, i_r, i_t) );
                 VoxelLineAccessCounter++;
               }
             }
@@ -2184,9 +2183,9 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             }
 
             //TODO Print appropriate error messages for other values of error code
-            m_Geometry->Object->d[j_new][k_new][i] = UpdatedVoxelValue;
+            m_Geometry->Object->setValue(UpdatedVoxelValue, j_new, k_new, i);
             //#ifdef NHICD
-            Real_t intermediate = MagUpdateMap->getValue(j_new, k_new) + fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+            Real_t intermediate = MagUpdateMap->getValue(j_new, k_new) + fabs(m_Geometry->Object->getValue(j_new, k_new, i) - V);
             MagUpdateMap->setValue(intermediate, j_new, k_new);
             //#endif
 
@@ -2194,7 +2193,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             //if(Mask->d[j_new][k_new] == 1)
             if (Mask->getValue(j_new, k_new) == 1)
             {
-              AverageUpdate += fabs(m_Geometry->Object->d[j_new][k_new][i] - V);
+              AverageUpdate += fabs(m_Geometry->Object->getValue(j_new, k_new, i) - V);
               AverageMagnitudeOfRecon += fabs(V); //computing the percentage update =(Change in mag/Initial magnitude)
             }
 #endif
@@ -2210,7 +2209,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
               for (uint32_t i_t = index; i_t < count; i_t++)
               //for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
               {
-                ErrorSino->d[i_theta][i_r][i_t] -= (NuisanceParams->I_0->d[i_theta] * (TempCol[Index]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->d[j_new][k_new][i] - V)));
+                Real_t ttmp = NuisanceParams->I_0->d[i_theta] * (TempCol[Index]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->getValue(j_new, k_new, i) - V));
+                ErrorSino->deleteFromValue(ttmp, i_theta, i_r, i_t);
                 VoxelLineAccessCounter++;
               }
             }

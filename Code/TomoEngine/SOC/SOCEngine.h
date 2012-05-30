@@ -114,7 +114,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 
     uint8_t updateVoxels(int16_t OuterIter, int16_t Iter, VoxelUpdateType updateType, UInt8Image_t::Pointer VisitCount,
                       RNGVars* RandomNumber, AMatrixCol** TempCol,
-                      RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight,
+                      Real3DType::Pointer ErrorSino, Real3DType::Pointer Weight,
                       AMatrixCol* VoxelLineResponse, ScaleOffsetParams* NuisanceParams,
                       UInt8Image_t::Pointer Mask, CostData::Pointer cost);
 
@@ -127,24 +127,24 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     int initializeRoughReconstructionData();
     void initializeROIMask(UInt8Image_t::Pointer Mask);
     void gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams);
-    void initializeHt(RealVolumeType::Pointer H_t);
-    void storeVoxelResponse(RealVolumeType::Pointer H_t, AMatrixCol* VoxelLineResponse);
-    void initializeVolume(RealVolumeType::Pointer Y_Est, double value);
-    void calculateMeasurementWeight(RealVolumeType::Pointer Weight,
+    void initializeHt(Real3DType::Pointer H_t);
+    void storeVoxelResponse(Real3DType::Pointer H_t, AMatrixCol* VoxelLineResponse);
+    void initializeVolume(Real3DType::Pointer Y_Est, double value);
+    void calculateMeasurementWeight(Real3DType::Pointer Weight,
                                                ScaleOffsetParamsPtr NuisanceParams,
-                                               RealVolumeType::Pointer ErrorSino,
-                                               RealVolumeType::Pointer Y_Est);
-    int jointEstimation(RealVolumeType::Pointer Weight,
+                                               Real3DType::Pointer ErrorSino,
+                                               Real3DType::Pointer Y_Est);
+    int jointEstimation(Real3DType::Pointer Weight,
                          ScaleOffsetParamsPtr NuisanceParams,
-                         RealVolumeType::Pointer ErrorSino,
-                         RealVolumeType::Pointer Y_Est,
+                         Real3DType::Pointer ErrorSino,
+                         Real3DType::Pointer Y_Est,
                          CostData::Pointer cost);
     int calculateCost(CostData::Pointer cost,
-                      RealVolumeType::Pointer Weight,
-                      RealVolumeType::Pointer ErrorSino);
-    void updateWeights(RealVolumeType::Pointer Weight,
+                      Real3DType::Pointer Weight,
+                      Real3DType::Pointer ErrorSino);
+    void updateWeights(Real3DType::Pointer Weight,
                        ScaleOffsetParamsPtr NuisanceParams,
-                       RealVolumeType::Pointer ErrorSino);
+                       Real3DType::Pointer ErrorSino);
     void writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams);
 
     void writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, Real3DType::Pointer Final_Sinogram);
@@ -213,7 +213,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      * @param H_t
      * @return
      */
-    RealVolumeType::Pointer forwardProject(RealVolumeType::Pointer DetectorResponse, RealVolumeType::Pointer H_t);
+    Real3DType::Pointer forwardProject(Real3DType::Pointer DetectorResponse, Real3DType::Pointer H_t);
 
     /**
      * @brief
@@ -252,7 +252,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      * @param Weight
      * @return
      */
-    Real_t computeCost(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight);
+    Real_t computeCost(Real3DType::Pointer ErrorSino, Real3DType::Pointer Weight);
 
     /**
      * @brief
@@ -261,7 +261,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      * @param slice
      * @param DetectorResponse
      */
-    void* calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, RealVolumeType::Pointer DetectorResponse);
+    void* calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, Real3DType::Pointer DetectorResponse);
 
     /**
      * @brief

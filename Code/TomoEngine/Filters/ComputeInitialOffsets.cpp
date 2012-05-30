@@ -87,7 +87,9 @@ void ComputeInitialOffsets::execute()
     for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
     {
       for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
-        sum += sinogram->counts->d[i_theta][i_r][i_t];
+      {
+        sum += sinogram->counts->getValue(i_theta, i_r, i_t);
+      }
     }
     sum /= (sinogram->N_r * sinogram->N_t);
     AverageGain[i_theta] = sum;
@@ -189,14 +191,14 @@ void ComputeInitialOffsets::execute()
 {
 	// If an error occurs, clean up any memory, call "setErrorCondition(-1)" and
 	// also setErrorMessage("Something went wrong"); and then return
-	
+
 	notify("GainsOffsetsCalculation Starting", 0, UpdateProgressMessage);
 	SinogramPtr sinogram = getSinogram(); //This I assume some how gets the sinogram as it stands now
 	TomoInputsPtr inputs = getTomoInputs(); //This gets the input files
 	Real_t min = INFINITY;
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	{
-		
+
 		for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
 		{
 			for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
@@ -204,7 +206,7 @@ void ComputeInitialOffsets::execute()
 					min = sinogram->counts->d[i_theta][i_r][i_t];
 		}
 	}
-	
+
 	//  std::cout << "Target Gain" << sinogram->targetGain << std::endl;
 	//  //In this the Gains are all set to the target Gain
 	//  std::cout << "------------Initial Gains-----------" << std::endl;
@@ -225,7 +227,7 @@ void ComputeInitialOffsets::execute()
 	//    sinogram->InitialVariance->d[i_theta] = 1;
 	//    std::cout << "Tilt: " << i_theta << "  Variance: " << sinogram->InitialVariance->d[i_theta] << std::endl;
 	//  }
-	
+
 	setErrorCondition(0);
 	setErrorMessage("");
 	notify("Done ComputeInitialOffsets", 0, UpdateProgressMessage);

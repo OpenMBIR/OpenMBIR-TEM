@@ -169,7 +169,7 @@ void MRCSinogramInitializer::execute()
   size_t dims[3] = {sinogram->N_theta,
   inputs->xEnd - inputs->xStart+1,
   inputs->yEnd - inputs->yStart+1};
-  sinogram->counts = RealVolumeType::New(dims, "Sinogram.counts");
+  sinogram->counts = Real3DType::New(dims, "Sinogram.counts");
 
 
 	//If the bright field image is included initialize space for it
@@ -178,7 +178,7 @@ void MRCSinogramInitializer::execute()
 	size_t dims[3] = {sinogram->N_theta,
 	inputs->xEnd - inputs->xStart+1,
 	inputs->yEnd - inputs->yStart+1};
-	sinogram->counts_BF = RealVolumeType::New(dims);
+	sinogram->counts_BF = Real3DType::New(dims);
 	sinogram->counts_BF->setName("Sinogram.counts_BrightField");
 	}*/
 
@@ -206,7 +206,7 @@ void MRCSinogramInitializer::execute()
       for (uint16_t x = 0; x < sinogram->N_r; x++)
       {
         size_t index = (dataZOffset * sinogram->N_r * sinogram->N_t) + (y * sinogram->N_r) + x;
-        sinogram->counts->d[z][x][y] = data[index];
+        sinogram->counts->setValue(data[index], z, x, y);
       }
     }
   }
@@ -237,7 +237,7 @@ void MRCSinogramInitializer::execute()
     {
       for (uint16_t k = 0; k < sinogram->N_t; k++)
       {
-        sum += sinogram->counts->d[i][j][k];
+        sum += sinogram->counts->getValue(i, j, k);
       }
     }
     printf("Sinogram Checksum %d: %f\n", i, sum);

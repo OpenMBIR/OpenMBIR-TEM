@@ -44,7 +44,7 @@
 // -----------------------------------------------------------------------------
 DetectorResponse::~DetectorResponse()
 {
-  m_Response = RealVolumeType::NullPointer();
+  m_Response = Real3DType::NullPointer();
 }
 
 // -----------------------------------------------------------------------------
@@ -76,7 +76,7 @@ void DetectorResponse::execute()
   TomoInputsPtr inputs = getTomoInputs();
 
   size_t dims[3] = {1, sinogram->N_theta,DETECTOR_RESPONSE_BINS};
-  RealVolumeType::Pointer H = RealVolumeType::New(dims, "DetectorResponse");
+  Real3DType::Pointer H = Real3DType::New(dims, "DetectorResponse");
 
   //H = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//change from 1 to DETECTOR_RESPONSE_BINS
   TempConst=(PROFILE_RESOLUTION)/(2*inputs->delta_xz);
@@ -110,7 +110,7 @@ void DetectorResponse::execute()
           sum += m_VoxelProfile->getValue(k, ProfileIndex) * m_BeamProfile->d[p];
 //          sum += (m_VoxelProfile->d[k][ProfileIndex] * m_BeamProfile->d[p]);//;*BeamProfile[l]);
         }
-        H->d[j][k][i] = sum;
+        H->setValue(sum, j, k, i);
       }
     }
   }

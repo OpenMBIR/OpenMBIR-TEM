@@ -76,14 +76,14 @@ Real_t InitialReconstructionInitializer::absMaxArray(std::vector<Real_t> &Array)
 void InitialReconstructionInitializer::initializeData()
 {
   GeometryPtr geometry = getGeometry();
-
-  for (uint16_t i = 0; i < geometry->N_y; i++)
+  for (uint16_t z = 0; z < geometry->N_z; z++)
   {
-    for (uint16_t j = 0; j < geometry->N_x; j++)
+    for (uint16_t x = 0; x < geometry->N_x; x++)
     {
-      for (uint16_t k = 0; k < geometry->N_z; k++)
+      for (uint16_t y = 0; y < geometry->N_y; y++)
       {
-        geometry->Object->d[k][j][i] = 0;
+        //geometry->Object->d[k][j][i] = 0;
+        geometry->Object->setValue(0.0, z, x, y);
       }
     }
   }
@@ -153,7 +153,7 @@ void InitialReconstructionInitializer::execute()
 
 
   size_t dims[3] = {geometry->N_z, geometry->N_x, geometry->N_y};
-  geometry->Object  = RealVolumeType::New(dims, "Geometry.Object");
+  geometry->Object  = Real3DType::New(dims, "Geometry.Object");
 
  // geometry->Object = (DATA_TYPE ***)get_3D(geometry->N_z, geometry->N_x, geometry->N_y, sizeof(DATA_TYPE));//Allocate space for the 3-D object
 //Coordinates of the left corner of the x-z object
@@ -165,23 +165,24 @@ void InitialReconstructionInitializer::execute()
 	printf("Geometry->X0=%lf\n",geometry->x0);
 	printf("Geometry->Y0=%lf\n",geometry->y0);
 	printf("Geometry->Z0=%lf\n",geometry->z0);
-	
+
   // Now we actually initialize the data to something. If a subclass is involved
   // then the subclasses version of initializeData() will be used instead
   initializeData();
 
   //Doing a check sum to verify with matlab
-  for(uint16_t i=0;i<geometry->N_y;i++)
+  for (uint16_t y = 0; y < geometry->N_y; y++)
   {
     sum = 0;
-    for (uint16_t j = 0; j < geometry->N_x; j++)
+    for (uint16_t x = 0; x < geometry->N_x; x++)
     {
-      for (uint16_t k = 0; k < geometry->N_z; k++)
+      for (uint16_t z = 0; z < geometry->N_z; z++)
       {
-        sum += geometry->Object->d[k][j][i];
+//        sum += geometry->Object->d[k][j][i];
+        sum += geometry->Object->getValue(z, x, y);
       }
     }
-    std::cout << "Geometry check sum Y:" << i << " Value:" << sum << std::endl;
+    std::cout << "Geometry check sum Y:" << y << " Value:" << sum << std::endl;
   }
   //End of check sum
 

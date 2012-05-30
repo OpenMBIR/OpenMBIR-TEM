@@ -81,7 +81,8 @@ void DetectorResponseWriter::execute()
   }
 
   size_t numElements = getSinogram()->N_theta * DETECTOR_RESPONSE_BINS;
-  size_t nEleWritten = fwrite(&(m_Response->d[0][0][0]), m_Response->getTypeSize(), numElements , Fp);
+  Real_t value = m_Response->getValue(0, 0, 0);
+  size_t nEleWritten = fwrite(&value, m_Response->getTypeSize(), numElements , Fp);
   fclose(Fp);
   if (numElements != nEleWritten)
   {

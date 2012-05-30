@@ -50,7 +50,7 @@ class TomoArray3D
     typedef boost::weak_ptr<TomoArray3D<T, Ptr, SIZE> > ConstWeakPointer;
 
     /** This is the raw pointer to the data. For multi-dimensional data one can
-     * use [][][] notation to get the value
+     * use [] notation to get the value
      */
     Ptr d;
 
@@ -134,6 +134,25 @@ class TomoArray3D
       assert(SIZE == 3);
       d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)] = v;
     }
+
+    inline void addToValue(T v, size_t z, size_t y, size_t x)
+    {
+      assert(SIZE == 3);
+      d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)] += v;
+    }
+
+    inline void deleteFromValue(T v, size_t z, size_t y, size_t x)
+    {
+      assert(SIZE == 3);
+      d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)] -= v;
+    }
+
+    inline void divideByValue(T v, size_t z, size_t y, size_t x)
+    {
+      assert(SIZE == 3);
+      d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)] /= v;
+    }
+
 
 #if 0
 

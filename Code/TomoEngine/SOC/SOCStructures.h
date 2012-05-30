@@ -65,9 +65,6 @@ typedef TomoArray<Real_t, Real_t*, 2> RealImage_t;
 typedef TomoArray<Real_t, Real_t*, 1> RealArrayType;
 
 
-//typedef TomoArray2D<uint8_t, uint8_t*, 2> UInt8Image_t;
-//typedef TomoArray2D<DATA_TYPE, DATA_TYPE*, 2> RealImage_t;
-
 namespace SOC {
   enum TiltSelection {
     A_Tilt,
@@ -101,7 +98,7 @@ namespace SOC {
     uint16_t N_theta;//Number of angles
     Real_t delta_r;//Distance between successive measurements along x
     Real_t delta_t;//Distance between successive measurements along y
-    RealVolumeType::Pointer counts;//The measured images should be stored in this once read from the input file. It will be a Ny X (Nz X Nx)
+    Real3DType::Pointer counts;//The measured images should be stored in this once read from the input file. It will be a Ny X (Nz X Nx)
     std::vector<Real_t> angles;//Holds the angles through which the object is tilted
     Real_t R0,RMax;
     Real_t T0,TMax;
@@ -117,7 +114,7 @@ namespace SOC {
 
   typedef struct
   {
-    RealVolumeType::Pointer Object;//Holds the volume to be reconstructed
+    Real3DType::Pointer Object;//Holds the volume to be reconstructed
     //Computed From User Input
     Real_t LengthX;//sinogram.N_x * delta_r;
     Real_t LengthY;//sinogram.N_y * delta_t
