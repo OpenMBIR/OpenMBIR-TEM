@@ -295,7 +295,7 @@ void SOCEngine::execute()
 
 
   RealVolumeType::Pointer Y_Est;//Estimated Sinogram
-  RealVolumeType::Pointer Final_Sinogram;//To store and write the final sinogram resulting from our reconstruction
+  Real3DType::Pointer Final_Sinogram;//To store and write the final sinogram resulting from our reconstruction
   RealVolumeType::Pointer ErrorSino;//Error Sinogram
   RealVolumeType::Pointer Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
   RNGVars* RandomNumber;
@@ -438,7 +438,7 @@ void SOCEngine::execute()
   Y_Est = RealVolumeType::New(dims, "Y_Est");
   ErrorSino = RealVolumeType::New(dims, "ErrorSino");
   Weight = RealVolumeType::New(dims, "Weight");
-  Final_Sinogram = RealVolumeType::New(dims, "Final Sinogram");
+  Final_Sinogram = Real3DType::New(dims, "Final Sinogram");
 
   //Setting the value of all the private members
   OffsetR = ((m_TomoInputs->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
@@ -711,19 +711,19 @@ void SOCEngine::execute()
   {
     ss.str(""); // Clear the string stream
     indent = "";
-	
+
 	//The first time we may need to update voxels multiple times and then on just optimize over I,d,\sigma,f once each outer loop
     if(OuterIter != 0)
     {
       m_TomoInputs->NumIter = 1;
     }
-	  
-	  
+
+
 
     for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
     {
-	
-	  std::cout<<OuterIter<<"/"<<m_TomoInputs->NumOuterIter<<" "<<Iter<<"/"<<m_TomoInputs->NumIter<<std::endl; 
+
+	  std::cout<<OuterIter<<"/"<<m_TomoInputs->NumOuterIter<<" "<<Iter<<"/"<<m_TomoInputs->NumIter<<std::endl;
       indent = "  ";
 //      ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
 //      ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
@@ -776,13 +776,13 @@ void SOCEngine::execute()
     err = calculateCost(cost, Weight, ErrorSino);
     if (err < 0)
     {
-	  std::cout<<"Cost went up after variance update"<<std::endl;	
+	  std::cout<<"Cost went up after variance update"<<std::endl;
       break;
     }
 #endif//cost
     if(0 == status && OuterIter >= 1)//&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
 	{
-	 std::cout<<"Exiting the code because status =0"<<std::endl;	
+	 std::cout<<"Exiting the code because status =0"<<std::endl;
       break;
 	}
 #else
@@ -835,13 +835,17 @@ void SOCEngine::execute()
 
  //calculates Ax and returns a pointer to the memory block
  // Final_Sinogram=forwardProject(detectorResponse, H_t);
+  Real_t temp_final = 0.0;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
     for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-        Final_Sinogram->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - ErrorSino->d[i_theta][i_r][i_t];
+        temp_final = m_Sinogram->counts->d[i_theta][i_r][i_t] - ErrorSino->d[i_theta][i_r][i_t];
+        //Final_Sinogram->d[i_theta][i_r][i_t] = temp;
+
+        Final_Sinogram->setValue(temp_final, i_theta, i_r, i_t);
       }
     }
   }
@@ -1860,7 +1864,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
   uint32_t zero_count = 0;
   Real_t UpdatedVoxelValue;
 //  Real_t accuracy=1e-8;
-//  uint16_t binarysearch_count 	
+//  uint16_t binarysearch_count
   Real_t accuracy = 1e-9; //This is the rooting accuracy for x
   uint32_t binarysearch_count=10;//Accuracy is 1/(2^10)
   int32_t errorcode = -1;
@@ -2093,22 +2097,22 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             THETA2 = 0.0;
 #ifdef ZERO_SKIPPING
 			  //Zero Skipping Algorithm
-			  bool ZSFlag=true;    
+			  bool ZSFlag=true;
 			  if(V == 0.0 && (Iter > 0 || OuterIter > 0))
-			  {			
+			  {
 				  for(uint8_t p = 0; p <=2; p++)
 					  for(uint8_t q = 0; q <= 2; q++)
 						  for(uint8_t r = 0; r <= 2;r++)
 							  if(NEIGHBORHOOD[p][q][r] > 0.0)
-							  {						  
+							  {
 								  ZSFlag = false;
-								  break;						  
+								  break;
 							  }
 			  }
-			  else 
+			  else
 			  {
 				  ZSFlag = false;//First time dont care for zero skipping
-			  }	
+			  }
 #else
 			  bool ZSFlag = false; //do ICD on all voxels
 #endif //Zero skipping
@@ -2303,7 +2307,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     }
 
   }
-	
+
 	std::cout<<"Number of zeroed out entries="<<zero_count<<std::endl;
   return exit_status;
 

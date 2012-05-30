@@ -115,7 +115,8 @@ void SinogramBinWriter::execute()
     {
       for (uint16_t i_t = 0; i_t < tSize; i_t++) // Height
       {
-        value = m_Data->d[i_theta][i_r][i_t];
+        //value = m_Data->d[i_theta][i_r][i_t];
+        value = m_Data->getValue(i_theta, i_r, i_t);
         value *= m_NuisanceParams->I_0->d[i_theta];
         value += m_NuisanceParams->mu->d[i_theta];
         fwrite(&value, sizeof(Real_t), 1, file);

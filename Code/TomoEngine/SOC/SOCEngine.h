@@ -147,7 +147,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
                        RealVolumeType::Pointer ErrorSino);
     void writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams);
 
-    void writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram);
+    void writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, Real3DType::Pointer Final_Sinogram);
     void writeReconstructionFile();
     void writeVtkFile();
     void writeMRCFile();

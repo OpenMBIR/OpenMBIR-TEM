@@ -824,7 +824,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   err = calculateCost(cost, Weight, ErrorSino);
   if (err < 0)
   {
-	std::cout<<"Cost went up after Gain+Offset update"<<std::endl;  
+	std::cout<<"Cost went up after Gain+Offset update"<<std::endl;
    // return -1;
   }
 #endif
@@ -873,25 +873,25 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
       {
         ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - Y_Est->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];
 
-#ifndef IDENTITY_NOISE_MODEL  
+#ifndef IDENTITY_NOISE_MODEL
         if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
         {
           Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
         }
         else
         {
-          Weight->d[i_theta][i_r][i_t] = 1.0; //Set the weight to some small number 
+          Weight->d[i_theta][i_r][i_t] = 1.0; //Set the weight to some small number
 		  //TODO: Make this something resonable
         }
 #else
-		  Weight->d[i_theta][i_r][i_t] = 1.0;  
+		  Weight->d[i_theta][i_r][i_t] = 1.0;
 #endif //IDENTITY_NOISE_MODEL endif
 
 #ifdef FORWARD_PROJECT_MODE
         temp=Y_Est->d[i_theta][i_r][i_t]/NuisanceParams->I_0->d[i_theta];
         fwrite(&temp,sizeof(Real_t),1,Fp6);
 #endif
-#ifdef DEBUG	  
+#ifdef DEBUG
         if(Weight->d[i_theta][i_r][i_t] < 0)
         {
           std::cout << m_Sinogram->counts->d[i_theta][i_r][i_t] << "    " << NuisanceParams->alpha->d[i_theta] << std::endl;
@@ -960,7 +960,7 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
         {
           Weight->d[i_theta][i_r][i_t] = 1.0 / m_Sinogram->counts->d[i_theta][i_r][i_t];
         }
-		else 
+		else
 		{
 			Weight->d[i_theta][i_r][i_t] = 1.0;
 		  }
@@ -970,7 +970,7 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
 
       }
     }
-  
+
 
     for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
     {
@@ -1065,7 +1065,7 @@ void SOCEngine::writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram)
+void SOCEngine::writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, Real3DType::Pointer Final_Sinogram)
 {
   // Write the Sinogram out to a file
   SinogramBinWriter::Pointer sinogramWriter = SinogramBinWriter::New();

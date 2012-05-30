@@ -70,14 +70,14 @@ class TomoArray3D
      * @param name The human name for the array. This can be helpful for debugging
      * @return Shared Pointer to the data
      *
-     * Example: If you have a 2D array that you would like to allocate and the
-     * dimensions are a width (X) of 512 pixels and a height (Y) of 256 pixels
-     * and you want the data laid out so that when traversing the array one would
-     * walk the width of the image FIRST then the heigth then you would create
-     * a TomoArray3D like the following:
+     * Example: If you have a 3D array that you would like to allocate and the
+     * dimensions are a width (X) of 512 pixels, height (Y) of 256 pixels and depth (Z)
+     * of 128 pixels and you want the data laid out so that when traversing the
+     * array one would walk the width of the image FIRST, then the heigth, then
+     * the Depth then you would create a TomoArray3D like the following:
      * @code
-     *  size_t dims[2] = { 256, 512 };
-     *  TomoArray3D<int, int*, 2>::Pointer image = TomoArray3D<int, int*, 2>::New(dims, "Image);
+     *  size_t dims[2] = { 128, 256, 512 };
+     *  TomoArray3D<int, int*, 3>::Pointer image = TomoArray3D<int, int*, 3>::New(dims, "Image);
      *
      *    Width (X) --->
      *    - - - - - - - - -
@@ -191,7 +191,7 @@ class TomoArray3D
         m_Dims[i] = dims[i];
         total *= m_Dims[i];
       }
-      if (SIZE == 1 || SIZE == 2)
+      if (SIZE == 1 || SIZE == 2 || SIZE == 3)
       {
         d = reinterpret_cast<Ptr>(malloc(sizeof(T) * total));
       }
