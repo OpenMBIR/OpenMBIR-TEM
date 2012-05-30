@@ -1,0 +1,26 @@
+#!/bin/bash
+
+cd @CMAKE_RUNTIME_OUTPUT_DIRECTORY@
+
+args=""
+args="$args --sinofile @BiSphere_Input_File@"
+args="$args --TargetGain 7872950.013398"
+args="$args --defaultOffset 0"
+args="$args --extendObject 0"
+args="$args -m 1.2"
+args="$args -l 4.5e-7" 
+args="$args -n 10" 
+args="$args -O 30" 
+args="$args -T .00001"
+args="$args --outdir BiSpehere_Output"
+args="$args -o ReconstructedObject.bin"
+args="$args --xz_size 1"
+args="$args --xy_size 1"
+args="$args --thickness 100"
+args="$args --tilt_selection 1"
+args="$args --subvolume 0,99,0,199,101,180"
+
+echo "Parameters"
+echo $args
+
+./@EXECUTABLE_NAME@ $args

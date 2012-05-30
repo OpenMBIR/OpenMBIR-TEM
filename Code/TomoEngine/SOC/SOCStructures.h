@@ -48,7 +48,7 @@ typedef double Real_t;
 
 typedef TomoArray<uint8_t, uint8_t***, 3> UInt8VolumeType;
 typedef TomoArray<uint8_t, uint8_t*, 2> UInt8Image_t;
-typedef TomoArray<uint8_t, uint8_t*, 1> UInt8;
+typedef TomoArray<uint8_t, uint8_t*, 1> UInt8ArrayType;
 
 
 typedef TomoArray<int32_t, int32_t***, 3> Int32VolumeType;
