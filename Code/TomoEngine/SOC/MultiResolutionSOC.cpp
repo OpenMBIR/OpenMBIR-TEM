@@ -156,6 +156,9 @@ void MultiResolutionSOC::execute()
     /* Now set the output files for this resolution */
     inputs->interpolateFactor = pow(2, getNumberResolutions()-1) * m_FinalResolution;
 
+    inputs->InterpFlag = m_InterpolateInitialFile;
+    inputs->interpolateFactor m_InterpolationFactor;
+
     inputs->sinoFile = m_InputFile;
     inputs->tempDir  = m_TempDir + MXADir::Separator + StringUtils::numToString(inputs->interpolateFactor/(pow(2,i))) + std::string("x");
 

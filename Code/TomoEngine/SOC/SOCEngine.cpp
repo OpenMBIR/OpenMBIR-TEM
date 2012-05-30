@@ -156,7 +156,7 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
    v->offsetsInputFile = "";
    v->varianceInputFile = "";
    v->InterpFlag=0;
-   v->interpolateFactor=1.0;
+   v->interpolateFactor=0.0;
    v->reconstructedOutputFile = "";
    v->tempDir = "";
    v->NumIter = 0;
@@ -378,7 +378,6 @@ void SOCEngine::execute()
 
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
-
     std::cout << i_theta << "\t" << m_Sinogram->InitialGain->d[i_theta] << "\t" << m_Sinogram->InitialOffset->d[i_theta];
     if(NULL != m_Sinogram->InitialVariance.get())
     {

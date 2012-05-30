@@ -167,9 +167,9 @@ int SOCArgsParser::parseArguments(int argc, char **argv, TomoInputs* inputs, Tom
   //Whether to interpolate initial file or not
   TCLAP::ValueArg<double> in_InterpFactor("", "interpFactor", "Interpolate Factor", false, 0.0, "");
   cmd.add(in_InterpFactor);
-	
+
 	TCLAP::ValueArg<bool> in_extendObject("", "extendObject", "To extend the object or not", false, 1, "");
-	cmd.add(in_extendObject);	
+	cmd.add(in_extendObject);
 
   TCLAP::ValueArg<std::string> in_outputFile("o", "outputfile", "The Output File", true, "", "");
   cmd.add(in_outputFile);
@@ -228,7 +228,7 @@ int SOCArgsParser::parseArguments(int argc, char **argv, TomoInputs* inputs, Tom
     inputs->sinoFile = in_sinoFile.getValue();
     inputs->initialReconFile = in_InitialRecon.getValue();
 
-    if (in_InterpFactor.getValue() == 0)
+    if (in_InterpFactor.getValue() == 0.0)
     {
       inputs->InterpFlag = 0;
     }
@@ -237,8 +237,8 @@ int SOCArgsParser::parseArguments(int argc, char **argv, TomoInputs* inputs, Tom
       inputs->InterpFlag = 1;
       inputs->interpolateFactor = in_InterpFactor.getValue();
     }
-	  
-	inputs->extendObject = in_extendObject.getValue();
+
+	  inputs->extendObject = in_extendObject.getValue();
 
     bf_inputs->sinoFile = in_BrightField.getValue();
 
