@@ -76,9 +76,9 @@ int SOCEngine::readInputData()
 int SOCEngine::initializeBrightFieldData()
 {
 
-  if (m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->sinoFile.empty()== false)
+  if(m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->sinoFile.empty() == false)
   {
-	std::cout<<"Initializing BF data"<<std::endl;
+    std::cout << "Initializing BF data" << std::endl;
     TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
     std::string extension = MXAFileInfo::extension(m_BFTomoInputs->sinoFile);
     if(extension.compare("mrc") == 0 || extension.compare("ali") == 0)
@@ -114,20 +114,18 @@ int SOCEngine::initializeBrightFieldData()
           m_Sinogram->counts->divideByValue(ttmp, i_theta, i_r, i_t);
           //100 is for Marc De Graef data which needed to multiplied
           m_BFSinogram->counts->multiplyByValue(100, i_theta, i_r, i_t);
-
         }
       }
     }
 
-	  m_Sinogram->BF_Flag = true;
-	  std::cout<<"BF initialization complete"<<std::endl;
+    m_Sinogram->BF_Flag = true;
+    std::cout << "BF initialization complete" << std::endl;
 
   }
-	else
-	{
-		m_Sinogram->BF_Flag=false;
-
-	}
+  else
+  {
+    m_Sinogram->BF_Flag = false;
+  }
   return 0;
 }
 
@@ -948,13 +946,17 @@ void SOCEngine::calculateMeasurementWeight(Real3DType::Pointer Weight,
         size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
         size_t yest_idx = Y_Est->calcIndex(i_theta, i_r, i_t);
         size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
-        size_t bfcounts_idx = m_BFSinogram->counts->calcIndex(i_theta, i_r, i_t);
 
         if(m_Sinogram->BF_Flag == false)
+        {
           ErrorSino->d[error_idx] = m_Sinogram->counts->d[counts_idx] - Y_Est->d[yest_idx] - NuisanceParams->mu->d[i_theta];
+        }
         else
         {
-          ErrorSino->d[error_idx] = m_Sinogram->counts->d[counts_idx] - m_BFSinogram->counts->d[bfcounts_idx]*Y_Est->d[yest_idx] - NuisanceParams->mu->d[i_theta];
+          size_t bfcounts_idx = m_BFSinogram->counts->calcIndex(i_theta, i_r, i_t);
+
+          ErrorSino->d[error_idx] = m_Sinogram->counts->d[counts_idx] - m_BFSinogram->counts->d[bfcounts_idx] * Y_Est->d[yest_idx]
+              - NuisanceParams->mu->d[i_theta];
         }
 
 
