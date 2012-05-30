@@ -76,6 +76,7 @@ int SOCEngine::readInputData()
 int SOCEngine::initializeBrightFieldData()
 {
 
+  std::cout<<"Initializing BF data"<<std::endl;
   if (m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->sinoFile.empty()== false)
   {
     TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
@@ -108,13 +109,21 @@ int SOCEngine::initializeBrightFieldData()
       {
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
-          //1000 is for Marc De Graef data which needed to multiplied
-          m_Sinogram->counts->d[i_theta][i_r][i_t] /= (m_BFSinogram->counts->d[i_theta][i_r][i_t] * 1000);
+          //100 is for Marc De Graef data which needed to multiplied
+		m_BFSinogram->counts->d[i_theta][i_r][i_t] *= 100;
         }
       }
     }
+	  
+	  m_Sinogram->BF_Flag = true;  
   }
+	else 
+	{
+		m_Sinogram->BF_Flag=false;
+		
+	}
 
+	std::cout<<"BF initialization complete"<<std::endl;
   return 0;
 }
 
@@ -638,6 +647,8 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
 {
   std::string indent("  ");
 
+  if(m_Sinogram->BF_Flag == false)
+  {
   Real_t AverageI_kUpdate=0;//absolute sum of the gain updates
   Real_t AverageMagI_k=0;//absolute sum of the initial gains
 
@@ -825,7 +836,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   if (err < 0)
   {
 	std::cout<<"Cost went up after Gain+Offset update"<<std::endl;  
-   // return -1;
+    return err;
   }
 #endif
 
@@ -847,6 +858,49 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   std::cout<<"Ratio of change in Delta_k "<<Delta_kRatio<<std::endl;
 
   return 0;
+	}
+	else 
+	{
+		
+		for (uint16_t i_theta=0; i_theta < m_Sinogram->N_theta; i_theta++)
+		{
+			Real_t num_sum=0;
+			Real_t den_sum=0;
+			Real_t alpha =0;
+			for(uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+				for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+				{
+					num_sum += (ErrorSino->d[i_theta][i_r][i_t]*Weight->d[i_theta][i_r][i_t]);
+					den_sum += Weight->d[i_theta][i_r][i_t];
+				}
+			alpha = num_sum/den_sum;
+			
+			for(uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+				for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+				{
+					ErrorSino->d[i_theta][i_r][i_t] -= alpha;
+				}
+			
+			NuisanceParams->mu->d[i_theta] += alpha; 			  
+			std::cout<<NuisanceParams->mu->d[i_theta]<<std::endl;
+		}		  
+#ifdef COST_CALCULATE		  
+		/*********************Cost Calculation*************************************/
+		Real_t cost_value = computeCost(ErrorSino, Weight);
+		std::cout<<cost_value<<std::endl;
+		int increase = cost->addCostValue(cost_value);
+		if (increase ==1)
+		{
+			std::cout << "Cost just increased after offset update!" << std::endl;
+			//break;
+			return -1;
+		}
+		cost->writeCostValue(cost_value);
+		/**************************************************************************/		  
+#endif
+		return 0;
+	} //BFflag = true
+	
 }
 // -----------------------------------------------------------------------------
 // Calculate Error Sinogram
@@ -865,14 +919,21 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
     {
       NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
     }
-#endif
+#endif //Noise model
     checksum = 0;
     for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-        ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - Y_Est->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];
 
+		  if(m_Sinogram->BF_Flag == false)  
+			  ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - Y_Est->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];
+		  else
+		  {
+			  ErrorSino->d[i_theta][i_r][i_t] = m_Sinogram->counts->d[i_theta][i_r][i_t] - m_BFSinogram->counts->d[i_theta][i_r][i_t]*Y_Est->d[i_theta][i_r][i_t] - NuisanceParams->mu->d[i_theta];	  
+		  }
+		  
+		  
 #ifndef IDENTITY_NOISE_MODEL  
         if(m_Sinogram->counts->d[i_theta][i_r][i_t] != 0)
         {

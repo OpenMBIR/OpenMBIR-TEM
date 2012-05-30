@@ -248,7 +248,6 @@ int SOCArgsParser::parseArguments(int argc, char **argv, TomoInputs* inputs, Tom
 
     bf_inputs->sinoFile = in_BrightField.getValue();
 
-
     inputs->gainsInputFile = in_Gains.getValue();
     inputs->offsetsInputFile = in_Offsets.getValue(); //Offset
     inputs->varianceInputFile = in_Variance.getValue(); //variance
