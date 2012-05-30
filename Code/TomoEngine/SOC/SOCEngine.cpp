@@ -293,11 +293,11 @@ void SOCEngine::execute()
   Real3DType::Pointer H_t;
 
 
-
   Real3DType::Pointer Y_Est;//Estimated Sinogram
   Real3DType::Pointer Final_Sinogram;//To store and write the final sinogram resulting from our reconstruction
   Real3DType::Pointer ErrorSino;//Error Sinogram
   Real3DType::Pointer Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
+
   RNGVars* RandomNumber;
   std::string indent("");
 
@@ -2114,11 +2114,11 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 #else
 			  bool ZSFlag = false; //do ICD on all voxels
 #endif //Zero skipping
-			  if(ZSFlag == false)
+			if(ZSFlag == false)
 			{
             Real_t tt;
             //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
-            for (uint32_t q = 0; q < TempCol[Index]->count; q++)
+           /* OLD for (uint32_t q = 0; q < TempCol[Index]->count; q++)
             {
               uint16_t i_theta = floor(static_cast<float>(TempCol[Index]->index[q] / (m_Sinogram->N_r)));
               uint16_t i_r = (TempCol[Index]->index[q] % (m_Sinogram->N_r));
@@ -2132,7 +2132,37 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                 THETA1 += (tt * ErrorSino->getValue(i_theta, i_r, i_t) );
                 VoxelLineAccessCounter++;
               }
-            }
+            }*/
+
+			for (uint32_t q = 0; q < TempCol[Index]->count; q++)
+			{
+					uint16_t i_theta = floor(static_cast<float>(TempCol[Index]->index[q] / (m_Sinogram->N_r)));
+					uint16_t i_r = (TempCol[Index]->index[q] % (m_Sinogram->N_r));
+					uint16_t VoxelLineAccessCounter = 0;
+					for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
+					{
+            size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
+            size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
+            size_t bfcounts_idx = m_BFSinogram->counts->calcIndex(i_theta, i_r, i_t);
+
+						if (m_Sinogram->BF_Flag == false)
+						{
+							Real_t ProjectionEntry = NuisanceParams->I_0->d[i_theta]*VoxelLineResponse[i].values[VoxelLineAccessCounter] * (TempCol[Index]->values[q]);
+							THETA2 += (ProjectionEntry*ProjectionEntry*Weight->d[weight_idx]);
+							THETA1 +=  (ErrorSino->d[error_idx]*ProjectionEntry* Weight->d[weight_idx]);
+							VoxelLineAccessCounter++;
+						}
+						else
+						{
+							Real_t ProjectionEntry = m_BFSinogram->counts->d[bfcounts_idx]*NuisanceParams->I_0->d[i_theta]*VoxelLineResponse[i].values[VoxelLineAccessCounter] * (TempCol[Index]->values[q]);
+
+							THETA2 += (ProjectionEntry*ProjectionEntry*Weight->d[weight_idx]);
+							THETA1 +=  (ErrorSino->d[error_idx]*ProjectionEntry* Weight->d[weight_idx]);
+							VoxelLineAccessCounter++;
+
+						}
+					}
+				}
 
             THETA1 *= -1;
             minMax(&low, &high);
@@ -2197,8 +2227,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             }
 #endif
 
-            //Update the ErrorSinogram
-            for (uint32_t q = 0; q < TempCol[Index]->count; q++)
+            //Update the ErrorSinogram -OLD
+           /* for (uint32_t q = 0; q < TempCol[Index]->count; q++)
             {
               uint16_t i_theta = floor(static_cast<float>(TempCol[Index]->index[q] / (m_Sinogram->N_r)));
               uint16_t i_r = (TempCol[Index]->index[q] % (m_Sinogram->N_r));
@@ -2212,7 +2242,32 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                 ErrorSino->deleteFromValue(ttmp, i_theta, i_r, i_t);
                 VoxelLineAccessCounter++;
               }
-            }
+            }*/
+
+				//Update the ErrorSinogram
+				for (uint32_t q = 0; q < TempCol[Index]->count; q++)
+				{
+					uint16_t i_theta = floor(static_cast<float>(TempCol[Index]->index[q] / (m_Sinogram->N_r)));
+					uint16_t i_r = (TempCol[Index]->index[q] % (m_Sinogram->N_r));
+					uint16_t VoxelLineAccessCounter = 0;
+					for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
+					{
+		        size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
+		        size_t bfcounts_idx = m_BFSinogram->counts->calcIndex(i_theta, i_r, i_t);
+
+						//for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
+						if(m_Sinogram->BF_Flag == false)
+						{
+							ErrorSino->d[error_idx] -= (NuisanceParams->I_0->d[i_theta]
+																* (TempCol[Index]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->getValue(j_new, k_new, i) - V)));
+							VoxelLineAccessCounter++;
+						}
+						else {
+							ErrorSino->d[error_idx] -= (NuisanceParams->I_0->d[i_theta]*m_BFSinogram->counts->d[bfcounts_idx]* (TempCol[Index]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->getValue(j_new, k_new, i) - V)));
+							VoxelLineAccessCounter++;
+						}
+					}
+				}
 		  }
 			  else {
 				  zero_count++;

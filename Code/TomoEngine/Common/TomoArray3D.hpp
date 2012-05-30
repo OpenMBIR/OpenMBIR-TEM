@@ -153,6 +153,12 @@ class TomoArray3D
       d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)] /= v;
     }
 
+    inline void multiplyByValue(T v, size_t z, size_t y, size_t x)
+    {
+      assert(SIZE == 3);
+      d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)] *= v;
+    }
+
 
 #if 0
 

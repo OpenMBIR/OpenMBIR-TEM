@@ -10,5 +10,9 @@
 * Turn doubles to floats to save memory. 
 * Add an option to switch off #define for Joint_Estimation and #Noise estimation.
 * Enable Bright-Field .mrc input to GUI
-
+* Implement reconstruction when Bright-Field is available 
+* Do more tests of the automatic SigmaX calculation based on TargetGain - is it robust? 
+* While choosing a region to recons. for multi-resolution need subvolume
+to be a proper multiple of xz size at all resolutions 
+* Make a command line version of the code so that user can run multiple instances using script files if needed.
 

@@ -80,6 +80,7 @@ void InitialReconstructionBinReader::initializeData()
   //Read the Initial Reconstruction data into a 3-D matrix
   //If Interpolate flag is set then the input has only half the
   //number of voxels along each dimension as the output
+
   std::stringstream outPath;
   outPath << input->tempDir << MXADir::Separator << "UpsampledObject.bin";
   FILE* Fp2 = fopen(outPath.str().c_str(), "wb");

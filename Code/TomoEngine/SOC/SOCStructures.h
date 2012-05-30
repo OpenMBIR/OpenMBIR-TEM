@@ -103,7 +103,8 @@ namespace SOC {
     Real_t R0,RMax;
     Real_t T0,TMax;
     Real_t targetGain;//,InitialOffset;//Initial scale and offset of the sinogram data
-
+    bool BF_Flag;
+	  
     RealArrayType::Pointer InitialGain;//Reads in the initial value for the gain for each view
     RealArrayType::Pointer InitialOffset;
     RealArrayType::Pointer InitialVariance;
@@ -161,6 +162,9 @@ namespace SOC {
     Real_t targetGain;
     bool useDefaultOffset;
     Real_t defaultOffset;
+	Real_t defaultInitialRecon; 
+	Real_t defaultVariance;
+	
 
     /* These are input files */
     std::string sinoFile; /* .mrc formatted files are accepted currently */

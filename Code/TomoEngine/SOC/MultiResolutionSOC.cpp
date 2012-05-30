@@ -157,7 +157,7 @@ void MultiResolutionSOC::execute()
     inputs->interpolateFactor = pow(2, getNumberResolutions()-1) * m_FinalResolution;
 
     inputs->InterpFlag = m_InterpolateInitialFile;
-    inputs->interpolateFactor m_InterpolationFactor;
+    inputs->interpolateFactor = m_InterpolationFactor;
 
     inputs->sinoFile = m_InputFile;
     inputs->tempDir  = m_TempDir + MXADir::Separator + StringUtils::numToString(inputs->interpolateFactor/(pow(2,i))) + std::string("x");
@@ -240,8 +240,21 @@ void MultiResolutionSOC::execute()
     }
     inputs->excludedViews = m_ViewMasks;
 
+	//Adjusting the volume along the y-directions so we dont have
+	//  issues with pixelation
+	int16_t disty = inputs->yEnd - inputs->yStart +1;
+	//3*iterpFactor is to account for the prior which operates on
+	//26 point 3-D neighborhood which needs 3 x-z slices at the least
+	int16_t rem_temp = disty % ((int16_t)inputs->interpolateFactor*3);
+	if(rem_temp != 0)
+	{
+		std::cout<<"The number of y-pixels is not a proper multiple for multi-res"<<std::endl;
+		int16_t remainder = (inputs->interpolateFactor*3)-(rem_temp);
+		inputs->yEnd += remainder;
+	}
+
     // Create an Engine and initialize all the structures
-    SOCEngine::Pointer soc = SOCEngine::New();
+	SOCEngine::Pointer soc = SOCEngine::New();
     soc->setTomoInputs(inputs);
     SinogramPtr sinogram = SinogramPtr(new Sinogram);
     soc->setSinogram(sinogram);
@@ -251,7 +264,6 @@ void MultiResolutionSOC::execute()
 
     ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
     soc->setNuisanceParams(nuisanceParams);
-
 
     SOCEngine::InitializeSinogram(sinogram);
     SOCEngine::InitializeGeometry(geometry);
