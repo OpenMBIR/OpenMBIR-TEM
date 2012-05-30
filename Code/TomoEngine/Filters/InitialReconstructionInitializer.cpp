@@ -76,14 +76,14 @@ Real_t InitialReconstructionInitializer::absMaxArray(std::vector<Real_t> &Array)
 void InitialReconstructionInitializer::initializeData()
 {
   GeometryPtr geometry = getGeometry();
-
+  TomoInputsPtr input = getTomoInputs();
   for (uint16_t i = 0; i < geometry->N_y; i++)
   {
     for (uint16_t j = 0; j < geometry->N_x; j++)
     {
       for (uint16_t k = 0; k < geometry->N_z; k++)
       {
-        geometry->Object->d[k][j][i] = 0;
+		  geometry->Object->d[k][j][i] = input->defaultInitialRecon;
       }
     }
   }

@@ -143,7 +143,7 @@ void InitialReconstructionBinReader::initializeData()
     }
     fclose(Fp2);
   }
-	else {
+  /*else {
 		for (uint16_t i = 0; i < geometry->N_y; i++)
 		{
 			for (uint16_t j = 0; j < geometry->N_x; j++)
@@ -154,7 +154,7 @@ void InitialReconstructionBinReader::initializeData()
 				}
 			}
 		}
-	}
+	}*/
 
 }
 

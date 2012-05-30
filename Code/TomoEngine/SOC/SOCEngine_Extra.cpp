@@ -76,9 +76,9 @@ int SOCEngine::readInputData()
 int SOCEngine::initializeBrightFieldData()
 {
 
-  std::cout<<"Initializing BF data"<<std::endl;
   if (m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->sinoFile.empty()== false)
   {
+	std::cout<<"Initializing BF data"<<std::endl;  
     TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
     std::string extension = MXAFileInfo::extension(m_BFTomoInputs->sinoFile);
     if(extension.compare("mrc") == 0 || extension.compare("ali") == 0)
@@ -116,14 +116,14 @@ int SOCEngine::initializeBrightFieldData()
     }
 	  
 	  m_Sinogram->BF_Flag = true;  
+	  std::cout<<"BF initialization complete"<<std::endl;
+
   }
 	else 
 	{
 		m_Sinogram->BF_Flag=false;
 		
 	}
-
-	std::cout<<"BF initialization complete"<<std::endl;
   return 0;
 }
 
@@ -847,8 +847,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
   {
     std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
-        "\t" << NuisanceParams->mu->d[i_theta] <<
-        "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
+        "\t" << NuisanceParams->mu->d[i_theta] <<std::endl;
   }
 //#endif
 
@@ -917,7 +916,7 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
   {
 #ifdef NOISE_MODEL
     {
-      NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
+		NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
     }
 #endif //Noise model
     checksum = 0;
@@ -1068,14 +1067,14 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
 
   }
 
-#ifdef DEBUG
+//#ifdef DEBUG
   std::cout << "Noise Model Weights:" << std::endl;
   std::cout << "Tilt\tWeight" << std::endl;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
     std::cout << i_theta << "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
   }
-#endif
+//#endif
   Real_t VarRatio = AverageVarUpdate / AverageMagVar;
   std::cout << "Ratio of change in Variance " << VarRatio << std::endl;
 }
