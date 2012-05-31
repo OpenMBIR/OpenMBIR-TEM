@@ -209,6 +209,10 @@ void TomoGui::readSettings(QSettings &prefs)
   // This will auto load the MRC File
   on_inputMRCFilePath_textChanged(inputMRCFilePath->text());
 
+  READ_STRING_SETTING(prefs, inputBrightFieldFilePath, "");
+  // This will auto load the MRC File
+  on_inputBrightFieldFilePath_textChanged(inputBrightFieldFilePath->text());
+
 
   READ_STRING_SETTING(prefs, initialReconstructionPath, "");
   READ_STRING_SETTING(prefs, tempDirPath, "");
@@ -254,6 +258,7 @@ void TomoGui::writeSettings(QSettings &prefs)
 {
   prefs.beginGroup("Parameters");
   WRITE_STRING_SETTING(prefs, inputMRCFilePath);
+  WRITE_STRING_SETTING(prefs, inputBrightFieldFilePath);
 
   WRITE_STRING_SETTING(prefs, initialReconstructionPath);
   WRITE_STRING_SETTING(prefs, tempDirPath);
@@ -794,6 +799,8 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   path = QDir::toNativeSeparators(outputFilePath->text());
   m_MultiResSOC->setOutputFile(path.toStdString());
 
+  path = QDir::toNativeSeparators(inputBrightFieldFilePath->text());
+  m_MultiResSOC->setBrightFieldFile(path.toStdString());
 
   bool ok = false;
   if (fullReconstruction == true)
@@ -818,7 +825,7 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   m_MultiResSOC->setExtendObject(extendObject->isChecked());
 
   m_MultiResSOC->setInterpolateInitialFile(interpolateInitialFile->isChecked());
-  m_MultiResSOC->setInterpolationFactor(interpolationFactor->text().toInt(&ok));
+  //m_MultiResSOC->setInterpolationFactor(interpolationFactor->text().toInt(&ok));
 
 
 
@@ -982,22 +989,6 @@ void TomoGui::on_outputDirectoryPathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_inputMRCFilePathBtn_clicked()
-{
-  //std::cout << "on_actionOpen_triggered" << std::endl;
-  QString imageFile =
-      QFileDialog::getOpenFileName(this, tr("Select MRC Data file"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc *.ali)"));
-
-  if (true == imageFile.isEmpty())
-  {
-    return;
-  }
-  inputMRCFilePath->setText(imageFile);
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 void TomoGui::on_outputFilePathBtn_clicked()
 {
   QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled";
@@ -1018,6 +1009,22 @@ void TomoGui::on_outputFilePathBtn_clicked()
                           tr("The parent directory of the output file is not writable by your user. Please make it writeable by changing the permissions or select another directory"),
                           QMessageBox::Ok);
   }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_inputMRCFilePathBtn_clicked()
+{
+  //std::cout << "on_actionOpen_triggered" << std::endl;
+  QString imageFile =
+      QFileDialog::getOpenFileName(this, tr("Select MRC Data file"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc *.ali)"));
+
+  if (true == imageFile.isEmpty())
+  {
+    return;
+  }
+  inputMRCFilePath->setText(imageFile);
 }
 
 // -----------------------------------------------------------------------------
@@ -1047,6 +1054,36 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
     setWidgetListEnabled(true);
     setImageWidgetsEnabled(true);
     updateBaseRecentFileList(filepath);
+  }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_inputBrightFieldFilePathBtn_clicked()
+{
+  //std::cout << "on_actionOpen_triggered" << std::endl;
+  QString imageFile =
+      QFileDialog::getOpenFileName(this, tr("Select BrightField Data file"), m_OpenDialogLastDirectory, tr("BrightField Files (*.mrc *.ali)"));
+
+  if (true == imageFile.isEmpty())
+  {
+    return;
+  }
+  inputBrightFieldFilePath->setText(imageFile);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_inputBrightFieldFilePath_textChanged(const QString & filepath)
+{
+  if (verifyPathExists(inputBrightFieldFilePath->text(), inputBrightFieldFilePath))
+  {
+    // Read the header info from the file and populate the GUI with those values
+//    readBrightFieldHeader(filepath);
+    // Now load up the first tilt from the file
+//    loadBrightFieldTiltImage(filepath, 0);
   }
 }
 

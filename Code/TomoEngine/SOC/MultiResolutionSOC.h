@@ -60,6 +60,7 @@ class MultiResolutionSOC : public FilterPipeline
     MXA_INSTANCE_STRING_PROPERTY(InputFile);
     MXA_INSTANCE_STRING_PROPERTY(TempDir);
     MXA_INSTANCE_STRING_PROPERTY(OutputFile);
+    MXA_INSTANCE_STRING_PROPERTY(BrightFieldFile);
 
     MXA_INSTANCE_PROPERTY(int, NumberResolutions);
     MXA_INSTANCE_PROPERTY(float, SampleThickness);

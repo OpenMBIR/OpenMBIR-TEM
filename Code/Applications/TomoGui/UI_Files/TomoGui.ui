@@ -84,12 +84,52 @@ font-size: 10px;
          <string>The image to be segmented</string>
         </property>
         <property name="text">
-         <string>/Users/Shared/Data/TomographyData/TiO2Ps100kRun3/Run3TiO2PS100k_2.ali</string>
+         <string/>
         </property>
        </widget>
       </item>
       <item row="0" column="2">
        <widget class="QPushButton" name="inputMRCFilePathBtn">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string>Select...</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_37">
+        <property name="toolTip">
+         <string>The image to be segmented</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+        </property>
+        <property name="text">
+         <string>Bright Field
+File:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QFSDropLineEdit" name="inputBrightFieldFilePath">
+        <property name="toolTip">
+         <string>The image to be segmented</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QPushButton" name="inputBrightFieldFilePathBtn">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
           <horstretch>0</horstretch>
@@ -1457,25 +1497,6 @@ Value:</string>
              </size>
             </property>
            </spacer>
-          </item>
-          <item row="1" column="3">
-           <widget class="QLineEdit" name="interpolationFactor">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>125</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>1.0</string>
-            </property>
-           </widget>
           </item>
           <item row="0" column="3">
            <widget class="QCheckBox" name="interpolateInitialFile">

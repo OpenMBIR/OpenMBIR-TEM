@@ -99,8 +99,8 @@ int main(int argc, char **argv)
   SOCEngine::InitializeGeometry(geometry);
   SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
   SOCEngine::InitializeSinogram(bf_sinogram);
-	
 
+  // Create an Engine and initialize all the structures
   SOCEngine::Pointer engine = SOCEngine::New();
   engine->setTomoInputs(inputs);
   engine->setSinogram(sinogram);
@@ -108,7 +108,8 @@ int main(int argc, char **argv)
   engine->setNuisanceParams(nuisanceParams);
   engine->setBFTomoInputs(bf_inputs);
   engine->setBFSinogram(bf_sinogram);
-	Observer observer;
+  // We need to get messages to the gui or command line
+  Observer observer;
 	engine->addObserver(&observer);
 
   // Run the reconstruction

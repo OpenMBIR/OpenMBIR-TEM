@@ -50,6 +50,10 @@
 //
 // -----------------------------------------------------------------------------
 MultiResolutionSOC::MultiResolutionSOC() :
+m_InputFile(""),
+m_TempDir(""),
+m_OutputFile(""),
+m_BrightFieldFile(""),
 m_NumberResolutions(1),
 m_SampleThickness(100.0f),
 m_TargetGain(0.0f),
@@ -136,10 +140,15 @@ void MultiResolutionSOC::execute()
   TomoInputsPtr prevInputs = TomoInputsPtr(new TomoInputs);
   SOCEngine::InitializeTomoInputs(prevInputs);
 
+  TomoInputsPtr bf_inputs = TomoInputsPtr(new TomoInputs);
+  SOCEngine::InitializeTomoInputs(bf_inputs);
+
   for (int i = 0; i < m_NumberResolutions; ++i)
   {
     TomoInputsPtr inputs = TomoInputsPtr(new TomoInputs);
     SOCEngine::InitializeTomoInputs(inputs);
+
+    bf_inputs->sinoFile = getBrightFieldFile();
 
     /* ******* this is bad. Remove this for production work ****** */
     inputs->extendObject = getExtendObject();
@@ -153,12 +162,12 @@ void MultiResolutionSOC::execute()
     inputs->initialReconFile = prevInputs->reconstructedOutputFile;
     if (i > 0) { inputs->InterpFlag = 1; }
 
-    /* Now set the output files for this resolution */
+
     inputs->interpolateFactor = pow(2, getNumberResolutions()-1) * m_FinalResolution;
 
     inputs->InterpFlag = m_InterpolateInitialFile;
-    inputs->interpolateFactor = m_InterpolationFactor;
 
+    /* Now set the output files for this resolution */
     inputs->sinoFile = m_InputFile;
     inputs->tempDir  = m_TempDir + MXADir::Separator + StringUtils::numToString(inputs->interpolateFactor/(pow(2,i))) + std::string("x");
 
@@ -170,10 +179,10 @@ void MultiResolutionSOC::execute()
     }
 
 	  /***************TO DO - Fix This*********************/
-   if (m_NumberResolutions-1 == i)
+    if(m_NumberResolutions - 1 == i)
     {
-		ss.str("");
-		ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedBinFile;
+      ss.str("");
+      ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedBinFile;
       inputs->reconstructedOutputFile = ss.str();
     }
     else
@@ -182,7 +191,7 @@ void MultiResolutionSOC::execute()
       ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedBinFile;
       inputs->reconstructedOutputFile = ss.str();
     }
-	/************************************/
+    /************************************/
 
     ss.str("");
     ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
@@ -237,44 +246,55 @@ void MultiResolutionSOC::execute()
       inputs->yEnd = m_Subvolume[4];
       inputs->zStart = m_Subvolume[2];
       inputs->zEnd = m_Subvolume[5];
+
+      bf_inputs->useSubvolume = true;
+      bf_inputs->xStart = m_Subvolume[0];
+      bf_inputs->xEnd = m_Subvolume[3];
+      bf_inputs->yStart = m_Subvolume[1];
+      bf_inputs->yEnd = m_Subvolume[4];
+      bf_inputs->zStart = m_Subvolume[2];
+      bf_inputs->zEnd = m_Subvolume[5];
     }
     inputs->excludedViews = m_ViewMasks;
 
-	//Adjusting the volume along the y-directions so we dont have
-	//  issues with pixelation
-	int16_t disty = inputs->yEnd - inputs->yStart +1;
-	//3*iterpFactor is to account for the prior which operates on
-	//26 point 3-D neighborhood which needs 3 x-z slices at the least
-	int16_t rem_temp = disty % ((int16_t)inputs->interpolateFactor*3);
-	if(rem_temp != 0)
-	{
-		std::cout<<"The number of y-pixels is not a proper multiple for multi-res"<<std::endl;
-		int16_t remainder = (inputs->interpolateFactor*3)-(rem_temp);
-		inputs->yEnd += remainder;
-	}
+    //Adjusting the volume along the y-directions so we dont have
+    //  issues with pixelation
+    int16_t disty = inputs->yEnd - inputs->yStart + 1;
+    //3*iterpFactor is to account for the prior which operates on
+    //26 point 3-D neighborhood which needs 3 x-z slices at the least
+    int16_t rem_temp = disty % ((int16_t)inputs->interpolateFactor * 3);
+    if(rem_temp != 0)
+    {
+      std::cout << "The number of y-pixels is not a proper multiple for multi-res" << std::endl;
+      int16_t remainder = (inputs->interpolateFactor * 3) - (rem_temp);
+      inputs->yEnd += remainder;
+    }
 
-    // Create an Engine and initialize all the structures
-	SOCEngine::Pointer soc = SOCEngine::New();
-    soc->setTomoInputs(inputs);
     SinogramPtr sinogram = SinogramPtr(new Sinogram);
-    soc->setSinogram(sinogram);
-
+    SinogramPtr bf_sinogram = SinogramPtr(new Sinogram);
     GeometryPtr geometry = GeometryPtr(new Geometry);
-    soc->setGeometry(geometry);
-
     ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
-    soc->setNuisanceParams(nuisanceParams);
 
     SOCEngine::InitializeSinogram(sinogram);
     SOCEngine::InitializeGeometry(geometry);
     SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
+    SOCEngine::InitializeSinogram(bf_sinogram);
 
+    // Create an Engine and initialize all the structures
+	  SOCEngine::Pointer engine = SOCEngine::New();
+	  engine->setTomoInputs(inputs);
+    engine->setSinogram(sinogram);
+    engine->setGeometry(geometry);
+    engine->setNuisanceParams(nuisanceParams);
+    engine->setBFTomoInputs(bf_inputs);
+    engine->setBFSinogram(bf_sinogram);
     // We need to get messages to the gui or command line
-    soc->addObserver(this);
+    engine->addObserver(this);
+
     printInputs(inputs, std::cout);
 
-    soc->execute();
-    soc = SOCEngine::NullPointer();
+    engine->execute();
+    engine = SOCEngine::NullPointer();
 
     prevInputs = inputs;
   }

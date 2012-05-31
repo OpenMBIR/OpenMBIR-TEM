@@ -163,10 +163,10 @@ int SOCArgsParser::parseArguments(int argc, char **argv, TomoInputs* inputs, Tom
 
   TCLAP::ValueArg<std::string> in_Variance("", "variance", "Initial Variance to use.", false, "", "");
   cmd.add(in_Variance);
-	
+
   TCLAP::ValueArg<double> in_DefaultVariance("", "defaultVariance", "Default variance for all Tilts", false, 1.0, "");
-  cmd.add(in_DefaultVariance);	
-	
+  cmd.add(in_DefaultVariance);
+
   TCLAP::ValueArg<double> in_DefaultInitialRecon("", "defaultInitialRecon", "Default initial value of reconstruction", false, 0.0, "");
   cmd.add(in_DefaultInitialRecon);
 
@@ -303,9 +303,9 @@ int SOCArgsParser::parseArguments(int argc, char **argv, TomoInputs* inputs, Tom
         inputs->defaultOffset = in_DefaultOffset.getValue();
       }
     }
-	  
-	inputs->defaultInitialRecon =in_DefaultInitialRecon.getValue();
-	inputs->defaultVariance = in_DefaultVariance.getValue();
+
+    inputs->defaultInitialRecon = in_DefaultInitialRecon.getValue();
+    inputs->defaultVariance = in_DefaultVariance.getValue();
 
     inputs->delta_xz = xz_size.getValue();
     inputs->delta_xy = xy_size.getValue();
