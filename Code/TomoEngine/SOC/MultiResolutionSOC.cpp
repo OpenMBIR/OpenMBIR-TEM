@@ -261,6 +261,7 @@ void MultiResolutionSOC::execute()
       bf_inputs->zEnd = m_Subvolume[5];
     }
     inputs->excludedViews = m_ViewMasks;
+    bf_inputs->excludedViews = m_ViewMasks;
 
     //Adjusting the volume along the y-directions so we dont have
     //  issues with pixelation
