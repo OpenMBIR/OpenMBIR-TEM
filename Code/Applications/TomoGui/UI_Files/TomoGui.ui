@@ -760,7 +760,7 @@ font-size: 10px;
     <item>
      <widget class="QTabWidget" name="tabWidget_2">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab_3">
        <attribute name="title">
@@ -1295,7 +1295,7 @@ Iterations:</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="5" rowspan="2">
+          <item row="0" column="4" rowspan="2">
            <spacer name="horizontalSpacer_3">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -1307,13 +1307,6 @@ Iterations:</string>
              </size>
             </property>
            </spacer>
-          </item>
-          <item row="0" column="4">
-           <widget class="QCheckBox" name="interpolateInitialFile">
-            <property name="text">
-             <string>Interpolate Initial File:</string>
-            </property>
-           </widget>
           </item>
          </layout>
         </item>

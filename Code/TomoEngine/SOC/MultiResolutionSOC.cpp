@@ -168,7 +168,7 @@ void MultiResolutionSOC::execute()
 
     inputs->interpolateFactor = powf((float)2, (float)getNumberResolutions()-1) * m_FinalResolution;
 
-    inputs->InterpFlag = m_InterpolateInitialFile;
+   // inputs->InterpFlag = m_InterpolateInitialFile;
 
     /* Now set the output files for this resolution */
     inputs->sinoFile = m_InputFile;

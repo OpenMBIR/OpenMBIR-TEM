@@ -826,7 +826,7 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   m_MultiResSOC->setDefaultVariance(defaultVariance->text().toFloat(&ok));
   m_MultiResSOC->setInitialReconstructionValue(defaultInitialRecon->text().toFloat(&ok));
 
-  m_MultiResSOC->setInterpolateInitialFile(interpolateInitialFile->isChecked());
+  //m_MultiResSOC->setInterpolateInitialFile(interpolateInitialFile->isChecked());
   //m_MultiResSOC->setInterpolationFactor(interpolationFactor->text().toInt(&ok));
 
   std::vector<uint16_t> subvolume(6);
