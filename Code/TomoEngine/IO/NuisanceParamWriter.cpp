@@ -114,7 +114,6 @@ void NuisanceParamWriter::execute()
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
-  std::cout << "Writing Nuisance Parameter to File: " << m_FileName << std::endl;
 
   RealArrayType::Pointer src = RealArrayType::NullPointer();
   std::string printTitle("UNKNOWN DATA");
@@ -135,6 +134,7 @@ void NuisanceParamWriter::execute()
     default:
       break;
   }
+
   if(NULL == src.get() || NULL == src->d)
   {
     setErrorCondition(-1);
@@ -142,6 +142,12 @@ void NuisanceParamWriter::execute()
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
+
+
+  ss.str("");
+  ss << "Writing Nuisance Parameter '" << printTitle << "' to File: '" << m_FileName << "'";
+  notify(ss.str(), 0, UpdateProgressMessage);
+
   if(m_WriteBinary == true)
   {
     fwrite(src->d, sizeof(Real_t), getSinogram()->N_theta, file);
@@ -164,5 +170,5 @@ void NuisanceParamWriter::execute()
 #endif
   setErrorCondition(0);
   setErrorMessage("");
-  notify("Done Writing the NuisanceParameters to a Binary File", 0, UpdateProgressMessage);
+  notify("Done Writing the NuisanceParameters to File", 0, UpdateProgressMessage);
 }

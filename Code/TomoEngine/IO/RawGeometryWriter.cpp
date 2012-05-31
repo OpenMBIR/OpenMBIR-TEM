@@ -33,6 +33,7 @@
 #include <errno.h>
 
 #include <iostream>
+#include <sstream>
 
 // -----------------------------------------------------------------------------
 //
@@ -67,12 +68,18 @@ void RawGeometryWriter::execute()
     notify(getErrorMessage().c_str(), 100, UpdateErrorMessage);
     return;
   }
-  Real_t buffer;
 
-	std::cout<<getFilePath().c_str()<<std::endl;
-	std::cout<<"Writing the Binary file"<<std::endl;
-	std::cout<<geometry->N_y<<","<<geometry->N_z<<","<<geometry->N_x<<std::endl;
 
+  std::stringstream ss;
+  ss.str("");
+  ss << "Writing Raw Geometry to '" << getFilePath() << "'";
+  notify(ss.str(), 0, UpdateProgressMessage);
+
+  ss.str("");
+  ss << "  Geometry Y:" << geometry->N_y<<"  Z:"<<geometry->N_z<<"  X:"<<geometry->N_x;
+  notify(ss.str(), 0, UpdateProgressMessage);
+
+	Real_t buffer = 0.0;
   for (uint16_t i = 0; i < geometry->N_y; ++i)
   {
     for (uint16_t j = 0; j < geometry->N_x; ++j)

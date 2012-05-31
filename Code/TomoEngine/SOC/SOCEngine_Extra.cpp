@@ -1216,6 +1216,11 @@ void SOCEngine::writeVtkFile()
 
   std::vector<VtkScalarWriter*> scalarsToWrite;
 
+  std::stringstream ss;
+  ss.str("");
+  ss << "Writing Vtk Reconstruction to '" << vtkFile << "'";
+  notify(ss.str(), 0, Observable::UpdateProgressMessage);
+
   VtkScalarWriter* w0 = static_cast<VtkScalarWriter*>(new TomoOutputScalarWriter(m_Geometry.get()));
   w0->setWriteBinaryFiles(true);
   scalarsToWrite.push_back(w0);
@@ -1234,8 +1239,15 @@ void SOCEngine::writeVtkFile()
 void SOCEngine::writeMRCFile()
 {
   /* Write the output to the MRC File */
+
    std::string mrcFile (m_TomoInputs->tempDir);
    mrcFile = mrcFile.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedMrcFile);
+
+   std::stringstream ss;
+   ss.str("");
+   ss << "Writing MRC Reconstruction file to '" << mrcFile << "'";
+   notify(ss.str(), 0, Observable::UpdateProgressMessage);
+
    MRCWriter::Pointer mrcWriter = MRCWriter::New();
    mrcWriter->setOutputFile(mrcFile);
    mrcWriter->setGeometry(m_Geometry);

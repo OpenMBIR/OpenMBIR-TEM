@@ -40,6 +40,7 @@
 #include <stdio.h>
 
 #include <string>
+#include <sstream>
 
 #include "MXA/Utilities/MXADir.h"
 
@@ -88,8 +89,8 @@ void SinogramBinWriter::execute()
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
+  std::stringstream ss;
 
-  notify("Writing Sinogram", 0, UpdateProgressMessage);
 
   FILE* file = NULL;
 
@@ -103,6 +104,9 @@ void SinogramBinWriter::execute()
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
+  ss.str("");
+  ss << "Writing Sinogram to '" << filepath << "'";
+  notify(ss.str(), 0, UpdateProgressMessage);
 
   //Writing the final sinogram
   uint16_t thetaSize = getSinogram()->N_theta;
