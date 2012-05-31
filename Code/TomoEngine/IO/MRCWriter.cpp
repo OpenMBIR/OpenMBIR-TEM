@@ -84,7 +84,6 @@ int MRCWriter::write()
   {
     return -1;
   }
-  std::cout << "Writing MRC file: " << m_OutputFile << std::endl;
   MRCHeader header;
   header.nx = m_Geometry->N_x;
   header.ny = m_Geometry->N_y;

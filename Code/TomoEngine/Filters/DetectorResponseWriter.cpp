@@ -83,8 +83,11 @@ void DetectorResponseWriter::execute()
   fclose(Fp);
   if (numElements != nEleWritten)
   {
+    std::stringstream ss;
+    ss << "Error Writing the Detector Response File. The number of elements requested to be written was not honored"
+        << ". The number requested was " << numElements << " and the number written was " << nEleWritten;
     setErrorCondition(-1);
-    setErrorMessage("Error Writing the Detector Response File. The number of elements requested to be written was not honored");
+    setErrorMessage(ss.str());
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
