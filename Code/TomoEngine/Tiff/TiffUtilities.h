@@ -30,6 +30,25 @@
 #ifndef _TIFF_UTILITIES_H_
 #define _TIFF_UTILITIES_H_
 
+#include "TomoEngine/TomoEngine.h"
+
+#ifdef CMP_HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+
+#ifdef CMP_HAVE_STDIO_H
+#include <stdio.h>
+#endif
+
+#ifdef CMP_HAVE_STRING_H
+#include <string.h>
+#endif
+
+#ifdef CMP_HAVE_STDINT_H
+#include <stdint.h>
+#endif
+
+#include <tiff.h>
 #include <tiffio.h>
 
 typedef struct {

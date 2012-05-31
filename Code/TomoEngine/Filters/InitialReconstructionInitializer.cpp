@@ -114,13 +114,13 @@ void InitialReconstructionInitializer::execute()
   input->LengthZ *= Z_STRETCH;
   input->LengthZ /= (input->interpolateFactor * sinogram->delta_r);
   //interpolation_factor;
-  input->LengthZ = round(input->LengthZ) * input->interpolateFactor * sinogram->delta_r; //interpolation_factor;
+  input->LengthZ = floor(input->LengthZ) * input->interpolateFactor * sinogram->delta_r; //interpolation_factor;
   if(1 == input->extendObject)
   {
     std::cout << "KNOWN BUG FIX NEEDED HERE IF MAX = 90 degrees" << std::endl;
     geometry->LengthX = X_SHRINK_FACTOR * ((sinogram->N_r * sinogram->delta_r) / cos(max * M_PI / 180)) + input->LengthZ * tan(max * M_PI / 180);
     geometry->LengthX /= (input->interpolateFactor * sinogram->delta_r);
-    geometry->LengthX = round(geometry->LengthX) * input->interpolateFactor * sinogram->delta_r;
+    geometry->LengthX = floor(geometry->LengthX) * input->interpolateFactor * sinogram->delta_r;
   }
   else
   {
@@ -133,9 +133,9 @@ void InitialReconstructionInitializer::execute()
 //  Geometry->LengthY = (Geometry->EndSlice- Geometry->StartSlice)*Geometry->delta_xy;
   geometry->LengthY = (input->yEnd - input->yStart + 1) * sinogram->delta_t;
 
-  geometry->N_x = round(geometry->LengthX / input->delta_xz); //Number of voxels in x direction
-  geometry->N_z = round(input->LengthZ / input->delta_xz); //Number of voxels in z direction
-  geometry->N_y = round(geometry->LengthY / input->delta_xy); //Number of measurements in y direction
+  geometry->N_x = floor(geometry->LengthX / input->delta_xz); //Number of voxels in x direction
+  geometry->N_z = floor(input->LengthZ / input->delta_xz); //Number of voxels in z direction
+  geometry->N_y = floor(geometry->LengthY / input->delta_xy); //Number of measurements in y direction
 
   printf("Geometry->LengthX=%lf nm \n", geometry->LengthX);
   printf("Geometry->LengthY=%lf nm \n", geometry->LengthY);

@@ -189,9 +189,9 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
 // -----------------------------------------------------------------------------
 void SOCEngine::InitializeSinogram(SinogramPtr v)
 {
-  v->N_r = 0.0;
+  v->N_r = 0;
   v->N_t = 0;
-  v->N_theta = 0.0;
+  v->N_theta = 0;
   v->delta_r = 0.0;
   v->delta_t = 0.0;
   v->counts = RealVolumeType::NullPointer();
@@ -1866,7 +1866,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
   Real_t accuracy = 1e-9; //This is the rooting accuracy for x
   uint32_t binarysearch_count=10;//Accuracy is 1/(2^10)
   int32_t errorcode = -1;
-  int16_t Idx;
+//  int16_t Idx;
 
   //FIXME: Where are these Initialized? Or what values should they be initialized to?
   Real_t low = 0.0, high = 0.0;
@@ -1900,8 +1900,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
     ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
     ss << "   SubLoop: " << NH_Iter << " of " << subIterations;
-    float currentLoop = OuterIter * m_TomoInputs->NumIter + Iter;
-    notify(ss.str(), currentLoop / totalLoops * 100, Observable::UpdateProgressValueAndMessage);
+    float currentLoop = static_cast<float>(OuterIter * m_TomoInputs->NumIter + Iter);
+    notify(ss.str(), currentLoop / totalLoops * 100.0f, Observable::UpdateProgressValueAndMessage);
     if(updateType == NonHomogeniousUpdate)
     {
       //Compute VSC and create a map of pixels that are above the threshold value
@@ -2116,7 +2116,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 #endif //Zero skipping
 			if(ZSFlag == false)
 			{
-            Real_t tt;
+//            Real_t tt;
             //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
            /* OLD for (uint32_t q = 0; q < TempCol[Index]->count; q++)
             {

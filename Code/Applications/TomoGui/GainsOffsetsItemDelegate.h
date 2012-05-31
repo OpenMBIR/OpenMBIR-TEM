@@ -81,14 +81,14 @@ class GainsOffsetsItemDelegate : public QStyledItemDelegate
     // -----------------------------------------------------------------------------
     QWidget* createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
     {
-      QLineEdit* editor;
+//      QLineEdit* editor;
     //  QCheckBox* checkbox;
     //  QIntValidator* intValidator;
-      QDoubleValidator* dblValidator;
+//      QDoubleValidator* dblValidator;
 
       qint32 col = index.column();
-      switch(col)
-      {
+//      switch(col)
+//      {
 //        case GainsOffsetsTableModel::TiltIndex:
 //          editor = new QLineEdit(parent);
 //          editor->setFrame(false);
@@ -121,9 +121,9 @@ class GainsOffsetsItemDelegate : public QStyledItemDelegate
 //          checkbox->setText("");
 //          checkbox->setTristate(false);
 //          return checkbox;
-        default:
-          break;
-      }
+//        default:
+//          break;
+//      }
       return QStyledItemDelegate::createEditor(parent, option, index);
     }
 

@@ -24,5 +24,5 @@ set (TomoEngine_IO_HDRS
     ${TomoEngine_SOURCE_DIR}/IO/NuisanceParamReader.h
     ${TomoEngine_SOURCE_DIR}/IO/SinogramBinWriter.h
 )
-cmp_IDE_SOURCE_PROPERTIES( "IO" "${TomoEngine_IO_HDRS}" "${TomoEngine_IO_SRCS}" "${CMP_INSTALL_FILES}")
+cmp_IDE_SOURCE_PROPERTIES( "TomoEngine/IO" "${TomoEngine_IO_HDRS}" "${TomoEngine_IO_SRCS}" "${CMP_INSTALL_FILES}")
 

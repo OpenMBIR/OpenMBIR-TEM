@@ -31,35 +31,17 @@
 
 #include "TiffUtilities.h"
 
-#ifdef CMP_HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
 
-#ifdef CMP_HAVE_STDIO_H
-#include <stdio.h>
-#endif
-
-#ifdef CMP_HAVE_STRING_H
-#include <string.h>
-#endif
-
-#ifdef CMP_HAVE_STDINT_H
-#include <stdint.h>
-#endif
 
 #include <iostream>
 
-//#include "TomoEngine/TomoEngine.h"
-//#include "TomoEngine/TomoEngineVersion.h"
-//#include "TomoEngine/Common/MSVCDefines.h"
-//#include "TomoEngine/Common/EIMTime.h"
 
 #define PIXEL8_TO_GREYVALUE(pal, palIndex, out)\
     r = pal[0][palIndex]; g = pal[1][palIndex]; b = pal[2][palIndex];\
     if (r == b && r == g)\
     { bitmapData[temp] = r; }\
     else {\
-      R = r * 0.299; G = g * 0.587; B = b * 0.114;\
+      R = r * 0.299f; G = g * 0.587f; B = b * 0.114f;\
       out = (unsigned char)(R + G + B);\
     }
 
@@ -68,7 +50,7 @@
   if (r == g && r == b) \
     out = r;\
   else {\
-    R = r * 0.299; G = g * 0.587; B = b * 0.144;\
+    R = r * 0.299f; G = g * 0.587f; B = b * 0.144f;\
     out = (unsigned char)(R + G + B);\
   }
 
@@ -118,12 +100,12 @@ int TiffUtilities::readInputImage(TiffImage* data, char* inputFileName)
 {
   int err = 0;
 
-  TIFF* in = NULL;
+  TIFF* in = (TIFF*)(NULL);
   in = TIFFOpen(inputFileName, "r");
   if (in == NULL)
   {
    printf("Error Opening Tiff file with Absolute Path:\n %s\n", inputFileName);
-   return NULL;
+   return 0;
   }
   int width, height;
   unsigned short samplesperpixel;
@@ -216,10 +198,9 @@ int TiffUtilities::readTiffAsGrayScale(TIFF* in, TiffImage* data)
 {
   unsigned char* raster; /* retrieve RGBA image */
   int32_t pixel_count;
-  unsigned char *src=NULL, *dst=NULL;
-  size_t totalBytes;
-
-  int err;
+  unsigned char* src = static_cast<unsigned char*>(NULL);
+  unsigned char* dst = static_cast<unsigned char*>(NULL);
+  tsize_t totalBytes;
 
   unsigned char r, g, b;
   float R,G,B;
@@ -231,7 +212,7 @@ int TiffUtilities::readTiffAsGrayScale(TIFF* in, TiffImage* data)
   if (raster == NULL)
   {
     TIFFError(TIFFFileName(in), "No space for raster buffer");
-    return NULL;
+    return 0;
   }
 
   // TIFFReadRGBAImageOriented converts non 8bit images including:
@@ -242,7 +223,7 @@ int TiffUtilities::readTiffAsGrayScale(TIFF* in, TiffImage* data)
   if (!TIFFReadRGBAImageOriented(in, (data->width), (data->height), (unsigned int*)(raster), ORIENTATION_TOPLEFT, 0))
   {
     _TIFFfree(raster);
-    return NULL;
+    return 0;
   }
 
   // Collapse the data down to a single channel, that will end up
@@ -274,7 +255,7 @@ int TiffUtilities::writeGrayScaleImage(const char* filename, int rows, int colum
 
   int err;
    TIFF *out;
-   char* dateTime;
+
    char software[1024];
    tsize_t area;
 

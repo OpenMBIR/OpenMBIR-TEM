@@ -34,4 +34,4 @@ set (TomoEngine_Filters_HDRS
     ${TomoEngine_SOURCE_DIR}/Filters/TargetGainSigmaXEstimation.h
 )
 
-cmp_IDE_SOURCE_PROPERTIES( "Filters" "${TomoEngine_Filters_HDRS}" "${TomoEngine_Filters_SRCS}" "${CMP_INSTALL_FILES}")
+cmp_IDE_SOURCE_PROPERTIES( "TomoEngine/Filters" "${TomoEngine_Filters_HDRS}" "${TomoEngine_Filters_SRCS}" "${CMP_INSTALL_FILES}")

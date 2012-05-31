@@ -30,4 +30,4 @@ set (TomoEngine_Common_HDRS
     ${TomoEngine_SOURCE_DIR}/Common/TomoArray.hpp
 )
 
-cmp_IDE_SOURCE_PROPERTIES( "Common" "${TomoEngine_Common_HDRS}" "${TomoEngine_Common_SRCS}" "${CMP_INSTALL_FILES}")
+cmp_IDE_SOURCE_PROPERTIES( "TomoEngine/Common" "${TomoEngine_Common_HDRS}" "${TomoEngine_Common_SRCS}" "${CMP_INSTALL_FILES}")
