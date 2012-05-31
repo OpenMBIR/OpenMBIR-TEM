@@ -38,6 +38,59 @@
 
 #include <boost/shared_ptr.hpp>
 
+/**
+ * @brief Creates a new Array by allocating memory in a contiguous space
+ * @param dims The dimensions of your data with the SLOWEST moving dimension
+ * in the first (zero) slot and continuing to the FASTEST moving dimension.
+ * @param name The human name for the array. This can be helpful for debugging
+ * @return Shared Pointer to the data
+ *
+ *
+ * Example: If you have a 2D array that you would like to allocate and the
+ * dimensions are a width (X) of 512 pixels and a height (Y) of 256 pixels
+ * and you want the data laid out so that when traversing the array one would
+ * walk the width of the image FIRST then the heigth then you would create
+ * a TomoArray2D like the following:
+ * @code
+ *  size_t dims[2] = { 256, 512 };
+ *  TomoArray2D<int, int*, 2>::Pointer image = TomoArray2D<int, int*, 2>::New(dims, "Image);
+ *
+ *    Width (X) --->
+ *    - - - - - - - - -
+ * H | | | | | | | | | |
+ * e  - - - - - - - - -
+ * i | | | | | | | | | |
+ * g  - - - - - - - - -
+ * h | | | | | | | | | |
+ * t  - - - - - - - - -
+ *   | | | | | | | | | |
+ * Y  - - - - - - - - -
+
+ * @endcode
+ * @n
+ * Example: If you have a 3D array that you would like to allocate and the
+ * dimensions are a width (X) of 512 pixels, height (Y) of 256 pixels and depth (Z)
+ * of 128 pixels and you want the data laid out so that when traversing the
+ * array one would walk the width of the image FIRST, then the heigth, then
+ * the Depth then you would create a TomoArray3D like the following:
+ * @code
+ *  size_t dims[2] = { 128, 256, 512 };
+ *  TomoArray3D<int, int*, 3>::Pointer image = TomoArray3D<int, int*, 3>::New(dims, "Image);
+ *
+ *    Width (X) --->
+ *    - - - - - - - - -
+ * H | | | | | | | | | |
+ * e  - - - - - - - - -
+ * i | | | | | | | | | |
+ * g  - - - - - - - - -
+ * h | | | | | | | | | |
+ * t  - - - - - - - - -
+ *   | | | | | | | | | |
+ * Y  - - - - - - - - -
+
+ * @endcode
+ */
+
 
 template<typename T, typename Ptr, int SIZE>
 class TomoArray
@@ -85,7 +138,7 @@ class TomoArray
         std::cout << "Deallocating TomoArray " << m_Name << std::endl;
       }
 #endif
-      if (SIZE == 1 || SIZE == 2)
+      if (SIZE == 1 || SIZE == 2 || SIZE == 3)
       {
         free(d);
       }
@@ -94,7 +147,8 @@ class TomoArray
       }
     }
 
-#if 0
+
+    /* ******************* These are 3D array methods ********************* */
     inline size_t calcIndex(size_t z, size_t y, size_t x)
     {
       assert(SIZE == 3);
@@ -112,7 +166,30 @@ class TomoArray
       assert(SIZE == 3);
       d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)] = v;
     }
-#endif
+
+    inline void addToValue(T v, size_t z, size_t y, size_t x)
+    {
+      assert(SIZE == 3);
+      d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)] += v;
+    }
+
+    inline void deleteFromValue(T v, size_t z, size_t y, size_t x)
+    {
+      assert(SIZE == 3);
+      d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)] -= v;
+    }
+
+    inline void divideByValue(T v, size_t z, size_t y, size_t x)
+    {
+      assert(SIZE == 3);
+      d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)] /= v;
+    }
+
+    inline void multiplyByValue(T v, size_t z, size_t y, size_t x)
+    {
+      assert(SIZE == 3);
+      d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)] *= v;
+    }
 
     inline size_t calcIndex(size_t slow, size_t fast)
     {
@@ -120,6 +197,7 @@ class TomoArray
       return (m_Dims[1]*slow) + (fast);
     }
 
+    /* ******************* These are 2D array methods ********************* */
     inline T getValue(size_t slow, size_t fast)
     {
       assert(SIZE == 2);
@@ -139,6 +217,7 @@ class TomoArray
     }
 
 
+    /* ******************* These are 1D array methods ********************* */
     inline T getValue(size_t x)
     {
       return d[x];
@@ -169,7 +248,7 @@ class TomoArray
         m_Dims[i] = dims[i];
         total *= m_Dims[i];
       }
-      if (SIZE == 1 || SIZE == 2)
+      if (SIZE == 1 || SIZE == 2 || SIZE == 3)
       {
         d = reinterpret_cast<Ptr>(malloc(sizeof(T) * total));
       }

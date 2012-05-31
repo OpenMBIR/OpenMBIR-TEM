@@ -147,7 +147,7 @@ void InitialReconstructionInitializer::execute()
 
   size_t dims[3] =
   { geometry->N_z, geometry->N_x, geometry->N_y };
-  geometry->Object = Real3DType::New(dims, "Geometry.Object");
+  geometry->Object = RealVolumeType::New(dims, "Geometry.Object");
 
   // geometry->Object = (DATA_TYPE ***)get_3D(geometry->N_z, geometry->N_x, geometry->N_y, sizeof(DATA_TYPE));//Allocate space for the 3-D object
 //Coordinates of the left corner of the x-z object
