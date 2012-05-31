@@ -110,8 +110,8 @@ int SOCEngine::initializeBrightFieldData()
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
           //1000 is for Marc De Graef data which needed to multiplied
-          Real_t ttmp = (m_BFSinogram->counts->getValue(i_theta, i_r, i_t) * 1000);
-          m_Sinogram->counts->divideByValue(ttmp, i_theta, i_r, i_t);
+        //  Real_t ttmp = (m_BFSinogram->counts->getValue(i_theta, i_r, i_t) * 1000);
+        //  m_Sinogram->counts->divideByValue(ttmp, i_theta, i_r, i_t);
           //100 is for Marc De Graef data which needed to multiplied
           m_BFSinogram->counts->multiplyByValue(100, i_theta, i_r, i_t);
         }
@@ -266,7 +266,6 @@ int SOCEngine::createInitialVariancesData()
 
   return 0;
 }
-
 
 // -----------------------------------------------------------------------------
 // Initialize the Geometry data from a rough reconstruction
