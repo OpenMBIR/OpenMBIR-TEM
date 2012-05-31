@@ -67,8 +67,6 @@ void DetectorResponseWriter::execute()
 
   std::string filepath(getTomoInputs()->tempDir);
   filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::DetectorResponseFile);
-
-
   Fp = fopen(filepath.c_str(), "wb");
   if(Fp == NULL)
   {
@@ -79,7 +77,6 @@ void DetectorResponseWriter::execute()
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
-
   size_t numElements = getSinogram()->N_theta * DETECTOR_RESPONSE_BINS;
   Real_t value = m_Response->getValue(0, 0, 0);
   size_t nEleWritten = fwrite(&value, m_Response->getTypeSize(), numElements , Fp);
