@@ -57,17 +57,17 @@ m_BrightFieldFile(""),
 m_NumberResolutions(1),
 m_SampleThickness(100.0f),
 m_TargetGain(0.0f),
-m_StopThreshold(0.009),
+m_StopThreshold(0.009f),
 m_OuterIterations(1),
 m_InnerIterations(1),
 m_SigmaX(0.0f),
-m_MRFShapeParameter(1.1),
+m_MRFShapeParameter(1.1f),
 m_DefaultOffsetValue(0.0f),
 m_UseDefaultOffset(false),
 m_FinalResolution(1),
 m_ExtendObject(true),
-m_DefaultVariance(1.0),
-m_InitialReconstructionValue(0.0),
+m_DefaultVariance(1.0f),
+m_InitialReconstructionValue(0.0f),
 m_TiltSelection(SOC::A_Tilt)
 
 {
@@ -166,13 +166,13 @@ void MultiResolutionSOC::execute()
     if (i > 0) { inputs->InterpFlag = 1; }
 
 
-    inputs->interpolateFactor = pow(2, getNumberResolutions()-1) * m_FinalResolution;
+    inputs->interpolateFactor = powf((float)2, (float)getNumberResolutions()-1) * m_FinalResolution;
 
     inputs->InterpFlag = m_InterpolateInitialFile;
 
     /* Now set the output files for this resolution */
     inputs->sinoFile = m_InputFile;
-    inputs->tempDir  = m_TempDir + MXADir::Separator + StringUtils::numToString(inputs->interpolateFactor/(pow(2,i))) + std::string("x");
+    inputs->tempDir  = m_TempDir + MXADir::Separator + StringUtils::numToString(inputs->interpolateFactor/(powf(2.0f,i))) + std::string("x");
 
     //Make sure the directory is created:
     bool success = MXADir::mkdir(inputs->tempDir, true);
@@ -231,8 +231,8 @@ void MultiResolutionSOC::execute()
     inputs->defaultInitialRecon = getInitialReconstructionValue();
     inputs->defaultVariance = getDefaultVariance();
 
-    inputs->delta_xy = pow(2, getNumberResolutions()-i-1)*m_FinalResolution;
-    inputs->delta_xz = pow(2, getNumberResolutions()-i-1)*m_FinalResolution;
+    inputs->delta_xy = powf(2.0f, getNumberResolutions()-i-1)*m_FinalResolution;
+    inputs->delta_xz = powf(2.0f, getNumberResolutions()-i-1)*m_FinalResolution;
 
     if (i == 0)
     {
@@ -271,7 +271,7 @@ void MultiResolutionSOC::execute()
     if(rem_temp != 0)
     {
       std::cout << "The number of y-pixels is not a proper multiple for multi-res" << std::endl;
-      int16_t remainder = (inputs->interpolateFactor * 3) - (rem_temp);
+      int16_t remainder = static_cast<int16_t>((inputs->interpolateFactor * 3) - (rem_temp));
       inputs->yEnd += remainder;
     }
 

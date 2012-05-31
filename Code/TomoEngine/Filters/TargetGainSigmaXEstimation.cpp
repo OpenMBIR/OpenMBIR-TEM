@@ -107,7 +107,7 @@ void TargetGainSigmaXEstimation::execute()
     {
 
     }
-    progress = (i_theta/header.nz) * 100;
+    progress = (i_theta/header.nz) * 100.0f;
 
     Real_t min = std::numeric_limits<Real_t>::max();
     Real_t max = std::numeric_limits<Real_t>::min();

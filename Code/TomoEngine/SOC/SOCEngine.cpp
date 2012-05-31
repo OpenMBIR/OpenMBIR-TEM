@@ -189,12 +189,12 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
 // -----------------------------------------------------------------------------
 void SOCEngine::InitializeSinogram(SinogramPtr v)
 {
-  v->N_r = 0.0;
+  v->N_r = 0;
   v->N_t = 0;
-  v->N_theta = 0.0;
+  v->N_theta = 0;
   v->delta_r = 0.0;
   v->delta_t = 0.0;
-  v->counts = Real3DType::NullPointer();
+  v->counts = RealVolumeType::NullPointer();
   v->R0 = 0.0;
   v->RMax = 0.0;
   v->T0 = 0.0;
@@ -209,7 +209,7 @@ void SOCEngine::InitializeSinogram(SinogramPtr v)
 // -----------------------------------------------------------------------------
 void SOCEngine::InitializeGeometry(GeometryPtr v)
 {
-  v->Object = Real3DType::NullPointer();
+  v->Object = RealVolumeType::NullPointer();
 
   v->LengthX = 0.0;
   v->LengthY = 0.0;
@@ -289,14 +289,14 @@ void SOCEngine::execute()
   Real_t checksum = 0,temp;
 
   RealImage_t::Pointer VoxelProfile;
-  Real3DType::Pointer detectorResponse;
-  Real3DType::Pointer H_t;
+  RealVolumeType::Pointer detectorResponse;
+  RealVolumeType::Pointer H_t;
 
 
-  Real3DType::Pointer Y_Est;//Estimated Sinogram
-  Real3DType::Pointer Final_Sinogram;//To store and write the final sinogram resulting from our reconstruction
-  Real3DType::Pointer ErrorSino;//Error Sinogram
-  Real3DType::Pointer Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
+  RealVolumeType::Pointer Y_Est;//Estimated Sinogram
+  RealVolumeType::Pointer Final_Sinogram;//To store and write the final sinogram resulting from our reconstruction
+  RealVolumeType::Pointer ErrorSino;//Error Sinogram
+  RealVolumeType::Pointer Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
 
   RNGVars* RandomNumber;
   std::string indent("");
@@ -434,10 +434,10 @@ void SOCEngine::execute()
   dims[2] = m_Sinogram->N_t;
 
 
-  Y_Est = Real3DType::New(dims, "Y_Est");
-  ErrorSino = Real3DType::New(dims, "ErrorSino");
-  Weight = Real3DType::New(dims, "Weight");
-  Final_Sinogram = Real3DType::New(dims, "Final Sinogram");
+  Y_Est = RealVolumeType::New(dims, "Y_Est");
+  ErrorSino = RealVolumeType::New(dims, "ErrorSino");
+  Weight = RealVolumeType::New(dims, "Weight");
+  Final_Sinogram = RealVolumeType::New(dims, "Final Sinogram");
 
   //Setting the value of all the private members
   OffsetR = ((m_TomoInputs->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
@@ -568,7 +568,7 @@ void SOCEngine::execute()
   dims[0] = 1;
   dims[1] = m_Sinogram->N_theta;
   dims[2] = DETECTOR_RESPONSE_BINS;
-  H_t = Real3DType::New(dims, "H_t");
+  H_t = RealVolumeType::New(dims, "H_t");
   initializeHt(H_t);
 
 
@@ -989,8 +989,8 @@ RealImage_t::Pointer SOCEngine::calculateVoxelProfile()
 /*******************************************************************
  Forwards Projects the Object and stores it in a 3-D matrix
  ********************************************************************/
-Real3DType::Pointer SOCEngine::forwardProject(Real3DType::Pointer DetectorResponse,
-                                                  Real3DType::Pointer H_t)
+RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer DetectorResponse,
+                                                  RealVolumeType::Pointer H_t)
 {
   notify("Executing Forward Projection", 50, Observable::UpdateProgressValueAndMessage);
 
@@ -1003,7 +1003,7 @@ Real3DType::Pointer SOCEngine::forwardProject(Real3DType::Pointer DetectorRespon
   int16_t index_delta_t, index_delta_r;
   size_t dims[3] =
   { m_Sinogram->N_theta, m_Sinogram->N_r, m_Sinogram->N_t };
-  Real3DType::Pointer Y_Est = Real3DType::New(dims, "Y_Est");
+  RealVolumeType::Pointer Y_Est = RealVolumeType::New(dims, "Y_Est");
 
   for (int16_t j = 0; j < m_Geometry->N_z; j++)
   {
@@ -1141,7 +1141,7 @@ void SOCEngine::initializeBeamProfile()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Real_t SOCEngine::computeCost(Real3DType::Pointer ErrorSino,Real3DType::Pointer Weight)
+Real_t SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::Pointer Weight)
 {
   Real_t cost=0,temp=0;
   Real_t delta;
@@ -1468,7 +1468,7 @@ Real_t SOCEngine::computeCost(Real3DType::Pointer ErrorSino,Real3DType::Pointer 
 //
 // -----------------------------------------------------------------------------
 void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice,
-                                               Real3DType::Pointer DetectorResponse)
+                                               RealVolumeType::Pointer DetectorResponse)
 {
   int32_t j,k,sliceidx;
   Real_t x,z,y;
@@ -1848,8 +1848,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                              UInt8Image_t::Pointer VisitCount,
                              RNGVars* RandomNumber,
                              AMatrixCol** TempCol,
-                             Real3DType::Pointer ErrorSino,
-                             Real3DType::Pointer Weight,
+                             RealVolumeType::Pointer ErrorSino,
+                             RealVolumeType::Pointer Weight,
                              AMatrixCol* VoxelLineResponse,
                              ScaleOffsetParams* NuisanceParams,
                              UInt8Image_t::Pointer Mask,
@@ -1866,7 +1866,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
   Real_t accuracy = 1e-9; //This is the rooting accuracy for x
   uint32_t binarysearch_count=10;//Accuracy is 1/(2^10)
   int32_t errorcode = -1;
-  int16_t Idx;
+//  int16_t Idx;
 
   //FIXME: Where are these Initialized? Or what values should they be initialized to?
   Real_t low = 0.0, high = 0.0;
@@ -1900,8 +1900,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
     ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
     ss << "   SubLoop: " << NH_Iter << " of " << subIterations;
-    float currentLoop = OuterIter * m_TomoInputs->NumIter + Iter;
-    notify(ss.str(), currentLoop / totalLoops * 100, Observable::UpdateProgressValueAndMessage);
+    float currentLoop = static_cast<float>(OuterIter * m_TomoInputs->NumIter + Iter);
+    notify(ss.str(), currentLoop / totalLoops * 100.0f, Observable::UpdateProgressValueAndMessage);
     if(updateType == NonHomogeniousUpdate)
     {
       //Compute VSC and create a map of pixels that are above the threshold value
@@ -2116,7 +2116,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 #endif //Zero skipping
 			if(ZSFlag == false)
 			{
-            Real_t tt;
+//            Real_t tt;
             //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
            /* OLD for (uint32_t q = 0; q < TempCol[Index]->count; q++)
             {

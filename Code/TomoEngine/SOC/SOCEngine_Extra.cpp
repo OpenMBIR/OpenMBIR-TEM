@@ -390,7 +390,7 @@ void SOCEngine::gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::initializeHt(Real3DType::Pointer H_t)
+void SOCEngine::initializeHt(RealVolumeType::Pointer H_t)
 {
   Real_t ProfileCenterT;
   for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
@@ -438,7 +438,7 @@ void SOCEngine::initializeHt(Real3DType::Pointer H_t)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::initializeVolume(Real3DType::Pointer Y_Est, double value)
+void SOCEngine::initializeVolume(RealVolumeType::Pointer Y_Est, double value)
 {
   for (uint16_t i = 0; i < m_Sinogram->N_theta; i++)
   {
@@ -455,7 +455,7 @@ void SOCEngine::initializeVolume(Real3DType::Pointer Y_Est, double value)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::storeVoxelResponse(Real3DType::Pointer H_t,  AMatrixCol* VoxelLineResponse)
+void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,  AMatrixCol* VoxelLineResponse)
 {
   Real_t ProfileThickness = 0.0;
   Real_t y = 0.0;
@@ -566,7 +566,7 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
 
      while(errorcode != 0 && low <= high && rooting_attempt_counter < MaxNumRootingAttempts) //0 implies the signof the function at low and high is the same
      {
-     uint32_t iter_count;
+       uint32_t iter_count = 0;
        LagrangeMultiplier=solve<CE_ConstraintEquation>(&ce, low, high, LambdaRootingAccuracy, &errorcode,iter_count);
        low=low+dist;
        dist*=2;
@@ -641,10 +641,10 @@ void SOCEngine::calculateArithmeticMean()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int SOCEngine::jointEstimation(Real3DType::Pointer Weight,
+int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
                                 ScaleOffsetParamsPtr NuisanceParams,
-                                Real3DType::Pointer ErrorSino,
-                                Real3DType::Pointer Y_Est,
+                                RealVolumeType::Pointer ErrorSino,
+                                RealVolumeType::Pointer Y_Est,
                                 CostData::Pointer cost)
 {
   std::string indent("  ");
@@ -921,10 +921,10 @@ int SOCEngine::jointEstimation(Real3DType::Pointer Weight,
 // Also compute weights of the diagonal covariance matrix
 // -----------------------------------------------------------------------------
 
-void SOCEngine::calculateMeasurementWeight(Real3DType::Pointer Weight,
+void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
                                            ScaleOffsetParamsPtr NuisanceParams,
-                                           Real3DType::Pointer ErrorSino,
-                                           Real3DType::Pointer Y_Est)
+                                           RealVolumeType::Pointer ErrorSino,
+                                           RealVolumeType::Pointer Y_Est)
 {
   Real_t checksum = 0;
   START_TIMER;
@@ -1008,8 +1008,8 @@ void SOCEngine::calculateMeasurementWeight(Real3DType::Pointer Weight,
 //
 // -----------------------------------------------------------------------------
 int SOCEngine::calculateCost(CostData::Pointer cost,
-                             Real3DType::Pointer Weight,
-                             Real3DType::Pointer ErrorSino)
+                             RealVolumeType::Pointer Weight,
+                             RealVolumeType::Pointer ErrorSino)
 {
   Real_t cost_value = computeCost(ErrorSino, Weight);
   std::cout << "cost_value: " << cost_value << std::endl;
@@ -1025,9 +1025,9 @@ int SOCEngine::calculateCost(CostData::Pointer cost,
 // -----------------------------------------------------------------------------
 // Updating the Weights for Noise Model
 // -----------------------------------------------------------------------------
-void SOCEngine::updateWeights(Real3DType::Pointer Weight,
+void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
                               ScaleOffsetParamsPtr NuisanceParams,
-                              Real3DType::Pointer ErrorSino)
+                              RealVolumeType::Pointer ErrorSino)
 {
   Real_t AverageVarUpdate = 0; //absolute sum of the gain updates
   Real_t AverageMagVar = 0; //absolute sum of the initial gains
@@ -1159,7 +1159,7 @@ void SOCEngine::writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, Real3DType::Pointer Final_Sinogram)
+void SOCEngine::writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram)
 {
   // Write the Sinogram out to a file
   SinogramBinWriter::Pointer sinogramWriter = SinogramBinWriter::New();

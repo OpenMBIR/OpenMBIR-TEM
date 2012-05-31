@@ -18,13 +18,25 @@ if ("${TIFF_INSTALL}" STREQUAL "")
     SET (TIFF_INSTALL  $ENV{TIFF_INSTALL})
 endif()
 
+set (More_Tiff_Search_Dirs "")
+if (NOT APPLE AND NOT WIN32)
+
+if ( "${CMAKE_SIZEOF_VOID_P}" EQUAL "8" )
+    set (More_Tiff_Search_Dirs "64")
+endif()
+
+endif()
+
+
 # Look for the header file.
 SET(TIFF_INCLUDE_SEARCH_DIRS
   ${TIFF_INSTALL}/include
+  /usr/include
 )
 
 SET (TIFF_LIB_SEARCH_DIRS
   ${TIFF_INSTALL}/lib
+  /usr/lib${More_Tiff_Search_Dirs}
   )
 
 SET (TIFF_BIN_SEARCH_DIRS

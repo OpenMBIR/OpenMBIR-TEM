@@ -90,14 +90,20 @@ endif()
 configure_file(${TomoEngine_SOURCE_DIR}/TomoEngineConfiguration.h.in
                ${TomoEngine_BINARY_DIR}/${CMP_TOP_HEADER_FILE})   
 
-include_directories(${TomoEngine_SOURCE_DIR}/..)            
-include_directories(${TomoEngine_SOURCE_DIR})
-include_directories(${TomoEngine_BINARY_DIR})
-
-
+cmp_IDE_GENERATED_PROPERTIES("Generated" 
+                             "${CMP_HEADER_DIR}/${CMP_TOP_HEADER_FILE};${CMP_HEADER_DIR}/${CMP_TYPES_FILE_NAME};${CMP_HEADER_DIR}/${CMP_CONFIGURATION_FILE_NAME};${CMP_HEADER_DIR}/${CMP_VERSION_HEADER_FILE_NAME}"
+                             "${CMP_HEADER_DIR}/${CMP_VERSION_SOURCE_FILE_NAME}")
+set(Project_SRCS 
+    ${CMP_HEADER_DIR}/${CMP_TOP_HEADER_FILE}
+    ${CMP_HEADER_DIR}/${CMP_TYPES_FILE_NAME}
+    ${CMP_HEADER_DIR}/${CMP_CONFIGURATION_FILE_NAME}
+    ${CMP_HEADER_DIR}/${CMP_VERSION_HEADER_FILE_NAME}
+    ${CMP_HEADER_DIR}/${CMP_VERSION_SOURCE_FILE_NAME}
+)
+                             
 # --------------------------------------------------------------------
 # Gather all the source files that will be put into the library
-set(Project_SRCS "")
+
 Macro(CMP_CompileDir DirName)
     include(${TomoEngine_SOURCE_DIR}/${DirName}/SourceList.cmake)
     set (Project_SRCS ${Project_SRCS} ${TomoEngine_${DirName}_SRCS} ${TomoEngine_${DirName}_HDRS})
@@ -114,6 +120,9 @@ if (EIMTomo_TIFF_SUPPORT)
     INCLUDE_DIRECTORIES(${TIFF_INCLUDE_DIRS})
 endif()
 
+include_directories(${TomoEngine_SOURCE_DIR}/..)            
+include_directories(${TomoEngine_SOURCE_DIR})
+include_directories(${TomoEngine_BINARY_DIR})
 
 # --------------------------------------------------------------------
 # Add the TomoEngine Library

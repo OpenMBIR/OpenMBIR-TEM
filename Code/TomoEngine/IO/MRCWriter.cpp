@@ -167,7 +167,7 @@ int MRCWriter::write()
   {
     FEIHeader fei;
     ::memset(&fei, 0, sizeof(FEIHeader));
-    fei.pixelsize = m_Geometry->LengthX;
+    fei.pixelsize = static_cast<float>(m_Geometry->LengthX);
     writer.write(reinterpret_cast<char*>(&fei), sizeof(FEIHeader));
   }
 

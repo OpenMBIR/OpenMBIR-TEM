@@ -11,4 +11,4 @@ set (TomoEngine_mt_SRCS
 set (TomoEngine_mt_HDRS
     ${TomoEngine_SOURCE_DIR}/mt/mt19937ar.h
 )
-cmp_IDE_SOURCE_PROPERTIES( "mt" "${TomoEngine_mt_HDRS}" "${TomoEngine_mt_SRCS}" "${CMP_INSTALL_FILES}")
+cmp_IDE_SOURCE_PROPERTIES( "TomoEngine/mt" "${TomoEngine_mt_HDRS}" "${TomoEngine_mt_SRCS}" "${CMP_INSTALL_FILES}")

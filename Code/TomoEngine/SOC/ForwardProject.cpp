@@ -46,7 +46,7 @@
 // -----------------------------------------------------------------------------
 ForwardProject::ForwardProject(Sinogram* sinogram, Geometry* geometry,
                                AMatrixCol** tempCol, AMatrixCol* voxelLineResponse,
-                               Real3DType::Pointer yEst,
+                               RealVolumeType::Pointer yEst,
                                ScaleOffsetParams* nuisanceParams,
                                uint16_t tilt) :
                   m_Sinogram(sinogram),

@@ -26,6 +26,7 @@ int main(int argc, char **argv)
   size_t z = 2;
   size_t dims[3] = { x, y, z};
   std::cout << "X, Y, Z: " << x << " " << y << " " << z << std::endl;
+#if 0
   std::cout << "-----------------Testing 3D Array------------------" << std::endl;
   {
     Int32VolumeType::Pointer object = Int32VolumeType::New(dims, "Test3D");
@@ -66,7 +67,7 @@ int main(int argc, char **argv)
     std::cout << "Cleaning up Memory\n" << std::endl;
     object = Int32VolumeType::NullPointer();
   }
-
+#endif
 
   std::cout << "-----------------Testing 2D Array------------------" << std::endl;
 
