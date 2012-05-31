@@ -823,11 +823,10 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   m_MultiResSOC->setUseDefaultOffset(useDefaultOffset->isChecked());
   m_MultiResSOC->setTiltSelection(static_cast<SOC::TiltSelection>(tiltSelection->currentIndex()));
   m_MultiResSOC->setExtendObject(extendObject->isChecked());
+  m_MultiResSOC->setDefaultVariance(defaultVariance->text().toFloat(&ok));
 
   m_MultiResSOC->setInterpolateInitialFile(interpolateInitialFile->isChecked());
   //m_MultiResSOC->setInterpolationFactor(interpolationFactor->text().toInt(&ok));
-
-
 
   std::vector<uint16_t> subvolume(6);
   subvolume[2] = 0;

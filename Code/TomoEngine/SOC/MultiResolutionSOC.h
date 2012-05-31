@@ -76,6 +76,8 @@ class MultiResolutionSOC : public FilterPipeline
     MXA_INSTANCE_PROPERTY(bool, ExtendObject);
     MXA_INSTANCE_PROPERTY(bool, InterpolateInitialFile);
     MXA_INSTANCE_PROPERTY(float, InterpolationFactor);
+    MXA_INSTANCE_PROPERTY(float, DefaultVariance);
+    MXA_INSTANCE_PROPERTY(float, InitialReconstructionValue);
 
     MXA_INSTANCE_PROPERTY(SOC::TiltSelection, TiltSelection);
 

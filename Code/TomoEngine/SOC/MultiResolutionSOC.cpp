@@ -66,6 +66,8 @@ m_DefaultOffsetValue(0.0f),
 m_UseDefaultOffset(false),
 m_FinalResolution(1),
 m_ExtendObject(true),
+m_DefaultVariance(1.0),
+m_InitialReconstructionValue(0.0),
 m_TiltSelection(SOC::A_Tilt)
 
 {
@@ -115,6 +117,7 @@ void MultiResolutionSOC::printInputs(TomoInputsPtr inputs, std::ostream &out)
 	PRINT_VAR(out, inputs, gainsInputFile);
 	PRINT_VAR(out, inputs, offsetsInputFile);
 	PRINT_VAR(out, inputs, varianceInputFile);
+
 
 	PRINT_VAR(out, inputs, tempDir);
 	PRINT_VAR(out, inputs, reconstructedOutputFile);
@@ -224,7 +227,9 @@ void MultiResolutionSOC::execute()
     /** SIGMA_X needs to be calculated here based on some formula**/
     inputs->SigmaX =pow(2,(getNumberResolutions()-1-i)*(1-3/inputs->p)) * getSigmaX();
 	  std::cout<<"SigmaX="<<inputs->SigmaX;
-//    inputs->SigmaX = getSigmaX();
+
+    inputs->defaultInitialRecon = getInitialReconstructionValue();
+    inputs->defaultVariance = getDefaultVariance();
 
     inputs->delta_xy = pow(2, getNumberResolutions()-i-1)*m_FinalResolution;
     inputs->delta_xz = pow(2, getNumberResolutions()-i-1)*m_FinalResolution;
