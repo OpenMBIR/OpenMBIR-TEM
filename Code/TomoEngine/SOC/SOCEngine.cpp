@@ -2143,7 +2143,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 					{
             size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
             size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
-            size_t bfcounts_idx = m_BFSinogram->counts->calcIndex(i_theta, i_r, i_t);
 
 						if (m_Sinogram->BF_Flag == false)
 						{
@@ -2154,6 +2153,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 						}
 						else
 						{
+							size_t bfcounts_idx = m_BFSinogram->counts->calcIndex(i_theta, i_r, i_t);
 							Real_t ProjectionEntry = m_BFSinogram->counts->d[bfcounts_idx]*NuisanceParams->I_0->d[i_theta]*VoxelLineResponse[i].values[VoxelLineAccessCounter] * (TempCol[Index]->values[q]);
 
 							THETA2 += (ProjectionEntry*ProjectionEntry*Weight->d[weight_idx]);
@@ -2252,8 +2252,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 					uint16_t VoxelLineAccessCounter = 0;
 					for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
 					{
-		        size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
-		        size_t bfcounts_idx = m_BFSinogram->counts->calcIndex(i_theta, i_r, i_t);
+        		        size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
 
 						//for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 						if(m_Sinogram->BF_Flag == false)
@@ -2263,6 +2262,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 							VoxelLineAccessCounter++;
 						}
 						else {
+							size_t bfcounts_idx = m_BFSinogram->counts->calcIndex(i_theta, i_r, i_t);
 							ErrorSino->d[error_idx] -= (NuisanceParams->I_0->d[i_theta]*m_BFSinogram->counts->d[bfcounts_idx]* (TempCol[Index]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->getValue(j_new, k_new, i) - V)));
 							VoxelLineAccessCounter++;
 						}

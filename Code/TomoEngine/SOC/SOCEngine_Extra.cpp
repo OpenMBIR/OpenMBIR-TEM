@@ -933,7 +933,7 @@ void SOCEngine::calculateMeasurementWeight(Real3DType::Pointer Weight,
   {
 #ifdef NOISE_MODEL
     {
-    NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
+		NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
     }
 #endif //Noise model
     checksum = 0;
