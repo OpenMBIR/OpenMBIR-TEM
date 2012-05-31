@@ -163,12 +163,11 @@ void MultiResolutionSOC::execute()
     inputs->offsetsInputFile = prevInputs->offsetsOutputFile;
     inputs->varianceInputFile = prevInputs->varianceOutputFile;
     inputs->initialReconFile = prevInputs->reconstructedOutputFile;
-    if (i > 0) { inputs->InterpFlag = 1; }
-
-
+	  
+    inputs->InterpFlag = m_InterpolateInitialFile;//contains whether to initially interpolate or not
+    if (i > 0) { inputs->InterpFlag = 1; }//If at a finer resolution need to interpolate
+	  
     inputs->interpolateFactor = powf((float)2, (float)getNumberResolutions()-1) * m_FinalResolution;
-
-    inputs->InterpFlag = m_InterpolateInitialFile;
 
     /* Now set the output files for this resolution */
     inputs->sinoFile = m_InputFile;
