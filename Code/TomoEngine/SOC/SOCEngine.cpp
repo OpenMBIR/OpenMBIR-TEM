@@ -546,19 +546,6 @@ void SOCEngine::execute()
 #endif
   //m_Sinogram->targetGain=20000;
 
-#ifdef BRIGHT_FIELD //Take log of the data and subtract log(Dosage) from it
-  for (i_theta = 0;i_theta < m_Sinogram->N_theta; i_theta++)
-  { //slice index
-    for(i_r = 0; i_r < m_Sinogram->N_r;i_r++)
-    {
-      for(i_t = 0;i_t < m_Sinogram->N_t;i_t++)
-      {
-
-        m_Sinogram->counts->d[i_theta][i_r][i_t] = log(m_Sinogram->counts->d[i_theta][i_r][i_t])-log(m_Sinogram->InitialGain[i_theta]);
-      }
-    }
-  }
-#endif//Bright Field
 
 
   //Gain and Offset Parameters Initialization

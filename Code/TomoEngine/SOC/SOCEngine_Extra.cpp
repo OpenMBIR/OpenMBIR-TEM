@@ -79,6 +79,8 @@ int SOCEngine::initializeBrightFieldData()
   if(m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->sinoFile.empty() == false)
   {
     std::cout << "Initializing BF data" << std::endl;
+	std::cout<<m_BFTomoInputs->zStart<<std::endl;  
+	std::cout<<m_BFTomoInputs->zEnd<<std::endl;  
     TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
     std::string extension = MXAFileInfo::extension(m_BFTomoInputs->sinoFile);
     if(extension.compare("mrc") == 0 || extension.compare("ali") == 0)
