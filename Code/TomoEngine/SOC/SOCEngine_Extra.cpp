@@ -121,7 +121,7 @@ int SOCEngine::initializeBrightFieldData()
     }
 
     m_Sinogram->BF_Flag = true;
-    std::cout << "BF initialization complete" << std::endl;
+    notify("BF initialization complete", 0, Observable::UpdateProgressMessage);
 
   }
   else
