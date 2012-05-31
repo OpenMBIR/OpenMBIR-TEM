@@ -226,10 +226,11 @@ void MultiResolutionSOC::execute()
     /** SIGMA_X needs to be calculated here based on some formula**/
     inputs->SigmaX =pow(2,(getNumberResolutions()-1-i)*(1-3/inputs->p)) * getSigmaX();
 	  std::cout<<"SigmaX="<<inputs->SigmaX;
-
-    inputs->defaultInitialRecon = getInitialReconstructionValue();
-    inputs->defaultVariance = getDefaultVariance();
-
+	  if (i == 0)
+	  {
+	    inputs->defaultInitialRecon = getInitialReconstructionValue();
+      inputs->defaultVariance = getDefaultVariance();
+	  }
     inputs->delta_xy = powf(2.0f, getNumberResolutions()-i-1)*m_FinalResolution;
     inputs->delta_xz = powf(2.0f, getNumberResolutions()-i-1)*m_FinalResolution;
 
