@@ -802,6 +802,9 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   path = QDir::toNativeSeparators(inputBrightFieldFilePath->text());
   m_MultiResSOC->setBrightFieldFile(path.toStdString());
 
+  path = QDir::toNativeSeparators(initialReconstructionPath->text());
+  m_MultiResSOC->setInitialReconstructionFile(path.toStdString());
+
   bool ok = false;
   if (fullReconstruction == true)
   {
