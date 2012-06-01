@@ -67,6 +67,7 @@ m_DefaultOffsetValue(0.0f),
 m_UseDefaultOffset(false),
 m_FinalResolution(1),
 m_ExtendObject(true),
+m_InterpolateInitialReconstruction(false),
 m_DefaultVariance(1.0f),
 m_InitialReconstructionValue(0.0f),
 m_TiltSelection(SOC::A_Tilt)
@@ -170,8 +171,14 @@ void MultiResolutionSOC::execute()
     {
       inputs->initialReconFile = prevInputs->reconstructedOutputFile;
     }
-    inputs->InterpFlag = 0;//contains whether to initially interpolate or not
-    if (i > 0) { inputs->InterpFlag = 1; }//If at a finer resolution need to interpolate
+
+    if (i == 0)
+    {
+      inputs->InterpFlag = (getInterpolateInitialReconstruction() == false) ? 0 : 1;
+    }
+    else
+    { inputs->InterpFlag = 1; }//If at a finer resolution need to interpolate
+
 
     inputs->interpolateFactor = powf((float)2, (float)getNumberResolutions()-1) * m_FinalResolution;
 
