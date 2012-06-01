@@ -302,6 +302,7 @@ void MultiResolutionSOC::execute()
     engine->setBFSinogram(bf_sinogram);
     // We need to get messages to the gui or command line
     engine->addObserver(this);
+    engine->setMessagePrefix( StringUtils::numToString(inputs->interpolateFactor/(powf(2.0f,i))) + std::string("x: ") );
 
     printInputs(inputs, std::cout);
 
