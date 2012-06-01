@@ -77,9 +77,15 @@ void DetectorResponseWriter::execute()
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
-  size_t numElements = getSinogram()->N_theta * DETECTOR_RESPONSE_BINS;
-  Real_t value = m_Response->getValue(0, 0, 0);
-  size_t nEleWritten = fwrite(&value, m_Response->getTypeSize(), numElements , Fp);
+
+  int nDims = m_Response->getNDims();
+  size_t* dims = m_Response->getDims();
+  size_t numElements = 1;
+  for (int i = 0; i < nDims; ++i)
+  {
+    numElements = numElements * dims[i];
+  }
+  size_t nEleWritten = fwrite(m_Response->d, m_Response->getTypeSize(), numElements , Fp);
   fclose(Fp);
   if (numElements != nEleWritten)
   {
