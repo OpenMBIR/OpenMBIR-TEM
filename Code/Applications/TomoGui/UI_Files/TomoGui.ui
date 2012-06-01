@@ -154,7 +154,7 @@ File:</string>
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="enabled">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="styleSheet">
          <string notr="true">QLabel {
@@ -170,7 +170,7 @@ font-size: 10px;
       <item row="0" column="1">
        <widget class="QFSDropLineEdit" name="initialReconstructionPath">
         <property name="enabled">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -1295,7 +1295,7 @@ Iterations:</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="4" rowspan="2">
+          <item row="0" column="5" rowspan="2">
            <spacer name="horizontalSpacer_3">
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -1307,6 +1307,62 @@ Iterations:</string>
              </size>
             </property>
            </spacer>
+          </item>
+          <item row="1" column="4">
+           <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <property name="spacing">
+             <number>10</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QCheckBox" name="interpolateInitialReconstructionFile">
+              <property name="text">
+               <string/>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="initialReconstructionFileInterpolationFactor">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>0</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="0" column="4">
+           <widget class="QLabel" name="label_40">
+            <property name="styleSheet">
+             <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+            </property>
+            <property name="text">
+             <string>Interpolate
+Initial Reconstruction:</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>

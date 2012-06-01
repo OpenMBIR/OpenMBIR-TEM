@@ -709,8 +709,7 @@ void SOCEngine::execute()
 
     for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
     {
-
-	  std::cout<<OuterIter<<"/"<<m_TomoInputs->NumOuterIter<<" "<<Iter<<"/"<<m_TomoInputs->NumIter<<std::endl;
+      std::cout << OuterIter << "/" << m_TomoInputs->NumOuterIter << " " << Iter << "/" << m_TomoInputs->NumIter << std::endl;
       indent = "  ";
 //      ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
 //      ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
@@ -731,11 +730,9 @@ void SOCEngine::execute()
 #else
 
 #endif//NHICD end if
-
       // This could contain multiple Subloops also
-       status =
-          updateVoxels(OuterIter, Iter, updateType, VisitCount, RandomNumber,
-                       TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost);
+      status =
+          updateVoxels(OuterIter, Iter, updateType, VisitCount, RandomNumber, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost);
 
       if(status == 0)
       {

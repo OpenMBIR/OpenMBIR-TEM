@@ -54,6 +54,7 @@ m_InputFile(""),
 m_TempDir(""),
 m_OutputFile(""),
 m_BrightFieldFile(""),
+m_InitialReconstructionFile(""),
 m_NumberResolutions(1),
 m_SampleThickness(100.0f),
 m_TargetGain(0.0f),
@@ -162,8 +163,13 @@ void MultiResolutionSOC::execute()
     inputs->gainsInputFile = prevInputs->gainsOutputFile;
     inputs->offsetsInputFile = prevInputs->offsetsOutputFile;
     inputs->varianceInputFile = prevInputs->varianceOutputFile;
-    inputs->initialReconFile = prevInputs->reconstructedOutputFile;
-
+    if ( i == 0) {
+      inputs->initialReconFile = getInitialReconstructionFile();
+    }
+    else
+    {
+      inputs->initialReconFile = prevInputs->reconstructedOutputFile;
+    }
     inputs->InterpFlag = 0;//contains whether to initially interpolate or not
     if (i > 0) { inputs->InterpFlag = 1; }//If at a finer resolution need to interpolate
 
@@ -296,6 +302,7 @@ void MultiResolutionSOC::execute()
     engine->setBFSinogram(bf_sinogram);
     // We need to get messages to the gui or command line
     engine->addObserver(this);
+    engine->setMessagePrefix( StringUtils::numToString(inputs->interpolateFactor/(powf(2.0f,i))) + std::string("x: ") );
 
     printInputs(inputs, std::cout);
 	  
