@@ -1960,28 +1960,16 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
       {
 
 #ifdef RANDOM_ORDER_UPDATES
-        //RandomNumber=init_genrand(Iter);
-        //int32_t Index = (genrand_int31(RandomNumber)) % ArraySize;
+        
         uint32_t Index = (genrand_int31(RandomNumber)) % ArraySize;
-//      int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
-//      int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
         int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
         int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
-        // std::cout<<k_new<<","<<j_new<<std::endl;
-        //memmove(Counter+Index,Counter+Index+1,sizeof(int32_t)*(ArraySize - Index-1));
-        //TODO: Instead just swap the value in Index with the one in ArraySize
         Counter->d[Index] = Counter->d[ArraySize - 1];
-//        VisitCount->d[j_new][k_new] = 1;
         VisitCount->setValue(1, j_new, k_new);
         ArraySize--;
         Index = j_new * m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to
         //the voxel line (j_new,k_new)
-#else
-        int32_t j_new=j;
-        int32_t k_new=k;
-        uint32_t Index = j_new*m_Geometry->N_x + k_new;
-#endif //Random order updates
-        //   AMatrixCol* TempMemBlock = TempCol[j_new][k_new]; //Remove this
+#endif //Random Order updates
 
         int shouldInitNeighborhood = 0;
 
@@ -2015,20 +2003,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                 }
               }
             }
-#ifdef CIRCULAR_BOUNDARY_CONDITION
-            for(p = -1; p <=1; p++)
-            {
-              for(q = -1; q <= 1; q++)
-              {
-                for(r = -1; r <= 1;r++)
-                {
-                  tempindex_x = mod(r+k_new,m_Geometry->N_x);
-                  tempindex_y =mod(p+i,m_Geometry->N_y);
-                  tempindex_z = mod(q+j_new,m_Geometry->N_z);
-                  NEIGHBORHOOD[p+1][q+1][r+1] = m_Geometry->Object->d[tempindex_z][tempindex_x][tempindex_y];
-                  BOUNDARYFLAG[p+1][q+1][r+1]=1;
-                }}}
-#else
             //For a given (i,j,k) store its 26 point neighborhood
             for (int32_t p = -1; p <= 1; p++)
             {
@@ -2054,25 +2028,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                 }
               }
             }
-#endif//circular boundary condition check
             NEIGHBORHOOD[1][1][1] = 0.0;
-#ifndef NDEBUG
-            if(i == 0 && j == 31 && k == 31)
-            {
-              printf("***************************\n");
-              printf("Geom %lf\n", m_Geometry->Object->getValue(i, 31, 31) );
-              for (int p = 0; p <= 2; p++)
-              {
-                for (int q = 0; q <= 2; q++)
-                {
-                  for (int r = 0; r <= 2; r++)
-                  {
-                    printf("%lf\n", NEIGHBORHOOD[p][q][r]);
-                  }
-                }
-              }
-            }
-#endif
             //Compute theta1 and theta2
             V = m_Geometry->Object->getValue(j_new, k_new, i); //Store the present value of the voxel
             THETA1 = 0.0;
@@ -2100,23 +2056,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 #endif //Zero skipping
 			if(ZSFlag == false)
 			{
-//            Real_t tt;
-            //TempCol = CE_CalculateAMatrixColumn(j, k, i, Sinogram, Geometry, VoxelProfile);
-           /* OLD for (uint32_t q = 0; q < TempCol[Index]->count; q++)
-            {
-              uint16_t i_theta = floor(static_cast<float>(TempCol[Index]->index[q] / (m_Sinogram->N_r)));
-              uint16_t i_r = (TempCol[Index]->index[q] % (m_Sinogram->N_r));
-              uint16_t VoxelLineAccessCounter = 0;
-              Real_t ttmp = NuisanceParams->I_0->d[i_theta]  * TempCol[Index]->values[q];
-              for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
-              {
-                Real_t ProjectionEntry = ttmp * VoxelLineResponse[i].values[VoxelLineAccessCounter];
-                tt = Weight->getValue(i_theta, i_r, i_t) * ProjectionEntry;
-                THETA2 += (tt * ProjectionEntry);
-                THETA1 += (tt * ErrorSino->getValue(i_theta, i_r, i_t) );
-                VoxelLineAccessCounter++;
-              }
-            }*/
 
 			for (uint32_t q = 0; q < TempCol[Index]->count; q++)
 			{
@@ -2125,7 +2064,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 					uint16_t VoxelLineAccessCounter = 0;
 					for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
 					{
-                     //size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
                      size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
 
 					 if (m_Sinogram->BF_Flag == false)
@@ -2137,7 +2075,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 					  }
 					  else
 					  {
-							//size_t bfcounts_idx = m_BFSinogram->counts->calcIndex(i_theta, i_r, i_t);
 							Real_t ProjectionEntry = m_BFSinogram->counts->d[error_idx]*NuisanceParams->I_0->d[i_theta]*VoxelLineResponse[i].values[VoxelLineAccessCounter] * (TempCol[Index]->values[q]);
 							THETA2 += (ProjectionEntry*ProjectionEntry*Weight->d[error_idx]);
 							THETA1 +=  (ErrorSino->d[error_idx]*ProjectionEntry* Weight->d[error_idx]);
@@ -2148,10 +2085,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 
             THETA1 *= -1;
             minMax(&low, &high);
-
-#ifdef DEBUG
-            if(i == 0 && j == 31 && k == 31) printf("(%lf,%lf,%lf) \n", low, high, V - (THETA1 / THETA2));
-#endif
 
             //Solve the 1-D optimization problem
             //printf("V before updating %lf",V);
@@ -2171,11 +2104,9 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             UpdatedVoxelValue = SurrogateUpdate;
 #endif //QGGMRF
 #endif//Surrogate function
-            //printf("%lf\n",SurrogateUpdate);
             if(errorcode == 0)
             {
-              //    printf("(%lf,%lf,%lf)\n",low,high,UpdatedVoxelValue);
-              //  printf("Updated %lf\n",UpdatedVoxelValue);
+
 #ifdef POSITIVITY_CONSTRAINT
               if(UpdatedVoxelValue < 0.0)
               { //Enforcing positivity constraints
@@ -2186,19 +2117,13 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             else
             {
               if(THETA1 == 0 && low == 0 && high == 0) UpdatedVoxelValue = 0;
-              else
-              {
-                // printf("Error \n");
-                // printf("%d %d\n", j_new, k_new);
-              }
+              
             }
 
             //TODO Print appropriate error messages for other values of error code
             m_Geometry->Object->setValue(UpdatedVoxelValue, j_new, k_new, i);
-            //#ifdef NHICD
             Real_t intermediate = MagUpdateMap->getValue(j_new, k_new) + fabs(m_Geometry->Object->getValue(j_new, k_new, i) - V);
             MagUpdateMap->setValue(intermediate, j_new, k_new);
-            //#endif
 
 #ifdef ROI
             //if(Mask->d[j_new][k_new] == 1)
@@ -2209,23 +2134,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
             }
 #endif
 
-            //Update the ErrorSinogram -OLD
-           /* for (uint32_t q = 0; q < TempCol[Index]->count; q++)
-            {
-              uint16_t i_theta = floor(static_cast<float>(TempCol[Index]->index[q] / (m_Sinogram->N_r)));
-              uint16_t i_r = (TempCol[Index]->index[q] % (m_Sinogram->N_r));
-              uint16_t VoxelLineAccessCounter = 0;
-              uint32_t index = VoxelLineResponse[i].index[0];
-              uint32_t count = VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count;
-              for (uint32_t i_t = index; i_t < count; i_t++)
-              //for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
-              {
-                Real_t ttmp = NuisanceParams->I_0->d[i_theta] * (TempCol[Index]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->getValue(j_new, k_new, i) - V));
-                ErrorSino->deleteFromValue(ttmp, i_theta, i_r, i_t);
-                VoxelLineAccessCounter++;
-              }
-            }*/
-
 				//Update the ErrorSinogram
 				for (uint32_t q = 0; q < TempCol[Index]->count; q++)
 				{
@@ -2235,8 +2143,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 					for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++)
 					{
         		        size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
-
-						//for(i_t = slice_index_min ; i_t <= slice_index_max; i_t++)
 						if(m_Sinogram->BF_Flag == false)
 						{
 							ErrorSino->d[error_idx] -= (NuisanceParams->I_0->d[i_theta]
@@ -2244,7 +2150,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 							VoxelLineAccessCounter++;
 						}
 						else {
-							//size_t bfcounts_idx = m_BFSinogram->counts->calcIndex(i_theta, i_r, i_t);
 							ErrorSino->d[error_idx] -= (NuisanceParams->I_0->d[i_theta]*m_BFSinogram->counts->d[error_idx]* (TempCol[Index]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter] * (m_Geometry->Object->getValue(j_new, k_new, i) - V)));
 							VoxelLineAccessCounter++;
 						}
@@ -2255,7 +2160,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 				  zero_count++;
 			  }
 
-//            Idx++;
           }
         }
         else
@@ -2273,7 +2177,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     { //Row index
       for (int k = 0; k < m_Geometry->N_x; k++)
       { //Column index
-        //if(VisitCount->d[j][k] == 0)
         if (VisitCount->getValue(j,k) == 0)
         {
           printf("Pixel (%d %d) not visited\n", j, k);
