@@ -42,6 +42,8 @@
 #include <sstream>
 
 #include "MXA/Utilities/MXADir.h"
+#include "MXA/Common/IO/MXAFileWriter64.h"
+
 #include "TomoEngine/SOC/SOCConstants.h"
 
 // -----------------------------------------------------------------------------
@@ -63,12 +65,25 @@ DetectorResponseWriter::~DetectorResponseWriter()
 // -----------------------------------------------------------------------------
 void DetectorResponseWriter::execute()
 {
-  FILE* Fp = NULL;
+ // FILE* Fp = NULL;
 
   std::string filepath(getTomoInputs()->tempDir);
   filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::DetectorResponseFile);
-  Fp = fopen(filepath.c_str(), "wb");
-  if(Fp == NULL)
+//  Fp = fopen(filepath.c_str(), "wb");
+//  if(Fp == NULL)
+//  {
+//    std::stringstream s;
+//    s << "Error Opening Detector Response Output file for writing. The output file path was \n  " << filepath;
+//    setErrorMessage(s.str());
+//    setErrorCondition(-1);
+//    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+//    return;
+//  }
+
+
+
+  MXAFileWriter64 writer(filepath);
+  if (writer.initWriter() == false)
   {
     std::stringstream s;
     s << "Error Opening Detector Response Output file for writing. The output file path was \n  " << filepath;
@@ -85,18 +100,32 @@ void DetectorResponseWriter::execute()
   {
     numElements = numElements * dims[i];
   }
-  size_t nEleWritten = fwrite(m_Response->d, m_Response->getTypeSize(), numElements , Fp);
-  fclose(Fp);
-  if (numElements != nEleWritten)
+
+
+  if (writer.writeArray(m_Response->d, numElements) == false)
   {
     std::stringstream ss;
-    ss << "Error Writing the Detector Response File. The number of elements requested to be written was not honored"
-        << ". The number requested was " << numElements << " and the number written was " << nEleWritten;
+    ss << "Error Writing the Detector Response File.";
     setErrorCondition(-1);
     setErrorMessage(ss.str());
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
+
+
+
+//  size_t nEleWritten = fwrite(m_Response->d, m_Response->getTypeSize(), numElements , Fp);
+//  fclose(Fp);
+//  if (numElements != nEleWritten)
+//  {
+//    std::stringstream ss;
+//    ss << "Error Writing the Detector Response File. The number of elements requested to be written was not honored"
+//        << ". The number requested was " << numElements << " and the number written was " << nEleWritten;
+//    setErrorCondition(-1);
+//    setErrorMessage(ss.str());
+//    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+//    return;
+//  }
 
   setErrorCondition(0);
   setErrorMessage("");
