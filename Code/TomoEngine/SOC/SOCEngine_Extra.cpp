@@ -79,8 +79,6 @@ int SOCEngine::initializeBrightFieldData()
   if(m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->sinoFile.empty() == false)
   {
     std::cout << "Initializing BF data" << std::endl;
-	std::cout<<m_BFTomoInputs->zStart<<std::endl;  
-	std::cout<<m_BFTomoInputs->zEnd<<std::endl;  
     TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
     std::string extension = MXAFileInfo::extension(m_BFTomoInputs->sinoFile);
     if(extension.compare("mrc") == 0 || extension.compare("ali") == 0)
@@ -278,7 +276,7 @@ int SOCEngine::initializeRoughReconstructionData()
   std::string extension = MXAFileInfo::extension(m_TomoInputs->initialReconFile);
   if (m_TomoInputs->initialReconFile.empty() == true)
   {
-    // This will just initialize all the values to Zero (0)
+    // This will just initialize all the values to Zero (0) or a DefaultValue Set by user
     geomInitializer = InitialReconstructionInitializer::New();
   }
   else if (extension.compare("bin") == 0 )

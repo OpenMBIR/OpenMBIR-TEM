@@ -298,6 +298,8 @@ void MultiResolutionSOC::execute()
     engine->addObserver(this);
 
     printInputs(inputs, std::cout);
+	  
+	printInputs(bf_inputs, std::cout);  
 
     engine->execute();
     engine = SOCEngine::NullPointer();
