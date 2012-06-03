@@ -325,12 +325,10 @@ void SOCEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
       if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && z >= -m_TomoInputs->LengthZ / 2
           && z <= m_TomoInputs->LengthZ / 2)
       {
-        //Mask->d[i][j] = 1;
         Mask->setValue(1, i, j);
       }
       else
       {
-        //Mask->d[i][j] = 0;
         Mask->setValue(0, i, j);
       }
     }

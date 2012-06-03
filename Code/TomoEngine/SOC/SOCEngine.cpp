@@ -731,9 +731,13 @@ void SOCEngine::execute()
 
 #endif//NHICD end if
       // This could contain multiple Subloops also
-      status =
-          updateVoxels(OuterIter, Iter, updateType, VisitCount, RandomNumber, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost);
-
+	//	for (int16_t parallel = 0; parallel < 3;parallel++)
+	//	{
+		uint16_t yStart = 0;//parallel*3;
+		uint16_t yEnd = m_Geometry->N_y;//(parallel+1)*3;
+        status = updateVoxels(OuterIter, Iter, updateType, VisitCount, RandomNumber, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost,yStart,yEnd);
+    //    }
+		
       if(status == 0)
       {
         break; //stop inner loop if we have hit the threshold value for x
@@ -1837,7 +1841,9 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                              AMatrixCol* VoxelLineResponse,
                              ScaleOffsetParams* NuisanceParams,
                              UInt8Image_t::Pointer Mask,
-                             CostData::Pointer cost)
+                             CostData::Pointer cost,
+								uint16_t yStart,
+								uint16_t yEnd)
 {
   uint8_t exit_status=1;//Indicates normal exit ; else indicates to stop inner iterations
   uint16_t subIterations = 1;
@@ -1946,7 +1952,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
           NumVoxelsToUpdate++;
         }
         VisitCount->setValue(0, j, k);
-       // VisitCount->d[j][k] = 0;
       }
     }
      std::cout << indent <<"Number of voxel lines to update: "<<NumVoxelsToUpdate<<std::endl;
@@ -1989,7 +1994,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         if(shouldInitNeighborhood > 0)
         //After this should ideally call UpdateVoxelLine(j_new,k_new) ie put everything in this "if" inside a method called UpdateVoxelLine
         {
-          for (int32_t i = 0; i < m_Geometry->N_y; i++) //slice index
+          for (int32_t i = yStart; i < yEnd; i++) //slice index
           {
             //Neighborhood of (i,j,k) should be initialized to zeros each time
             for (int32_t p = 0; p <= 2; p++)
@@ -2228,9 +2233,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
       strcat(Filename,buffer);
       strcat(Filename,".bin");
       Fp3 = fopen(Filename, "w");
-      //  for (i=0; i < Geometry->N_y; i++)
-      //    for (j=0; j < Geometry->N_z; j++)
-      //      for (k=0; k < Geometry->N_x; k++)
       TempPointer = m_Geometry->Object;
       NumOfBytesWritten=fwrite(&(m_Geometry->Object->d[0][0][0]), sizeof(Real_t),m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z, Fp3);
       printf("%d\n",NumOfBytesWritten);
@@ -2257,50 +2259,12 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 //Function to compute parameters of thesurrogate function
 void SOCEngine::CE_ComputeQGGMRFParameters(Real_t umin,Real_t umax,Real_t RefValue)
 {
-//  DATA_TYPE DeltaMin,DeltaMax,T,Derivative_Delta0;
    Real_t Delta0;
-//  DATA_TYPE AbsDelta0,AbsDeltaMin,AbsDeltaMax;
-  uint8_t i,j,k,count=0;
-  for(i=0;i<3;i++)
+   uint8_t i,j,k,count=0;
+   for(i=0;i<3;i++)
     for (j=0; j < 3; j++)
       for(k=0; k < 3;k++)
         if ((i != 1 || j !=1 || k != 1) &&  BOUNDARYFLAG[i][j][k] == 1)
-      /*  {
-          Delta0 = V - NEIGHBORHOOD[i][j][k];
-          DeltaMin = umin - NEIGHBORHOOD[i][j][k];
-          DeltaMax = umax - NEIGHBORHOOD[i][j][k];
-          AbsDelta0 = fabs(Delta0);
-          AbsDeltaMin = fabs(DeltaMin);
-          AbsDeltaMax = fabs(DeltaMax);
-
-          if(AbsDelta0 <= Minimum(AbsDeltaMin,AbsDeltaMax))
-            T = -Delta0;
-          else if(AbsDeltaMin <= Minimum(AbsDelta0,AbsDeltaMax))
-            T = DeltaMin;
-          else if(AbsDeltaMax <= Minimum(AbsDeltaMin,AbsDelta0))
-            T = DeltaMax;
-          if(Delta0 != 0)
-          {
-            Derivative_Delta0 = CE_QGGMRF_Derivative(Delta0);
-            if( T == -Delta0)
-            {
-            QGGMRF_Params[count][0] = - Derivative_Delta0/(T-Delta0); //Because the QGGMRF prior is symmetric
-            }
-            else
-            {
-            QGGMRF_Params[count][0] = ((CE_QGGMRF_Value(T) - CE_QGGMRF_Value(Delta0))/((T-Delta0)*(T - Delta0))) - (Derivative_Delta0/(T-Delta0));
-            }
-
-          }
-          else
-          {
-            Derivative_Delta0 = CE_QGGMRF_Derivative(Delta0);
-            QGGMRF_Params[count][0] = CE_QGGMRF_SecondDerivative(0)/2;
-          }
-          QGGMRF_Params[count][1] = Derivative_Delta0 - 2*QGGMRF_Params[count][0]*V;
-          QGGMRF_Params[count][2] = CE_QGGMRF_Value(Delta0) - QGGMRF_Params[count][0]*V*V - QGGMRF_Params[count][1]*V;
-          count++;
-        }*/
         {
           Delta0  = RefValue - NEIGHBORHOOD[i][j][k];
 
@@ -2333,11 +2297,6 @@ Real_t SOCEngine::CE_FunctionalSubstitution(Real_t umin,Real_t umax)
       for(k=0; k < 3; k++)
       {
         if((i != 1 || j != 1 || k != 1) && BOUNDARYFLAG[i][j][k] == 1)
-        /*{
-          temp1 += FILTER[i][j][k]*QGGMRF_Params[count][1];
-          temp2 += FILTER[i][j][k]*QGGMRF_Params[count][0];
-            count++;
-        }*/
         {
           temp_const = FILTER[i][j][k]*QGGMRF_Params[count][0];
           temp1 += temp_const*NEIGHBORHOOD[i][j][k];

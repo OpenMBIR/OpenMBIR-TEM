@@ -116,7 +116,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
                       RNGVars* RandomNumber, AMatrixCol** TempCol,
                       RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight,
                       AMatrixCol* VoxelLineResponse, ScaleOffsetParams* NuisanceParams,
-                      UInt8Image_t::Pointer Mask, CostData::Pointer cost);
+                      UInt8Image_t::Pointer Mask, CostData::Pointer cost, uint16_t yStart,uint16_t yEnd);
 
 
     int readInputData();
