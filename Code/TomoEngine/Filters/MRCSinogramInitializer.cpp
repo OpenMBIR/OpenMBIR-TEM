@@ -88,6 +88,10 @@ void MRCSinogramInitializer::execute()
   inputs->fileXSize = header.nx;
   inputs->fileYSize = header.ny;
   inputs->fileZSize = header.nz;
+  
+  Real_t CenterOfRot = header.nx/2;	
+  std::cout<<"Center of rotation in this data set is "<<CenterOfRot<<std::endl;	
+	
   if (inputs->useSubvolume == true)
   {
      voxelMin[0] = inputs->xStart;
@@ -97,6 +101,29 @@ void MRCSinogramInitializer::execute()
      voxelMax[0] = inputs->xEnd;
      voxelMax[1] = inputs->yEnd;
      voxelMax[2] = inputs->zEnd;
+	  
+	 Real_t LeftLength =  CenterOfRot-voxelMin[0];
+	 Real_t RightLength = voxelMax[0] - CenterOfRot + 1; //1 is present to account for indexing of subvolume which starts from 0
+	 
+	//If the size of the sinogram is even 
+	 
+	 if (LeftLength != RightLength) 
+	 {
+		 std::cout<<"The subvolume is not symmetric about the center. Adjusting.."<<std::endl;
+		 if(LeftLength < RightLength)
+		 {
+			 voxelMax[0] = CenterOfRot + LeftLength -1;
+			 std::cout<<"New xEnd : "<<voxelMax[0]<<std::endl;
+		 }
+		 else
+		 {
+			 voxelMin[0] = CenterOfRot - RightLength ;
+			 std::cout<<"New xStart : "<<voxelMin[0]<<std::endl;
+		 }
+	 } 
+	 
+	 
+
   }
   else
   {

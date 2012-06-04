@@ -726,7 +726,7 @@ void SOCEngine::execute()
       else
       {
         updateType = NonHomogeniousUpdate;
-      }
+      } 
 #else
 
 #endif//NHICD end if
