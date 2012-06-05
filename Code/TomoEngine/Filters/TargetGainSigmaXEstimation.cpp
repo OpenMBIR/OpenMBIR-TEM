@@ -153,10 +153,10 @@ void TargetGainSigmaXEstimation::execute()
     {
       cosine = cos(header.feiHeaders[i_theta].b_tilt);
     }
-    sum1 += ( sum2s[i_theta] * cosine) / (m_SampleThickness / Z_STRETCH);
+    sum1 += ( sum2s[i_theta] * cosine) / (m_SampleThickness);
   }
 
-  m_SigmaXEstimate = sum1/header.nz/100.0;
+  m_SigmaXEstimate = sum1/header.nz/10.0;
 
 //  std::cout << "Estimated Target Gain: " << m_TargetGainEstimate << std::endl;
 //  std::cout << "Estimated Sigma X: " << m_SigmaXEstimate << std::endl;

@@ -938,12 +938,10 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-
         size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
         size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
         size_t yest_idx = Y_Est->calcIndex(i_theta, i_r, i_t);
         size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
-
         if(m_Sinogram->BF_Flag == false)
         {
           ErrorSino->d[error_idx] = m_Sinogram->counts->d[counts_idx] - Y_Est->d[yest_idx] - NuisanceParams->mu->d[i_theta];
@@ -1053,7 +1051,7 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
           Weight->d[weight_idx] = 1.0;
         }
 #else
-        Weight->d[i_theta][i_r][i_t] = 1.0;
+        Weight->d[weight_idx] = 1.0;
 #endif//Identity noise Model
       }
     }
@@ -1078,10 +1076,9 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
+		  size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
+		  size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MATRIX
-        size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
-        size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
-
         if(NuisanceParams->alpha->d[i_theta] != 0 && m_Sinogram->counts->d[counts_idx] != 0)
         {
           Weight->d[weight_idx] = 1.0 / (m_Sinogram->counts->d[counts_idx] * NuisanceParams->alpha->d[i_theta]);
@@ -1091,7 +1088,7 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
           Weight->d[weight_idx] = 1.0;
         }
 #else
-		Weight->d[i_theta][i_r][i_t] = 1.0/NuisanceParams->alpha->d[i_theta];
+		Weight->d[weight_idx] = 1.0/NuisanceParams->alpha->d[i_theta];
 #endif //IDENTITY_NOISE_MODEL endif
 
       }
