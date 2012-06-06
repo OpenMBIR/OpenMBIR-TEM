@@ -92,42 +92,50 @@ MultiResolutionSOC::~MultiResolutionSOC()
 // -----------------------------------------------------------------------------
 void MultiResolutionSOC::printInputs(TomoInputsPtr inputs, std::ostream &out)
 {
-	out << "------------------ TomoInputs Begin ------------------" << std::endl;
-	PRINT_VAR(out, inputs, NumIter);
-	PRINT_VAR(out, inputs, NumOuterIter);
-	PRINT_VAR(out, inputs, SigmaX);
-	PRINT_VAR(out, inputs, p);
-	PRINT_VAR(out, inputs, StopThreshold);
-	PRINT_VAR(out, inputs, InterpFlag);
-	PRINT_VAR(out, inputs, useSubvolume);
-	PRINT_VAR(out, inputs, xStart);
-	PRINT_VAR(out, inputs, xEnd);
-	PRINT_VAR(out, inputs, yStart);
-	PRINT_VAR(out, inputs, yEnd);
-	PRINT_VAR(out, inputs, zStart);
-	PRINT_VAR(out, inputs, zEnd);
-	PRINT_VAR(out, inputs, tiltSelection);
-	PRINT_VAR(out, inputs, fileXSize);
-	PRINT_VAR(out, inputs, fileYSize);
-	PRINT_VAR(out, inputs, fileZSize);
-	PRINT_VAR(out, inputs, LengthZ);
-	PRINT_VAR(out, inputs, delta_xz);
-	PRINT_VAR(out, inputs, delta_xy);
-	PRINT_VAR(out, inputs, targetGain);
-	PRINT_VAR(out, inputs, sinoFile);
-	PRINT_VAR(out, inputs, initialReconFile);
-	PRINT_VAR(out, inputs, gainsInputFile);
-	PRINT_VAR(out, inputs, offsetsInputFile);
-	PRINT_VAR(out, inputs, varianceInputFile);
+#if 0
+	std::out << "------------------ TomoInputs Begin ------------------" << std::endl;
+  PRINT_VAR(out, inputs, NumIter);
+  PRINT_VAR(out, inputs, NumOuterIter);
+  PRINT_VAR(out, inputs, SigmaX);
+  PRINT_VAR(out, inputs, p);
+  PRINT_VAR(out, inputs, StopThreshold);
+  PRINT_VAR(out, inputs, InterpFlag);
+  PRINT_VAR(out, inputs, useSubvolume);
+  PRINT_VAR(out, inputs, xStart);
+  PRINT_VAR(out, inputs, xEnd);
+  PRINT_VAR(out, inputs, yStart);
+  PRINT_VAR(out, inputs, yEnd);
+  PRINT_VAR(out, inputs, zStart);
+  PRINT_VAR(out, inputs, zEnd);
+  PRINT_VAR(out, inputs, tiltSelection);
+  PRINT_VAR(out, inputs, fileXSize);
+  PRINT_VAR(out, inputs, fileYSize);
+  PRINT_VAR(out, inputs, fileZSize);
+  PRINT_VAR(out, inputs, LengthZ);
+  PRINT_VAR(out, inputs, delta_xz);
+  PRINT_VAR(out, inputs, delta_xy);
+  PRINT_VAR(out, inputs, extendObject);
+  PRINT_VAR(out, inputs, interpolateFactor);
+  PRINT_VAR(out, inputs, targetGain);
+  PRINT_VAR(out, inputs, useDefaultOffset);
+  PRINT_VAR(out, inputs, defaultOffset);
+  PRINT_VAR(out, inputs, defaultInitialRecon);
+  PRINT_VAR(out, inputs, defaultVariance);
 
+  PRINT_VAR(out, inputs, sinoFile);
+  PRINT_VAR(out, inputs, initialReconFile);
+  PRINT_VAR(out, inputs, gainsInputFile);
+  PRINT_VAR(out, inputs, offsetsInputFile);
+  PRINT_VAR(out, inputs, varianceInputFile);
 
-	PRINT_VAR(out, inputs, tempDir);
-	PRINT_VAR(out, inputs, reconstructedOutputFile);
-	PRINT_VAR(out, inputs, gainsOutputFile);
-	PRINT_VAR(out, inputs, offsetsOutputFile);
-	PRINT_VAR(out, inputs, varianceOutputFile);
+  PRINT_VAR(out, inputs, tempDir);
+  PRINT_VAR(out, inputs, reconstructedOutputFile);
+  PRINT_VAR(out, inputs, gainsOutputFile);
+  PRINT_VAR(out, inputs, offsetsOutputFile);
+  PRINT_VAR(out, inputs, varianceOutputFile);
 
-	out << "------------------ TomoInputs End ------------------" << std::endl;
+	std::out << "------------------ TomoInputs End ------------------" << std::endl;
+#endif
 }
 
 // -----------------------------------------------------------------------------
@@ -312,8 +320,8 @@ void MultiResolutionSOC::execute()
     engine->setMessagePrefix( StringUtils::numToString(inputs->interpolateFactor/(powf(2.0f,i))) + std::string("x: ") );
 
     printInputs(inputs, std::cout);
-	  
-	printInputs(bf_inputs, std::cout);  
+
+	printInputs(bf_inputs, std::cout);
 
     engine->execute();
     engine = SOCEngine::NullPointer();

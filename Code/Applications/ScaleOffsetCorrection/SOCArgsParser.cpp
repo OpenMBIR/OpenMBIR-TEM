@@ -237,6 +237,7 @@ int SOCArgsParser::parseArguments(int argc, char **argv, TomoInputs* inputs, Tom
     if (in_InterpFactor.getValue() == 0.0)
     {
       inputs->InterpFlag = 0;
+      inputs->interpolateFactor = powf((float)2, (float)1.0f-1.0f) * xz_size.getValue();
     }
     else
     {
@@ -359,7 +360,14 @@ void SOCArgsParser::printInputs(TomoInputsPtr inputs, std::ostream &out)
   PRINT_VAR(out, inputs, LengthZ);
   PRINT_VAR(out, inputs, delta_xz);
   PRINT_VAR(out, inputs, delta_xy);
+  PRINT_VAR(out, inputs, extendObject);
+  PRINT_VAR(out, inputs, interpolateFactor);
   PRINT_VAR(out, inputs, targetGain);
+  PRINT_VAR(out, inputs, useDefaultOffset);
+  PRINT_VAR(out, inputs, defaultOffset);
+  PRINT_VAR(out, inputs, defaultInitialRecon);
+  PRINT_VAR(out, inputs, defaultVariance);
+
   PRINT_VAR(out, inputs, sinoFile);
   PRINT_VAR(out, inputs, initialReconFile);
   PRINT_VAR(out, inputs, gainsInputFile);

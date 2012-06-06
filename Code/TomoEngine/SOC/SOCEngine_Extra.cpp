@@ -615,7 +615,7 @@ void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisancePara
          b = (Qk_cost->getValue(i_theta, 0)*root[1]*root[1] + 2*Qk_cost->getValue(i_theta, 1)*root[1]*temp_mu + temp_mu*temp_mu*Qk_cost->getValue(i_theta, 2) - 2*(bk_cost->getValue(i_theta, 0)*root[1] + temp_mu*bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]);//evaluating the cost function
        }
 
-       if(a == Minimum(a, b))
+       if(a == Detail::Minimum(a, b))
        NuisanceParams->I_0->d[i_theta] = root[0];
        else
        {
@@ -854,14 +854,14 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
 
   printf("Lagrange Multiplier = %lf\n", LagrangeMultiplier);
 
-//#ifdef DEBUG
+#ifdef DEBUG
   std::cout << "Tilt\tGains\tOffsets\tVariance" << std::endl;
   for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
   {
     std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
         "\t" << NuisanceParams->mu->d[i_theta] <<std::endl;
   }
-//#endif
+#endif
 
   Real_t I_kRatio=AverageI_kUpdate/AverageMagI_k;
   Real_t Delta_kRatio = AverageDelta_kUpdate/AverageMagDelta_k;
@@ -1099,14 +1099,14 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
 
   }
 
-//#ifdef DEBUG
+#ifdef DEBUG
   std::cout << "Noise Model Weights:" << std::endl;
   std::cout << "Tilt\tWeight" << std::endl;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
     std::cout << i_theta << "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
   }
-//#endif
+#endif
   Real_t VarRatio = AverageVarUpdate / AverageMagVar;
   std::cout << "Ratio of change in Variance " << VarRatio << std::endl;
 }
@@ -1250,3 +1250,5 @@ void SOCEngine::writeMRCFile()
    mrcWriter->setGeometry(m_Geometry);
    mrcWriter->write();
 }
+
+

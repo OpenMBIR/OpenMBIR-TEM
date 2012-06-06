@@ -47,11 +47,10 @@
 #include "TomoEngine/Common/AbstractFilter.h"
 #include "TomoEngine/Common/Observer.h"
 #include "TomoEngine/mt/mt19937ar.h"
-
 #include "TomoEngine/SOC/SOCStructures.h"
-#include "TomoEngine/Filters/CostData.h"
 #include "TomoEngine/SOC/SOCConstants.h"
-
+#include "TomoEngine/SOC/QGGMRF_Functions.h"
+#include "TomoEngine/Filters/CostData.h"
 
 /**
  * @class SOCEngine SOCEngine.h TomoEngine/SOC/SOCEngine.h
@@ -112,11 +111,20 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      */
     void updateVoxelValues_NHICD();
 
-    uint8_t updateVoxels(int16_t OuterIter, int16_t Iter, VoxelUpdateType updateType, UInt8Image_t::Pointer VisitCount,
-                      RNGVars* RandomNumber, AMatrixCol** TempCol,
-                      RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight,
-                      AMatrixCol* VoxelLineResponse, ScaleOffsetParams* NuisanceParams,
-                      UInt8Image_t::Pointer Mask, CostData::Pointer cost, uint16_t yStart,uint16_t yEnd);
+    /**
+     *
+     */
+    uint8_t updateVoxels(int16_t OuterIter, int16_t Iter,
+                         VoxelUpdateType updateType,
+                         UInt8Image_t::Pointer VisitCount,
+                         RNGVars* RandomNumber,
+                         AMatrixCol** TempCol,
+                         RealVolumeType::Pointer ErrorSino,
+                         RealVolumeType::Pointer Weight,
+                         AMatrixCol* VoxelLineResponse,
+                         ScaleOffsetParams* NuisanceParams,
+                         UInt8Image_t::Pointer Mask,
+                         CostData::Pointer cost);
 
 
     int readInputData();
@@ -152,36 +160,25 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     void writeVtkFile();
     void writeMRCFile();
 
-
-  #ifdef QGGMRF
-    Real_t CE_FunctionalSubstitution(Real_t umin,Real_t umax);
-    void CE_ComputeQGGMRFParameters(Real_t umin,Real_t umax,Real_t RefValue);
-    Real_t CE_QGGMRF_Value(Real_t delta);
-    Real_t CE_QGGMRF_Derivative(Real_t delta);
-    Real_t CE_QGGMRF_SecondDerivative(Real_t delta);
-  #endif //QGGMRF
-
-
   private:
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
-    uint8_t BOUNDARYFLAG[3][3][3];
+    uint8_t BOUNDARYFLAG[27];
     //Markov Random Field Prior parameters - Globals DATA_TYPE
-    Real_t FILTER[3][3][3];
+    Real_t FILTER[27];
     Real_t HAMMING_WINDOW[5][5];
     Real_t THETA1;
     Real_t THETA2;
-    Real_t NEIGHBORHOOD[3][3][3];
-    Real_t V;
+    Real_t NEIGHBORHOOD[27];
+
+
+#ifdef EIMTOMO_USE_QGGMRF
+    QGGMRF::QGGMRF_Values m_QGGMRF_Values;
+#else
     Real_t MRF_P;
     Real_t SIGMA_X_P;
-#ifdef QGGMRF
-    //QGGMRF extras
-    Real_t MRF_Q,MRF_C;
-    Real_t QGGMRF_Params[26][3];
-    Real_t MRF_ALPHA;
-	Real_t SIGMA_X_P_Q;
-	Real_t SIGMA_X_Q;
-#endif //QGGMRF
+#endif
+
+
     //used to store cosine and sine of all angles through which sample is tilted
     RealArrayType::Pointer cosine;
     RealArrayType::Pointer sine;
@@ -207,6 +204,9 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     uint64_t startm;
     uint64_t stopm;
 
+    int m_NumThreads;
+
+
     /**
      * @brief
      * @param DetectorResponse
@@ -230,7 +230,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      * @param low
      * @param high
      */
-    void minMax(Real_t *low, Real_t *high);
+    void minMax(Real_t *low, Real_t *high, Real_t currentVoxelValue);
 
     /**
      * @brief
@@ -267,11 +267,17 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      * @brief
      * @return
      */
-    double surrogateFunctionBasedMin();
+#ifndef EIMTOMO_USE_QGGMRF
+    double surrogateFunctionBasedMin(Real_t currentVoxelValue);
+#endif
 
-	//Updates a single line of voxels along y-axis
-	void UpdateVoxelLine(uint16_t j_new,uint16_t k_new);
 
+    /**
+    * @brief Updates a single line of voxels along y-axis
+    * @param j_new
+    * @param k_new
+    */
+    void UpdateVoxelLine(uint16_t j_new,uint16_t k_new);
 
 	/**
      * Code to take the magnitude map and filter it with a hamming window
@@ -279,8 +285,8 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      */
     void ComputeVSC();
 
-	//Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
-	Real_t SetNonHomThreshold();
+    //Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
+    Real_t SetNonHomThreshold();
 
 
     template<typename T>

@@ -40,6 +40,13 @@
 #define SCALEOFFSETCORRECTIONCONSTANTS_H_
 
 #include <string>
+
+
+#define INDEX_3(i, j, k)\
+    ((9*(i)) + (3*(j)) + ((k)))
+
+
+
 //#define FORWARD_PROJECT_MODE
 //#define EXTEND_OBJECT
 #define X_SHRINK_FACTOR 0.6
@@ -69,8 +76,8 @@
 #define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
 
 #define SURROGATE_FUNCTION
-#define QGGMRF
-#define QGGMRF_ITER 1
+#define EIMTOMO_USE_QGGMRF 1
+
 //#define DISTANCE_DRIVEN
 //#define CORRECTION
 //#define WRITE_INTERMEDIATE_RESULTS

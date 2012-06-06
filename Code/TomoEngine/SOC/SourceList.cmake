@@ -9,6 +9,7 @@ set (TomoEngine_SOC_SRCS
     ${TomoEngine_SOURCE_DIR}/SOC/SOCEngine.cpp
     ${TomoEngine_SOURCE_DIR}/SOC/SOCInputs.cpp
     ${TomoEngine_SOURCE_DIR}/SOC/MultiResolutionSOC.cpp
+    ${TomoEngine_SOURCE_DIR}/SOC/QGGMRF_Functions.cpp
 )
 
 set (TomoEngine_SOC_HDRS
@@ -18,6 +19,7 @@ set (TomoEngine_SOC_HDRS
     ${TomoEngine_SOURCE_DIR}/SOC/SOCInputs.h
     ${TomoEngine_SOURCE_DIR}/SOC/SOCStructures.h
     ${TomoEngine_SOURCE_DIR}/SOC/MultiResolutionSOC.h
+    ${TomoEngine_SOURCE_DIR}/SOC/QGGMRF_Functions.h
 )
 cmp_IDE_SOURCE_PROPERTIES( "TomoEngine/SOC" "${TomoEngine_SOC_HDRS}" "${TomoEngine_SOC_SRCS}" "${CMP_INSTALL_FILES}")
 

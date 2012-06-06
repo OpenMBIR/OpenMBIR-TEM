@@ -63,7 +63,9 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  std::cout << "Sinogram Inputs:" << std::endl;
   argParser.printInputs(inputs, std::cout);
+  std::cout << "Bright Field Inputs:" << std::endl;
   argParser.printInputs(bf_inputs, std::cout);
 
 #if 0
