@@ -528,7 +528,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
           /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 #if defined (TomoEngine_USE_PARALLEL_ALGORITHMS)
 
-          unsigned int rowIncrement = m_Geometry->N_y/m_NumThreads;
+          unsigned int rowIncrement = ceil((Real_t)m_Geometry->N_y/(Real_t)m_NumThreads);
           int waitCount = m_NumThreads;
           if (rowIncrement < 1) // More cores than slices to reconstruct
           {
@@ -564,7 +564,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
               rowStop = m_Geometry->N_y;
             }
           }
-      //    std::cout << "  %%%% Starting TaskList: " << waitCount << std::endl;
+      //    std::cout << "  %%%% Starting TaskList: "<< waitCount << std::endl;
           tbb::task::spawn_root_and_wait( taskList );
       //    std::cout << "  %%%% Ending TaskList: " << waitCount << std::endl;
           // Now sum up some values
