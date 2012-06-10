@@ -443,6 +443,27 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     Real_t AverageUpdate = 0;
     Real_t AverageMagnitudeOfRecon = 0;
 #endif
+	  
+#if defined (TomoEngine_USE_PARALLEL_ALGORITHMS)
+	  unsigned int rowIncrement = ceil((Real_t)m_Geometry->N_y/(Real_t)m_NumThreads);
+	  int waitCount = m_NumThreads;
+	  if (rowIncrement < 1) // More cores than slices to reconstruct
+	  {
+		  rowIncrement = 1;
+		  waitCount = m_Geometry->N_y;
+	  }
+	  
+	  Real_t* averageUpdate = (Real_t*)(malloc(sizeof(Real_t) * waitCount));
+	  Real_t* averageMagnitudeOfRecon = (Real_t*)(malloc(sizeof(Real_t) * waitCount));
+	  
+	  //Initialize the accumulators to zero
+	  for( int t=0; t < waitCount;++t)
+	  {
+		  averageUpdate[t] = 0;
+		  averageMagnitudeOfRecon[t] = 0;
+	  }
+	  
+#endif //TomoEngine parallel algorithm inits
 
 #ifdef RANDOM_ORDER_UPDATES
     int32_t ArraySize = m_Geometry->N_x * m_Geometry->N_z;
@@ -521,14 +542,12 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
           ++shouldInitNeighborhood;
         }
 
-
         if(shouldInitNeighborhood > 0)
         //After this should ideally call UpdateVoxelLine(j_new,k_new) ie put everything in this "if" inside a method called UpdateVoxelLine
         {
           /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 #if defined (TomoEngine_USE_PARALLEL_ALGORITHMS)
-
-          unsigned int rowIncrement = ceil((Real_t)m_Geometry->N_y/(Real_t)m_NumThreads);
+        /*  unsigned int rowIncrement = ceil((Real_t)m_Geometry->N_y/(Real_t)m_NumThreads);
           int waitCount = m_NumThreads;
           if (rowIncrement < 1) // More cores than slices to reconstruct
           {
@@ -537,10 +556,11 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
           }
           uint16_t rowStop = 0 + rowIncrement;
           uint16_t rowStart = 0;
+		  Real_t* averageUpdate = (Real_t*)(malloc(sizeof(Real_t) * waitCount));
+		  Real_t* averageMagnitudeOfRecon = (Real_t*)(malloc(sizeof(Real_t) * waitCount));*/
+		  uint16_t rowStop = 0 + rowIncrement;
+		  uint16_t rowStart = 0;
           tbb::task_list taskList;
-          Real_t* averageUpdate = (Real_t*)(malloc(sizeof(Real_t) * waitCount));
-          Real_t* averageMagnitudeOfRecon = (Real_t*)(malloc(sizeof(Real_t) * waitCount));
-
           for (int t = 0; t < waitCount; ++t)
           {
             UpdateYSlice& a = *new(tbb::task::allocate_root()) UpdateYSlice(rowStart, rowStop, j_new, k_new,
@@ -568,13 +588,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
           tbb::task::spawn_root_and_wait( taskList );
       //    std::cout << "  %%%% Ending TaskList: " << waitCount << std::endl;
           // Now sum up some values
-          for (int t = 0; t < waitCount; ++t)
-          {
-            AverageUpdate += averageUpdate[t];
-            AverageMagnitudeOfRecon += averageMagnitudeOfRecon[t];
-          }
-          free(averageUpdate);
-          free(averageMagnitudeOfRecon);
+          
+         
          // std::cout << "%%%%%%%%%%%%%% Done with all Tasks %%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
 //#error Get the AverageUpdate and AverageMagnitudeOfRecon values and add them all together
 
@@ -638,7 +653,23 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 #else
     printf("%d\n",Iter);
 #endif //Cost calculation endif
+
 #ifdef ROI
+	  
+#if defined (TomoEngine_USE_PARALLEL_ALGORITHMS)	  
+	  for (int t = 0; t < waitCount; ++t)
+	  {
+		  AverageUpdate += averageUpdate[t];
+		  AverageMagnitudeOfRecon += averageMagnitudeOfRecon[t];
+	  }
+	  
+	  //Free memory used to record the updates
+	  free(averageUpdate);
+	  free(averageMagnitudeOfRecon);
+#endif
+	  
+	  std::cout<<"Average Update "<<AverageUpdate<<std::endl;
+	  std::cout<<"Average Mag "<<AverageMagnitudeOfRecon<<std::endl;
     if(AverageMagnitudeOfRecon > 0)
     {
       printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);
@@ -654,6 +685,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
       }
     }
 #endif//ROI end
+	  
 #ifdef WRITE_INTERMEDIATE_RESULTS
 
     if(Iter == NumOfWrites*WriteCount)
