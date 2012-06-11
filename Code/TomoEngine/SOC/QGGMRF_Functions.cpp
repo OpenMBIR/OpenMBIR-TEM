@@ -193,7 +193,7 @@ Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue
     }
     else
     {
-      RefValue = Detail::Clip(u, umin, umax);
+      RefValue = Detail::Clip(RefValue + qggmrf_values->MRF_ALPHA * (u - RefValue), umin, umax);
     }
   }
 
