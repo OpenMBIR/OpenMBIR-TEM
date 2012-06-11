@@ -106,11 +106,13 @@ void NuisanceParamWriter::execute()
  // FILE* file = fopen(m_FileName.c_str(), "wb");
 
 	FILE* file = NULL;
-	
+
+
 	std::string filepath(getTomoInputs()->tempDir);
+  MXADir::mkdir(filepath, true);
 	filepath = filepath.append(MXADir::getSeparator()).append(m_FileName.c_str());
 	file = fopen(filepath.c_str(), "wb");
-	
+
   if(file == 0)
   {
     ss.str("");
