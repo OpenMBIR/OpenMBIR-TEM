@@ -157,6 +157,7 @@ namespace Detail {
 #if defined (TomoEngine_USE_PARALLEL_ALGORITHMS)
     tbb::task_scheduler_init init;
     m_NumThreads = init.default_num_threads();
+    m_NumThreads = 8;
 #else
     m_NumThreads = 1;
 #endif
@@ -747,7 +748,9 @@ void SOCEngine::execute()
 #endif//NHICD end if
       // This could contain multiple Subloops also
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
-      status = updateVoxels(OuterIter, Iter, updateType, VisitCount, RandomNumber, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost);
+      status = updateVoxels(OuterIter, Iter, updateType, VisitCount, RandomNumber,
+                            TempCol, ErrorSino, Weight, VoxelLineResponse,
+                            NuisanceParams.get(), Mask, cost);
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
       if(status == 0)
