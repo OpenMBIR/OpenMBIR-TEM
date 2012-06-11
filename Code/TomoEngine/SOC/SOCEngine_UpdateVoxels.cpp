@@ -559,8 +559,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     Real_t AverageMagnitudeOfRecon = 0;
 #endif
 
-
-
     START_TIMER;
 #if defined (TomoEngine_USE_PARALLEL_ALGORITHMS)
     std::vector<int> yCount(m_NumThreads, 0);
@@ -571,15 +569,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
       ++t;
       if (t==m_NumThreads) { t = 0; }
     }
-
-
-//    unsigned int rowIncrement = m_Geometry->N_y / m_NumThreads;
-//    int waitCount = m_NumThreads;
-//    if(rowIncrement < 1) // More cores than slices to reconstruct
-//    {
-//      rowIncrement = 1;
-//      waitCount = m_Geometry->N_y;
-//    }
 
     uint16_t yStart = 0;
     uint16_t yStop = 0;
@@ -612,23 +601,9 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                                                          averageUpdate + t,
                                                          averageMagnitudeOfRecon + t);
       taskList.push_back(a);
-
-//      yStart = yStop;
-//      yStop = yStop + rowIncrement;
-//      if(yStop >= m_Geometry->N_y)
-//      {
-//        yStop = m_Geometry->N_y;
-//      }
-//      if (t == waitCount-2 && yStop != m_Geometry->N_y)
-//      {
-//        yStop = m_Geometry->N_y;
-//      }
     }
-    //exit(0);
 
-    //    std::cout << "  %%%% Starting TaskList: " << waitCount << std::endl;
     tbb::task::spawn_root_and_wait(taskList);
-    //    std::cout << "  %%%% Ending TaskList: " << waitCount << std::endl;
     // Now sum up some values
     for (int t = 0; t < m_NumThreads; ++t)
     {
@@ -679,7 +654,11 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 #else
     printf("%d\n",Iter);
 #endif //Cost calculation endif
+
 #ifdef ROI
+
+	  std::cout<<"Average Update "<<AverageUpdate<<std::endl;
+	  std::cout<<"Average Mag "<<AverageMagnitudeOfRecon<<std::endl;
     if(AverageMagnitudeOfRecon > 0)
     {
       printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);
@@ -695,6 +674,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
       }
     }
 #endif//ROI end
+
 #ifdef WRITE_INTERMEDIATE_RESULTS
 
     if(Iter == NumOfWrites*WriteCount)

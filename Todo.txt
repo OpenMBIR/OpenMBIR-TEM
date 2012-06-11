@@ -15,4 +15,5 @@
 * While choosing a region to recons. for multi-resolution need subvolume
 to be a proper multiple of xz size at all resolutions 
 * Make a command line version of the code so that user can run multiple instances using script files if needed.
+* Bug in name of the final sinogram file 
 
