@@ -25,6 +25,7 @@
 # TBB_DEBUG_LIBRARIES, the libraries to link against to use TBB with debug symbols.
 # TBB_FOUND, If false, don't try to use TBB.
 
+set(FINDTBB_DEBUG 0)
 
 if (WIN32)
     # has intel64/vc8   intel64/vc9
@@ -130,7 +131,7 @@ if (NOT TBB_INSTALL_DIR)
     mark_as_advanced(TBB_INSTALL_DIR)
 endif (NOT TBB_INSTALL_DIR)
 
-message(STATUS "TBB_INSTALL_DIR: ${TBB_INSTALL_DIR}")
+
 
 #-- A macro to rewrite the paths of the library. This is necessary, because 
 #   find_library() always found the intel64/vc9 version of the TBB libs
@@ -153,12 +154,15 @@ find_path(TBB_INCLUDE_DIR
     NO_DEFAULT_PATH
 )
 mark_as_advanced(TBB_INCLUDE_DIR)
+if (FINDTBB_DEBUG)
+message(STATUS "TBB_INSTALL_DIR: ${TBB_INSTALL_DIR}")
 message(STATUS "TBB_INCLUDE_DIR: ${TBB_INCLUDE_DIR}")
-
+message(STATUS "TBB_ARCH_PLATFORM: $ENV{TBB_ARCH_PLATFORM}")
+endif()
 
 #-- Look for libraries
 # GvdB: $ENV{TBB_ARCH_PLATFORM} is set by the build script tbbvars[.bat|.sh|.csh]
-message(STATUS "TBB_ARCH_PLATFORM: $ENV{TBB_ARCH_PLATFORM}")
+
 # if (NOT $ENV{TBB_ARCH_PLATFORM} STREQUAL "")
     set (_TBB_LIBRARY_DIR 
          ${_TBB_INSTALL_DIR}/lib/$ENV{TBB_ARCH_PLATFORM}
@@ -217,7 +221,9 @@ if (TBB_INCLUDE_DIR)
         ENDIF(TBB_LIBRARY_DEBUG)
         set(TBB_IS_SHARED "TRUE")
         set(TBB_MALLOC_IS_SHARED "TRUE")
+        if (FINDTBB_DEBUG)
         message(STATUS "Found Intel TBB - ${_TBB_INSTALL_DIR}")
+        endif()
     endif (TBB_LIBRARY)
 endif (TBB_INCLUDE_DIR)
 
