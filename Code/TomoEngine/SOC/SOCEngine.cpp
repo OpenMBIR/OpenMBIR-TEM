@@ -316,13 +316,15 @@ void SOCEngine::execute()
   RNGVars* RandomNumber;
   std::string indent("");
 
-#ifdef COST_CALCULATE
+//#ifdef COST_CALCULATE //Commented out because if not the code fails to run. 
   std::string filepath(m_TomoInputs->tempDir);
   filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::CostFunctionFile);
 
   CostData::Pointer cost = CostData::New();
   cost->initOutputFile(filepath);
-#endif
+//#endif 
+	
+	
 
 
 #if TomoEngine_USE_PARALLEL_ALGORITHMS
@@ -576,10 +578,7 @@ void SOCEngine::execute()
 
   checksum=0;
 
-#ifdef STORE_A_MATRIX
 
-  AMatrixCol**** AMatrix = (AMatrixCol ****)multialloc(sizeof(AMatrixCol*),3,m_Geometry->N_y,m_Geometry->N_z,m_Geometry->N_x);
-#else
 
   //TODO: All this needs to be deallocated at some point
 //  DATA_TYPE y;
@@ -594,7 +593,6 @@ void SOCEngine::execute()
     VoxelLineResponse[i].values = (Real_t*)get_spc(MaxNumberOfDetectorElts, sizeof(Real_t));
     VoxelLineResponse[i].index = (uint32_t*)get_spc(MaxNumberOfDetectorElts, sizeof(uint32_t));
   }
-#endif
 
   //Calculating A-Matrix one column at a time
   //For each entry the idea is to initially allocate space for Sinogram.N_theta * Sinogram.N_x
@@ -604,24 +602,7 @@ void SOCEngine::execute()
   checksum = 0;
   //q = 0;
 
-#ifdef STORE_A_MATRIX
-  for(uint16_t i = 0;i < m_Geometry->N_y; i++)
-  {
-    for(uint16_t j = 0;j < m_Geometry->N_z; j++)
-    {
-      for (uint16_t k = 0; k < m_Geometry->N_x; k++)
-      {
-        //  AMatrix[q++]=CE_CalculateAMatrixColumn(i,j,Sinogram,Geometry,VoxelProfile);
-        AMatrix[i][j][k]=calculateAMatrixColumn(j,k,i,m_Sinogram,m_Geometry,VoxelProfile);//row,col,slice
 
-        for(p = 0; p < AMatrix[i][j][k]->count; p++)
-        {
-          checksum += AMatrix[i][j][k]->values[p];}
-        //   printf("(%d,%d,%d) %lf \n",i,j,k,AMatrix[i][j][k]->values);
-        checksum = 0;
-      }}}
-  printf("Stored A matrix\n");
-#else
   temp = 0;
   uint32_t voxel_count = 0;
   for (uint16_t z = 0; z < m_Geometry->N_z; z++)
@@ -643,7 +624,6 @@ void SOCEngine::execute()
       voxel_count++;
     }
   }
-#endif
 
 
   storeVoxelResponse(H_t, VoxelLineResponse);
@@ -810,16 +790,6 @@ void SOCEngine::execute()
 #endif
 
 
-#ifdef DEBUG_CONSTRAINT_OPT
-  FILE *Fp8 = NULL;
-  int fileError=0;
-  MAKE_OUTPUT_FILE(Fp8, fileError, m_TomoInputs->tempDir, ScaleOffsetCorrection::CostFunctionCoefficientsFile);
-  if (fileError >= 0)
-  {
-    // Write the output File
-  }
-#endif
-
 
 /* Write the Gains and Offsets to an output file */
   writeNuisanceParameters(NuisanceParams);
@@ -866,12 +836,6 @@ void SOCEngine::execute()
   std::cout << "  Ny = " << m_Geometry->N_y << std::endl;
   std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
 
-  //free(AMatrix);
-#ifdef STORE_A_MATRIX
-  multifree(AMatrix,2);
-  //#else
-  //  free((void*)TempCol);
-#endif
 
 
   notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
@@ -1344,14 +1308,6 @@ Real_t SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::
 //Noise Error
 #ifdef NOISE_MODEL
   temp = 0;
- /* for (i = 0; i < m_Sinogram->N_theta; i++)
-  {
-    if(Weight->d[i][0][0] != 0)
-    {
-      temp += log(2 * M_PI * (1.0 / Weight->d[i][0][0])); //2*pi*sigma_k^{2}
-    }
-  }
-  temp *= ((m_Sinogram->N_r * m_Sinogram->N_t) / 2);*/
   for (int16_t i = 0; i < m_Sinogram->N_theta; i++)
   {
     for (int16_t j = 0; j < m_Sinogram->N_r; j++)
