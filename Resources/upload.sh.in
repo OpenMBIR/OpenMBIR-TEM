@@ -1,0 +1,3 @@
+#! /bin/bash
+
+scp @UPLOAD_FILE_NAME@ @TomoEngine_WEBSITE_SCP_USERNAME@@@TomoEngine_WEBSITE_SERVER@:@TomoEngine_WEBSITE_SERVER_PATH@

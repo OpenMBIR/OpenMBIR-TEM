@@ -194,3 +194,9 @@ if (EIMTomo_BUILD_GUI)
 endif()
 
 
+
+# This should be the last line in this file:
+include(${PROJECT_RESOURCES_DIR}/CPack/PackageProject.cmake)
+
+
+
