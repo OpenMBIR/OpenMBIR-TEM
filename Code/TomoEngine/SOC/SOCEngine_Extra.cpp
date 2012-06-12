@@ -630,6 +630,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   STOP_TIMER;
   PRINT_TIME("Joint Estimation Loops Time");
 
+#ifdef COST_CALCULATE
   //compute cost
   /********************************************************************************************/
   sum = 0;
@@ -645,9 +646,9 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
 
   /********************************************************************************************/
 
-#ifdef GEOMETRIC_MEAN_CONSTRAINT
-  calculateGeometricMeanConstraint();
-#else
+#endif //Cost calculate
+	  
+
   Real_t sum1 = 0;
   Real_t sum2 = 0;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
@@ -685,8 +686,8 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
       NuisanceParams->mu->d[i_theta] *= 1;
     }
   }
-#endif //Type of constraining Geometric or arithmetic
 
+#ifdef COST_CALCULATE
   /********************************************************************************************/
   //checking to see if the cost went down
   sum = 0;
@@ -701,7 +702,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
 
   printf("The value of the data match error after updating the I and mu =%lf\n", sum);
   /*****************************************************************************************************/
-
+#endif //Cost calculate
   //Reproject to compute Error Sinogram for ICD
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
