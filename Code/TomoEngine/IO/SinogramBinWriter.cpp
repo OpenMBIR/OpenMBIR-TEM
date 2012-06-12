@@ -94,18 +94,21 @@ void SinogramBinWriter::execute()
 
   FILE* file = NULL;
 
-  std::string filepath(getTomoInputs()->tempDir);
-  filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedBinFile);\
-  file = fopen(filepath.c_str(), "wb");
+
+ // std::string filepath(getTomoInputs()->tempDir);
+ // filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedBinFile);
+  file = fopen(getTomoInputs()->reconstructedOutputFile.c_str(), "wb");
   if(file == 0)
   {
+    ss.str("");
+    ss << "SinogramBinWriter: Error opening output file for writing: '" << getTomoInputs()->reconstructedOutputFile << "'";
     setErrorCondition(-1);
-    setErrorMessage("SinogramBinWriter: Error opening output file for writing");
+    setErrorMessage(ss.str());
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
   ss.str("");
-  ss << "Writing Sinogram to '" << filepath << "'";
+  ss << "Writing Sinogram to '" << getTomoInputs()->reconstructedOutputFile << "'";
   notify(ss.str(), 0, UpdateProgressMessage);
 
   //Writing the final sinogram

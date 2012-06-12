@@ -216,7 +216,7 @@ void TomoGui::readSettings(QSettings &prefs)
 
   READ_STRING_SETTING(prefs, initialReconstructionPath, "");
   READ_STRING_SETTING(prefs, tempDirPath, "");
-  READ_STRING_SETTING(prefs, outputFilePath, "");
+  READ_STRING_SETTING(prefs, reconstructedVolumeFileName, "");
 
   READ_STRING_SETTING(prefs, sampleThickness, "");
   READ_STRING_SETTING(prefs, targetGain, "0")
@@ -262,7 +262,7 @@ void TomoGui::writeSettings(QSettings &prefs)
 
   WRITE_STRING_SETTING(prefs, initialReconstructionPath);
   WRITE_STRING_SETTING(prefs, tempDirPath);
-  WRITE_STRING_SETTING(prefs, outputFilePath);
+  WRITE_STRING_SETTING(prefs, reconstructedVolumeFileName);
 
   WRITE_STRING_SETTING(prefs, sampleThickness);
   WRITE_STRING_SETTING(prefs, targetGain)
@@ -412,7 +412,7 @@ void TomoGui::setupGui()
 
 
 
-  outputFilePath->setText("");
+  reconstructedVolumeFileName->setText("");
 
 
   QMenu* zoomMenu = new QMenu(this);
@@ -501,8 +501,8 @@ void TomoGui::setupGui()
   QObject::connect(com, SIGNAL(activated(const QString &)), this, SLOT(on_inputMRCFilePath_textChanged(const QString &)));
 
   QFileCompleter* com4 = new QFileCompleter(this, false);
-  outputFilePath->setCompleter(com4);
-  QObject::connect(com4, SIGNAL(activated(const QString &)), this, SLOT(on_outputFilePath_textChanged(const QString &)));
+  reconstructedVolumeFileName->setCompleter(com4);
+  QObject::connect(com4, SIGNAL(activated(const QString &)), this, SLOT(on_reconstructedVolumeFileName_textChanged(const QString &)));
 
   // setup the Widget List
   m_WidgetList << inputMRCFilePath << inputMRCFilePathBtn;
@@ -696,13 +696,13 @@ void TomoGui::on_m_GoBtn_clicked()
   }
 
   // Make sure we have a name for the output file
-  if(outputFilePath->text().isEmpty() == true)
+  if(reconstructedVolumeFileName->text().isEmpty() == true)
   {
     QMessageBox::critical(this, tr("Output File Error"), tr("Please select a file name for the reconstructed file to be saved as."), QMessageBox::Ok);
     return;
   }
   // We have a name, make sure the user wants to over write the file
-  QFile file(outputFilePath->text());
+  QFile file(reconstructedVolumeFileName->text());
   if(file.exists() == true)
   {
     int ret = QMessageBox::warning(this, tr("EIM Tomo GUI"), tr("The Output File Already Exists\nDo you want to over write the existing file?"), QMessageBox::No
@@ -796,7 +796,7 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   path = QDir::toNativeSeparators(tempDirPath->text());
   m_MultiResSOC->setTempDir(path.toStdString());
 
-  path = QDir::toNativeSeparators(outputFilePath->text());
+  path = QDir::toNativeSeparators(reconstructedVolumeFileName->text());
   m_MultiResSOC->setOutputFile(path.toStdString());
 
   path = QDir::toNativeSeparators(inputBrightFieldFilePath->text());
@@ -916,9 +916,13 @@ void TomoGui::pipelineComplete()
 #endif
 
   setCurrentImageFile(inputMRCFilePath->text());
-  setCurrentProcessedFile(outputFilePath->text());
-  m_GraphicsView->loadOverlayImageFile(outputFilePath->text());
-//    m_LayersPalette->getSegmentedImageCheckBox()->setChecked(true);
+
+  QString s = tempDirPath->text();
+  s = s.append(QDir::separator()).append(reconstructedVolumeFileName->text());
+  setCurrentProcessedFile(s);
+
+  m_GraphicsView->loadOverlayImageFile(s);
+
 
   setWindowTitle(m_CurrentImageFile);
   setWidgetListEnabled(true);
@@ -992,7 +996,7 @@ void TomoGui::on_outputDirectoryPathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_outputFilePathBtn_clicked()
+void TomoGui::on_reconstructedVolumeFileNameBtn_clicked()
 {
   QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled";
   outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("All files (*.*)"));
@@ -1004,7 +1008,7 @@ void TomoGui::on_outputFilePathBtn_clicked()
   QFileInfo fi(outputFile);
   QFileInfo fi2(fi.absolutePath());
   if (fi2.isWritable() == true) {
-    outputFilePath->setText(outputFile);
+    reconstructedVolumeFileName->setText(fi.fileName());
   }
   else
   {
@@ -1093,7 +1097,7 @@ void TomoGui::on_inputBrightFieldFilePath_textChanged(const QString & filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_outputFilePath_textChanged(const QString & text)
+void TomoGui::on_reconstructedVolumeFileName_textChanged(const QString & text)
 {
   //  verifyPathExists(outputMRCFilePath->text(), movingImageFile);
 }
@@ -1361,9 +1365,9 @@ void TomoGui::openOverlayImage(QString processedImage)
 void TomoGui::overlayImageFileLoaded(const QString &filename)
 {
   // std::cout << "TomoGui::overlayImageFileLoaded" << std::endl;
-  outputFilePath->blockSignals(true);
-  outputFilePath->setText(filename);
-  outputFilePath->blockSignals(false);
+  reconstructedVolumeFileName->blockSignals(true);
+  reconstructedVolumeFileName->setText(filename);
+  reconstructedVolumeFileName->blockSignals(false);
 }
 
 // -----------------------------------------------------------------------------

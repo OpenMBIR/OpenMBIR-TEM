@@ -421,7 +421,7 @@ void TomoGuiGraphicsView::loadOverlayImageFile(const QString &filename)
   m_OverlayImage = QImage(filename);
   if (m_OverlayImage.isNull() == true)
   {
-    std::cout << "Error Loading image: " << filename.toStdString() << std::endl;
+    std::cout << "Error Loading Overlay Image: " << filename.toStdString() << std::endl;
     return;
   }
 

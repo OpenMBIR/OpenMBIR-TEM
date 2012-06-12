@@ -157,7 +157,6 @@ namespace Detail {
 #if defined (TomoEngine_USE_PARALLEL_ALGORITHMS)
     tbb::task_scheduler_init init;
     m_NumThreads = init.default_num_threads();
-    m_NumThreads = 8;
 #else
     m_NumThreads = 1;
 #endif
