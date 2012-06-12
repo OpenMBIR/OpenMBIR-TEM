@@ -48,55 +48,40 @@
 
 
 //#define FORWARD_PROJECT_MODE
-//#define EXTEND_OBJECT
+
 #define X_SHRINK_FACTOR 0.6
-//#define TARGET_GAIN 7872950.013398
 
 #define X_STRETCH 1
 #define Z_STRETCH 2
 
 
-//#define INTERPOLATE_FACTOR 8 //8 times the final desired resolution multilple
 
 //#define DEBUG ,
 #define PROFILE_RESOLUTION 1536
-//#define PI 4*atan(1)//3.14159265
-//Beam Parameters - This is set to some number <<< Sinogram->delta_r.
-//#define BEAM_WIDTH 0.050000
+
 #define BEAM_RESOLUTION 512
 #define AREA_WEIGHTED
 
 //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
 #define ROI 1
 
-#define STOPPING_THRESHOLD 0.001
-#define STOPPING_THRESHOLD_I_k 0.001
-#define STOPPING_THRESHOLD_Delta_k 0.001
-#define STOPPING_THRESHOLD_Var_k 0.001
 #define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
 
 #define SURROGATE_FUNCTION
 #define EIMTOMO_USE_QGGMRF 1
 
-//#define DISTANCE_DRIVEN
-//#define CORRECTION
 //#define WRITE_INTERMEDIATE_RESULTS
 //#define COST_CALCULATE
 #define DETECTOR_RESPONSE_BINS 64
 #define JOINT_ESTIMATION
 #define ZERO_SKIPPING
-//#define GEOMETRIC_MEAN_CONSTRAINT
 #define NOISE_MODEL
 //#define IDENTITY_NOISE_MATRIX
 #define POSITIVITY_CONSTRAINT
-//#define CIRCULAR_BOUNDARY_CONDITION
-//#define DEBUG_CONSTRAINT_OPT
 #define RANDOM_ORDER_UPDATES
-//#define BRIGHT_FIELD
 //#define NHICD
 #define NUM_NON_HOMOGENOUS_ITER 20
 
-//#define FORWARD_PROJECT_MODE //this Flag just takes the input file , forward projects it and exits
 
 
 namespace ScaleOffsetCorrection

@@ -348,29 +348,13 @@ void SOCEngine::gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams)
     NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k];
     // Offsets
     NuisanceParams->mu->d[k] = m_Sinogram->InitialOffset->d[k];
-#ifdef GEOMETRIC_MEAN_CONSTRAINT
-    sum += log(NuisanceParams->I_0->d[k]);
-#else
+
     sum += NuisanceParams->I_0->d[k];
-#endif
+
   }
   sum /= m_Sinogram->N_theta;
 
-#ifdef GEOMETRIC_MEAN_CONSTRAINT
-  sum=exp(sum);
-  printf("The geometric mean of the gains is %lf\n",sum);
 
-  //Checking if the input parameters satisfy the target geometric mean
-  if(fabs(sum - m_Sinogram->targetGain) > 1e-5)
-  {
-    printf("The input paramters dont meet the constraint..Renormalizing\n");
-    temp = exp(log(m_Sinogram->targetGain) - log(sum));
-    for (k = 0; k < m_Sinogram->N_theta; k++)
-    {
-      NuisanceParams->I_0->d[k]=m_Sinogram->InitialGain->d[k]*temp;
-    }
-  }
-#else
   printf("The Arithmetic mean of the constraint is %lf\n", sum);
   if(sum - m_Sinogram->targetGain > 1e-5)
   {
@@ -381,7 +365,6 @@ void SOCEngine::gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams)
       NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k] * temp;
     }
   }
-#endif
 
 }
 
@@ -520,113 +503,7 @@ void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,  AMatrixCol* Vox
   }
 }
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void SOCEngine::calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams)
-{
 
-  Real_t low,high,dist;
-  Real_t perturbation=1e-30;//perturbs the rooting range
-  uint16_t rooting_attempt_counter;
-  int32_t errorcode=-1;
-  Real_t LagrangeMultiplier;
-  Real_t LambdaRootingAccuracy=1e-10;//accuracy for rooting Lambda
-  uint16_t MaxNumRootingAttempts = 1000;//for lambda this corresponds to a distance of 2^1000
-  Real_t* root;
-  Real_t a,b;
-  Real_t temp_mu;
-
-//TODO: Fix these initializations
-  high = 0;
-  low = 0;
-  dist = 0;
-  //Root the expression using the derived quadratic parameters. Need to choose min and max values
-     printf("Rooting the equation to solve for the optimal Lagrange multiplier\n");
-
-     if(high != std::numeric_limits<Real_t>::max())
-     {
-       high-=perturbation; //Since the high value is set to make all discriminants exactly >=0 there are some issues when it is very close due to round off issues. So we get sqrt(-6e-20) for example. So subtract an arbitrary value like 0.5
-       //we need to find a window within which we need to root the expression . the upper bound is clear but lower bound we need to look for one
-       //low=high;
-       dist=-1;
-     }
-     else if (low != std::numeric_limits<Real_t>::min())
-     {
-       low +=perturbation;
-       //high=low;
-       dist=1;
-     }
-
-     rooting_attempt_counter=0;
-     errorcode=-1;
-     CE_ConstraintEquation ce(NumOfViews, QuadraticParameters, d1, d2, Qk_cost, bk_cost, ck_cost, LogGain);
-
-     while(errorcode != 0 && low <= high && rooting_attempt_counter < MaxNumRootingAttempts) //0 implies the signof the function at low and high is the same
-     {
-       uint32_t iter_count = 0;
-       LagrangeMultiplier=solve<CE_ConstraintEquation>(&ce, low, high, LambdaRootingAccuracy, &errorcode,iter_count);
-       low=low+dist;
-       dist*=2;
-       rooting_attempt_counter++;
-     }
-
-     //Something went wrong and the algorithm was unable to bracket the root within the given interval
-     if(rooting_attempt_counter == MaxNumRootingAttempts && errorcode != 0)
-     {
-       printf("The rooting for lambda was unsuccesful\n");
-       printf("Low = %lf High = %lf\n",low,high);
-       printf("Quadratic Parameters\n");
-       for(int i_theta =0; i_theta < m_Sinogram->N_theta;i_theta++)
-       {
-         printf("%lf %lf %lf\n",QuadraticParameters->getValue(i_theta, 0),QuadraticParameters->getValue(i_theta, 1),QuadraticParameters->getValue(i_theta, 2));
-       }
- #ifdef DEBUG_CONSTRAINT_OPT
-
-       //for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
-       //{
-       fwrite(&Qk_cost->d[0][0], sizeof(Real_t), m_Sinogram->N_theta*3, Fp8);
-       //}
-       //for(i_theta =0; i_theta < Sinogram->N_theta;i_theta++)
-       //{
-       fwrite(&bk_cost->d[0][0], sizeof(Real_t), m_Sinogram->N_theta*2, Fp8);
-       //}
-       fwrite(&ck_cost->d[0], sizeof(Real_t), m_Sinogram->N_theta, Fp8);
- #endif
-
-       return;
-     }
-
-     CE_ConstraintEquation conEqn(NumOfViews, QuadraticParameters, d1, d2, Qk_cost, bk_cost, ck_cost, LogGain);
-
-     //Based on the optimal lambda compute the optimal mu and I0 values
-     for (int i_theta =0; i_theta < m_Sinogram->N_theta; i_theta++)
-     {
-
-       root = conEqn.CE_RootsOfQuadraticFunction(QuadraticParameters->getValue(i_theta, 0),QuadraticParameters->getValue(i_theta, 1),LagrangeMultiplier); //returns the 2 roots of the quadratic parameterized by a,b,c
-       a=root[0];
-       b=root[0];
-       if(root[0] >= 0 && root[1] >= 0)
-       {
-         temp_mu = d1->d[i_theta] - root[0]*d2->d[i_theta]; //for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-         a = (Qk_cost->getValue(i_theta, 0)*root[0]*root[0] + 2*Qk_cost->getValue(i_theta, 1)*root[0]*temp_mu + temp_mu*temp_mu*Qk_cost->getValue(i_theta, 2) - 2*(bk_cost->getValue(i_theta, 0)*root[0] + temp_mu*bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]);//evaluating the cost function
-
-         temp_mu = d1->d[i_theta] - root[1]*d2->d[i_theta];//for a given lambda we can calculate I0(\lambda) and hence mu(lambda)
-         b = (Qk_cost->getValue(i_theta, 0)*root[1]*root[1] + 2*Qk_cost->getValue(i_theta, 1)*root[1]*temp_mu + temp_mu*temp_mu*Qk_cost->getValue(i_theta, 2) - 2*(bk_cost->getValue(i_theta, 0)*root[1] + temp_mu*bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]);//evaluating the cost function
-       }
-
-       if(a == Detail::Minimum(a, b))
-       NuisanceParams->I_0->d[i_theta] = root[0];
-       else
-       {
-         NuisanceParams->I_0->d[i_theta] = root[1];
-       }
-
-       free(root); //freeing the memory holding the roots of the quadratic equation
-
-       NuisanceParams->mu->d[i_theta] = d1->d[i_theta] - d2->d[i_theta]*NuisanceParams->I_0->d[i_theta];//some function of I_0[i_theta]
-     }
-}
 
 // -----------------------------------------------------------------------------
 //
