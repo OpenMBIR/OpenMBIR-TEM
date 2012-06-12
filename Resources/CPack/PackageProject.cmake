@@ -61,7 +61,7 @@ set(CPACK_PACKAGE_EXECUTABLES
 set(UPLOAD_FILE_NAME "")
 
 IF (APPLE)
-    set(CPACK_PACKAGE_FILE_NAME "TomoEngine-${TomoEngine_VERSION_SHORT}-OSX")
+    set(CPACK_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-OSX")
     # This ASSUMES we are creating a tar.gz package. If you change that below to
     # anything else then you need to update this.
     set (UPLOAD_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}.tar.gz)
