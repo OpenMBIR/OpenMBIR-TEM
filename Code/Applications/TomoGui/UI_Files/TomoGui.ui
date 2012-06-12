@@ -258,7 +258,7 @@ font-size: 10px;
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QFSDropLineEdit" name="outputFilePath">
+       <widget class="QFSDropLineEdit" name="reconstructedVolumeFileName">
         <property name="enabled">
          <bool>true</bool>
         </property>
@@ -271,7 +271,7 @@ font-size: 10px;
        </widget>
       </item>
       <item row="2" column="2">
-       <widget class="QPushButton" name="outputFilePathBtn">
+       <widget class="QPushButton" name="reconstructedVolumeFileNameBtn">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
           <horstretch>0</horstretch>

@@ -205,13 +205,13 @@ void MultiResolutionSOC::execute()
     if(m_NumberResolutions - 1 == i)
     {
       ss.str("");
-      ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedBinFile;
+      ss << inputs->tempDir << MXADir::Separator << m_OutputFile; // << ScaleOffsetCorrection::ReconstructedBinFile;
       inputs->reconstructedOutputFile = ss.str();
     }
     else
     {
       ss.str("");
-      ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedBinFile;
+      ss << inputs->tempDir << MXADir::Separator << m_OutputFile; //<< ScaleOffsetCorrection::ReconstructedBinFile;
       inputs->reconstructedOutputFile = ss.str();
     }
     /************************************/
@@ -289,7 +289,7 @@ void MultiResolutionSOC::execute()
    // int16_t disty = inputs->yEnd - inputs->yStart + 1;
     //3*iterpFactor is to account for the prior which operates on
     //26 point 3-D neighborhood which needs 3 x-z slices at the least
-    	  
+
 	/*int16_t rem_temp = disty % ((int16_t)inputs->interpolateFactor * 3);
     if(rem_temp != 0)
     {
@@ -320,9 +320,10 @@ void MultiResolutionSOC::execute()
     engine->addObserver(this);
     engine->setMessagePrefix( StringUtils::numToString(inputs->interpolateFactor/(powf(2.0f,i))) + std::string("x: ") );
 
+    std::cout << "Sinogram Inputs -----------------------------------------" << std::endl;
     printInputs(inputs, std::cout);
-
-	printInputs(bf_inputs, std::cout);
+    std::cout << "Bright Field Inputs -----------------------------------------" << std::endl;
+    printInputs(bf_inputs, std::cout);
 
     engine->execute();
     engine = SOCEngine::NullPointer();

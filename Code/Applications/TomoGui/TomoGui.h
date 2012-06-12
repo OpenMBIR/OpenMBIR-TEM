@@ -187,8 +187,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void on_inputBrightFieldFilePathBtn_clicked();
     void on_inputBrightFieldFilePath_textChanged(const QString &string);
 
-    void on_outputFilePathBtn_clicked();
-    void on_outputFilePath_textChanged(const QString & text);
+    void on_reconstructedVolumeFileNameBtn_clicked();
+    void on_reconstructedVolumeFileName_textChanged(const QString & text);
 
     void on_outputDirectoryPathBtn_clicked();
     void on_tempDirPath_textChanged(const QString & text);
