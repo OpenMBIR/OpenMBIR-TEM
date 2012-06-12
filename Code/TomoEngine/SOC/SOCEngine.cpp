@@ -317,13 +317,15 @@ void SOCEngine::execute()
   RNGVars* RandomNumber;
   std::string indent("");
 
-#ifdef COST_CALCULATE
+//#ifdef COST_CALCULATE //Commented out because if not the code fails to run. 
   std::string filepath(m_TomoInputs->tempDir);
   filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::CostFunctionFile);
 
   CostData::Pointer cost = CostData::New();
   cost->initOutputFile(filepath);
-#endif
+//#endif 
+	
+	
 
 
 #if TomoEngine_USE_PARALLEL_ALGORITHMS

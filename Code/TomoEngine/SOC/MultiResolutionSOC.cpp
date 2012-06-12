@@ -286,16 +286,17 @@ void MultiResolutionSOC::execute()
 
     //Adjusting the volume along the y-directions so we dont have
     //  issues with pixelation
-    int16_t disty = inputs->yEnd - inputs->yStart + 1;
+   // int16_t disty = inputs->yEnd - inputs->yStart + 1;
     //3*iterpFactor is to account for the prior which operates on
     //26 point 3-D neighborhood which needs 3 x-z slices at the least
-    int16_t rem_temp = disty % ((int16_t)inputs->interpolateFactor * 3);
+    	  
+	/*int16_t rem_temp = disty % ((int16_t)inputs->interpolateFactor * 3);
     if(rem_temp != 0)
     {
       std::cout << "The number of y-pixels is not a proper multiple for multi-res" << std::endl;
       int16_t remainder = static_cast<int16_t>((inputs->interpolateFactor * 3) - (rem_temp));
       inputs->yEnd += remainder;
-    }
+    }*/
 
     SinogramPtr sinogram = SinogramPtr(new Sinogram);
     SinogramPtr bf_sinogram = SinogramPtr(new Sinogram);
