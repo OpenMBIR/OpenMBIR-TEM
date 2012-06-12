@@ -316,15 +316,15 @@ void SOCEngine::execute()
   RNGVars* RandomNumber;
   std::string indent("");
 
-//#ifdef COST_CALCULATE //Commented out because if not the code fails to run. 
+//#ifdef COST_CALCULATE //Commented out because if not the code fails to run.
   std::string filepath(m_TomoInputs->tempDir);
   filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::CostFunctionFile);
 
   CostData::Pointer cost = CostData::New();
   cost->initOutputFile(filepath);
-//#endif 
-	
-	
+//#endif
+
+
 
 
 #if TomoEngine_USE_PARALLEL_ALGORITHMS
@@ -824,8 +824,8 @@ void SOCEngine::execute()
 
 
 
-  writeSinogramFile(NuisanceParams, Final_Sinogram);
-  writeReconstructionFile();
+  writeSinogramFile(NuisanceParams, Final_Sinogram); // Writes the sinogram to a file
+  writeReconstructionFile(); // Writes the m_Geometry to a file
   writeVtkFile();
   writeMRCFile();
 
