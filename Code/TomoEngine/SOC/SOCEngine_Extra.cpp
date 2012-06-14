@@ -974,14 +974,14 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
 
   }
 
-//#ifdef DEBUG
+#ifdef DEBUG
   std::cout << "Noise Model Weights:" << std::endl;
   std::cout << "Tilt\tWeight" << std::endl;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
     std::cout << i_theta << "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
   }
-//#endif
+#endif
   Real_t VarRatio = AverageVarUpdate / AverageMagVar;
   std::cout << "Ratio of change in Variance " << VarRatio << std::endl;
 }
