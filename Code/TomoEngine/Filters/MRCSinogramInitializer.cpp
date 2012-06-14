@@ -114,13 +114,23 @@ void MRCSinogramInitializer::execute()
 		 std::cout<<"The subvolume is not symmetric about the center. Adjusting.."<<std::endl;
 		 if(LeftLength < RightLength)
 		 {
-			 voxelMax[0] = CenterOfRot + LeftLength -1;
+			 Real_t tempx = CenterOfRot + LeftLength -1;
+			 //Make sure the adjustment does not overrun the size of the data
+			 if(tempx >= header.nx)
+				 tempx = header.nx -1;
+			 			 
+			 voxelMax[0] = tempx;
 			 inputs->xEnd = voxelMax[0];
 			 std::cout<<"New xEnd : "<<voxelMax[0]<<std::endl;
 		 }
 		 else
 		 {
-			 voxelMin[0] = CenterOfRot - RightLength ;
+			 Real_t tempx = CenterOfRot - RightLength;
+			 //Make sure the adjustment does not overrun the size of the data
+			 if(tempx < 0)
+				 tempx =0;
+			 
+			 voxelMin[0] = tempx;
 			 inputs->xStart = voxelMin[0];
 			 std::cout<<"New xStart : "<<voxelMin[0]<<std::endl;
 		 }
@@ -141,7 +151,15 @@ void MRCSinogramInitializer::execute()
 	  {
 	   std::cout << "The number of y-pixels is not a proper multiple for multi-res" << std::endl;
 	   int16_t remainder = static_cast<int16_t>((inputs->interpolateFactor * 3) - (rem_temp));
-	   inputs->yEnd += remainder;
+	   
+	//Make sure the adjustment does not overrun the size of the data
+	   if(inputs->yEnd + remainder < header.ny)
+		   inputs->yEnd+=remainder;
+		  else {
+			  inputs->yEnd = header.ny-1;
+		  }
+
+		  std::cout<<"New y end "<<	inputs->yEnd<<std::endl;  
 	  }
 	  
 	  voxelMax[1] = inputs->yEnd;
