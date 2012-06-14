@@ -127,6 +127,9 @@ void MRCSinogramInitializer::execute()
 	 }
 	  
 	
+	  //This part of selecting y can be ignored if the user has selected 
+	  //single slice mode
+	  
 	  //Adjusting the volume along the y-directions so we dont have
 	  //  issues with pixelation
 	  int16_t disty = inputs->yEnd - inputs->yStart + 1;

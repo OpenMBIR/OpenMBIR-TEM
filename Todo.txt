@@ -1,19 +1,23 @@
-
-* Write the reconstruction as a .mrc file
-* Implement Target Gain estimation based on input data file.
+* Write the reconstruction as a .mrc file and display the XZ slice in the ROI
 * Do we allow the user to set the SigmaX or do we always calculate it internally.
 * Determine how to handle all the intermediate files.
 * Streamline progress feedback to the GUI
 * Add more "Cancel" checks in the code
 * Update command line SOC to use MultiResolutionSOC instead
-* Parallelize the code
 * Turn doubles to floats to save memory. 
 * Add an option to switch off #define for Joint_Estimation and #Noise estimation.
-* Enable Bright-Field .mrc input to GUI
-* Implement reconstruction when Bright-Field is available - Done. Venkat 5/30
-* Do more tests of the automatic SigmaX calculation based on TargetGain - is it robust? 
-* While choosing a region to recons. for multi-resolution need subvolume
-to be a proper multiple of xz size at all resolutions 
 * Make a command line version of the code so that user can run multiple instances using script files if needed.
-* Bug in name of the final sinogram file - Done.Venkat/Mike 6/13/2012
 * Single Slice reconstruction mode needs to be fixed
+* Need to enable a quick load option to continue the reconstruction for a few 
+more iterations. This will need reading the final rec, offset, gain and var.
+
+Stuff Completed
+ 
+* Implement Target Gain estimation based on input data file.- Done. Venkat 6/14
+* Bug in name of the final sinogram file - Done.Venkat/Mike 6/13/2012
+* While choosing a region to recons. for multi-resolution need subvolume
+to be a proper multiple of xz size at all resolutions - Done. Venkat 6/14/2012
+* Parallelize the code - Done by Mike 6/12/2012
+* Enable Bright-Field .mrc input to GUI - Done. Venkat. 
+* Implement reconstruction when Bright-Field is available - Done. Venkat 5/30
+* Do more tests of the automatic SigmaX calculation based on TargetGain - is it robust? - Done. Venkat 6/14/2012
