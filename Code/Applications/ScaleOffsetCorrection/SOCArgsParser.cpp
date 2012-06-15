@@ -295,6 +295,8 @@ int SOCArgsParser::parseArguments(int argc, char **argv, TomoInputs* inputs, Tom
       bf_inputs->zStart = subvolumeValues[2];
       bf_inputs->zEnd = subvolumeValues[5];
     }
+	
+	bf_inputs->interpolateFactor = inputs->interpolateFactor;
 
     for(int i = 0; i < argc; ++i)
     {

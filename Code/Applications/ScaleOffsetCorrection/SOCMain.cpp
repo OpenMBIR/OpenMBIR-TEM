@@ -90,6 +90,21 @@ int main(int argc, char **argv)
   getcwd(path1, MAXPATHLEN);
   std::cout << "Current Working Directory: " << path1 << std::endl;
 #endif
+	
+	std::stringstream ss;
+	ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
+    inputs->gainsOutputFile = ss.str();
+	
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalOffsetParametersFile;
+    inputs->offsetsOutputFile = ss.str();
+	
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalVariancesFile;
+    inputs->varianceOutputFile = ss.str();
+	
+	
 
   // Create these variables so we
   SinogramPtr sinogram = SinogramPtr(new Sinogram);
