@@ -276,7 +276,6 @@ class UpdateYSlice
                   uint16_t i_theta = floor(static_cast<float>(m_TempCol[Index]->index[q] / (m_Sinogram->N_r)));
                   uint16_t i_r = (m_TempCol[Index]->index[q] % (m_Sinogram->N_r));
                   Real_t kConst0 = m_NuisanceParams->I_0->d[i_theta] * (m_TempCol[Index]->values[q]);
-
                   uint16_t VoxelLineAccessCounter = 0;
                   uint32_t vlrCount = m_VoxelLineResponse[i].index[0] + m_VoxelLineResponse[i].count;
                   for (uint32_t i_t = m_VoxelLineResponse[i].index[0]; i_t < vlrCount; i_t++)

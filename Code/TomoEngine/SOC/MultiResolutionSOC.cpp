@@ -280,7 +280,9 @@ void MultiResolutionSOC::execute()
       bf_inputs->yEnd = m_Subvolume[4];
       bf_inputs->zStart = m_Subvolume[2];
       bf_inputs->zEnd = m_Subvolume[5];
+		
     }
+	bf_inputs->interpolateFactor = inputs->interpolateFactor;
     inputs->excludedViews = m_ViewMasks;
     bf_inputs->excludedViews = m_ViewMasks;
 

@@ -102,13 +102,29 @@ void MRCSinogramInitializer::execute()
      voxelMax[1] = inputs->yEnd;
      voxelMax[2] = inputs->zEnd;
 	  
-	 Real_t LeftLength =  CenterOfRot-voxelMin[0];
-	 Real_t RightLength = voxelMax[0] - CenterOfRot + 1; //1 is present to account for indexing of subvolume which starts from 0
 	 
-
-	  
+							   
 	  //Code to ensure region selected has the "right" dimensions	 
 	  /************************************************************/
+	  
+	  
+	  
+	  Real_t LeftLength =  CenterOfRot-voxelMin[0];
+	  Real_t RightLength = voxelMax[0] - CenterOfRot + 1; //1 is present to account for indexing of subvolume which starts from 0
+	  
+	  if(LeftLength < 0)
+	  {
+		  voxelMin[0] = CenterOfRot+LeftLength;
+		  inputs->xStart = voxelMin[0];
+		  LeftLength*=-1;
+	  }
+	  if(RightLength < 0)
+	  {
+		  voxelMax[0] = CenterOfRot - RightLength;
+		  inputs->xEnd= voxelMax[0];
+		  RightLength*=-1;
+	  }
+	  
 	 if (LeftLength != RightLength) 
 	 {
 		 std::cout<<"The subvolume is not symmetric about the center. Adjusting.."<<std::endl;
@@ -135,15 +151,14 @@ void MRCSinogramInitializer::execute()
 			 std::cout<<"New xStart : "<<voxelMin[0]<<std::endl;
 		 }
 	 }
-	  
-	
+	  	
 	  //This part of selecting y can be ignored if the user has selected 
 	  //single slice mode
 	  
 	  //Adjusting the volume along the y-directions so we dont have
 	  //  issues with pixelation
 	  int16_t disty = inputs->yEnd - inputs->yStart + 1;
-	  std::cout<<"Interpolate Factor"<<inputs->interpolateFactor;
+	  std::cout<<"Interpolate Factor="<<inputs->interpolateFactor<<std::endl;
 	  //3*iterpFactor is to account for the prior which operates on
 	  //26 point 3-D neighborhood which needs 3 x-z slices at the least	  
 	  int16_t rem_temp = disty % ((int16_t)inputs->interpolateFactor * 3);
@@ -159,11 +174,14 @@ void MRCSinogramInitializer::execute()
 			  inputs->yEnd = header.ny-1;
 		  }
 
-		  std::cout<<"New y end "<<	inputs->yEnd<<std::endl;  
+		  std::cout<<"New yEnd "<<	inputs->yEnd<<std::endl;  
 	  }
 	  
 	  voxelMax[1] = inputs->yEnd;
 	  
+	  
+	  std::cout<<"xStart="<<inputs->xStart<<" "<<"xEnd="<<inputs->xEnd<<std::endl;
+	  std::cout<<"yStart="<<inputs->yStart<<" "<<"yEnd="<<inputs->yEnd<<std::endl;
 	 /************************************************************/
 	 
 
