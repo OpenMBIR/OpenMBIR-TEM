@@ -733,7 +733,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   printf("Lagrange Multiplier = %lf\n", LagrangeMultiplier);
 
 #ifdef DEBUG
-  std::cout << "Tilt\tGains\tOffsets\tVariance" << std::endl;
+  std::cout << "Tilt\tGains\tOffsets" << std::endl;
   for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
   {
     std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
@@ -851,12 +851,12 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
         temp=Y_Est->d[i_theta][i_r][i_t]/NuisanceParams->I_0->d[i_theta];
         fwrite(&temp,sizeof(Real_t),1,Fp6);
 #endif
-#ifdef DEBUG
+//#ifdef DEBUG
         if(Weight->d[weight_idx] < 0)
         {
           std::cout << m_Sinogram->counts->d[counts_idx] << "    " << NuisanceParams->alpha->d[i_theta] << std::endl;
         }
-#endif//Debug
+//#endif//Debug
 
 #ifdef NOISE_MODEL
           {
