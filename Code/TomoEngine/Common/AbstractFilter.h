@@ -55,6 +55,8 @@ class TomoEngine_EXPORT AbstractFilter : public Observable
     // These should be implemented by the subclass
     MXA_INSTANCE_STRING_PROPERTY(ErrorMessage);
     MXA_INSTANCE_PROPERTY(int, ErrorCondition);
+    MXA_INSTANCE_PROPERTY(bool, Debug);
+
     /**
      * @brief Cancel the operation
      */

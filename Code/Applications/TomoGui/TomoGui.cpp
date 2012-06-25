@@ -975,8 +975,8 @@ QImage TomoGui::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, 
     if(data[i] < dmin) dmin = data[i];
   }
 
-  std::cout << "Min float MRC Value:" << dmin << std::endl;
-  std::cout << "Max float MRC Value:" << dmax << std::endl;
+//  std::cout << "Min float MRC Value:" << dmin << std::endl;
+//  std::cout << "Max float MRC Value:" << dmax << std::endl;
 
   //Scale all the values to 0 and 255 in place over writing the float values with 32 bit ints
   int* iData = reinterpret_cast<int*>(data);
@@ -990,8 +990,8 @@ QImage TomoGui::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, 
     if(iData[i] < imin) imin = iData[i];
   }
 
-  std::cout << "Min int MRC Value:" << imin << std::endl;
-  std::cout << "Max int MRC Value:" << imax << std::endl;
+//  std::cout << "Min int MRC Value:" << imin << std::endl;
+//  std::cout << "Max int MRC Value:" << imax << std::endl;
 
   QVector<QRgb> colorTable;
   // Generate a Color Table
@@ -1039,13 +1039,13 @@ QImage TomoGui::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, 
       }
     }
 
-    QString fname("/tmp/single_slice_z_");
-    fname.append(QString::number(z)).append(".tif");
-    image.save(fname);
+//    QString fname("/tmp/single_slice_z_");
+//    fname.append(QString::number(z)).append(".tif");
+//    image.save(fname);
   }
-  std::cout << "Min int QImage Value:" << imin << std::endl;
-  std::cout << "Max int QImage Value:" << imax << std::endl;
-  xzImage.save("/tmp/xz_image.tif");
+//  std::cout << "Min int QImage Value:" << imin << std::endl;
+//  std::cout << "Max int QImage Value:" << imax << std::endl;
+//  xzImage.save("/tmp/xz_image.tif");
   return xzImage;
 }
 

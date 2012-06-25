@@ -160,6 +160,7 @@ namespace Detail {
 #else
     m_NumThreads = 1;
 #endif
+  //  setDebug(true);
  }
 
  // -----------------------------------------------------------------------------
@@ -382,27 +383,30 @@ void SOCEngine::execute()
     return;
   }
 
+  if(getDebug())
+  {
 #ifdef DEBUG_GAINS_OFFSETS_VARIANCES
 // Print out the Initial Gains, Offsets, Variances
-  std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
-  std::cout << "Tilt\tGain\tOffset";
+    std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
+    std::cout << "Tilt\tGain\tOffset";
 
-  if(NULL != m_Sinogram->InitialVariance.get())
-  {
-    std::cout << "\tVariance";
-  }
-  std::cout << std::endl;
-
-  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-  {
-    std::cout << i_theta << "\t" << m_Sinogram->InitialGain->d[i_theta] << "\t" << m_Sinogram->InitialOffset->d[i_theta];
     if(NULL != m_Sinogram->InitialVariance.get())
     {
-      std::cout << "\t" << m_Sinogram->InitialVariance->d[i_theta];
+      std::cout << "\tVariance";
     }
     std::cout << std::endl;
-  }
+
+    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+    {
+      std::cout << i_theta << "\t" << m_Sinogram->InitialGain->d[i_theta] << "\t" << m_Sinogram->InitialOffset->d[i_theta];
+      if(NULL != m_Sinogram->InitialVariance.get())
+      {
+        std::cout << "\t" << m_Sinogram->InitialVariance->d[i_theta];
+      }
+      std::cout << std::endl;
+    }
 #endif
+  }
 
   // Initialize the Geometry data from a rough reconstruction
   err = initializeRoughReconstructionData();
@@ -609,9 +613,11 @@ void SOCEngine::execute()
 
   storeVoxelResponse(H_t, VoxelLineResponse);
 
-  printf("Number of non zero entries of the forward projector is %lf\n",temp);
-  printf("Geometry-Z %d\n",m_Geometry->N_z);
-
+  if(getDebug())
+  {
+    printf("Number of non zero entries of the forward projector is %lf\n", temp);
+    printf("Geometry-Z %d\n", m_Geometry->N_z);
+  }
 
   //Forward Project Geometry->Object one slice at a time and compute the  Sinogram for each slice
   //is Y_Est initailized to zero?
@@ -626,10 +632,10 @@ void SOCEngine::execute()
 
 #if TomoEngine_USE_PARALLEL_ALGORITHMS
   tbb::task_group* g = new tbb::task_group;
-  std::cout << "Default Number of Threads to Use: " << init.default_num_threads() << std::endl;
-  std::cout << "Forward Projection Running in Parallel." << std::endl;
+//  std::cout << "Default Number of Threads to Use: " << init.default_num_threads() << std::endl;
+//  std::cout << "Forward Projection Running in Parallel." << std::endl;
 #else
-  std::cout << "Forward Projection Running in Serial." << std::endl;
+//  std::cout << "Forward Projection Running in Serial." << std::endl;
 #endif
   // Queue up a thread for each z layer of the Geometry. The threads will only be
   // run as hardware resources open up so this will not just fire up a gazillion
@@ -775,16 +781,17 @@ void SOCEngine::execute()
 /* Write the Gains and Offsets to an output file */
   writeNuisanceParameters(NuisanceParams);
 
-#if DEBUG_GAINS_OFFSETS_VARIANCES
-  std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
-  for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
+  if(getDebug())
   {
-    std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
-        "\t" << NuisanceParams->mu->d[i_theta] <<
-        "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
-  }
+#if DEBUG_GAINS_OFFSETS_VARIANCES
+    std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
+    for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
+    {
+      std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] << "\t" << NuisanceParams->mu->d[i_theta] << "\t" << NuisanceParams->alpha->d[i_theta]
+          << std::endl;
+    }
 #endif
-
+  }
 
   Real_t temp_final = 0.0;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)

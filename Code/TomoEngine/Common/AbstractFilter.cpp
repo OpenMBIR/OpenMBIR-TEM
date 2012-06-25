@@ -36,6 +36,7 @@
 AbstractFilter::AbstractFilter() :
 m_ErrorMessage(""),
 m_ErrorCondition(0),
+m_Debug(false),
 m_Cancel(false)
 {
 

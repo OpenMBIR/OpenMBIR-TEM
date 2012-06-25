@@ -137,14 +137,16 @@ void InitialReconstructionInitializer::execute()
   geometry->N_z = floor(input->LengthZ / input->delta_xz); //Number of voxels in z direction
   geometry->N_y = floor(geometry->LengthY / input->delta_xy); //Number of measurements in y direction
 
-  printf("Geometry->LengthX=%lf nm \n", geometry->LengthX);
-  printf("Geometry->LengthY=%lf nm \n", geometry->LengthY);
-  printf("Geometry->LengthZ=%lf nm \n", input->LengthZ);
+  if(getDebug())
+  {
+    printf("Geometry->LengthX=%lf nm \n", geometry->LengthX);
+    printf("Geometry->LengthY=%lf nm \n", geometry->LengthY);
+    printf("Geometry->LengthZ=%lf nm \n", input->LengthZ);
 
-  printf("Geometry->Nz=%d\n", geometry->N_z);
-  printf("Geometry->Nx=%d\n", geometry->N_x);
-  printf("Geometry->Ny=%d\n", geometry->N_y);
-
+    printf("Geometry->Nz=%d\n", geometry->N_z);
+    printf("Geometry->Nx=%d\n", geometry->N_x);
+    printf("Geometry->Ny=%d\n", geometry->N_y);
+  }
   size_t dims[3] =
   { geometry->N_z, geometry->N_x, geometry->N_y };
   geometry->Object = RealVolumeType::New(dims, "Geometry.Object");
@@ -156,10 +158,12 @@ void InitialReconstructionInitializer::execute()
   // Geometry->y0 = -(sinogram->N_t * sinogram->delta_t)/2 + Geometry->StartSlice*Geometry->delta_xy;
   geometry->y0 = -(geometry->LengthY) / 2;
 
-  printf("Geometry->X0=%lf\n", geometry->x0);
-  printf("Geometry->Y0=%lf\n", geometry->y0);
-  printf("Geometry->Z0=%lf\n", geometry->z0);
-
+  if(getDebug())
+  {
+    printf("Geometry->X0=%lf\n", geometry->x0);
+    printf("Geometry->Y0=%lf\n", geometry->y0);
+    printf("Geometry->Z0=%lf\n", geometry->z0);
+  }
   // Now we actually initialize the data to something. If a subclass is involved
   // then the subclasses version of initializeData() will be used instead
   initializeData();
@@ -176,7 +180,8 @@ void InitialReconstructionInitializer::execute()
         sum += geometry->Object->getValue(z, x, y);
       }
     }
-    std::cout << "Geometry check sum Y:" << y << " Value:" << sum << std::endl;
+
+    if(getDebug()) std::cout << "Geometry check sum Y:" << y << " Value:" << sum << std::endl;
   }
   //End of check sum
 

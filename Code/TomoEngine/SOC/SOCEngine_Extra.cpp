@@ -260,8 +260,11 @@ int SOCEngine::createInitialVariancesData()
     //  std::cout << "------------Initial Variance-----------" << std::endl;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-        m_Sinogram->InitialVariance->d[i_theta] = m_TomoInputs->defaultVariance;
-       std::cout << "Tilt: " << i_theta << "  Variance: " << m_Sinogram->InitialVariance->d[i_theta] << std::endl;
+      m_Sinogram->InitialVariance->d[i_theta] = m_TomoInputs->defaultVariance;
+      if(getDebug())
+      {
+        std::cout << "Tilt: " << i_theta << "  Variance: " << m_Sinogram->InitialVariance->d[i_theta] << std::endl;
+      }
     }
   }
 
@@ -295,6 +298,7 @@ int SOCEngine::initializeRoughReconstructionData()
     notify("Could not find a compatible reader for the initial reconstruction data file. The program will now end.", 0, Observable::UpdateErrorMessage);
     return -1;
   }
+  geomInitializer->setDebug(getDebug());
   geomInitializer->setSinogram(m_Sinogram);
   geomInitializer->setTomoInputs(m_TomoInputs);
   geomInitializer->setGeometry(m_Geometry);
@@ -356,10 +360,10 @@ void SOCEngine::gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams)
   sum /= m_Sinogram->N_theta;
 
 
-  printf("The Arithmetic mean of the constraint is %lf\n", sum);
+  if (getDebug()) std::cout << "The Arithmetic mean of the constraint is " << sum << std::endl;
   if(sum - m_Sinogram->targetGain > 1e-5)
   {
-    printf("Arithmetic Mean Constraint not met..renormalizing\n");
+    if (getDebug()) std::cout << "Arithmetic Mean Constraint not met..renormalizing" << std::endl;
     temp = m_Sinogram->targetGain / sum;
     for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
     {
@@ -868,9 +872,11 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
         checksum += Weight->d[weight_idx];
       }
     }
-#ifdef DEBUG
-    printf("Check sum of Diagonal Covariance Matrix= %lf\n", checksum);
-#endif
+
+    if(getDebug())
+    {
+      std::cout << "Check sum of Diagonal Covariance Matrix=" << checksum << std::endl;
+    }
   }
   STOP_TIMER;
   std::cout << std::endl;
@@ -976,16 +982,18 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
 
   }
 
-#ifdef DEBUG
-  std::cout << "Noise Model Weights:" << std::endl;
-  std::cout << "Tilt\tWeight" << std::endl;
-  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  if(getDebug())
   {
-    std::cout << i_theta << "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
+    std::cout << "Noise Model Weights:" << std::endl;
+    std::cout << "Tilt\tWeight" << std::endl;
+    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+    {
+      std::cout << i_theta << "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
+    }
+
+    Real_t VarRatio = AverageVarUpdate / AverageMagVar;
+    std::cout << "Ratio of change in Variance " << VarRatio << std::endl;
   }
-#endif
-  Real_t VarRatio = AverageVarUpdate / AverageMagVar;
-  std::cout << "Ratio of change in Variance " << VarRatio << std::endl;
 }
 
 // -----------------------------------------------------------------------------

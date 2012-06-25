@@ -507,28 +507,37 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 
 //  //FIXME: Where are these Initialized? Or what values should they be initialized to?
 //  Real_t low = 0.0, high = 0.0;
+  std::stringstream ss;
 
   if(updateType == RegularRandomOrderUpdate)
   {
-    std::cout << indent << "Regular Random Order update of Voxels" << std::endl;
+    ss.str(""); // Clear the string stream first
+    ss << indent << "Regular Random Order update of Voxels" << std::endl;
+    notify(ss.str(), 0, Observable::UpdateProgressMessage);
   }
   else if(updateType == HomogeniousUpdate)
   {
-    std::cout << indent << "Homogenous update of voxels" << std::endl;
+    ss.str(""); // Clear the string stream first
+    ss << indent << "Homogenous update of voxels" << std::endl;
+    notify(ss.str(), 0, Observable::UpdateProgressMessage);
   }
   else if(updateType == NonHomogeniousUpdate)
   {
-    std::cout << indent << "Non Homogenous update of voxels" << std::endl;
+    ss.str(""); // Clear the string stream first
+    ss << indent << "Non Homogenous update of voxels" << std::endl;
     subIterations = NUM_NON_HOMOGENOUS_ITER;
+    notify(ss.str(), 0, Observable::UpdateProgressMessage);
   }
   else
   {
-    std::cout << indent << "Unknown Voxel Update Type. Returning Now" << std::endl;
+    ss.str("");
+    ss << indent << "Unknown Voxel Update Type. Returning Now" << std::endl;
+    notify(ss.str(), 0, Observable::UpdateErrorMessage);
     return exit_status;
   }
 
   Real_t NH_Threshold = 0.0;
-  std::stringstream ss;
+
   int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
 
   for (uint16_t NH_Iter = 0; NH_Iter < subIterations; ++NH_Iter)
@@ -545,11 +554,12 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
       ComputeVSC();
       START_TIMER;
       NH_Threshold = SetNonHomThreshold();
-      STOP_TIMER;PRINT_TIME("  SetNonHomThreshold");
-      std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
-      //Use  FiltMagUpdateMap  to find MagnitudeUpdateMask
-      //std::cout << "Completed Calculation of filtered magnitude" << std::endl;
-      //Calculate the threshold for the top ? % of voxel updates
+      STOP_TIMER;
+      PRINT_TIME("  SetNonHomThreshold");
+      if(getDebug())
+      {
+        std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
+      }
     }
 
     //printf("Iter %d\n",Iter);
