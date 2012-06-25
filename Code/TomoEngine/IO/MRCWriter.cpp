@@ -55,6 +55,13 @@ MRCWriter::~MRCWriter()
 {
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void MRCWriter::execute()
+{
+    write();
+}
 
 // -----------------------------------------------------------------------------
 //
@@ -73,23 +80,43 @@ int MRCWriter::writeHeader()
 int MRCWriter::write()
 {
   int err = -1;
-
+  std::stringstream ss;
+  std::cout << "MRC Output File: '" << m_OutputFile << "'" << std::endl;
   if (m_OutputFile.empty())
   {
-    return -1;
+      ss.str("");
+      ss << "MRCWriter: Output File was Not Set";
+      setErrorCondition(-1);
+      setErrorMessage(ss.str());
+      notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+      return err;
   }
   MXAFileWriter64 writer(m_OutputFile);
   bool success = writer.initWriter();
+
   if (false == success)
   {
-    return -1;
+      ss.str("");
+      ss << "MRCWriter: Error opening output file for writing. '" <<
+          m_OutputFile << "'";
+      setErrorCondition(-1);
+      setErrorMessage(ss.str());
+      notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+      return err;
   }
+
+  std::cout << "Writing MRC File with Geometry of: " << std::endl;
+  std::cout << "  N_z: " << m_Geometry->N_z << std::endl;
+  std::cout << "  N_x: " << m_Geometry->N_x << std::endl;
+  std::cout << "  N_y: " << m_Geometry->N_y << std::endl;
+
+
   MRCHeader header;
   header.nx = m_Geometry->N_x;
   header.ny = m_Geometry->N_y;
   header.nz = m_Geometry->N_z;
 
-  header.mode = 1;
+  header.mode = 2;
 
   header.nxstart = 0;
   header.nystart = 0;
@@ -157,10 +184,13 @@ int MRCWriter::write()
   }
   snprintf(header.labels[0], 80, "Fei Company");
   snprintf(header.labels[1], 80, "Reconstruction by EIM Tomography Engine");
-  snprintf(header.labels[2], 80, "EIM TomoEngine code developer by Purdue University & BlueQuartz Software");
+  snprintf(header.labels[2], 80, "EIM TomoEngine code developed by Purdue University & BlueQuartz Software");
 
   // Write the header
+  std::cout << "  Writing Header to file at " << writer.getFilePointer64() << std::endl;
   writer.write(reinterpret_cast<char*>(&header), 1024);
+
+  std::cout << "  Writing Extended Header to file at " << writer.getFilePointer64() << std::endl;
 
   for(uint16_t i = 0; i < m_Geometry->N_z; ++i)
   {
@@ -169,28 +199,79 @@ int MRCWriter::write()
     fei.pixelsize = static_cast<float>(m_Geometry->LengthX);
     writer.write(reinterpret_cast<char*>(&fei), sizeof(FEIHeader));
   }
+  std::cout << "  Writing Data to file at " << writer.getFilePointer64() << std::endl;
 
-  size_t size = sizeof(uint16_t) * m_Geometry->N_x * m_Geometry->N_y;
-  uint16_t* slice = (uint16_t*)(malloc(size));
+  size_t size = sizeof(float) * m_Geometry->N_x * m_Geometry->N_y;
+  float* slice = (float*)(malloc(size));
   size_t index = 0;
-  Real_t* d = m_Geometry->Object->d;
-  for(uint16_t z = 0; z < m_Geometry->N_z; ++z)
+  Real_t d = 0.0;
+
+#if 0
+  // Find the max and min value so we can scale correctly (or at least try)
+  size_t nVoxels = m_Geometry->N_z * m_Geometry->N_y * m_Geometry->N_x;
+  Real_t dmax = std::numeric_limits<Real_t>::min();
+  Real_t dmin = std::numeric_limits<Real_t>::max();
+
+  for (size_t i = 0; i < nVoxels; ++i)
   {
-  //  std::cout << "Writing Z=" << z << " Layer" << std::endl;
-    for(uint16_t x = 0; x < m_Geometry->N_x; ++x)
+    if(d[i] > dmax) dmax = d[i];
+    if(d[i] < dmin) dmin = d[i];
+  }
+
+  Real_t k_1 = 1.0;
+  if (dmax - dmin > 0.0) {
+    k_1 = std::numeric_limits<uint16_t>::max() / (dmax - dmin);
+  }
+#endif
+
+
+#if 0
+  float t;
+  for (int z = m_Geometry->N_z - 1; z >= 0; z--)
+  {
+    for (int y = 0; y < m_Geometry->N_y; ++y)
     {
-      for(uint16_t y = 0; y < m_Geometry->N_y; ++y)
+      for (int x = 0; x < m_Geometry->N_x; x++)
       {
-        index = (m_Geometry->N_y * m_Geometry->N_x * 0) + (m_Geometry->N_y * x) + y;
-        size_t idx = m_Geometry->Object->calcIndex(z, x, y);
-        slice[index] = (uint16_t)(d[idx]);
+        t = static_cast<float>(m_Geometry->Object->getValue(z, x, y));
+      }
+    }
+  }
+#endif
+  Real_t dmax = std::numeric_limits<Real_t>::min();
+  Real_t dmin = std::numeric_limits<Real_t>::max();
+  std::cout << "Values Written to MRC File" << std::endl;
+ // float t = 0.0f;
+  for (int z = m_Geometry->N_z - 1; z >= 0; z--)
+  {
+    index = 0;
+    for (int y = 0; y < m_Geometry->N_y; ++y)
+    {
+      for (int x = 0; x < m_Geometry->N_x; ++x)
+      {
+        //index = (x * m_Geometry->N_y) + y;
+        d = m_Geometry->Object->getValue(z, x, y);
+        slice[index] = static_cast<float>(d);
+        if(d > dmax) dmax = d;
+        if(d < dmin) dmin = d;
+        ++index;
       }
     }
     writer.write(reinterpret_cast<char*>(slice), size);
+ //   std::cout << "  Writing Slice " << z << " to file at " << writer.getFilePointer64() << std::endl;
   }
+
+
+  std::cout << "  Min float MRC Value:" << dmin << std::endl;
+  std::cout << "  Max float MRC Value:" << dmax << std::endl;
+  std::cout << "-----------------------------" << std::endl;
+
   free(slice);
 
-  std::cout << "Done Writing MRC file." << std::endl;
 
+  setErrorCondition(0);
+  setErrorMessage("");
+  notify("Done Writing the MRC Output File", 0, UpdateProgressMessage);
+  err = 1;
   return err;
 }

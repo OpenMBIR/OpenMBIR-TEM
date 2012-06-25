@@ -91,7 +91,14 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     void readMRCHeader(QString filepath);
 
-    void loadMRCTiltImage(QString filepath, int tiltIndex);
+    QImage loadMRCTiltImage(QString filepath, int tiltIndex);
+
+    /**
+     * @brief Loads the Single Slice Reconstruction in the 2nd Graphics View
+     * @param filepath The path to the single slice reconstruction
+     */
+    void loadSingleSliceReconstruction(QString filepath);
+
 
     void openOverlayImage(QString mountImage);
 
@@ -152,7 +159,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     void on_estimateGainSigma_clicked();
 
-    void on_singleSliceReconstruction_clicked();
+    void on_m_SingleSliceReconstructionBtn_clicked();
 
     void z10_triggered();
     void z25_triggered();
@@ -199,7 +206,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     void on_currentTiltIndex_valueChanged(int i);
 
-
+    void singleSlicePlaneSet();
 
   protected:
 
@@ -250,6 +257,9 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void drawOrigin(QImage image);
 
     void displayDialogBox(QString title, QString text, QMessageBox::Icon icon);
+
+    QImage xzSigned16CrossSection(qint16* data, size_t nVoxels, int* voxelMin, int* voxelMax);
+    QImage xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, int* voxelMax);
 
   signals:
 

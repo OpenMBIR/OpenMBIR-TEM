@@ -143,6 +143,8 @@ class TomoGuiGraphicsView : public QGraphicsView
 
    void fireUserInitAreaAdded(ReconstructionArea* uia);
    void fireUserInitAreaLostFocus();
+   void fireSingleSliceSelected();
+
   protected:
 
 

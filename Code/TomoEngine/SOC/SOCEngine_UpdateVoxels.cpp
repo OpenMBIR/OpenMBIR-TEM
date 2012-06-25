@@ -1,5 +1,6 @@
 
-
+#include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/SOC/SOCConstants.h"
 
 /*****************************************************************************
  //Finds the min and max of the neighborhood . This is required prior to calling
@@ -585,7 +586,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 
 
 
-      std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
+      // std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
       UpdateYSlice& a =
           *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop,
                                                          m_Geometry,
@@ -651,13 +652,12 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     cost->writeCostValue(cost_value);
     /**************************************************************************/
 #else
-    printf("%d\n",Iter);
+    printf("Iter: %d\n",Iter);
 #endif //Cost calculation endif
 
 #ifdef ROI
-
-	  std::cout<<"Average Update "<<AverageUpdate<<std::endl;
-	  std::cout<<"Average Mag "<<AverageMagnitudeOfRecon<<std::endl;
+      std::cout<<"Average Update "<<AverageUpdate<<std::endl;
+      std::cout<<"Average Mag "<<AverageMagnitudeOfRecon<<std::endl;
     if(AverageMagnitudeOfRecon > 0)
     {
       printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);

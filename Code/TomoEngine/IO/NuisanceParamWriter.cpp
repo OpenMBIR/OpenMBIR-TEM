@@ -161,7 +161,7 @@ void NuisanceParamWriter::execute()
     }
   }
   fclose(file);
-#ifdef DEBUG
+#if DEBUG_GAINS_OFFSETS_VARIANCES
   std::cout << "************* " << printTitle << " ***************" << std::endl;
   for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
   {

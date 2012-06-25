@@ -172,11 +172,12 @@ void getColorCorrespondingTovalue(int16_t val,
 
 int main(int argc, char **argv)
 {
-	if(argc != 2)
+    if(argc != 2)
   {
+      std::cout << "This program needs the path to the mrc file. Output files will be placed in a folder next to that file." << std::endl;
     return 1;
   }
-	std::string filepath(argv[1]);
+    std::string filepath(argv[1]);
   std::cout << "Testing file \n  " << filepath << std::endl;
 
   MRCReader::Pointer reader = MRCReader::New(true);
@@ -192,9 +193,9 @@ int main(int argc, char **argv)
 
   int voxelMin[3] = {0,0,0};
   int voxelMax[3] = {header.nx-1, header.ny-1, 0};
-  int dims[3] = { (voxelMax[0] - voxelMin[0] + 1),
-                  (voxelMax[1] - voxelMin[1] + 1),
-                  (voxelMax[2] - voxelMin[2] + 1) };
+//  int dims[3] = { (voxelMax[0] - voxelMin[0] + 1),
+//                  (voxelMax[1] - voxelMin[1] + 1),
+//                  (voxelMax[2] - voxelMin[2] + 1) };
 
   // Generate a Color Table
   float max = static_cast<float>(header.amax);
@@ -263,25 +264,6 @@ int main(int argc, char **argv)
 
   }
 
-
-
-
-
-//  for(int z = voxelMin[2]; z <= voxelMax[2]; ++z)
-//  {
-//    for(int y = voxelMin[1]; y <= voxelMax[1]; ++y)
-//    {
-//      for(int x = voxelMin[0]; x <= voxelMax[0]; ++x)
-//      {
-//        size_t index = (dims[0] * dims[1] * z) + (dims[0] * y) + x;
-//        std::cout << data[index] << " ";
-//      }
-//      std::cout << std::endl;
-//
-//    }
-//  }
-
- // free(data);
 
   std::cout << "Done Reading File" << std::endl;
   return EXIT_SUCCESS;

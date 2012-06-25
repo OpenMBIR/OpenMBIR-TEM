@@ -79,15 +79,15 @@ void RawGeometryWriter::execute()
   ss << "  Geometry Y:" << geometry->N_y<<"  Z:"<<geometry->N_z<<"  X:"<<geometry->N_x;
   notify(ss.str(), 0, UpdateProgressMessage);
 
-	Real_t buffer = 0.0;
-  for (uint16_t i = 0; i < geometry->N_y; ++i)
+  Real_t buffer = 0.0;
+  for (uint16_t y = 0; y < geometry->N_y; ++y)
   {
-    for (uint16_t j = 0; j < geometry->N_x; ++j)
+    for (uint16_t x = 0; x < geometry->N_x; ++x)
     {
-      for (uint16_t k = 0; k < geometry->N_z; k++)
+      for (uint16_t z = 0; z < geometry->N_z; z++)
       {
       //  std::cout << k << std::endl;
-        buffer = geometry->Object->getValue(k, j, i);
+        buffer = geometry->Object->getValue(z, x, y);
         fwrite(&buffer, sizeof(Real_t), 1, Fp);
       }
     }

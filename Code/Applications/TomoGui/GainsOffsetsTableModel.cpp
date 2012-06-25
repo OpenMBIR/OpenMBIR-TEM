@@ -276,9 +276,9 @@ bool GainsOffsetsTableModel::insertRows(int row, int count, const QModelIndex& i
   QString axis("<0,0,1>");
   int angleIndx = 0;
   float angle = 0.0;
-  double gain = 0.0;
-  double offset = 0.0;
-  double variances = 0.0;
+//  double gain = 0.0;
+//  double offset = 0.0;
+//  double variances = 0.0;
   bool exclude = false;
 
   beginInsertRows(QModelIndex(), row, row + count - 1);

@@ -86,7 +86,7 @@ class GainsOffsetsItemDelegate : public QStyledItemDelegate
     //  QIntValidator* intValidator;
 //      QDoubleValidator* dblValidator;
 
-      qint32 col = index.column();
+//      qint32 col = index.column();
 //      switch(col)
 //      {
 //        case GainsOffsetsTableModel::TiltIndex:

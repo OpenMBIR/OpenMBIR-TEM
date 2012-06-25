@@ -71,7 +71,7 @@ TiffUtilities::~TiffUtilities()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int TiffUtilities::writeOutputImage(TiffImage* data, char* outpuFileName)
+int TiffUtilities::writeOutputImage(TiffImage* data, const char* outpuFileName)
 {
   int err = 1;
 
@@ -96,7 +96,7 @@ int TiffUtilities::writeOutputImage(TiffImage* data, char* outpuFileName)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int TiffUtilities::readInputImage(TiffImage* data, char* inputFileName)
+int TiffUtilities::readInputImage(TiffImage* data, const char* inputFileName)
 {
   int err = 0;
 
@@ -336,8 +336,8 @@ int TiffUtilities::writeGrayScaleImage(const char* filename, int rows, int colum
 //
 // -----------------------------------------------------------------------------
 int TiffUtilities::writeGrayScaleTiff(TiffImage* data,
-                                      char* imageDescription,
-                                      char* outputFileName)
+                                      const char* imageDescription,
+                                      const char* outputFileName)
 {
   return  writeGrayScaleImage(outputFileName,
                               data->height, data->width,

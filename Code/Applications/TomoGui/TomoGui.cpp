@@ -410,10 +410,7 @@ void TomoGui::setupGui()
   resize(mySize);
 #endif
 
-
-
   reconstructedVolumeFileName->setText("");
-
 
   QMenu* zoomMenu = new QMenu(this);
   ZOOM_MENU(10, zoomMenu, z10_triggered);
@@ -429,6 +426,9 @@ void TomoGui::setupGui()
   zoomButton->setMenu(zoomMenu);
 
   m_GraphicsView->setTomoGui(this);
+  connect(m_GraphicsView, SIGNAL(fireSingleSliceSelected()),
+          this, SLOT(singleSlicePlaneSet()));
+
   // Just place a really big white image to get our GUI to layout properly
   QImage image(1000, 1000, QImage::Format_ARGB32_Premultiplied);
   image.fill(0);
@@ -598,10 +598,10 @@ bool TomoGui::sanityCheckOutputDirectory(QLineEdit* le, QString msgTitle)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_singleSliceReconstruction_clicked()
+void TomoGui::on_m_SingleSliceReconstructionBtn_clicked()
 {
   // First make sure we are not already running a reconstruction
-  if(singleSliceReconstruction->text().compare("Cancel") == 0)
+  if(m_SingleSliceReconstructionBtn->text().compare("Cancel") == 0)
   {
     if(m_MultiResSOC != NULL)
     {
@@ -612,54 +612,55 @@ void TomoGui::on_singleSliceReconstruction_clicked()
   }
 
   // Create a Worker Thread that will run the Reconstruction
-    if(m_WorkerThread != NULL)
-    {
-      m_WorkerThread->wait(); // Wait until the thread is complete
-      delete m_WorkerThread; // Kill the thread
-      m_WorkerThread = NULL;
-    }
-    m_WorkerThread = new QThread(); // Create a new Thread Resource
+  if(m_WorkerThread != NULL)
+  {
+    m_WorkerThread->wait(); // Wait until the thread is complete
+    delete m_WorkerThread; // Kill the thread
+    m_WorkerThread = NULL;
+  }
+  m_WorkerThread = new QThread(); // Create a new Thread Resource
 
-    m_MultiResSOC = new QMultiResolutionSOC(NULL);
+  m_MultiResSOC = new QMultiResolutionSOC(NULL);
 
-    // Move the Reconstruction object into the thread that we just created.
-    m_MultiResSOC->moveToThread(m_WorkerThread);
-    initializeSOCEngine(false);
+  // Move the Reconstruction object into the thread that we just created.
+  m_MultiResSOC->moveToThread(m_WorkerThread);
+  initializeSOCEngine(false);
 
-    /* Connect the signal 'started()' from the QThread to the 'run' slot of the
-     * SOCEngine object. Since the SOCEngine object has been moved to another
-     * thread of execution and the actual QThread lives in *this* thread then the
-     * type of connection will be a Queued connection.
-     */
-    // When the thread starts its event loop, start the Reconstruction going
-    connect(m_WorkerThread, SIGNAL(started()), m_MultiResSOC, SLOT(run()));
+  /* Connect the signal 'started()' from the QThread to the 'run' slot of the
+   * SOCEngine object. Since the SOCEngine object has been moved to another
+   * thread of execution and the actual QThread lives in *this* thread then the
+   * type of connection will be a Queued connection.
+   */
+  // When the thread starts its event loop, start the Reconstruction going
+  connect(m_WorkerThread, SIGNAL(started()), m_MultiResSOC, SLOT(run()));
 
-    // When the Reconstruction ends then tell the QThread to stop its event loop
-    connect(m_MultiResSOC, SIGNAL(finished() ), m_WorkerThread, SLOT(quit()));
+  // When the Reconstruction ends then tell the QThread to stop its event loop
+  connect(m_MultiResSOC, SIGNAL(finished() ), m_WorkerThread, SLOT(quit()));
 
-    // When the QThread finishes, tell this object that it has finished.
-    connect(m_WorkerThread, SIGNAL(finished()), this, SLOT( singleSliceComplete() ));
+  // When the QThread finishes, tell this object that it has finished.
+  connect(m_WorkerThread, SIGNAL(finished()), this, SLOT( singleSliceComplete() ));
 
-    // If the use clicks on the "Cancel" button send a message to the Reconstruction object
-    // We need a Direct Connection so the
-    connect(this, SIGNAL(cancelPipeline() ), m_MultiResSOC, SLOT (on_CancelWorker() ), Qt::DirectConnection);
+  // If the use clicks on the "Cancel" button send a message to the Reconstruction object
+  // We need a Direct Connection so the
+  connect(this, SIGNAL(cancelPipeline() ), m_MultiResSOC, SLOT (on_CancelWorker() ), Qt::DirectConnection);
 
-    // Send Progress from the Reconstruction to this object for display
-    connect(m_MultiResSOC, SIGNAL (updateProgress(int)), this, SLOT(pipelineProgress(int) ));
+  // Send Progress from the Reconstruction to this object for display
+  connect(m_MultiResSOC, SIGNAL (updateProgress(int)), this, SLOT(pipelineProgress(int) ));
 
-    // Send progress messages from Reconstruction to this object for display
-    connect(m_MultiResSOC, SIGNAL (progressMessage(QString)), this, SLOT(addProgressMessage(QString) ));
+  // Send progress messages from Reconstruction to this object for display
+  connect(m_MultiResSOC, SIGNAL (progressMessage(QString)), this, SLOT(addProgressMessage(QString) ));
 
-    // Send progress messages from Reconstruction to this object for display
-    connect(m_MultiResSOC, SIGNAL (warningMessage(QString)), this, SLOT(addWarningMessage(QString) ));
+  // Send progress messages from Reconstruction to this object for display
+  connect(m_MultiResSOC, SIGNAL (warningMessage(QString)), this, SLOT(addWarningMessage(QString) ));
 
-    // Send progress messages from Reconstruction to this object for display
-    connect(m_MultiResSOC, SIGNAL (errorMessage(QString)), this, SLOT(addErrorMessage(QString) ));
+  // Send progress messages from Reconstruction to this object for display
+  connect(m_MultiResSOC, SIGNAL (errorMessage(QString)), this, SLOT(addErrorMessage(QString) ));
 
-    setWidgetListEnabled(false);
-    emit pipelineStarted();
-    m_WorkerThread->start();
-    singleSliceReconstruction->setText("Cancel");
+  setWidgetListEnabled(false);
+  emit
+  pipelineStarted();
+  m_WorkerThread->start();
+  m_SingleSliceReconstructionBtn->setText("Cancel");
 
 }
 
@@ -847,7 +848,7 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   {
     QLineF line = m_GraphicsView->getXZPlane();
     std::cout << "p1: " << line.p1().x() << ", " << line.p1().y()
-     << "p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
+     << "   p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
 
     unsigned short x = m_XDim->text().toUShort(&ok);
     // Only reconstruct the middle section of data along the x axis
@@ -858,6 +859,10 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
     // Try and center on the line best we can
     subvolume[1] = line.p1().y() - (ySlices/2);
     subvolume[4] = subvolume[1] + ySlices;
+
+    path = QDir::toNativeSeparators(tempDirPath->text());
+    QString tempFolder = QDir::tempPath() + QDir::separator() + QString("EIMTomo");
+    m_MultiResSOC->setTempDir(tempFolder.toStdString());
   }
   m_MultiResSOC->setSubvolume(subvolume);
 
@@ -879,14 +884,222 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+void TomoGui::singleSlicePlaneSet()
+{
+    m_SingleSliceReconstructionBtn->setEnabled(true);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void TomoGui::singleSliceComplete()
 {
   std::cout << "TomoGui::singleSliceComplete" << std::endl;
-  singleSliceReconstruction->setText("Single Slice Reconstruction");
+  m_SingleSliceReconstructionBtn->setText("Single Slice Reconstruction");
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
+  QString reconVolumeFile = QString::fromStdString(m_MultiResSOC->getTempDir()) + QDir::separator() +
+          finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(ScaleOffsetCorrection::ReconstructedMrcFile);
+
+  loadSingleSliceReconstruction(reconVolumeFile);
+
+
   emit pipelineEnded();
   m_MultiResSOC->deleteLater();
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::loadSingleSliceReconstruction(QString reconMRCFilePath)
+{
+  MRCHeader header;
+  MRCReader::Pointer reader = MRCReader::New(true);
+  int err = reader->readHeader(reconMRCFilePath.toStdString(), &header);
+  if(err < 0)
+  {
+    return;
+  }
+  // Read the first image from the file
+  int voxelMin[3] =
+  { 0, 0, 0 };
+  int voxelMax[3] =
+  { header.nx, header.ny, header.nz };
+  size_t nVoxels = (voxelMax[0] - voxelMin[0]) * (voxelMax[1] - voxelMin[1]) * (voxelMax[2] - voxelMin[2]);
+
+  err = reader->read(reconMRCFilePath.toStdString(), NULL, NULL);
+  m_CurrentCorner = 0; // Reset the corner
+
+  char dataType = 0;
+
+
+  if(err >= 0)
+  {
+    switch(header.mode)
+    {
+      case 1:
+        dataType = 1;
+        break;
+      case 2:
+        dataType = 2;
+        break;
+      default:
+        std::cout << "Only float and 16 bit signed integers from the MRC file are supported" << std::endl;
+        return;
+    }
+  }
+  QImage image;
+  if (dataType == 1) {
+    qint16* data = reinterpret_cast<qint16*>(reader->getDataPointer());
+    image = xzSigned16CrossSection(data,  nVoxels, voxelMin, voxelMax);
+  }
+  else if (dataType == 2)
+  {
+    float* data = reinterpret_cast<float*>(reader->getDataPointer());
+    image = xzFloatCrossSection(data, nVoxels, voxelMin, voxelMax);
+  }
+
+  m_GraphicsView_2->loadBaseImageFile(image);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QImage TomoGui::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, int* voxelMax)
+{
+  float dmax = std::numeric_limits<float>::min();
+  float dmin = std::numeric_limits<float>::max();
+  for (size_t i = 0; i < nVoxels; ++i)
+  {
+    if(data[i] > dmax) dmax = data[i];
+    if(data[i] < dmin) dmin = data[i];
+  }
+
+  std::cout << "Min float MRC Value:" << dmin << std::endl;
+  std::cout << "Max float MRC Value:" << dmax << std::endl;
+
+  //Scale all the values to 0 and 255 in place over writing the float values with 32 bit ints
+  int* iData = reinterpret_cast<int*>(data);
+  int imax = std::numeric_limits<int>::min();
+  int imin = std::numeric_limits<int>::max();
+
+  for (size_t i = 0; i < nVoxels; ++i)
+  {
+    iData[i] = (data[i]-dmin) / (dmax - dmin) * 255.0;
+    if(iData[i] > imax) imax = iData[i];
+    if(iData[i] < imin) imin = iData[i];
+  }
+
+  std::cout << "Min int MRC Value:" << imin << std::endl;
+  std::cout << "Max int MRC Value:" << imax << std::endl;
+
+  QVector<QRgb> colorTable;
+  // Generate a Color Table
+
+  int numColors = 256; // We are going to fix this at 256 colors
+
+  // generate the color table
+
+  colorTable.resize(numColors);
+  dmin = 0.0;
+  dmax = 255;
+  float range = 256;
+  float r, g, b;
+  for (int i = 0; i < numColors; i++)
+  {
+    int16_t val = static_cast<int16_t>(dmin + ((float)i / numColors) * range);
+    getColorCorrespondingTovalue(val, r, g, b, dmax, dmin);
+    colorTable[i] = qRgba(r * 255, g * 255, b * 255, 255);
+  }
+
+  // Create an RGB Image
+  QImage xzImage(voxelMax[0], voxelMax[2], QImage::Format_ARGB32);
+//  int xzIdx = 0;
+  imax = std::numeric_limits<int>::min();
+  imin = std::numeric_limits<int>::max();
+  int idx = 0;
+  for (int z = voxelMin[2]; z < voxelMax[2]; ++z)
+  {
+    QImage image(voxelMax[0], voxelMax[1], QImage::Format_ARGB32);
+
+    for (int y = voxelMin[1]; y < voxelMax[1]; ++y)
+    {
+      for (int x = voxelMin[0]; x < voxelMax[0]; ++x)
+      {
+       // idx = (voxelMax[0] * voxelMax[1] * z) + (x * voxelMax[1]) + y;
+        int iData_idx = iData[idx];
+        image.setPixel(x, y, qRgb(iData_idx, iData_idx, iData_idx)); // m_ColorTable[colorIndex]);
+        if(iData[idx] > imax) imax = iData[idx];
+        if(iData[idx] < imin) imin = iData[idx];
+        ++idx;
+        if(y == 0)
+        {
+          xzImage.setPixel(x, z, qRgb(iData[idx], iData[idx], iData[idx]));
+        }
+      }
+    }
+
+    QString fname("/tmp/single_slice_z_");
+    fname.append(QString::number(z)).append(".tif");
+    image.save(fname);
+  }
+  std::cout << "Min int QImage Value:" << imin << std::endl;
+  std::cout << "Max int QImage Value:" << imax << std::endl;
+  xzImage.save("/tmp/xz_image.tif");
+  return xzImage;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QImage TomoGui::xzSigned16CrossSection(qint16* data, size_t nVoxels, int* voxelMin, int* voxelMax)
+{
+  qint16 dmax = std::numeric_limits<qint16>::min();
+  qint16 dmin = std::numeric_limits<qint16>::max();
+  for (size_t i = 0; i < nVoxels; ++i)
+  {
+    if(data[i] > dmax) dmax = data[i];
+    if(data[i] < dmin) dmin = data[i];
+  }
+
+  std::cout << "Min MRC Value:" << dmin << std::endl;
+  std::cout << "Max MRC Value:" << dmax << std::endl;
+
+  QVector<QRgb> colorTable;
+  // Generate a Color Table
+  float max = static_cast<float>(dmax);
+  float min = static_cast<float>(dmin);
+  int numColors = static_cast<int>((max - min) + 1);
+
+  // generate the color table
+  if(colorTable.size() != numColors)
+  {
+    colorTable.resize(numColors);
+    float range = max - min;
+
+    float r, g, b;
+    for (int i = 0; i < numColors; i++)
+    {
+      int16_t val = static_cast<int16_t>(min + ((float)i / numColors) * range);
+      getColorCorrespondingTovalue(val, r, g, b, max, min);
+      colorTable[i] = qRgba(r * 255, g * 255, b * 255, 255);
+    }
+  }
+
+  // Create an RGB Image
+  QImage image(voxelMax[0], voxelMax[2], QImage::Format_ARGB32);
+
+  int idx = 0;
+  for (int z = voxelMin[2]; z < voxelMax[2]; ++z)
+  {
+    for (int x = voxelMin[0]; x < voxelMax[0]; ++x)
+    {
+      idx = (voxelMin[0] * z) + x;
+      int colorIndex = data[idx] - static_cast<int>(dmin);
+      image.setPixel(x, z, m_ColorTable[colorIndex]);
+    }
+  }
+  return image;
 }
 
 // -----------------------------------------------------------------------------
@@ -898,8 +1111,7 @@ void TomoGui::pipelineComplete()
   m_GoBtn->setText("Reconstruct");
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
-  emit
-  pipelineEnded();
+  emit pipelineEnded();
   m_MultiResSOC->deleteLater();
 
 #if 0
@@ -1044,7 +1256,10 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
     // Read the header info from the file and populate the GUI with those values
     readMRCHeader(filepath);
     // Now load up the first tilt from the file
-    loadMRCTiltImage(filepath, 0);
+    m_CurrentImage = loadMRCTiltImage(filepath, 0);
+    // Be sure to properly orient the image which will in turn load the image into
+    // the graphics scene
+    on_originCB_currentIndexChanged(originCB->currentIndex());
 
     m_GainsFile = ""; // We are reading a new .mrc file so we probably need a new Gains Offsets File
 
@@ -1470,70 +1685,64 @@ void TomoGui::readMRCHeader(QString filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::loadMRCTiltImage(QString filepath, int tiltIndex)
+QImage TomoGui::loadMRCTiltImage(QString filepath, int tiltIndex)
 {
-  MRCHeader header;
-  currentTiltIndex->setValue(tiltIndex);
-
-   MRCReader::Pointer reader = MRCReader::New(true);
-   // Read the header from the file
-   int err = reader->readHeader(filepath.toStdString(), &header);
-   if(err < 0)
-   {
-     return;
-   }
-
-   // If we have the FEI headers get that information
-   if(header.feiHeaders != NULL)
-   {
-     FEIHeader fei = header.feiHeaders[tiltIndex];
-     a_tilt->setText(QString::number(fei.a_tilt));
-     b_tilt->setText(QString::number(fei.b_tilt));
-     x_stage->setText(QString::number(fei.x_stage));
-     y_stage->setText(QString::number(fei.y_stage));
-     z_stage->setText(QString::number(fei.z_stage));
-     x_shift->setText(QString::number(fei.x_shift));
-     y_shift->setText(QString::number(fei.y_shift));
-     defocus->setText(QString::number(fei.defocus));
-     exp_time->setText(QString::number(fei.exp_time));
-     mean_int->setText(QString::number(fei.mean_int));
-     tiltaxis->setText(QString::number(fei.tiltaxis));
-     pixelsize->setText(QString::number(fei.pixelsize));
-     magnification->setText(QString::number(fei.magnification));
-     voltage->setText(QString::number(fei.voltage));
-   }
-  // Read the first image from the file
-  int voxelMin[3] =
-  { 0, 0, tiltIndex };
-  int voxelMax[3] =
-  { header.nx - 1, header.ny - 1, tiltIndex };
-
-  err = reader->read(filepath.toStdString(), voxelMin, voxelMax);
-  m_CurrentCorner = 0; // Reset the corner
-  if(err >= 0)
-  {
-    switch(header.mode)
+    MRCHeader header;
+    currentTiltIndex->setValue(tiltIndex);
+    QImage image;
+    MRCReader::Pointer reader = MRCReader::New(true);
+    // Read the header from the file
+    int err = reader->readHeader(filepath.toStdString(), &header);
+    if(err < 0)
     {
-      case 0:
-        break;
-      case 1:
-        m_CurrentImage = signed16Image(reinterpret_cast<qint16*>(reader->getDataPointer()), header);
-        break;
-      case 2:
-        break;
-      default:
-        break;
+        return image;
     }
-  }
 
-//  drawOrigin(m_CurrentImage);
+    // If we have the FEI headers get that information
+    if(header.feiHeaders != NULL)
+    {
+        FEIHeader fei = header.feiHeaders[tiltIndex];
+        a_tilt->setText(QString::number(fei.a_tilt));
+        b_tilt->setText(QString::number(fei.b_tilt));
+        x_stage->setText(QString::number(fei.x_stage));
+        y_stage->setText(QString::number(fei.y_stage));
+        z_stage->setText(QString::number(fei.z_stage));
+        x_shift->setText(QString::number(fei.x_shift));
+        y_shift->setText(QString::number(fei.y_shift));
+        defocus->setText(QString::number(fei.defocus));
+        exp_time->setText(QString::number(fei.exp_time));
+        mean_int->setText(QString::number(fei.mean_int));
+        tiltaxis->setText(QString::number(fei.tiltaxis));
+        pixelsize->setText(QString::number(fei.pixelsize));
+        magnification->setText(QString::number(fei.magnification));
+        voltage->setText(QString::number(fei.voltage));
+    }
+    // Read the first image from the file
+    int voxelMin[3] =
+    { 0, 0, tiltIndex };
+    int voxelMax[3] =
+    { header.nx - 1, header.ny - 1, tiltIndex };
 
+    err = reader->read(filepath.toStdString(), voxelMin, voxelMax);
+    m_CurrentCorner = 0; // Reset the corner
 
-  // Be sure to properly orient the image which will in turn load the image into
-  // the graphics scene
-  on_originCB_currentIndexChanged(originCB->currentIndex());
+    if(err >= 0)
+    {
+        switch(header.mode)
+        {
+        case 0:
+            break;
+        case 1:
+            image = signed16Image(reinterpret_cast<qint16*>(reader->getDataPointer()), header);
+            break;
+        case 2:
+            break;
+        default:
+            break;
+        }
+    }
 
-
+    return image;
 }
 
 // -----------------------------------------------------------------------------
@@ -1541,7 +1750,10 @@ void TomoGui::loadMRCTiltImage(QString filepath, int tiltIndex)
 // -----------------------------------------------------------------------------
 void TomoGui::on_currentTiltIndex_valueChanged(int i)
 {
-  loadMRCTiltImage(this->windowFilePath(), i);
+  m_CurrentImage = loadMRCTiltImage(this->windowFilePath(), i);
+  // Be sure to properly orient the image which will in turn load the image into
+  // the graphics scene
+  on_originCB_currentIndexChanged(originCB->currentIndex());
 }
 
 // -----------------------------------------------------------------------------

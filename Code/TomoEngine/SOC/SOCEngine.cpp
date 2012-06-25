@@ -169,8 +169,8 @@ namespace Detail {
  {
  }
 
+ // These files are just Factored out CPP code because this file was getting really long
 #include "SOCEngine_UpdateVoxels.cpp"
-
 #include "SOCEngine_Extra.cpp"
 
 // -----------------------------------------------------------------------------
@@ -382,7 +382,7 @@ void SOCEngine::execute()
     return;
   }
 
-#ifdef DEBUG
+#ifdef DEBUG_GAINS_OFFSETS_VARIANCES
 // Print out the Initial Gains, Offsets, Variances
   std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
   std::cout << "Tilt\tGain\tOffset";
@@ -422,19 +422,6 @@ void SOCEngine::execute()
   NuisanceParams->alpha = RealArrayType::New(dims, "NuisanceParams->alpha");
 #else
   NuisanceParams->alpha = RealArrayType::NullPointer();
-#endif
-
-  // initialize variables
-  uint16_t Idx = 0;
-
-#ifdef WRITE_INTERMEDIATE_RESULTS
-  Real_t Fraction = 0.1;//write this fraction of the iterations
-  int16_t NumOfWrites = floor((Real_t)(m_TomoInputs->NumIter)*Fraction);
-  int16_t WriteCount = 0;
-  char Filename[100];
-  char buffer[20];
-  void* TempPointer;
-  size_t NumOfBytesWritten;
 #endif
 
 #ifdef ROI
@@ -597,12 +584,7 @@ void SOCEngine::execute()
   //Calculating A-Matrix one column at a time
   //For each entry the idea is to initially allocate space for Sinogram.N_theta * Sinogram.N_x
   // And then store only the non zero entries by allocating a new array of the desired size
-  //k=0;
-
   checksum = 0;
-  //q = 0;
-
-
   temp = 0;
   uint32_t voxel_count = 0;
   for (uint16_t z = 0; z < m_Geometry->N_z; z++)
@@ -617,7 +599,6 @@ void SOCEngine::execute()
         //set it to zero
         for (uint16_t y = 0; y < m_Geometry->N_y; y++)
         {
-          //m_Geometry->Object->d[z][x][y] = 0;
           m_Geometry->Object->setValue(0.0, z, x, y);
         }
       }
@@ -694,7 +675,7 @@ void SOCEngine::execute()
     ss.str(""); // Clear the string stream
     indent = "";
 
-	//The first time we may need to update voxels multiple times and then on just optimize over I,d,\sigma,f once each outer loop
+    //The first time we may need to update voxels multiple times and then on just optimize over I,d,\sigma,f once each outer loop
     if(OuterIter != 0)
     {
       m_TomoInputs->NumIter = 1;
@@ -758,15 +739,15 @@ void SOCEngine::execute()
     err = calculateCost(cost, Weight, ErrorSino);
     if (err < 0)
     {
-	  std::cout<<"Cost went up after variance update"<<std::endl;
+      std::cout<<"Cost went up after variance update"<<std::endl;
       break;
     }
 #endif//cost
     if(0 == status && OuterIter >= 1)//&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
-	{
-	 std::cout<<"Exiting the code because status =0"<<std::endl;
+    {
+     std::cout<<"Exiting the code because status =0"<<std::endl;
       break;
-	}
+    }
 #else
     if(0 == status)//&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
       break;
@@ -775,7 +756,7 @@ void SOCEngine::execute()
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
 
   indent = "";
-#ifdef DEBUG
+#if DEBUG_COSTS
   cost->printCosts(std::cout);
 #endif
 
@@ -794,7 +775,7 @@ void SOCEngine::execute()
 /* Write the Gains and Offsets to an output file */
   writeNuisanceParameters(NuisanceParams);
 
-#ifdef DEBUG
+#if DEBUG_GAINS_OFFSETS_VARIANCES
   std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
   for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
   {
@@ -805,8 +786,6 @@ void SOCEngine::execute()
 #endif
 
 
- //calculates Ax and returns a pointer to the memory block
- // Final_Sinogram=forwardProject(detectorResponse, H_t);
   Real_t temp_final = 0.0;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
@@ -814,9 +793,7 @@ void SOCEngine::execute()
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-//        temp_final = m_Sinogram->counts->d[i_theta][i_r][i_t] - ErrorSino->d[i_theta][i_r][i_t];
         temp_final = m_Sinogram->counts->getValue(i_theta, i_r, i_t) - ErrorSino->getValue(i_theta, i_r, i_t);
-        //Final_Sinogram->d[i_theta][i_r][i_t] = temp;
         Final_Sinogram->setValue(temp_final, i_theta, i_r, i_t);
       }
     }

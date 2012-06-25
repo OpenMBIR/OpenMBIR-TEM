@@ -120,12 +120,12 @@ void FilterPipeline::run()
 // -----------------------------------------------------------------------------
 void FilterPipeline::execute()
 {
-  int err = 0;
+    //int err = 0;
 
-  std::stringstream ss;
+    std::stringstream ss;
 
 
-   ss.str("");
-   ss << "FilterPipeline Complete";
-   pipelineProgressMessage(ss.str());
+    ss.str("");
+    ss << "FilterPipeline Complete";
+    pipelineProgressMessage(ss.str());
 }

@@ -82,6 +82,10 @@
 //#define NHICD
 #define NUM_NON_HOMOGENOUS_ITER 20
 
+#define DEBUG_FILE_VALUES 0
+#define DEBUG_GAINS_OFFSETS_VARIANCES 0
+#define DEBUG_COSTS 0
+
 
 
 namespace ScaleOffsetCorrection

@@ -559,6 +559,8 @@ void TomoGuiGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 
     m_XZLine.setPolygon(polygon);
     m_XZLine.setVisible(true);
+
+    emit fireSingleSliceSelected();
   }
   else if (m_AddUserInitArea == true)
   {

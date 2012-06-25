@@ -78,7 +78,7 @@ class TiffUtilities
      * @param callbacks The Callbacks structure to provide information to the user.
      * @return Negative on Error
      */
-    int readInputImage(TiffImage* data, char* inputFileName);
+    int readInputImage(TiffImage* data, const char* inputFileName);
 
     /**
      * @brief Writes the output from the EM/MPM algorithm to a tiff file
@@ -86,7 +86,7 @@ class TiffUtilities
      * @param callbacks The Callbacks structure to provide information to the user.
      * @return Negative on Error
      */
-    int writeOutputImage(TiffImage* data, char* outpuFileName);
+    int writeOutputImage(TiffImage* data, const char* outpuFileName);
 
     /**
      * @brief Reads a tiff image value and converts it to a Grayscale image.
@@ -106,8 +106,8 @@ class TiffUtilities
      * @return Zero Value or Negative on Error. Anything else is considered a success;
      */
     int writeGrayScaleTiff(TiffImage* data,
-                           char* imageDescription,
-                           char* outputFileName);
+                           const char* imageDescription,
+                           const char* outputFileName);
 
 #if 0
     /**

@@ -35,6 +35,7 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 #include "SOCEngine.h"
+#include "TomoEngine/SOC/SOCConstants.h"
 
 // Read the Input data from the supplied data file
 // We are scoping here so the various readers are automatically cleaned up before
@@ -259,7 +260,7 @@ int SOCEngine::createInitialVariancesData()
     //  std::cout << "------------Initial Variance-----------" << std::endl;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-		m_Sinogram->InitialVariance->d[i_theta] = m_TomoInputs->defaultVariance;
+        m_Sinogram->InitialVariance->d[i_theta] = m_TomoInputs->defaultVariance;
        std::cout << "Tilt: " << i_theta << "  Variance: " << m_Sinogram->InitialVariance->d[i_theta] << std::endl;
     }
   }
@@ -532,8 +533,8 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   Real_t AverageDelta_kUpdate=0; //absolute sum of the offsets
   Real_t AverageMagDelta_k=0;//abs sum of the initial offset
 
-  Real_t sum = 0;
-  int err = 0;
+  //Real_t sum = 0;
+  //int err = 0;
   uint64_t startm, stopm;
 
   //DATA_TYPE high = std::numeric_limits<DATA_TYPE>::max();
@@ -647,7 +648,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   /********************************************************************************************/
 
 #endif //Cost calculate
-	  
+
 
   Real_t sum1 = 0;
   Real_t sum2 = 0;
@@ -725,7 +726,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   err = calculateCost(cost, Weight, ErrorSino);
   if (err < 0)
   {
-	std::cout<<"Cost went up after Gain+Offset update"<<std::endl;
+    std::cout<<"Cost went up after Gain+Offset update"<<std::endl;
     return err;
   }
 #endif
@@ -747,49 +748,49 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
   std::cout<<"Ratio of change in Delta_k "<<Delta_kRatio<<std::endl;
 
   return 0;
-	}
-	else
-	{
+    }
+    else
+    {
 
-		for (uint16_t i_theta=0; i_theta < m_Sinogram->N_theta; i_theta++)
-		{
-			Real_t num_sum=0;
-			Real_t den_sum=0;
-			Real_t alpha =0;
-			for(uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++) {
-				for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-				{
-					num_sum += (ErrorSino->getValue(i_theta, i_r, i_t) * Weight->getValue(i_theta, i_r, i_t) );
-					den_sum += Weight->getValue(i_theta, i_r, i_t);
-				}
-			}
-			alpha = num_sum/den_sum;
+        for (uint16_t i_theta=0; i_theta < m_Sinogram->N_theta; i_theta++)
+        {
+            Real_t num_sum=0;
+            Real_t den_sum=0;
+            Real_t alpha =0;
+            for(uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++) {
+                for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+                {
+                    num_sum += (ErrorSino->getValue(i_theta, i_r, i_t) * Weight->getValue(i_theta, i_r, i_t) );
+                    den_sum += Weight->getValue(i_theta, i_r, i_t);
+                }
+            }
+            alpha = num_sum/den_sum;
 
-			for(uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-				for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-				{
-					ErrorSino->deleteFromValue(alpha, i_theta, i_r, i_t);
-				}
+            for(uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+                for(uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+                {
+                    ErrorSino->deleteFromValue(alpha, i_theta, i_r, i_t);
+                }
 
-			NuisanceParams->mu->d[i_theta] += alpha;
-			std::cout<<NuisanceParams->mu->d[i_theta]<<std::endl;
-		}
+            NuisanceParams->mu->d[i_theta] += alpha;
+            std::cout<<NuisanceParams->mu->d[i_theta]<<std::endl;
+        }
 #ifdef COST_CALCULATE
-		/*********************Cost Calculation*************************************/
-		Real_t cost_value = computeCost(ErrorSino, Weight);
-		std::cout<<cost_value<<std::endl;
-		int increase = cost->addCostValue(cost_value);
-		if (increase ==1)
-		{
-			std::cout << "Cost just increased after offset update!" << std::endl;
-			//break;
-			return -1;
-		}
-		cost->writeCostValue(cost_value);
-		/**************************************************************************/
+        /*********************Cost Calculation*************************************/
+        Real_t cost_value = computeCost(ErrorSino, Weight);
+        std::cout<<cost_value<<std::endl;
+        int increase = cost->addCostValue(cost_value);
+        if (increase ==1)
+        {
+            std::cout << "Cost just increased after offset update!" << std::endl;
+            //break;
+            return -1;
+        }
+        cost->writeCostValue(cost_value);
+        /**************************************************************************/
 #endif
-		return 0;
-	} //BFflag = true
+        return 0;
+    } //BFflag = true
 
 }
 // -----------------------------------------------------------------------------
@@ -808,7 +809,7 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
   {
 #ifdef NOISE_MODEL
     {
-		NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
+        NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
     }
 #endif //Noise model
     checksum = 0;
@@ -954,9 +955,10 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-		  size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
-		  size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
+
+          size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MATRIX
+          size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
         if(NuisanceParams->alpha->d[i_theta] != 0 && m_Sinogram->counts->d[counts_idx] != 0)
         {
           Weight->d[weight_idx] = 1.0 / (m_Sinogram->counts->d[counts_idx] * NuisanceParams->alpha->d[i_theta]);
@@ -966,7 +968,7 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
           Weight->d[weight_idx] = 1.0;
         }
 #else
-		Weight->d[weight_idx] = 1.0/NuisanceParams->alpha->d[i_theta];
+        Weight->d[weight_idx] = 1.0/NuisanceParams->alpha->d[i_theta];
 #endif //IDENTITY_NOISE_MODEL endif
 
       }
@@ -1123,7 +1125,14 @@ void SOCEngine::writeMRCFile()
    MRCWriter::Pointer mrcWriter = MRCWriter::New();
    mrcWriter->setOutputFile(mrcFile);
    mrcWriter->setGeometry(m_Geometry);
-   mrcWriter->write();
+   mrcWriter->setObservers(getObservers());
+   mrcWriter->execute();
+   if (mrcWriter->getErrorCondition() < 0)
+   {
+     setErrorCondition(mrcWriter->getErrorCondition());
+     notify("Error Writing the MRC File", 100, Observable::UpdateProgressValueAndMessage);
+   }
+
 }
 
 

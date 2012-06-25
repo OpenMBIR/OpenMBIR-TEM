@@ -47,13 +47,13 @@ class TomoEngine_EXPORT RawGeometryWriter : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(RawGeometryWriter)
-    MXA_STATIC_NEW_MACRO(RawGeometryWriter);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, RawGeometryWriter);
+    MXA_STATIC_NEW_MACRO(RawGeometryWriter)
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, RawGeometryWriter)
     MXA_TYPE_MACRO_SUPER(RawGeometryWriter, TomoFilter)
 
     virtual ~RawGeometryWriter();
 
-    MXA_INSTANCE_STRING_PROPERTY(FilePath);
+    MXA_INSTANCE_STRING_PROPERTY(FilePath)
 
     void execute();
 

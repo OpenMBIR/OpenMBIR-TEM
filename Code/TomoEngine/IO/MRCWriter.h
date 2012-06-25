@@ -40,6 +40,7 @@
 
 #include "TomoEngine/TomoEngine.h"
 #include "TomoEngine/SOC/SOCStructures.h"
+#include "TomoEngine/Filters/TomoFilter.h"
 
 /**
  * @class MRCReader MRCReader.h EIMTomo/IO/MRCWriter.h
@@ -48,10 +49,10 @@
  * @date Feb 22, 2012
  * @version 1.0
  */
-class TomoEngine_EXPORT MRCWriter
+class TomoEngine_EXPORT MRCWriter : public TomoFilter
 {
   public:
-    MXA_SHARED_POINTERS(MRCWriter);
+    MXA_SHARED_POINTERS(MRCWriter)
     static Pointer New()
     {
       Pointer sharedPtr (new MRCWriter);
@@ -62,9 +63,11 @@ class TomoEngine_EXPORT MRCWriter
 
     virtual ~MRCWriter();
 
-    MXA_INSTANCE_PROPERTY(bool, DeleteMemory);
-    MXA_INSTANCE_STRING_PROPERTY(OutputFile);
-    MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry);
+    MXA_INSTANCE_PROPERTY(bool, DeleteMemory)
+    MXA_INSTANCE_STRING_PROPERTY(OutputFile)
+    MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
+
+    void execute();
 
     /**
      * @brief This method ONLY reads the header section of the file
