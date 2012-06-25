@@ -50,6 +50,7 @@
 //
 // -----------------------------------------------------------------------------
 MultiResolutionSOC::MultiResolutionSOC() :
+m_Debug(false),
 m_InputFile(""),
 m_TempDir(""),
 m_OutputFile(""),
@@ -92,8 +93,8 @@ MultiResolutionSOC::~MultiResolutionSOC()
 // -----------------------------------------------------------------------------
 void MultiResolutionSOC::printInputs(TomoInputsPtr inputs, std::ostream &out)
 {
-#if 0
-	std::out << "------------------ TomoInputs Begin ------------------" << std::endl;
+#if 1
+	out << "------------------ TomoInputs Begin ------------------" << std::endl;
   PRINT_VAR(out, inputs, NumIter);
   PRINT_VAR(out, inputs, NumOuterIter);
   PRINT_VAR(out, inputs, SigmaX);
@@ -134,7 +135,7 @@ void MultiResolutionSOC::printInputs(TomoInputsPtr inputs, std::ostream &out)
   PRINT_VAR(out, inputs, offsetsOutputFile);
   PRINT_VAR(out, inputs, varianceOutputFile);
 
-	std::out << "------------------ TomoInputs End ------------------" << std::endl;
+	out << "------------------ TomoInputs End ------------------" << std::endl;
 #endif
 }
 
@@ -143,9 +144,8 @@ void MultiResolutionSOC::printInputs(TomoInputsPtr inputs, std::ostream &out)
 // -----------------------------------------------------------------------------
 void MultiResolutionSOC::execute()
 {
-  std::cout << "MultiResolutionSOC::execute" << std::endl;
   int err = 0;
-  std::cout << "-- There are " << m_NumberResolutions << " resolutions to reconstruct." << std::endl;
+  //std::cout << "-- There are " << m_NumberResolutions << " resolutions to reconstruct." << std::endl;
 
   std::stringstream ss;
 
@@ -166,7 +166,7 @@ void MultiResolutionSOC::execute()
     /* ******* this is bad. Remove this for production work ****** */
     inputs->extendObject = getExtendObject();
 
-	  std::cout<<"Extend Object Flag"<<inputs->extendObject<<std::endl;
+//	  std::cout<<"Extend Object Flag: "<<inputs->extendObject<<std::endl;
 
     /* Get our input files from the last resolution iteration */
     inputs->gainsInputFile = prevInputs->gainsOutputFile;
@@ -246,7 +246,7 @@ void MultiResolutionSOC::execute()
     }
     /** SIGMA_X needs to be calculated here based on some formula**/
     inputs->SigmaX =pow(2,(getNumberResolutions()-1-i)*(1-3/inputs->p)) * getSigmaX();
-	  std::cout<<"SigmaX="<<inputs->SigmaX;
+//	  std::cout<<"SigmaX="<<inputs->SigmaX << std::endl;
 	  if (i == 0)
 	  {
 	    inputs->defaultInitialRecon = getInitialReconstructionValue();
@@ -280,13 +280,13 @@ void MultiResolutionSOC::execute()
       bf_inputs->yEnd = m_Subvolume[4];
       bf_inputs->zStart = m_Subvolume[2];
       bf_inputs->zEnd = m_Subvolume[5];
-		
+
     }
 	bf_inputs->interpolateFactor = inputs->interpolateFactor;
     inputs->excludedViews = m_ViewMasks;
     bf_inputs->excludedViews = m_ViewMasks;
 
-    
+
 
     SinogramPtr sinogram = SinogramPtr(new Sinogram);
     SinogramPtr bf_sinogram = SinogramPtr(new Sinogram);
@@ -310,11 +310,13 @@ void MultiResolutionSOC::execute()
     engine->addObserver(this);
     engine->setMessagePrefix( StringUtils::numToString(inputs->interpolateFactor/(powf(2.0f,i))) + std::string("x: ") );
 
-    std::cout << "Sinogram Inputs -----------------------------------------" << std::endl;
-    printInputs(inputs, std::cout);
-    std::cout << "Bright Field Inputs -----------------------------------------" << std::endl;
-    printInputs(bf_inputs, std::cout);
-
+    if (getDebug())
+    {
+      std::cout << "Sinogram Inputs -----------------------------------------" << std::endl;
+      printInputs(inputs, std::cout);
+      std::cout << "Bright Field Inputs -----------------------------------------" << std::endl;
+      printInputs(bf_inputs, std::cout);
+    }
     engine->execute();
     engine = SOCEngine::NullPointer();
 

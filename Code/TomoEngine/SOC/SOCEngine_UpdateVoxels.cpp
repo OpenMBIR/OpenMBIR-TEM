@@ -497,16 +497,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
   std::string indent("    ");
   uint8_t err = 0;
   uint32_t zero_count = 0;
-//  Real_t UpdatedVoxelValue;
-//  Real_t accuracy=1e-8;
-//  uint16_t binarysearch_count
-//  Real_t accuracy = 1e-9; //This is the rooting accuracy for x
-//  uint32_t binarysearch_count = 10; //Accuracy is 1/(2^10)
-//  int32_t errorcode = -1;
-//  int16_t Idx;
-
-//  //FIXME: Where are these Initialized? Or what values should they be initialized to?
-//  Real_t low = 0.0, high = 0.0;
   std::stringstream ss;
 
   if(updateType == RegularRandomOrderUpdate)
@@ -662,22 +652,27 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     cost->writeCostValue(cost_value);
     /**************************************************************************/
 #else
-    printf("Iter: %d\n",Iter);
+    if(getDebug()) printf("Iter: %d\n",Iter);
 #endif //Cost calculation endif
 
 #ifdef ROI
-      std::cout<<"Average Update "<<AverageUpdate<<std::endl;
-      std::cout<<"Average Mag "<<AverageMagnitudeOfRecon<<std::endl;
+    if(getDebug()) {
+      std::cout << "Average Update " << AverageUpdate << std::endl;
+      std::cout << "Average Mag " << AverageMagnitudeOfRecon << std::endl;
+    }
     if(AverageMagnitudeOfRecon > 0)
     {
-      printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);
-
+      if (getDebug()) {std::cout << Iter + 1 << ", " <<  AverageUpdate / AverageMagnitudeOfRecon<< std::endl;}
       //Use the stopping criteria if we are performing a full update of all voxels
       if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != NonHomogeniousUpdate)
       {
-        printf("This is the terminating point %d\n", Iter);
+        ss.str("");
+        ss << "This is the terminating point " <<  Iter;
+        notify(ss.str(), 0, Observable::UpdateProgressMessage);
         m_TomoInputs->StopThreshold *= THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
-        std::cout << "New threshold" << m_TomoInputs->StopThreshold << std::endl;
+        if(getDebug()) {
+          std::cout << "New threshold" << m_TomoInputs->StopThreshold << std::endl;
+        }
         exit_status = 0;
         break;
       }

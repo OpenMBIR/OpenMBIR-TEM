@@ -385,7 +385,6 @@ void SOCEngine::execute()
 
   if(getDebug())
   {
-#ifdef DEBUG_GAINS_OFFSETS_VARIANCES
 // Print out the Initial Gains, Offsets, Variances
     std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
     std::cout << "Tilt\tGain\tOffset";
@@ -405,7 +404,6 @@ void SOCEngine::execute()
       }
       std::cout << std::endl;
     }
-#endif
   }
 
   // Initialize the Geometry data from a rough reconstruction
@@ -554,8 +552,6 @@ void SOCEngine::execute()
 #endif
   //m_Sinogram->targetGain=20000;
 
-
-
   //Gain and Offset Parameters Initialization
   gainAndOffsetInitialization(NuisanceParams);
 
@@ -566,10 +562,7 @@ void SOCEngine::execute()
   H_t = RealVolumeType::New(dims, "H_t");
   initializeHt(H_t);
 
-
   checksum=0;
-
-
 
   //TODO: All this needs to be deallocated at some point
 //  DATA_TYPE y;
@@ -687,17 +680,12 @@ void SOCEngine::execute()
       m_TomoInputs->NumIter = 1;
     }
 
-
-
     for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
     {
-      std::cout << OuterIter << "/" << m_TomoInputs->NumOuterIter << " " << Iter << "/" << m_TomoInputs->NumIter << std::endl;
-      indent = "  ";
-//      ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
-//      ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
-//      float currentLoop = OuterIter * m_TomoInputs->NumIter + Iter;
-//      notify(ss.str(), currentLoop / totalLoops * 100);
-      indent = "    ";
+      ss.str("");
+      ss << "Outer Iteration: " << OuterIter << "/" << m_TomoInputs->NumOuterIter;
+      ss << "   Inner Iteration: " << Iter << "/" << m_TomoInputs->NumIter;
+      std::cout << ss.str() << std::endl;
       // This is all done PRIOR to calling what will become a method
       VoxelUpdateType updateType = RegularRandomOrderUpdate;
 #ifdef NHICD
