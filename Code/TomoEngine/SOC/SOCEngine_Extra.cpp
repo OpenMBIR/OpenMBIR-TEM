@@ -773,7 +773,9 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
                 }
 
             NuisanceParams->mu->d[i_theta] += alpha;
+#idef DEBUG
             std::cout<<NuisanceParams->mu->d[i_theta]<<std::endl;
+#endif //Debug info 
         }
 #ifdef COST_CALCULATE
         /*********************Cost Calculation*************************************/
