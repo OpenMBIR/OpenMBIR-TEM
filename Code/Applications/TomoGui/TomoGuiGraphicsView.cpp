@@ -542,16 +542,17 @@ void TomoGuiGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 
   if (event->modifiers() == Qt::ShiftModifier)
   {
-    std::cout << "Shift Key held down during mouse click" << std::endl;
+    //std::cout << "Shift Key held down during mouse click" << std::endl;
 
     QRectF sr = sceneRect();
+    QPointF mappedPoint = mapToScene(QPoint(0, m_MouseClickOrigin.y()));
+    QPointF p0(0, mappedPoint.y());
+    QPointF p1(sr.width(), mappedPoint.y());
 
 
-    QPointF p0 = mapToScene(QPoint(0, m_MouseClickOrigin.y()));
-    QPointF p1 = mapToScene(QPoint(sr.width(), m_MouseClickOrigin.y()) );
+ //   std::cout << "SceneRect: " << sr.x() << ", " << sr.y() << "  " << sr.width() << ", " << sr.height() << std::endl;
+ //   std::cout << "mapToScene: " << p0.x() << ", " << p0.y() << "  " << p1.x() << ", " << p1.y() << std::endl;
 
-
-  //  std::cout << "SceneRect: " << sr.x() << ", " << sr.y() << "  " << sr.width() << ", " << sr.height() << std::endl;
     QVector<QPointF> line;
     line.push_back(p0);
     line.push_back(p1);

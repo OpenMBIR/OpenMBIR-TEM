@@ -847,8 +847,14 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   else
   {
     QLineF line = m_GraphicsView->getXZPlane();
-    std::cout << "p1: " << line.p1().x() << ", " << line.p1().y()
-     << "   p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
+//    int xPt = line.p1().x();
+//    if (xPt < 0)
+//    {
+//      line.p1().setX(0);
+//      line.p2().setX(line.p2().x() - -xPt);
+//    }
+//    std::cout << "p1: " << line.p1().x() << ", " << line.p1().y()
+//     << "   p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
 
     unsigned short x = m_XDim->text().toUShort(&ok);
     // Only reconstruct the middle section of data along the x axis
@@ -894,7 +900,7 @@ void TomoGui::singleSlicePlaneSet()
 // -----------------------------------------------------------------------------
 void TomoGui::singleSliceComplete()
 {
-  std::cout << "TomoGui::singleSliceComplete" << std::endl;
+//  std::cout << "TomoGui::singleSliceComplete" << std::endl;
   m_SingleSliceReconstructionBtn->setText("Single Slice Reconstruction");
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
@@ -958,6 +964,7 @@ void TomoGui::loadSingleSliceReconstruction(QString reconMRCFilePath)
     float* data = reinterpret_cast<float*>(reader->getDataPointer());
     image = xzFloatCrossSection(data, nVoxels, voxelMin, voxelMax);
   }
+  image = image.mirrored(true, true);
 
   m_GraphicsView_2->loadBaseImageFile(image);
 }
