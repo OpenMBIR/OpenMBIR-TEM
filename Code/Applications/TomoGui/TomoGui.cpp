@@ -964,7 +964,7 @@ void TomoGui::loadSingleSliceReconstruction(QString reconMRCFilePath)
     float* data = reinterpret_cast<float*>(reader->getDataPointer());
     image = xzFloatCrossSection(data, nVoxels, voxelMin, voxelMax);
   }
-  image = image.mirrored(true, true);
+  image = image.mirrored(false, true);
 
   m_GraphicsView_2->loadBaseImageFile(image);
 }
