@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <iomanip>
+#include <limits>
 
 #include "MXA/MXA.h"
 #include "MXA/Common/MXAEndian.h"
