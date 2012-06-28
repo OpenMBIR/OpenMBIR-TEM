@@ -54,7 +54,9 @@ class UpdateYSlice
                  RealVolumeType::Pointer weight,
                  AMatrixCol* voxelLineResponse,
                  ScaleOffsetParams* nuisanceParams,
+#if ROI
                  UInt8Image_t::Pointer mask,
+#endif
                  RealImage_t::Pointer magUpdateMap,//Hold the magnitude of the reconstuction along each voxel line
                  UInt8Image_t::Pointer magUpdateMask,
                  QGGMRF::QGGMRF_Values* qggmrfValues,
@@ -74,16 +76,21 @@ class UpdateYSlice
       m_Weight(weight),
       m_VoxelLineResponse(voxelLineResponse),
       m_NuisanceParams(nuisanceParams),
+#if ROI
       m_Mask(mask),
+#endif
       m_MagUpdateMap(magUpdateMap),
       m_MagUpdateMask(magUpdateMask),
       m_QggmrfValues(qggmrfValues),
       m_UpdateType(updateType),
       m_NH_Threshold(nh_Threshold),
       m_ZeroCount(0),
-      m_CurrentVoxelValue(0.0),
+      m_CurrentVoxelValue(0.0)
+#if ROI
+    ,
       m_AverageUpdate(averageUpdate),
       m_AverageMagnitudeOfRecon(averageMagnitudeOfRecon)
+#endif
     {
       initVariables();
     }
@@ -345,7 +352,7 @@ class UpdateYSlice
                 Real_t intermediate = m_MagUpdateMap->getValue(j_new, k_new) + fabs(UpdatedVoxelValue - m_CurrentVoxelValue);
                 m_MagUpdateMap->setValue(intermediate, j_new, k_new);
 
-#ifdef ROI
+#if ROI
                 //if(Mask->d[j_new][k_new] == 1)
                 if(m_Mask->getValue(j_new, k_new) == 1)
                 {
@@ -434,7 +441,7 @@ class UpdateYSlice
 
     int m_ZeroCount;
     Real_t m_CurrentVoxelValue;
-#ifdef ROI
+#if ROI
     //variables used to stop the process
     Real_t* m_AverageUpdate;
     Real_t* m_AverageMagnitudeOfRecon;
@@ -489,7 +496,9 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                              RealVolumeType::Pointer Weight,
                              AMatrixCol* VoxelLineResponse,
                              ScaleOffsetParams* NuisanceParams,
+#if ROI
                              UInt8Image_t::Pointer Mask,
+#endif
                              CostData::Pointer cost)
 {
   uint8_t exit_status = 1; //Indicates normal exit ; else indicates to stop inner iterations
@@ -553,7 +562,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     }
 
     //printf("Iter %d\n",Iter);
-#ifdef ROI
+#if ROI
     //variables used to stop the process
     Real_t AverageUpdate = 0;
     Real_t AverageMagnitudeOfRecon = 0;
@@ -593,8 +602,12 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                                                          OuterIter, Iter, m_Sinogram,
                                                          m_BFSinogram, TempCol,
                                                          ErrorSino, Weight, VoxelLineResponse,
-                                                         NuisanceParams, Mask,
-                                                         MagUpdateMap, MagUpdateMask,
+                                                         NuisanceParams,
+#if ROI
+                                                         Mask,
+#endif
+                                                         MagUpdateMap,
+                                                         MagUpdateMask,
                                                          &m_QGGMRF_Values,
                                                          updateType,
                                                          NH_Threshold,
@@ -604,12 +617,14 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     }
 
     tbb::task::spawn_root_and_wait(taskList);
+#if ROI
     // Now sum up some values
     for (int t = 0; t < m_NumThreads; ++t)
     {
       AverageUpdate += averageUpdate[t];
       AverageMagnitudeOfRecon += averageMagnitudeOfRecon[t];
     }
+#endif
     free(averageUpdate);
     free(averageMagnitudeOfRecon);
 
@@ -655,7 +670,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     if(getDebug()) printf("Iter: %d\n",Iter);
 #endif //Cost calculation endif
 
-#ifdef ROI
+#if ROI
     if(getDebug()) {
       std::cout << "Average Update " << AverageUpdate << std::endl;
       std::cout << "Average Mag " << AverageMagnitudeOfRecon << std::endl;
@@ -669,7 +684,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         ss.str("");
         ss << "This is the terminating point " <<  Iter;
         notify(ss.str(), 0, Observable::UpdateProgressMessage);
-        m_TomoInputs->StopThreshold *= THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
+        m_TomoInputs->StopThreshold *= ScaleOffsetCorrection::ThresholdReductionFactor; //Reducing the thresold for subsequent iterations
         if(getDebug()) {
           std::cout << "New threshold" << m_TomoInputs->StopThreshold << std::endl;
         }

@@ -1,13 +1,11 @@
-* Write the reconstruction as a .mrc file and display the XZ slice in the ROI
+
 * Do we allow the user to set the SigmaX or do we always calculate it internally.
-* Determine how to handle all the intermediate files.
+
 * Streamline progress feedback to the GUI
 * Add more "Cancel" checks in the code
-* Update command line SOC to use MultiResolutionSOC instead
 * Turn doubles to floats to save memory. 
 * Add an option to switch off #define for Joint_Estimation and #Noise estimation.
 
-* Single Slice reconstruction mode needs to be fixed
 * Need to enable a quick load option to continue the reconstruction for a few 
 more iterations. This will need reading the final rec, offset, gain and var.
 
