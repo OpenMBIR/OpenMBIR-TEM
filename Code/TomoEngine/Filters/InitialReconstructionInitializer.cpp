@@ -111,16 +111,16 @@ void InitialReconstructionInitializer::execute()
   input->delta_xy = input->delta_xz;
   //Find the maximum absolute tilt angle
   max = absMaxArray(sinogram->angles);
-  input->LengthZ *= Z_STRETCH;
+  input->LengthZ *= SOC::Z_STRETCH;
   input->LengthZ /= (input->interpolateFactor * sinogram->delta_r);
   //interpolation_factor;
-  input->LengthZ = floor(input->LengthZ) * input->interpolateFactor * sinogram->delta_r; //interpolation_factor;
+  input->LengthZ = round(input->LengthZ) * input->interpolateFactor * sinogram->delta_r; //interpolation_factor;
   if(1 == input->extendObject)
   {
     std::cout << "KNOWN BUG FIX NEEDED HERE IF MAX = 90 degrees" << std::endl;
-    geometry->LengthX = X_SHRINK_FACTOR * ((sinogram->N_r * sinogram->delta_r) / cos(max * M_PI / 180)) + input->LengthZ * tan(max * M_PI / 180);
+    geometry->LengthX = SOC::X_SHRINK_FACTOR * ((sinogram->N_r * sinogram->delta_r) / cos(max * M_PI / 180)) + input->LengthZ * tan(max * M_PI / 180);
     geometry->LengthX /= (input->interpolateFactor * sinogram->delta_r);
-    geometry->LengthX = floor(geometry->LengthX) * input->interpolateFactor * sinogram->delta_r;
+    geometry->LengthX = round(geometry->LengthX) * input->interpolateFactor * sinogram->delta_r;
   }
   else
   {
@@ -137,16 +137,14 @@ void InitialReconstructionInitializer::execute()
   geometry->N_z = floor(input->LengthZ / input->delta_xz); //Number of voxels in z direction
   geometry->N_y = floor(geometry->LengthY / input->delta_xy); //Number of measurements in y direction
 
-  if(getDebug())
-  {
-    printf("Geometry->LengthX=%lf nm \n", geometry->LengthX);
-    printf("Geometry->LengthY=%lf nm \n", geometry->LengthY);
-    printf("Geometry->LengthZ=%lf nm \n", input->LengthZ);
+  printf("Geometry->LengthX=%lf nm \n", geometry->LengthX);
+  printf("Geometry->LengthY=%lf nm \n", geometry->LengthY);
+  printf("Geometry->LengthZ=%lf nm \n", input->LengthZ);
 
-    printf("Geometry->Nz=%d\n", geometry->N_z);
-    printf("Geometry->Nx=%d\n", geometry->N_x);
-    printf("Geometry->Ny=%d\n", geometry->N_y);
-  }
+  printf("Geometry->Nz=%d\n", geometry->N_z);
+  printf("Geometry->Nx=%d\n", geometry->N_x);
+  printf("Geometry->Ny=%d\n", geometry->N_y);
+
   size_t dims[3] =
   { geometry->N_z, geometry->N_x, geometry->N_y };
   geometry->Object = RealVolumeType::New(dims, "Geometry.Object");
@@ -158,12 +156,10 @@ void InitialReconstructionInitializer::execute()
   // Geometry->y0 = -(sinogram->N_t * sinogram->delta_t)/2 + Geometry->StartSlice*Geometry->delta_xy;
   geometry->y0 = -(geometry->LengthY) / 2;
 
-  if(getDebug())
-  {
-    printf("Geometry->X0=%lf\n", geometry->x0);
-    printf("Geometry->Y0=%lf\n", geometry->y0);
-    printf("Geometry->Z0=%lf\n", geometry->z0);
-  }
+  printf("Geometry->X0=%lf\n", geometry->x0);
+  printf("Geometry->Y0=%lf\n", geometry->y0);
+  printf("Geometry->Z0=%lf\n", geometry->z0);
+
   // Now we actually initialize the data to something. If a subclass is involved
   // then the subclasses version of initializeData() will be used instead
   initializeData();
@@ -180,8 +176,7 @@ void InitialReconstructionInitializer::execute()
         sum += geometry->Object->getValue(z, x, y);
       }
     }
-
-    if(getDebug()) std::cout << "Geometry check sum Y:" << y << " Value:" << sum << std::endl;
+    std::cout << "Geometry check sum Y:" << y << " Value:" << sum << std::endl;
   }
   //End of check sum
 

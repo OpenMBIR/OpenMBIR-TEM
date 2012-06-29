@@ -49,11 +49,12 @@
 
 //#define FORWARD_PROJECT_MODE
 
-#define X_SHRINK_FACTOR 0.6
-
-#define X_STRETCH 1
-#define Z_STRETCH 2
-
+namespace SOC
+{
+  const double X_SHRINK_FACTOR = 0.6;
+  const unsigned int X_STRETCH = 1;
+  const unsigned int Z_STRETCH = 2;
+}
 
 
 //#define DEBUG ,
@@ -65,7 +66,7 @@
 //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
 #define ROI 1
 
-//#define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
+#define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
 
 #define SURROGATE_FUNCTION
 #define EIMTOMO_USE_QGGMRF 1
@@ -82,13 +83,14 @@
 //#define NHICD
 #define NUM_NON_HOMOGENOUS_ITER 20
 
+#define DEBUG_FILE_VALUES 0
+#define DEBUG_GAINS_OFFSETS_VARIANCES 0
+#define DEBUG_COSTS 0
 
 
 
 namespace ScaleOffsetCorrection
 {
-  //Dynamically lower the threshold by this amount. Set to 1 for no reduction
-  static const unsigned int ThresholdReductionFactor = 1;
 
 //  const std::string OutputDirectory("ScaleOffsetCorrection_Output");
   const std::string DetectorResponseFile("DetectorResponse.bin");

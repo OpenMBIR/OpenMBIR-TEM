@@ -123,9 +123,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
                          RealVolumeType::Pointer Weight,
                          AMatrixCol* VoxelLineResponse,
                          ScaleOffsetParams* NuisanceParams,
-#if ROI
                          UInt8Image_t::Pointer Mask,
-#endif
                          CostData::Pointer cost);
 
 
