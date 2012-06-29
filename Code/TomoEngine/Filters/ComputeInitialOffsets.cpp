@@ -168,14 +168,10 @@ void ComputeInitialOffsets::execute()
 //    std::cout << "Tilt: " << i_theta << "  Gain: " << sinogram->InitialGain->d[i_theta] << std::endl;
 //  }
 //  std::cout << "------------Initial Offsets-----------" << std::endl;
-
-    for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
   {
     sinogram->InitialOffset->d[i_theta] = LS_Estimates[1];
-    if(getDebug())
-    {
-      std::cout << "Tilt: " << i_theta << "  Offset: " << sinogram->InitialOffset->d[i_theta] << std::endl;
-    }
+    std::cout << "Tilt: " << i_theta << "  Offset: " << sinogram->InitialOffset->d[i_theta] << std::endl;
   }
 //  std::cout << "------------Initial Variance-----------" << std::endl;
 //  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)

@@ -160,7 +160,6 @@ namespace Detail {
 #else
     m_NumThreads = 1;
 #endif
-  //  setDebug(true);
  }
 
  // -----------------------------------------------------------------------------
@@ -383,28 +382,27 @@ void SOCEngine::execute()
     return;
   }
 
-  if(getDebug())
-  {
+#ifdef DEBUG_GAINS_OFFSETS_VARIANCES
 // Print out the Initial Gains, Offsets, Variances
-    std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
-    std::cout << "Tilt\tGain\tOffset";
+  std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
+  std::cout << "Tilt\tGain\tOffset";
 
+  if(NULL != m_Sinogram->InitialVariance.get())
+  {
+    std::cout << "\tVariance";
+  }
+  std::cout << std::endl;
+
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  {
+    std::cout << i_theta << "\t" << m_Sinogram->InitialGain->d[i_theta] << "\t" << m_Sinogram->InitialOffset->d[i_theta];
     if(NULL != m_Sinogram->InitialVariance.get())
     {
-      std::cout << "\tVariance";
+      std::cout << "\t" << m_Sinogram->InitialVariance->d[i_theta];
     }
     std::cout << std::endl;
-
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      std::cout << i_theta << "\t" << m_Sinogram->InitialGain->d[i_theta] << "\t" << m_Sinogram->InitialOffset->d[i_theta];
-      if(NULL != m_Sinogram->InitialVariance.get())
-      {
-        std::cout << "\t" << m_Sinogram->InitialVariance->d[i_theta];
-      }
-      std::cout << std::endl;
-    }
   }
+#endif
 
   // Initialize the Geometry data from a rough reconstruction
   err = initializeRoughReconstructionData();
@@ -426,7 +424,7 @@ void SOCEngine::execute()
   NuisanceParams->alpha = RealArrayType::NullPointer();
 #endif
 
-#if ROI
+#ifdef ROI
   UInt8Image_t::Pointer Mask;
 //  DATA_TYPE EllipseA,EllipseB;
 #endif
@@ -543,7 +541,7 @@ void SOCEngine::execute()
   FiltMagUpdateMap = RealImage_t::New(dims, "Update Map for voxel lines");
   MagUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");
 
-#if ROI
+#ifdef ROI
   //Mask = (uint8_t**)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
   dims[0] = m_Geometry->N_z;
   dims[1] = m_Geometry->N_x;
@@ -551,6 +549,8 @@ void SOCEngine::execute()
   initializeROIMask(Mask);
 #endif
   //m_Sinogram->targetGain=20000;
+
+
 
   //Gain and Offset Parameters Initialization
   gainAndOffsetInitialization(NuisanceParams);
@@ -562,7 +562,10 @@ void SOCEngine::execute()
   H_t = RealVolumeType::New(dims, "H_t");
   initializeHt(H_t);
 
+
   checksum=0;
+
+
 
   //TODO: All this needs to be deallocated at some point
 //  DATA_TYPE y;
@@ -606,11 +609,9 @@ void SOCEngine::execute()
 
   storeVoxelResponse(H_t, VoxelLineResponse);
 
-  if(getDebug())
-  {
-    printf("Number of non zero entries of the forward projector is %lf\n", temp);
-    printf("Geometry-Z %d\n", m_Geometry->N_z);
-  }
+  printf("Number of non zero entries of the forward projector is %lf\n",temp);
+  printf("Geometry-Z %d\n",m_Geometry->N_z);
+
 
   //Forward Project Geometry->Object one slice at a time and compute the  Sinogram for each slice
   //is Y_Est initailized to zero?
@@ -625,10 +626,10 @@ void SOCEngine::execute()
 
 #if TomoEngine_USE_PARALLEL_ALGORITHMS
   tbb::task_group* g = new tbb::task_group;
-//  std::cout << "Default Number of Threads to Use: " << init.default_num_threads() << std::endl;
-//  std::cout << "Forward Projection Running in Parallel." << std::endl;
+  std::cout << "Default Number of Threads to Use: " << init.default_num_threads() << std::endl;
+  std::cout << "Forward Projection Running in Parallel." << std::endl;
 #else
-//  std::cout << "Forward Projection Running in Serial." << std::endl;
+  std::cout << "Forward Projection Running in Serial." << std::endl;
 #endif
   // Queue up a thread for each z layer of the Geometry. The threads will only be
   // run as hardware resources open up so this will not just fire up a gazillion
@@ -680,12 +681,17 @@ void SOCEngine::execute()
       m_TomoInputs->NumIter = 1;
     }
 
+
+
     for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
     {
-      ss.str("");
-      ss << "Outer Iteration: " << OuterIter << "/" << m_TomoInputs->NumOuterIter;
-      ss << "   Inner Iteration: " << Iter << "/" << m_TomoInputs->NumIter;
-      std::cout << ss.str() << std::endl;
+      std::cout << OuterIter << "/" << m_TomoInputs->NumOuterIter << " " << Iter << "/" << m_TomoInputs->NumIter << std::endl;
+      indent = "  ";
+//      ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
+//      ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
+//      float currentLoop = OuterIter * m_TomoInputs->NumIter + Iter;
+//      notify(ss.str(), currentLoop / totalLoops * 100);
+      indent = "    ";
       // This is all done PRIOR to calling what will become a method
       VoxelUpdateType updateType = RegularRandomOrderUpdate;
 #ifdef NHICD
@@ -704,11 +710,7 @@ void SOCEngine::execute()
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
       status = updateVoxels(OuterIter, Iter, updateType, VisitCount, RandomNumber,
                             TempCol, ErrorSino, Weight, VoxelLineResponse,
-                            NuisanceParams.get(),
-#if ROI
-                            Mask,
-#endif
-                            cost);
+                            NuisanceParams.get(), Mask, cost);
 /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
       if(status == 0)
@@ -773,17 +775,16 @@ void SOCEngine::execute()
 /* Write the Gains and Offsets to an output file */
   writeNuisanceParameters(NuisanceParams);
 
-  if(getDebug())
-  {
 #if DEBUG_GAINS_OFFSETS_VARIANCES
-    std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
-    for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
-    {
-      std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] << "\t" << NuisanceParams->mu->d[i_theta] << "\t" << NuisanceParams->alpha->d[i_theta]
-          << std::endl;
-    }
-#endif
+  std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
+  for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
+  {
+    std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
+        "\t" << NuisanceParams->mu->d[i_theta] <<
+        "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
   }
+#endif
+
 
   Real_t temp_final = 0.0;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)

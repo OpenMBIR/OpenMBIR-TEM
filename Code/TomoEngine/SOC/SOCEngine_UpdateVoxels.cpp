@@ -54,9 +54,7 @@ class UpdateYSlice
                  RealVolumeType::Pointer weight,
                  AMatrixCol* voxelLineResponse,
                  ScaleOffsetParams* nuisanceParams,
-#if ROI
                  UInt8Image_t::Pointer mask,
-#endif
                  RealImage_t::Pointer magUpdateMap,//Hold the magnitude of the reconstuction along each voxel line
                  UInt8Image_t::Pointer magUpdateMask,
                  QGGMRF::QGGMRF_Values* qggmrfValues,
@@ -76,21 +74,16 @@ class UpdateYSlice
       m_Weight(weight),
       m_VoxelLineResponse(voxelLineResponse),
       m_NuisanceParams(nuisanceParams),
-#if ROI
       m_Mask(mask),
-#endif
       m_MagUpdateMap(magUpdateMap),
       m_MagUpdateMask(magUpdateMask),
       m_QggmrfValues(qggmrfValues),
       m_UpdateType(updateType),
       m_NH_Threshold(nh_Threshold),
       m_ZeroCount(0),
-      m_CurrentVoxelValue(0.0)
-#if ROI
-    ,
+      m_CurrentVoxelValue(0.0),
       m_AverageUpdate(averageUpdate),
       m_AverageMagnitudeOfRecon(averageMagnitudeOfRecon)
-#endif
     {
       initVariables();
     }
@@ -352,7 +345,7 @@ class UpdateYSlice
                 Real_t intermediate = m_MagUpdateMap->getValue(j_new, k_new) + fabs(UpdatedVoxelValue - m_CurrentVoxelValue);
                 m_MagUpdateMap->setValue(intermediate, j_new, k_new);
 
-#if ROI
+#ifdef ROI
                 //if(Mask->d[j_new][k_new] == 1)
                 if(m_Mask->getValue(j_new, k_new) == 1)
                 {
@@ -441,7 +434,7 @@ class UpdateYSlice
 
     int m_ZeroCount;
     Real_t m_CurrentVoxelValue;
-#if ROI
+#ifdef ROI
     //variables used to stop the process
     Real_t* m_AverageUpdate;
     Real_t* m_AverageMagnitudeOfRecon;
@@ -496,9 +489,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                              RealVolumeType::Pointer Weight,
                              AMatrixCol* VoxelLineResponse,
                              ScaleOffsetParams* NuisanceParams,
-#if ROI
                              UInt8Image_t::Pointer Mask,
-#endif
                              CostData::Pointer cost)
 {
   uint8_t exit_status = 1; //Indicates normal exit ; else indicates to stop inner iterations
@@ -506,37 +497,38 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
   std::string indent("    ");
   uint8_t err = 0;
   uint32_t zero_count = 0;
-  std::stringstream ss;
+//  Real_t UpdatedVoxelValue;
+//  Real_t accuracy=1e-8;
+//  uint16_t binarysearch_count
+//  Real_t accuracy = 1e-9; //This is the rooting accuracy for x
+//  uint32_t binarysearch_count = 10; //Accuracy is 1/(2^10)
+//  int32_t errorcode = -1;
+//  int16_t Idx;
+
+//  //FIXME: Where are these Initialized? Or what values should they be initialized to?
+//  Real_t low = 0.0, high = 0.0;
 
   if(updateType == RegularRandomOrderUpdate)
   {
-    ss.str(""); // Clear the string stream first
-    ss << indent << "Regular Random Order update of Voxels" << std::endl;
-    notify(ss.str(), 0, Observable::UpdateProgressMessage);
+    std::cout << indent << "Regular Random Order update of Voxels" << std::endl;
   }
   else if(updateType == HomogeniousUpdate)
   {
-    ss.str(""); // Clear the string stream first
-    ss << indent << "Homogenous update of voxels" << std::endl;
-    notify(ss.str(), 0, Observable::UpdateProgressMessage);
+    std::cout << indent << "Homogenous update of voxels" << std::endl;
   }
   else if(updateType == NonHomogeniousUpdate)
   {
-    ss.str(""); // Clear the string stream first
-    ss << indent << "Non Homogenous update of voxels" << std::endl;
+    std::cout << indent << "Non Homogenous update of voxels" << std::endl;
     subIterations = NUM_NON_HOMOGENOUS_ITER;
-    notify(ss.str(), 0, Observable::UpdateProgressMessage);
   }
   else
   {
-    ss.str("");
-    ss << indent << "Unknown Voxel Update Type. Returning Now" << std::endl;
-    notify(ss.str(), 0, Observable::UpdateErrorMessage);
+    std::cout << indent << "Unknown Voxel Update Type. Returning Now" << std::endl;
     return exit_status;
   }
 
   Real_t NH_Threshold = 0.0;
-
+  std::stringstream ss;
   int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
 
   for (uint16_t NH_Iter = 0; NH_Iter < subIterations; ++NH_Iter)
@@ -553,16 +545,15 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
       ComputeVSC();
       START_TIMER;
       NH_Threshold = SetNonHomThreshold();
-      STOP_TIMER;
-      PRINT_TIME("  SetNonHomThreshold");
-      if(getDebug())
-      {
-        std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
-      }
+      STOP_TIMER;PRINT_TIME("  SetNonHomThreshold");
+      std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
+      //Use  FiltMagUpdateMap  to find MagnitudeUpdateMask
+      //std::cout << "Completed Calculation of filtered magnitude" << std::endl;
+      //Calculate the threshold for the top ? % of voxel updates
     }
 
     //printf("Iter %d\n",Iter);
-#if ROI
+#ifdef ROI
     //variables used to stop the process
     Real_t AverageUpdate = 0;
     Real_t AverageMagnitudeOfRecon = 0;
@@ -602,12 +593,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                                                          OuterIter, Iter, m_Sinogram,
                                                          m_BFSinogram, TempCol,
                                                          ErrorSino, Weight, VoxelLineResponse,
-                                                         NuisanceParams,
-#if ROI
-                                                         Mask,
-#endif
-                                                         MagUpdateMap,
-                                                         MagUpdateMask,
+                                                         NuisanceParams, Mask,
+                                                         MagUpdateMap, MagUpdateMask,
                                                          &m_QGGMRF_Values,
                                                          updateType,
                                                          NH_Threshold,
@@ -617,14 +604,12 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     }
 
     tbb::task::spawn_root_and_wait(taskList);
-#if ROI
     // Now sum up some values
     for (int t = 0; t < m_NumThreads; ++t)
     {
       AverageUpdate += averageUpdate[t];
       AverageMagnitudeOfRecon += averageMagnitudeOfRecon[t];
     }
-#endif
     free(averageUpdate);
     free(averageMagnitudeOfRecon);
 
@@ -667,27 +652,22 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     cost->writeCostValue(cost_value);
     /**************************************************************************/
 #else
-    if(getDebug()) printf("Iter: %d\n",Iter);
+    printf("Iter: %d\n",Iter);
 #endif //Cost calculation endif
 
-#if ROI
-    if(getDebug()) {
-      std::cout << "Average Update " << AverageUpdate << std::endl;
-      std::cout << "Average Mag " << AverageMagnitudeOfRecon << std::endl;
-    }
+#ifdef ROI
+      std::cout<<"Average Update "<<AverageUpdate<<std::endl;
+      std::cout<<"Average Mag "<<AverageMagnitudeOfRecon<<std::endl;
     if(AverageMagnitudeOfRecon > 0)
     {
-      if (getDebug()) {std::cout << Iter + 1 << ", " <<  AverageUpdate / AverageMagnitudeOfRecon<< std::endl;}
+      printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);
+
       //Use the stopping criteria if we are performing a full update of all voxels
       if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != NonHomogeniousUpdate)
       {
-        ss.str("");
-        ss << "This is the terminating point " <<  Iter;
-        notify(ss.str(), 0, Observable::UpdateProgressMessage);
-        m_TomoInputs->StopThreshold *= ScaleOffsetCorrection::ThresholdReductionFactor; //Reducing the thresold for subsequent iterations
-        if(getDebug()) {
-          std::cout << "New threshold" << m_TomoInputs->StopThreshold << std::endl;
-        }
+        printf("This is the terminating point %d\n", Iter);
+        m_TomoInputs->StopThreshold *= THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
+        std::cout << "New threshold" << m_TomoInputs->StopThreshold << std::endl;
         exit_status = 0;
         break;
       }

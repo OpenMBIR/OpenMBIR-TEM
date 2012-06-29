@@ -847,14 +847,8 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   else
   {
     QLineF line = m_GraphicsView->getXZPlane();
-//    int xPt = line.p1().x();
-//    if (xPt < 0)
-//    {
-//      line.p1().setX(0);
-//      line.p2().setX(line.p2().x() - -xPt);
-//    }
-//    std::cout << "p1: " << line.p1().x() << ", " << line.p1().y()
-//     << "   p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
+    std::cout << "p1: " << line.p1().x() << ", " << line.p1().y()
+     << "   p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
 
     unsigned short x = m_XDim->text().toUShort(&ok);
     // Only reconstruct the middle section of data along the x axis
@@ -900,7 +894,7 @@ void TomoGui::singleSlicePlaneSet()
 // -----------------------------------------------------------------------------
 void TomoGui::singleSliceComplete()
 {
-//  std::cout << "TomoGui::singleSliceComplete" << std::endl;
+  std::cout << "TomoGui::singleSliceComplete" << std::endl;
   m_SingleSliceReconstructionBtn->setText("Single Slice Reconstruction");
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
@@ -964,9 +958,11 @@ void TomoGui::loadSingleSliceReconstruction(QString reconMRCFilePath)
     float* data = reinterpret_cast<float*>(reader->getDataPointer());
     image = xzFloatCrossSection(data, nVoxels, voxelMin, voxelMax);
   }
+
   image = image.mirrored(false, true);
 
   m_GraphicsView_2->loadBaseImageFile(image);
+
 }
 
 // -----------------------------------------------------------------------------
@@ -982,8 +978,8 @@ QImage TomoGui::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, 
     if(data[i] < dmin) dmin = data[i];
   }
 
-//  std::cout << "Min float MRC Value:" << dmin << std::endl;
-//  std::cout << "Max float MRC Value:" << dmax << std::endl;
+  std::cout << "Min float MRC Value:" << dmin << std::endl;
+  std::cout << "Max float MRC Value:" << dmax << std::endl;
 
   //Scale all the values to 0 and 255 in place over writing the float values with 32 bit ints
   int* iData = reinterpret_cast<int*>(data);
@@ -997,8 +993,8 @@ QImage TomoGui::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, 
     if(iData[i] < imin) imin = iData[i];
   }
 
-//  std::cout << "Min int MRC Value:" << imin << std::endl;
-//  std::cout << "Max int MRC Value:" << imax << std::endl;
+  std::cout << "Min int MRC Value:" << imin << std::endl;
+  std::cout << "Max int MRC Value:" << imax << std::endl;
 
   QVector<QRgb> colorTable;
   // Generate a Color Table
@@ -1046,13 +1042,13 @@ QImage TomoGui::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, 
       }
     }
 
-//    QString fname("/tmp/single_slice_z_");
-//    fname.append(QString::number(z)).append(".tif");
-//    image.save(fname);
+    QString fname("/tmp/single_slice_z_");
+    fname.append(QString::number(z)).append(".tif");
+    image.save(fname);
   }
-//  std::cout << "Min int QImage Value:" << imin << std::endl;
-//  std::cout << "Max int QImage Value:" << imax << std::endl;
-//  xzImage.save("/tmp/xz_image.tif");
+  std::cout << "Min int QImage Value:" << imin << std::endl;
+  std::cout << "Max int QImage Value:" << imax << std::endl;
+  xzImage.save("/tmp/xz_image.tif");
   return xzImage;
 }
 

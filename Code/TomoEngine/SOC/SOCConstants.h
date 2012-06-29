@@ -65,7 +65,7 @@
 //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
 #define ROI 1
 
-//#define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
+#define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
 
 #define SURROGATE_FUNCTION
 #define EIMTOMO_USE_QGGMRF 1
@@ -82,13 +82,14 @@
 //#define NHICD
 #define NUM_NON_HOMOGENOUS_ITER 20
 
+#define DEBUG_FILE_VALUES 0
+#define DEBUG_GAINS_OFFSETS_VARIANCES 0
+#define DEBUG_COSTS 0
 
 
 
 namespace ScaleOffsetCorrection
 {
-  //Dynamically lower the threshold by this amount. Set to 1 for no reduction
-  static const unsigned int ThresholdReductionFactor = 1;
 
 //  const std::string OutputDirectory("ScaleOffsetCorrection_Output");
   const std::string DetectorResponseFile("DetectorResponse.bin");

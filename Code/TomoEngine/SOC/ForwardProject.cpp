@@ -71,7 +71,7 @@ ForwardProject::~ForwardProject()
 // -----------------------------------------------------------------------------
 void ForwardProject::operator()() const
 {
- // std::cout << "\rForward projecting Z-Slice " << m_Tilt << "/" << m_Geometry->N_z;
+  std::cout << "\rForward projecting Z-Slice " << m_Tilt << "/" << m_Geometry->N_z;
   uint32_t j = m_Tilt;
   uint16_t VoxelLineAccessCounter;
   uint32_t Index;

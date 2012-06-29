@@ -168,7 +168,7 @@ int MRCReader::read(const std::string &filepath, int* voxelMin, int* voxelMax)
   }
 
   // Now read the extended header
-  //std::cout << "  Reading Extended Header from file at " << reader.getFilePointer64() << std::endl;
+  std::cout << "  Reading Extended Header from file at " << reader.getFilePointer64() << std::endl;
 
   std::vector<uint8_t> extended_header(m_Header->next, 0);
   success = reader.readArray( &(extended_header.front()), m_Header->next);
@@ -231,7 +231,8 @@ int MRCReader::read(const std::string &filepath, int* voxelMin, int* voxelMax)
   if (typeSize > 0 && dataPtr != NULL )
   {
     if (false == readSubVolume) {
-      //std::cout << "  Reading Volume data from file at " << reader.getFilePointer64() << std::endl;
+      std::cout << "  Reading Volume data from file at " << reader.getFilePointer64() << std::endl;
+
       success = reader.rawRead(reinterpret_cast<char*>(dataPtr), typeSize * nVoxels);
       if(false == success)
       {

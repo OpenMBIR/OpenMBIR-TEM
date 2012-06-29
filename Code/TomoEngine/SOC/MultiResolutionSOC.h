@@ -55,7 +55,8 @@ class MultiResolutionSOC : public FilterPipeline
 
     virtual ~MultiResolutionSOC();
 
-    MXA_INSTANCE_PROPERTY(bool, Debug)
+    //MXA_INSTANCE_PROPERTY(std::vector<TomoInputsPtr>, TomoInputs);
+
     MXA_INSTANCE_STRING_PROPERTY(InputFile)
     MXA_INSTANCE_STRING_PROPERTY(TempDir)
     MXA_INSTANCE_STRING_PROPERTY(OutputFile)
