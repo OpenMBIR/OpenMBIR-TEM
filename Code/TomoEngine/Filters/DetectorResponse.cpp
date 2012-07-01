@@ -66,7 +66,7 @@ DetectorResponse::DetectorResponse()
 // -----------------------------------------------------------------------------
 void DetectorResponse::execute()
 {
-  int16_t i,j,k,p,ProfileIndex;
+  int16_t i,j,k,ProfileIndex;
   SinogramPtr sinogram = getSinogram();
   TomoInputsPtr inputs = getTomoInputs();
   AdvancedParametersPtr advParams = getAdvParams();
@@ -84,18 +84,17 @@ void DetectorResponse::execute()
   {
     for (i = 0; i < advParams->DETECTOR_RESPONSE_BINS; i++) //displacement along r
     {
-      ProfileCenterR = i*m_OffsetR;
+      ProfileCenterR = i * m_OffsetR;
       rmin = ProfileCenterR - inputs->delta_xz;
-      for (j = 0 ; j < 1; j++)//displacement along t ;change to DETECTOR_RESPONSE_BINS later
+      for (j = 0; j < 1; j++) //displacement along t ;change to DETECTOR_RESPONSE_BINS later
       {
-        ProfileCenterT = j*m_OffsetT;
-        tmin = ProfileCenterT - inputs->delta_xy/2;
+        ProfileCenterT = j * m_OffsetT;
+        tmin = ProfileCenterT - inputs->delta_xy / 2;
         sum = 0;
-        for (p=0; p < advParams->BEAM_RESOLUTION; p++)
+        for (uint32_t p = 0; p < advParams->BEAM_RESOLUTION; p++)
         {
-          r = r0 + p*StepSize;
-          if(r < rmin)
-            continue;
+          r = r0 + p * StepSize;
+          if(r < rmin) continue;
 
           ProfileIndex = (int32_t)floor((r - rmin) * TempConst);
           if(ProfileIndex < 0)

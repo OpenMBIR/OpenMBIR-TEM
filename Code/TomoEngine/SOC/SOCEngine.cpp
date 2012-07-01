@@ -693,22 +693,20 @@ if (m_AdvParams->NOISE_MODEL) {
 //  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
   std::stringstream ss;
   //Loop through every voxel updating it by solving a cost function
-  for(int16_t OuterIter = 0; OuterIter < m_TomoInputs->NumOuterIter; OuterIter++)
+  for(int16_t reconOuterIter = 0; reconOuterIter < m_TomoInputs->NumOuterIter; reconOuterIter++)
   {
     ss.str(""); // Clear the string stream
     indent = "";
 
     //The first time we may need to update voxels multiple times and then on just optimize over I,d,\sigma,f once each outer loop
-    if(OuterIter != 0)
+    if(reconOuterIter != 0)
     {
       m_TomoInputs->NumIter = 1;
     }
 
-
-
     for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
     {
-      std::cout << OuterIter << "/" << m_TomoInputs->NumOuterIter << " " << Iter << "/" << m_TomoInputs->NumIter << std::endl;
+      std::cout << reconOuterIter << "/" << m_TomoInputs->NumOuterIter << " " << Iter << "/" << m_TomoInputs->NumIter << std::endl;
       indent = "  ";
 //      ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
 //      ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
@@ -730,11 +728,10 @@ if (m_AdvParams->NOISE_MODEL) {
 
 #endif//NHICD end if
       // This could contain multiple Subloops also
-/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
-      status = updateVoxels(OuterIter, Iter, updateType, VisitCount, RandomNumber,
-                            TempCol, ErrorSino, Weight, VoxelLineResponse,
-                            NuisanceParams.get(), Mask, cost);
-/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
+      /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
+      status =
+          updateVoxels(reconOuterIter, Iter, updateType, VisitCount, RandomNumber, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost);
+      /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
       if(status == 0)
       {
@@ -768,7 +765,7 @@ if (m_AdvParams->NOISE_MODEL) {
         break;
       }
 #endif//cost
-      if(0 == status && OuterIter >= 1) //&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+      if(0 == status && reconOuterIter >= 1) //&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
       {
         std::cout << "Exiting the code because status =0" << std::endl;
         break;

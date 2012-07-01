@@ -59,7 +59,7 @@ CalculateAMatrixColumn::~CalculateAMatrixColumn()
 void CalculateAMatrixColumn::execute()
 {
 
-  int32_t j, k, sliceidx;
+  int32_t j, sliceidx;
   Real_t x, z, y;
   Real_t r; //this is used to find where does the ray passing through the voxel at certain angle hit the detector
   Real_t t; //this is similar to r but along the y direction
@@ -166,7 +166,7 @@ void CalculateAMatrixColumn::execute()
         //   if(FinalIndex >=176 && FinalIndex <= 178 && row ==0 && col == 0)
         //printf("%d %lf %lf\n",j, LeftEndOfBeam,rmin);
 
-        for (k = 0; k < advParams->BEAM_RESOLUTION; k++)
+        for (uint32_t k = 0; k < advParams->BEAM_RESOLUTION; k++)
         {
 
           RTemp = LeftEndOfBeam + ((((Real_t)k) * (BEAM_WIDTH)) / advParams->BEAM_RESOLUTION);
@@ -176,7 +176,8 @@ void CalculateAMatrixColumn::execute()
             ProfileIndex = (int32_t)floor((RTemp - rmin) * TempConst); //Finding the nearest neighbor profile to the beam
             //if(FinalIndex >=176 && FinalIndex <= 178 && row ==0 && col == 0)
             //printf("%d\n",ProfileIndex);
-            if(ProfileIndex > advParams->PROFILE_RESOLUTION) ProfileIndex = advParams->PROFILE_RESOLUTION;
+            if(ProfileIndex > advParams->PROFILE_RESOLUTION)
+              {ProfileIndex = advParams->PROFILE_RESOLUTION;}
           }
           if(ProfileIndex < 0) ProfileIndex = 0;
 
@@ -248,10 +249,8 @@ void CalculateAMatrixColumn::execute()
   }
 
 #ifdef DISTANCE_DRIVEN
-
   for(uint16_t i=0;i<sinogram->N_theta;i++)
   {
-
     r = x*cosine[i] - z*sine[i];
     t = y;
 
@@ -263,7 +262,6 @@ void CalculateAMatrixColumn::execute()
       rmin = r - (inputs->delta_xz/2)*(cosine[i]);
       rmax = r + (inputs->delta_xz/2)*(cosine[i]);
     }
-
     else
     {
       rmin = r - (inputs->delta_xz/2)*fabs(sine[i]);
@@ -281,6 +279,7 @@ void CalculateAMatrixColumn::execute()
 
     if(slice_index_min < 0)
     slice_index_min = 0;
+
     if(slice_index_max >= sinogram->N_t)
     slice_index_max = sinogram->N_t -1;
 
@@ -345,7 +344,6 @@ void CalculateAMatrixColumn::execute()
             {
               ProfileThickness = sinogram->delta_t;
             }
-
           }
           if (ProfileThickness > 0)
           {
@@ -365,34 +363,26 @@ void CalculateAMatrixColumn::execute()
         //  printf("%lf \n",Sinogram->angles[i]*180/PI);
       }
     }
-
   }
-
 #endif
   // printf("Final Space allocation for column %d %d\n",row,col);
 
   Ai->values = (Real_t*)get_spc(count, sizeof(Real_t));
   Ai->index = (uint32_t*)get_spc(count, sizeof(uint32_t));
-  k = 0;
+  uint32_t aiTempCount = 0;
   for (uint32_t i = 0; i < count; i++)
   {
     if(Temp->values[i] > 0.0)
     {
-      Ai->values[k] = Temp->values[i];
-      checksum += Ai->values[k];
-      Ai->index[k++] = Temp->index[i];
+      Ai->values[aiTempCount] = Temp->values[i];
+      checksum += Ai->values[aiTempCount];
+      Ai->index[aiTempCount++] = Temp->index[i];
     }
 
   }
 
-  Ai->count = k;
-
-  //printf("%d %d \n",Ai->count,count);
-
-  //printf("(%d,%d) %lf \n",row,col,checksum);
-
+  Ai->count = aiTempCount;
   free(Temp->values);
   free(Temp->index);
   free(Temp);
-
 }

@@ -186,8 +186,8 @@ namespace SOC {
       double X_SHRINK_FACTOR; /* This is defaulted to 0.6 */
       unsigned int X_STRETCH; /* This is defaulted to 1 */
       unsigned int Z_STRETCH; /* This is defaulted to 2 */
-      unsigned int DETECTOR_RESPONSE_BINS; /* This is defaulted to 64 */
-      unsigned int PROFILE_RESOLUTION; /* This is defaulted to 1536 */
+      uint16_t DETECTOR_RESPONSE_BINS; /* This is defaulted to 64 */
+      int32_t PROFILE_RESOLUTION; /* This is defaulted to 1536 */
       unsigned int BEAM_RESOLUTION; /* This is defaulted to 512 */
       unsigned int AREA_WEIGHTED; /* This is defaulted to 1 */
       unsigned int THRESHOLD_REDUCTION_FACTOR; /* This is defaulted to 1 */
