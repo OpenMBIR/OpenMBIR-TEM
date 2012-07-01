@@ -272,7 +272,10 @@ void SOCEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
   v->BEAM_RESOLUTION = 512;
   v->AREA_WEIGHTED = 1;
   v->THRESHOLD_REDUCTION_FACTOR = 1;
+  v->JOINT_ESTIMATION = 1;
   v->ZERO_SKIPPING = 1;
+  v->NOISE_MODEL = 1;
+
 }
 
 // -----------------------------------------------------------------------------
@@ -435,12 +438,12 @@ void SOCEngine::execute()
   dims[0] = m_Sinogram->N_theta;
   NuisanceParams->I_0 = RealArrayType::New(dims, "NuisanceParams->I_0");
   NuisanceParams->mu = RealArrayType::New(dims, "NuisanceParams->mu");
-#ifdef NOISE_MODEL
+if (m_AdvParams->NOISE_MODEL) {
   //alpha is the noise variance adjustment factor
   NuisanceParams->alpha = RealArrayType::New(dims, "NuisanceParams->alpha");
-#else
+}else{
   NuisanceParams->alpha = RealArrayType::NullPointer();
-#endif
+}
 
 #if ROI
   UInt8Image_t::Pointer Mask;
@@ -745,33 +748,37 @@ void SOCEngine::execute()
       }
 
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
-#ifdef JOINT_ESTIMATION
-     err = jointEstimation(Weight, NuisanceParams, ErrorSino, Y_Est, cost);
-     if (err < 0)
-     {
-       break;
-     }
-#endif//Joint estimation endif
+    if(m_AdvParams->JOINT_ESTIMATION)
+    {
+      err = jointEstimation(Weight, NuisanceParams, ErrorSino, Y_Est, cost);
+      if(err < 0)
+      {
+        break;
+      }
+    } //Joint estimation endif
 
-#ifdef NOISE_MODEL
-    updateWeights(Weight, NuisanceParams, ErrorSino);
+    if(m_AdvParams->NOISE_MODEL)
+    {
+      updateWeights(Weight, NuisanceParams, ErrorSino);
 #ifdef COST_CALCULATE
-    err = calculateCost(cost, Weight, ErrorSino);
-    if (err < 0)
-    {
-      std::cout<<"Cost went up after variance update"<<std::endl;
-      break;
-    }
+      err = calculateCost(cost, Weight, ErrorSino);
+      if (err < 0)
+      {
+        std::cout<<"Cost went up after variance update"<<std::endl;
+        break;
+      }
 #endif//cost
-    if(0 == status && OuterIter >= 1)//&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
-    {
-     std::cout<<"Exiting the code because status =0"<<std::endl;
-      break;
+      if(0 == status && OuterIter >= 1) //&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+      {
+        std::cout << "Exiting the code because status =0" << std::endl;
+        break;
+      }
     }
-#else
-    if(0 == status)//&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+    else
+    {
+      if(0 == status) //&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
       break;
-#endif //Noise Model
+    } //Noise Model
 
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
 
@@ -1303,7 +1310,7 @@ Real_t SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::
 
 
 //Noise Error
-#ifdef NOISE_MODEL
+  if(m_AdvParams->NOISE_MODEL) {
   temp = 0;
   for (int16_t i = 0; i < m_Sinogram->N_theta; i++)
   {
@@ -1318,7 +1325,7 @@ Real_t SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::
   }
   temp/=2;
   cost += temp;
-#endif//noise model
+}//NOISE_MODEL
   return cost;
 }
 

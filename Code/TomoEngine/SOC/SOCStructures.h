@@ -183,15 +183,21 @@ namespace SOC {
 
   typedef struct
   {
-      double X_SHRINK_FACTOR;
-      unsigned int X_STRETCH;
-      unsigned int Z_STRETCH;
-      unsigned int DETECTOR_RESPONSE_BINS;
-      unsigned int PROFILE_RESOLUTION;
-      unsigned int BEAM_RESOLUTION;
-      unsigned int AREA_WEIGHTED;
-      unsigned int THRESHOLD_REDUCTION_FACTOR;
-      unsigned int ZERO_SKIPPING;
+      double X_SHRINK_FACTOR; /* This is defaulted to 0.6 */
+      unsigned int X_STRETCH; /* This is defaulted to 1 */
+      unsigned int Z_STRETCH; /* This is defaulted to 2 */
+      unsigned int DETECTOR_RESPONSE_BINS; /* This is defaulted to 64 */
+      unsigned int PROFILE_RESOLUTION; /* This is defaulted to 1536 */
+      unsigned int BEAM_RESOLUTION; /* This is defaulted to 512 */
+      unsigned int AREA_WEIGHTED; /* This is defaulted to 1 */
+      unsigned int THRESHOLD_REDUCTION_FACTOR; /* This is defaulted to 1 */
+      unsigned int JOINT_ESTIMATION; /* It need not be on for all cases. In case
+                                    the Bright Field image file is present (very unlikely) + the offset
+                                    is known the user might want to Turn this OFF. All
+                                    other cases it needs be switched ON. */
+      unsigned int ZERO_SKIPPING; /* This will always be ON in the end product I think. */
+      unsigned int NOISE_MODEL; /* This is a parameter that the user MAY or MAY NOT
+                                  want turned ON. It is ON by default */
   } AdvancedParameters ;
   typedef boost::shared_ptr<AdvancedParameters> AdvancedParametersPtr;
 

@@ -605,7 +605,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                                                          updateType,
                                                          NH_Threshold,
                                                          averageUpdate + t,
-                                                         averageMagnitudeOfRecon + t);
+                                                         averageMagnitudeOfRecon + t,
+                                                         m_AdvParams->ZERO_SKIPPING);
       taskList.push_back(a);
     }
 
@@ -633,16 +634,14 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                                     updateType,
                                     NH_Threshold,
                                     &AverageUpdate,
-                                    &AverageMagnitudeOfRecon);
+                                    &AverageMagnitudeOfRecon,
+                                    m_AdvParams->ZERO_SKIPPING);
 
           yVoxelUpdate.execute();
 #endif
           /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
-
     STOP_TIMER;
     PRINT_TIME("%%%%%=====> Voxel Update");
-
-
 
 #ifdef COST_CALCULATE
 

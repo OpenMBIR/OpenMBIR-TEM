@@ -813,11 +813,11 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
   START_TIMER;
   for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
   {
-#ifdef NOISE_MODEL
+    if (m_AdvParams->NOISE_MODEL)
     {
       NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
-    }
-#endif //Noise model
+    }//Noise model
+
     checksum = 0;
     for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
     {
@@ -863,11 +863,11 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
         }
 //#endif//Debug
 
-#ifdef NOISE_MODEL
+        if (m_AdvParams->NOISE_MODEL)
         {
           Weight->d[weight_idx] /= NuisanceParams->alpha->d[i_theta];
-        }
-#endif
+        }// NOISE_MODEL
+
 
         checksum += Weight->d[weight_idx];
       }
@@ -1001,36 +1001,38 @@ void SOCEngine::writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams)
   nuisanceBinWriter->setAdvParams(m_AdvParams);
   nuisanceBinWriter->setObservers(getObservers());
   nuisanceBinWriter->setNuisanceParams(NuisanceParams.get());
-#ifdef JOINT_ESTIMATION
-  nuisanceBinWriter->setFileName(m_TomoInputs->gainsOutputFile);
-  nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_I_O);
-  nuisanceBinWriter->execute();
-  if (nuisanceBinWriter->getErrorCondition() < 0)
+  if(m_AdvParams->JOINT_ESTIMATION)
   {
-    setErrorCondition(-1);
-    notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
+    nuisanceBinWriter->setFileName(m_TomoInputs->gainsOutputFile);
+    nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_I_O);
+    nuisanceBinWriter->execute();
+    if(nuisanceBinWriter->getErrorCondition() < 0)
+    {
+      setErrorCondition(-1);
+      notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
+    }
+
+    nuisanceBinWriter->setFileName(m_TomoInputs->offsetsOutputFile);
+    nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_mu);
+    nuisanceBinWriter->execute();
+    if(nuisanceBinWriter->getErrorCondition() < 0)
+    {
+      setErrorCondition(-1);
+      notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
+    }
   }
 
-  nuisanceBinWriter->setFileName(m_TomoInputs->offsetsOutputFile);
-  nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_mu);
-  nuisanceBinWriter->execute();
-  if (nuisanceBinWriter->getErrorCondition() < 0)
+  if(m_AdvParams->NOISE_MODEL)
   {
-   setErrorCondition(-1);
-   notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
-  }
-#endif
-
-#ifdef NOISE_MODEL
-  nuisanceBinWriter->setFileName(m_TomoInputs->varianceOutputFile);
-  nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_alpha);
-  nuisanceBinWriter->execute();
-  if (nuisanceBinWriter->getErrorCondition() < 0)
-  {
-    setErrorCondition(-1);
-    notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
-  }
-#endif//Noise Model
+    nuisanceBinWriter->setFileName(m_TomoInputs->varianceOutputFile);
+    nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_alpha);
+    nuisanceBinWriter->execute();
+    if(nuisanceBinWriter->getErrorCondition() < 0)
+    {
+      setErrorCondition(-1);
+      notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateProgressValueAndMessage);
+    }
+  } //Noise Model
 
 }
 
