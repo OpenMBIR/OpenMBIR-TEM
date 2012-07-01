@@ -1080,10 +1080,11 @@ void SOCEngine::writeReconstructionFile()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::writeVtkFile()
+void SOCEngine::writeVtkFile(const std::string &vtkFile)
 {
-  std::string vtkFile(m_TomoInputs->tempDir);
-  vtkFile = vtkFile.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedVtkFile);
+  std::stringstream ss;
+  ss << "Writing VTK file to '" << vtkFile << "'";
+  notify(ss.str(), 0, Observable::UpdateProgressMessage);
 
   VTKStructuredPointsFileWriter vtkWriter;
   vtkWriter.setWriteBinaryFiles(true);
@@ -1097,19 +1098,17 @@ void SOCEngine::writeVtkFile()
 
   std::vector<VtkScalarWriter*> scalarsToWrite;
 
-  std::stringstream ss;
-  ss.str("");
-  ss << "Writing Vtk Reconstruction to '" << vtkFile << "'";
-  notify(ss.str(), 0, Observable::UpdateProgressMessage);
-
   VtkScalarWriter* w0 = static_cast<VtkScalarWriter*>(new TomoOutputScalarWriter(m_Geometry.get()));
   w0->setWriteBinaryFiles(true);
   scalarsToWrite.push_back(w0);
 
   int error = vtkWriter.write<DimsAndRes>(vtkFile, &dimsAndRes, scalarsToWrite);
-  if (error < 0)
+  if(error < 0)
   {
-    std::cout << "Error writing vtk file '" << vtkFile << "'" << std::endl;
+    ss.str("");
+    ss << "Error writing vtk file\n    '" << vtkFile << "'" << std::endl;
+    setErrorCondition(-12);
+    notify(ss.str(), 0, Observable::UpdateErrorMessage);
   }
   delete w0;
 }
@@ -1117,29 +1116,27 @@ void SOCEngine::writeVtkFile()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::writeMRCFile()
+void SOCEngine::writeMRCFile(const std::string &mrcFile)
 {
   /* Write the output to the MRC File */
+  std::stringstream ss;
+  ss.str("");
+  ss << "Writing MRC file to '" << mrcFile << "'";
+  notify(ss.str(), 0, Observable::UpdateProgressMessage);
 
-   std::string mrcFile (m_TomoInputs->tempDir);
-   mrcFile = mrcFile.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedMrcFile);
-
-   std::stringstream ss;
-   ss.str("");
-   ss << "Writing MRC Reconstruction file to '" << mrcFile << "'";
-   notify(ss.str(), 0, Observable::UpdateProgressMessage);
-
-   MRCWriter::Pointer mrcWriter = MRCWriter::New();
-   mrcWriter->setOutputFile(mrcFile);
-   mrcWriter->setGeometry(m_Geometry);
-   mrcWriter->setAdvParams(m_AdvParams);
-   mrcWriter->setObservers(getObservers());
-   mrcWriter->execute();
-   if (mrcWriter->getErrorCondition() < 0)
-   {
-     setErrorCondition(mrcWriter->getErrorCondition());
-     notify("Error Writing the MRC File", 100, Observable::UpdateProgressValueAndMessage);
-   }
+  MRCWriter::Pointer mrcWriter = MRCWriter::New();
+  mrcWriter->setOutputFile(mrcFile);
+  mrcWriter->setGeometry(m_Geometry);
+  mrcWriter->setAdvParams(m_AdvParams);
+  mrcWriter->setObservers(getObservers());
+  mrcWriter->execute();
+  if(mrcWriter->getErrorCondition() < 0)
+  {
+    ss.str("");
+    ss << "Error writing MRC file\n    '" << mrcFile << "'" << std::endl;
+    setErrorCondition(mrcWriter->getErrorCondition());
+    notify(ss.str(), 0, Observable::UpdateErrorMessage);
+  }
 
 }
 

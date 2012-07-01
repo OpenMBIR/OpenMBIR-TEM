@@ -159,8 +159,8 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 
     void writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram);
     void writeReconstructionFile();
-    void writeVtkFile();
-    void writeMRCFile();
+    void writeVtkFile(const std::string &vtkFile);
+    void writeMRCFile(const std::string &vtkFile);
 
   private:
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered

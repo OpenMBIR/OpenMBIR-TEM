@@ -754,6 +754,22 @@ if (m_AdvParams->NOISE_MODEL) {
       }
     } //Joint estimation endif
 
+
+    // Write out the VTK file
+    {
+      std::stringstream ss;
+      ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << ScaleOffsetCorrection::ReconstructedVtkFile;
+      writeVtkFile(ss.str());
+    }
+    // Write out the MRC File
+    {
+      std::stringstream ss;
+      ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << ScaleOffsetCorrection::ReconstructedMrcFile;
+      writeMRCFile(ss.str());
+    }
+
+
+
     if(m_AdvParams->NOISE_MODEL)
     {
       updateWeights(Weight, NuisanceParams, ErrorSino);
@@ -827,10 +843,18 @@ if (m_AdvParams->NOISE_MODEL) {
 
   writeSinogramFile(NuisanceParams, Final_Sinogram); // Writes the sinogram to a file
   writeReconstructionFile(); // Writes the m_Geometry to a file
-  writeVtkFile();
-  writeMRCFile();
-
-
+  // Write out the VTK file
+  {
+    std::stringstream ss;
+    ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedVtkFile;
+    writeVtkFile(ss.str());
+  }
+  // Write out the MRC File
+  {
+    std::stringstream ss;
+    ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedMrcFile;
+    writeMRCFile(ss.str());
+  }
 
   std::cout << "Final Dimensions of Object: " << std::endl;
   std::cout << "  Nx = " << m_Geometry->N_x << std::endl;
