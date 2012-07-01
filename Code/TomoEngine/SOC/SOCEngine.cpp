@@ -248,6 +248,10 @@ void SOCEngine::InitializeGeometry(GeometryPtr v)
   v->z0 = 0.0;
   v->y0 = 0.0;
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void SOCEngine::InitializeScaleOffsetParams(ScaleOffsetParamsPtr v)
 {
   v->I_0 = RealArrayType::NullPointer();
@@ -255,7 +259,20 @@ void SOCEngine::InitializeScaleOffsetParams(ScaleOffsetParamsPtr v)
   v->alpha = RealArrayType::NullPointer();
 }
 
-
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
+{
+  v->X_SHRINK_FACTOR = 0.6;
+  v->X_STRETCH = 1;
+  v->Z_STRETCH = 2;
+  v->DETECTOR_RESPONSE_BINS = 64;
+  v->PROFILE_RESOLUTION = 1536;
+  v->BEAM_RESOLUTION = 512;
+  v->AREA_WEIGHTED = 1;
+  v->THRESHOLD_REDUCTION_FACTOR = 1;
+}
 
 // -----------------------------------------------------------------------------
 //
@@ -444,8 +461,8 @@ void SOCEngine::execute()
   Final_Sinogram = RealVolumeType::New(dims, "Final Sinogram");
 
   //Setting the value of all the private members
-  OffsetR = ((m_TomoInputs->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/ SOC::DETECTOR_RESPONSE_BINS;
-  OffsetT = ((m_TomoInputs->delta_xz/2) + m_Sinogram->delta_t/2)/ SOC::DETECTOR_RESPONSE_BINS;
+  OffsetR = ((m_TomoInputs->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/m_AdvParams->DETECTOR_RESPONSE_BINS;
+  OffsetT = ((m_TomoInputs->delta_xz/2) + m_Sinogram->delta_t/2)/m_AdvParams->DETECTOR_RESPONSE_BINS;
 
   BEAM_WIDTH = m_Sinogram->delta_r;
 
@@ -494,6 +511,7 @@ void SOCEngine::execute()
   DetectorResponse::Pointer dResponseFilter = DetectorResponse::New();
   dResponseFilter->setTomoInputs(m_TomoInputs);
   dResponseFilter->setSinogram(m_Sinogram);
+  dResponseFilter->setAdvParams(m_AdvParams);
   dResponseFilter->setBeamWidth(BEAM_WIDTH);
   dResponseFilter->setOffsetR(OffsetR);
   dResponseFilter->setOffsetT(OffsetT);
@@ -512,6 +530,7 @@ void SOCEngine::execute()
   DetectorResponseWriter::Pointer responseWriter = DetectorResponseWriter::New();
   responseWriter->setTomoInputs(m_TomoInputs);
   responseWriter->setSinogram(m_Sinogram);
+  responseWriter->setAdvParams(m_AdvParams);
   responseWriter->setObservers(getObservers());
   responseWriter->setResponse(detectorResponse);
   responseWriter->execute();
@@ -558,7 +577,7 @@ void SOCEngine::execute()
   // Initialize H_t volume
   dims[0] = 1;
   dims[1] = m_Sinogram->N_theta;
-  dims[2] =  SOC::DETECTOR_RESPONSE_BINS;
+  dims[2] = m_AdvParams->DETECTOR_RESPONSE_BINS;
   H_t = RealVolumeType::New(dims, "H_t");
   initializeHt(H_t);
 
@@ -867,7 +886,7 @@ RealImage_t::Pointer SOCEngine::calculateVoxelProfile()
 {
   Real_t angle,MaxValLineIntegral;
   Real_t temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
-  size_t dims[2] = {m_Sinogram->N_theta , SOC::PROFILE_RESOLUTION};
+  size_t dims[2] = {m_Sinogram->N_theta ,m_AdvParams->PROFILE_RESOLUTION};
   RealImage_t::Pointer VoxProfile = RealImage_t::New(dims, "VoxelProfile");
 
   Real_t checksum=0;
@@ -906,9 +925,9 @@ RealImage_t::Pointer SOCEngine::calculateVoxelProfile()
     RightNear = 1+dist2;
     RightCorner = 1+dist1;
 
-    for(j = 0;j< SOC::PROFILE_RESOLUTION;j++)
+    for(j = 0;j<m_AdvParams->PROFILE_RESOLUTION;j++)
     {
-      t = 2.0*j / SOC::PROFILE_RESOLUTION;//2 is the normalized length of the profile (basically equl to 2*delta_xz)
+      t = 2.0*j /m_AdvParams->PROFILE_RESOLUTION;//2 is the normalized length of the profile (basically equl to 2*delta_xz)
       if(t <= LeftCorner || t >= RightCorner)
         VoxProfile->setValue(0, i, j);
       else if(t > RightNear)
@@ -990,11 +1009,11 @@ RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer Detect
             delta_r = fabs(center_r - r);
             index_delta_r = static_cast<uint16_t>(floor((delta_r / OffsetR)));
 
-            if(index_delta_r <  SOC::DETECTOR_RESPONSE_BINS)
+            if(index_delta_r < m_AdvParams->DETECTOR_RESPONSE_BINS)
             {
               w1 = delta_r - index_delta_r * OffsetR;
               w2 = (index_delta_r + 1) * OffsetR - delta_r;
-              uint16_t iidx = index_delta_r + 1 <  SOC::DETECTOR_RESPONSE_BINS ? index_delta_r + 1 :  SOC::DETECTOR_RESPONSE_BINS - 1;
+              uint16_t iidx = index_delta_r + 1 < m_AdvParams->DETECTOR_RESPONSE_BINS ? index_delta_r + 1 : m_AdvParams->DETECTOR_RESPONSE_BINS - 1;
               f1 = (w2 / OffsetR) * DetectorResponse->getValue(0, i_theta, index_delta_r)
                   +(w1 / OffsetR) * DetectorResponse->getValue(0, i_theta, iidx);
             }
@@ -1009,11 +1028,11 @@ RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer Detect
               delta_t = fabs(center_t - t);
               index_delta_t = static_cast<uint16_t>(floor((delta_t / OffsetT)));
 
-              if(index_delta_t <  SOC::DETECTOR_RESPONSE_BINS)
+              if(index_delta_t < m_AdvParams->DETECTOR_RESPONSE_BINS)
               {
                 w1 = delta_t - index_delta_t * OffsetT;
                 w2 = (index_delta_t + 1) * OffsetT - delta_t;
-                uint16_t iidx = index_delta_t + 1 <  SOC::DETECTOR_RESPONSE_BINS ? index_delta_t + 1 :  SOC::DETECTOR_RESPONSE_BINS - 1;
+                uint16_t iidx = index_delta_t + 1 < m_AdvParams->DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : m_AdvParams->DETECTOR_RESPONSE_BINS - 1;
                 f2 = (w2 / OffsetT) * H_t->getValue(0, i_theta, index_delta_t) + (w1 / OffsetT) * H_t->getValue(0, i_theta, iidx);
               }
               else
@@ -1056,19 +1075,19 @@ void SOCEngine::initializeBeamProfile()
   uint16_t i;
   Real_t sum=0,W;
 //  BeamProfile=(DATA_TYPE*)get_spc(BEAM_RESOLUTION,sizeof(DATA_TYPE));
-  size_t dims[1] = { SOC::BEAM_RESOLUTION };
+  size_t dims[1] = {m_AdvParams->BEAM_RESOLUTION };
   BeamProfile = RealArrayType::New(dims, "BeamProfile");
   W=BEAM_WIDTH/2;
-  for (i=0; i < SOC::BEAM_RESOLUTION ;i++)
+  for (i=0; i <m_AdvParams->BEAM_RESOLUTION ;i++)
   {
     //BeamProfile->d[i] = (1.0/(BEAM_WIDTH)) * ( 1 + cos ((PI/W)*fabs(-W + i*(BEAM_WIDTH/BEAM_RESOLUTION))));
-    BeamProfile->d[i] = 0.54 - 0.46*cos((2.0*M_PI/SOC::BEAM_RESOLUTION)*i);
+    BeamProfile->d[i] = 0.54 - 0.46*cos((2.0*M_PI/m_AdvParams->BEAM_RESOLUTION)*i);
     sum=sum+BeamProfile->d[i];
   }
 
   //Normalize the beam to have an area of 1
 
-  for (i=0; i < SOC::BEAM_RESOLUTION ;i++)
+  for (i=0; i <m_AdvParams->BEAM_RESOLUTION ;i++)
   {
 
     BeamProfile->d[i]/=sum;
@@ -1339,7 +1358,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
   z = m_Geometry->z0 + ((Real_t)row+0.5)*m_TomoInputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
   y = m_Geometry->y0 + ((Real_t)slice + 0.5)*m_TomoInputs->delta_xy;
 
-  TempConst=(SOC::PROFILE_RESOLUTION)/(2*m_TomoInputs->delta_xz);
+  TempConst=(m_AdvParams->PROFILE_RESOLUTION)/(2*m_TomoInputs->delta_xz);
 
   //alternately over estimate the maximum size require for a single AMatrix column
   AvgNumXElements = ceil(3*m_TomoInputs->delta_xz/m_Sinogram->delta_r);
@@ -1350,112 +1369,85 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
   Temp->index  = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(uint32_t));
 
 
-#ifdef AREA_WEIGHTED
-  for(uint32_t i=0;i<m_Sinogram->N_theta;i++)
+  if (m_AdvParams->AREA_WEIGHTED)
   {
-
-    r = x*cosine->d[i] - z*sine->d[i];
-    t = y;
-
-    rmin = r - m_TomoInputs->delta_xz;
-    rmax = r + m_TomoInputs->delta_xz;
-
-    tmin = (t - m_TomoInputs->delta_xy/2) > m_Sinogram->T0 ? t-m_TomoInputs->delta_xy/2 : m_Sinogram->T0;
-    tmax = (t + m_TomoInputs->delta_xy/2) <= m_Sinogram->TMax ? t + m_TomoInputs->delta_xy/2 : m_Sinogram->TMax;
-
-    if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax)
-      continue;
-
-
-
-    index_min = static_cast<int32_t>(floor(((rmin - m_Sinogram->R0)/m_Sinogram->delta_r)));
-    index_max = static_cast<int32_t>(floor((rmax - m_Sinogram->R0)/m_Sinogram->delta_r));
-
-
-    if(index_max >= m_Sinogram->N_r)
-      index_max = m_Sinogram->N_r - 1;
-
-    if(index_min < 0)
-      index_min = 0;
-
-    slice_index_min = static_cast<int32_t>(floor((tmin - m_Sinogram->T0)/m_Sinogram->delta_t));
-    slice_index_max = static_cast<int32_t>(floor((tmax - m_Sinogram->T0)/m_Sinogram->delta_t));
-
-    if(slice_index_min < 0)
-      slice_index_min = 0;
-    if(slice_index_max >= m_Sinogram->N_t)
-      slice_index_max = m_Sinogram->N_t -1;
-
-    BaseIndex = i*m_Sinogram->N_r;//*Sinogram->N_t;
-
-    for(j = index_min;j <= index_max; j++)//Check
+    for (uint32_t i = 0; i < m_Sinogram->N_theta; i++)
     {
 
-      //Accounting for Beam width
-      R_Center = (m_Sinogram->R0 + (((Real_t)j) + 0.5) *(m_Sinogram->delta_r));//the 0.5 is to get to the center of the detector
+      r = x * cosine->d[i] - z * sine->d[i];
+      t = y;
 
-      //Find the difference between the center of detector and center of projection and compute the Index to look up into
-      delta_r = fabs(r - R_Center);
-      index_delta_r = static_cast<int32_t>(floor((delta_r/OffsetR)));
+      rmin = r - m_TomoInputs->delta_xz;
+      rmax = r + m_TomoInputs->delta_xz;
 
+      tmin = (t - m_TomoInputs->delta_xy / 2) > m_Sinogram->T0 ? t - m_TomoInputs->delta_xy / 2 : m_Sinogram->T0;
+      tmax = (t + m_TomoInputs->delta_xy / 2) <= m_Sinogram->TMax ? t + m_TomoInputs->delta_xy / 2 : m_Sinogram->TMax;
 
-      if (index_delta_r >= 0 && index_delta_r <  SOC::DETECTOR_RESPONSE_BINS)
+      if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax) continue;
+
+      index_min = static_cast<int32_t>(floor(((rmin - m_Sinogram->R0) / m_Sinogram->delta_r)));
+      index_max = static_cast<int32_t>(floor((rmax - m_Sinogram->R0) / m_Sinogram->delta_r));
+
+      if(index_max >= m_Sinogram->N_r) index_max = m_Sinogram->N_r - 1;
+
+      if(index_min < 0) index_min = 0;
+
+      slice_index_min = static_cast<int32_t>(floor((tmin - m_Sinogram->T0) / m_Sinogram->delta_t));
+      slice_index_max = static_cast<int32_t>(floor((tmax - m_Sinogram->T0) / m_Sinogram->delta_t));
+
+      if(slice_index_min < 0) slice_index_min = 0;
+      if(slice_index_max >= m_Sinogram->N_t) slice_index_max = m_Sinogram->N_t - 1;
+
+      BaseIndex = i * m_Sinogram->N_r; //*Sinogram->N_t;
+
+      for (j = index_min; j <= index_max; j++) //Check
       {
 
-    //    for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++)
-    //    {
-          T_Center = (m_Sinogram->T0 + (((Real_t)sliceidx) + 0.5) *(m_Sinogram->delta_t));
+        //Accounting for Beam width
+        R_Center = (m_Sinogram->R0 + (((Real_t)j) + 0.5) * (m_Sinogram->delta_r)); //the 0.5 is to get to the center of the detector
+
+        //Find the difference between the center of detector and center of projection and compute the Index to look up into
+        delta_r = fabs(r - R_Center);
+        index_delta_r = static_cast<int32_t>(floor((delta_r / OffsetR)));
+
+        if(index_delta_r >= 0 && index_delta_r <m_AdvParams->DETECTOR_RESPONSE_BINS)
+        {
+          T_Center = (m_Sinogram->T0 + (((Real_t)sliceidx) + 0.5) * (m_Sinogram->delta_t));
           delta_t = fabs(t - T_Center);
-          index_delta_t = 0;//floor(delta_t/OffsetT);
-
-
-
-          if (index_delta_t >= 0 && index_delta_t <  SOC::DETECTOR_RESPONSE_BINS)
+          index_delta_t = 0; //floor(delta_t/OffsetT);
+          if(index_delta_t >= 0 && index_delta_t < m_AdvParams->DETECTOR_RESPONSE_BINS)
           {
-
             //Using index_delta_t,index_delta_t+1,index_delta_r and index_delta_r+1 do bilinear interpolation
-            w1 = delta_r - index_delta_r*OffsetR;
-            w2 = (index_delta_r+1)*OffsetR - delta_r;
+            w1 = delta_r - index_delta_r * OffsetR;
+            w2 = (index_delta_r + 1) * OffsetR - delta_r;
 
-            w3 = delta_t - index_delta_t*OffsetT;
-            w4 = (index_delta_r+1)*OffsetT - delta_t;
+            w3 = delta_t - index_delta_t * OffsetT;
+            w4 = (index_delta_r + 1) * OffsetT - delta_t;
 
-            uint16_t iidx = index_delta_r+1 <  SOC::DETECTOR_RESPONSE_BINS ? index_delta_r+1: SOC::DETECTOR_RESPONSE_BINS-1;
-            f1 = (w2/OffsetR)*DetectorResponse->getValue(index_delta_t, i, index_delta_r)
-               + (w1/OffsetR)*DetectorResponse->getValue(index_delta_t, i, iidx);
-            //  f2 = (w2/OffsetR)*DetectorResponse[index_delta_t+1 <  SOC::DETECTOR_RESPONSE_BINS ?index_delta_t+1 :  SOC::DETECTOR_RESPONSE_BINS-1][i][index_delta_r] + (w1/OffsetR)*DetectorResponse[index_delta_t+1 <  SOC::DETECTOR_RESPONSE_BINS? index_delta_t+1: SOC::DETECTOR_RESPONSE_BINS][i][index_delta_r+1 <  SOC::DETECTOR_RESPONSE_BINS? index_delta_r+1: SOC::DETECTOR_RESPONSE_BINS-1];
+            uint16_t iidx = index_delta_r + 1 < m_AdvParams->DETECTOR_RESPONSE_BINS ? index_delta_r + 1 :m_AdvParams->DETECTOR_RESPONSE_BINS - 1;
+            f1 = (w2 / OffsetR) * DetectorResponse->getValue(index_delta_t, i, index_delta_r)
+                + (w1 / OffsetR) * DetectorResponse->getValue(index_delta_t, i, iidx);
+            //  f2 = (w2/OffsetR)*DetectorResponse[index_delta_t+1 < m_AdvParams->DETECTOR_RESPONSE_BINS ?index_delta_t+1 : m_AdvParams->DETECTOR_RESPONSE_BINS-1][i][index_delta_r] + (w1/OffsetR)*DetectorResponse[index_delta_t+1 < m_AdvParams->DETECTOR_RESPONSE_BINS? index_delta_t+1:m_AdvParams->DETECTOR_RESPONSE_BINS][i][index_delta_r+1 < m_AdvParams->DETECTOR_RESPONSE_BINS? index_delta_r+1:m_AdvParams->DETECTOR_RESPONSE_BINS-1];
 
-            if(sliceidx == slice_index_min)
-              ContributionAlongT = (sliceidx + 1)*m_Sinogram->delta_t - tmin;
-            else if(sliceidx == slice_index_max)
-              ContributionAlongT = tmax - (sliceidx)*m_Sinogram->delta_t;
-            else {
+            if(sliceidx == slice_index_min) ContributionAlongT = (sliceidx + 1) * m_Sinogram->delta_t - tmin;
+            else if(sliceidx == slice_index_max) ContributionAlongT = tmax - (sliceidx) * m_Sinogram->delta_t;
+            else
+            {
               ContributionAlongT = m_Sinogram->delta_t;
             }
-
-
-              InterpolatedValue = f1;//*ContributionAlongT;//(w3/OffsetT)*f2 + (w4/OffsetT)*f2;
+            InterpolatedValue = f1; //*ContributionAlongT;//(w3/OffsetT)*f2 + (w4/OffsetT)*f2;
             if(InterpolatedValue > 0)
             {
-              FinalIndex = BaseIndex + (int32_t)j ;//+ (int32_t)sliceidx * Sinogram->N_r;
-              Temp->values[count] = InterpolatedValue;//DetectorResponse[index_delta_t][i][index_delta_r];
-              Temp->index[count] = FinalIndex;//can instead store a triple (row,col,slice) for the sinogram
+              FinalIndex = BaseIndex + (int32_t)j; //+ (int32_t)sliceidx * Sinogram->N_r;
+              Temp->values[count] = InterpolatedValue; //DetectorResponse[index_delta_t][i][index_delta_r];
+              Temp->index[count] = FinalIndex; //can instead store a triple (row,col,slice) for the sinogram
               count++;
             }
           }
-
-
-        //}
+        }
       }
-
-
     }
-
-
-
-  }
-
-#endif
+}
 
 
   Ai->values=(Real_t*)get_spc(count,sizeof(Real_t));

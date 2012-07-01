@@ -71,6 +71,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)
     MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
     MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams)
+    MXA_INSTANCE_PROPERTY(AdvancedParametersPtr, AdvParams)
 
     MXA_INSTANCE_PROPERTY(bool, UseBrightFieldData)
     MXA_INSTANCE_PROPERTY(TomoInputsPtr, BFTomoInputs)
@@ -80,6 +81,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     static void InitializeSinogram(SinogramPtr);
     static void InitializeGeometry(GeometryPtr);
     static void InitializeScaleOffsetParams(ScaleOffsetParamsPtr);
+    static void InitializeAdvancedParams(AdvancedParametersPtr v);
 
     virtual ~SOCEngine();
 

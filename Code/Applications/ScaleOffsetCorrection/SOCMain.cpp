@@ -90,32 +90,34 @@ int main(int argc, char **argv)
   getcwd(path1, MAXPATHLEN);
   std::cout << "Current Working Directory: " << path1 << std::endl;
 #endif
-	
+
 	std::stringstream ss;
 	ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
-    inputs->gainsOutputFile = ss.str();
-	
-    ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalOffsetParametersFile;
-    inputs->offsetsOutputFile = ss.str();
-	
-    ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalVariancesFile;
-    inputs->varianceOutputFile = ss.str();
-	
-	
+  ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
+  inputs->gainsOutputFile = ss.str();
+
+  ss.str("");
+  ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalOffsetParametersFile;
+  inputs->offsetsOutputFile = ss.str();
+
+  ss.str("");
+  ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalVariancesFile;
+  inputs->varianceOutputFile = ss.str();
+
+
 
   // Create these variables so we
   SinogramPtr sinogram = SinogramPtr(new Sinogram);
   SinogramPtr bf_sinogram = SinogramPtr(new Sinogram);
   GeometryPtr geometry =  GeometryPtr(new   Geometry);
   ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
+  AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
 
   SOCEngine::InitializeSinogram(sinogram);
   SOCEngine::InitializeGeometry(geometry);
   SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
   SOCEngine::InitializeSinogram(bf_sinogram);
+  SOCEngine::InitializeAdvancedParams(advancedParams);
 
   // Create an Engine and initialize all the structures
   SOCEngine::Pointer engine = SOCEngine::New();

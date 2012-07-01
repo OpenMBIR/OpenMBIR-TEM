@@ -59,24 +59,25 @@ CalculateAMatrixColumn::~CalculateAMatrixColumn()
 void CalculateAMatrixColumn::execute()
 {
 
-  int32_t j,k,sliceidx;
-  Real_t x,z,y;
-  Real_t r;//this is used to find where does the ray passing through the voxel at certain angle hit the detector
+  int32_t j, k, sliceidx;
+  Real_t x, z, y;
+  Real_t r; //this is used to find where does the ray passing through the voxel at certain angle hit the detector
   Real_t t; //this is similar to r but along the y direction
-  Real_t tmin,tmax;
-  Real_t rmax,rmin;//stores the start and end points of the pixel profile on the detector
-  Real_t RTemp,TempConst,checksum = 0,Integral = 0;
+  Real_t tmin, tmax;
+  Real_t rmax, rmin; //stores the start and end points of the pixel profile on the detector
+  Real_t RTemp, TempConst, checksum = 0, Integral = 0;
   Real_t LeftEndOfBeam;
-  Real_t MaximumSpacePerColumn;//we will use this to allocate space
-  Real_t AvgNumXElements,AvgNumYElements;//This is a measure of the expected amount of space per Amatrixcolumn. We will make a overestimate to avoid seg faults
+  Real_t MaximumSpacePerColumn; //we will use this to allocate space
+  Real_t AvgNumXElements, AvgNumYElements; //This is a measure of the expected amount of space per Amatrixcolumn. We will make a overestimate to avoid seg faults
   Real_t ProfileThickness;
-  int32_t index_min,index_max,slice_index_min,slice_index_max;//stores the detector index in which the profile lies
-  int32_t BaseIndex,FinalIndex,ProfileIndex=0;
+  int32_t index_min, index_max, slice_index_min, slice_index_max; //stores the detector index in which the profile lies
+  int32_t BaseIndex, FinalIndex, ProfileIndex = 0;
   uint32_t count = 0;
 
   SinogramPtr sinogram = getSinogram();
   GeometryPtr geometry = getGeometry();
   TomoInputsPtr inputs = getTomoInputs();
+  AdvancedParametersPtr advParams = getAdvParams();
 
 #ifdef BEAM_CALCULATION
   BEAM_WIDTH = (0.5)*sinogram->delta_r;
@@ -88,179 +89,163 @@ void CalculateAMatrixColumn::execute()
   Real_t d1,d2; //These are the values of the detector boundaries
 #endif
 
-  Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
-  AMatrixCol* Temp = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));//This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
+  Ai = (AMatrixCol*)get_spc(1, sizeof(AMatrixCol));
+  AMatrixCol* Temp = (AMatrixCol*)get_spc(1, sizeof(AMatrixCol)); //This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
 
   // printf("Space allocated for column %d %d\n",row,col);
 
   //Temp->index = (uint32_t*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(uint32_t));
   //Temp->values = (DATA_TYPE*)multialloc(sizeof(DATA_TYPE),1,Sinogram->N_r*Sinogram->N_theta);//makes the values =0
 
-  x = geometry->x0 + ((Real_t)col+0.5)*inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-  z = geometry->z0 + ((Real_t)row+0.5)*inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-  y = geometry->y0 + ((Real_t)slice + 0.5)*inputs->delta_xy;
+  x = geometry->x0 + ((Real_t)col + 0.5) * inputs->delta_xz; //0.5 is for center of voxel. x_0 is the left corner
+  z = geometry->z0 + ((Real_t)row + 0.5) * inputs->delta_xz; //0.5 is for center of voxel. x_0 is the left corner
+  y = geometry->y0 + ((Real_t)slice + 0.5) * inputs->delta_xy;
 
-  TempConst=(SOC::PROFILE_RESOLUTION)/(2*inputs->delta_xz);
-
+  TempConst = (advParams->PROFILE_RESOLUTION) / (2 * inputs->delta_xz);
 
   //  Temp->values = (DATA_TYPE*)calloc(Sinogram->N_t*Sinogram->N_r*Sinogram->N_theta,sizeof(DATA_TYPE));//(DATA_TYPE*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(DATA_TYPE));//makes the values =0
 
   //alternately over estimate the maximum size require for a single AMatrix column
-  AvgNumXElements = ceil(3*inputs->delta_xz/sinogram->delta_r);
-  AvgNumYElements = ceil(3*inputs->delta_xy/sinogram->delta_t);
-  MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*sinogram->N_theta;
+  AvgNumXElements = ceil(3 * inputs->delta_xz / sinogram->delta_r);
+  AvgNumYElements = ceil(3 * inputs->delta_xy / sinogram->delta_t);
+  MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements) * sinogram->N_theta;
 
-  Temp->values = (Real_t*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(Real_t));
-  Temp->index  = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(uint32_t));
+  Temp->values = (Real_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(Real_t));
+  Temp->index = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(uint32_t));
 
   //printf("%lf",Temp->values[10]);
 
-#ifdef AREA_WEIGHTED
-  for(uint32_t i=0;i<sinogram->N_theta;i++)
+  if(advParams->AREA_WEIGHTED)
+
   {
-
-    r = x*cosine[i] - z*sine[i];
-    t = y;
-
-    rmin = r - inputs->delta_xz;
-    rmax = r + inputs->delta_xz;
-
-    tmin = (t - inputs->delta_xy/2) > sinogram->T0 ? t-inputs->delta_xy/2 : sinogram->T0;
-    tmax = (t + inputs->delta_xy/2) <= sinogram->TMax ? t + inputs->delta_xy/2 : sinogram->TMax;
-
-    if(rmax < sinogram->R0 || rmin > sinogram->RMax)
-      continue;
-
-
-
-    index_min = floor(((rmin - sinogram->R0)/sinogram->delta_r));
-    index_max = floor((rmax - sinogram->R0)/sinogram->delta_r);
-
-    if(index_max >= sinogram->N_r)
-      index_max = sinogram->N_r - 1;
-
-    if(index_min < 0)
-      index_min = 0;
-
-    slice_index_min = floor((tmin - sinogram->T0)/sinogram->delta_t);
-    slice_index_max = floor((tmax - sinogram->T0)/sinogram->delta_t);
-
-    if(slice_index_min < 0)
-      slice_index_min = 0;
-    if(slice_index_max >= sinogram->N_t)
-      slice_index_max = sinogram->N_t -1;
-
-    BaseIndex = i*sinogram->N_r*sinogram->N_t;
-
-    // if(row == 63 && col == 63)
-    //    printf("%d %d\n",index_min,index_max);
-
-
-    //Do calculations only if there is a non zero contribution to the slice. This is particulary useful when the detector and geometry are
-    //of same dimesions
-
-
-    for(j = index_min;j <= index_max; j++)//Check
+    for (uint32_t i = 0; i < sinogram->N_theta; i++)
     {
 
-      Integral = 0.0;
+      r = x * cosine[i] - z * sine[i];
+      t = y;
 
-      //Accounting for Beam width
-      RTemp = (sinogram->R0 + (((Real_t)j) + 0.5) *(sinogram->delta_r));//the 0.5 is to get to the center of the detector
+      rmin = r - inputs->delta_xz;
+      rmax = r + inputs->delta_xz;
 
-      LeftEndOfBeam = RTemp - (BEAM_WIDTH/2);//Consider pre storing the divide by 2
+      tmin = (t - inputs->delta_xy / 2) > sinogram->T0 ? t - inputs->delta_xy / 2 : sinogram->T0;
+      tmax = (t + inputs->delta_xy / 2) <= sinogram->TMax ? t + inputs->delta_xy / 2 : sinogram->TMax;
 
-      //   if(FinalIndex >=176 && FinalIndex <= 178 && row ==0 && col == 0)
-      //printf("%d %lf %lf\n",j, LeftEndOfBeam,rmin);
+      if(rmax < sinogram->R0 || rmin > sinogram->RMax) continue;
 
+      index_min = floor(((rmin - sinogram->R0) / sinogram->delta_r));
+      index_max = floor((rmax - sinogram->R0) / sinogram->delta_r);
 
-      for(k=0; k < SOC::BEAM_RESOLUTION; k++)
+      if(index_max >= sinogram->N_r) index_max = sinogram->N_r - 1;
+
+      if(index_min < 0) index_min = 0;
+
+      slice_index_min = floor((tmin - sinogram->T0) / sinogram->delta_t);
+      slice_index_max = floor((tmax - sinogram->T0) / sinogram->delta_t);
+
+      if(slice_index_min < 0) slice_index_min = 0;
+      if(slice_index_max >= sinogram->N_t) slice_index_max = sinogram->N_t - 1;
+
+      BaseIndex = i * sinogram->N_r * sinogram->N_t;
+
+      // if(row == 63 && col == 63)
+      //    printf("%d %d\n",index_min,index_max);
+
+      //Do calculations only if there is a non zero contribution to the slice. This is particulary useful when the detector and geometry are
+      //of same dimesions
+
+      for (j = index_min; j <= index_max; j++) //Check
       {
 
-        RTemp = LeftEndOfBeam + ((((Real_t)k)*(BEAM_WIDTH))/ SOC::BEAM_RESOLUTION);
+        Integral = 0.0;
 
-        if (RTemp-rmin >= 0.0)
+        //Accounting for Beam width
+        RTemp = (sinogram->R0 + (((Real_t)j) + 0.5) * (sinogram->delta_r)); //the 0.5 is to get to the center of the detector
+
+        LeftEndOfBeam = RTemp - (BEAM_WIDTH / 2); //Consider pre storing the divide by 2
+
+        //   if(FinalIndex >=176 && FinalIndex <= 178 && row ==0 && col == 0)
+        //printf("%d %lf %lf\n",j, LeftEndOfBeam,rmin);
+
+        for (k = 0; k < advParams->BEAM_RESOLUTION; k++)
         {
-          ProfileIndex = (int32_t)floor((RTemp-rmin)*TempConst);//Finding the nearest neighbor profile to the beam
-          //if(FinalIndex >=176 && FinalIndex <= 178 && row ==0 && col == 0)
-          //printf("%d\n",ProfileIndex);
-          if(ProfileIndex > SOC::PROFILE_RESOLUTION)
-            ProfileIndex = SOC::PROFILE_RESOLUTION;
-        }
-        if(ProfileIndex < 0)
-          ProfileIndex = 0;
 
+          RTemp = LeftEndOfBeam + ((((Real_t)k) * (BEAM_WIDTH)) / advParams->BEAM_RESOLUTION);
 
-        if(ProfileIndex >= 0 && ProfileIndex < SOC::PROFILE_RESOLUTION)
-        {
-#ifdef BEAM_CALCULATION
-          Integral+=(BeamProfile[k]*VoxelProfile[i][ProfileIndex]);
-#else
-          Integral+=(VoxelProfile[i][ProfileIndex]/ SOC::PROFILE_RESOLUTION);
-#endif
-          //  if(FinalIndex >=176 && FinalIndex <= 178 && row ==0 && col == 0)
-          //   printf("Index %d %lf Voxel %lf I=%d\n",ProfileIndex,BeamProfile[k],VoxelProfile[2][274],i);
-        }
-
-      }
-      if(Integral > 0.0)
-      {
-        //  printf("Entering, Final Index %d %d\n",FinalIndex,Temp->values[0]);
-        //    printf("Done %d %d\n",slice_index_min,slice_index_max);
-        for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++)
-        {
-          if(sliceidx == slice_index_min)
-            ProfileThickness = (((sliceidx+1)*sinogram->delta_t + sinogram->T0) - tmin);//Sinogram->delta_t; //Will be < Sinogram->delta_t
-          else
+          if(RTemp - rmin >= 0.0)
           {
-            if (sliceidx == slice_index_max)
-            {
-              ProfileThickness = (tmax - ((sliceidx)*sinogram->delta_t + sinogram->T0));//Sinogram->delta_t;//Will be < Sinogram->delta_t
-            }
+            ProfileIndex = (int32_t)floor((RTemp - rmin) * TempConst); //Finding the nearest neighbor profile to the beam
+            //if(FinalIndex >=176 && FinalIndex <= 178 && row ==0 && col == 0)
+            //printf("%d\n",ProfileIndex);
+            if(ProfileIndex > advParams->PROFILE_RESOLUTION) ProfileIndex = advParams->PROFILE_RESOLUTION;
+          }
+          if(ProfileIndex < 0) ProfileIndex = 0;
+
+          if(ProfileIndex >= 0 && ProfileIndex < advParams->PROFILE_RESOLUTION)
+          {
+#ifdef BEAM_CALCULATION
+            Integral+=(BeamProfile[k]*VoxelProfile[i][ProfileIndex]);
+#else
+            Integral += (VoxelProfile[i][ProfileIndex] / advParams->PROFILE_RESOLUTION);
+#endif
+            //  if(FinalIndex >=176 && FinalIndex <= 178 && row ==0 && col == 0)
+            //   printf("Index %d %lf Voxel %lf I=%d\n",ProfileIndex,BeamProfile[k],VoxelProfile[2][274],i);
+          }
+
+        }
+        if(Integral > 0.0)
+        {
+          //  printf("Entering, Final Index %d %d\n",FinalIndex,Temp->values[0]);
+          //    printf("Done %d %d\n",slice_index_min,slice_index_max);
+          for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++)
+          {
+            if(sliceidx == slice_index_min) ProfileThickness = (((sliceidx + 1) * sinogram->delta_t + sinogram->T0) - tmin); //Sinogram->delta_t; //Will be < Sinogram->delta_t
             else
             {
-              ProfileThickness = sinogram->delta_t;//Sinogram->delta_t;
+              if(sliceidx == slice_index_max)
+              {
+                ProfileThickness = (tmax - ((sliceidx) * sinogram->delta_t + sinogram->T0)); //Sinogram->delta_t;//Will be < Sinogram->delta_t
+              }
+              else
+              {
+                ProfileThickness = sinogram->delta_t; //Sinogram->delta_t;
+              }
+
+            }
+            if(ProfileThickness > 0)
+            {
+
+              FinalIndex = BaseIndex + (int32_t)j + (int32_t)sliceidx * sinogram->N_r;
+              Temp->values[count] = Integral * ProfileThickness;
+              Temp->index[count] = FinalIndex; //can instead store a triple (row,col,slice) for the sinogram
+              //printf("Done\n");
+#ifdef CORRECTION
+              Temp->values[count]/=NORMALIZATION_FACTOR[FinalIndex]; //There is a normalizing constant for each measurement . So we have a total of Sinogram.N_x * Sinogram->N_theta values
+#endif
+              //printf("Access\n");
+              count++;
             }
 
           }
-          if(ProfileThickness > 0)
-          {
-
-            FinalIndex = BaseIndex + (int32_t)j + (int32_t)sliceidx * sinogram->N_r;
-            Temp->values[count] = Integral*ProfileThickness;
-            Temp->index[count] = FinalIndex;//can instead store a triple (row,col,slice) for the sinogram
-            //printf("Done\n");
-#ifdef CORRECTION
-            Temp->values[count]/=NORMALIZATION_FACTOR[FinalIndex];//There is a normalizing constant for each measurement . So we have a total of Sinogram.N_x * Sinogram->N_theta values
-#endif
-            //printf("Access\n");
-            count++;
-          }
-
         }
+
+        //  End of Beam width accounting
+
+        //        ProfileIndex=(uint32_t)(((RTemp-rmin)*TempConst));
+        // //    //   printf("%d\n",ProfileIndex);
+        //        if(ProfileIndex>=0 && ProfileIndex <m_AdvParams->PROFILE_RESOLUTION)
+        //        {
+        //    if(VoxelProfile[i][ProfileIndex] > 0.0)
+        //    {
+        //          Temp->values[FinalIndex]=VoxelProfile[i][ProfileIndex];
+        //         // Temp->index[count++]=FinalIndex;
+        //   count++;
+        //    }
+        //        }
       }
 
-      //  End of Beam width accounting
-
-
-      //        ProfileIndex=(uint32_t)(((RTemp-rmin)*TempConst));
-      // //    //   printf("%d\n",ProfileIndex);
-      //        if(ProfileIndex>=0 && ProfileIndex < SOC::PROFILE_RESOLUTION)
-      //        {
-      //    if(VoxelProfile[i][ProfileIndex] > 0.0)
-      //    {
-      //          Temp->values[FinalIndex]=VoxelProfile[i][ProfileIndex];
-      //         // Temp->index[count++]=FinalIndex;
-      //   count++;
-      //    }
-      //        }
     }
 
-
-
   }
-
-#endif
 
 #ifdef DISTANCE_DRIVEN
 
@@ -272,7 +257,6 @@ void CalculateAMatrixColumn::execute()
 
     tmin = (t - inputs->delta_xy/2) > -geometry->LengthY/2 ? t-inputs->delta_xy/2 : -geometry->LengthY/2;
     tmax = (t + inputs->delta_xy/2) <= geometry->LengthY/2 ? t + inputs->delta_xy/2 : geometry->LengthY/2;
-
 
     if(sinogram->angles[i]*(180/M_PI) >= -45 && sinogram->angles[i]*(180/M_PI) <= 45)
     {
@@ -286,9 +270,8 @@ void CalculateAMatrixColumn::execute()
       rmax = r + (inputs->delta_xz/2)*fabs(sine[i]);
     }
 
-
     if(rmax < sinogram->R0 || rmin > sinogram->R0 + sinogram->N_r*sinogram->delta_r)
-      continue;
+    continue;
 
     index_min = floor(((rmin-sinogram->R0)/sinogram->delta_r));
     index_max = floor((rmax-sinogram->R0)/sinogram->delta_r);
@@ -297,31 +280,28 @@ void CalculateAMatrixColumn::execute()
     slice_index_max = floor((tmax - sinogram->T0)/sinogram->delta_t);
 
     if(slice_index_min < 0)
-      slice_index_min = 0;
+    slice_index_min = 0;
     if(slice_index_max >= sinogram->N_t)
-      slice_index_max = sinogram->N_t -1;
-
+    slice_index_max = sinogram->N_t -1;
 
     if(index_max >= sinogram->N_r)
-      index_max = sinogram->N_r-1;
+    index_max = sinogram->N_r-1;
 
     if(index_min < 0)
-      index_min = 0;
+    index_min = 0;
 
     BaseIndex = i*sinogram->N_r*sinogram->N_t;
 
     // if(row == 63 && col == 63)
     //    printf("%d %d\n",index_min,index_max);
 
-
-
     //Do calculations only if there is a non zero contribution to the slice. This is particulary useful when the detector and geometry are
     //of same dimesions
 
     for(j = index_min;j <= index_max; j++)//Check
     {
-      d1  = ((Real_t)j)*sinogram->delta_r + sinogram->R0;
-      d2 =  d1 + sinogram->delta_r;
+      d1 = ((Real_t)j)*sinogram->delta_r + sinogram->R0;
+      d2 = d1 + sinogram->delta_r;
 
       if(rmax < d1)
       {
@@ -336,17 +316,16 @@ void CalculateAMatrixColumn::execute()
         else
         {
           if(rmin >= d1 && rmin <= d2 && rmax >= d1 && rmax <= d2)
-            Integral= (rmax - rmin)/sinogram->delta_r;
+          Integral= (rmax - rmin)/sinogram->delta_r;
           else
-            if(rmax > d1 && rmax < d2 && rmin < d1)
-              Integral = (rmax - d1)/sinogram->delta_r;
-            else
-              if( rmin < d1 && rmax > d2)
-                Integral = 1;
-              else
-                Integral = 0;
+          if(rmax > d1 && rmax < d2 && rmin < d1)
+          Integral = (rmax - d1)/sinogram->delta_r;
+          else
+          if( rmin < d1 && rmax > d2)
+          Integral = 1;
+          else
+          Integral = 0;
         }
-
 
       }
       if(Integral > 0)
@@ -355,13 +334,15 @@ void CalculateAMatrixColumn::execute()
         for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++)
         {
           if(sliceidx == slice_index_min)
-            ProfileThickness = (((sliceidx+1)*sinogram->delta_t + sinogram->T0) - tmin)*sinogram->delta_t;
-          else {
+          ProfileThickness = (((sliceidx+1)*sinogram->delta_t + sinogram->T0) - tmin)*sinogram->delta_t;
+          else
+          {
             if (sliceidx == slice_index_max)
             {
               ProfileThickness = (tmax - ((sliceidx)*sinogram->delta_t + sinogram->T0))*sinogram->delta_t;
             }
-            else {
+            else
+            {
               ProfileThickness = sinogram->delta_t;
             }
 
@@ -373,7 +354,7 @@ void CalculateAMatrixColumn::execute()
             Temp->values[count] = Integral*ProfileThickness;
             Temp->index[count] = FinalIndex;
 #ifdef CORRECTION
-            Temp->values[count]/=NORMALIZATION_FACTOR[FinalIndex];//There is a normalizing constant for each measurement . So we have a total of Sinogram.N_x * Sinogram->N_theta values
+            Temp->values[count]/=NORMALIZATION_FACTOR[FinalIndex]; //There is a normalizing constant for each measurement . So we have a total of Sinogram.N_x * Sinogram->N_theta values
 #endif
             count++;
           }
@@ -385,29 +366,26 @@ void CalculateAMatrixColumn::execute()
       }
     }
 
-
-
   }
-
 
 #endif
   // printf("Final Space allocation for column %d %d\n",row,col);
 
-  Ai->values=(Real_t*)get_spc(count,sizeof(Real_t));
-  Ai->index=(uint32_t*)get_spc(count,sizeof(uint32_t));
-  k=0;
-  for(uint32_t i = 0; i < count; i++)
+  Ai->values = (Real_t*)get_spc(count, sizeof(Real_t));
+  Ai->index = (uint32_t*)get_spc(count, sizeof(uint32_t));
+  k = 0;
+  for (uint32_t i = 0; i < count; i++)
   {
     if(Temp->values[i] > 0.0)
     {
-      Ai->values[k]=Temp->values[i];
-      checksum+=Ai->values[k];
-      Ai->index[k++]=Temp->index[i];
+      Ai->values[k] = Temp->values[i];
+      checksum += Ai->values[k];
+      Ai->index[k++] = Temp->index[i];
     }
 
   }
 
-  Ai->count=k;
+  Ai->count = k;
 
   //printf("%d %d \n",Ai->count,count);
 

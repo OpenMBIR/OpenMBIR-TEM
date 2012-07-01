@@ -831,7 +831,11 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   m_MultiResSOC->setInitialReconstructionValue(defaultInitialRecon->text().toFloat(&ok));
 
   m_MultiResSOC->setInterpolateInitialReconstruction(interpolateInitialRecontruction->isChecked());
-  //m_MultiResSOC->setInterpolationFactor(interpolationFactor->text().toInt(&ok));
+
+  AdvancedParametersPtr advParams = AdvancedParametersPtr(new AdvancedParameters);
+  SOCEngine::InitializeAdvancedParams(advParams);
+  m_MultiResSOC->setAdvParams(advParams);
+
 
   std::vector<uint16_t> subvolume(6);
   subvolume[2] = 0;

@@ -155,8 +155,8 @@ namespace SOC {
     Real_t targetGain;
     bool useDefaultOffset;
     Real_t defaultOffset;
-	Real_t defaultInitialRecon;
-	Real_t defaultVariance;
+    Real_t defaultInitialRecon;
+    Real_t defaultVariance;
 
 
     /* These are input files */
@@ -177,10 +177,22 @@ namespace SOC {
 
     std::vector<uint8_t> excludedViews;// Indices of views to exclude from reconstruction
     std::vector<int> goodViews; // Contains the indices of the views to use for reconstruction
-
   } TomoInputs;
-
   typedef boost::shared_ptr<TomoInputs> TomoInputsPtr;
+
+
+  typedef struct
+  {
+      double X_SHRINK_FACTOR;
+      unsigned int X_STRETCH;
+      unsigned int Z_STRETCH;
+      unsigned int DETECTOR_RESPONSE_BINS;
+      unsigned int PROFILE_RESOLUTION;
+      unsigned int BEAM_RESOLUTION;
+      unsigned int AREA_WEIGHTED;
+      unsigned int THRESHOLD_REDUCTION_FACTOR;
+  } AdvancedParameters ;
+  typedef boost::shared_ptr<AdvancedParameters> AdvancedParametersPtr;
 
   //Structure to store a single column(A_i) of the A-matrix
   typedef struct
@@ -197,7 +209,6 @@ namespace SOC {
     RealArrayType::Pointer mu; //Offset
     RealArrayType::Pointer alpha;//Noise variance refinement factor
   } ScaleOffsetParams;
-
   typedef boost::shared_ptr<ScaleOffsetParams> ScaleOffsetParamsPtr;
 
 

@@ -60,6 +60,7 @@ class TomoEngine_EXPORT TomoFilter : public AbstractFilter
     MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
     MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)
     MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
+    MXA_INSTANCE_PROPERTY(AdvancedParametersPtr, AdvParams)
 
     virtual void execute();
 

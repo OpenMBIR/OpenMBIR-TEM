@@ -48,28 +48,12 @@
 
 
 //#define FORWARD_PROJECT_MODE
-
-namespace SOC
-{
-  const double X_SHRINK_FACTOR = 0.6;
-  const unsigned int X_STRETCH = 1;
-  const unsigned int Z_STRETCH = 2;
-  const unsigned int DETECTOR_RESPONSE_BINS = 64;
-  const unsigned int PROFILE_RESOLUTION = 1536;
-  const unsigned int BEAM_RESOLUTION = 512;
-}
-
-
 //#define DEBUG 0
 
-
-#define AREA_WEIGHTED
 
 //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
 
 #define ROI 1
-
-#define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
 
 #define SURROGATE_FUNCTION
 #define EIMTOMO_USE_QGGMRF 1

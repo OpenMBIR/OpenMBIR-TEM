@@ -76,11 +76,12 @@ class MultiResolutionSOC : public FilterPipeline
     MXA_INSTANCE_PROPERTY(int, FinalResolution)
     MXA_INSTANCE_PROPERTY(bool, ExtendObject)
     MXA_INSTANCE_PROPERTY(bool, InterpolateInitialReconstruction)
-//    MXA_INSTANCE_PROPERTY(float, InterpolationFactor)
     MXA_INSTANCE_PROPERTY(float, DefaultVariance)
     MXA_INSTANCE_PROPERTY(float, InitialReconstructionValue)
 
     MXA_INSTANCE_PROPERTY(SOC::TiltSelection, TiltSelection)
+    MXA_INSTANCE_PROPERTY(AdvancedParametersPtr, AdvParams)
+
 
     /**
      * @brief If this vector is set, ie, length = 6, then we are going to use
