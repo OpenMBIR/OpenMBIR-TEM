@@ -54,16 +54,19 @@ namespace SOC
   const double X_SHRINK_FACTOR = 0.6;
   const unsigned int X_STRETCH = 1;
   const unsigned int Z_STRETCH = 2;
+  const unsigned int DETECTOR_RESPONSE_BINS = 64;
 }
 
 
 //#define DEBUG ,
+
 #define PROFILE_RESOLUTION 1536
 
 #define BEAM_RESOLUTION 512
 #define AREA_WEIGHTED
 
 //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
+
 #define ROI 1
 
 #define THRESHOLD_REDUCTION_FACTOR 1 //Dynamically lower the threshold by this amount. Set to 1 for no reduction
@@ -73,14 +76,18 @@ namespace SOC
 
 //#define WRITE_INTERMEDIATE_RESULTS
 //#define COST_CALCULATE
-#define DETECTOR_RESPONSE_BINS 64
+
 #define JOINT_ESTIMATION
 #define ZERO_SKIPPING
 #define NOISE_MODEL
+
 //#define IDENTITY_NOISE_MATRIX
+
 #define POSITIVITY_CONSTRAINT
 #define RANDOM_ORDER_UPDATES
+
 //#define NHICD
+
 #define NUM_NON_HOMOGENOUS_ITER 20
 
 #define DEBUG_FILE_VALUES 0
