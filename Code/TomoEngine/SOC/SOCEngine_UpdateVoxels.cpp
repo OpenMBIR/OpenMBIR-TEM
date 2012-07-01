@@ -345,7 +345,7 @@ class UpdateYSlice
                 Real_t intermediate = m_MagUpdateMap->getValue(j_new, k_new) + fabs(UpdatedVoxelValue - m_CurrentVoxelValue);
                 m_MagUpdateMap->setValue(intermediate, j_new, k_new);
 
-#ifdef ROI
+#if ROI
                 //if(Mask->d[j_new][k_new] == 1)
                 if(m_Mask->getValue(j_new, k_new) == 1)
                 {
@@ -434,7 +434,7 @@ class UpdateYSlice
 
     int m_ZeroCount;
     Real_t m_CurrentVoxelValue;
-#ifdef ROI
+#if ROI
     //variables used to stop the process
     Real_t* m_AverageUpdate;
     Real_t* m_AverageMagnitudeOfRecon;
@@ -553,7 +553,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     }
 
     //printf("Iter %d\n",Iter);
-#ifdef ROI
+#if ROI
     //variables used to stop the process
     Real_t AverageUpdate = 0;
     Real_t AverageMagnitudeOfRecon = 0;
@@ -655,7 +655,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     printf("Iter: %d\n",Iter);
 #endif //Cost calculation endif
 
-#ifdef ROI
+#if ROI
       std::cout<<"Average Update "<<AverageUpdate<<std::endl;
       std::cout<<"Average Mag "<<AverageMagnitudeOfRecon<<std::endl;
     if(AverageMagnitudeOfRecon > 0)

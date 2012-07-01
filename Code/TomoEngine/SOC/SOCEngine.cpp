@@ -441,7 +441,7 @@ void SOCEngine::execute()
   NuisanceParams->alpha = RealArrayType::NullPointer();
 #endif
 
-#ifdef ROI
+#if ROI
   UInt8Image_t::Pointer Mask;
 //  DATA_TYPE EllipseA,EllipseB;
 #endif
@@ -560,7 +560,7 @@ void SOCEngine::execute()
   FiltMagUpdateMap = RealImage_t::New(dims, "Update Map for voxel lines");
   MagUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");
 
-#ifdef ROI
+#if ROI
   //Mask = (uint8_t**)get_img(m_Geometry->N_x, m_Geometry->N_z,sizeof(uint8_t));//width,height
   dims[0] = m_Geometry->N_z;
   dims[1] = m_Geometry->N_x;
