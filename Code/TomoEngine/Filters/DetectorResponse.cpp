@@ -70,7 +70,7 @@ void DetectorResponse::execute()
 
   Real_t r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,tmin;
   Real_t r0 = -(m_BeamWidth)/2;
-  Real_t StepSize = m_BeamWidth/BEAM_RESOLUTION;
+  Real_t StepSize = m_BeamWidth/SOC::BEAM_RESOLUTION;
   int16_t i,j,k,p,ProfileIndex;
   SinogramPtr sinogram = getSinogram();
   TomoInputsPtr inputs = getTomoInputs();
@@ -79,7 +79,7 @@ void DetectorResponse::execute()
   RealVolumeType::Pointer H = RealVolumeType::New(dims, "DetectorResponse");
 
   //H = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//change from 1 to DETECTOR_RESPONSE_BINS
-  TempConst=(PROFILE_RESOLUTION)/(2*inputs->delta_xz);
+  TempConst=(SOC::PROFILE_RESOLUTION)/(2*inputs->delta_xz);
 
   for(k = 0 ; k < sinogram->N_theta; k++)
   {
@@ -92,7 +92,7 @@ void DetectorResponse::execute()
         ProfileCenterT = j*m_OffsetT;
         tmin = ProfileCenterT - inputs->delta_xy/2;
         sum = 0;
-        for (p=0; p < BEAM_RESOLUTION; p++)
+        for (p=0; p < SOC::BEAM_RESOLUTION; p++)
         {
           r = r0 + p*StepSize;
           if(r < rmin)
@@ -103,9 +103,9 @@ void DetectorResponse::execute()
           {
             ProfileIndex = 0;
           }
-          if(ProfileIndex >= PROFILE_RESOLUTION)
+          if(ProfileIndex >= SOC::PROFILE_RESOLUTION)
           {
-            ProfileIndex = PROFILE_RESOLUTION - 1;
+            ProfileIndex = SOC::PROFILE_RESOLUTION - 1;
           }
           sum += m_VoxelProfile->getValue(k, ProfileIndex) * m_BeamProfile->d[p];
 //          sum += (m_VoxelProfile->d[k][ProfileIndex] * m_BeamProfile->d[p]);//;*BeamProfile[l]);

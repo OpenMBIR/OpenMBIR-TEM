@@ -100,7 +100,7 @@ void CalculateAMatrixColumn::execute()
   z = geometry->z0 + ((Real_t)row+0.5)*inputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
   y = geometry->y0 + ((Real_t)slice + 0.5)*inputs->delta_xy;
 
-  TempConst=(PROFILE_RESOLUTION)/(2*inputs->delta_xz);
+  TempConst=(SOC::PROFILE_RESOLUTION)/(2*inputs->delta_xz);
 
 
   //  Temp->values = (DATA_TYPE*)calloc(Sinogram->N_t*Sinogram->N_r*Sinogram->N_theta,sizeof(DATA_TYPE));//(DATA_TYPE*)get_spc(Sinogram->N_r*Sinogram->N_theta,sizeof(DATA_TYPE));//makes the values =0
@@ -174,29 +174,29 @@ void CalculateAMatrixColumn::execute()
       //printf("%d %lf %lf\n",j, LeftEndOfBeam,rmin);
 
 
-      for(k=0; k < BEAM_RESOLUTION; k++)
+      for(k=0; k < SOC::BEAM_RESOLUTION; k++)
       {
 
-        RTemp = LeftEndOfBeam + ((((Real_t)k)*(BEAM_WIDTH))/BEAM_RESOLUTION);
+        RTemp = LeftEndOfBeam + ((((Real_t)k)*(BEAM_WIDTH))/ SOC::BEAM_RESOLUTION);
 
         if (RTemp-rmin >= 0.0)
         {
           ProfileIndex = (int32_t)floor((RTemp-rmin)*TempConst);//Finding the nearest neighbor profile to the beam
           //if(FinalIndex >=176 && FinalIndex <= 178 && row ==0 && col == 0)
           //printf("%d\n",ProfileIndex);
-          if(ProfileIndex > PROFILE_RESOLUTION)
-            ProfileIndex = PROFILE_RESOLUTION;
+          if(ProfileIndex > SOC::PROFILE_RESOLUTION)
+            ProfileIndex = SOC::PROFILE_RESOLUTION;
         }
         if(ProfileIndex < 0)
           ProfileIndex = 0;
 
 
-        if(ProfileIndex >= 0 && ProfileIndex < PROFILE_RESOLUTION)
+        if(ProfileIndex >= 0 && ProfileIndex < SOC::PROFILE_RESOLUTION)
         {
 #ifdef BEAM_CALCULATION
           Integral+=(BeamProfile[k]*VoxelProfile[i][ProfileIndex]);
 #else
-          Integral+=(VoxelProfile[i][ProfileIndex]/PROFILE_RESOLUTION);
+          Integral+=(VoxelProfile[i][ProfileIndex]/ SOC::PROFILE_RESOLUTION);
 #endif
           //  if(FinalIndex >=176 && FinalIndex <= 178 && row ==0 && col == 0)
           //   printf("Index %d %lf Voxel %lf I=%d\n",ProfileIndex,BeamProfile[k],VoxelProfile[2][274],i);
@@ -245,7 +245,7 @@ void CalculateAMatrixColumn::execute()
 
       //        ProfileIndex=(uint32_t)(((RTemp-rmin)*TempConst));
       // //    //   printf("%d\n",ProfileIndex);
-      //        if(ProfileIndex>=0 && ProfileIndex < PROFILE_RESOLUTION)
+      //        if(ProfileIndex>=0 && ProfileIndex < SOC::PROFILE_RESOLUTION)
       //        {
       //    if(VoxelProfile[i][ProfileIndex] > 0.0)
       //    {

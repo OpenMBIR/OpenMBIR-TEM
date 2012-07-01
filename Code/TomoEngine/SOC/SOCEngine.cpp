@@ -867,7 +867,7 @@ RealImage_t::Pointer SOCEngine::calculateVoxelProfile()
 {
   Real_t angle,MaxValLineIntegral;
   Real_t temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
-  size_t dims[2] = {m_Sinogram->N_theta , PROFILE_RESOLUTION};
+  size_t dims[2] = {m_Sinogram->N_theta , SOC::PROFILE_RESOLUTION};
   RealImage_t::Pointer VoxProfile = RealImage_t::New(dims, "VoxelProfile");
 
   Real_t checksum=0;
@@ -906,9 +906,9 @@ RealImage_t::Pointer SOCEngine::calculateVoxelProfile()
     RightNear = 1+dist2;
     RightCorner = 1+dist1;
 
-    for(j = 0;j<PROFILE_RESOLUTION;j++)
+    for(j = 0;j< SOC::PROFILE_RESOLUTION;j++)
     {
-      t = 2.0*j / PROFILE_RESOLUTION;//2 is the normalized length of the profile (basically equl to 2*delta_xz)
+      t = 2.0*j / SOC::PROFILE_RESOLUTION;//2 is the normalized length of the profile (basically equl to 2*delta_xz)
       if(t <= LeftCorner || t >= RightCorner)
         VoxProfile->setValue(0, i, j);
       else if(t > RightNear)
@@ -1056,19 +1056,19 @@ void SOCEngine::initializeBeamProfile()
   uint16_t i;
   Real_t sum=0,W;
 //  BeamProfile=(DATA_TYPE*)get_spc(BEAM_RESOLUTION,sizeof(DATA_TYPE));
-  size_t dims[1] = { BEAM_RESOLUTION };
+  size_t dims[1] = { SOC::BEAM_RESOLUTION };
   BeamProfile = RealArrayType::New(dims, "BeamProfile");
   W=BEAM_WIDTH/2;
-  for (i=0; i < BEAM_RESOLUTION ;i++)
+  for (i=0; i < SOC::BEAM_RESOLUTION ;i++)
   {
     //BeamProfile->d[i] = (1.0/(BEAM_WIDTH)) * ( 1 + cos ((PI/W)*fabs(-W + i*(BEAM_WIDTH/BEAM_RESOLUTION))));
-    BeamProfile->d[i] = 0.54 - 0.46*cos((2*M_PI/BEAM_RESOLUTION)*i);
+    BeamProfile->d[i] = 0.54 - 0.46*cos((2.0*M_PI/SOC::BEAM_RESOLUTION)*i);
     sum=sum+BeamProfile->d[i];
   }
 
   //Normalize the beam to have an area of 1
 
-  for (i=0; i < BEAM_RESOLUTION ;i++)
+  for (i=0; i < SOC::BEAM_RESOLUTION ;i++)
   {
 
     BeamProfile->d[i]/=sum;
@@ -1339,7 +1339,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
   z = m_Geometry->z0 + ((Real_t)row+0.5)*m_TomoInputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
   y = m_Geometry->y0 + ((Real_t)slice + 0.5)*m_TomoInputs->delta_xy;
 
-  TempConst=(PROFILE_RESOLUTION)/(2*m_TomoInputs->delta_xz);
+  TempConst=(SOC::PROFILE_RESOLUTION)/(2*m_TomoInputs->delta_xz);
 
   //alternately over estimate the maximum size require for a single AMatrix column
   AvgNumXElements = ceil(3*m_TomoInputs->delta_xz/m_Sinogram->delta_r);

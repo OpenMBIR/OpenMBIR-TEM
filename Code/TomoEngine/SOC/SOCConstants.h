@@ -55,14 +55,14 @@ namespace SOC
   const unsigned int X_STRETCH = 1;
   const unsigned int Z_STRETCH = 2;
   const unsigned int DETECTOR_RESPONSE_BINS = 64;
+  const unsigned int PROFILE_RESOLUTION = 1536;
+  const unsigned int BEAM_RESOLUTION = 512;
 }
 
 
-//#define DEBUG ,
+//#define DEBUG 0
 
-#define PROFILE_RESOLUTION 1536
 
-#define BEAM_RESOLUTION 512
 #define AREA_WEIGHTED
 
 //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
