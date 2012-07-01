@@ -250,7 +250,7 @@ class UpdateYSlice
               if(m_ZeroSkipping == true)
               {
                 //Zero Skipping Algorithm
-                bool ZSFlag = true;
+                ZSFlag = true;
                 if(m_CurrentVoxelValue == 0.0 && (m_InnerIter > 0 || m_OuterIter > 0))
                 {
                   for (uint8_t p = 0; p <= 2; p++)
