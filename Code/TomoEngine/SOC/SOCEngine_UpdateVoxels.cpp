@@ -48,8 +48,8 @@ class UpdateYSlice
   public:
     UpdateYSlice(uint16_t yStart, uint16_t yEnd,
                  GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
-                  SinogramPtr  sinogram, SinogramPtr  bfSinogram,
-                  AMatrixCol** tempCol,
+                 SinogramPtr  sinogram, SinogramPtr  bfSinogram,
+                 AMatrixCol** tempCol,
                  RealVolumeType::Pointer errorSino,
                  RealVolumeType::Pointer weight,
                  AMatrixCol* voxelLineResponse,
@@ -61,7 +61,8 @@ class UpdateYSlice
                  SOCEngine::VoxelUpdateType updateType,
                  Real_t nh_Threshold,
                  Real_t* averageUpdate,
-                 Real_t* averageMagnitudeOfRecon) :
+                 Real_t* averageMagnitudeOfRecon,
+                 unsigned int zeroSkipping) :
       m_YStart(yStart),
       m_YEnd(yEnd),
       m_Geometry(geometry),
@@ -83,7 +84,8 @@ class UpdateYSlice
       m_ZeroCount(0),
       m_CurrentVoxelValue(0.0),
       m_AverageUpdate(averageUpdate),
-      m_AverageMagnitudeOfRecon(averageMagnitudeOfRecon)
+      m_AverageMagnitudeOfRecon(averageMagnitudeOfRecon),
+      m_ZeroSkipping(zeroSkipping)
     {
       initVariables();
     }
@@ -244,31 +246,36 @@ class UpdateYSlice
               m_CurrentVoxelValue = m_Geometry->Object->getValue(j_new, k_new, i); //Store the present value of the voxel
               THETA1 = 0.0;
               THETA2 = 0.0;
-#ifdef ZERO_SKIPPING
-              //Zero Skipping Algorithm
               bool ZSFlag = true;
-              if(m_CurrentVoxelValue == 0.0 && (m_InnerIter > 0 || m_OuterIter > 0))
+              if(m_ZeroSkipping == true)
               {
-                for (uint8_t p = 0; p <= 2; p++)
+                //Zero Skipping Algorithm
+                bool ZSFlag = true;
+                if(m_CurrentVoxelValue == 0.0 && (m_InnerIter > 0 || m_OuterIter > 0))
                 {
-                  for (uint8_t q = 0; q <= 2; q++)
+                  for (uint8_t p = 0; p <= 2; p++)
                   {
-                    for (uint8_t r = 0; r <= 2; r++)
-                    if(NEIGHBORHOOD[INDEX_3(p,q,r)] > 0.0)
+                    for (uint8_t q = 0; q <= 2; q++)
                     {
-                      ZSFlag = false;
-                      break;
+                      for (uint8_t r = 0; r <= 2; r++)
+                        if(NEIGHBORHOOD[INDEX_3(p,q,r)] > 0.0)
+                        {
+                          ZSFlag = false;
+                          break;
+                        }
                     }
                   }
+                }
+                else
+                {
+                  ZSFlag = false; //First time dont care for zero skipping
                 }
               }
               else
               {
-                ZSFlag = false; //First time dont care for zero skipping
+                ZSFlag = false; //do ICD on all voxels
               }
-#else
-              bool ZSFlag = false; //do ICD on all voxels
-#endif //Zero skipping
+
               if(ZSFlag == false)
               {
 
@@ -313,9 +320,8 @@ class UpdateYSlice
 #else
                 errorcode = 0;
 #ifdef EIMTOMO_USE_QGGMRF
-                UpdatedVoxelValue = QGGMRF::FunctionalSubstitution(low, high, m_CurrentVoxelValue,
-                    BOUNDARYFLAG, FILTER, NEIGHBORHOOD,
-                    THETA1, THETA2, m_QggmrfValues);
+                UpdatedVoxelValue =
+                    QGGMRF::FunctionalSubstitution(low, high, m_CurrentVoxelValue, BOUNDARYFLAG, FILTER, NEIGHBORHOOD, THETA1, THETA2, m_QggmrfValues);
 #else
                 SurrogateUpdate = surrogateFunctionBasedMin();
                 UpdatedVoxelValue = SurrogateUpdate;
@@ -337,7 +343,6 @@ class UpdateYSlice
                   {
                     UpdatedVoxelValue = 0;
                   }
-
                 }
 
                 //TODO Print appropriate error messages for other values of error code
@@ -363,7 +368,8 @@ class UpdateYSlice
                   for (uint32_t i_t = m_VoxelLineResponse[i].index[0]; i_t < m_VoxelLineResponse[i].index[0] + m_VoxelLineResponse[i].count; i_t++)
                   {
                     size_t error_idx = m_ErrorSino->calcIndex(i_theta, i_r, i_t);
-                    kConst2 = (m_NuisanceParams->I_0->d[i_theta] * (m_TempCol[Index]->values[q] * m_VoxelLineResponse[i].values[VoxelLineAccessCounter] * (UpdatedVoxelValue - m_CurrentVoxelValue)));
+                    kConst2 = (m_NuisanceParams->I_0->d[i_theta]
+                        * (m_TempCol[Index]->values[q] * m_VoxelLineResponse[i].values[VoxelLineAccessCounter] * (UpdatedVoxelValue - m_CurrentVoxelValue)));
                     if(m_Sinogram->BF_Flag == false)
                     {
                       m_ErrorSino->d[error_idx] -= kConst2;
@@ -439,7 +445,7 @@ class UpdateYSlice
     Real_t* m_AverageUpdate;
     Real_t* m_AverageMagnitudeOfRecon;
 #endif
-
+    unsigned int m_ZeroSkipping;
 
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
     uint8_t BOUNDARYFLAG[27];

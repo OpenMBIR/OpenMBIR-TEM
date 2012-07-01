@@ -191,6 +191,7 @@ namespace SOC {
       unsigned int BEAM_RESOLUTION;
       unsigned int AREA_WEIGHTED;
       unsigned int THRESHOLD_REDUCTION_FACTOR;
+      unsigned int ZERO_SKIPPING;
   } AdvancedParameters ;
   typedef boost::shared_ptr<AdvancedParameters> AdvancedParametersPtr;
 

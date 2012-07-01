@@ -52,7 +52,6 @@
 
 
 //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
-
 #define ROI 1
 
 #define SURROGATE_FUNCTION
@@ -62,7 +61,6 @@
 //#define COST_CALCULATE
 
 #define JOINT_ESTIMATION
-#define ZERO_SKIPPING
 #define NOISE_MODEL
 
 //#define IDENTITY_NOISE_MATRIX

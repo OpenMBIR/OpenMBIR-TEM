@@ -272,6 +272,7 @@ void SOCEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
   v->BEAM_RESOLUTION = 512;
   v->AREA_WEIGHTED = 1;
   v->THRESHOLD_REDUCTION_FACTOR = 1;
+  v->ZERO_SKIPPING = 1;
 }
 
 // -----------------------------------------------------------------------------
