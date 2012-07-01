@@ -75,7 +75,7 @@ void DetectorResponse::execute()
   SinogramPtr sinogram = getSinogram();
   TomoInputsPtr inputs = getTomoInputs();
 
-  size_t dims[3] = {1, sinogram->N_theta,DETECTOR_RESPONSE_BINS};
+  size_t dims[3] = {1, sinogram->N_theta,SOC::DETECTOR_RESPONSE_BINS};
   RealVolumeType::Pointer H = RealVolumeType::New(dims, "DetectorResponse");
 
   //H = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//change from 1 to DETECTOR_RESPONSE_BINS
@@ -83,7 +83,7 @@ void DetectorResponse::execute()
 
   for(k = 0 ; k < sinogram->N_theta; k++)
   {
-    for (i = 0; i < DETECTOR_RESPONSE_BINS; i++) //displacement along r
+    for (i = 0; i < SOC::DETECTOR_RESPONSE_BINS; i++) //displacement along r
     {
       ProfileCenterR = i*m_OffsetR;
       rmin = ProfileCenterR - inputs->delta_xz;

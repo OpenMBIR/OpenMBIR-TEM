@@ -444,8 +444,8 @@ void SOCEngine::execute()
   Final_Sinogram = RealVolumeType::New(dims, "Final Sinogram");
 
   //Setting the value of all the private members
-  OffsetR = ((m_TomoInputs->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/DETECTOR_RESPONSE_BINS;
-  OffsetT = ((m_TomoInputs->delta_xz/2) + m_Sinogram->delta_t/2)/DETECTOR_RESPONSE_BINS;
+  OffsetR = ((m_TomoInputs->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/ SOC::DETECTOR_RESPONSE_BINS;
+  OffsetT = ((m_TomoInputs->delta_xz/2) + m_Sinogram->delta_t/2)/ SOC::DETECTOR_RESPONSE_BINS;
 
   BEAM_WIDTH = m_Sinogram->delta_r;
 
@@ -558,7 +558,7 @@ void SOCEngine::execute()
   // Initialize H_t volume
   dims[0] = 1;
   dims[1] = m_Sinogram->N_theta;
-  dims[2] = DETECTOR_RESPONSE_BINS;
+  dims[2] =  SOC::DETECTOR_RESPONSE_BINS;
   H_t = RealVolumeType::New(dims, "H_t");
   initializeHt(H_t);
 
@@ -990,11 +990,11 @@ RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer Detect
             delta_r = fabs(center_r - r);
             index_delta_r = static_cast<uint16_t>(floor((delta_r / OffsetR)));
 
-            if(index_delta_r < DETECTOR_RESPONSE_BINS)
+            if(index_delta_r <  SOC::DETECTOR_RESPONSE_BINS)
             {
               w1 = delta_r - index_delta_r * OffsetR;
               w2 = (index_delta_r + 1) * OffsetR - delta_r;
-              uint16_t iidx = index_delta_r + 1 < DETECTOR_RESPONSE_BINS ? index_delta_r + 1 : DETECTOR_RESPONSE_BINS - 1;
+              uint16_t iidx = index_delta_r + 1 <  SOC::DETECTOR_RESPONSE_BINS ? index_delta_r + 1 :  SOC::DETECTOR_RESPONSE_BINS - 1;
               f1 = (w2 / OffsetR) * DetectorResponse->getValue(0, i_theta, index_delta_r)
                   +(w1 / OffsetR) * DetectorResponse->getValue(0, i_theta, iidx);
             }
@@ -1009,11 +1009,11 @@ RealVolumeType::Pointer SOCEngine::forwardProject(RealVolumeType::Pointer Detect
               delta_t = fabs(center_t - t);
               index_delta_t = static_cast<uint16_t>(floor((delta_t / OffsetT)));
 
-              if(index_delta_t < DETECTOR_RESPONSE_BINS)
+              if(index_delta_t <  SOC::DETECTOR_RESPONSE_BINS)
               {
                 w1 = delta_t - index_delta_t * OffsetT;
                 w2 = (index_delta_t + 1) * OffsetT - delta_t;
-                uint16_t iidx = index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1;
+                uint16_t iidx = index_delta_t + 1 <  SOC::DETECTOR_RESPONSE_BINS ? index_delta_t + 1 :  SOC::DETECTOR_RESPONSE_BINS - 1;
                 f2 = (w2 / OffsetT) * H_t->getValue(0, i_theta, index_delta_t) + (w1 / OffsetT) * H_t->getValue(0, i_theta, iidx);
               }
               else
@@ -1399,7 +1399,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
       index_delta_r = static_cast<int32_t>(floor((delta_r/OffsetR)));
 
 
-      if (index_delta_r >= 0 && index_delta_r < DETECTOR_RESPONSE_BINS)
+      if (index_delta_r >= 0 && index_delta_r <  SOC::DETECTOR_RESPONSE_BINS)
       {
 
     //    for (sliceidx = slice_index_min; sliceidx <= slice_index_max; sliceidx++)
@@ -1410,7 +1410,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
 
 
 
-          if (index_delta_t >= 0 && index_delta_t < DETECTOR_RESPONSE_BINS)
+          if (index_delta_t >= 0 && index_delta_t <  SOC::DETECTOR_RESPONSE_BINS)
           {
 
             //Using index_delta_t,index_delta_t+1,index_delta_r and index_delta_r+1 do bilinear interpolation
@@ -1420,10 +1420,10 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
             w3 = delta_t - index_delta_t*OffsetT;
             w4 = (index_delta_r+1)*OffsetT - delta_t;
 
-            uint16_t iidx = index_delta_r+1 < DETECTOR_RESPONSE_BINS ? index_delta_r+1:DETECTOR_RESPONSE_BINS-1;
+            uint16_t iidx = index_delta_r+1 <  SOC::DETECTOR_RESPONSE_BINS ? index_delta_r+1: SOC::DETECTOR_RESPONSE_BINS-1;
             f1 = (w2/OffsetR)*DetectorResponse->getValue(index_delta_t, i, index_delta_r)
                + (w1/OffsetR)*DetectorResponse->getValue(index_delta_t, i, iidx);
-            //  f2 = (w2/OffsetR)*DetectorResponse[index_delta_t+1 < DETECTOR_RESPONSE_BINS ?index_delta_t+1 : DETECTOR_RESPONSE_BINS-1][i][index_delta_r] + (w1/OffsetR)*DetectorResponse[index_delta_t+1 < DETECTOR_RESPONSE_BINS? index_delta_t+1:DETECTOR_RESPONSE_BINS][i][index_delta_r+1 < DETECTOR_RESPONSE_BINS? index_delta_r+1:DETECTOR_RESPONSE_BINS-1];
+            //  f2 = (w2/OffsetR)*DetectorResponse[index_delta_t+1 <  SOC::DETECTOR_RESPONSE_BINS ?index_delta_t+1 :  SOC::DETECTOR_RESPONSE_BINS-1][i][index_delta_r] + (w1/OffsetR)*DetectorResponse[index_delta_t+1 <  SOC::DETECTOR_RESPONSE_BINS? index_delta_t+1: SOC::DETECTOR_RESPONSE_BINS][i][index_delta_r+1 <  SOC::DETECTOR_RESPONSE_BINS? index_delta_r+1: SOC::DETECTOR_RESPONSE_BINS-1];
 
             if(sliceidx == slice_index_min)
               ContributionAlongT = (sliceidx + 1)*m_Sinogram->delta_t - tmin;

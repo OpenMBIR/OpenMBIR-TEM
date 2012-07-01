@@ -377,7 +377,7 @@ void SOCEngine::initializeHt(RealVolumeType::Pointer H_t)
   Real_t ProfileCenterT;
   for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
   {
-    for (int i = 0; i < DETECTOR_RESPONSE_BINS; i++)
+    for (int i = 0; i < SOC::DETECTOR_RESPONSE_BINS; i++)
     {
       ProfileCenterT = i * OffsetT;
       if(m_TomoInputs->delta_xy >= m_Sinogram->delta_t)
@@ -477,15 +477,15 @@ void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,  AMatrixCol* Vox
       center_t = ((Real_t)i_t + 0.5) * m_Sinogram->delta_t + m_Sinogram->T0;
       delta_t = fabs(center_t - t);
       index_delta_t = static_cast<uint16_t>(floor(delta_t / OffsetT));
-      if(index_delta_t < DETECTOR_RESPONSE_BINS)
+      if(index_delta_t < SOC::DETECTOR_RESPONSE_BINS)
       {
         w3 = delta_t - (Real_t)(index_delta_t) * OffsetT;
         w4 = ((Real_t)index_delta_t + 1) * OffsetT - delta_t;
-        uint16_t ttmp = index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1;
+        uint16_t ttmp = index_delta_t + 1 < SOC::DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : SOC::DETECTOR_RESPONSE_BINS - 1;
         ProfileThickness = (w4 / OffsetT) * H_t->getValue(0, 0, index_delta_t)
             + (w3 / OffsetT) * H_t->getValue(0, 0, ttmp);
     //  ProfileThickness = (w4 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t]
-    //  + (w3 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t + 1 < DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : DETECTOR_RESPONSE_BINS - 1];
+    //  + (w3 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t + 1 < SOC::DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : SOC::DETECTOR_RESPONSE_BINS - 1];
     }
       else
       {
