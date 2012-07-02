@@ -865,8 +865,8 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   else
   {
     QLineF line = m_GraphicsView->getXZPlane();
-    std::cout << "p1: " << line.p1().x() << ", " << line.p1().y()
-     << "   p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
+  //  std::cout << "p1: " << line.p1().x() << ", " << line.p1().y()
+  //   << "   p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
 
     unsigned short x = m_XDim->text().toUShort(&ok);
     // Only reconstruct the middle section of data along the x axis
@@ -905,6 +905,9 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
 void TomoGui::singleSlicePlaneSet()
 {
     m_SingleSliceReconstructionBtn->setEnabled(true);
+    QLineF line = m_GraphicsView->getXZPlane();
+    int y = line.y1();
+    ySingleSliceValue->setText(QString::number(y));
 }
 
 // -----------------------------------------------------------------------------
