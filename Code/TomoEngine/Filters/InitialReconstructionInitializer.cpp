@@ -115,13 +115,13 @@ void InitialReconstructionInitializer::execute()
   input->LengthZ *= advParams->Z_STRETCH;
   input->LengthZ /= (input->interpolateFactor * sinogram->delta_r);
   //interpolation_factor;
-  input->LengthZ = round(input->LengthZ) * input->interpolateFactor * sinogram->delta_r; //interpolation_factor;
+  input->LengthZ = floor(input->LengthZ + 0.5) * input->interpolateFactor * sinogram->delta_r; //interpolation_factor;
   if(1 == input->extendObject)
   {
     std::cout << "KNOWN BUG FIX NEEDED HERE IF MAX = 90 degrees" << std::endl;
     geometry->LengthX = advParams->X_SHRINK_FACTOR * ((sinogram->N_r * sinogram->delta_r) / cos(max * M_PI / 180)) + input->LengthZ * tan(max * M_PI / 180);
     geometry->LengthX /= (input->interpolateFactor * sinogram->delta_r);
-    geometry->LengthX = round(geometry->LengthX) * input->interpolateFactor * sinogram->delta_r;
+    geometry->LengthX = floor(geometry->LengthX + 0.5) * input->interpolateFactor * sinogram->delta_r;
   }
   else
   {

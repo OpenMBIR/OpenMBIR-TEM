@@ -30,9 +30,14 @@
 
 #include "MRCWriter.h"
 
+//-- C Includes
 #include <stdio.h>
-#include <iomanip>
 
+//-- C++ Includes
+#include <iomanip>
+#include <limits>
+
+//-- MXA Includes
 #include "MXA/MXA.h"
 #include "MXA/Common/MXAEndian.h"
 #include "MXA/Common/IO/MXAFileWriter64.h"

@@ -247,7 +247,7 @@ class UpdateYSlice
               THETA1 = 0.0;
               THETA2 = 0.0;
               bool ZSFlag = true;
-              if(m_ZeroSkipping == true)
+              if(m_ZeroSkipping == 1)
               {
                 //Zero Skipping Algorithm
                 ZSFlag = true;
