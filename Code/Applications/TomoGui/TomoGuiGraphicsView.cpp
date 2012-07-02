@@ -364,7 +364,7 @@ void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
   m_OverlayImage = m_BaseImage;
   m_CompositedImage = m_BaseImage;
 
-  m_BaseImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+  m_BaseImage = m_BaseImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
   QGraphicsScene* gScene = scene();
   if (gScene == NULL)
@@ -445,7 +445,7 @@ void TomoGuiGraphicsView::setOverlayImage(QImage image)
   }
 
 // Convert to an Pre multiplied Image for faster rendering
-  m_OverlayImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+  m_OverlayImage = m_OverlayImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
   QGraphicsScene* gScene = scene();
   if (gScene == NULL)

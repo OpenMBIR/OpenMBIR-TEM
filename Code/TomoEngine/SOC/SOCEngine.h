@@ -297,9 +297,9 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     {
 
       int signa, signb, signc;
-      double fa, fb, fc, c, signaling_nan();
+      double fa, fb, fc, c; //, signaling_nan();
       double dist;
-	  uint32_t num_iter=0;
+      uint32_t num_iter=0;
 
 
       fa = f->execute(a);
@@ -321,7 +321,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 
       while (num_iter < iteration_count)//(dist > err)
       {
-		num_iter++;
+        num_iter++;
         c = (b + a) / 2;
         fc = f->execute(c);
         signc = fc > 0;

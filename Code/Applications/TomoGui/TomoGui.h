@@ -100,6 +100,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void loadSingleSliceReconstruction(QString filepath);
 
 
+
+
     void openOverlayImage(QString mountImage);
 
     QImage signed16Image(qint16* data, MRCHeader &header);
@@ -119,8 +121,6 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
       */
      virtual void updateProgressAndMessage(const char* message, int progress);
      virtual void updateProgressAndMessage(const std::string &msg, int progress);
-
-
 
   public slots:
 
@@ -208,6 +208,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     void singleSlicePlaneSet();
 
+
+
   protected:
 
     /**
@@ -290,8 +292,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     virtual void addErrorMessage(QString message);
     virtual void addWarningMessage(QString message);
     virtual void addProgressMessage(QString message);
+    virtual void loadProgressMRCFile(QString filePath);
 
-    /* Reconstruction Thread communicates throught these methods */
     virtual void pipelineComplete();
     virtual void pipelineProgress(int value);
     virtual void singleSliceComplete();
@@ -314,7 +316,12 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     QThread*              m_WorkerThread;
     QMultiResolutionSOC*           m_MultiResSOC;
     GainsOffsetsTableModel*  m_GainsOffsetsTableModel;
+
+    bool                  m_SingleSliceReconstructionActive;
+    bool                  m_FullReconstrucionActive;
+
     QString               m_OpenDialogLastDirectory;
+
 
     TomoGui(const TomoGui&); // Copy Constructor Not Implemented
     void operator=(const TomoGui&); // Operator '=' Not Implemented

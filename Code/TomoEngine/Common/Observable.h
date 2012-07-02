@@ -68,7 +68,8 @@ class TomoEngine_EXPORT Observable
       UpdateProgressMessage,
       UpdateWarningMessage,
       UpdateErrorMessage,
-      UpdateProgressValueAndMessage
+      UpdateProgressValueAndMessage,
+      UpdateIntermediateImage
     };
 
     /**
@@ -97,7 +98,7 @@ class TomoEngine_EXPORT Observable
      * @param progress A progress to indicate how much pipeline has been accomplished
      * @param a The type of notification to send.
      */
-    void notify(const std::string msg, int progress, ObserverAspect a);
+    void notify(const std::string &msg, int progress, ObserverAspect a);
 
     std::vector<Observer*> getObservers();
 

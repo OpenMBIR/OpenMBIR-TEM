@@ -134,6 +134,8 @@ m_StopAnimation(true),
 m_CurrentCorner(0),
 m_WorkerThread(NULL),
 m_MultiResSOC(NULL),
+  m_SingleSliceReconstructionActive(false),
+  m_FullReconstrucionActive(false),
 #if defined(Q_WS_WIN)
 m_OpenDialogLastDirectory("C:\\")
 #else
@@ -656,12 +658,15 @@ void TomoGui::on_m_SingleSliceReconstructionBtn_clicked()
   // Send progress messages from Reconstruction to this object for display
   connect(m_MultiResSOC, SIGNAL (errorMessage(QString)), this, SLOT(addErrorMessage(QString) ));
 
+  connect(m_MultiResSOC, SIGNAL(progressImageIsReady(QString)),
+          this, SLOT(loadProgressMRCFile(QString) ));
+
   setWidgetListEnabled(false);
-  emit
-  pipelineStarted();
+  emit pipelineStarted();
   m_WorkerThread->start();
   m_SingleSliceReconstructionBtn->setText("Cancel");
-
+  m_SingleSliceReconstructionActive = true;
+  m_FullReconstrucionActive = false;
 }
 
 
@@ -764,25 +769,34 @@ void TomoGui::on_m_GoBtn_clicked()
 
   // If the use clicks on the "Cancel" button send a message to the Reconstruction object
   // We need a Direct Connection so the
-  connect(this, SIGNAL(cancelPipeline() ), m_MultiResSOC, SLOT (on_CancelWorker() ), Qt::DirectConnection);
+  connect(this, SIGNAL(cancelPipeline() ),
+          m_MultiResSOC, SLOT (on_CancelWorker() ), Qt::DirectConnection);
 
   // Send Progress from the Reconstruction to this object for display
-  connect(m_MultiResSOC, SIGNAL (updateProgress(int)), this, SLOT(pipelineProgress(int) ));
+  connect(m_MultiResSOC, SIGNAL (updateProgress(int)),
+          this, SLOT(pipelineProgress(int) ));
 
   // Send progress messages from Reconstruction to this object for display
-  connect(m_MultiResSOC, SIGNAL (progressMessage(QString)), this, SLOT(addProgressMessage(QString) ));
+  connect(m_MultiResSOC, SIGNAL (progressMessage(QString)),
+          this, SLOT(addProgressMessage(QString) ));
 
   // Send progress messages from Reconstruction to this object for display
-  connect(m_MultiResSOC, SIGNAL (warningMessage(QString)), this, SLOT(addWarningMessage(QString) ));
+  connect(m_MultiResSOC, SIGNAL (warningMessage(QString)),
+          this, SLOT(addWarningMessage(QString) ));
 
   // Send progress messages from Reconstruction to this object for display
-  connect(m_MultiResSOC, SIGNAL (errorMessage(QString)), this, SLOT(addErrorMessage(QString) ));
+  connect(m_MultiResSOC, SIGNAL (errorMessage(QString)),
+          this, SLOT(addErrorMessage(QString) ));
+
+  connect(m_MultiResSOC, SIGNAL(progressImageIsReady(QString)),
+          this, SLOT(loadProgressMRCFile(QString) ));
 
   setWidgetListEnabled(false);
   emit pipelineStarted();
   m_WorkerThread->start();
   m_GoBtn->setText("Cancel");
-
+m_SingleSliceReconstructionActive = false;
+m_FullReconstrucionActive = true;
 }
 
 // -----------------------------------------------------------------------------
@@ -907,7 +921,8 @@ void TomoGui::singleSliceComplete()
 
   loadSingleSliceReconstruction(reconVolumeFile);
 
-
+  m_FullReconstrucionActive = false;
+  m_SingleSliceReconstructionActive = false;
   emit pipelineEnded();
   m_MultiResSOC->deleteLater();
 }
@@ -935,7 +950,6 @@ void TomoGui::loadSingleSliceReconstruction(QString reconMRCFilePath)
   m_CurrentCorner = 0; // Reset the corner
 
   char dataType = 0;
-
 
   if(err >= 0)
   {
@@ -982,8 +996,8 @@ QImage TomoGui::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, 
     if(data[i] < dmin) dmin = data[i];
   }
 
-  std::cout << "Min float MRC Value:" << dmin << std::endl;
-  std::cout << "Max float MRC Value:" << dmax << std::endl;
+//  std::cout << "Min float MRC Value:" << dmin << std::endl;
+//  std::cout << "Max float MRC Value:" << dmax << std::endl;
 
   //Scale all the values to 0 and 255 in place over writing the float values with 32 bit ints
   int* iData = reinterpret_cast<int*>(data);
@@ -997,8 +1011,8 @@ QImage TomoGui::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, 
     if(iData[i] < imin) imin = iData[i];
   }
 
-  std::cout << "Min int MRC Value:" << imin << std::endl;
-  std::cout << "Max int MRC Value:" << imax << std::endl;
+//  std::cout << "Min int MRC Value:" << imin << std::endl;
+//  std::cout << "Max int MRC Value:" << imax << std::endl;
 
   QVector<QRgb> colorTable;
   // Generate a Color Table
@@ -1050,10 +1064,19 @@ QImage TomoGui::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, 
     fname.append(QString::number(z)).append(".tif");
     image.save(fname);
   }
-  std::cout << "Min int QImage Value:" << imin << std::endl;
-  std::cout << "Max int QImage Value:" << imax << std::endl;
-  xzImage.save("/tmp/xz_image.tif");
+//  std::cout << "Min int QImage Value:" << imin << std::endl;
+//  std::cout << "Max int QImage Value:" << imax << std::endl;
+//  xzImage.save("/tmp/xz_image.tif");
   return xzImage;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::loadProgressMRCFile(QString filePath)
+{
+  std::cout << "Loading Progress MRC File: " << filePath.toStdString() << std::endl;
+  loadSingleSliceReconstruction(filePath);
 }
 
 // -----------------------------------------------------------------------------
@@ -1120,6 +1143,8 @@ void TomoGui::pipelineComplete()
   this->progressBar->setValue(0);
   emit pipelineEnded();
   m_MultiResSOC->deleteLater();
+  m_FullReconstrucionActive = false;
+  m_SingleSliceReconstructionActive = false;
 
 #if 0
   if (m_LayersPalette != NULL)

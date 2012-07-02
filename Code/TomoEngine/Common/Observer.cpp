@@ -116,3 +116,11 @@ void Observer::pipelineErrorMessage(const std::string &msg)
 {
   std::cout << "Error Message: " << msg << std::endl;
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void Observer::updateIntermediateImage(const std::string &filepath)
+{
+  std::cout << "Intermediate Output is ready: " << filepath << std::endl;
+}

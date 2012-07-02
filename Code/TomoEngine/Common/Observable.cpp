@@ -87,7 +87,7 @@ std::string Observable::getMessagePrefix()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void Observable::notify(const std::string msg, int progress, ObserverAspect a)
+void Observable::notify(const std::string &msg, int progress, ObserverAspect a)
 {
   std::string s = msg;
   if(m_Prefix.empty() == false)
@@ -112,6 +112,9 @@ void Observable::notify(const std::string msg, int progress, ObserverAspect a)
         break;
       case UpdateProgressValueAndMessage:
         (*iter)->updateProgressAndMessage(s, progress);
+        break;
+      case UpdateIntermediateImage:
+        (*iter)->updateIntermediateImage(msg);
         break;
       default:
         break;

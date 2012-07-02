@@ -92,6 +92,11 @@ class TomoEngine_EXPORT Observer
      virtual void pipelineErrorMessage(const std::string &msg);
 
 
+     /**
+      * @brief Update an intermediate image file for display somewhere
+      * @param filepath The path to the file
+      */
+     virtual void updateIntermediateImage(const std::string &filepath);
 
   private:
     Observer(const Observer&); // Copy Constructor Not Implemented

@@ -192,8 +192,8 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
    v->SigmaX = 0.0;
    v->p = 0.0;
    v->StopThreshold = 0.0;
-   v->excludedViews;
-   v->goodViews;
+  // v->excludedViews;
+ //  v->goodViews;
    v->useSubvolume = false;
    v->xStart = 0;
    v->xEnd = 0;
@@ -757,15 +757,16 @@ if (m_AdvParams->NOISE_MODEL) {
 
     // Write out the VTK file
     {
-      std::stringstream ss;
+      ss.str("");
       ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << ScaleOffsetCorrection::ReconstructedVtkFile;
       writeVtkFile(ss.str());
     }
     // Write out the MRC File
     {
-      std::stringstream ss;
+      ss.str("");
       ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << ScaleOffsetCorrection::ReconstructedMrcFile;
       writeMRCFile(ss.str());
+      notify(ss.str(), 0, Observable::UpdateIntermediateImage);
     }
 
 

@@ -81,7 +81,7 @@ int MRCWriter::write()
 {
   int err = -1;
   std::stringstream ss;
-  std::cout << "MRC Output File: '" << m_OutputFile << "'" << std::endl;
+ // std::cout << "MRC Output File: '" << m_OutputFile << "'" << std::endl;
   if (m_OutputFile.empty())
   {
       ss.str("");
@@ -105,10 +105,10 @@ int MRCWriter::write()
       return err;
   }
 
-  std::cout << "Writing MRC File with Geometry of: " << std::endl;
-  std::cout << "  N_z: " << m_Geometry->N_z << std::endl;
-  std::cout << "  N_x: " << m_Geometry->N_x << std::endl;
-  std::cout << "  N_y: " << m_Geometry->N_y << std::endl;
+//  std::cout << "Writing MRC File with Geometry of: " << std::endl;
+//  std::cout << "  N_z: " << m_Geometry->N_z << std::endl;
+//  std::cout << "  N_x: " << m_Geometry->N_x << std::endl;
+//  std::cout << "  N_y: " << m_Geometry->N_y << std::endl;
 
 
   MRCHeader header;
@@ -187,11 +187,7 @@ int MRCWriter::write()
   snprintf(header.labels[2], 80, "EIM TomoEngine code developed by Purdue University & BlueQuartz Software");
 
   // Write the header
-  std::cout << "  Writing Header to file at " << writer.getFilePointer64() << std::endl;
   writer.write(reinterpret_cast<char*>(&header), 1024);
-
-  std::cout << "  Writing Extended Header to file at " << writer.getFilePointer64() << std::endl;
-
   for(uint16_t i = 0; i < m_Geometry->N_z; ++i)
   {
     FEIHeader fei;
@@ -199,7 +195,6 @@ int MRCWriter::write()
     fei.pixelsize = static_cast<float>(m_Geometry->LengthX);
     writer.write(reinterpret_cast<char*>(&fei), sizeof(FEIHeader));
   }
-  std::cout << "  Writing Data to file at " << writer.getFilePointer64() << std::endl;
 
   size_t size = sizeof(float) * m_Geometry->N_x * m_Geometry->N_y;
   float* slice = (float*)(malloc(size));
@@ -240,7 +235,6 @@ int MRCWriter::write()
 #endif
   Real_t dmax = std::numeric_limits<Real_t>::min();
   Real_t dmin = std::numeric_limits<Real_t>::max();
-  std::cout << "Values Written to MRC File" << std::endl;
  // float t = 0.0f;
   for (int z = m_Geometry->N_z - 1; z >= 0; z--)
   {
@@ -262,9 +256,9 @@ int MRCWriter::write()
   }
 
 
-  std::cout << "  Min float MRC Value:" << dmin << std::endl;
-  std::cout << "  Max float MRC Value:" << dmax << std::endl;
-  std::cout << "-----------------------------" << std::endl;
+//  std::cout << "  Min float MRC Value:" << dmin << std::endl;
+//  std::cout << "  Max float MRC Value:" << dmax << std::endl;
+//  std::cout << "-----------------------------" << std::endl;
 
   free(slice);
 
