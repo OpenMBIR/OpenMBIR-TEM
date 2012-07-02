@@ -399,7 +399,7 @@ void ReconstructionArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 void ReconstructionArea::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
 {
   ReconstructionArea::CTRL_POINTS pt = isInResizeArea(event->pos());
-  if (m_isResizing || pt != ReconstructionArea::NO_CTRL_POINT && isSelected() )
+  if ( (m_isResizing || pt != ReconstructionArea::NO_CTRL_POINT) && isSelected()  )
   {
 
     if (pt == UPPER_LEFT_CTRL_POINT || pt == LOWER_RIGHT_CTRL_POINT)
