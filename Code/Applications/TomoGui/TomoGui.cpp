@@ -1650,6 +1650,7 @@ void TomoGui::readMRCHeader(QString filepath)
 {
 
   MRCHeader header;
+  ::memset(&header, 0, sizeof(header));
 
   MRCReader::Pointer reader = MRCReader::New(true);
   // Read the header from the file
@@ -1729,35 +1730,36 @@ void TomoGui::readMRCHeader(QString filepath)
 // -----------------------------------------------------------------------------
 QImage TomoGui::loadMRCTiltImage(QString filepath, int tiltIndex)
 {
-    MRCHeader header;
-    currentTiltIndex->setValue(tiltIndex);
-    QImage image;
+  MRCHeader header;
+  currentTiltIndex->setValue(tiltIndex);
+  QImage image;
+  {
     MRCReader::Pointer reader = MRCReader::New(true);
     // Read the header from the file
     int err = reader->readHeader(filepath.toStdString(), &header);
     if(err < 0)
     {
-        return image;
+      return image;
     }
 
     // If we have the FEI headers get that information
     if(header.feiHeaders != NULL)
     {
-        FEIHeader fei = header.feiHeaders[tiltIndex];
-        a_tilt->setText(QString::number(fei.a_tilt));
-        b_tilt->setText(QString::number(fei.b_tilt));
-        x_stage->setText(QString::number(fei.x_stage));
-        y_stage->setText(QString::number(fei.y_stage));
-        z_stage->setText(QString::number(fei.z_stage));
-        x_shift->setText(QString::number(fei.x_shift));
-        y_shift->setText(QString::number(fei.y_shift));
-        defocus->setText(QString::number(fei.defocus));
-        exp_time->setText(QString::number(fei.exp_time));
-        mean_int->setText(QString::number(fei.mean_int));
-        tiltaxis->setText(QString::number(fei.tiltaxis));
-        pixelsize->setText(QString::number(fei.pixelsize));
-        magnification->setText(QString::number(fei.magnification));
-        voltage->setText(QString::number(fei.voltage));
+      FEIHeader fei = header.feiHeaders[tiltIndex];
+      a_tilt->setText(QString::number(fei.a_tilt));
+      b_tilt->setText(QString::number(fei.b_tilt));
+      x_stage->setText(QString::number(fei.x_stage));
+      y_stage->setText(QString::number(fei.y_stage));
+      z_stage->setText(QString::number(fei.z_stage));
+      x_shift->setText(QString::number(fei.x_shift));
+      y_shift->setText(QString::number(fei.y_shift));
+      defocus->setText(QString::number(fei.defocus));
+      exp_time->setText(QString::number(fei.exp_time));
+      mean_int->setText(QString::number(fei.mean_int));
+      tiltaxis->setText(QString::number(fei.tiltaxis));
+      pixelsize->setText(QString::number(fei.pixelsize));
+      magnification->setText(QString::number(fei.magnification));
+      voltage->setText(QString::number(fei.voltage));
     }
     // Read the first image from the file
     int voxelMin[3] =
@@ -1770,21 +1772,21 @@ QImage TomoGui::loadMRCTiltImage(QString filepath, int tiltIndex)
 
     if(err >= 0)
     {
-        switch(header.mode)
-        {
+      switch(header.mode)
+      {
         case 0:
-            break;
+          break;
         case 1:
-            image = signed16Image(reinterpret_cast<qint16*>(reader->getDataPointer()), header);
-            break;
+          image = signed16Image(reinterpret_cast<qint16*>(reader->getDataPointer()), header);
+          break;
         case 2:
-            break;
+          break;
         default:
-            break;
-        }
+          break;
+      }
     }
-
-    return image;
+  }
+  return image;
 }
 
 // -----------------------------------------------------------------------------
@@ -1873,47 +1875,48 @@ QImage TomoGui::signed16Image(qint16* data, MRCHeader &header)
   qint16 dmax = std::numeric_limits<qint16>::min();
   qint16 dmin = std::numeric_limits<qint16>::max();
   size_t size = header.nx * header.ny;
-  for(size_t i = 0; i < size; ++i)
+  for (size_t i = 0; i < size; ++i)
   {
-    if (data[i] > dmax) dmax = data[i];
-    if (data[i] < dmin) dmin = data[i];
+    if(data[i] > dmax) dmax = data[i];
+    if(data[i] < dmin) dmin = data[i];
+  }
+
+  // Generate a Color Table
+  float max = static_cast<float>(dmax);
+  float min = static_cast<float>(dmin);
+  int numColors = static_cast<int>((max - min) + 1);
+
+  // Only generate the color table if the number of colors does not match
+  if(m_ColorTable.size() != numColors)
+  {
+    m_ColorTable.resize(numColors);
+    float range = max - min;
+
+    float r, g, b;
+    for (int i = 0; i < numColors; i++)
+    {
+      int16_t val = static_cast<int16_t>(min + ((float)i / numColors) * range);
+      getColorCorrespondingTovalue(val, r, g, b, max, min);
+      m_ColorTable[i] = qRgba(r * 255, g * 255, b * 255, 255);
+    }
   }
 
 
-  // Generate a Color Table
-    float max = static_cast<float>(dmax);
-    float min = static_cast<float>(dmin);
-    int numColors = static_cast<int>((max-min) + 1);
+  // Create an RGB Image
+  QImage image(header.nx, header.ny, QImage::Format_ARGB32);
 
-    // Only generate the color table if the number of colors does not match
-    if (m_ColorTable.size() != numColors)
+
+  int idx = 0;
+  for (int y = 0; y < header.ny; ++y)
+  {
+    for (int x = 0; x < header.nx; ++x)
     {
-      m_ColorTable.resize(numColors);
-      float range = max - min;
-
-      float r, g, b;
-      for (int i = 0; i < numColors; i++)
-      {
-        int16_t val = static_cast<int16_t>( min + ((float)i / numColors) * range);
-        getColorCorrespondingTovalue(val, r, g, b, max, min);
-        m_ColorTable[i] = qRgba(r*255, g*255, b*255, 255);
-      }
+      idx = (header.nx * y) + x;
+      int colorIndex = data[idx] - static_cast<int>(dmin);
+      image.setPixel(x, y, m_ColorTable[colorIndex]);
     }
-
-    // Create an RGB Image
-    QImage image(header.nx, header.ny, QImage::Format_ARGB32);
-
-    int idx = 0;
-    for (int y = 0; y < header.ny; ++y)
-    {
-      for (int x = 0; x < header.nx; ++x)
-      {
-        idx = (header.nx * y) + x;
-        int colorIndex = data[idx] - static_cast<int>(dmin);
-        image.setPixel(x, y, m_ColorTable[colorIndex]);
-      }
-    }
-    return image;
+  }
+  return image;
 }
 
 // -----------------------------------------------------------------------------

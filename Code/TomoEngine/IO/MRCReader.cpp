@@ -48,7 +48,7 @@ m_Int16Data(NULL),
 m_UInt16Data(NULL),
 m_FloatData(NULL)
 {
-  m_Header = new MRCHeader;
+//  m_Header = new MRCHeader;
 }
 
 // -----------------------------------------------------------------------------
@@ -65,19 +65,30 @@ m_FloatData(NULL)
 
 }
 
-
+#define FREE_MEMORY(var)\
+  std::cout << "   free(" << #var << ")" << std::endl; free(var);
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
 MRCReader::~MRCReader()
 {
+ // std::cout << "MRCReader::~MRCReader()" << std::endl;
   if(m_DeleteMemory) {
+    //std::cout << "  Deleting memory:" << std::endl;
     if (NULL != m_UInt8Data) { free(m_UInt8Data); }
     if (NULL != m_Int16Data) { free(m_Int16Data); }
     if (NULL != m_UInt16Data) { free(m_UInt16Data); }
     if (NULL != m_FloatData) { free(m_FloatData); }
   }
-  delete m_Header;
+  if (NULL != m_Header)
+  {
+    if (NULL != m_Header->feiHeaders)
+    {
+      free(m_Header->feiHeaders);
+    }
+    delete m_Header;
+  }
+
 }
 
 
@@ -113,6 +124,11 @@ int MRCReader::readHeader(const std::string &filepath, MRCHeader* header)
    std::string::size_type pos = feiLabel.find("Fei Company");
    if (pos != std::string::npos)
    {
+     if (NULL != header->feiHeaders)
+     {
+       free(header->feiHeaders);
+       header->feiHeaders = NULL;
+     }
      // Allocate and copy in the data
      header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * header->nz));
      ::memcpy(header->feiHeaders, &(extended_header.front()), sizeof(FEIHeader) * header->nz);
@@ -120,6 +136,11 @@ int MRCReader::readHeader(const std::string &filepath, MRCHeader* header)
    pos = feiLabel.find("EIC project");
    if (pos != std::string::npos)
    {
+     if (NULL != header->feiHeaders)
+     {
+       free(header->feiHeaders);
+       header->feiHeaders = NULL;
+     }
      // Allocate and copy in the data
      header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * header->nz));
      ::memcpy(header->feiHeaders, &(extended_header.front()), sizeof(FEIHeader) * header->nz);
@@ -158,9 +179,9 @@ int MRCReader::read(const std::string &filepath, int* voxelMin, int* voxelMax)
   {
     return -1;
   }
-
   m_Header = new MRCHeader;
   ::memset(m_Header, 0, 1024); // Splat zeros across the entire structure
+  m_Header->feiHeaders = NULL;
   success = reader.rawRead(reinterpret_cast<char*>(m_Header), 1024);
   if (false == success)
   {
@@ -180,6 +201,11 @@ int MRCReader::read(const std::string &filepath, int* voxelMin, int* voxelMax)
   m_Header->feiHeaders = NULL;
   if (feiLabel.find_first_of("Fei Company") != std::string::npos)
   {
+    if (NULL != m_Header->feiHeaders)
+    {
+      free(m_Header->feiHeaders);
+      m_Header->feiHeaders = NULL;
+    }
     // Allocate and copy in the data
     m_Header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * m_Header->nz));
     ::memcpy(m_Header->feiHeaders, &(extended_header.front()), sizeof(FEIHeader) * m_Header->nz);

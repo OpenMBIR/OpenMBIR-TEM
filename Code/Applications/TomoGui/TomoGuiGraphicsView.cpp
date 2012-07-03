@@ -375,6 +375,8 @@ void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
   else
   {
     gScene->removeItem(m_ImageGraphicsItem);
+    delete m_ImageGraphicsItem;
+    m_ImageGraphicsItem = NULL;
   }
 
   if (NULL != m_ReconstructionArea)
