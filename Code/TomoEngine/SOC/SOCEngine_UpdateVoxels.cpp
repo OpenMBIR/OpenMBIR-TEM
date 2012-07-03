@@ -2,6 +2,12 @@
 #include "TomoEngine/TomoEngine.h"
 #include "TomoEngine/SOC/SOCConstants.h"
 
+//-- Boost Headers for Random Numbers
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/variate_generator.hpp>
+
 /*****************************************************************************
  //Finds the min and max of the neighborhood . This is required prior to calling
  solve()
@@ -111,8 +117,20 @@ class UpdateYSlice
     execute()
     {
 
-      RNGVars RandomNumber;
+
 #ifdef RANDOM_ORDER_UPDATES
+      const uint32_t rangeMin = 0;
+      const uint32_t rangeMax = std::numeric_limits<uint32_t>::max();
+      typedef boost::uniform_int<uint32_t> NumberDistribution;
+      typedef boost::mt19937 RandomNumberGenerator;
+      typedef boost::variate_generator<RandomNumberGenerator&,
+                                       NumberDistribution> Generator;
+      NumberDistribution distribution(rangeMin, rangeMax);
+      RandomNumberGenerator generator;
+      Generator numberGenerator(generator, distribution);
+      generator.seed(EIMTOMO_getMilliSeconds()); // seed with the current time
+
+
       int32_t ArraySize = m_Geometry->N_x * m_Geometry->N_z;
       size_t dims[3] =
       { ArraySize, 0, 0};
@@ -168,7 +186,7 @@ class UpdateYSlice
 
 #ifdef RANDOM_ORDER_UPDATES
 
-          uint32_t Index = (genrand_int31(&RandomNumber)) % ArraySize;
+          uint32_t Index = numberGenerator() % ArraySize;
           int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
           int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
           Counter->d[Index] = Counter->d[ArraySize - 1];
@@ -489,7 +507,6 @@ class UpdateYSlice
 uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                              VoxelUpdateType updateType,
                              UInt8Image_t::Pointer VisitCount,
-                             RNGVars* RandomNumber,
                              AMatrixCol** TempCol,
                              RealVolumeType::Pointer ErrorSino,
                              RealVolumeType::Pointer Weight,

@@ -57,7 +57,6 @@
 #include "TomoEngine/Common/EIMTime.h"
 #include "TomoEngine/Common/CE_ConstraintEquation.hpp"
 #include "TomoEngine/Common/DerivOfCostFunc.hpp"
-#include "TomoEngine/mt/mt19937ar.h"
 #include "TomoEngine/IO/RawGeometryWriter.h"
 #include "TomoEngine/IO/MRCHeader.h"
 #include "TomoEngine/IO/MRCReader.h"
@@ -331,7 +330,6 @@ void SOCEngine::execute()
   RealVolumeType::Pointer ErrorSino; //Error Sinogram
   RealVolumeType::Pointer Weight; //This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
 
-  RNGVars* RandomNumber;
   std::string indent("");
 
 //#ifdef COST_CALCULATE //Commented out because if not the code fails to run.
@@ -633,8 +631,6 @@ void SOCEngine::execute()
   //is Y_Est initailized to zero?
   initializeVolume(Y_Est, 0.0);
 
-  RandomNumber = init_genrand(1ul);
-
   notify("Starting Forward Projection", 10, Observable::UpdateProgressValueAndMessage);
   START_TIMER;
   // This next section looks crazy with all the #if's but this makes sure we are
@@ -721,7 +717,7 @@ void SOCEngine::execute()
       // This could contain multiple Subloops also
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
       status =
-          updateVoxels(reconOuterIter, Iter, updateType, VisitCount, RandomNumber, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost);
+          updateVoxels(reconOuterIter, Iter, updateType, VisitCount, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost);
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
       if(status == 0)

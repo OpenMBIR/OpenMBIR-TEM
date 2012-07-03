@@ -361,6 +361,29 @@ void TomoGui::on_actionLoad_Config_File_triggered()
   readSettings(prefs);
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_actionParameters_triggered()
+{
+  parametersDockWidget->show();
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_actionInfo_triggered()
+{
+  infoDockWidget->show();
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_actionLayers_Palette_triggered()
+{
+  m_LayersPalette->show();
+}
 
 
 // -----------------------------------------------------------------------------
@@ -1618,22 +1641,6 @@ void TomoGui::overlayImageFileLoaded(const QString &filename)
   reconstructedVolumeFileName->blockSignals(true);
   reconstructedVolumeFileName->setText(filename);
   reconstructedVolumeFileName->blockSignals(false);
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TomoGui::on_actionParameters_triggered()
-{
-  //ParametersDockWidget->show();
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TomoGui::on_actionLayers_Palette_triggered()
-{
-  m_LayersPalette->show();
 }
 
 // -----------------------------------------------------------------------------

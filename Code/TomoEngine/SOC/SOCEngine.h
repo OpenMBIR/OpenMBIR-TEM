@@ -39,14 +39,15 @@
 #ifndef COMPUTATIONENGINE_H_
 #define COMPUTATIONENGINE_H_
 
+//-- C Headers
 #include <stdio.h>
 
+//-- MXA Headers
 #include "MXA/Common/MXASetGetMacros.h"
 
 #include "TomoEngine/TomoEngine.h"
 #include "TomoEngine/Common/AbstractFilter.h"
 #include "TomoEngine/Common/Observer.h"
-#include "TomoEngine/mt/mt19937ar.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 #include "TomoEngine/SOC/SOCConstants.h"
 #include "TomoEngine/SOC/QGGMRF_Functions.h"
@@ -119,7 +120,6 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     uint8_t updateVoxels(int16_t OuterIter, int16_t Iter,
                          VoxelUpdateType updateType,
                          UInt8Image_t::Pointer VisitCount,
-                         RNGVars* RandomNumber,
                          AMatrixCol** TempCol,
                          RealVolumeType::Pointer ErrorSino,
                          RealVolumeType::Pointer Weight,

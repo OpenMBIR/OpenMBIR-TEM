@@ -172,9 +172,11 @@ void getColorCorrespondingTovalue(int16_t val,
 
 int main(int argc, char **argv)
 {
-    if(argc != 2)
+  if(argc != 3)
   {
-      std::cout << "This program needs the path to the mrc file. Output files will be placed in a folder next to that file." << std::endl;
+    std::cout
+        << "This program needs the path to the mrc file and either a 0 or 1 to indicate if tiff images should be output. Output files will be placed in a folder next to that file."
+        << std::endl;
     return 1;
   }
     std::string filepath(argv[1]);
@@ -191,6 +193,14 @@ int main(int argc, char **argv)
 
   reader->printHeader(&header, std::cout);
 
+
+
+  if ( *(argv[2]) == '0')
+  {
+    return EXIT_SUCCESS;
+  }
+
+  // Write a folder full of tiff images
   int voxelMin[3] = {0,0,0};
   int voxelMax[3] = {header.nx-1, header.ny-1, 0};
 //  int dims[3] = { (voxelMax[0] - voxelMin[0] + 1),

@@ -550,6 +550,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
                                 RealVolumeType::Pointer Y_Est,
                                 CostData::Pointer cost)
 {
+  std::stringstream ss;
   std::string indent("  ");
 
   if(m_Sinogram->BF_Flag == false)
@@ -755,23 +756,19 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
       return err;
     }
 #endif
-
-    printf("Lagrange Multiplier = %lf\n", LagrangeMultiplier);
-
-#ifdef DEBUG
-    std::cout << "Tilt\tGains\tOffsets" << std::endl;
-    for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
+    if(getVeryVerbose())
     {
-      std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] << "\t" << NuisanceParams->mu->d[i_theta] << std::endl;
+      ss.str("");
+      ss << "Lagrange Multiplier = " << LagrangeMultiplier;
+
+      std::cout << "Tilt\tGains\tOffsets" << std::endl;
+      for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
+      {
+        std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] << "\t" << NuisanceParams->mu->d[i_theta] << std::endl;
+      }
+      std::cout << "Ratio of change in I_k " << AverageI_kUpdate / AverageMagI_k << std::endl;
+      std::cout << "Ratio of change in Delta_k " << AverageDelta_kUpdate / AverageMagDelta_k << std::endl;
     }
-#endif
-
-    Real_t I_kRatio = AverageI_kUpdate / AverageMagI_k;
-    Real_t Delta_kRatio = AverageDelta_kUpdate / AverageMagDelta_k;
-    std::cout << "Ratio of change in I_k " << I_kRatio << std::endl;
-    std::cout << "Ratio of change in Delta_k " << Delta_kRatio << std::endl;
-
-    return 0;
   }
   else
   {
@@ -791,16 +788,17 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
       }
       alpha = num_sum / den_sum;
 
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++) {
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
           ErrorSino->deleteFromValue(alpha, i_theta, i_r, i_t);
         }
+      }
 
       NuisanceParams->mu->d[i_theta] += alpha;
-#ifdef DEBUG
-      std::cout << NuisanceParams->mu->d[i_theta] << std::endl;
-#endif //Debug info
+      if(getVeryVerbose()) {
+            std::cout << "Theta: " << i_theta << " Mu: " << NuisanceParams->mu->d[i_theta] << std::endl;
+      }
     }
 #ifdef COST_CALCULATE
     /*********************Cost Calculation*************************************/
@@ -816,9 +814,9 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
     cost->writeCostValue(cost_value);
     /**************************************************************************/
 #endif
-    return 0;
-  } //BFflag = true
 
+  } //BFflag = true
+  return 0;
 }
 // -----------------------------------------------------------------------------
 // Calculate Error Sinogram
@@ -999,16 +997,18 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
 
   }
 
-#ifdef DEBUG
-  std::cout << "Noise Model Weights:" << std::endl;
-  std::cout << "Tilt\tWeight" << std::endl;
-  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+  if(getVeryVerbose())
   {
-    std::cout << i_theta << "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
+    std::cout << "Noise Model Weights:" << std::endl;
+    std::cout << "Tilt\tWeight" << std::endl;
+    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+    {
+      std::cout << i_theta << "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
+    }
+    std::cout << "Ratio of change in Variance " << AverageVarUpdate / AverageMagVar << std::endl;
   }
-#endif
-  Real_t VarRatio = AverageVarUpdate / AverageMagVar;
-  std::cout << "Ratio of change in Variance " << VarRatio << std::endl;
+
+  notify("Update Weights Complete", 0, Observable::UpdateProgressMessage);
 }
 
 // -----------------------------------------------------------------------------
