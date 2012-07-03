@@ -48,8 +48,12 @@
 #include "TomoEngine/Common/EIMMath.h"
 #include "TomoEngine/SOC/SOCConstants.h"
 
-/*
- *
+/**
+ * @class ComputeInitialOffsets ComputeInitialOffsets.h SOC/ComputeInitialOffsets.h
+ * @brief
+ * @author
+ * @date Jan 3, 2012
+ * @version 1.0
  */
 class TomoEngine_EXPORT ComputeInitialOffsets : public TomoFilter
 {

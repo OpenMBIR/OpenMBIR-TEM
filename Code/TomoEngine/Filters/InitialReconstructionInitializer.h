@@ -44,8 +44,12 @@
 #include "TomoEngine/SOC/SOCStructures.h"
 
 
-/*
- *
+/**
+ * @class InitialReconstructionInitializer InitialReconstructionInitializer.h SOC/InitialReconstructionInitializer.h
+ * @brief
+ * @author
+ * @date
+ * @version 1.0
  */
 class TomoEngine_EXPORT InitialReconstructionInitializer : public TomoFilter
 {

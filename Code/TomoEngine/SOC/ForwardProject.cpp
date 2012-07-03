@@ -37,6 +37,9 @@
 
 #include "ForwardProject.h"
 
+#include <sstream>
+
+
 #include "TomoEngine/Common/EIMMath.h"
 #include "TomoEngine/SOC/SOCConstants.h"
 
@@ -48,14 +51,16 @@ ForwardProject::ForwardProject(Sinogram* sinogram, Geometry* geometry,
                                AMatrixCol** tempCol, AMatrixCol* voxelLineResponse,
                                RealVolumeType::Pointer yEst,
                                ScaleOffsetParams* nuisanceParams,
-                               uint16_t tilt) :
+                               uint16_t tilt,
+                               Observable* obs) :
                   m_Sinogram(sinogram),
                   m_Geometry(geometry),
                   TempCol(tempCol),
                   VoxelLineResponse(voxelLineResponse),
                   Y_Est(yEst),
                   NuisanceParams(nuisanceParams),
-                  m_Tilt(tilt)
+                  m_Tilt(tilt),
+                  m_Observable(obs)
 {
 }
 
@@ -71,7 +76,13 @@ ForwardProject::~ForwardProject()
 // -----------------------------------------------------------------------------
 void ForwardProject::operator()() const
 {
-  std::cout << "\rForward projecting Z-Slice " << m_Tilt << "/" << m_Geometry->N_z;
+  std::stringstream ss;
+  ss << "Forward projecting Z-Slice " << m_Tilt << "/" << m_Geometry->N_z;
+  if (NULL != m_Observable)
+  {
+    m_Observable->notify(ss.str(), 0, Observable::UpdateProgressMessage);
+  }
+
   uint32_t j = m_Tilt;
   uint16_t VoxelLineAccessCounter;
   uint32_t Index;
@@ -79,7 +90,7 @@ void ForwardProject::operator()() const
 
   for (uint32_t k = 0; k < m_Geometry->N_x; k++)
   {
-	Index = j*m_Geometry->N_x + k;
+    Index = j * m_Geometry->N_x + k;
     if(TempCol[Index]->count > 0)
     {
       for (uint32_t i = 0; i < m_Geometry->N_y; i++) //slice index
@@ -92,9 +103,8 @@ void ForwardProject::operator()() const
           VoxelLineAccessCounter = 0;
           for (uint32_t i_t = VoxelLineResponse[i].index[0]; i_t < VoxelLineResponse[i].index[0] + VoxelLineResponse[i].count; i_t++) //CHANGED from <= to <
           {
-            ttmp = (NuisanceParams->I_0->d[i_theta] *
-                (TempCol[Index]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++]
-                * m_Geometry->Object->getValue(j, k, i) ) );
+            ttmp = (NuisanceParams->I_0->d[i_theta]
+                * (TempCol[Index]->values[q] * VoxelLineResponse[i].values[VoxelLineAccessCounter++] * m_Geometry->Object->getValue(j, k, i)));
 
             Y_Est->addToValue(ttmp, i_theta, i_r, i_t);
 

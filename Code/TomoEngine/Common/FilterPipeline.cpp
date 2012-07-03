@@ -109,7 +109,6 @@ bool FilterPipeline::getCancel()
 // -----------------------------------------------------------------------------
 void FilterPipeline::run()
 {
-  std::cout << "FilterPipeline::run()" << std::endl;
   execute();
   pipelineFinished();
 }

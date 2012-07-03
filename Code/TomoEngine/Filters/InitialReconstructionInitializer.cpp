@@ -138,13 +138,15 @@ void InitialReconstructionInitializer::execute()
   geometry->N_z = floor(input->LengthZ / input->delta_xz); //Number of voxels in z direction
   geometry->N_y = floor(geometry->LengthY / input->delta_xy); //Number of measurements in y direction
 
-  printf("Geometry->LengthX=%lf nm \n", geometry->LengthX);
-  printf("Geometry->LengthY=%lf nm \n", geometry->LengthY);
-  printf("Geometry->LengthZ=%lf nm \n", input->LengthZ);
+  std::stringstream ss;
 
-  printf("Geometry->Nz=%d\n", geometry->N_z);
-  printf("Geometry->Nx=%d\n", geometry->N_x);
-  printf("Geometry->Ny=%d\n", geometry->N_y);
+  ss << "Geometry->LengthX=" << geometry->LengthX << " nm"  << std::endl;
+  ss << "Geometry->LengthY=" << geometry->LengthY << " nm"  << std::endl;
+  ss << "Geometry->LengthZ=" << input->LengthZ << " nm"  << std::endl;
+
+  ss << "Geometry->Nz=" <<  geometry->N_z << std::endl;
+  ss << "Geometry->Nx=" <<  geometry->N_x << std::endl;
+  ss << "Geometry->Ny=" <<  geometry->N_y << std::endl;
 
   size_t dims[3] =
   { geometry->N_z, geometry->N_x, geometry->N_y };
@@ -157,9 +159,9 @@ void InitialReconstructionInitializer::execute()
   // Geometry->y0 = -(sinogram->N_t * sinogram->delta_t)/2 + Geometry->StartSlice*Geometry->delta_xy;
   geometry->y0 = -(geometry->LengthY) / 2;
 
-  printf("Geometry->X0=%lf\n", geometry->x0);
-  printf("Geometry->Y0=%lf\n", geometry->y0);
-  printf("Geometry->Z0=%lf\n", geometry->z0);
+  ss << "Geometry->X0=" << geometry->x0 << std::endl;
+  ss << "Geometry->Y0=" << geometry->y0 << std::endl;
+  ss << "Geometry->Z0=" << geometry->z0 << std::endl;
 
   // Now we actually initialize the data to something. If a subclass is involved
   // then the subclasses version of initializeData() will be used instead
@@ -177,13 +179,16 @@ void InitialReconstructionInitializer::execute()
         sum += geometry->Object->getValue(z, x, y);
       }
     }
-    std::cout << "Geometry check sum Y:" << y << " Value:" << sum << std::endl;
+    ss << "Geometry check sum Y:" << y << " Value:" << sum << std::endl;
   }
   //End of check sum
-
+  if (getVeryVerbose())
+  {
+    std::cout << ss.str() << std::endl;
+  }
   setErrorCondition(0);
   setErrorMessage("");
-  std::string msg("Done with ");
-  msg = msg.append(getNameOfClass());
-  notify(msg.c_str(), 0, UpdateProgressMessage);
+  ss.str("");
+  ss << getNameOfClass() << " Complete";
+  notify(ss.str(), 0, UpdateProgressMessage);
 }

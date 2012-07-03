@@ -498,11 +498,12 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                              UInt8Image_t::Pointer Mask,
                              CostData::Pointer cost)
 {
+  std::stringstream ss;
   uint8_t exit_status = 1; //Indicates normal exit ; else indicates to stop inner iterations
   uint16_t subIterations = 1;
   std::string indent("    ");
   uint8_t err = 0;
-  uint32_t zero_count = 0;
+//  uint32_t zero_count = 0;
 //  Real_t UpdatedVoxelValue;
 //  Real_t accuracy=1e-8;
 //  uint16_t binarysearch_count
@@ -516,25 +517,30 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 
   if(updateType == RegularRandomOrderUpdate)
   {
-    std::cout << indent << "Regular Random Order update of Voxels" << std::endl;
+    ss << indent << "Regular Random Order update of Voxels" << std::endl;
   }
   else if(updateType == HomogeniousUpdate)
   {
-    std::cout << indent << "Homogenous update of voxels" << std::endl;
+    ss << indent << "Homogenous update of voxels" << std::endl;
   }
   else if(updateType == NonHomogeniousUpdate)
   {
-    std::cout << indent << "Non Homogenous update of voxels" << std::endl;
+    ss << indent << "Non Homogenous update of voxels" << std::endl;
     subIterations = NUM_NON_HOMOGENOUS_ITER;
   }
   else
   {
-    std::cout << indent << "Unknown Voxel Update Type. Returning Now" << std::endl;
+    ss << indent << "Unknown Voxel Update Type. Returning Now" << std::endl;
+    notify(ss.str(), 0, Observable::UpdateErrorMessage);
     return exit_status;
   }
 
+  if (getVerbose())
+  {
+    std::cout << ss.str() << std::endl;
+  }
+
   Real_t NH_Threshold = 0.0;
-  std::stringstream ss;
   int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
 
   for (uint16_t NH_Iter = 0; NH_Iter < subIterations; ++NH_Iter)
@@ -551,7 +557,8 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
       ComputeVSC();
       START_TIMER;
       NH_Threshold = SetNonHomThreshold();
-      STOP_TIMER;PRINT_TIME("  SetNonHomThreshold");
+      STOP_TIMER;
+      PRINT_TIME("  SetNonHomThreshold");
       std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
       //Use  FiltMagUpdateMap  to find MagnitudeUpdateMask
       //std::cout << "Completed Calculation of filtered magnitude" << std::endl;
@@ -641,7 +648,9 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 #endif
           /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
     STOP_TIMER;
-    PRINT_TIME("%%%%%=====> Voxel Update");
+    ss.str("");
+    ss << "Inner Iter: " << Iter << " Voxel Update";
+    PRINT_TIME(ss.str());
 
 #ifdef COST_CALCULATE
 
@@ -656,21 +665,22 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     }
     cost->writeCostValue(cost_value);
     /**************************************************************************/
-#else
-    printf("Iter: %d\n",Iter);
 #endif //Cost calculation endif
 
 #if ROI
+    if (getVerbose()) {
       std::cout<<"Average Update "<<AverageUpdate<<std::endl;
       std::cout<<"Average Mag "<<AverageMagnitudeOfRecon<<std::endl;
+    }
     if(AverageMagnitudeOfRecon > 0)
     {
-      printf("%d,%lf\n", Iter + 1, AverageUpdate / AverageMagnitudeOfRecon);
-
+      if (getVerbose()) {
+        std::cout <<  Iter + 1 << " " << AverageUpdate / AverageMagnitudeOfRecon << std::endl;
+      }
       //Use the stopping criteria if we are performing a full update of all voxels
       if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != NonHomogeniousUpdate)
       {
-        printf("This is the terminating point %d\n", Iter);
+        std::cout << "This is the terminating point " << Iter << std::endl;
         m_TomoInputs->StopThreshold *= m_AdvParams->THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
         std::cout << "New threshold" << m_TomoInputs->StopThreshold << std::endl;
         exit_status = 0;
@@ -705,7 +715,6 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 
   }
 
-  std::cout << "Number of zeroed out entries=" << zero_count << std::endl;
   return exit_status;
 
 }

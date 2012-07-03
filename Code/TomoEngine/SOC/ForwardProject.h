@@ -43,6 +43,7 @@
 
 
 #include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/Observable.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 
 
@@ -62,7 +63,8 @@ class TomoEngine_EXPORT ForwardProject
                    AMatrixCol** tempCol, AMatrixCol* voxelLineResponse,
                    RealVolumeType::Pointer yEst,
                    ScaleOffsetParams* nuisanceParams,
-                   uint16_t tilt);
+                   uint16_t tilt,
+                   Observable* obs);
 
     virtual ~ForwardProject();
 
@@ -76,6 +78,7 @@ class TomoEngine_EXPORT ForwardProject
     RealVolumeType::Pointer Y_Est;
     ScaleOffsetParams* NuisanceParams;
     uint16_t m_Tilt;
+    Observable* m_Observable;
 };
 
 #endif /* FORWARDPROJECT_H_ */

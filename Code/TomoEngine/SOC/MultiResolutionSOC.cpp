@@ -50,6 +50,7 @@
 //
 // -----------------------------------------------------------------------------
 MultiResolutionSOC::MultiResolutionSOC() :
+m_Debug(false),
 m_InputFile(""),
 m_TempDir(""),
 m_OutputFile(""),
@@ -92,8 +93,8 @@ MultiResolutionSOC::~MultiResolutionSOC()
 // -----------------------------------------------------------------------------
 void MultiResolutionSOC::printInputs(TomoInputsPtr inputs, std::ostream &out)
 {
-#if 0
-	std::out << "------------------ TomoInputs Begin ------------------" << std::endl;
+#if 1
+	out << "------------------ TomoInputs Begin ------------------" << std::endl;
   PRINT_VAR(out, inputs, NumIter);
   PRINT_VAR(out, inputs, NumOuterIter);
   PRINT_VAR(out, inputs, SigmaX);
@@ -134,7 +135,7 @@ void MultiResolutionSOC::printInputs(TomoInputsPtr inputs, std::ostream &out)
   PRINT_VAR(out, inputs, offsetsOutputFile);
   PRINT_VAR(out, inputs, varianceOutputFile);
 
-	std::out << "------------------ TomoInputs End ------------------" << std::endl;
+	out << "------------------ TomoInputs End ------------------" << std::endl;
 #endif
 }
 
@@ -143,12 +144,13 @@ void MultiResolutionSOC::printInputs(TomoInputsPtr inputs, std::ostream &out)
 // -----------------------------------------------------------------------------
 void MultiResolutionSOC::execute()
 {
-  std::cout << "MultiResolutionSOC::execute" << std::endl;
+
+  pipelineProgressMessage("MultiResolutionSOC::execute");
   int err = 0;
-  std::cout << "-- There are " << m_NumberResolutions << " resolutions to reconstruct." << std::endl;
-
   std::stringstream ss;
-
+  ss << "-- There are " << m_NumberResolutions << " resolutions to reconstruct." ;
+  pipelineProgressMessage(ss.str());
+  ss.str("");
 
   TomoInputsPtr prevInputs = TomoInputsPtr(new TomoInputs);
   SOCEngine::InitializeTomoInputs(prevInputs);
@@ -166,7 +168,8 @@ void MultiResolutionSOC::execute()
     /* ******* this is bad. Remove this for production work ****** */
     inputs->extendObject = getExtendObject();
 
-	  std::cout<<"Extend Object Flag"<<inputs->extendObject<<std::endl;
+	  ss<<"Extend Object Flag"<<inputs->extendObject<<std::endl;
+	  pipelineProgressMessage(ss.str());
 
     /* Get our input files from the last resolution iteration */
     inputs->gainsInputFile = prevInputs->gainsOutputFile;
@@ -198,7 +201,11 @@ void MultiResolutionSOC::execute()
     bool success = MXADir::mkdir(inputs->tempDir, true);
     if (!success)
     {
-      std::cout << "Could not create path: " << inputs->tempDir << std::endl;
+      ss.str("");
+      ss << "Could not create path: " << inputs->tempDir << std::endl;
+      setErrorCondition(-1);
+      pipelineErrorMessage(ss.str());
+      return;
     }
 
 	  /***************TO DO - Fix This*********************/
@@ -246,7 +253,9 @@ void MultiResolutionSOC::execute()
     }
     /** SIGMA_X needs to be calculated here based on some formula**/
     inputs->SigmaX =pow(2,(getNumberResolutions()-1-i)*(1-3/inputs->p)) * getSigmaX();
-	  std::cout<<"SigmaX="<<inputs->SigmaX;
+    ss.str("");
+    ss << "SigmaX=" << inputs->SigmaX;
+	  pipelineProgressMessage(ss.str());
 	  if (i == 0)
 	  {
 	    inputs->defaultInitialRecon = getInitialReconstructionValue();
@@ -310,11 +319,14 @@ void MultiResolutionSOC::execute()
     // We need to get messages to the gui or command line
     engine->addObserver(this);
     engine->setMessagePrefix( StringUtils::numToString(inputs->interpolateFactor/(powf(2.0f,i))) + std::string("x: ") );
-
-    std::cout << "Sinogram Inputs -----------------------------------------" << std::endl;
-    printInputs(inputs, std::cout);
-    std::cout << "Bright Field Inputs -----------------------------------------" << std::endl;
-    printInputs(bf_inputs, std::cout);
+    ss.str("");
+    ss << "Sinogram Inputs -----------------------------------------" << std::endl;
+    printInputs(inputs, ss);
+    pipelineProgressMessage(ss.str());
+    ss.str("");
+    ss << "Bright Field Inputs -----------------------------------------" << std::endl;
+    printInputs(bf_inputs, ss);
+    pipelineProgressMessage(ss.str());
 
     engine->execute();
     engine = SOCEngine::NullPointer();

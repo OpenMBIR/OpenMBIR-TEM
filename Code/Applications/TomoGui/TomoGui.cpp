@@ -1078,7 +1078,7 @@ QImage TomoGui::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, 
 // -----------------------------------------------------------------------------
 void TomoGui::loadProgressMRCFile(QString filePath)
 {
-  std::cout << "Loading Progress MRC File: " << filePath.toStdString() << std::endl;
+//  std::cout << "Loading Progress MRC File: " << filePath.toStdString() << std::endl;
   loadSingleSliceReconstruction(filePath);
 }
 

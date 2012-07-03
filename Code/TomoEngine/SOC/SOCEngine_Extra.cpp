@@ -62,6 +62,8 @@ int SOCEngine::readInputData()
   dataReader->setSinogram(m_Sinogram);
   dataReader->setAdvParams(m_AdvParams);
   dataReader->setObservers(getObservers());
+  dataReader->setVerbose(getVerbose());
+  dataReader->setVeryVerbose(getVeryVerbose());
   dataReader->execute();
   if(dataReader->getErrorCondition() < 0)
   {
@@ -77,10 +79,12 @@ int SOCEngine::readInputData()
 // -----------------------------------------------------------------------------
 int SOCEngine::initializeBrightFieldData()
 {
-
+  std::stringstream ss;
   if(m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->sinoFile.empty() == false)
   {
-    std::cout << "Initializing BF data" << std::endl;
+    ss << "Initializing BF data";
+    notify(ss.str(), 0, Observable::UpdateProgressMessage);
+
     TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
     std::string extension = MXAFileInfo::extension(m_BFTomoInputs->sinoFile);
     if(extension.compare("mrc") == 0 || extension.compare("ali") == 0)
@@ -123,7 +127,6 @@ int SOCEngine::initializeBrightFieldData()
 
     m_Sinogram->BF_Flag = true;
     notify("BF initialization complete", 0, Observable::UpdateProgressMessage);
-
   }
   else
   {
@@ -137,6 +140,7 @@ int SOCEngine::initializeBrightFieldData()
 // -----------------------------------------------------------------------------
 int SOCEngine::createInitialGainsData()
 {
+  std::stringstream ss;
   /* ********************* Initialize the Gains Array **************************/
   size_t gains_dims[1] =
   { m_Sinogram->N_theta };
@@ -169,11 +173,15 @@ int SOCEngine::createInitialGainsData()
     }
   }
   /********************REMOVE************************/
-  std::cout << "HARD WIRED TARGET GAIN" << std::endl;
+  ss << "HARD WIRED TARGET GAIN" << std::endl;
   m_Sinogram->targetGain = m_TomoInputs->targetGain; //TARGET_GAIN;
-  std::cout << "Target Gain: " << m_Sinogram->targetGain << std::endl;
+  ss << "Target Gain: " << m_Sinogram->targetGain << std::endl;
   /*************************************************/
 
+  if (getVeryVerbose())
+  {
+    std::cout << ss.str() << std::endl;
+  }
   return 0;
 }
 
@@ -182,6 +190,7 @@ int SOCEngine::createInitialGainsData()
 // -----------------------------------------------------------------------------
 int SOCEngine::createInitialOffsetsData()
 {
+  std::stringstream ss;
   /* ********************* Initialize the Offsets Array **************************/
   size_t offsets_dims[1] =
   { m_Sinogram->N_theta };
@@ -221,6 +230,8 @@ int SOCEngine::createInitialOffsetsData()
     initializer->setTomoInputs(m_TomoInputs);
     initializer->setAdvParams(m_AdvParams);
     initializer->setObservers(getObservers());
+    initializer->setVerbose(getVerbose());
+    initializer->setVeryVerbose(getVeryVerbose());
     initializer->execute();
     if(initializer->getErrorCondition() < 0)
     {
@@ -253,6 +264,8 @@ int SOCEngine::createInitialVariancesData()
     variancesInitializer->setGeometry(m_Geometry);
     variancesInitializer->setAdvParams(m_AdvParams);
     variancesInitializer->setObservers(getObservers());
+    variancesInitializer->setVerbose(getVerbose());
+    variancesInitializer->setVeryVerbose(getVeryVerbose());
     variancesInitializer->execute();
     if(variancesInitializer->getErrorCondition() < 0)
     {
@@ -263,11 +276,15 @@ int SOCEngine::createInitialVariancesData()
   }
   else
   {
-    //  std::cout << "------------Initial Variance-----------" << std::endl;
+    std::stringstream ss;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-        m_Sinogram->InitialVariance->d[i_theta] = m_TomoInputs->defaultVariance;
-       std::cout << "Tilt: " << i_theta << "  Variance: " << m_Sinogram->InitialVariance->d[i_theta] << std::endl;
+      m_Sinogram->InitialVariance->d[i_theta] = m_TomoInputs->defaultVariance;
+      ss<< "Tilt: " << i_theta << "  Variance: " << m_Sinogram->InitialVariance->d[i_theta] << std::endl;
+    }
+    if (getVeryVerbose())
+    {
+      std::cout << ss.str() << std::endl;
     }
   }
 
@@ -306,6 +323,8 @@ int SOCEngine::initializeRoughReconstructionData()
   geomInitializer->setGeometry(m_Geometry);
   geomInitializer->setAdvParams(m_AdvParams);
   geomInitializer->setObservers(getObservers());
+  geomInitializer->setVerbose(getVerbose());
+  geomInitializer->setVeryVerbose(getVeryVerbose());
   geomInitializer->execute();
 
   if(geomInitializer->getErrorCondition() < 0)
@@ -362,11 +381,10 @@ void SOCEngine::gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams)
   }
   sum /= m_Sinogram->N_theta;
 
-
-  printf("The Arithmetic mean of the constraint is %lf\n", sum);
+  if (getVerbose()) { printf("The Arithmetic mean of the constraint is %lf\n", sum); }
   if(sum - m_Sinogram->targetGain > 1e-5)
   {
-    printf("Arithmetic Mean Constraint not met..renormalizing\n");
+    if (getVerbose()) { printf("Arithmetic Mean Constraint not met..renormalizing\n");}
     temp = m_Sinogram->targetGain / sum;
     for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
     {
@@ -500,9 +518,12 @@ void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,  AMatrixCol* Vox
 
       if(ProfileThickness != 0) //Store the response of this slice
       {
-#ifdef DEBUG
-        printf("%d %lf\n", i_t, ProfileThickness);
-#endif
+        if(getVeryVerbose())
+        {
+          std::cout << "Voxel Response by Y Slice" << std::endl;
+          std::cout << "Y\tProfile Thickness" << std::endl;
+          std::cout << i_t << "\t" << ProfileThickness << std::endl;
+        }
         VoxelLineResponse[i].values[VoxelLineResponse[i].count] = ProfileThickness;
         VoxelLineResponse[i].index[VoxelLineResponse[i].count++] = i_t;
       }
@@ -872,12 +893,12 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
         checksum += Weight->d[weight_idx];
       }
     }
-#ifdef DEBUG
-    printf("Check sum of Diagonal Covariance Matrix= %lf\n", checksum);
-#endif
+    if(getVerbose())
+    {
+      printf("Check sum of Diagonal Covariance Matrix= %lf\n", checksum);
+    }
   }
   STOP_TIMER;
-  std::cout << std::endl;
   std::string indent(" ");
   PRINT_TIME("Computing Weights");
 }

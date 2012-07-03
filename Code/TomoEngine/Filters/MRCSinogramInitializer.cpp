@@ -61,7 +61,7 @@ MRCSinogramInitializer::~MRCSinogramInitializer()
 // -----------------------------------------------------------------------------
 void MRCSinogramInitializer::execute()
 {
-
+  std::stringstream ss;
   SinogramPtr sinogram = getSinogram();
   TomoInputsPtr inputs = getTomoInputs();
  // int16_t i,j,k;
@@ -79,7 +79,9 @@ void MRCSinogramInitializer::execute()
 
   if (header.mode != 1)
   {
-    std::cout << "16 bit integers are only supported. Error at line  " << __LINE__ << " in file " << __FILE__ << std::endl;
+    ss << "16 bit integers are only supported. Error at line  " << __LINE__ << " in file " << __FILE__ << std::endl;
+    setErrorCondition(-1);
+    notify(ss.str(), 0, Observable::UpdateErrorMessage);
     return;
   }
 
@@ -88,103 +90,93 @@ void MRCSinogramInitializer::execute()
   inputs->fileXSize = header.nx;
   inputs->fileYSize = header.ny;
   inputs->fileZSize = header.nz;
-  
-  Real_t CenterOfRot = header.nx/2;	
-  std::cout<<"Center of rotation in this data set is "<<CenterOfRot<<std::endl;	
-	
+
+  Real_t CenterOfRot = header.nx/2;
+  ss.str("");
+  ss << "Center of rotation in this data set is " << CenterOfRot << std::endl;
+
   if (inputs->useSubvolume == true)
   {
-     voxelMin[0] = inputs->xStart;
-     voxelMin[1] = inputs->yStart;
-     voxelMin[2] = inputs->zStart;
+    voxelMin[0] = inputs->xStart;
+    voxelMin[1] = inputs->yStart;
+    voxelMin[2] = inputs->zStart;
 
-     voxelMax[0] = inputs->xEnd;
-     voxelMax[1] = inputs->yEnd;
-     voxelMax[2] = inputs->zEnd;
-	  
-	 
-							   
-	  //Code to ensure region selected has the "right" dimensions	 
-	  /************************************************************/
-	  
-	  
-	  
-	  Real_t LeftLength =  CenterOfRot-voxelMin[0];
-	  Real_t RightLength = voxelMax[0] - CenterOfRot + 1; //1 is present to account for indexing of subvolume which starts from 0
-	  
-	  if(LeftLength < 0)
-	  {
-		  voxelMin[0] = CenterOfRot+LeftLength;
-		  inputs->xStart = voxelMin[0];
-		  LeftLength*=-1;
-	  }
-	  if(RightLength < 0)
-	  {
-		  voxelMax[0] = CenterOfRot - RightLength;
-		  inputs->xEnd= voxelMax[0];
-		  RightLength*=-1;
-	  }
-	  
-	 if (LeftLength != RightLength) 
-	 {
-		 std::cout<<"The subvolume is not symmetric about the center. Adjusting.."<<std::endl;
-		 if(LeftLength < RightLength)
-		 {
-			 Real_t tempx = CenterOfRot + LeftLength -1;
-			 //Make sure the adjustment does not overrun the size of the data
-			 if(tempx >= header.nx)
-				 tempx = header.nx -1;
-			 			 
-			 voxelMax[0] = tempx;
-			 inputs->xEnd = voxelMax[0];
-			 std::cout<<"New xEnd : "<<voxelMax[0]<<std::endl;
-		 }
-		 else
-		 {
-			 Real_t tempx = CenterOfRot - RightLength;
-			 //Make sure the adjustment does not overrun the size of the data
-			 if(tempx < 0)
-				 tempx =0;
-			 
-			 voxelMin[0] = tempx;
-			 inputs->xStart = voxelMin[0];
-			 std::cout<<"New xStart : "<<voxelMin[0]<<std::endl;
-		 }
-	 }
-	  	
-	  //This part of selecting y can be ignored if the user has selected 
-	  //single slice mode
-	  
-	  //Adjusting the volume along the y-directions so we dont have
-	  //  issues with pixelation
-	  int16_t disty = inputs->yEnd - inputs->yStart + 1;
-	  std::cout<<"Interpolate Factor="<<inputs->interpolateFactor<<std::endl;
-	  //3*iterpFactor is to account for the prior which operates on
-	  //26 point 3-D neighborhood which needs 3 x-z slices at the least	  
-	  int16_t rem_temp = disty % ((int16_t)inputs->interpolateFactor * 3);
-	  if(rem_temp != 0)
-	  {
-	   std::cout << "The number of y-pixels is not a proper multiple for multi-res" << std::endl;
-	   int16_t remainder = static_cast<int16_t>((inputs->interpolateFactor * 3) - (rem_temp));
-	   
-	//Make sure the adjustment does not overrun the size of the data
-	   if(inputs->yEnd + remainder < header.ny)
-		   inputs->yEnd+=remainder;
-		  else {
-			  inputs->yEnd = header.ny-1;
-		  }
+    voxelMax[0] = inputs->xEnd;
+    voxelMax[1] = inputs->yEnd;
+    voxelMax[2] = inputs->zEnd;
 
-		  std::cout<<"New yEnd "<<	inputs->yEnd<<std::endl;  
-	  }
-	  
-	  voxelMax[1] = inputs->yEnd;
-	  
-	  
-	  std::cout<<"xStart="<<inputs->xStart<<" "<<"xEnd="<<inputs->xEnd<<std::endl;
-	  std::cout<<"yStart="<<inputs->yStart<<" "<<"yEnd="<<inputs->yEnd<<std::endl;
-	 /************************************************************/
-	 
+    //Code to ensure region selected has the "right" dimensions
+    /************************************************************/
+    Real_t LeftLength = CenterOfRot - voxelMin[0];
+    Real_t RightLength = voxelMax[0] - CenterOfRot + 1; //1 is present to account for indexing of subvolume which starts from 0
 
+    if(LeftLength < 0)
+    {
+      voxelMin[0] = CenterOfRot + LeftLength;
+      inputs->xStart = voxelMin[0];
+      LeftLength *= -1;
+    }
+    if(RightLength < 0)
+    {
+      voxelMax[0] = CenterOfRot - RightLength;
+      inputs->xEnd = voxelMax[0];
+      RightLength *= -1;
+    }
+
+    if(LeftLength != RightLength)
+    {
+      ss << "The subvolume is not symmetric about the center. Adjusting.." << std::endl;
+      if(LeftLength < RightLength)
+      {
+        Real_t tempx = CenterOfRot + LeftLength - 1;
+        //Make sure the adjustment does not overrun the size of the data
+        if(tempx >= header.nx) tempx = header.nx - 1;
+
+        voxelMax[0] = tempx;
+        inputs->xEnd = voxelMax[0];
+        ss << "New xEnd : " << voxelMax[0] << std::endl;
+      }
+      else
+      {
+        Real_t tempx = CenterOfRot - RightLength;
+        //Make sure the adjustment does not overrun the size of the data
+        if(tempx < 0) tempx = 0;
+
+        voxelMin[0] = tempx;
+        inputs->xStart = voxelMin[0];
+        ss << "New xStart : " << voxelMin[0] << std::endl;
+      }
+    }
+
+    //This part of selecting y can be ignored if the user has selected
+    //single slice mode
+
+    //Adjusting the volume along the y-directions so we dont have
+    //  issues with pixelation
+    int16_t disty = inputs->yEnd - inputs->yStart + 1;
+    ss << "Interpolate Factor=" << inputs->interpolateFactor << std::endl;
+    //3*iterpFactor is to account for the prior which operates on
+    //26 point 3-D neighborhood which needs 3 x-z slices at the least
+    int16_t rem_temp = disty % ((int16_t)inputs->interpolateFactor * 3);
+    if(rem_temp != 0)
+    {
+      ss << "The number of y-pixels is not a proper multiple for multi-res" << std::endl;
+      int16_t remainder = static_cast<int16_t>((inputs->interpolateFactor * 3) - (rem_temp));
+
+      //Make sure the adjustment does not overrun the size of the data
+      if(inputs->yEnd + remainder < header.ny) inputs->yEnd += remainder;
+      else
+      {
+        inputs->yEnd = header.ny - 1;
+      }
+
+      ss << "New yEnd " << inputs->yEnd << std::endl;
+    }
+
+    voxelMax[1] = inputs->yEnd;
+    ss << "xStart=" << inputs->xStart << " " << "xEnd=" << inputs->xEnd << std::endl;
+    ss << "yStart=" << inputs->yStart << " " << "yEnd=" << inputs->yEnd << std::endl;
+    /************************************************************/
   }
   else
   {
@@ -314,24 +306,27 @@ void MRCSinogramInitializer::execute()
   sinogram->TMax = (sinogram->N_t*sinogram->delta_t)/2;
 
 
-  printf("Size of the Masked Sinogram N_r =%d N_t = %d N_theta=%d\n",sinogram->N_r,sinogram->N_t,sinogram->N_theta);
+  ss << "Size of the Masked Sinogram N_r =" << sinogram->N_r << " N_t = "<< sinogram->N_t
+      << " N_theta=" << sinogram->N_theta << std::endl;
 
-#ifdef DEBUG
-      //check sum calculation
-  for(uint16_t i=0;i<sinogram->N_theta;i++)
+  if(getVerbose())
   {
-    sum = 0;
-    for (uint16_t j = 0; j < sinogram->N_r; j++)
+
+    //check sum calculation
+    for (uint16_t i = 0; i < sinogram->N_theta; i++)
     {
-      for (uint16_t k = 0; k < sinogram->N_t; k++)
+      sum = 0;
+      for (uint16_t j = 0; j < sinogram->N_r; j++)
       {
-        sum += sinogram->counts->getValue(i, j, k);
+        for (uint16_t k = 0; k < sinogram->N_t; k++)
+        {
+          sum += sinogram->counts->getValue(i, j, k);
+        }
       }
+      ss << "Sinogram Checksum " << i << ":" << sum << std::endl;
     }
-    printf("Sinogram Checksum %d: %f\n", i, sum);
+    std::cout << ss.str() << std::endl;
   }
-  //end ofcheck sum
-#endif
 
   setErrorCondition(0);
   setErrorMessage("");

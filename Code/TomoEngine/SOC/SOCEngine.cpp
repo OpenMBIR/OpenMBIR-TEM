@@ -192,8 +192,6 @@ void SOCEngine::InitializeTomoInputs(TomoInputsPtr v)
    v->SigmaX = 0.0;
    v->p = 0.0;
    v->StopThreshold = 0.0;
-  // v->excludedViews;
- //  v->goodViews;
    v->useSubvolume = false;
    v->xStart = 0;
    v->xEnd = 0;
@@ -308,31 +306,30 @@ void SOCEngine::initVariables()
 // -----------------------------------------------------------------------------
 void SOCEngine::execute()
 {
-   uint64_t totalTime = EIMTOMO_getMilliSeconds();
-   int32_t err = 0;
+  uint64_t totalTime = EIMTOMO_getMilliSeconds();
+  int32_t err = 0;
 
- // int16_t i,j,k,Idx;
+  std::stringstream ss;
+
+  // int16_t i,j,k,Idx;
   size_t dims[3];
 
   Int32ArrayType::Pointer Counter;
   UInt8Image_t::Pointer VisitCount;
 
-
   uint16_t MaxNumberOfDetectorElts;
-  uint8_t status;//set to 1 if ICD has converged
+  uint8_t status; //set to 1 if ICD has converged
 
-
-  Real_t checksum = 0,temp;
+  Real_t checksum = 0, temp;
 
   RealImage_t::Pointer VoxelProfile;
   RealVolumeType::Pointer detectorResponse;
   RealVolumeType::Pointer H_t;
 
-
-  RealVolumeType::Pointer Y_Est;//Estimated Sinogram
-  RealVolumeType::Pointer Final_Sinogram;//To store and write the final sinogram resulting from our reconstruction
-  RealVolumeType::Pointer ErrorSino;//Error Sinogram
-  RealVolumeType::Pointer Weight;//This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
+  RealVolumeType::Pointer Y_Est; //Estimated Sinogram
+  RealVolumeType::Pointer Final_Sinogram; //To store and write the final sinogram resulting from our reconstruction
+  RealVolumeType::Pointer ErrorSino; //Error Sinogram
+  RealVolumeType::Pointer Weight; //This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
 
   RNGVars* RandomNumber;
   std::string indent("");
@@ -345,89 +342,86 @@ void SOCEngine::execute()
   cost->initOutputFile(filepath);
 //#endif
 
-
-
-
 #if TomoEngine_USE_PARALLEL_ALGORITHMS
   tbb::task_scheduler_init init;
 #endif
 
   // Initialize the Sinogram
-  if (m_TomoInputs == NULL)
+  if(m_TomoInputs == NULL)
   {
     setErrorCondition(-1);
     notify("Error: The TomoInput Structure was NULL. The proper API is to supply this class with that structure,", 100, Observable::UpdateProgressValueAndMessage);
     return;
   }
   //Based on the inputs , calculate the "other" variables in the structure definition
-  if (m_Sinogram == NULL)
+  if(m_Sinogram == NULL)
   {
     setErrorCondition(-1);
     notify("Error: The Sinogram Structure was NULL. The proper API is to supply this class with that structure,", 100, Observable::UpdateProgressValueAndMessage);
     return;
   }
-  if (m_Geometry == NULL)
+  if(m_Geometry == NULL)
   {
     setErrorCondition(-1);
     notify("Error: The Geometry Structure was NULL. The proper API is to supply this class with that structure,", 100, Observable::UpdateProgressValueAndMessage);
     return;
   }
 
-
   // Read the Input data from the supplied data file
   err = readInputData();
-  if (err < 0)
+  if(err < 0)
   {
     return;
   }
 
   err = initializeBrightFieldData();
-  if (err < 0)
+  if(err < 0)
   {
     return;
   }
 
   err = createInitialGainsData();
-  if (err < 0)
+  if(err < 0)
   {
     return;
   }
   err = createInitialOffsetsData();
-  if (err < 0)
+  if(err < 0)
   {
     return;
   }
   err = createInitialVariancesData();
-  if (err < 0)
+  if(err < 0)
   {
     return;
   }
 
-#ifdef DEBUG_GAINS_OFFSETS_VARIANCES
-// Print out the Initial Gains, Offsets, Variances
-  std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
-  std::cout << "Tilt\tGain\tOffset";
-
-  if(NULL != m_Sinogram->InitialVariance.get())
+  if(getVeryVerbose())
   {
-    std::cout << "\tVariance";
-  }
-  std::cout << std::endl;
+    // Print out the Initial Gains, Offsets, Variances
+    std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
+    std::cout << "Tilt\tGain\tOffset";
 
-  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-  {
-    std::cout << i_theta << "\t" << m_Sinogram->InitialGain->d[i_theta] << "\t" << m_Sinogram->InitialOffset->d[i_theta];
     if(NULL != m_Sinogram->InitialVariance.get())
     {
-      std::cout << "\t" << m_Sinogram->InitialVariance->d[i_theta];
+      std::cout << "\tVariance";
     }
     std::cout << std::endl;
+
+    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+    {
+      std::cout << i_theta << "\t" << m_Sinogram->InitialGain->d[i_theta] << "\t" << m_Sinogram->InitialOffset->d[i_theta];
+      if(NULL != m_Sinogram->InitialVariance.get())
+      {
+        std::cout << "\t" << m_Sinogram->InitialVariance->d[i_theta];
+      }
+      std::cout << std::endl;
+    }
   }
-#endif
 
   // Initialize the Geometry data from a rough reconstruction
   err = initializeRoughReconstructionData();
-  if (err < 0)
+  if(err < 0)
   {
     return;
   }
@@ -438,12 +432,15 @@ void SOCEngine::execute()
   dims[0] = m_Sinogram->N_theta;
   NuisanceParams->I_0 = RealArrayType::New(dims, "NuisanceParams->I_0");
   NuisanceParams->mu = RealArrayType::New(dims, "NuisanceParams->mu");
-if (m_AdvParams->NOISE_MODEL) {
-  //alpha is the noise variance adjustment factor
-  NuisanceParams->alpha = RealArrayType::New(dims, "NuisanceParams->alpha");
-}else{
-  NuisanceParams->alpha = RealArrayType::NullPointer();
-}
+  if(m_AdvParams->NOISE_MODEL)
+  {
+    //alpha is the noise variance adjustment factor
+    NuisanceParams->alpha = RealArrayType::New(dims, "NuisanceParams->alpha");
+  }
+  else
+  {
+    NuisanceParams->alpha = RealArrayType::NullPointer();
+  }
 
 #if ROI
   UInt8Image_t::Pointer Mask;
@@ -458,18 +455,16 @@ if (m_AdvParams->NOISE_MODEL) {
   dims[1] = m_Sinogram->N_r;
   dims[2] = m_Sinogram->N_t;
 
-
   Y_Est = RealVolumeType::New(dims, "Y_Est");
   ErrorSino = RealVolumeType::New(dims, "ErrorSino");
   Weight = RealVolumeType::New(dims, "Weight");
   Final_Sinogram = RealVolumeType::New(dims, "Final Sinogram");
 
   //Setting the value of all the private members
-  OffsetR = ((m_TomoInputs->delta_xz/sqrt(3.0)) + m_Sinogram->delta_r/2)/m_AdvParams->DETECTOR_RESPONSE_BINS;
-  OffsetT = ((m_TomoInputs->delta_xz/2) + m_Sinogram->delta_t/2)/m_AdvParams->DETECTOR_RESPONSE_BINS;
+  OffsetR = ((m_TomoInputs->delta_xz / sqrt(3.0)) + m_Sinogram->delta_r / 2) / m_AdvParams->DETECTOR_RESPONSE_BINS;
+  OffsetT = ((m_TomoInputs->delta_xz / 2) + m_Sinogram->delta_t / 2) / m_AdvParams->DETECTOR_RESPONSE_BINS;
 
   BEAM_WIDTH = m_Sinogram->delta_r;
-
 
 #ifdef EIMTOMO_USE_QGGMRF
   m_QGGMRF_Values.MRF_P = 2;
@@ -483,7 +478,6 @@ if (m_AdvParams->NOISE_MODEL) {
   MRF_P = m_TomoInputs->p;
   SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
 #endif //QGGMRF
-
   //globals assosiated with finding the optimal gain and offset parameters
 
   dims[0] = m_Sinogram->N_theta;
@@ -499,7 +493,7 @@ if (m_AdvParams->NOISE_MODEL) {
   ck_cost = RealArrayType::New(dims, "ck_cost");
 
   NumOfViews = m_Sinogram->N_theta;
-  LogGain = m_Sinogram->N_theta*log(m_Sinogram->targetGain);
+  LogGain = m_Sinogram->N_theta * log(m_Sinogram->targetGain);
   dims[0] = m_Sinogram->N_theta;
   d1 = RealArrayType::New(dims, "d1");
   d2 = RealArrayType::New(dims, "d2");
@@ -523,7 +517,7 @@ if (m_AdvParams->NOISE_MODEL) {
   dResponseFilter->setBeamProfile(BeamProfile);
   dResponseFilter->setObservers(getObservers());
   dResponseFilter->execute();
-  if (dResponseFilter->getErrorCondition() < 0)
+  if(dResponseFilter->getErrorCondition() < 0)
   {
     std::cout << "Error Calling function detectorResponse in file " << __FILE__ << "(" << __LINE__ << ")" << std::endl;
     setErrorCondition(-2);
@@ -538,7 +532,7 @@ if (m_AdvParams->NOISE_MODEL) {
   responseWriter->setObservers(getObservers());
   responseWriter->setResponse(detectorResponse);
   responseWriter->execute();
-  if (responseWriter->getErrorCondition() < 0)
+  if(responseWriter->getErrorCondition() < 0)
   {
     std::cout << "Error writing detector response to file." << __FILE__ << "(" << __LINE__ << ")" << std::endl;
     setErrorCondition(-2);
@@ -552,13 +546,12 @@ if (m_AdvParams->NOISE_MODEL) {
   dims[2] = 0;
   VisitCount = UInt8Image_t::New(dims, "VisitCount");
 // Initialize the Array to zero
-  ::memset( VisitCount->d, 0, dims[0] * dims[1] * sizeof(uint8_t));
+  ::memset(VisitCount->d, 0, dims[0] * dims[1] * sizeof(uint8_t));
 #endif//Random update
 
-
-  dims[0]=m_Geometry->N_z;//height
-  dims[1]=m_Geometry->N_x;//width
-  dims[2]=0;
+  dims[0] = m_Geometry->N_z; //height
+  dims[1] = m_Geometry->N_x; //width
+  dims[2] = 0;
 
   MagUpdateMap = RealImage_t::New(dims, "Update Map for voxel lines");
   FiltMagUpdateMap = RealImage_t::New(dims, "Update Map for voxel lines");
@@ -573,8 +566,6 @@ if (m_AdvParams->NOISE_MODEL) {
 #endif
   //m_Sinogram->targetGain=20000;
 
-
-
   //Gain and Offset Parameters Initialization
   gainAndOffsetInitialization(NuisanceParams);
 
@@ -585,10 +576,11 @@ if (m_AdvParams->NOISE_MODEL) {
   H_t = RealVolumeType::New(dims, "H_t");
   initializeHt(H_t);
 
+  checksum = 0;
 
-  checksum=0;
-
-
+  ss.str("");
+  ss << "Calculating AMatrix....";
+  notify(ss.str(), 0, Observable::UpdateProgressMessage);
 
   //TODO: All this needs to be deallocated at some point
 //  DATA_TYPE y;
@@ -629,18 +621,19 @@ if (m_AdvParams->NOISE_MODEL) {
     }
   }
 
-
   storeVoxelResponse(H_t, VoxelLineResponse);
 
-  printf("Number of non zero entries of the forward projector is %lf\n",temp);
-  printf("Geometry-Z %d\n",m_Geometry->N_z);
-
+  if(getVerbose())
+  {
+    printf("Number of non zero entries of the forward projector is %lf\n", temp);
+    printf("Geometry-Z %d\n", m_Geometry->N_z);
+  }
 
   //Forward Project Geometry->Object one slice at a time and compute the  Sinogram for each slice
   //is Y_Est initailized to zero?
   initializeVolume(Y_Est, 0.0);
 
-  RandomNumber=init_genrand(1ul);
+  RandomNumber = init_genrand(1ul);
 
   notify("Starting Forward Projection", 10, Observable::UpdateProgressValueAndMessage);
   START_TIMER;
@@ -649,10 +642,16 @@ if (m_AdvParams->NOISE_MODEL) {
 
 #if TomoEngine_USE_PARALLEL_ALGORITHMS
   tbb::task_group* g = new tbb::task_group;
-  std::cout << "Default Number of Threads to Use: " << init.default_num_threads() << std::endl;
-  std::cout << "Forward Projection Running in Parallel." << std::endl;
+  if (getVerbose())
+  {
+    std::cout << "Default Number of Threads to Use: " << init.default_num_threads() << std::endl;
+    std::cout << "Forward Projection Running in Parallel." << std::endl;
+  }
 #else
-  std::cout << "Forward Projection Running in Serial." << std::endl;
+  if(getVerbose())
+  {
+    std::cout << "Forward Projection Running in Serial." << std::endl;
+  }
 #endif
   // Queue up a thread for each z layer of the Geometry. The threads will only be
   // run as hardware resources open up so this will not just fire up a gazillion
@@ -660,40 +659,35 @@ if (m_AdvParams->NOISE_MODEL) {
   for (uint16_t t = 0; t < m_Geometry->N_z; t++)
   {
 #if TomoEngine_USE_PARALLEL_ALGORITHMS
-    g->run(ForwardProject(m_Sinogram.get(), m_Geometry.get(), TempCol,VoxelLineResponse,Y_Est, NuisanceParams.get(), t));
+    g->run(ForwardProject(m_Sinogram.get(), m_Geometry.get(), TempCol,VoxelLineResponse,Y_Est, NuisanceParams.get(), t, this));
 #else
-    ForwardProject fp(m_Sinogram.get(), m_Geometry.get(), TempCol,VoxelLineResponse,Y_Est, NuisanceParams.get(), t);
+    ForwardProject fp(m_Sinogram.get(), m_Geometry.get(), TempCol, VoxelLineResponse, Y_Est, NuisanceParams.get(), t, this);
+    fp.setObservers(getObservers());
     fp();
 #endif
-
   }
 #if TomoEngine_USE_PARALLEL_ALGORITHMS
   g->wait(); // Wait for all the threads to complete before moving on.
   delete g;
 #endif
-  printf("\n");
-  STOP_TIMER;
-  PRINT_TIME("Forward Project Time");
 
+  STOP_TIMER;PRINT_TIME("Forward Project Time");
 
   //Calculate Error Sinogram - Can this be combined with previous loop?
   //Also compute weights of the diagonal covariance matrix
   calculateMeasurementWeight(Weight, NuisanceParams, ErrorSino, Y_Est);
 
-
 #ifdef FORWARD_PROJECT_MODE
-  return 0;//exit the program once we finish forward projecting the object
+  return 0; //exit the program once we finish forward projecting the object
 #endif//Forward Project mode
-
 
 #ifdef COST_CALCULATE
   err = calculateCost(cost, Weight, ErrorSino);
 #endif //Cost calculation endif
-
 //  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
-  std::stringstream ss;
+
   //Loop through every voxel updating it by solving a cost function
-  for(int16_t reconOuterIter = 0; reconOuterIter < m_TomoInputs->NumOuterIter; reconOuterIter++)
+  for (int16_t reconOuterIter = 0; reconOuterIter < m_TomoInputs->NumOuterIter; reconOuterIter++)
   {
     ss.str(""); // Clear the string stream
     indent = "";
@@ -706,12 +700,9 @@ if (m_AdvParams->NOISE_MODEL) {
 
     for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
     {
-      std::cout << reconOuterIter << "/" << m_TomoInputs->NumOuterIter << " " << Iter << "/" << m_TomoInputs->NumIter << std::endl;
-      indent = "  ";
-//      ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
-//      ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
-//      float currentLoop = OuterIter * m_TomoInputs->NumIter + Iter;
-//      notify(ss.str(), currentLoop / totalLoops * 100);
+      ss.str("");
+      ss << "Outer Iterations: " << reconOuterIter << "/" << m_TomoInputs->NumOuterIter << " Inner Iterations: " << Iter << "/" << m_TomoInputs->NumIter << std::endl;
+
       indent = "    ";
       // This is all done PRIOR to calling what will become a method
       VoxelUpdateType updateType = RegularRandomOrderUpdate;
@@ -754,7 +745,6 @@ if (m_AdvParams->NOISE_MODEL) {
       }
     } //Joint estimation endif
 
-
     // Write out the VTK file
     {
       ss.str("");
@@ -768,8 +758,6 @@ if (m_AdvParams->NOISE_MODEL) {
       writeMRCFile(ss.str());
       notify(ss.str(), 0, Observable::UpdateIntermediateImage);
     }
-
-
 
     if(m_AdvParams->NOISE_MODEL)
     {
@@ -811,21 +799,18 @@ if (m_AdvParams->NOISE_MODEL) {
   }
 #endif
 
-
-
-/* Write the Gains and Offsets to an output file */
+  /* Write the Gains and Offsets to an output file */
   writeNuisanceParameters(NuisanceParams);
 
-#if DEBUG_GAINS_OFFSETS_VARIANCES
-  std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
-  for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
-  {
-    std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
-        "\t" << NuisanceParams->mu->d[i_theta] <<
-        "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
+  if(getVerbose()) {
+    std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
+    for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
+    {
+      std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
+      "\t" << NuisanceParams->mu->d[i_theta] <<
+      "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
+    }
   }
-#endif
-
 
   Real_t temp_final = 0.0;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
@@ -839,8 +824,6 @@ if (m_AdvParams->NOISE_MODEL) {
       }
     }
   }
-
-
 
   writeSinogramFile(NuisanceParams, Final_Sinogram); // Writes the sinogram to a file
   writeReconstructionFile(); // Writes the m_Geometry to a file
@@ -862,11 +845,9 @@ if (m_AdvParams->NOISE_MODEL) {
   std::cout << "  Ny = " << m_Geometry->N_y << std::endl;
   std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
 
-
-
   notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
   setErrorCondition(0);
-  std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds()-totalTime)/1000 << std::endl;
+  std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds() - totalTime) / 1000 << std::endl;
   return;
 }
 

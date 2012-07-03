@@ -60,6 +60,9 @@ class TomoEngine_EXPORT AbstractFilter : public Observable
      */
     MXA_INSTANCE_PROPERTY(bool, Cancel);
 
+    MXA_INSTANCE_PROPERTY(bool, Verbose);
+    MXA_INSTANCE_PROPERTY(bool, VeryVerbose);
+
     virtual void printValues(std::ostream &out){}
 
 
