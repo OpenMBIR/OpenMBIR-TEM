@@ -830,6 +830,7 @@ font-size: 10px;
      <string>Window</string>
     </property>
     <addaction name="actionParameters"/>
+    <addaction name="actionInfo"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuWindow"/>
@@ -2267,7 +2268,7 @@ font-size: 10px;
         </sizepolicy>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -3332,6 +3333,11 @@ Reconstruction Value:</string>
     <string>Load Configuration</string>
    </property>
   </action>
+  <action name="actionInfo">
+   <property name="text">
+    <string>Info</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -3347,16 +3353,32 @@ Reconstruction Value:</string>
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>zoomIn</tabstop>
-  <tabstop>zoomOut</tabstop>
-  <tabstop>fitToWindow</tabstop>
-  <tabstop>layersPalette</tabstop>
-  <tabstop>originCB</tabstop>
-  <tabstop>currentTiltIndex</tabstop>
-  <tabstop>playBtn</tabstop>
-  <tabstop>zoomButton</tabstop>
-  <tabstop>skipStart</tabstop>
-  <tabstop>skipEnd</tabstop>
+  <tabstop>xMin</tabstop>
+  <tabstop>xMax</tabstop>
+  <tabstop>yMin</tabstop>
+  <tabstop>yMax</tabstop>
+  <tabstop>sampleThickness</tabstop>
+  <tabstop>z</tabstop>
+  <tabstop>tiltSelection</tabstop>
+  <tabstop>targetGain</tabstop>
+  <tabstop>sigmaX</tabstop>
+  <tabstop>numResolutions</tabstop>
+  <tabstop>finalResolution</tabstop>
+  <tabstop>outerIterations</tabstop>
+  <tabstop>innerIterations</tabstop>
+  <tabstop>interpolateInitialRecontruction</tabstop>
+  <tabstop>extendObject</tabstop>
+  <tabstop>mrf</tabstop>
+  <tabstop>useDefaultOffset</tabstop>
+  <tabstop>stopThreshold</tabstop>
+  <tabstop>defaultOffset</tabstop>
+  <tabstop>defaultVariance</tabstop>
+  <tabstop>defaultInitialRecon</tabstop>
+  <tabstop>inputMRCFilePath</tabstop>
+  <tabstop>inputBrightFieldFilePath</tabstop>
+  <tabstop>initialReconstructionPath</tabstop>
+  <tabstop>tempDirPath</tabstop>
+  <tabstop>reconstructedVolumeFileName</tabstop>
  </tabstops>
  <resources>
   <include location="../../../../Resources/icons/images/Icons.qrc"/>
