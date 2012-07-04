@@ -83,7 +83,7 @@ class CE_ConstraintEquation
      */
     Real_t* CE_RootsOfQuadraticFunction(Real_t a, Real_t b, Real_t c)
     {
-      Real_t* temp = (Real_t*)get_spc(2, sizeof(double));
+      Real_t* temp = (Real_t*)calloc(2, sizeof(double));
       Real_t value = 0, discriminant;
       temp[0] = -1;
       temp[1] = -1;
@@ -157,7 +157,6 @@ class CE_ConstraintEquation
           printf("Roots of the quadratic are %lf %lf \n", root[0], root[1]);
         }
         free(root);
-
       }
       value = sum - LogGain;
       return value;

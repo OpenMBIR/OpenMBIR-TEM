@@ -78,8 +78,13 @@ void ComputeInitialOffsets::execute()
   std::vector<Real_t> AverageGain(sinogram->N_theta, 0);
   std::vector<Real_t> TargetGain(sinogram->N_theta, 0);
 //	std::vector<std::vector<DATA_TYPE>>LS_Matrix(sinogram->N_theta, std::vector<DATA_TYPE> (2));
-  Real_t** LS_Matrix = (Real_t**)get_img(2, sinogram->N_theta, sizeof(Real_t));
-  std::vector<Real_t> LS_Estimates(2, 0);
+//  Real_t** LS_Matrix = (Real_t**)get_img(2, sinogram->N_theta, sizeof(Real_t));
+
+  size_t dims[2] = {sinogram->N_theta, 2};
+  RealImage_t::Pointer LS_Matrix = RealImage_t::New(dims, "LS_Matrix");
+
+
+  Real_t LS_Estimates[2] = {0, 0};
 
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
   {
@@ -94,8 +99,9 @@ void ComputeInitialOffsets::execute()
     sum /= (sinogram->N_r * sinogram->N_t);
     AverageGain[i_theta] = sum;
     TargetGain[i_theta] = 1.0 / cos(sinogram->angles[i_theta] * M_PI / 180); //Set to 1/cos(tilt_angle)
-    LS_Matrix[i_theta][0] = TargetGain[i_theta];
-    LS_Matrix[i_theta][1] = 1;
+    LS_Matrix->setValue(TargetGain[i_theta], i_theta, 0);
+    LS_Matrix->setValue(1, i_theta, 1);
+   // LS_Matrix[i_theta][1] = 1;
   }
 
 #if 0
@@ -118,13 +124,14 @@ void ComputeInitialOffsets::execute()
   //Compute A^t * A
   Real_t ProdMatrix[2][2];
 
-  for (uint8_t i = 0; i < 2; i++) {
+  for (uint8_t i = 0; i < 2; i++)
+  {
     for (uint8_t j = 0; j < 2; j++)
     {
       ProdMatrix[i][j] = 0;
       for (uint8_t k = 0; k < sinogram->N_theta; k++)
       {
-        ProdMatrix[i][j] += (LS_Matrix[k][i] * LS_Matrix[k][j]);
+        ProdMatrix[i][j] += (LS_Matrix->getValue(k, i) * LS_Matrix->getValue(k, j));
       }
     }
   }
@@ -144,12 +151,12 @@ void ComputeInitialOffsets::execute()
   {
     for (uint8_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
     {
-      TempVector[j] += LS_Matrix[i_theta][j] * AverageGain[i_theta];
+      TempVector[j] += LS_Matrix->getValue(i_theta, j) * AverageGain[i_theta];
     }
   }
 
-  //Compute T1*T2 (2 X 2 matrix with 2 X 1 vector)
 
+  //Compute T1*T2 (2 X 2 matrix with 2 X 1 vector)
   for (uint8_t i = 0; i < 2; i++)
   {
     for (uint8_t k = 0; k < 2; k++)

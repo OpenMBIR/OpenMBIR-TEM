@@ -89,8 +89,7 @@ void CalculateAMatrixColumn::execute()
   Real_t d1,d2; //These are the values of the detector boundaries
 #endif
 
-  Ai = (AMatrixCol*)get_spc(1, sizeof(AMatrixCol));
-  AMatrixCol* Temp = (AMatrixCol*)get_spc(1, sizeof(AMatrixCol)); //This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
+
 
   // printf("Space allocated for column %d %d\n",row,col);
 
@@ -110,8 +109,12 @@ void CalculateAMatrixColumn::execute()
   AvgNumYElements = ceil(3 * inputs->delta_xy / sinogram->delta_t);
   MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements) * sinogram->N_theta;
 
-  Temp->values = (Real_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(Real_t));
-  Temp->index = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(uint32_t));
+  size_t dims[1] = { MaximumSpacePerColumn };
+  AMatrixWrapper::Pointer Temp = AMatrixWrapper::New(dims, 0);
+//  AMatrixCol* Temp = (AMatrixCol*)get_spc(1, sizeof(AMatrixCol)); //This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
+//
+//  Temp->values = (Real_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(Real_t));
+//  Temp->index = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(uint32_t));
 
   //printf("%lf",Temp->values[10]);
 
@@ -366,23 +369,24 @@ void CalculateAMatrixColumn::execute()
   }
 #endif
   // printf("Final Space allocation for column %d %d\n",row,col);
+  dims[0] = count;
+  AMatrixWrapper::Pointer Ai = AMatrixWrapper::New(dims, 0);
 
-  Ai->values = (Real_t*)get_spc(count, sizeof(Real_t));
-  Ai->index = (uint32_t*)get_spc(count, sizeof(uint32_t));
-  uint32_t aiTempCount = 0;
+//  Ai->values = (Real_t*)get_spc(count, sizeof(Real_t));
+//  Ai->index = (uint32_t*)get_spc(count, sizeof(uint32_t));
+  uint32_t k = 0;
   for (uint32_t i = 0; i < count; i++)
   {
     if(Temp->values[i] > 0.0)
     {
-      Ai->values[aiTempCount] = Temp->values[i];
-      checksum += Ai->values[aiTempCount];
-      Ai->index[aiTempCount++] = Temp->index[i];
+      Ai->values[k] = Temp->values[i];
+      checksum += Ai->values[k];
+      Ai->index[k] = Temp->index[i];
+      k++;
     }
-
   }
-
-  Ai->count = aiTempCount;
-  free(Temp->values);
-  free(Temp->index);
-  free(Temp);
+  Ai->setCount(k);
+//  free(Temp->values);
+//  free(Temp->index);
+//  free(Temp);
 }

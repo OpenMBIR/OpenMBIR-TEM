@@ -55,10 +55,10 @@ class UpdateYSlice
     UpdateYSlice(uint16_t yStart, uint16_t yEnd,
                  GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
                  SinogramPtr  sinogram, SinogramPtr  bfSinogram,
-                 AMatrixCol** tempCol,
+                 std::vector<AMatrixWrapper::Pointer> &tempCol,
                  RealVolumeType::Pointer errorSino,
                  RealVolumeType::Pointer weight,
-                 AMatrixCol* voxelLineResponse,
+                 std::vector<AMatrixWrapper::Pointer> &voxelLineResponse,
                  ScaleOffsetParams* nuisanceParams,
                  UInt8Image_t::Pointer mask,
                  RealImage_t::Pointer magUpdateMap,//Hold the magnitude of the reconstuction along each voxel line
@@ -197,15 +197,19 @@ class UpdateYSlice
 #endif //Random Order updates
           int shouldInitNeighborhood = 0;
 
-          if(m_UpdateType == SOCEngine::NonHomogeniousUpdate && m_MagUpdateMask->getValue(j_new, k_new) == 1 && m_TempCol[Index]->count > 0)
+          if(m_UpdateType == SOCEngine::NonHomogeniousUpdate
+              && m_MagUpdateMask->getValue(j_new, k_new) == 1
+              && m_TempCol[Index]->count > 0)
           {
             ++shouldInitNeighborhood;
           }
-          if(m_UpdateType == SOCEngine::HomogeniousUpdate && m_TempCol[Index]->count > 0)
+          if(m_UpdateType == SOCEngine::HomogeniousUpdate
+              && m_TempCol[Index]->count > 0)
           {
             ++shouldInitNeighborhood;
           }
-          if(m_UpdateType == SOCEngine::RegularRandomOrderUpdate && m_TempCol[Index]->count > 0)
+          if(m_UpdateType == SOCEngine::RegularRandomOrderUpdate
+              && m_TempCol[Index]->count > 0)
           {
             ++shouldInitNeighborhood;
           }
@@ -303,11 +307,11 @@ class UpdateYSlice
                   uint16_t i_r = (m_TempCol[Index]->index[q] % (m_Sinogram->N_r));
                   Real_t kConst0 = m_NuisanceParams->I_0->d[i_theta] * (m_TempCol[Index]->values[q]);
                   uint16_t VoxelLineAccessCounter = 0;
-                  uint32_t vlrCount = m_VoxelLineResponse[i].index[0] + m_VoxelLineResponse[i].count;
-                  for (uint32_t i_t = m_VoxelLineResponse[i].index[0]; i_t < vlrCount; i_t++)
+                  uint32_t vlrCount = m_VoxelLineResponse[i]->index[0] + m_VoxelLineResponse[i]->count;
+                  for (uint32_t i_t = m_VoxelLineResponse[i]->index[0]; i_t < vlrCount; i_t++)
                   {
                     size_t error_idx = m_ErrorSino->calcIndex(i_theta, i_r, i_t);
-                    Real_t ProjectionEntry = kConst0 * m_VoxelLineResponse[i].values[VoxelLineAccessCounter];
+                    Real_t ProjectionEntry = kConst0 * m_VoxelLineResponse[i]->values[VoxelLineAccessCounter];
                     if(m_Sinogram->BF_Flag == false)
                     {
                       THETA2 += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
@@ -383,11 +387,11 @@ class UpdateYSlice
                   uint16_t i_theta = floor(static_cast<float>(m_TempCol[Index]->index[q] / (m_Sinogram->N_r)));
                   uint16_t i_r = (m_TempCol[Index]->index[q] % (m_Sinogram->N_r));
                   uint16_t VoxelLineAccessCounter = 0;
-                  for (uint32_t i_t = m_VoxelLineResponse[i].index[0]; i_t < m_VoxelLineResponse[i].index[0] + m_VoxelLineResponse[i].count; i_t++)
+                  for (uint32_t i_t = m_VoxelLineResponse[i]->index[0]; i_t < m_VoxelLineResponse[i]->index[0] + m_VoxelLineResponse[i]->count; i_t++)
                   {
                     size_t error_idx = m_ErrorSino->calcIndex(i_theta, i_r, i_t);
                     kConst2 = (m_NuisanceParams->I_0->d[i_theta]
-                        * (m_TempCol[Index]->values[q] * m_VoxelLineResponse[i].values[VoxelLineAccessCounter] * (UpdatedVoxelValue - m_CurrentVoxelValue)));
+                        * (m_TempCol[Index]->values[q] * m_VoxelLineResponse[i]->values[VoxelLineAccessCounter] * (UpdatedVoxelValue - m_CurrentVoxelValue)));
                     if(m_Sinogram->BF_Flag == false)
                     {
                       m_ErrorSino->d[error_idx] -= kConst2;
@@ -443,10 +447,10 @@ class UpdateYSlice
     int16_t m_InnerIter;
     SinogramPtr  m_Sinogram;
     SinogramPtr  m_BFSinogram;
-    AMatrixCol** m_TempCol;
+    std::vector<AMatrixWrapper::Pointer> &m_TempCol;
     RealVolumeType::Pointer m_ErrorSino;
     RealVolumeType::Pointer m_Weight;
-    AMatrixCol*  m_VoxelLineResponse;
+    std::vector<AMatrixWrapper::Pointer> m_VoxelLineResponse;
     ScaleOffsetParams* m_NuisanceParams;
     UInt8Image_t::Pointer m_Mask;
     RealImage_t::Pointer m_MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
@@ -507,10 +511,10 @@ class UpdateYSlice
 uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                              VoxelUpdateType updateType,
                              UInt8Image_t::Pointer VisitCount,
-                             AMatrixCol** TempCol,
+                             std::vector<AMatrixWrapper::Pointer> &TempCol,
                              RealVolumeType::Pointer ErrorSino,
                              RealVolumeType::Pointer Weight,
-                             AMatrixCol* VoxelLineResponse,
+                             std::vector<AMatrixWrapper::Pointer> &VoxelLineResponse,
                              ScaleOffsetParams* NuisanceParams,
                              UInt8Image_t::Pointer Mask,
                              CostData::Pointer cost)

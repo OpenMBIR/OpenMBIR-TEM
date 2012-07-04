@@ -52,6 +52,7 @@ typedef TomoArray<uint8_t, uint8_t*, 1> UInt8ArrayType;
 //typedef TomoArray<int32_t, int32_t***, 3> Int32VolumeType;
 
 typedef TomoArray<int32_t, int32_t*, 1> Int32ArrayType;
+typedef TomoArray<uint32_t, uint32_t*, 1> UInt32ArrayType;
 
 typedef TomoArray<Real_t, Real_t*, 3> RealVolumeType;
 typedef TomoArray<Real_t, Real_t*, 2> RealImage_t;
@@ -202,16 +203,72 @@ namespace SOC {
   typedef boost::shared_ptr<AdvancedParameters> AdvancedParametersPtr;
 
   //Structure to store a single column(A_i) of the A-matrix
-  typedef struct
+//  typedef struct
+//  {
+//      Real_t* values; //Store the non zero entries
+//      uint32_t count; //The number of non zero values present in the column
+//      uint32_t* index; //This maps each value to its location in the column. The entries in this can vary from 0 to Sinogram.N_x Sinogram.N_theta-1
+//  } AMatrixCol;
+
+
+  class AMatrixWrapper
   {
-      Real_t* values; //Store the non zero entries
+    public:
+      typedef AMatrixWrapper                      Self;
+      typedef boost::shared_ptr<Self >        Pointer;
+      typedef boost::shared_ptr<const Self >  ConstPointer;
+      typedef boost::weak_ptr<AMatrixWrapper > WeakPointer;
+      typedef boost::weak_ptr<AMatrixWrapper > ConstWeakPointer;
+      static Pointer NullPointer(void)
+      {
+        return Pointer(static_cast<AMatrixWrapper*>(0));
+      }
+      static Pointer New(size_t* dims, int32_t count)
+      {
+        Pointer sharedPtr (new AMatrixWrapper(dims, count));
+        return sharedPtr;
+      }
+
+      virtual ~AMatrixWrapper(){}
+
+      RealArrayType::Pointer valuesPtr;
+      Real_t*                values;
+      UInt32ArrayType::Pointer indexPtr;
+      uint32_t*                index;
+      uint64_t                 d0;
+      uint64_t                 d1;
+
       uint32_t count; //The number of non zero values present in the column
-      uint32_t *index; //This maps each value to its location in the column. The entries in this can vary from 0 to Sinogram.N_x Sinogram.N_theta-1
-  } AMatrixCol;
+      void setCount(uint32_t c)
+      {
+        if(c > valuesPtr->getDims()[0])
+        {
+          std::cout << "BAD!!! c: " << c << "  count: " << count << std::endl;
+          assert(false);
+        }
+        count = c;
+      }
+    protected:
+      AMatrixWrapper(size_t* dims, int32_t c) {
+        valuesPtr = RealArrayType::New(dims, "VoxelLineResponse_Values");
+        values = valuesPtr->getPointer(0);
+        indexPtr = UInt32ArrayType::New(dims, "VoxelLineResponse_index");
+        index = indexPtr->getPointer(0);
+        count = c;
+        d0 = 0xABABABABABABABAB;
+        d1 = 0xCACACACACACACACA;
+      }
+    private:
+
+
+      AMatrixWrapper(const AMatrixWrapper&); // Copy Constructor Not Implemented
+      void operator=(const AMatrixWrapper&); // Operator '=' Not Implemented
+  };
+
+
 
   typedef struct
   {
-
     RealArrayType::Pointer I_0; //Gains
     RealArrayType::Pointer mu; //Offset
     RealArrayType::Pointer alpha;//Noise variance refinement factor
