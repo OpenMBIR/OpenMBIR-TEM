@@ -81,7 +81,7 @@ void ComputeInitialOffsets::execute()
 //  Real_t** LS_Matrix = (Real_t**)get_img(2, sinogram->N_theta, sizeof(Real_t));
 
   size_t dims[2] = {sinogram->N_theta, 2};
-  RealImage_t::Pointer LS_Matrix = RealImage_t::New(dims, "LS_Matrix");
+  RealImageType::Pointer LS_Matrix = RealImageType::New(dims, "LS_Matrix");
 
 
   Real_t LS_Estimates[2] = {0, 0};

@@ -189,14 +189,14 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     Real_t OffsetR;
     Real_t OffsetT;
 
-    RealImage_t::Pointer QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
+    RealImageType::Pointer QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
 
-    RealImage_t::Pointer MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
-    RealImage_t::Pointer FiltMagUpdateMap;//Filters the above to compute threshold
+    RealImageType::Pointer MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
+    RealImageType::Pointer FiltMagUpdateMap;//Filters the above to compute threshold
     UInt8Image_t::Pointer MagUpdateMask;//Masks only the voxels of interest
 
-    RealImage_t::Pointer Qk_cost;
-    RealImage_t::Pointer bk_cost;
+    RealImageType::Pointer Qk_cost;
+    RealImageType::Pointer bk_cost;
     RealArrayType::Pointer ck_cost; //these are the terms of the quadratic cost function
     RealArrayType::Pointer d1;
     RealArrayType::Pointer d2; //hold the intermediate values needed to compute optimal mu_k
@@ -237,7 +237,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     /**
      * @brief
      */
-    RealImage_t::Pointer calculateVoxelProfile();
+    RealImageType::Pointer calculateVoxelProfile();
 
     /**
      * @brief

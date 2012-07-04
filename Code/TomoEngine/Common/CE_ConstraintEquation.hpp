@@ -52,11 +52,11 @@ class CE_ConstraintEquation
 {
   public:
     CE_ConstraintEquation(uint16_t NumOfViews,
-                          RealImage_t::Pointer QuadraticParameters,
+                          RealImageType::Pointer QuadraticParameters,
                           RealArrayType::Pointer d1,
                           RealArrayType::Pointer d2,
-                          RealImage_t::Pointer Qk_cost,
-                          RealImage_t::Pointer bk_cost,
+                          RealImageType::Pointer Qk_cost,
+                          RealImageType::Pointer bk_cost,
                           RealArrayType::Pointer ck_cost,
                           Real_t LogGain) :
         NumOfViews(NumOfViews),
@@ -167,11 +167,11 @@ class CE_ConstraintEquation
 
   private:
     uint16_t NumOfViews;
-    RealImage_t::Pointer QuadraticParameters;
+    RealImageType::Pointer QuadraticParameters;
     RealArrayType::Pointer d1;
     RealArrayType::Pointer d2; //hold the intermediate values needed to compute optimal mu_k
-    RealImage_t::Pointer Qk_cost;
-    RealImage_t::Pointer bk_cost;
+    RealImageType::Pointer Qk_cost;
+    RealImageType::Pointer bk_cost;
     RealArrayType::Pointer ck_cost; //these are the terms of the quadratic cost function
     Real_t LogGain;
     CE_ConstraintEquation(const CE_ConstraintEquation&); // Copy Constructor Not Implemented

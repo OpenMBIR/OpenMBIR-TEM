@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 
   {
 
-    RealImage_t::Pointer object = RealImage_t::New(dims, "Test2D");
+    RealImageType::Pointer object = RealImageType::New(dims, "Test2D");
 
     Real_t* data = reinterpret_cast<Real_t*>(object->getPointer());
     printf("Array to Hold Pointers to start of each Row: %p \n", data);
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
     printf("-------------------------- \n");
 
     std::cout << "Cleaning up Memory\n" << std::endl;
-    object = RealImage_t::NullPointer();
+    object = RealImageType::NullPointer();
 
   }
 

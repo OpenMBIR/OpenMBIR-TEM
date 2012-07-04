@@ -61,7 +61,7 @@ class UpdateYSlice
                  std::vector<AMatrixCol::Pointer> &voxelLineResponse,
                  ScaleOffsetParams* nuisanceParams,
                  UInt8Image_t::Pointer mask,
-                 RealImage_t::Pointer magUpdateMap,//Hold the magnitude of the reconstuction along each voxel line
+                 RealImageType::Pointer magUpdateMap,//Hold the magnitude of the reconstuction along each voxel line
                  UInt8Image_t::Pointer magUpdateMask,
                  QGGMRF::QGGMRF_Values* qggmrfValues,
                  SOCEngine::VoxelUpdateType updateType,
@@ -453,7 +453,7 @@ class UpdateYSlice
     std::vector<AMatrixCol::Pointer> m_VoxelLineResponse;
     ScaleOffsetParams* m_NuisanceParams;
     UInt8Image_t::Pointer m_Mask;
-    RealImage_t::Pointer m_MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
+    RealImageType::Pointer m_MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
     UInt8Image_t::Pointer m_MagUpdateMask;
     QGGMRF::QGGMRF_Values* m_QggmrfValues;
     SOCEngine::VoxelUpdateType m_UpdateType;

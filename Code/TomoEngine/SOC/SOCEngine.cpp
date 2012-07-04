@@ -323,7 +323,7 @@ void SOCEngine::execute()
 
   Real_t checksum = 0, temp;
 
-  RealImage_t::Pointer VoxelProfile;
+  RealImageType::Pointer VoxelProfile;
   RealVolumeType::Pointer detectorResponse;
   RealVolumeType::Pointer H_t;
 
@@ -484,10 +484,10 @@ void SOCEngine::execute()
   dims[1] = 3;
   dims[2] = 0;
   //Hold the coefficients of a quadratic equation
-  QuadraticParameters = RealImage_t::New(dims, "QuadraticParameters");
-  Qk_cost = RealImage_t::New(dims, "Qk_cost");
+  QuadraticParameters = RealImageType::New(dims, "QuadraticParameters");
+  Qk_cost = RealImageType::New(dims, "Qk_cost");
   dims[1] = 2;
-  bk_cost = RealImage_t::New(dims, "bk_cost");
+  bk_cost = RealImageType::New(dims, "bk_cost");
 
   dims[0] = m_Sinogram->N_theta;
   ck_cost = RealArrayType::New(dims, "ck_cost");
@@ -557,8 +557,8 @@ void SOCEngine::execute()
   dims[1] = m_Geometry->N_x; //width
   dims[2] = 0;
 
-  MagUpdateMap = RealImage_t::New(dims, "Update Map for voxel lines");
-  FiltMagUpdateMap = RealImage_t::New(dims, "Update Map for voxel lines");
+  MagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
+  FiltMagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
   MagUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");
 
 #if ROI
@@ -901,12 +901,12 @@ void SOCEngine::minMax(Real_t *low,Real_t *high, Real_t currentVoxelValue)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-RealImage_t::Pointer SOCEngine::calculateVoxelProfile()
+RealImageType::Pointer SOCEngine::calculateVoxelProfile()
 {
   Real_t angle,MaxValLineIntegral;
   Real_t temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
   size_t dims[2] = {m_Sinogram->N_theta ,m_AdvParams->PROFILE_RESOLUTION};
-  RealImage_t::Pointer VoxProfile = RealImage_t::New(dims, "VoxelProfile");
+  RealImageType::Pointer VoxProfile = RealImageType::New(dims, "VoxelProfile");
 
   Real_t checksum=0;
   uint16_t i,j;
