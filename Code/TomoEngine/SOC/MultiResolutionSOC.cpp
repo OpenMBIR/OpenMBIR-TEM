@@ -294,7 +294,8 @@ void MultiResolutionSOC::execute()
     inputs->excludedViews = m_ViewMasks;
     bf_inputs->excludedViews = m_ViewMasks;
 
-
+      memCalculate(inputs, bf_inputs);
+      
 
     SinogramPtr sinogram = SinogramPtr(new Sinogram);
     SinogramPtr bf_sinogram = SinogramPtr(new Sinogram);
@@ -306,6 +307,7 @@ void MultiResolutionSOC::execute()
     SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
     SOCEngine::InitializeSinogram(bf_sinogram);
 
+      
     // Create an Engine and initialize all the structures
 	  SOCEngine::Pointer engine = SOCEngine::New();
 	  engine->setTomoInputs(inputs);
@@ -335,4 +337,51 @@ void MultiResolutionSOC::execute()
 
   updateProgressAndMessage("MultiResolution SOC Complete", 100);
   setErrorCondition(err);
+}
+
+void MultiResolutionSOC::memCalculate(TomoInputsPtr inputs, TomoInputsPtr bf_inputs)
+{
+    float GeomNx,GeomNy,GeomNz;
+    float SinoNr,SinoNt,SinoNtheta;
+    SinoNr = inputs->xEnd - inputs->xStart+1;
+    SinoNt = inputs->yEnd - inputs->yStart+1;
+    SinoNtheta = inputs->zEnd - inputs->zStart+1;
+    
+    if(inputs->extendObject == 1)
+    {
+        GeomNx = (SinoNr/m_FinalResolution);//Need to access X_Stretch and m_Sinogram->cosine and 
+    }
+    else {
+        GeomNx = SinoNr/m_FinalResolution;
+    }
+    
+    GeomNy = SinoNt/m_FinalResolution;
+    GeomNz = 2*m_SampleThickness/(m_FinalResolution);// TODO: need to access Sinogram_deltar and z_stretch. This is wrong currently 
+    
+    
+    float dataTypeMem = sizeof(Real_t);
+
+    float ObjectMem = GeomNx*GeomNy*GeomNz*dataTypeMem;
+    float SinogramMem = SinoNr*SinoNt*SinoNtheta*dataTypeMem;
+    float ErroSinoMem = SinogramMem;
+    float WeightMem = SinogramMem; //Weight matrix
+    float A_MatrixMem;
+    if(0 == inputs->extendObject)
+    {
+    A_MatrixMem = GeomNx*GeomNz*(m_FinalResolution*3*(dataTypeMem+4)*SinoNtheta);// 4 is the bytes to store the counts 
+   //*+4 correspodns to bytes to store a single double and a unsigned into to
+   //store the offset. 3*m_FinalRes is the approximate number of detector elements hit per voxel
+    }
+    else {
+        A_MatrixMem = GeomNx*GeomNz*(m_FinalResolution*(dataTypeMem+4)*SinoNtheta); //Since we are reconstructing a larger region there are several voxels with no projection data. so instead of each voxel hitting 3*m_FinalRes det entries we aproximate it by m_FinalRes
+    }
+    float NuisanceParamMem = SinoNtheta*dataTypeMem*3;//3 is for gains offsets and noise var
+        
+    float TotalMem = ObjectMem+SinogramMem+ErroSinoMem+WeightMem+A_MatrixMem+NuisanceParamMem;//in bytes
+    
+    TotalMem/=(1e9);//To get answer in Gb
+    
+    std::cout<<"Total Max Mem needed ="<<TotalMem<<std::endl;
+    
+    
 }

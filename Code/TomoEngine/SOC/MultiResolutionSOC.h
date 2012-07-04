@@ -99,6 +99,8 @@ class MultiResolutionSOC : public FilterPipeline
     virtual void execute();
 
     void printInputs(TomoInputsPtr inputs, std::ostream &out);
+    
+    void memCalculate(TomoInputsPtr inputs,TomoInputsPtr bf_inputs);
 
   protected:
     MultiResolutionSOC();
