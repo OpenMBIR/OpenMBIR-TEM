@@ -147,7 +147,6 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
 //Window Menu
     void on_actionParameters_triggered();
-    void on_actionInfo_triggered();
     void on_actionLayers_Palette_triggered();
 
     void on_playBtn_clicked();

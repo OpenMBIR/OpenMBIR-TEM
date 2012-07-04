@@ -372,14 +372,6 @@ void TomoGui::on_actionParameters_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_actionInfo_triggered()
-{
-  infoDockWidget->show();
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 void TomoGui::on_actionLayers_Palette_triggered()
 {
   m_LayersPalette->show();
@@ -818,8 +810,8 @@ void TomoGui::on_m_GoBtn_clicked()
   emit pipelineStarted();
   m_WorkerThread->start();
   m_GoBtn->setText("Cancel");
-m_SingleSliceReconstructionActive = false;
-m_FullReconstrucionActive = true;
+  m_SingleSliceReconstructionActive = false;
+  m_FullReconstrucionActive = true;
 }
 
 // -----------------------------------------------------------------------------
@@ -938,7 +930,7 @@ void TomoGui::singleSlicePlaneSet()
 // -----------------------------------------------------------------------------
 void TomoGui::singleSliceComplete()
 {
-  std::cout << "TomoGui::singleSliceComplete" << std::endl;
+  //std::cout << "TomoGui::singleSliceComplete" << std::endl;
   m_SingleSliceReconstructionBtn->setText("Single Slice Reconstruction");
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
@@ -946,6 +938,64 @@ void TomoGui::singleSliceComplete()
           finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(ScaleOffsetCorrection::ReconstructedMrcFile);
 
   loadSingleSliceReconstruction(reconVolumeFile);
+
+
+  // Remove all the files that just got created:
+  // Remove the Reconstruction.bin file
+  QString path = QString::fromStdString(m_MultiResSOC->getTempDir()) + QDir::separator() + finalResolution->text() + QString("x")+ QDir::separator();
+  {
+    QString filePath = path + QString::fromStdString(m_MultiResSOC->getOutputFile());
+    QFile f(filePath);
+    f.remove();
+  }
+  {
+    QString filePath = path + ScaleOffsetCorrection::CostFunctionFile.c_str();
+    QFile f(filePath);
+    f.remove();
+  }
+  {
+    QString filePath = path + ScaleOffsetCorrection::DetectorResponseFile.c_str();
+    QFile f(filePath);
+    f.remove();
+  }
+  {
+    QString filePath = path + ScaleOffsetCorrection::FinalGainParametersFile.c_str();
+    QFile f(filePath);
+    f.remove();
+  }
+  {
+    QString filePath = path + ScaleOffsetCorrection::FinalOffsetParametersFile.c_str();
+    QFile f(filePath);
+    f.remove();
+  }
+  {
+    QString filePath = path + ScaleOffsetCorrection::FinalVariancesFile.c_str();
+    QFile f(filePath);
+    f.remove();
+  }
+  {
+    QString filePath = path + ScaleOffsetCorrection::ReconstructedBinFile.c_str();
+    QFile f(filePath);
+    f.remove();
+  }
+  {
+    QString filePath = path + ScaleOffsetCorrection::ReconstructedMrcFile.c_str();
+    QFile f(filePath);
+    f.remove();
+  }
+  {
+    QString filePath = path + ScaleOffsetCorrection::ReconstructedVtkFile.c_str();
+    QFile f(filePath);
+    f.remove();
+  }
+  {
+    QString filePath = path + ScaleOffsetCorrection::VoxelProfileFile.c_str();
+    QFile f(filePath);
+    f.remove();
+  }
+  // Delete the top level directory
+  QDir dir(path);
+  dir.rmdir(path);
 
   m_FullReconstrucionActive = false;
   m_SingleSliceReconstructionActive = false;
@@ -1103,6 +1153,8 @@ void TomoGui::loadProgressMRCFile(QString filePath)
 {
 //  std::cout << "Loading Progress MRC File: " << filePath.toStdString() << std::endl;
   loadSingleSliceReconstruction(filePath);
+  QFile fi(filePath);
+  fi.remove();
 }
 
 // -----------------------------------------------------------------------------
@@ -1335,6 +1387,8 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
     setImageWidgetsEnabled(true);
     updateBaseRecentFileList(filepath);
   }
+
+
 }
 
 // -----------------------------------------------------------------------------

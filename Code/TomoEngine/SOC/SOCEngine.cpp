@@ -694,16 +694,16 @@ void SOCEngine::execute()
       m_TomoInputs->NumIter = 1;
     }
 
-    for (int16_t Iter = 0; Iter < m_TomoInputs->NumIter; Iter++)
+    for (int16_t reconInnerIter = 0; reconInnerIter < m_TomoInputs->NumIter; reconInnerIter++)
     {
       ss.str("");
-      ss << "Outer Iterations: " << reconOuterIter << "/" << m_TomoInputs->NumOuterIter << " Inner Iterations: " << Iter << "/" << m_TomoInputs->NumIter << std::endl;
+      ss << "Outer Iterations: " << reconOuterIter << "/" << m_TomoInputs->NumOuterIter << " Inner Iterations: " << reconInnerIter << "/" << m_TomoInputs->NumIter << std::endl;
 
       indent = "    ";
       // This is all done PRIOR to calling what will become a method
       VoxelUpdateType updateType = RegularRandomOrderUpdate;
 #ifdef NHICD
-      if(0 == Iter % 2)
+      if(0 == reconInnerIter % 2)
       {
         updateType = HomogeniousUpdate;
       }
@@ -717,7 +717,7 @@ void SOCEngine::execute()
       // This could contain multiple Subloops also
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
       status =
-          updateVoxels(reconOuterIter, Iter, updateType, VisitCount, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost);
+          updateVoxels(reconOuterIter, reconInnerIter, updateType, VisitCount, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost);
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
       if(status == 0)
@@ -731,7 +731,23 @@ void SOCEngine::execute()
         return;
       }
 
+      // Write out the VTK file
+  //    {
+  //      ss.str("");
+  //      ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << ScaleOffsetCorrection::ReconstructedVtkFile;
+  //      writeVtkFile(ss.str());
+  //    }
+      // Write out the MRC File
+      {
+        ss.str("");
+        ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << reconInnerIter << "_" << ScaleOffsetCorrection::ReconstructedMrcFile;
+        writeMRCFile(ss.str());
+        notify(ss.str(), 0, Observable::UpdateIntermediateImage);
+      }
+
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
+
+
     if(m_AdvParams->JOINT_ESTIMATION)
     {
       err = jointEstimation(Weight, NuisanceParams, ErrorSino, Y_Est, cost);
@@ -740,20 +756,6 @@ void SOCEngine::execute()
         break;
       }
     } //Joint estimation endif
-
-    // Write out the VTK file
-    {
-      ss.str("");
-      ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << ScaleOffsetCorrection::ReconstructedVtkFile;
-      writeVtkFile(ss.str());
-    }
-    // Write out the MRC File
-    {
-      ss.str("");
-      ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << ScaleOffsetCorrection::ReconstructedMrcFile;
-      writeMRCFile(ss.str());
-      notify(ss.str(), 0, Observable::UpdateIntermediateImage);
-    }
 
     if(m_AdvParams->NOISE_MODEL)
     {
