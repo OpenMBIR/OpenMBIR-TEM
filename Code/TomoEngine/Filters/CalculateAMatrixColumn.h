@@ -66,7 +66,7 @@ class TomoEngine_EXPORT CalculateAMatrixColumn : public TomoFilter
     MXA_INSTANCE_PROPERTY_OLD(Real_t**, VoxelProfile, VoxelProfile);
     MXA_INSTANCE_PROPERTY_OLD(Real_t*, D1, d1);
     MXA_INSTANCE_PROPERTY_OLD(Real_t*, D2, d2);
-    MXA_INSTANCE_PROPERTY_OLD(AMatrixWrapper::Pointer, AMatrixCol, Ai)
+    MXA_INSTANCE_PROPERTY_OLD(AMatrixCol::Pointer, AMatrixCol, Ai)
 
 
     virtual void execute();

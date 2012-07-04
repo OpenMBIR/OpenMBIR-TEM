@@ -463,7 +463,7 @@ void SOCEngine::initializeVolume(RealVolumeType::Pointer Y_Est, double value)
 //
 // -----------------------------------------------------------------------------
 void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
-                                   std::vector<AMatrixWrapper::Pointer> &VoxelLineResponse)
+                                   std::vector<AMatrixCol::Pointer> &VoxelLineResponse)
 {
   Real_t ProfileThickness = 0.0;
   Real_t y = 0.0;
@@ -528,7 +528,7 @@ void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
         {
           std::cout << i_t << "\t" << ProfileThickness << std::endl;
         }
-        AMatrixWrapper::Pointer vlr = VoxelLineResponse[i];
+        AMatrixCol::Pointer vlr = VoxelLineResponse[i];
         int32_t count = vlr->count;
         vlr->values[count] = ProfileThickness;
         vlr->index[count] = i_t;

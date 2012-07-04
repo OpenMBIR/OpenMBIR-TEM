@@ -211,25 +211,25 @@ namespace SOC {
 //  } AMatrixCol;
 
 
-  class AMatrixWrapper
+  class AMatrixCol
   {
     public:
-      typedef AMatrixWrapper                      Self;
+      typedef AMatrixCol                      Self;
       typedef boost::shared_ptr<Self >        Pointer;
       typedef boost::shared_ptr<const Self >  ConstPointer;
-      typedef boost::weak_ptr<AMatrixWrapper > WeakPointer;
-      typedef boost::weak_ptr<AMatrixWrapper > ConstWeakPointer;
+      typedef boost::weak_ptr<AMatrixCol > WeakPointer;
+      typedef boost::weak_ptr<AMatrixCol > ConstWeakPointer;
       static Pointer NullPointer(void)
       {
-        return Pointer(static_cast<AMatrixWrapper*>(0));
+        return Pointer(static_cast<AMatrixCol*>(0));
       }
       static Pointer New(size_t* dims, int32_t count)
       {
-        Pointer sharedPtr (new AMatrixWrapper(dims, count));
+        Pointer sharedPtr (new AMatrixCol(dims, count));
         return sharedPtr;
       }
 
-      virtual ~AMatrixWrapper(){}
+      virtual ~AMatrixCol(){}
 
       RealArrayType::Pointer valuesPtr;
       Real_t*                values;
@@ -249,7 +249,7 @@ namespace SOC {
         count = c;
       }
     protected:
-      AMatrixWrapper(size_t* dims, int32_t c) {
+      AMatrixCol(size_t* dims, int32_t c) {
         valuesPtr = RealArrayType::New(dims, "VoxelLineResponse_Values");
         values = valuesPtr->getPointer(0);
         indexPtr = UInt32ArrayType::New(dims, "VoxelLineResponse_index");
@@ -261,8 +261,8 @@ namespace SOC {
     private:
 
 
-      AMatrixWrapper(const AMatrixWrapper&); // Copy Constructor Not Implemented
-      void operator=(const AMatrixWrapper&); // Operator '=' Not Implemented
+      AMatrixCol(const AMatrixCol&); // Copy Constructor Not Implemented
+      void operator=(const AMatrixCol&); // Operator '=' Not Implemented
   };
 
 

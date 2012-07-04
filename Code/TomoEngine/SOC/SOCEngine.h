@@ -120,10 +120,10 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     uint8_t updateVoxels(int16_t OuterIter, int16_t Iter,
                          VoxelUpdateType updateType,
                          UInt8Image_t::Pointer VisitCount,
-                         std::vector<AMatrixWrapper::Pointer> &TempCol,
+                         std::vector<AMatrixCol::Pointer> &TempCol,
                          RealVolumeType::Pointer ErrorSino,
                          RealVolumeType::Pointer Weight,
-                         std::vector<AMatrixWrapper::Pointer> &VoxelLineResponse,
+                         std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
                          ScaleOffsetParams* NuisanceParams,
                          UInt8Image_t::Pointer Mask,
                          CostData::Pointer cost);
@@ -138,7 +138,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     void initializeROIMask(UInt8Image_t::Pointer Mask);
     void gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams);
     void initializeHt(RealVolumeType::Pointer H_t);
-    void storeVoxelResponse(RealVolumeType::Pointer H_t, std::vector<AMatrixWrapper::Pointer> &VoxelLineResponse);
+    void storeVoxelResponse(RealVolumeType::Pointer H_t, std::vector<AMatrixCol::Pointer> &VoxelLineResponse);
     void initializeVolume(RealVolumeType::Pointer Y_Est, double value);
     void calculateMeasurementWeight(RealVolumeType::Pointer Weight,
                                                ScaleOffsetParamsPtr NuisanceParams,
@@ -263,7 +263,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      * @param slice
      * @param DetectorResponse
      */
-    AMatrixWrapper::Pointer calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, RealVolumeType::Pointer DetectorResponse);
+    AMatrixCol::Pointer calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, RealVolumeType::Pointer DetectorResponse);
 
     /**
      * @brief

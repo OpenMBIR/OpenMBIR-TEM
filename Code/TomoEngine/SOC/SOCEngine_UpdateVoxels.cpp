@@ -55,10 +55,10 @@ class UpdateYSlice
     UpdateYSlice(uint16_t yStart, uint16_t yEnd,
                  GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
                  SinogramPtr  sinogram, SinogramPtr  bfSinogram,
-                 std::vector<AMatrixWrapper::Pointer> &tempCol,
+                 std::vector<AMatrixCol::Pointer> &tempCol,
                  RealVolumeType::Pointer errorSino,
                  RealVolumeType::Pointer weight,
-                 std::vector<AMatrixWrapper::Pointer> &voxelLineResponse,
+                 std::vector<AMatrixCol::Pointer> &voxelLineResponse,
                  ScaleOffsetParams* nuisanceParams,
                  UInt8Image_t::Pointer mask,
                  RealImage_t::Pointer magUpdateMap,//Hold the magnitude of the reconstuction along each voxel line
@@ -447,10 +447,10 @@ class UpdateYSlice
     int16_t m_InnerIter;
     SinogramPtr  m_Sinogram;
     SinogramPtr  m_BFSinogram;
-    std::vector<AMatrixWrapper::Pointer> &m_TempCol;
+    std::vector<AMatrixCol::Pointer> &m_TempCol;
     RealVolumeType::Pointer m_ErrorSino;
     RealVolumeType::Pointer m_Weight;
-    std::vector<AMatrixWrapper::Pointer> m_VoxelLineResponse;
+    std::vector<AMatrixCol::Pointer> m_VoxelLineResponse;
     ScaleOffsetParams* m_NuisanceParams;
     UInt8Image_t::Pointer m_Mask;
     RealImage_t::Pointer m_MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
@@ -511,10 +511,10 @@ class UpdateYSlice
 uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
                              VoxelUpdateType updateType,
                              UInt8Image_t::Pointer VisitCount,
-                             std::vector<AMatrixWrapper::Pointer> &TempCol,
+                             std::vector<AMatrixCol::Pointer> &TempCol,
                              RealVolumeType::Pointer ErrorSino,
                              RealVolumeType::Pointer Weight,
-                             std::vector<AMatrixWrapper::Pointer> &VoxelLineResponse,
+                             std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
                              ScaleOffsetParams* NuisanceParams,
                              UInt8Image_t::Pointer Mask,
                              CostData::Pointer cost)

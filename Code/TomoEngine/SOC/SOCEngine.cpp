@@ -591,13 +591,13 @@ void SOCEngine::execute()
 
 
   //AMatrixCol* VoxelLineResponse = (AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));
-  std::vector<AMatrixWrapper::Pointer> VoxelLineResponse(m_Geometry->N_y);
+  std::vector<AMatrixCol::Pointer> VoxelLineResponse(m_Geometry->N_y);
 
   MaxNumberOfDetectorElts = (uint16_t)((m_TomoInputs->delta_xy / m_Sinogram->delta_t) + 2);
   dims[0] = MaxNumberOfDetectorElts;
   for (uint16_t i = 0; i < m_Geometry->N_y; i++)
   {
-    AMatrixWrapper::Pointer vlr = AMatrixWrapper::New(dims, 0);
+    AMatrixCol::Pointer vlr = AMatrixCol::New(dims, 0);
     VoxelLineResponse[i] = vlr;
   }
 
@@ -605,7 +605,7 @@ void SOCEngine::execute()
   //For each entry the idea is to initially allocate space for Sinogram.N_theta * Sinogram.N_x
   // And then store only the non zero entries by allocating a new array of the desired size
   //AMatrixCol** TempCol = (AMatrixCol**)get_spc(m_Geometry->N_x * m_Geometry->N_z, sizeof(AMatrixCol*));
-  std::vector<AMatrixWrapper::Pointer> TempCol(m_Geometry->N_x * m_Geometry->N_z);
+  std::vector<AMatrixCol::Pointer> TempCol(m_Geometry->N_x * m_Geometry->N_z);
 
   checksum = 0;
   temp = 0;
@@ -1343,7 +1343,7 @@ Real_t SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-AMatrixWrapper::Pointer SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice,
+AMatrixCol::Pointer SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice,
                                                                  RealVolumeType::Pointer DetectorResponse)
 {
   int32_t j, k, sliceidx;
@@ -1384,7 +1384,7 @@ AMatrixWrapper::Pointer SOCEngine::calculateAMatrixColumnPartial(uint16_t row,ui
   MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements) * m_Sinogram->N_theta;
 
   size_t dims[1] = { MaximumSpacePerColumn };
-  AMatrixWrapper::Pointer Temp = AMatrixWrapper::New(dims, 0);
+  AMatrixCol::Pointer Temp = AMatrixCol::New(dims, 0);
 //  AMatrixCol* Temp = (AMatrixCol*)get_spc(1, sizeof(AMatrixCol)); //This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
 //
 //  Temp->values = (Real_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(Real_t));
@@ -1473,7 +1473,7 @@ AMatrixWrapper::Pointer SOCEngine::calculateAMatrixColumnPartial(uint16_t row,ui
   //AMatrixCol* Ai = (AMatrixCol*)get_spc(1, sizeof(AMatrixCol));
 
   dims[0] = count;
-  AMatrixWrapper::Pointer Ai = AMatrixWrapper::New(dims, 0);
+  AMatrixCol::Pointer Ai = AMatrixCol::New(dims, 0);
 //
 //  Ai->values = (Real_t*)get_spc(count, sizeof(Real_t));
 //  Ai->index = (uint32_t*)get_spc(count, sizeof(uint32_t));

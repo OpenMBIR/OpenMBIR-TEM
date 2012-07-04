@@ -49,8 +49,8 @@
 // -----------------------------------------------------------------------------
 ForwardProject::ForwardProject(Sinogram* sinogram,
                                Geometry* geometry,
-                               std::vector<AMatrixWrapper::Pointer> &tempCol,
-                               std::vector<AMatrixWrapper::Pointer> &voxelLineResponse,
+                               std::vector<AMatrixCol::Pointer> &tempCol,
+                               std::vector<AMatrixCol::Pointer> &voxelLineResponse,
                                RealVolumeType::Pointer yEst,
                                ScaleOffsetParams* nuisanceParams,
                                uint16_t tilt,
