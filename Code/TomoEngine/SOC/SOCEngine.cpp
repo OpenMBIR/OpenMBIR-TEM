@@ -159,6 +159,8 @@ namespace Detail {
 #else
     m_NumThreads = 1;
 #endif
+//    setVerbose(true);
+//    setVeryVerbose(true);
  }
 
  // -----------------------------------------------------------------------------
@@ -321,7 +323,7 @@ void SOCEngine::execute()
 
   Real_t checksum = 0, temp;
 
-  RealImage_t::Pointer VoxelProfile;
+  RealImageType::Pointer VoxelProfile;
   RealVolumeType::Pointer detectorResponse;
   RealVolumeType::Pointer H_t;
 
@@ -482,10 +484,10 @@ void SOCEngine::execute()
   dims[1] = 3;
   dims[2] = 0;
   //Hold the coefficients of a quadratic equation
-  QuadraticParameters = RealImage_t::New(dims, "QuadraticParameters");
-  Qk_cost = RealImage_t::New(dims, "Qk_cost");
+  QuadraticParameters = RealImageType::New(dims, "QuadraticParameters");
+  Qk_cost = RealImageType::New(dims, "Qk_cost");
   dims[1] = 2;
-  bk_cost = RealImage_t::New(dims, "bk_cost");
+  bk_cost = RealImageType::New(dims, "bk_cost");
 
   dims[0] = m_Sinogram->N_theta;
   ck_cost = RealArrayType::New(dims, "ck_cost");
@@ -514,6 +516,8 @@ void SOCEngine::execute()
   dResponseFilter->setVoxelProfile(VoxelProfile);
   dResponseFilter->setBeamProfile(BeamProfile);
   dResponseFilter->setObservers(getObservers());
+  dResponseFilter->setVerbose(getVerbose());
+  dResponseFilter->setVeryVerbose(getVeryVerbose());
   dResponseFilter->execute();
   if(dResponseFilter->getErrorCondition() < 0)
   {
@@ -529,6 +533,8 @@ void SOCEngine::execute()
   responseWriter->setAdvParams(m_AdvParams);
   responseWriter->setObservers(getObservers());
   responseWriter->setResponse(detectorResponse);
+  responseWriter->setVerbose(getVerbose());
+  responseWriter->setVeryVerbose(getVeryVerbose());
   responseWriter->execute();
   if(responseWriter->getErrorCondition() < 0)
   {
@@ -551,8 +557,8 @@ void SOCEngine::execute()
   dims[1] = m_Geometry->N_x; //width
   dims[2] = 0;
 
-  MagUpdateMap = RealImage_t::New(dims, "Update Map for voxel lines");
-  FiltMagUpdateMap = RealImage_t::New(dims, "Update Map for voxel lines");
+  MagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
+  FiltMagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
   MagUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");
 
 #if ROI
@@ -581,22 +587,26 @@ void SOCEngine::execute()
   notify(ss.str(), 0, Observable::UpdateProgressMessage);
 
   //TODO: All this needs to be deallocated at some point
-//  DATA_TYPE y;
-//  DATA_TYPE t, tmin, tmax, ProfileThickness;
-//  int16_t slice_index_min, slice_index_max;
-  AMatrixCol** TempCol = (AMatrixCol**)get_spc(m_Geometry->N_x * m_Geometry->N_z, sizeof(AMatrixCol*));
-  AMatrixCol* VoxelLineResponse = (AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));
+
+
+
+  //AMatrixCol* VoxelLineResponse = (AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));
+  std::vector<AMatrixCol::Pointer> VoxelLineResponse(m_Geometry->N_y);
+
   MaxNumberOfDetectorElts = (uint16_t)((m_TomoInputs->delta_xy / m_Sinogram->delta_t) + 2);
+  dims[0] = MaxNumberOfDetectorElts;
   for (uint16_t i = 0; i < m_Geometry->N_y; i++)
   {
-    VoxelLineResponse[i].count = 0;
-    VoxelLineResponse[i].values = (Real_t*)get_spc(MaxNumberOfDetectorElts, sizeof(Real_t));
-    VoxelLineResponse[i].index = (uint32_t*)get_spc(MaxNumberOfDetectorElts, sizeof(uint32_t));
+    AMatrixCol::Pointer vlr = AMatrixCol::New(dims, 0);
+    VoxelLineResponse[i] = vlr;
   }
 
   //Calculating A-Matrix one column at a time
   //For each entry the idea is to initially allocate space for Sinogram.N_theta * Sinogram.N_x
   // And then store only the non zero entries by allocating a new array of the desired size
+  //AMatrixCol** TempCol = (AMatrixCol**)get_spc(m_Geometry->N_x * m_Geometry->N_z, sizeof(AMatrixCol*));
+  std::vector<AMatrixCol::Pointer> TempCol(m_Geometry->N_x * m_Geometry->N_z);
+
   checksum = 0;
   temp = 0;
   uint32_t voxel_count = 0;
@@ -604,9 +614,9 @@ void SOCEngine::execute()
   {
     for (uint16_t x = 0; x < m_Geometry->N_x; x++)
     {
-      TempCol[voxel_count] = (AMatrixCol*)calculateAMatrixColumnPartial(z, x, 0, detectorResponse);
+      TempCol[voxel_count] = calculateAMatrixColumnPartial(z, x, 0, detectorResponse);
       temp += TempCol[voxel_count]->count;
-      if(0 == TempCol[voxel_count]->count)
+      if(0 == TempCol[voxel_count]->count )
       {
         //If this line is never hit and the Object is badly initialized
         //set it to zero
@@ -655,7 +665,7 @@ void SOCEngine::execute()
   for (uint16_t t = 0; t < m_Geometry->N_z; t++)
   {
 #if TomoEngine_USE_PARALLEL_ALGORITHMS
-    g->run(ForwardProject(m_Sinogram.get(), m_Geometry.get(), TempCol,VoxelLineResponse,Y_Est, NuisanceParams.get(), t, this));
+    g->run(ForwardProject(m_Sinogram.get(), m_Geometry.get(), TempCol, VoxelLineResponse, Y_Est, NuisanceParams.get(), t, this));
 #else
     ForwardProject fp(m_Sinogram.get(), m_Geometry.get(), TempCol, VoxelLineResponse, Y_Est, NuisanceParams.get(), t, this);
     fp.setObservers(getObservers());
@@ -891,12 +901,12 @@ void SOCEngine::minMax(Real_t *low,Real_t *high, Real_t currentVoxelValue)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-RealImage_t::Pointer SOCEngine::calculateVoxelProfile()
+RealImageType::Pointer SOCEngine::calculateVoxelProfile()
 {
   Real_t angle,MaxValLineIntegral;
   Real_t temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
   size_t dims[2] = {m_Sinogram->N_theta ,m_AdvParams->PROFILE_RESOLUTION};
-  RealImage_t::Pointer VoxProfile = RealImage_t::New(dims, "VoxelProfile");
+  RealImageType::Pointer VoxProfile = RealImageType::New(dims, "VoxelProfile");
 
   Real_t checksum=0;
   uint16_t i,j;
@@ -1333,52 +1343,54 @@ Real_t SOCEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice,
-                                               RealVolumeType::Pointer DetectorResponse)
+AMatrixCol::Pointer SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice,
+                                                                 RealVolumeType::Pointer DetectorResponse)
 {
-  int32_t j,k,sliceidx;
-  Real_t x,z,y;
-  Real_t r;//this is used to find where does the ray passing through the voxel at certain angle hit the detector
+  int32_t j, k, sliceidx;
+  Real_t x, z, y;
+  Real_t r; //this is used to find where does the ray passing through the voxel at certain angle hit the detector
   Real_t t; //this is similar to r but along the y direction
-  Real_t tmin,tmax;
-  Real_t rmax,rmin;//stores the start and end points of the pixel profile on the detector
-  Real_t R_Center,TempConst,checksum = 0,delta_r;
+  Real_t tmin, tmax;
+  Real_t rmax, rmin; //stores the start and end points of the pixel profile on the detector
+  Real_t R_Center, TempConst, checksum = 0, delta_r;
 //  DATA_TYPE Integral = 0;
-  Real_t T_Center,delta_t;
-  Real_t MaximumSpacePerColumn;//we will use this to allocate space
-  Real_t AvgNumXElements,AvgNumYElements;//This is a measure of the expected amount of space per Amatrixcolumn. We will make a overestimate to avoid seg faults
+  Real_t T_Center, delta_t;
+  Real_t MaximumSpacePerColumn; //we will use this to allocate space
+  Real_t AvgNumXElements, AvgNumYElements; //This is a measure of the expected amount of space per Amatrixcolumn. We will make a overestimate to avoid seg faults
 //  DATA_TYPE ProfileThickness,stepsize;
 
   //interpolation variables
-  Real_t w1,w2,w3,w4,f1,InterpolatedValue,ContributionAlongT;
+  Real_t w1, w2, w3, w4, f1, InterpolatedValue, ContributionAlongT;
 //  DATA_TYPE f2;
-  int32_t index_min,index_max,slice_index_min,slice_index_max,index_delta_r,index_delta_t;//stores the detector index in which the profile lies
-  int32_t BaseIndex,FinalIndex;
+  int32_t index_min, index_max, slice_index_min, slice_index_max, index_delta_r, index_delta_t; //stores the detector index in which the profile lies
+  int32_t BaseIndex, FinalIndex;
 //  int32_t ProfileIndex=0;
 //  int32_t NumOfDisplacements=32;
   uint32_t count = 0;
 
   sliceidx = 0;
 
-  AMatrixCol* Ai = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));
-  AMatrixCol* Temp = (AMatrixCol*)get_spc(1,sizeof(AMatrixCol));//This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
 
-  x = m_Geometry->x0 + ((Real_t)col+0.5)*m_TomoInputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-  z = m_Geometry->z0 + ((Real_t)row+0.5)*m_TomoInputs->delta_xz;//0.5 is for center of voxel. x_0 is the left corner
-  y = m_Geometry->y0 + ((Real_t)slice + 0.5)*m_TomoInputs->delta_xy;
 
-  TempConst=(m_AdvParams->PROFILE_RESOLUTION)/(2*m_TomoInputs->delta_xz);
+  x = m_Geometry->x0 + ((Real_t)col + 0.5) * m_TomoInputs->delta_xz; //0.5 is for center of voxel. x_0 is the left corner
+  z = m_Geometry->z0 + ((Real_t)row + 0.5) * m_TomoInputs->delta_xz; //0.5 is for center of voxel. x_0 is the left corner
+  y = m_Geometry->y0 + ((Real_t)slice + 0.5) * m_TomoInputs->delta_xy;
+
+  TempConst = (m_AdvParams->PROFILE_RESOLUTION) / (2 * m_TomoInputs->delta_xz);
 
   //alternately over estimate the maximum size require for a single AMatrix column
-  AvgNumXElements = ceil(3*m_TomoInputs->delta_xz/m_Sinogram->delta_r);
-  AvgNumYElements = ceil(3*m_TomoInputs->delta_xy/m_Sinogram->delta_t);
-  MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements)*m_Sinogram->N_theta;
+  AvgNumXElements = ceil(3 * m_TomoInputs->delta_xz / m_Sinogram->delta_r);
+  AvgNumYElements = ceil(3 * m_TomoInputs->delta_xy / m_Sinogram->delta_t);
+  MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements) * m_Sinogram->N_theta;
 
-  Temp->values = (Real_t*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(Real_t));
-  Temp->index  = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn,sizeof(uint32_t));
+  size_t dims[1] = { MaximumSpacePerColumn };
+  AMatrixCol::Pointer Temp = AMatrixCol::New(dims, 0);
+//  AMatrixCol* Temp = (AMatrixCol*)get_spc(1, sizeof(AMatrixCol)); //This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
+//
+//  Temp->values = (Real_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(Real_t));
+//  Temp->index = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(uint32_t));
 
-
-  if (m_AdvParams->AREA_WEIGHTED)
+  if(m_AdvParams->AREA_WEIGHTED)
   {
     for (uint32_t i = 0; i < m_Sinogram->N_theta; i++)
     {
@@ -1419,7 +1431,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
         delta_r = fabs(r - R_Center);
         index_delta_r = static_cast<int32_t>(floor((delta_r / OffsetR)));
 
-        if(index_delta_r >= 0 && index_delta_r <m_AdvParams->DETECTOR_RESPONSE_BINS)
+        if(index_delta_r >= 0 && index_delta_r < m_AdvParams->DETECTOR_RESPONSE_BINS)
         {
           T_Center = (m_Sinogram->T0 + (((Real_t)sliceidx) + 0.5) * (m_Sinogram->delta_t));
           delta_t = fabs(t - T_Center);
@@ -1433,7 +1445,7 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
             w3 = delta_t - index_delta_t * OffsetT;
             w4 = (index_delta_r + 1) * OffsetT - delta_t;
 
-            uint16_t iidx = index_delta_r + 1 < m_AdvParams->DETECTOR_RESPONSE_BINS ? index_delta_r + 1 :m_AdvParams->DETECTOR_RESPONSE_BINS - 1;
+            uint16_t iidx = index_delta_r + 1 < m_AdvParams->DETECTOR_RESPONSE_BINS ? index_delta_r + 1 : m_AdvParams->DETECTOR_RESPONSE_BINS - 1;
             f1 = (w2 / OffsetR) * DetectorResponse->getValue(index_delta_t, i, index_delta_r)
                 + (w1 / OffsetR) * DetectorResponse->getValue(index_delta_t, i, iidx);
             //  f2 = (w2/OffsetR)*DetectorResponse[index_delta_t+1 < m_AdvParams->DETECTOR_RESPONSE_BINS ?index_delta_t+1 : m_AdvParams->DETECTOR_RESPONSE_BINS-1][i][index_delta_r] + (w1/OffsetR)*DetectorResponse[index_delta_t+1 < m_AdvParams->DETECTOR_RESPONSE_BINS? index_delta_t+1:m_AdvParams->DETECTOR_RESPONSE_BINS][i][index_delta_r+1 < m_AdvParams->DETECTOR_RESPONSE_BINS? index_delta_r+1:m_AdvParams->DETECTOR_RESPONSE_BINS-1];
@@ -1456,29 +1468,31 @@ void* SOCEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16
         }
       }
     }
-}
+  }
 
+  //AMatrixCol* Ai = (AMatrixCol*)get_spc(1, sizeof(AMatrixCol));
 
-  Ai->values=(Real_t*)get_spc(count,sizeof(Real_t));
-  Ai->index=(uint32_t*)get_spc(count,sizeof(uint32_t));
-  k=0;
-  for(uint32_t i = 0; i < count; i++)
+  dims[0] = count;
+  AMatrixCol::Pointer Ai = AMatrixCol::New(dims, 0);
+//
+//  Ai->values = (Real_t*)get_spc(count, sizeof(Real_t));
+//  Ai->index = (uint32_t*)get_spc(count, sizeof(uint32_t));
+  k = 0;
+  for (uint32_t i = 0; i < count; i++)
   {
     if(Temp->values[i] > 0.0)
     {
-      Ai->values[k]=Temp->values[i];
-      checksum+=Ai->values[k];
-      Ai->index[k++]=Temp->index[i];
+      Ai->values[k] = Temp->values[i];
+      checksum += Ai->values[k];
+      Ai->index[k] = Temp->index[i];
+      k++;
     }
-
   }
+  Ai->setCount(k);
 
-  Ai->count=k;
-
-
-  free(Temp->values);
-  free(Temp->index);
-  free(Temp);
+//  free(Temp->values);
+//  free(Temp->index);
+//  free(Temp);
   return Ai;
 }
 

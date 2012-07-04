@@ -1013,6 +1013,7 @@ void TomoGui::loadSingleSliceReconstruction(QString reconMRCFilePath)
   int err = reader->readHeader(reconMRCFilePath.toStdString(), &header);
   if(err < 0)
   {
+    FREE_FEI_HEADERS( header.feiHeaders )
     return;
   }
   // Read the first image from the file
@@ -1042,6 +1043,9 @@ void TomoGui::loadSingleSliceReconstruction(QString reconMRCFilePath)
         return;
     }
   }
+
+  FREE_FEI_HEADERS( header.feiHeaders )
+
   QImage image;
   if (dataType == 1) {
     qint16* data = reinterpret_cast<qint16*>(reader->getDataPointer());
@@ -1784,15 +1788,17 @@ void TomoGui::readMRCHeader(QString filepath)
 // -----------------------------------------------------------------------------
 QImage TomoGui::loadMRCTiltImage(QString filepath, int tiltIndex)
 {
-  MRCHeader header;
+
   currentTiltIndex->setValue(tiltIndex);
   QImage image;
   {
+    MRCHeader header;
     MRCReader::Pointer reader = MRCReader::New(true);
     // Read the header from the file
     int err = reader->readHeader(filepath.toStdString(), &header);
     if(err < 0)
     {
+      FREE_FEI_HEADERS( header.feiHeaders )
       return image;
     }
 
@@ -1839,6 +1845,7 @@ QImage TomoGui::loadMRCTiltImage(QString filepath, int tiltIndex)
           break;
       }
     }
+    FREE_FEI_HEADERS( header.feiHeaders )
   }
   return image;
 }
@@ -2239,6 +2246,12 @@ void TomoGui::stepForwardFromTimer()
   QCoreApplication::processEvents();
 
   int idx = currentTiltIndex->value();
+  if (idx == currentTiltIndex->maximum())
+  {
+    currentTiltIndex->setValue(0);
+  }
+  idx = currentTiltIndex->value();
+
   if (idx < currentTiltIndex->maximum())
   {
     currentTiltIndex->setValue(idx += 1); // This should cause a loading of the image

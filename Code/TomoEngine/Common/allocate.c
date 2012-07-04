@@ -38,6 +38,7 @@
 #include <stdio.h>//
 #include <string.h>
 #include <stdarg.h>
+#include <assert.h>
 
 #include "allocate.h"
 
@@ -45,7 +46,7 @@
 void *get_spc(int num, size_t size)
 {
 	void *pt;
-
+	assert(0);
 	if( (pt=calloc((size_t)num,size)) == NULL ) {
 		fprintf(stderr, "==> calloc() error\n");
 		exit(-1);
@@ -56,7 +57,7 @@ void *get_spc(int num, size_t size)
 void *mget_spc(int num,size_t size)
 {
 	void *pt;
-
+	assert(0);
 	if( (pt=malloc((size_t)(num*size))) == NULL ) {
 		fprintf(stderr, "==> malloc() error\n");
 		exit(-1);
@@ -68,7 +69,7 @@ void *mget_spc(int num,size_t size)
 void **get_img(int wd,int ht,size_t size)
 {
 	void  *pt;
-
+	assert(0);
 	if( (pt=multialloc(size,2,ht,wd))==NULL) {
           fprintf(stderr, "get_img: out of memory\n");
           exit(-1);
@@ -79,7 +80,7 @@ void **get_img(int wd,int ht,size_t size)
 void ***get_3D(int N, int M, int A, size_t size)
 {
 	void  *pt;
-
+	assert(0);
 	if( (pt=multialloc(size,3,N,M,A))==NULL) {
           fprintf(stderr, "get_3D: out of memory\n");
           exit(-1);
@@ -117,7 +118,7 @@ void *multialloc(size_t s, int d, ...)
         **s1, *t, *tree;        /* base pointer to beginning of first array */
         int i, j;               /* loop counters */
         int *d1;                /* dimension list */
-
+        assert(0);
         va_start(ap,d);
         d1 = (int *) mget_spc(d,sizeof(int));
 

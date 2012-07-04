@@ -273,6 +273,7 @@ class TomoArray
                                * pointers for a dimension */
       **s1, *t, *tree;        /* base pointer to beginning of first array */
       size_t i, j;               /* loop counters */
+      assert(false);
      // int *d1;                /* dimension list */
 
      // va_start(ap,d);

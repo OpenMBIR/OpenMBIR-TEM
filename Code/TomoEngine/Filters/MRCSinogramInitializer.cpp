@@ -56,6 +56,9 @@ MRCSinogramInitializer::~MRCSinogramInitializer()
 {
 }
 
+
+
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -75,10 +78,12 @@ void MRCSinogramInitializer::execute()
   //reader->printHeader(&header, std::cout);
 	if (err < 0)
   {
+	  FREE_FEI_HEADERS( header.feiHeaders )
   }
 
   if (header.mode != 1)
   {
+    FREE_FEI_HEADERS( header.feiHeaders )
     ss << "16 bit integers are only supported. Error at line  " << __LINE__ << " in file " << __FILE__ << std::endl;
     setErrorCondition(-1);
     notify(ss.str(), 0, Observable::UpdateErrorMessage);
@@ -230,6 +235,7 @@ void MRCSinogramInitializer::execute()
   err = reader->read(inputs->sinoFile, voxelMin, voxelMax);
   if (err < 0)
   {
+    FREE_FEI_HEADERS( header.feiHeaders )
     setErrorMessage("Error Code from Reading MRC File");
     setErrorCondition(err);
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
@@ -294,7 +300,7 @@ void MRCSinogramInitializer::execute()
   // Clean up all the memory associated with the MRC Reader
   reader->setDeleteMemory(true);
   reader = MRCReader::NullPointer();
-
+  FREE_FEI_HEADERS( header.feiHeaders )
 
 
 //  sinogram->N_theta = TotalNumMaskedViews;

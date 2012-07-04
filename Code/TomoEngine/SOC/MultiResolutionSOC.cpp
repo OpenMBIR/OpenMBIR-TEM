@@ -72,7 +72,6 @@ m_InterpolateInitialReconstruction(false),
 m_DefaultVariance(1.0f),
 m_InitialReconstructionValue(0.0f),
 m_TiltSelection(SOC::A_Tilt)
-
 {
 
 }
