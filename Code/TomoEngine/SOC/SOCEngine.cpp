@@ -163,12 +163,12 @@ namespace Detail {
     //setVeryVerbose(true); //set this to ennable even more cout:: s
  }
 
- // -----------------------------------------------------------------------------
- //
- // -----------------------------------------------------------------------------
- SOCEngine::~SOCEngine()
- {
- }
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+SOCEngine::~SOCEngine()
+{
+}
 
  // These files are just Factored out CPP code because this file was getting really long
 #include "SOCEngine_UpdateVoxels.cpp"
@@ -425,6 +425,8 @@ void SOCEngine::execute()
   {
     return;
   }
+
+
 
   //Gain, Offset and Variance Parameter Structures
   ScaleOffsetParamsPtr NuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);

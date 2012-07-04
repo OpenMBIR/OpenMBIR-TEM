@@ -42,7 +42,7 @@
  @ORIGINAL_FILE@
 
  */
-
+#include <QApplication>
 #include <QtCore/QObject>
 
 #include "TomoEngine/TomoEngine.h"
@@ -150,6 +150,8 @@ class Q@CLASS_NAME@ : public QObject, public @CLASS_NAME@
      */
     virtual void pipelineFinished()
     {
+      // Move this object back to the main thread where it will get destroyed by that thread's event loop
+      this->moveToThread(QApplication::instance()->thread());
       emit finished();
     }
 

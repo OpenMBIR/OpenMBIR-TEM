@@ -356,7 +356,7 @@ void TomoGuiGraphicsView::setImageDisplayType(TomoGui_Constants::ImageDisplayTyp
 void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
 {
   m_BaseImage = image;
-  if (m_BaseImage.isNull() == true)
+  if(m_BaseImage.isNull() == true)
   {
     return;
   }
@@ -367,7 +367,7 @@ void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
   m_BaseImage = m_BaseImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
   QGraphicsScene* gScene = scene();
-  if (gScene == NULL)
+  if(gScene == NULL)
   {
     gScene = new QGraphicsScene(this);
     setScene(gScene);
@@ -375,23 +375,19 @@ void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
   else
   {
     gScene->removeItem(m_ImageGraphicsItem);
-    delete m_ImageGraphicsItem;
+    if(NULL != m_ReconstructionArea)
+    {
+      m_ReconstructionArea->setParentItem(NULL);
+    }
+    delete m_ImageGraphicsItem; // Will delete its children
     m_ImageGraphicsItem = NULL;
   }
 
-  if (NULL != m_ReconstructionArea)
+  m_ImageGraphicsItem = gScene->addPixmap(QPixmap::fromImage(m_BaseImage));
+  if(NULL != m_ReconstructionArea)
   {
-    m_ReconstructionArea->setParentItem(NULL);
+    m_ReconstructionArea->setParentItem(m_ImageGraphicsItem);
   }
-
-
-//  if (NULL == m_ImageGraphicsItem)
-  {
-    m_ImageGraphicsItem = gScene->addPixmap(QPixmap::fromImage(m_BaseImage));
-    if (NULL != m_ReconstructionArea)
-        {m_ReconstructionArea->setParentItem(m_ImageGraphicsItem);}
-  }
-
 
   m_ImageGraphicsItem->setAcceptDrops(true);
   m_ImageGraphicsItem->setZValue(-1);
@@ -405,7 +401,8 @@ void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
   m_XZLine.setZValue(1);
   m_XZLine.setCacheMode(QGraphicsItem::DeviceCoordinateCache);
   m_XZLine.setVisible(m_XZLine.isVisible());
-  if (scene()->items().contains(&m_XZLine) == false) {
+  if(scene()->items().contains(&m_XZLine) == false)
+  {
     scene()->addItem(&m_XZLine);
   }
 
