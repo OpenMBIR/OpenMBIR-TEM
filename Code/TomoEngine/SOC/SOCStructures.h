@@ -198,7 +198,7 @@ namespace SOC {
       unsigned int ZERO_SKIPPING; /* This will always be ON in the end product I think. */
       unsigned int NOISE_MODEL; /* This is a parameter that the user MAY or MAY NOT
                                   want turned ON. It is ON by default */
-  } AdvancedParameters ;
+  } AdvancedParameters;
   typedef boost::shared_ptr<AdvancedParameters> AdvancedParametersPtr;
 
   //Structure to store a single column(A_i) of the A-matrix
