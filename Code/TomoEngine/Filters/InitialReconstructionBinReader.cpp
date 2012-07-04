@@ -83,7 +83,7 @@ void InitialReconstructionBinReader::initializeData()
 
   std::stringstream outPath;
   outPath << input->tempDir << MXADir::Separator << "UpsampledObject.bin";
-  FILE* Fp2 = fopen(outPath.str().c_str(), "wb");
+
   FILE* Fp = fopen(input->initialReconFile.c_str(), "r");
   std::cout << "Reading Geom from File: " << input->initialReconFile << std::endl;
   if(NULL == Fp)
@@ -92,6 +92,7 @@ void InitialReconstructionBinReader::initializeData()
     notify(ss.str(), 0, Observable::UpdateErrorMessage);
     return;
   }
+  FILE* Fp2 = fopen(outPath.str().c_str(), "wb");
   if(NULL == Fp2)
   {
     ss << "Error opening Output file '" << input->initialReconFile << "'";

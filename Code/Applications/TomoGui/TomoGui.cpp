@@ -1247,7 +1247,7 @@ void TomoGui::pipelineComplete()
   s = s.append(QDir::separator()).append(reconstructedVolumeFileName->text());
   setCurrentProcessedFile(s);
 
-  m_GraphicsView->loadOverlayImageFile(s);
+//  m_GraphicsView->loadOverlayImageFile(s);
 
 
   setWindowTitle(m_CurrentImageFile);
