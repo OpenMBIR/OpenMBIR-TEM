@@ -81,6 +81,7 @@ void TargetGainSigmaXEstimation::execute()
   int err = reader->readHeader(m_InputFile, &header);
   if (err < 0)
   {
+    FREE_FEI_HEADERS( header.feiHeaders )
     notify("Error reading the MRC input file", 0, Observable::UpdateErrorMessage);
     setErrorCondition(-1);
     return;
@@ -156,6 +157,7 @@ void TargetGainSigmaXEstimation::execute()
   }
 
   m_SigmaXEstimate = sum1/header.nz/10.0;
+  FREE_FEI_HEADERS( header.feiHeaders )
 
 //  std::cout << "Estimated Target Gain: " << m_TargetGainEstimate << std::endl;
 //  std::cout << "Estimated Sigma X: " << m_SigmaXEstimate << std::endl;

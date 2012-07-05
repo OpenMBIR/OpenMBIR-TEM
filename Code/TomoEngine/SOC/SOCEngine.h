@@ -120,10 +120,10 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     uint8_t updateVoxels(int16_t OuterIter, int16_t Iter,
                          VoxelUpdateType updateType,
                          UInt8Image_t::Pointer VisitCount,
-                         AMatrixCol** TempCol,
+                         std::vector<AMatrixCol::Pointer> &TempCol,
                          RealVolumeType::Pointer ErrorSino,
                          RealVolumeType::Pointer Weight,
-                         AMatrixCol* VoxelLineResponse,
+                         std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
                          ScaleOffsetParams* NuisanceParams,
                          UInt8Image_t::Pointer Mask,
                          CostData::Pointer cost);
@@ -138,7 +138,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     void initializeROIMask(UInt8Image_t::Pointer Mask);
     void gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams);
     void initializeHt(RealVolumeType::Pointer H_t);
-    void storeVoxelResponse(RealVolumeType::Pointer H_t, AMatrixCol* VoxelLineResponse);
+    void storeVoxelResponse(RealVolumeType::Pointer H_t, std::vector<AMatrixCol::Pointer> &VoxelLineResponse);
     void initializeVolume(RealVolumeType::Pointer Y_Est, double value);
     void calculateMeasurementWeight(RealVolumeType::Pointer Weight,
                                                ScaleOffsetParamsPtr NuisanceParams,
@@ -189,14 +189,14 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     Real_t OffsetR;
     Real_t OffsetT;
 
-    RealImage_t::Pointer QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
+    RealImageType::Pointer QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
 
-    RealImage_t::Pointer MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
-    RealImage_t::Pointer FiltMagUpdateMap;//Filters the above to compute threshold
+    RealImageType::Pointer MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
+    RealImageType::Pointer FiltMagUpdateMap;//Filters the above to compute threshold
     UInt8Image_t::Pointer MagUpdateMask;//Masks only the voxels of interest
 
-    RealImage_t::Pointer Qk_cost;
-    RealImage_t::Pointer bk_cost;
+    RealImageType::Pointer Qk_cost;
+    RealImageType::Pointer bk_cost;
     RealArrayType::Pointer ck_cost; //these are the terms of the quadratic cost function
     RealArrayType::Pointer d1;
     RealArrayType::Pointer d2; //hold the intermediate values needed to compute optimal mu_k
@@ -237,7 +237,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     /**
      * @brief
      */
-    RealImage_t::Pointer calculateVoxelProfile();
+    RealImageType::Pointer calculateVoxelProfile();
 
     /**
      * @brief
@@ -263,7 +263,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
      * @param slice
      * @param DetectorResponse
      */
-    void* calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, RealVolumeType::Pointer DetectorResponse);
+    AMatrixCol::Pointer calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, RealVolumeType::Pointer DetectorResponse);
 
     /**
      * @brief

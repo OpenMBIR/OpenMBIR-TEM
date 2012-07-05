@@ -462,7 +462,8 @@ void SOCEngine::initializeVolume(RealVolumeType::Pointer Y_Est, double value)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,  AMatrixCol* VoxelLineResponse)
+void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
+                                   std::vector<AMatrixCol::Pointer> &VoxelLineResponse)
 {
   Real_t ProfileThickness = 0.0;
   Real_t y = 0.0;
@@ -476,6 +477,11 @@ void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,  AMatrixCol* Vox
 
   //Storing the response along t-direction for each voxel line
   notify("Storing the response along Y-direction for each voxel line", 0, Observable::UpdateProgressMessage);
+  if(getVeryVerbose())
+  {
+    std::cout << "Voxel Response by Y Slice" << std::endl;
+    std::cout << "Y\tProfile Thickness" << std::endl;
+  }
   for (uint16_t i = 0; i < m_Geometry->N_y; i++)
   {
     y = ((Real_t)i + 0.5) * m_TomoInputs->delta_xy + m_Geometry->y0;
@@ -520,12 +526,14 @@ void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,  AMatrixCol* Vox
       {
         if(getVeryVerbose())
         {
-          std::cout << "Voxel Response by Y Slice" << std::endl;
-          std::cout << "Y\tProfile Thickness" << std::endl;
           std::cout << i_t << "\t" << ProfileThickness << std::endl;
         }
-        VoxelLineResponse[i].values[VoxelLineResponse[i].count] = ProfileThickness;
-        VoxelLineResponse[i].index[VoxelLineResponse[i].count++] = i_t;
+        AMatrixCol::Pointer vlr = VoxelLineResponse[i];
+        int32_t count = vlr->count;
+        vlr->values[count] = ProfileThickness;
+        vlr->index[count] = i_t;
+        size_t dim0 = vlr->valuesPtr->getDims()[0];
+        vlr->setCount(count + 1);
       }
     }
   }

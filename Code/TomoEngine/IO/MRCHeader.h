@@ -31,6 +31,14 @@
 #ifndef MRCHEADER_H_
 #define MRCHEADER_H_
 
+
+#define FREE_FEI_HEADERS(feiHeaders)\
+if (NULL != feiHeaders) {\
+  free(feiHeaders);\
+  feiHeaders = NULL;\
+}\
+
+
 /**
  * @brief this was take from http://www.biochem.mpg.de/doc_tom/index.html using the
  * tom_mrcfeistack2emseries code.
