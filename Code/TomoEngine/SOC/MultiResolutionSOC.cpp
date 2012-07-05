@@ -306,6 +306,10 @@ void MultiResolutionSOC::execute()
     SOCEngine::InitializeGeometry(geometry);
     SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
     SOCEngine::InitializeSinogram(bf_sinogram);
+	  
+	  //Calculate approximate memory required
+	  
+	  
 
     // Create an Engine and initialize all the structures
 	  SOCEngine::Pointer engine = SOCEngine::New();

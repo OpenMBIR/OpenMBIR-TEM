@@ -97,7 +97,6 @@ void TargetGainSigmaXEstimation::execute()
 
   float progress = 0.0;
 
-
   for(int i_theta = 0; i_theta < header.nz; ++i_theta)
   {
     voxelMin[2] = i_theta;
@@ -160,7 +159,6 @@ void TargetGainSigmaXEstimation::execute()
 
 //  std::cout << "Estimated Target Gain: " << m_TargetGainEstimate << std::endl;
 //  std::cout << "Estimated Sigma X: " << m_SigmaXEstimate << std::endl;
-
   notify("Estimating Target Gain and Sigma X Complete ", 100, Observable::UpdateProgressValueAndMessage);
 
 }
