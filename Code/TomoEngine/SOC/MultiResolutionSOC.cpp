@@ -294,9 +294,8 @@ void MultiResolutionSOC::execute()
     inputs->excludedViews = m_ViewMasks;
     bf_inputs->excludedViews = m_ViewMasks;
 
-      memCalculate(inputs, bf_inputs);
+	
       
-
     SinogramPtr sinogram = SinogramPtr(new Sinogram);
     SinogramPtr bf_sinogram = SinogramPtr(new Sinogram);
     GeometryPtr geometry = GeometryPtr(new Geometry);
@@ -307,17 +306,16 @@ void MultiResolutionSOC::execute()
     SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
     SOCEngine::InitializeSinogram(bf_sinogram);
 	  
-	  //Calculate approximate memory required
+	//Calculate approximate memory required
+	memCalculate(inputs, bf_inputs);  
 	  
 	  
-
-      
-    // Create an Engine and initialize all the structures
-	  SOCEngine::Pointer engine = SOCEngine::New();
-	  engine->setTomoInputs(inputs);
+    //Create an Engine and initialize all the structures
+	SOCEngine::Pointer engine = SOCEngine::New();
+	engine->setTomoInputs(inputs);
     engine->setSinogram(sinogram);
-    engine->setGeometry(geometry);
-    engine->setAdvParams(m_AdvParams);
+	engine->setGeometry(geometry);
+	engine->setAdvParams(m_AdvParams);
     engine->setNuisanceParams(nuisanceParams);
     engine->setBFTomoInputs(bf_inputs);
     engine->setBFSinogram(bf_sinogram);
@@ -351,20 +349,33 @@ void MultiResolutionSOC::memCalculate(TomoInputsPtr inputs, TomoInputsPtr bf_inp
     SinoNt = inputs->yEnd - inputs->yStart+1;
     SinoNtheta = inputs->zEnd - inputs->zStart+1;
     
+	AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
+    SOCEngine::InitializeAdvancedParams(advancedParams);
+	
+	//std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
+
+	
     if(inputs->extendObject == 1)
     {
-        GeomNx = (SinoNr/m_FinalResolution);//Need to access X_Stretch and m_Sinogram->cosine and 
+        GeomNx = (SinoNr/m_FinalResolution)*4;//TODO:Need to access X_Stretch and 
+		//m_Sinogram->cosine and 
+		
+//      float LengthZ = m_SampleThickness*advancedParams->Z_STRETCH;
+//		float temp = advancedParams->X_SHRINK_FACTOR * ((SinoN_r * sinogram->delta_r) / cos(maxTilt * M_PI / 180)) + input->LengthZ * tan(max * M_PI / 180);
+//		temp/= (input->interpolateFactor * sinogram->delta_r);
+//		float GeomLengthX = floor(temp + 0.5) * inputs->interpolateFactor * sinogram->delta_r;
+//		GeomN_x = floor(GeomLengthX / inputs->delta_xz);
     }
-    else {
+    else 
+	{
         GeomNx = SinoNr/m_FinalResolution;
     }
     
     GeomNy = SinoNt/m_FinalResolution;
-    GeomNz = 2*m_SampleThickness/(m_FinalResolution);// TODO: need to access Sinogram_deltar and z_stretch. This is wrong currently 
-    
+    GeomNz = advancedParams->Z_STRETCH*(m_SampleThickness/(m_FinalResolution));// TODO: need to access Sinogram_deltar and z_stretch. 
+	//This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm 
     
     float dataTypeMem = sizeof(Real_t);
-
     float ObjectMem = GeomNx*GeomNy*GeomNz*dataTypeMem;
     float SinogramMem = SinoNr*SinoNt*SinoNtheta*dataTypeMem;
     float ErroSinoMem = SinogramMem;

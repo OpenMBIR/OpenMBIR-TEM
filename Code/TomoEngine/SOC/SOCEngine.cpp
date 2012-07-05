@@ -427,7 +427,6 @@ void SOCEngine::execute()
   }
 
 
-
   //Gain, Offset and Variance Parameter Structures
   ScaleOffsetParamsPtr NuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
   dims[1] = m_Sinogram->N_t;

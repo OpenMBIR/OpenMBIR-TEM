@@ -209,7 +209,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     void singleSlicePlaneSet();
 
-
+    void memCalculate();
 
   protected:
 

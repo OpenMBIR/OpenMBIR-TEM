@@ -2436,3 +2436,67 @@ void TomoGui::on_removeResolution_clicked()
 }
 #endif
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+
+void TomoGui::memCalculate()
+{
+    float GeomNx,GeomNy,GeomNz;
+    float SinoNr,SinoNt,SinoNtheta;
+    SinoNr = inputs->xEnd - inputs->xStart+1;
+    SinoNt = inputs->yEnd - inputs->yStart+1;
+    SinoNtheta = inputs->zEnd - inputs->zStart+1;
+    
+	AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
+    SOCEngine::InitializeAdvancedParams(advancedParams);
+	
+	//std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
+	
+	
+    if(inputs->extendObject == 1)
+    {
+       		
+		      float LengthZ = m_SampleThickness*advancedParams->Z_STRETCH;
+				float temp = advancedParams->X_SHRINK_FACTOR * ((SinoN_r * sinogram->delta_r) / cos(maxTilt * M_PI / 180)) + input->LengthZ * tan(max * M_PI / 180);
+				temp/= (input->interpolateFactor * sinogram->delta_r);
+				float GeomLengthX = floor(temp + 0.5) * inputs->interpolateFactor * sinogram->delta_r;
+				GeomN_x = floor(GeomLengthX / inputs->delta_xz);
+    }
+    else 
+	{
+        GeomNx = SinoNr/m_FinalResolution;
+    }
+    
+    GeomNy = SinoNt/m_FinalResolution;
+    GeomNz = advancedParams->Z_STRETCH*(m_SampleThickness/(m_FinalResolution*sinogram->delta_r));// TODO: need to access Sinogram_deltar and z_stretch. 
+	//This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm 
+    
+    float dataTypeMem = sizeof(Real_t);
+    float ObjectMem = GeomNx*GeomNy*GeomNz*dataTypeMem;
+    float SinogramMem = SinoNr*SinoNt*SinoNtheta*dataTypeMem;
+    float ErroSinoMem = SinogramMem;
+    float WeightMem = SinogramMem; //Weight matrix
+    float A_MatrixMem;
+    if(0 == inputs->extendObject)
+    {
+		A_MatrixMem = GeomNx*GeomNz*(m_FinalResolution*3*(dataTypeMem+4)*SinoNtheta);// 4 is the bytes to store the counts 
+		//*+4 correspodns to bytes to store a single double and a unsigned into to
+		//store the offset. 3*m_FinalRes is the approximate number of detector elements hit per voxel
+    }
+    else {
+        A_MatrixMem = GeomNx*GeomNz*(m_FinalResolution*(dataTypeMem+4)*SinoNtheta); //Since we are reconstructing a larger region there are several voxels with no projection data. so instead of each voxel hitting 3*m_FinalRes det entries we aproximate it by m_FinalRes
+    }
+    float NuisanceParamMem = SinoNtheta*dataTypeMem*3;//3 is for gains offsets and noise var
+	
+	if(bf is present) //how to check if file is loaded
+		SinogramMem*=2;
+	
+    float TotalMem = ObjectMem+SinogramMem+ErroSinoMem+WeightMem+A_MatrixMem+NuisanceParamMem;//in bytes
+    
+    TotalMem/=(1e9);//To get answer in Gb
+    
+    std::cout<<"Total Max Mem needed ="<<TotalMem<<std::endl;
+    
+    
+}
