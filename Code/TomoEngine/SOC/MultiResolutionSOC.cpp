@@ -392,11 +392,11 @@ void MultiResolutionSOC::memCalculate(TomoInputsPtr inputs, TomoInputsPtr bf_inp
     }
     float NuisanceParamMem = SinoNtheta*dataTypeMem*3;//3 is for gains offsets and noise var
         
-    float TotalMem = ObjectMem+SinogramMem+ErroSinoMem+WeightMem+A_MatrixMem+NuisanceParamMem;//in bytes
+    float TotalMem = ObjectMem+SinogramMem*2+ErroSinoMem+WeightMem+A_MatrixMem+NuisanceParamMem;//in bytes
     
     TotalMem/=(1e9);//To get answer in Gb
     
-    std::cout<<"Total Max Mem needed ="<<TotalMem<<std::endl;
+    std::cout<<"Total Max Mem needed = "<<TotalMem<<" Gb"<<std::endl;
     
     
 }

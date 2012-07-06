@@ -2442,6 +2442,8 @@ void TomoGui::on_removeResolution_clicked()
 
 void TomoGui::memCalculate()
 {
+	/*
+
     float GeomNx,GeomNy,GeomNz;
     float SinoNr,SinoNt,SinoNtheta;
     SinoNr = inputs->xEnd - inputs->xStart+1;
@@ -2498,5 +2500,5 @@ void TomoGui::memCalculate()
     
     std::cout<<"Total Max Mem needed ="<<TotalMem<<std::endl;
     
-    
+    */
 }
