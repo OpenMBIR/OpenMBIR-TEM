@@ -1414,10 +1414,7 @@ void TomoGui::on_inputBrightFieldFilePath_textChanged(const QString & filepath)
 {
   if (verifyPathExists(inputBrightFieldFilePath->text(), inputBrightFieldFilePath))
   {
-    // Read the header info from the file and populate the GUI with those values
-//    readBrightFieldHeader(filepath);
-    // Now load up the first tilt from the file
-//    loadBrightFieldTiltImage(filepath, 0);
+    targetGain->setText(QString("1"));
   }
 }
 
