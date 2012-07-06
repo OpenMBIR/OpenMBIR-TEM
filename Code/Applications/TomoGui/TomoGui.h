@@ -323,6 +323,9 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     QString               m_OpenDialogLastDirectory;
 
+    float                 m_CachedPixelSize;
+    float                 m_CachedLargestAngle;
+
 
     TomoGui(const TomoGui&); // Copy Constructor Not Implemented
     void operator=(const TomoGui&); // Operator '=' Not Implemented

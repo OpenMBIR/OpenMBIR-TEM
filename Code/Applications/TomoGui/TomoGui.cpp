@@ -372,12 +372,6 @@ void TomoGui::on_actionParameters_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_actionLayers_Palette_triggered()
-{
-  m_LayersPalette->show();
-}
-
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -1377,6 +1371,8 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
 
     m_GainsFile = ""; // We are reading a new .mrc file so we probably need a new Gains Offsets File
 
+
+
     setWindowTitle(filepath);
     this->setWindowFilePath(filepath);
 
@@ -1573,6 +1569,12 @@ void TomoGui::openRecentBaseImageFile()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+void TomoGui::on_actionLayers_Palette_triggered()
+{
+  m_LayersPalette->show();
+}
+
+
 void TomoGui::on_actionOpenMRCFile_triggered()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
@@ -1763,11 +1765,22 @@ void TomoGui::readMRCHeader(QString filepath)
     QVector<float> b_tilts(header.nz);
 
     QVector<bool>  excludes(header.nz);
+    m_CachedLargestAngle = std::numeric_limits<float>::min();
+
     for(int l = 0; l < header.nz; ++l)
     {
       indices[l] = l;
       a_tilts[l] = header.feiHeaders[l].a_tilt;
       b_tilts[l] = header.feiHeaders[l].b_tilt;
+
+      if (abs(a_tilts[l]) > m_CachedLargestAngle)
+      {
+        m_CachedLargestAngle =  abs(a_tilts[l]);
+      }
+      if (abs(b_tilts[l]) > m_CachedLargestAngle)
+      {
+        m_CachedLargestAngle =  abs(b_tilts[l]);
+      }
 
       excludes[l] = false;
     }
@@ -1802,6 +1815,7 @@ QImage TomoGui::loadMRCTiltImage(QString filepath, int tiltIndex)
       return image;
     }
 
+    m_CachedPixelSize = 1.0;
     // If we have the FEI headers get that information
     if(header.feiHeaders != NULL)
     {
@@ -1820,6 +1834,8 @@ QImage TomoGui::loadMRCTiltImage(QString filepath, int tiltIndex)
       pixelsize->setText(QString::number(fei.pixelsize));
       magnification->setText(QString::number(fei.magnification));
       voltage->setText(QString::number(fei.voltage));
+
+      m_CachedPixelSize = fei.pixelsize;
     }
     // Read the first image from the file
     int voxelMin[3] =
@@ -2020,6 +2036,8 @@ void TomoGui::on_originCB_currentIndexChanged(int corner)
   }
   m_CurrentCorner = corner;
 
+  // Calculate the approx memory usage
+  memCalculate();
 
   // This will display the image in the graphics scene
   m_GraphicsView->loadBaseImageFile(m_CurrentImage);
@@ -2442,61 +2460,69 @@ void TomoGui::on_removeResolution_clicked()
 
 void TomoGui::memCalculate()
 {
-    float GeomNx,GeomNy,GeomNz;
-    float SinoNr,SinoNt,SinoNtheta;
-    SinoNr = inputs->xEnd - inputs->xStart+1;
-    SinoNt = inputs->yEnd - inputs->yStart+1;
-    SinoNtheta = inputs->zEnd - inputs->zStart+1;
-    
-	AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
-    SOCEngine::InitializeAdvancedParams(advancedParams);
-	
-	//std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
-	
-	
-    if(inputs->extendObject == 1)
-    {
-       		
-		      float LengthZ = m_SampleThickness*advancedParams->Z_STRETCH;
-				float temp = advancedParams->X_SHRINK_FACTOR * ((SinoN_r * sinogram->delta_r) / cos(maxTilt * M_PI / 180)) + input->LengthZ * tan(max * M_PI / 180);
-				temp/= (input->interpolateFactor * sinogram->delta_r);
-				float GeomLengthX = floor(temp + 0.5) * inputs->interpolateFactor * sinogram->delta_r;
-				GeomN_x = floor(GeomLengthX / inputs->delta_xz);
-    }
-    else 
-	{
-        GeomNx = SinoNr/m_FinalResolution;
-    }
-    
-    GeomNy = SinoNt/m_FinalResolution;
-    GeomNz = advancedParams->Z_STRETCH*(m_SampleThickness/(m_FinalResolution*sinogram->delta_r));// TODO: need to access Sinogram_deltar and z_stretch. 
-	//This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm 
-    
-    float dataTypeMem = sizeof(Real_t);
-    float ObjectMem = GeomNx*GeomNy*GeomNz*dataTypeMem;
-    float SinogramMem = SinoNr*SinoNt*SinoNtheta*dataTypeMem;
-    float ErroSinoMem = SinogramMem;
-    float WeightMem = SinogramMem; //Weight matrix
-    float A_MatrixMem;
-    if(0 == inputs->extendObject)
-    {
-		A_MatrixMem = GeomNx*GeomNz*(m_FinalResolution*3*(dataTypeMem+4)*SinoNtheta);// 4 is the bytes to store the counts 
-		//*+4 correspodns to bytes to store a single double and a unsigned into to
-		//store the offset. 3*m_FinalRes is the approximate number of detector elements hit per voxel
-    }
-    else {
-        A_MatrixMem = GeomNx*GeomNz*(m_FinalResolution*(dataTypeMem+4)*SinoNtheta); //Since we are reconstructing a larger region there are several voxels with no projection data. so instead of each voxel hitting 3*m_FinalRes det entries we aproximate it by m_FinalRes
-    }
-    float NuisanceParamMem = SinoNtheta*dataTypeMem*3;//3 is for gains offsets and noise var
-	
-	if(bf is present) //how to check if file is loaded
-		SinogramMem*=2;
-	
-    float TotalMem = ObjectMem+SinogramMem+ErroSinoMem+WeightMem+A_MatrixMem+NuisanceParamMem;//in bytes
-    
-    TotalMem/=(1e9);//To get answer in Gb
-    
-    std::cout<<"Total Max Mem needed ="<<TotalMem<<std::endl;
-    
-    
+
+  bool ok = false;
+  float GeomN_x, GeomN_y, GeomN_z;
+
+  float SinoN_r = xMax->text().toInt(&ok) - xMin->text().toInt(&ok) + 1;
+  float SinoN_t = yMax->text().toInt(&ok) - yMin->text().toInt(&ok) + 1;
+  float SinoNtheta = m_nTilts->text().toInt(&ok) - 0 + 1;
+
+  float sample_thickness = sampleThickness->text().toFloat(&ok);
+  int final_resolution = finalResolution->value();
+  int num_resolutions = numResolutions->text().toInt(&ok);
+  float interpolate_factor = powf((float)2, (float)num_resolutions-1) * final_resolution;
+  float delta_r = m_CachedPixelSize * 1.0e9;
+  float delta_xz = delta_r*final_resolution;
+  AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
+  SOCEngine::InitializeAdvancedParams(advancedParams);
+
+  //std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
+
+  if(extendObject->isChecked() == true)
+  {
+    float maxTilt = m_CachedLargestAngle;
+    float LengthZ = sample_thickness * advancedParams->Z_STRETCH;
+    float temp = advancedParams->X_SHRINK_FACTOR * ((SinoN_r * delta_r) / cos(maxTilt * M_PI / 180)) + sample_thickness * tan(maxTilt * M_PI / 180);
+    temp /= (interpolate_factor * delta_r);
+    float GeomLengthX = floor(temp + 0.5) * interpolate_factor * delta_r;
+    GeomN_x = floor(GeomLengthX / delta_xz);
+  }
+  else
+  {
+    GeomN_x = SinoN_r / final_resolution;
+  }
+
+  GeomN_y = SinoN_t / final_resolution;
+  GeomN_z = advancedParams->Z_STRETCH * (sample_thickness / (final_resolution * delta_r)); // TODO: need to access Sinogram_deltar and z_stretch.
+  //This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm
+
+  float dataTypeMem = sizeof(Real_t);
+  float ObjectMem = GeomN_x * GeomN_y * GeomN_z * dataTypeMem;
+  float SinogramMem = SinoN_r * SinoN_t * SinoNtheta * dataTypeMem;
+  float ErroSinoMem = SinogramMem;
+  float WeightMem = SinogramMem; //Weight matrix
+  float A_MatrixMem;
+  if(extendObject->isChecked() == true)
+  {
+    A_MatrixMem = GeomN_x * GeomN_z * (final_resolution * 3 * (dataTypeMem + 4) * SinoNtheta); // 4 is the bytes to store the counts
+    //*+4 correspodns to bytes to store a single double and a unsigned into to
+    //store the offset. 3*m_FinalRes is the approximate number of detector elements hit per voxel
+  }
+  else
+  {
+    A_MatrixMem = GeomN_x * GeomN_z * (final_resolution * (dataTypeMem + 4) * SinoNtheta); //Since we are reconstructing a larger region there are several voxels with no projection data. so instead of each voxel hitting 3*m_FinalRes det entries we aproximate it by m_FinalRes
+  }
+  float NuisanceParamMem = SinoNtheta * dataTypeMem * 3; //3 is for gains offsets and noise var
+
+  if(inputBrightFieldFilePath->text().isEmpty() == false) {
+    SinogramMem *= 2;
+  }
+
+  float TotalMem = ObjectMem + SinogramMem + ErroSinoMem + WeightMem + A_MatrixMem + NuisanceParamMem; //in bytes
+
+  TotalMem /= (1e9); //To get answer in Gb
+
+  memoryUse->setText(QString::number(TotalMem));
+
 }
