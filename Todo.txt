@@ -9,6 +9,8 @@
 * Need to enable a quick load option to continue the reconstruction for a few 
 more iterations. This will need reading the final rec, offset, gain and var.
 
+*Enable daat sets in which amx tilt is 90 degrees - there is a dividide by cos(max angle) which will break if this occurs 
+
 Stuff Completed
  
 * Implement Target Gain estimation based on input data file.- Done. Venkat 6/14
