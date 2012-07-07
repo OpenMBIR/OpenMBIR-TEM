@@ -950,7 +950,7 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
         size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
         //     size_t yest_idx = Y_Est->calcIndex(i_theta, i_r, i_t);
         //    size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
-#ifndef IDENTITY_NOISE_MATRIX
+#ifndef IDENTITY_NOISE_MODEL
         size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
         if(m_Sinogram->counts->d[counts_idx] != 0)
         {
@@ -987,7 +987,7 @@ void SOCEngine::updateWeights(RealVolumeType::Pointer Weight,
       {
 
         size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
-#ifndef IDENTITY_NOISE_MATRIX
+#ifndef IDENTITY_NOISE_MODEL
         size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
         if(NuisanceParams->alpha->d[i_theta] != 0 && m_Sinogram->counts->d[counts_idx] != 0)
         {
