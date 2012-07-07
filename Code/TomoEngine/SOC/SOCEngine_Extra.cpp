@@ -877,18 +877,18 @@ void SOCEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
           //TODO: Make this something resonable
         }
 #else
-        Weight->d[i_theta][i_r][i_t] = 1.0;
+        Weight->d[weight_idx] = 1.0;
 #endif //IDENTITY_NOISE_MODEL endif
 #ifdef FORWARD_PROJECT_MODE
         temp=Y_Est->d[i_theta][i_r][i_t]/NuisanceParams->I_0->d[i_theta];
         fwrite(&temp,sizeof(Real_t),1,Fp6);
 #endif
-//#ifdef DEBUG
+#ifdef DEBUG
         if(Weight->d[weight_idx] < 0)
         {
-          std::cout << m_Sinogram->counts->d[counts_idx] << "    " << NuisanceParams->alpha->d[i_theta] << std::endl;
+        //  std::cout << m_Sinogram->counts->d[counts_idx] << "    " << NuisanceParams->alpha->d[i_theta] << std::endl;
         }
-//#endif//Debug
+#endif//Debug
 
         if (m_AdvParams->NOISE_MODEL)
         {
