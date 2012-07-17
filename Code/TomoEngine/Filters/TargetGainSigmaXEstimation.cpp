@@ -136,13 +136,24 @@ void TargetGainSigmaXEstimation::execute()
     if (min < targetMin) { targetMin = min; }
     if (max > targetMax) { targetMax = max; }
     sum2s[i_theta] = sum2;
+	  
+	  //Subtract off any offset in the data 
+	  //if(sum2s[i_theta] < 0)
+		  sum2s[i_theta] -= min*header.nx * header.ny;
+	  std::cout<<"Accumulated sum"<<sum2s[i_theta]<<std::endl;
+	  
     notify("Estimating Target Gain and Sigma X from Data. ", (int)progress, Observable::UpdateProgressValueAndMessage);
   }
-  m_TargetGainEstimate = (targetMax - targetMin) * 10;
+	
+  //m_TargetGainEstimate = (targetMax - targetMin) * 10;
+	m_TargetGainEstimate = 1.0; //Setting this to one so that user can then
+	//modify it based on any knowledge they have about the tx. attenuation
 
   // Now Calculate the Sigma X estimation
   for(int i_theta = 0; i_theta < header.nz; ++i_theta)
   {
+	  
+	  
     sum2s[i_theta] /= header.nx * header.ny * m_TargetGainEstimate;
     Real_t cosine = 0.0;
     if (m_TiltAngles == 0)
