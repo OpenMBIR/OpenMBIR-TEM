@@ -273,7 +273,7 @@ void SOCEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
   v->THRESHOLD_REDUCTION_FACTOR = 1;
   v->JOINT_ESTIMATION = 1;
   v->ZERO_SKIPPING = 1;
-  v->NOISE_MODEL = 0;
+  v->NOISE_MODEL = 1;
 
 }
 
