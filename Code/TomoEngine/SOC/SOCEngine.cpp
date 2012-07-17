@@ -273,7 +273,7 @@ void SOCEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
   v->THRESHOLD_REDUCTION_FACTOR = 1;
   v->JOINT_ESTIMATION = 1;
   v->ZERO_SKIPPING = 1;
-  v->NOISE_MODEL = 1;
+  v->NOISE_MODEL = 0;
 
 }
 
@@ -816,9 +816,18 @@ void SOCEngine::execute()
     std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
     for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
     {
+	
+		if(m_AdvParams->NOISE_MODEL)
+		{
       std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
       "\t" << NuisanceParams->mu->d[i_theta] <<
       "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
+		}
+		else
+		{
+			std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
+			"\t" << NuisanceParams->mu->d[i_theta] << std::endl;		
+		}
     }
   }
 
