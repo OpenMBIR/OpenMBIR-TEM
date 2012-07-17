@@ -138,9 +138,9 @@ void TargetGainSigmaXEstimation::execute()
     sum2s[i_theta] = sum2;
 	  
 	  //Subtract off any offset in the data 
-	  //if(sum2s[i_theta] < 0)
-		  sum2s[i_theta] -= min*header.nx * header.ny;
-	  std::cout<<"Accumulated sum"<<sum2s[i_theta]<<std::endl;
+	  sum2s[i_theta] -= min*header.nx * header.ny;
+	  
+	 
 	  
     notify("Estimating Target Gain and Sigma X from Data. ", (int)progress, Observable::UpdateProgressValueAndMessage);
   }
