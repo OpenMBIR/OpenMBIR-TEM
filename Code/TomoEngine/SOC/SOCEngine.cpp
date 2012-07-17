@@ -788,8 +788,11 @@ void SOCEngine::execute()
     }
     else
     {
-      if(0 == status) //&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
-      break;
+      if(0 == status && reconOuterIter >= 1) 
+	  {//&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+          std::cout << "Exiting the code because status =0" << std::endl;
+		  break;
+	  }
     } //Noise Model
 
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
