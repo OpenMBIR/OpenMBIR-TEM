@@ -127,6 +127,7 @@ int main(int argc, char **argv)
   engine->setNuisanceParams(nuisanceParams);
   engine->setBFTomoInputs(bf_inputs);
   engine->setBFSinogram(bf_sinogram);
+  engine->setAdvParams(advancedParams);
   // We need to get messages to the gui or command line
   Observer observer;
 	engine->addObserver(&observer);

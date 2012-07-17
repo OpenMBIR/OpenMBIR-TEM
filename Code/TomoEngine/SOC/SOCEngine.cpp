@@ -419,6 +419,7 @@ void SOCEngine::execute()
     }
   }
 
+	
   // Initialize the Geometry data from a rough reconstruction
   err = initializeRoughReconstructionData();
   if(err < 0)
