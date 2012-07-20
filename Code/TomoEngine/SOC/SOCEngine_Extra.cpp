@@ -774,8 +774,8 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
       {
         std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] << "\t" << NuisanceParams->mu->d[i_theta] << std::endl;
       }
-      std::cout << "Ratio of change in I_k " << AverageI_kUpdate / AverageMagI_k << std::endl;
-      std::cout << "Ratio of change in Delta_k " << AverageDelta_kUpdate / AverageMagDelta_k << std::endl;
+      //std::cout << "Ratio of change in I_k " << AverageI_kUpdate / AverageMagI_k << std::endl;
+      //std::cout << "Ratio of change in Delta_k " << AverageDelta_kUpdate / AverageMagDelta_k << std::endl;
     }
   }
   else

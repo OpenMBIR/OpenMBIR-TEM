@@ -759,6 +759,7 @@ void SOCEngine::execute()
 
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
 
+	
 
     if(m_AdvParams->JOINT_ESTIMATION)
     {
@@ -769,31 +770,32 @@ void SOCEngine::execute()
       }
     } //Joint estimation endif
 
-    if(m_AdvParams->NOISE_MODEL)
-    {
-      updateWeights(Weight, NuisanceParams, ErrorSino);
+	if(m_AdvParams->NOISE_MODEL)
+	{
+		  updateWeights(Weight, NuisanceParams, ErrorSino);
 #ifdef COST_CALCULATE
-      err = calculateCost(cost, Weight, ErrorSino);
-      if (err < 0)
-      {
-        std::cout<<"Cost went up after variance update"<<std::endl;
-        break;
-      }
+		  err = calculateCost(cost, Weight, ErrorSino);
+		  if (err < 0)
+		  {
+			  std::cout<<"Cost went up after variance update"<<std::endl;
+			  break;
+		  }
 #endif//cost
-      if(0 == status && reconOuterIter >= 1) //&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
-      {
-        std::cout << "Exiting the code because status =0" << std::endl;
-        break;
-      }
-    }
-    else
-    {
-      if(0 == status && reconOuterIter >= 1) 
-	  {//&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
-          std::cout << "Exiting the code because status =0" << std::endl;
-		  break;
+		  if(0 == status && reconOuterIter >= 1) //&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+		  {
+			  std::cout << "Exiting the code because status =0" << std::endl;
+			  break;
+		  }
 	  }
-    } //Noise Model
+	else
+	{
+		  if(0 == status && reconOuterIter >= 1) 
+		  {//&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+			  std::cout << "Exiting the code because status =0" << std::endl;
+			  break;
+		  }
+	  } //Noise Model
+   
 
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
 
