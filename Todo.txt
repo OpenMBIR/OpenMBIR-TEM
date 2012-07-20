@@ -4,12 +4,28 @@
 * Streamline progress feedback to the GUI
 * Add more "Cancel" checks in the code
 * Turn doubles to floats to save memory. 
-* Add an option to switch off #define for Joint_Estimation and #Noise estimation.
-
+* Add an option to switch off #define for Joint_Estimation and #Noise estimation
 * Need to enable a quick load option to continue the reconstruction for a few 
 more iterations. This will need reading the final rec, offset, gain and var.
 
-*Enable daat sets in which amx tilt is 90 degrees - there is a dividide by cos(max angle) which will break if this occurs 
+* Allow user to define the XZ Plane that is shown during the reconstruction
+
+I just noticed. In the data load section I think we should rename MRC File -> HAADF Data File.
+
+Also Inner Iterations, Outer Iterations, Default Offset , Default Variance need to be
+moved to a advanced parameters tab. After that previous session we demoed I think only
+the Full Reconstruction , SigmaX (to be renamed later), Final Resolution multiple 
+are really what a typical user needs to set. The rest all we should have in advanced 
+parameters. 
+
+
+Would it be possible to put a zoom capability on the single slice reconstruction?
+I've been messing around with it, and when I change the final resolution to make 
+it run faster it makes the output slice smaller.  Is there an existing way to change
+the image size without running a final resolution of 1?
+
+
+*Enable data sets in which max tilt is 90 degrees - there is a dividide by cos(max angle) which will break if this occurs 
 
 Stuff Completed
  
