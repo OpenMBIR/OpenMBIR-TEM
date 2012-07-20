@@ -135,13 +135,9 @@ m_CurrentCorner(0),
 m_WorkerThread(NULL),
 m_MultiResSOC(NULL),
   m_SingleSliceReconstructionActive(false),
-  m_FullReconstrucionActive(false),
-#if defined(Q_WS_WIN)
-m_OpenDialogLastDirectory("C:\\")
-#else
-m_OpenDialogLastDirectory("~/")
-#endif
+  m_FullReconstrucionActive(false)
 {
+   m_OpenDialogLastDirectory = QDir::homePath();
   setupUi(this);
   setupGui();
 
