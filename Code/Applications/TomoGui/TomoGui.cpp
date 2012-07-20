@@ -881,7 +881,7 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
     int ySlices = 3 * finalResolution->value();
     // Try and center on the line best we can
     subvolume[1] = line.p1().y() - (ySlices/2);
-    subvolume[4] = subvolume[1] + ySlices;
+    subvolume[4] = subvolume[1] + ySlices - 1;
 
     path = QDir::toNativeSeparators(tempDirPath->text());
     QString tempFolder = QDir::tempPath() + QDir::separator() + QString("EIMTomo");

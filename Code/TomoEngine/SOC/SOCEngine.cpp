@@ -419,6 +419,7 @@ void SOCEngine::execute()
     }
   }
 
+	
   // Initialize the Geometry data from a rough reconstruction
   err = initializeRoughReconstructionData();
   if(err < 0)
@@ -787,8 +788,11 @@ void SOCEngine::execute()
     }
     else
     {
-      if(0 == status) //&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
-      break;
+      if(0 == status && reconOuterIter >= 1) 
+	  {//&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+          std::cout << "Exiting the code because status =0" << std::endl;
+		  break;
+	  }
     } //Noise Model
 
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
@@ -815,9 +819,18 @@ void SOCEngine::execute()
     std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
     for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
     {
+	
+		if(m_AdvParams->NOISE_MODEL)
+		{
       std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
       "\t" << NuisanceParams->mu->d[i_theta] <<
       "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
+		}
+		else
+		{
+			std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
+			"\t" << NuisanceParams->mu->d[i_theta] << std::endl;		
+		}
     }
   }
 

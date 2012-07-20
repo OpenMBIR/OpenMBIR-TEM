@@ -158,6 +158,7 @@ void MRCSinogramInitializer::execute()
 
     //Adjusting the volume along the y-directions so we dont have
     //  issues with pixelation
+    ss <<"Current y ROI: "<< "yStart=" << inputs->yStart << " " << "yEnd=" << inputs->yEnd << std::endl;
     int16_t disty = inputs->yEnd - inputs->yStart + 1;
     ss << "Interpolate Factor=" << inputs->interpolateFactor << std::endl;
     //3*iterpFactor is to account for the prior which operates on

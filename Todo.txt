@@ -20,12 +20,12 @@ parameters.
 
 
 Would it be possible to put a zoom capability on the single slice reconstruction?
-IÕve been messing around with it, and when I change the final resolution to make 
+I've been messing around with it, and when I change the final resolution to make 
 it run faster it makes the output slice smaller.  Is there an existing way to change
 the image size without running a final resolution of 1?
 
 
-
+*Enable data sets in which max tilt is 90 degrees - there is a dividide by cos(max angle) which will break if this occurs 
 
 Stuff Completed
  
