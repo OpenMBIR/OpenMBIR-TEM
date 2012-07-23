@@ -59,6 +59,9 @@
 
 //#define WRITE_INTERMEDIATE_RESULTS
 //#define COST_CALCULATE
+//#define BF_RECON //Bright Field Reconstruction
+#define BF_OFFSET 32768
+#define BF_MAX 20700
 
 #define IDENTITY_NOISE_MODEL
 

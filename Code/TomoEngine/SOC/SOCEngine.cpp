@@ -159,8 +159,8 @@ namespace Detail {
 #else
     m_NumThreads = 1;
 #endif
-    setVerbose(true); //set this to enable cout::'s
-    setVeryVerbose(true); //set this to ennable even more cout:: s
+   // setVerbose(true); //set this to enable cout::'s
+   // setVeryVerbose(true); //set this to ennable even more cout:: s
  }
 
 // -----------------------------------------------------------------------------
@@ -419,6 +419,9 @@ void SOCEngine::execute()
     }
   }
 
+#ifdef BF_RECON //Take log of the input data after subtracting offset
+	processRawCounts();
+#endif
 	
   // Initialize the Geometry data from a rough reconstruction
   err = initializeRoughReconstructionData();
@@ -589,7 +592,6 @@ void SOCEngine::execute()
   notify(ss.str(), 0, Observable::UpdateProgressMessage);
 
   //TODO: All this needs to be deallocated at some point
-
 
 
   //AMatrixCol* VoxelLineResponse = (AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));

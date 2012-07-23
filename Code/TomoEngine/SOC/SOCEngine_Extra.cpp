@@ -1169,4 +1169,25 @@ void SOCEngine::writeMRCFile(const std::string &mrcFile)
 
 }
 
+#ifdef BF_RECON
+void SOCEngine::processRawCounts()
+{
+	for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
+	{
+		for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+		{
+			for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+			{
+				size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
+				m_Sinogram->counts->d[counts_idx] += BF_OFFSET;
+				m_Sinogram->counts->d[counts_idx] = -log(m_Sinogram->counts->d[counts_idx]/BF_MAX);
+			}
+		}
+	}
+}
+
+#endif //BF Recon
+
+
+
 

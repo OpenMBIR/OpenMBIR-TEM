@@ -1,5 +1,5 @@
-
-* Do we allow the user to set the SigmaX or do we always calculate it internally.
+* Do we allow the user to set the SigmaX or do we always calculate it 
+internally.
 
 * Streamline progress feedback to the GUI
 * Add more "Cancel" checks in the code

@@ -156,6 +156,9 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
                        ScaleOffsetParamsPtr NuisanceParams,
                        RealVolumeType::Pointer ErrorSino);
     void writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams);
+#ifdef BF_RECON
+	void processRawCounts();
+#endif
 
     void writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram);
     void writeReconstructionFile();

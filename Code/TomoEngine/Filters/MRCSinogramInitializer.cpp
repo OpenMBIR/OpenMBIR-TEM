@@ -318,7 +318,13 @@ void MRCSinogramInitializer::execute()
 
   if(getVerbose())
   {
-
+	  //display tilt angles
+	  std::cout<<"The tilt angles are"<<std::endl;
+	  for (uint16_t i = 0; i < sinogram->N_theta; i++)
+	  {
+		  std::cout<<sinogram->angles[i]<<std::endl;
+	  }
+   
     //check sum calculation
     for (uint16_t i = 0; i < sinogram->N_theta; i++)
     {
