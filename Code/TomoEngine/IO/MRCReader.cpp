@@ -112,8 +112,8 @@ int MRCReader::readHeader(const std::string &filepath, MRCHeader* header)
    }
 
    // Now read the extended header
-   std::vector<uint8_t> extended_header(header->next, 0);
-   success = reader.readArray( &(extended_header.front()), header->next);
+   m_ExtendedHeader.resize(header->next, 0);
+   success = reader.readArray( &(m_ExtendedHeader.front()), header->next);
    if (false == success)
    {
      return -3;
@@ -131,7 +131,7 @@ int MRCReader::readHeader(const std::string &filepath, MRCHeader* header)
      }
      // Allocate and copy in the data
      header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * header->nz));
-     ::memcpy(header->feiHeaders, &(extended_header.front()), sizeof(FEIHeader) * header->nz);
+     ::memcpy(header->feiHeaders, &(m_ExtendedHeader.front()), sizeof(FEIHeader) * header->nz);
    }
    pos = feiLabel.find("EIC project");
    if (pos != std::string::npos)
@@ -143,7 +143,7 @@ int MRCReader::readHeader(const std::string &filepath, MRCHeader* header)
      }
      // Allocate and copy in the data
      header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * header->nz));
-     ::memcpy(header->feiHeaders, &(extended_header.front()), sizeof(FEIHeader) * header->nz);
+     ::memcpy(header->feiHeaders, &(m_ExtendedHeader.front()), sizeof(FEIHeader) * header->nz);
    }
 
    return 1;
@@ -170,6 +170,14 @@ std::string MRCReader::getLabelField(int index)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+std::vector<uint8_t> MRCReader::extendedHeader()
+{
+  return m_ExtendedHeader;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 int MRCReader::read(const std::string &filepath, int* voxelMin, int* voxelMax)
 {
   bool readSubVolume = false;
@@ -189,12 +197,14 @@ int MRCReader::read(const std::string &filepath, int* voxelMin, int* voxelMax)
   }
 
   // Now read the extended header
-  std::vector<uint8_t> extended_header(m_Header->next, 0);
-  success = reader.readArray( &(extended_header.front()), m_Header->next);
+  m_ExtendedHeader.resize(m_Header->next, 0);
+  success = reader.readArray( &(m_ExtendedHeader.front()), m_Header->next);
   if (false == success)
   {
     return -3;
   }
+
+//  size_t fp = reader.getFilePointer64();
 
   // If we have an FEI header then parse the extended header information
   std::string feiLabel(m_Header->labels[0], 80);
@@ -208,7 +218,7 @@ int MRCReader::read(const std::string &filepath, int* voxelMin, int* voxelMax)
     }
     // Allocate and copy in the data
     m_Header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * m_Header->nz));
-    ::memcpy(m_Header->feiHeaders, &(extended_header.front()), sizeof(FEIHeader) * m_Header->nz);
+    ::memcpy(m_Header->feiHeaders, &(m_ExtendedHeader.front()), sizeof(FEIHeader) * m_Header->nz);
   }
 
   size_t nVoxels = m_Header->nx * m_Header->ny * m_Header->nz;

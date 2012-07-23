@@ -22,3 +22,11 @@ endif()
 # --------------------------------------------------------------------
 add_executable(WrappedArrayTest WrappedArrayTest.cpp)
 target_link_libraries(WrappedArrayTest MXA TomoEngine)
+
+
+# --------------------------------------------------------------------
+# 
+# --------------------------------------------------------------------
+add_executable(MRCSubset MRCSubset.cpp)
+target_link_libraries(MRCSubset MXA TomoEngine)
+
