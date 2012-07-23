@@ -743,6 +743,16 @@ void TomoGui::on_m_GoBtn_clicked()
     }
   }
 
+  //Write out the current settings so if we crash they can easily start back again
+#if defined (Q_OS_MAC)
+  QSettings prefs(QSettings::NativeFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
+#else
+  QSettings prefs(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
+#endif
+    writeSettings(prefs);
+    writeWindowSettings(prefs);
+
+
   // Create a Worker Thread that will run the Reconstruction
   if(m_WorkerThread != NULL)
   {
@@ -1129,10 +1139,13 @@ QImage TomoGui::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, 
         }
       }
     }
-
+#if 0
+    // This code section writes all the individual images to files in the /tmp directory
+    // this is useful for debugging
     QString fname("/tmp/single_slice_z_");
     fname.append(QString::number(z)).append(".tif");
     image.save(fname);
+#endif
   }
 //  std::cout << "Min int QImage Value:" << imin << std::endl;
 //  std::cout << "Max int QImage Value:" << imax << std::endl;
