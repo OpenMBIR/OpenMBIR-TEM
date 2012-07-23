@@ -121,6 +121,8 @@ class TomoEngine_EXPORT MRCReader
 
     std::string getLabelField(int index);
 
+    std::vector<uint8_t> extendedHeader();
+
     void printHeader(MRCHeader* header, std::ostream &out);
 
   protected:
@@ -139,7 +141,7 @@ class TomoEngine_EXPORT MRCReader
     int16_t*   m_Int16Data;
     uint16_t*  m_UInt16Data;
     float*     m_FloatData;
-
+    std::vector<uint8_t> m_ExtendedHeader;
 
 
     MRCReader(const MRCReader&); // Copy Constructor Not Implemented
