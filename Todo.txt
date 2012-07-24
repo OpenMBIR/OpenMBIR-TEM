@@ -1,3 +1,11 @@
+* When in single slice mode we need to FORCE the num resolutions to 1
+
+* The check box for default offset is being placed near Stop threshold incorrectly
+
+* Move : Target Gain, Stop Threshold, Outer, Inner Iterations, Default OFfset, Default variance, Default Initial Recon value, Num Resolutions to a Advanced Params Tab
+
+* The shape parameter can only take values from 1 to 2. Right now it goes right to zero.
+
 * Do we allow the user to set the SigmaX or do we always calculate it 
 internally.
 
