@@ -891,7 +891,7 @@ font-size: 10px;
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
+              <y>-9</y>
               <width>233</width>
               <height>826</height>
              </rect>
@@ -1457,7 +1457,7 @@ Iterations:</string>
                     <number>1</number>
                    </property>
                    <property name="value">
-                    <number>10</number>
+                    <number>30</number>
                    </property>
                   </widget>
                  </item>
@@ -1557,7 +1557,7 @@ Resolutions</string>
                     <number>100</number>
                    </property>
                    <property name="value">
-                    <number>3</number>
+                    <number>4</number>
                    </property>
                   </widget>
                  </item>
@@ -1605,7 +1605,7 @@ Multiple</string>
                     <number>100</number>
                    </property>
                    <property name="value">
-                    <number>4</number>
+                    <number>3</number>
                    </property>
                   </widget>
                  </item>
@@ -1757,7 +1757,7 @@ Threshold:</string>
                       </size>
                      </property>
                      <property name="text">
-                      <string>0.001</string>
+                      <string>0.004</string>
                      </property>
                     </widget>
                    </item>
@@ -1798,7 +1798,7 @@ Threshold:</string>
                     </size>
                    </property>
                    <property name="text">
-                    <string>.0000000199</string>
+                    <string>1</string>
                    </property>
                   </widget>
                  </item>
@@ -1830,7 +1830,7 @@ font-size: 10px;
                     </size>
                    </property>
                    <property name="text">
-                    <string>7872950.013398</string>
+                    <string>1</string>
                    </property>
                   </widget>
                  </item>
