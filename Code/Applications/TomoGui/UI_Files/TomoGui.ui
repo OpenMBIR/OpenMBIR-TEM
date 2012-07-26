@@ -1656,8 +1656,7 @@ font-size: 10px;
 }</string>
                    </property>
                    <property name="text">
-                    <string>MRF Shape
-Parameter:</string>
+                    <string>Diffuseness</string>
                    </property>
                    <property name="wordWrap">
                     <bool>true</bool>
@@ -1811,7 +1810,7 @@ font-size: 10px;
 }</string>
                    </property>
                    <property name="text">
-                    <string>Sigma X:</string>
+                    <string>SigmaX:</string>
                    </property>
                   </widget>
                  </item>
