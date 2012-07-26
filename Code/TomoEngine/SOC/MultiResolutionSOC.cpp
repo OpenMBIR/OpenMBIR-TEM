@@ -244,7 +244,7 @@ void MultiResolutionSOC::execute()
     {
 		inputs->NumIter = 1;//getInnerIterations();
     }
-    inputs->p = getMRFShapeParameter();
+    inputs->p = getMRFShapeParameter()+1; //NEW: Now we are going to compute p = Diffuseness(input) + 1
     inputs->StopThreshold = getStopThreshold();
     if (i >= 2)
     {
