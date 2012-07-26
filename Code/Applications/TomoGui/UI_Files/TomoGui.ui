@@ -891,7 +891,7 @@ font-size: 10px;
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-9</y>
+              <y>0</y>
               <width>233</width>
               <height>826</height>
              </rect>
@@ -1682,7 +1682,7 @@ Parameter:</string>
                     <number>6</number>
                    </property>
                    <property name="minimum">
-                    <double>0.000001000000000</double>
+                    <double>1.000000000000000</double>
                    </property>
                    <property name="maximum">
                     <double>2.000000000000000</double>
