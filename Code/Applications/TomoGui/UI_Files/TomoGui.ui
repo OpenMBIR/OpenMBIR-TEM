@@ -1810,7 +1810,7 @@ font-size: 10px;
 }</string>
                    </property>
                    <property name="text">
-                    <string>SigmaX:</string>
+                    <string>Smoothness:</string>
                    </property>
                   </widget>
                  </item>

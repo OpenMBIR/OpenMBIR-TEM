@@ -167,7 +167,7 @@ void TargetGainSigmaXEstimation::execute()
     sum1 += ( sum2s[i_theta] * cosine) / (m_SampleThickness);
   }
 
-  m_SigmaXEstimate = sum1/header.nz/10.0;
+	m_SigmaXEstimate = sum1/header.nz;///10.0;
   FREE_FEI_HEADERS( header.feiHeaders )
 
 //  std::cout << "Estimated Target Gain: " << m_TargetGainEstimate << std::endl;
