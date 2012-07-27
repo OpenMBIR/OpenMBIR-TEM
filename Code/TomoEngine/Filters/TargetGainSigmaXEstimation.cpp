@@ -151,9 +151,7 @@ void TargetGainSigmaXEstimation::execute()
 
   // Now Calculate the Sigma X estimation
   for(int i_theta = 0; i_theta < header.nz; ++i_theta)
-  {
-	  
-	  
+  {	  
     sum2s[i_theta] /= header.nx * header.ny * m_TargetGainEstimate;
     Real_t cosine = 0.0;
     if (m_TiltAngles == 0)
