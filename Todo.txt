@@ -1,10 +1,16 @@
+*Display image with lowerleft as default and make the y go from 0 - ? from bottom to top 
+
+*Fix the smoothness and SigmaX calculation. SigmaX needs to be computed and multiplied by 1/smoothness internally. 
+
+*Code fails if the extension .bin is not given in OutputReconstructionFile  
+
 * When in single slice mode we need to FORCE the num resolutions to 1
 
 * The check box for default offset is being placed near Stop threshold incorrectly
 
 * Move : Target Gain, Stop Threshold, Outer, Inner Iterations, Default OFfset, Default variance, Default Initial Recon value, Num Resolutions to a Advanced Params Tab
 
-* The shape parameter can only take values from 1 to 2. Right now it goes right to zero.
+
 
 * Do we allow the user to set the SigmaX or do we always calculate it 
 internally.
@@ -46,3 +52,4 @@ to be a proper multiple of xz size at all resolutions - Done. Venkat 6/14/2012
 * Implement reconstruction when Bright-Field is available - Done. Venkat 5/30
 * Do more tests of the automatic SigmaX calculation based on TargetGain - is it robust? - Done. Venkat 6/14/2012
 * Make a command line version of the code so that user can run multiple instances using script files if needed. - Done. Venkat 6/24/2012
+* The shape parameter can only take values from 1 to 2. Right now it goes right to zero.
