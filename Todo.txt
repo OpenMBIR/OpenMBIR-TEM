@@ -1,3 +1,5 @@
+*Memory calculate routines need to be dynamically computed
+
 *Display image with lowerleft as default and make the y go from 0 - ? from bottom to top 
 
 *Fix the smoothness and SigmaX calculation. SigmaX needs to be computed and multiplied by 1/smoothness internally. 
