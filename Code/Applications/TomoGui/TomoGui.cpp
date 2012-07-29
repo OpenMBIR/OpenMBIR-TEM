@@ -2327,7 +2327,7 @@ void TomoGui::on_estimateGainSigma_clicked()
   targetGain->setText(QString::number(estimate->getTargetGainEstimate()));
 //  sigmaX->setText(QString::number(estimate->getSigmaXEstimate()));
 //NEW: The user inputs the Smoothness. We take (1/Smoothness)*EstimatedSigmaX = SigmaX
-	sigmaX->setText(QString::number(estimate->getSigmaXEstimate()*(1.0/sigmaX->text().toDouble(&ok))));
+  sigmaX->setText(QString::number(estimate->getSigmaXEstimate()*(1.0/sigmaX->text().toDouble(&ok))));
 	
 	
 }

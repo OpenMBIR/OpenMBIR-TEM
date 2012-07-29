@@ -1,3 +1,5 @@
+*Change the Advanced parameter -> Noise_Model to Noise_Esimation
+
 *Memory calculate routines need to be dynamically computed
 
 *Display image with lowerleft as default and make the y go from 0 - ? from bottom to top 
