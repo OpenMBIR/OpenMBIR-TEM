@@ -670,7 +670,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
 #ifdef COST_CALCULATE
     //compute cost
     /********************************************************************************************/
-    sum = 0;
+    Real_t sum = 0;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
       sum += (Qk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta]
@@ -757,7 +757,7 @@ int SOCEngine::jointEstimation(RealVolumeType::Pointer Weight,
     }
 
 #ifdef COST_CALCULATE
-    err = calculateCost(cost, Weight, ErrorSino);
+    int16_t err = calculateCost(cost, Weight, ErrorSino);
     if (err < 0)
     {
       std::cout<<"Cost went up after Gain+Offset update"<<std::endl;
