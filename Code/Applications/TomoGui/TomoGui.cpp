@@ -218,7 +218,8 @@ void TomoGui::readSettings(QSettings &prefs)
 
   READ_STRING_SETTING(prefs, sampleThickness, "");
   READ_STRING_SETTING(prefs, targetGain, "0")
-  READ_STRING_SETTING(prefs, sigmaX, ".00000045");
+  READ_STRING_SETTING(prefs, sigma_x, ".00000045");
+  READ_STRING_SETTING(prefs, smoothness, ".00000045");
 
   READ_SETTING(prefs, numResolutions, ok, i, 1, Int);
   READ_SETTING(prefs, finalResolution, ok, i, 1, Int);
@@ -264,7 +265,8 @@ void TomoGui::writeSettings(QSettings &prefs)
 
   WRITE_STRING_SETTING(prefs, sampleThickness);
   WRITE_STRING_SETTING(prefs, targetGain)
-  WRITE_STRING_SETTING(prefs, sigmaX);
+  WRITE_STRING_SETTING(prefs, sigma_x);
+  WRITE_STRING_SETTING(prefs, smoothness);
   WRITE_SETTING(prefs, numResolutions);
   WRITE_SETTING(prefs, finalResolution);
   WRITE_SETTING(prefs, outerIterations);
@@ -540,6 +542,8 @@ void TomoGui::setupGui()
   QAbstractItemDelegate* cbDelegate = new CheckBoxDelegate;
   gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Exclude, cbDelegate);
 #endif
+
+  advancedParametersGroupBox->setChecked(false);
 
 }
 
@@ -850,7 +854,8 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   m_MultiResSOC->setStopThreshold(stopThreshold->text().toFloat(&ok));
   m_MultiResSOC->setOuterIterations(outerIterations->value());
   m_MultiResSOC->setInnerIterations(innerIterations->value());
-  m_MultiResSOC->setSigmaX(sigmaX->text().toFloat(&ok));
+  m_MultiResSOC->setSigmaX(sigma_x->text().toFloat(&ok));
+
   m_MultiResSOC->setMRFShapeParameter(mrf->value());
   m_MultiResSOC->setDefaultOffsetValue(defaultOffset->text().toFloat(&ok));
   m_MultiResSOC->setUseDefaultOffset(useDefaultOffset->isChecked());
@@ -2327,9 +2332,9 @@ void TomoGui::on_estimateGainSigma_clicked()
   targetGain->setText(QString::number(estimate->getTargetGainEstimate()));
 //  sigmaX->setText(QString::number(estimate->getSigmaXEstimate()));
 //NEW: The user inputs the Smoothness. We take (1/Smoothness)*EstimatedSigmaX = SigmaX
-  sigmaX->setText(QString::number(estimate->getSigmaXEstimate()*(1.0/sigmaX->text().toDouble(&ok))));
-	
-	
+  sigma_x->setText(QString::number(estimate->getSigmaXEstimate()*(1.0/smoothness->text().toDouble(&ok))));
+
+
 }
 
 // -----------------------------------------------------------------------------
