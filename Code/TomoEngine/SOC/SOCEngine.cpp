@@ -672,7 +672,7 @@ void SOCEngine::execute()
     g->run(ForwardProject(m_Sinogram.get(), m_Geometry.get(), TempCol, VoxelLineResponse, Y_Est, NuisanceParams.get(), t, this));
 #else
     ForwardProject fp(m_Sinogram.get(), m_Geometry.get(), TempCol, VoxelLineResponse, Y_Est, NuisanceParams.get(), t, this);
-    fp.setObservers(getObservers());
+    //fp.setObservers(getObservers());
     fp();
 #endif
   }

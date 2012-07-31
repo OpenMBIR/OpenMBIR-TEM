@@ -532,7 +532,7 @@ void SOCEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
         int32_t count = vlr->count;
         vlr->values[count] = ProfileThickness;
         vlr->index[count] = i_t;
-        size_t dim0 = vlr->valuesPtr->getDims()[0];
+//        size_t dim0 = vlr->valuesPtr->getDims()[0];
         vlr->setCount(count + 1);
       }
     }

@@ -2498,7 +2498,7 @@ void TomoGui::memCalculate()
   if(extendObject->isChecked() == true)
   {
     float maxTilt = m_CachedLargestAngle;
-    float LengthZ = sample_thickness * advancedParams->Z_STRETCH;
+//    float LengthZ = sample_thickness * advancedParams->Z_STRETCH;
     float temp = advancedParams->X_SHRINK_FACTOR * ((SinoN_r * delta_r) / cos(maxTilt * M_PI / 180)) + sample_thickness * tan(maxTilt * M_PI / 180);
     temp /= (interpolate_factor * delta_r);
     float GeomLengthX = floor(temp + 0.5) * interpolate_factor * delta_r;
