@@ -716,6 +716,17 @@ void TomoGui::on_m_GoBtn_clicked()
     QMessageBox::critical(this, tr("Output File Error"), tr("Please select a file name for the reconstructed file to be saved as."), QMessageBox::Ok);
     return;
   }
+
+  fi = QFileInfo(reconstructedVolumeFileName->text());
+  if (fi.suffix().compare(".bin") != 0)
+  {
+    QString t = reconstructedVolumeFileName->text();
+    t.append(".bin");
+    reconstructedVolumeFileName->blockSignals(true);
+    reconstructedVolumeFileName->setText(t);
+    reconstructedVolumeFileName->blockSignals(false);
+  }
+
   // We have a name, make sure the user wants to over write the file
   QFile file(reconstructedVolumeFileName->text());
   if(file.exists() == true)
@@ -732,15 +743,14 @@ void TomoGui::on_m_GoBtn_clicked()
     }
     else
     {
-      QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled.raw";
-      outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("RAW (*.raw)"));
+      QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled.bin";
+      outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("Bin (*.bin)"));
       if(!outputFile.isNull())
       {
         setCurrentProcessedFile("");
         setOutputExistsCheck(true);
       }
       else // The user clicked cancel from the save file dialog
-
       {
         return;
       }
@@ -1332,8 +1342,8 @@ void TomoGui::on_outputDirectoryPathBtn_clicked()
 // -----------------------------------------------------------------------------
 void TomoGui::on_reconstructedVolumeFileNameBtn_clicked()
 {
-  QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled";
-  outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("All files (*.*)"));
+  QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled.bin";
+  outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("All files (*.bin)"));
   if (outputFile.isEmpty())
   {
     return;
@@ -1437,7 +1447,7 @@ void TomoGui::on_inputBrightFieldFilePath_textChanged(const QString & filepath)
 // -----------------------------------------------------------------------------
 void TomoGui::on_reconstructedVolumeFileName_textChanged(const QString & text)
 {
-  //  verifyPathExists(outputMRCFilePath->text(), movingImageFile);
+
 }
 
 // -----------------------------------------------------------------------------
