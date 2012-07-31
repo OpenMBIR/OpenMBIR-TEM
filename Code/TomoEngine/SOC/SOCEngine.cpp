@@ -159,8 +159,8 @@ namespace Detail {
 #else
     m_NumThreads = 1;
 #endif
-    setVerbose(true); //set this to enable cout::'s
-    setVeryVerbose(true); //set this to ennable even more cout:: s
+    //setVerbose(true); //set this to enable cout::'s
+    //setVeryVerbose(true); //set this to ennable even more cout:: s
  }
 
 // -----------------------------------------------------------------------------
