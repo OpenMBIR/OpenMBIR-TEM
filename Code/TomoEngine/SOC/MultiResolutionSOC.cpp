@@ -159,6 +159,8 @@ void MultiResolutionSOC::execute()
 
   for (int i = 0; i < m_NumberResolutions; ++i)
   {
+    if (getCancel() == true) { setErrorCondition(-999); return; }
+
     TomoInputsPtr inputs = TomoInputsPtr(new TomoInputs);
     SOCEngine::InitializeTomoInputs(inputs);
 

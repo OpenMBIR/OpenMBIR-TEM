@@ -373,12 +373,14 @@ void SOCEngine::execute()
   {
     return;
   }
+  if (getCancel() == true) { setErrorCondition(-999); return; }
 
   err = initializeBrightFieldData();
   if(err < 0)
   {
     return;
   }
+  if (getCancel() == true) { setErrorCondition(-999); return; }
 
   err = createInitialGainsData();
   if(err < 0)
@@ -395,6 +397,9 @@ void SOCEngine::execute()
   {
     return;
   }
+
+  if (getCancel() == true) { setErrorCondition(-999); return; }
+
 
   if(getVeryVerbose())
   {
@@ -429,6 +434,7 @@ void SOCEngine::execute()
   {
     return;
   }
+  if (getCancel() == true) { setErrorCondition(-999); return; }
 
 
   //Gain, Offset and Variance Parameter Structures
@@ -509,6 +515,7 @@ void SOCEngine::execute()
   calculateSinCos();
   //Initialize the e-beam
   initializeBeamProfile(); //verified with ML
+  if (getCancel() == true) { setErrorCondition(-999); return; }
 
   //calculate sine and cosine of all angles and store in the global arrays sine and cosine
   DetectorResponse::Pointer dResponseFilter = DetectorResponse::New();
@@ -578,6 +585,8 @@ void SOCEngine::execute()
   //Gain and Offset Parameters Initialization
   gainAndOffsetInitialization(NuisanceParams);
 
+  if (getCancel() == true) { setErrorCondition(-999); return; }
+
   // Initialize H_t volume
   dims[0] = 1;
   dims[1] = m_Sinogram->N_theta;
@@ -635,6 +644,8 @@ void SOCEngine::execute()
 
   storeVoxelResponse(H_t, VoxelLineResponse);
 
+  if (getCancel() == true) { setErrorCondition(-999); return; }
+
   if(getVerbose())
   {
     printf("Number of non zero entries of the forward projector is %lf\n", temp);
@@ -644,6 +655,8 @@ void SOCEngine::execute()
   //Forward Project Geometry->Object one slice at a time and compute the  Sinogram for each slice
   //is Y_Est initailized to zero?
   initializeVolume(Y_Est, 0.0);
+
+  if (getCancel() == true) { setErrorCondition(-999); return; }
 
   notify("Starting Forward Projection", 10, Observable::UpdateProgressValueAndMessage);
   START_TIMER;
@@ -686,6 +699,9 @@ void SOCEngine::execute()
   //Calculate Error Sinogram - Can this be combined with previous loop?
   //Also compute weights of the diagonal covariance matrix
   calculateMeasurementWeight(Weight, NuisanceParams, ErrorSino, Y_Est);
+
+  if (getCancel() == true) { setErrorCondition(-999); return; }
+
 
 #ifdef FORWARD_PROJECT_MODE
   return 0; //exit the program once we finish forward projecting the object
@@ -739,11 +755,7 @@ void SOCEngine::execute()
         break; //stop inner loop if we have hit the threshold value for x
       }
       // Check to see if we are canceled.
-      if(getCancel() == true)
-      {
-        setErrorCondition(-100);
-        return;
-      }
+      if (getCancel() == true) { setErrorCondition(-999); return; }
 
       // Write out the VTK file
   //    {
@@ -760,8 +772,6 @@ void SOCEngine::execute()
       }
 
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
-
-	
 
     if(m_AdvParams->JOINT_ESTIMATION)
     {
@@ -816,6 +826,8 @@ void SOCEngine::execute()
   }
 #endif
 
+  if (getCancel() == true) { setErrorCondition(-999); return; }
+
   /* Write the Gains and Offsets to an output file */
   writeNuisanceParameters(NuisanceParams);
 
@@ -850,6 +862,8 @@ void SOCEngine::execute()
       }
     }
   }
+
+  if (getCancel() == true) { setErrorCondition(-999); return; }
 
   writeSinogramFile(NuisanceParams, Final_Sinogram); // Writes the sinogram to a file
   writeReconstructionFile(); // Writes the m_Geometry to a file
