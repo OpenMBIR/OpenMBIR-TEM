@@ -506,10 +506,29 @@ void TomoGuiGraphicsView::mousePressEvent(QMouseEvent *event)
   m_AddUserInitArea = true;
   QGraphicsView::mousePressEvent(event);
 
+  // This next code makes sure the rubber band is within the boundaries of the image
+  // and if it is not then it forcefully sets it there. It only checks if we
+  // are to the left or above the image. If we are right or below the image
+  // the mouseRelease event will take care of that sanity check.
+  m_MouseClickOrigin = event->pos();
+  QRect box = QRect(m_MouseClickOrigin, event->pos()).normalized();
+  QPolygonF sceneBox = mapToScene(box);
+  QRectF rectf = sceneBox.boundingRect();
+  
+  if (rectf.x() < 0 )
+  {
+    m_MouseClickOrigin.setX( m_MouseClickOrigin.x() + -rectf.x() );
+  }
+  if (rectf.y() < 0 )
+  {
+    m_MouseClickOrigin.setY( m_MouseClickOrigin.y() + -rectf.y() );
+  }
+
   // std::cout << "    event->accepted() == false" << std::endl;
   if(m_AddUserInitArea == true)
   {
-    m_MouseClickOrigin = event->pos();
+ //   m_MouseClickOrigin = event->pos();
+
     if(!m_RubberBand) m_RubberBand = new QRubberBand(QRubberBand::Rectangle, this);
     m_RubberBand->setGeometry(QRect(m_MouseClickOrigin, QSize()));
     m_RubberBand->show();
@@ -562,9 +581,28 @@ void TomoGuiGraphicsView::mouseReleaseEvent(QMouseEvent *event)
   else if (m_AddUserInitArea == true)
   {
     m_RubberBand->hide();
+    QPoint endPoint = event->pos();
+    
     QRect box = QRect(m_MouseClickOrigin, event->pos()).normalized();
+    
     QPolygonF sceneBox = mapToScene(box);
-    createNewUserInitArea(sceneBox.boundingRect());
+    QRectF boxf = sceneBox.boundingRect();
+    //make sure we are within the upper left corner of the image
+    if (boxf.left() < 0) { boxf.setLeft(0); }
+    if (boxf.top() < 0) { boxf.setTop(0); }
+
+
+    if (boxf.right() > m_BaseImage.size().width())
+    {
+      boxf.setRight(m_BaseImage.size().width());
+    }
+    if (boxf.bottom() > m_BaseImage.size().height())
+    {
+      boxf.setBottom(m_BaseImage.size().height());
+    }
+
+
+    createNewUserInitArea(boxf);
     m_AddUserInitArea = false;
   }
   else

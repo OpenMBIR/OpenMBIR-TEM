@@ -718,7 +718,7 @@ void TomoGui::on_m_GoBtn_clicked()
   }
 
   fi = QFileInfo(reconstructedVolumeFileName->text());
-  if (fi.suffix().compare(".bin") != 0)
+  if (fi.suffix().compare("bin") != 0)
   {
     QString t = reconstructedVolumeFileName->text();
     t.append(".bin");
@@ -886,6 +886,21 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   subvolume[5] = m_nTilts->text().toUShort(&ok) - 1;
   if (fullReconstruction == true)
   {
+    // Sanity Check the Input dimensions
+    QImage image = m_GraphicsView->getBaseImage();
+    QSize size = image.size();
+    quint16 value = xMin->text().toUShort(&ok);
+    if (value < 0) { xMin->setText("0");}
+
+    value = yMin->text().toUShort(&ok);
+    if (value < 0) { yMin->setText("0"); }
+
+    value = xMax->text().toUShort(&ok);
+    if (value >= size.width()) { xMax->setText(QString::number(size.width()-1)); }
+
+    value =  yMax->text().toUShort(&ok);
+    if (value >= size.height()) { yMax->setText(QString::number(size.height()-1)); }
+
     subvolume[0] = xMin->text().toUShort(&ok);
     subvolume[3] = xMax->text().toUShort(&ok);
     subvolume[1] = yMin->text().toUShort(&ok);
