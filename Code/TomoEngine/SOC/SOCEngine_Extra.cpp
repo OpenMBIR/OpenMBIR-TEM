@@ -308,7 +308,7 @@ int SOCEngine::initializeRoughReconstructionData()
     // This will read the values from a binary file
     geomInitializer = InitialReconstructionBinReader::NewInitialReconstructionInitializer();
   }
-  else if (extension.compare(".mrc") == 0)
+  else if (extension.compare("mrc") == 0)
   {
     notify("We are not dealing with mrc volume files. The program will now end.", 0, Observable::UpdateErrorMessage);
     return -1;

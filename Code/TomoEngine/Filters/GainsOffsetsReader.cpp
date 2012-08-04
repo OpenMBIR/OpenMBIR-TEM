@@ -71,7 +71,7 @@ void GainsOffsetsReader::execute()
 
 
 	//Gains Read
-   Fp = fopen(inputs->gainsInputFile.c_str(), "r");
+   Fp = fopen(inputs->gainsInputFile.c_str(), "rb");
 	if(Fp != NULL)
 	{
 		// Read all the gains in a single shot
@@ -137,7 +137,7 @@ void GainsOffsetsReader::execute()
 	}
 
 	//Offset Read
-	Fp = fopen(inputs->offsetsInputFile.c_str(), "r");
+	Fp = fopen(inputs->offsetsInputFile.c_str(), "rb");
 	if(Fp != NULL)
 	{
 
@@ -193,7 +193,7 @@ void GainsOffsetsReader::execute()
 
 
 	//Variance Read
-	Fp = fopen(inputs->varianceInputFile.c_str(), "r");
+	Fp = fopen(inputs->varianceInputFile.c_str(), "rb");
 	if(Fp != NULL)
 	{
 		// Read all the gains in a single shot
