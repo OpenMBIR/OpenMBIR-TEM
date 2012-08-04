@@ -101,7 +101,7 @@ int main(int argc, char **argv)
   cmd.add(subset);
 
 
-  int subsetValues[4];
+  int subsetValues[6];
   ::memset(subsetValues, 0, 6 * sizeof(int));
 
   try
