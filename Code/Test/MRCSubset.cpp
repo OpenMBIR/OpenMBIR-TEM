@@ -35,7 +35,7 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 #include <stdlib.h>
-
+#include <limits>
 #include <iostream>
 
 #include <tclap/CmdLine.h>
@@ -48,10 +48,10 @@
 #include "MXA/Utilities/MXAFileInfo.h"
 #include "MXA/Utilities/MXADir.h"
 
-
 #include "TomoEngine/TomoEngineVersion.h"
 #include "TomoEngine/IO/MRCReader.h"
 #include "TomoEngine/IO/MRCWriter.h"
+
 
 
 /**
@@ -83,6 +83,79 @@ int parseValues(const std::string &values, const char* format, T* output)
   return 0;
 }
 
+
+template<typename T>
+int copyData(MRCHeader &header, int* voxelMin, int* voxelMax, int* subsetValues,
+           int typeSize, const std::string filepath, MXAFileWriter64 &writer)
+{
+  float mean = 0.0;
+  float min = std::numeric_limits<float>::max();
+  float max = std::numeric_limits<float>::min();
+  size_t count = 0;
+  int err = 0;
+  // Read each slice
+  for (int z = 0; z < header.nz; ++z)
+  {
+    MRCReader::Pointer mrcTiltDataReader = MRCReader::New(true);
+    std::cout << "Reading Section " << z << " out of " << header.nz << std::endl;
+    voxelMin[2] = z;
+    voxelMax[2] = z;
+    err = mrcTiltDataReader->read(filepath, voxelMin, voxelMax);
+
+    if(err < 0)
+    {
+      std::cout << "Error Code from Reading: " << err << std::endl;
+      return err;
+    }
+    uint8_t* inputData = reinterpret_cast<uint8_t*>(mrcTiltDataReader->getDataPointer());
+    uint8_t* src = NULL;
+    //Copy the data, scan line by scan line from the source to the destination
+    size_t outWidth = subsetValues[1] - subsetValues[0];
+
+    for (int row = subsetValues[2]; row < subsetValues[3]; ++row)
+    {
+      // Calculate the destination pointer
+      //  dest = dataPtr + ((row - subsetValues[2]) * outWidth * typeSize);
+      // Place the pointer to the start of the row that we want
+      src = inputData + typeSize * ((header.nx * row) + subsetValues[0]);
+
+      // Write the scan line to the output file
+      writer.write(reinterpret_cast<char*>(src), typeSize * outWidth);
+
+      T* data = reinterpret_cast<T*>(src);
+      for(size_t w = 0; w < outWidth; ++w)
+      {
+        mean += data[w];
+        if (data[w] < min) { min = data[w]; }
+        if (data[w] > max) { max = data[w]; }
+
+      }
+      count += outWidth;
+
+    }
+
+  }
+
+  // Calculate the mean value
+  mean = mean / count;
+
+  std::cout << "min:" << min << std::endl;
+  std::cout << "max:" << max << std::endl;
+  std::cout << "mean:" << mean << std::endl;
+
+
+  // Update the values in the file
+  writer.setFilePointer64(76); // Set the position to the "amin" header entry
+  writer.writeValue(&min);
+  writer.writeValue(&max);
+  writer.writeValue(&mean);
+  return 0;
+
+}
+
+
+
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -99,7 +172,6 @@ int main(int argc, char **argv)
 
   TCLAP::ValueArg<std::string> subset("", "subset", "Subset to Reconstruct in the form xmin,xmax,ymin,ymax", true, "", "");
   cmd.add(subset);
-
 
   int subsetValues[6];
   ::memset(subsetValues, 0, 6 * sizeof(int));
@@ -141,7 +213,6 @@ int main(int argc, char **argv)
 
   reader->printHeader(&header, std::cout);
 
-
   int voxelMin[3] =
   { 0, 0, 0 };
   int voxelMax[3] =
@@ -162,107 +233,59 @@ int main(int argc, char **argv)
   outHeader.xlen = nx;
   outHeader.ylen = ny;
 
-
-
   MXAFileWriter64 writer(outputFile.getValue());
   bool success = writer.initWriter();
   std::stringstream ss;
-  if (false == success)
+  if(false == success)
   {
-      ss.str("");
-      ss << "MRCSubset: Error opening output file for writing. '" <<
-          outputFile.getValue() << "'";
-      return EXIT_FAILURE;
+    ss.str("");
+    ss << "MRCSubset: Error opening output file for writing. '" << outputFile.getValue() << "'";
+    return EXIT_FAILURE;
   }
 
   // Write the output header
   writer.write(reinterpret_cast<char*>(&outHeader), 1024);
-  std::cout << "File Pointer: " << writer.getFilePointer64() << std::endl;
+//  std::cout << "File Pointer: " << writer.getFilePointer64() << std::endl;
 
-  writer.writeArray( &(extendedHeader.front()), header.next);
+  writer.writeArray(&(extendedHeader.front()), header.next);
 
   // Write the FEI extended headers
 //  for(uint16_t i = 0; i < header.nz; ++i)
 //  {
 //    writer.write(reinterpret_cast<char*>( &(outHeader.feiHeaders[i])), sizeof(FEIHeader));
 //  }
-  std::cout << "File Pointer: " << writer.getFilePointer64() << std::endl;
-
-
+//  std::cout << "File Pointer: " << writer.getFilePointer64() << std::endl;
 
   std::string path = MXAFileInfo::parentPath(outputFile.getValue());
   MXADir::mkdir(path, true);
 
   size_t typeSize = 0;
 
-   switch(header.mode)
-   {
-     case 0:
-       typeSize = 1;
-       break;
-     case 1:
-       typeSize = 2;
-       break;
-     case 2:
-       typeSize = 4;
-       break;
-     case 3:
-       break;
-     case 4:
-       break;
-     case 6:
-       typeSize = 2;
-       break;
-     case 16:
-       break;
-   }
-
-
-  // Allocate a region of memory large enough to hold the subset region
-//   uint8_t* dataPtr = reinterpret_cast<uint8_t*>(malloc(outHeader.nx * outHeader.ny * typeSize));
-//   uint8_t* dest = dataPtr;
-
-
-  // Read each slice
-  for (int z = 0; z < header.nz; ++z)
+  switch(header.mode)
   {
-    MRCReader::Pointer mrcTiltDataReader = MRCReader::New(true);
-    std::cout << "Reading Section " << z << " out of " << header.nz << std::endl;
-    voxelMin[2] = z;
-    voxelMax[2] = z;
-    err = mrcTiltDataReader->read(filepath, voxelMin, voxelMax);
-
-    if(err < 0)
-    {
-      std::cout << "Error Code from Reading: " << err << std::endl;
-      return EXIT_FAILURE;
-    }
-    uint8_t* inputData = reinterpret_cast<uint8_t*>(mrcTiltDataReader->getDataPointer());
-    uint8_t* src = NULL;
-    //Copy the data, scan line by scan line from the source to the destination
-    size_t outWidth = subsetValues[1] - subsetValues[0];
-
-    for(int row = subsetValues[2]; row < subsetValues[3]; ++row)
-    {
-      // Calculate the destination pointer
-    //  dest = dataPtr + ((row - subsetValues[2]) * outWidth * typeSize);
-      // Place the pointer to the start of the row that we want
-      src = inputData + typeSize*((header.nx * row) + subsetValues[0]);
-
-
-      //Copy the bytes from the source into the destination
-      //::memcpy(dest, src, typeSize * outWidth);
-
-      // Write the scan line to the output file
-      writer.write(reinterpret_cast<char*>(src), typeSize * outWidth);
-
-
-    }
-
-
+    case 0:
+      typeSize = 1;
+      copyData<uint8_t>(header, voxelMin, voxelMax, subsetValues, typeSize, filepath, writer);
+      break;
+    case 1:
+      typeSize = 2;
+      copyData<int16_t>(header, voxelMin, voxelMax, subsetValues, typeSize, filepath, writer);
+      break;
+    case 2:
+      typeSize = 4;
+      copyData<float>(header, voxelMin, voxelMax, subsetValues, typeSize, filepath, writer);
+      break;
+    case 3:
+      break;
+    case 4:
+      break;
+    case 6:
+      typeSize = 2;
+      copyData<uint16_t>(header, voxelMin, voxelMax, subsetValues, typeSize, filepath, writer);
+      break;
+    case 16:
+      break;
   }
-
- // free(dataPtr);
 
 
   std::cout << "Done Subsetting MRC File" << std::endl;
