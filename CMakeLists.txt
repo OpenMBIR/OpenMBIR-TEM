@@ -80,7 +80,8 @@ IF (BUILD_SHARED_LIBS)
   ENDIF (WIN32)
 ENDIF (BUILD_SHARED_LIBS)
 
-OPTION (EIMTomo_HDF5_SUPPORT "Add HDF5 Support" OFF)
+#OPTION (EIMTomo_HDF5_SUPPORT "Add HDF5 Support" OFF)
+set (TomoEngine_HDF5_SUPPORT 0)
 #OPTION (EIMTomo_USE_MERSENNE_TWISTER "Use the Mersenne Twister RNG" OFF)
 
 # ---------- Find Boost Headers/Libraries -----------------------
@@ -98,19 +99,24 @@ LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 # --------------------------------------------------------------------
 # Look for Lib Tiff
 # --------------------------------------------------------------------
-set (EIMTomo_TIFF_SUPPORT "0")
+set (TomoEngine_TIFF_SUPPORT "0")
 OPTION (EIMTomo_USE_TIFF "Add libTiff Support" OFF)
 if (EIMTomo_USE_TIFF)
+    set(CMAKE_MODULE_PATH ${CMP_MODULES_SOURCE_DIR} ${CMAKE_MODULE_PATH} )
     FIND_PACKAGE(Tiff)
     IF (TIFF_FOUND)
-        set (EIMTomo_TIFF_SUPPORT "1")
+        set (TomoEngine_TIFF_SUPPORT "1")
         INCLUDE_DIRECTORIES(${TIFF_INCLUDE_DIRS})
         # Copy DLL libraries into the correct build location on MSVC platforms
         if (HAVE_TIFF_DLL)
             CMP_COPY_DEPENDENT_LIBRARIES ("tiff")
             CMP_LIBRARIES_INSTALL_RULES ("tiff" "." )
         endif()  
-    ENDIF (TIFF_FOUND)
+    else()
+       message(STATUS "Tiff was asked to be used but was not located on your system. Tiff Support will be disabled")
+       set(EIMTomo_USE_TIFF "OFF")
+       set (TomoEngine_TIFF_SUPPORT "0")
+    ENDIF ()
 endif()
 
 # --------------------------------------------------------------------
