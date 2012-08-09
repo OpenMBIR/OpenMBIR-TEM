@@ -48,6 +48,9 @@
 /* Did we compile with HDF5 support */
 #define TomoEngine_HDF5_SUPPORT @TomoEngine_HDF5_SUPPORT@
 
+/* Are we compiling Tiff support using an external libTiff */
+#define EIMTomo_TIFF_SUPPORT @EIMTomo_TIFF_SUPPORT@
+
 /* define to 1 if we are using parallel algorithms */
 #cmakedefine TomoEngine_USE_PARALLEL_ALGORITHMS @TomoEngine_USE_PARALLEL_ALGORITHMS@
 

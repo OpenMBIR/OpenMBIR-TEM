@@ -48,20 +48,6 @@ set (CMP_GENERATE_VERSION_STRING 1)
 set (CMP_INSTALL_FILES 0)
 INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
 
-OPTION (EIMTomo_TIFF_SUPPORT "Add libTiff Support" ON)
-FIND_PACKAGE(Tiff)
-IF (NOT TIFF_FOUND)
-      MESSAGE (FATAL_ERROR " Tiff Library was NOT Found and is needed.")
-ENDIF (NOT TIFF_FOUND)
-set (EMMPMLib_TIFF_SUPPORT "1")
-INCLUDE_DIRECTORIES(${TIFF_INCLUDE_DIRS})
-# Copy DLL libraries into the correct build location on MSVC platforms
-if (HAVE_TIFF_DLL)
-    CMP_COPY_DEPENDENT_LIBRARIES ("tiff")
-    CMP_LIBRARIES_INSTALL_RULES ("tiff" "." )
-endif()
-
-
 
 # --------------------------------------------------------------------
 # Should we use Intel Threading Building Blocks

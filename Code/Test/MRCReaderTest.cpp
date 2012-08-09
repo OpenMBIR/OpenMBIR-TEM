@@ -43,6 +43,8 @@
 #include "MXA/Utilities/StringUtils.h"
 #include "MXA/Common/LogTime.h"
 
+
+#if EIMTomo_TIFF_SUPPORT
 #define _TIFF_DATA_TYPEDEFS_ 1
 #include <tiffio.h>
 
@@ -124,7 +126,7 @@ int writeColorTiff(const std::string filename, std::vector<uint8_t> image, int w
    (void)TIFFClose(out);
    return err;
 }
-
+#endif
 
 ///getColorCorrespondingToValue ////////////////////////////////////////////////
 //
@@ -200,6 +202,9 @@ int main(int argc, char **argv)
     return EXIT_SUCCESS;
   }
 
+#if EIMTomo_TIFF_SUPPORT
+
+
   // Write a folder full of tiff images
   int voxelMin[3] = {0,0,0};
   int voxelMax[3] = {header.nx-1, header.ny-1, 0};
@@ -273,7 +278,7 @@ int main(int argc, char **argv)
     }
 
   }
-
+#endif
 
   std::cout << "Done Reading File" << std::endl;
   return EXIT_SUCCESS;
