@@ -29,7 +29,7 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#include "TomoGuiGraphicsView.h"
+#include "MRCGraphicsView.h"
 
 #include <QtCore/QFileInfo>
 #include <QtCore/QUrl>
@@ -54,9 +54,10 @@ namespace UIA
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-TomoGuiGraphicsView::TomoGuiGraphicsView(QWidget *parent)
+MRCGraphicsView::MRCGraphicsView(QWidget *parent)
 : QGraphicsView(parent),
   m_ImageGraphicsItem(NULL),
+  m_DisableVOISelection(false),
   m_ReconstructionArea(NULL)
 {
   setAcceptDrops(true);
@@ -84,7 +85,7 @@ TomoGuiGraphicsView::TomoGuiGraphicsView(QWidget *parent)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::setOverlayTransparency(float f)
+void MRCGraphicsView::setOverlayTransparency(float f)
 {
   m_OverlayTransparency = f;
 }
@@ -92,7 +93,7 @@ void TomoGuiGraphicsView::setOverlayTransparency(float f)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::addUserInitArea(bool b)
+void MRCGraphicsView::addUserInitArea(bool b)
 {
   m_AddUserInitArea = b;
 }
@@ -100,7 +101,7 @@ void TomoGuiGraphicsView::addUserInitArea(bool b)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::zoomIn()
+void MRCGraphicsView::zoomIn()
 {
   scale(1.1, 1.1);
 }
@@ -108,7 +109,7 @@ void TomoGuiGraphicsView::zoomIn()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::zoomOut()
+void MRCGraphicsView::zoomOut()
 {
   scale(1.0 / 1.1, 1.0 / 1.1);
 }
@@ -117,7 +118,7 @@ void TomoGuiGraphicsView::zoomOut()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::setZoomIndex(int index)
+void MRCGraphicsView::setZoomIndex(int index)
 {
   if (index == 9)
   {
@@ -137,16 +138,7 @@ void TomoGuiGraphicsView::setZoomIndex(int index)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::userInitAreaUpdated(ReconstructionArea* uia)
-{
-  updateDisplay();
-}
-
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::dragEnterEvent(QDragEnterEvent *event)
+void MRCGraphicsView::dragEnterEvent(QDragEnterEvent *event)
 {
  // qWarning("QFSDroppableGraphicsView::dragEnterEvent(QDragEnterEvent *event)");
   // accept just text/uri-list mime format
@@ -160,7 +152,7 @@ void TomoGuiGraphicsView::dragEnterEvent(QDragEnterEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)
+void MRCGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)
 {
 //  qWarning("QFSDroppableGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)");
   this->setStyleSheet("");
@@ -169,7 +161,7 @@ void TomoGuiGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::dropEvent(QDropEvent *event)
+void MRCGraphicsView::dropEvent(QDropEvent *event)
 {
   this->setStyleSheet("");
 //  qWarning("QFSDroppableGraphicsView::dropEvent(QDropEvent *event)");
@@ -205,89 +197,8 @@ void TomoGuiGraphicsView::dropEvent(QDropEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QImage TomoGuiGraphicsView::getCompositedImage()
+void MRCGraphicsView::updateDisplay()
 {
-  return m_CompositedImage;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-QImage& TomoGuiGraphicsView::blend(QImage& src, QImage& dst, float opacity)
-{
-    if (src.width() <= 0 || src.height() <= 0)
-        return dst;
-    if (dst.width() <= 0 || dst.height() <= 0)
-        return dst;
-
-    if (src.width() != dst.width() || src.height() != dst.height()) {
-#ifndef NDEBUG
-        std::cerr << "WARNING: ImageEffect::blend : src and destination images are not the same size\n";
-#endif
-        return dst;
-    }
-
-    if (opacity < 0.0 || opacity > 1.0) {
-#ifndef NDEBUG
-        std::cerr << "WARNING: ImageEffect::blend : invalid opacity. Range [0, 1]\n";
-#endif
-        return dst;
-    }
-
-    if (src.depth() != 32) src = src.convertToFormat(QImage::Format_ARGB32);
-    if (dst.depth() != 32) dst = dst.convertToFormat(QImage::Format_ARGB32);
-
-    int pixels = src.width() * src.height();
-    {
-#ifdef WORDS_BIGENDIAN   // ARGB (skip alpha)
-        register unsigned char *data1 = (unsigned char *)dst.bits() + 1;
-        register unsigned char *data2 = (unsigned char *)src.bits() + 1;
-#else                    // BGRA
-        register unsigned char *data1 = (unsigned char *)dst.bits();
-        register unsigned char *data2 = (unsigned char *)src.bits();
-#endif
-
-        for (register int i=0; i<pixels; i++)
-        {
-#ifdef WORDS_BIGENDIAN
-            *data1 += (unsigned char)((*(data2++) - *data1) * opacity);
-            data1++;
-            *data1 += (unsigned char)((*(data2++) - *data1) * opacity);
-            data1++;
-            *data1 += (unsigned char)((*(data2++) - *data1) * opacity);
-            data1++;
-#else
-            *data1 += (unsigned char)((*(data2++) - *data1) * opacity);
-            data1++;
-            *data1 += (unsigned char)((*(data2++) - *data1) * opacity);
-            data1++;
-            *data1 += (unsigned char)((*(data2++) - *data1) * opacity);
-            data1++;
-#endif
-            data1++; // skip alpha
-            data2++;
-        }
-    }
-
-    return dst;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::updateDisplay()
-{
- // QVector<QRgb > colorTable(256);
-  if (m_OverlayImage.isNull() == false)
-  {
-
-  }
-  else
-  {
-    return;
-  }
-
-//  std::cout << "TomoGuiGraphicsView::updateDisplay()" << std::endl;
   QPainter painter;
   QSize pSize(0, 0);
   if (m_BaseImage.isNull() == false)
@@ -307,30 +218,8 @@ void TomoGuiGraphicsView::updateDisplay()
   {
     painter.drawImage(point, m_BaseImage);
   }
-  else if (m_ImageDisplayType == TomoGui_Constants::SegmentedImage)
-  {
-    painter.drawImage(point, m_OverlayImage);
-  }
-  else if (m_ImageDisplayType == TomoGui_Constants::CompositedImage)
-  {
 
-    if (m_composition_mode == QPainter::CompositionMode_SourceOver)
-    {
-      QImage img = m_OverlayImage.copy(0, 0, m_OverlayImage.width(), m_OverlayImage.height());
-      img = blend(m_BaseImage, img, m_OverlayTransparency);
-      painter.drawImage(point, img);
-    }
-    else
-    {
-      painter.drawImage(point, m_BaseImage);
-      if (m_OverlayImage.isNull() == false) {
-      painter.setCompositionMode(m_composition_mode);
-      painter.drawImage(point, m_OverlayImage);
-      }
-    }
-  }
   painter.end();
-  m_CompositedImage = paintImage;
 
   if (paintImage.isNull() == true)
   {
@@ -345,7 +234,7 @@ void TomoGuiGraphicsView::updateDisplay()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::setImageDisplayType(TomoGui_Constants::ImageDisplayType displayType)
+void MRCGraphicsView::setImageDisplayType(TomoGui_Constants::ImageDisplayType displayType)
 {
   m_ImageDisplayType = displayType;
 }
@@ -353,7 +242,7 @@ void TomoGuiGraphicsView::setImageDisplayType(TomoGui_Constants::ImageDisplayTyp
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
+void MRCGraphicsView::loadBaseImageFile(QImage image)
 {
   m_BaseImage = image;
   if(m_BaseImage.isNull() == true)
@@ -361,8 +250,7 @@ void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
     return;
   }
   QSize pSize(0, 0);
-  m_OverlayImage = m_BaseImage;
-  m_CompositedImage = m_BaseImage;
+
 
   m_BaseImage = m_BaseImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
@@ -414,85 +302,16 @@ void TomoGuiGraphicsView::loadBaseImageFile(QImage image)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::loadOverlayImageFile(const QString &filename)
-{
-
-  m_OverlayImage = QImage(filename);
-  if (m_OverlayImage.isNull() == true)
-  {
-    std::cout << "Error Loading Overlay Image: " << filename.toStdString() << std::endl;
-    return;
-  }
-
-  m_ImageDisplayType = TomoGui_Constants::CompositedImage;
-  setOverlayImage(m_OverlayImage);
-  emit fireOverlayImageFileLoaded(filename);
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::setOverlayImage(QImage image)
-{
-  m_OverlayImage = image;
-
-  QSize size = m_OverlayImage.size();
- // std::cout << "Overlay Image Size: " << size.width() << " x " << size.height() << std::endl;
-  if (size.width() == 0 || size.height() == 0)
-  {
-    return;
-  }
-
-// Convert to an Pre multiplied Image for faster rendering
-  m_OverlayImage = m_OverlayImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-
-  QGraphicsScene* gScene = scene();
-  if (gScene == NULL)
-  {
-    gScene = new QGraphicsScene(this);
-    setScene(gScene);
-  }
-
-  // If the GraphicsScene Item does not exist yet lets make one. This would happen
-  // if the user loads a segmented image first.
-  if (NULL == m_ImageGraphicsItem) {
-    m_ImageGraphicsItem = gScene->addPixmap(QPixmap::fromImage(m_OverlayImage));
-  }
-  m_ImageGraphicsItem->setAcceptDrops(true);
-  m_ImageGraphicsItem->setZValue(-1);
-  QRectF rect = m_ImageGraphicsItem->boundingRect();
-  gScene->setSceneRect(rect);
-  updateDisplay();
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-QImage TomoGuiGraphicsView::getBaseImage()
+QImage MRCGraphicsView::getBaseImage()
 {
   return m_BaseImage;
 }
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-//void TomoGuiGraphicsView::setBaseImage(QImage image)
-//{
-//  m_BaseImage = image;
-//}
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QImage TomoGuiGraphicsView::getOverlayImage()
-{
-  return m_OverlayImage;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::setAddUserArea(bool b)
+void MRCGraphicsView::setAddUserArea(bool b)
 {
   m_AddUserInitArea = b;
 }
@@ -500,11 +319,15 @@ void TomoGuiGraphicsView::setAddUserArea(bool b)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::mousePressEvent(QMouseEvent *event)
+void MRCGraphicsView::mousePressEvent(QMouseEvent *event)
 {
   // std::cout << "TomoGuiGraphicsView::mousePressEvent accepted:" << (int)(event->isAccepted()) << std::endl;
   m_AddUserInitArea = true;
   QGraphicsView::mousePressEvent(event);
+  if (m_DisableVOISelection == true)
+  {
+    return;
+  }
 
   // This next code makes sure the rubber band is within the boundaries of the image
   // and if it is not then it forcefully sets it there. It only checks if we
@@ -514,7 +337,7 @@ void TomoGuiGraphicsView::mousePressEvent(QMouseEvent *event)
   QRect box = QRect(m_MouseClickOrigin, event->pos()).normalized();
   QPolygonF sceneBox = mapToScene(box);
   QRectF rectf = sceneBox.boundingRect();
-  
+
   if (rectf.x() < 0 )
   {
     m_MouseClickOrigin.setX( m_MouseClickOrigin.x() + -rectf.x() );
@@ -528,7 +351,6 @@ void TomoGuiGraphicsView::mousePressEvent(QMouseEvent *event)
   if(m_AddUserInitArea == true)
   {
  //   m_MouseClickOrigin = event->pos();
-
     if(!m_RubberBand) m_RubberBand = new QRubberBand(QRubberBand::Rectangle, this);
     m_RubberBand->setGeometry(QRect(m_MouseClickOrigin, QSize()));
     m_RubberBand->show();
@@ -540,7 +362,7 @@ void TomoGuiGraphicsView::mousePressEvent(QMouseEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::mouseMoveEvent(QMouseEvent *event)
+void MRCGraphicsView::mouseMoveEvent(QMouseEvent *event)
 {
   if(m_AddUserInitArea == true && m_RubberBand != NULL)
   {
@@ -555,7 +377,7 @@ void TomoGuiGraphicsView::mouseMoveEvent(QMouseEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::mouseReleaseEvent(QMouseEvent *event)
+void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 {
 
   if (event->modifiers() == Qt::ShiftModifier)
@@ -564,6 +386,12 @@ void TomoGuiGraphicsView::mouseReleaseEvent(QMouseEvent *event)
     QRectF sr = sceneRect();
 
     QPointF mappedPoint = mapToScene(QPoint(0, m_MouseClickOrigin.y()));
+
+    if (mappedPoint.y() > m_BaseImage.size().height())
+    {
+      mappedPoint.setY(m_BaseImage.size().height());
+    }
+
     QPointF p0(0, mappedPoint.y());
     QPointF p1(sr.width(), mappedPoint.y());
 
@@ -576,15 +404,18 @@ void TomoGuiGraphicsView::mouseReleaseEvent(QMouseEvent *event)
     m_XZLine.setPolygon(polygon);
     m_XZLine.setVisible(true);
 
-    emit fireSingleSliceSelected();
+    int y = getXZPlane().y1();
+
+
+    emit fireSingleSliceSelected(y);
   }
   else if (m_AddUserInitArea == true)
   {
     m_RubberBand->hide();
     QPoint endPoint = event->pos();
-    
+
     QRect box = QRect(m_MouseClickOrigin, event->pos()).normalized();
-    
+
     QPolygonF sceneBox = mapToScene(box);
     QRectF boxf = sceneBox.boundingRect();
     //make sure we are within the upper left corner of the image
@@ -614,7 +445,7 @@ void TomoGuiGraphicsView::mouseReleaseEvent(QMouseEvent *event)
       selected = scene()->selectedItems();
       if (selected.count() == 0)
       {
-        emit fireUserInitAreaLostFocus();
+        emit fireReconstructionVOILostFocus();
       }
     }
   }
@@ -623,7 +454,7 @@ void TomoGuiGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QLineF TomoGuiGraphicsView::getXZPlane()
+QLineF MRCGraphicsView::getXZPlane()
 {
  QPointF p0 = m_XZLine.polygon().at(0);
  QPointF p1 = m_XZLine.polygon().at(1);
@@ -635,7 +466,7 @@ QLineF TomoGuiGraphicsView::getXZPlane()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::createNewUserInitArea(const QRectF brect)
+void MRCGraphicsView::createNewUserInitArea(const QRectF brect)
 {
   ReconstructionArea* userInitArea = new ReconstructionArea( brect);
   userInitArea->setGraphicsView(this);
@@ -653,7 +484,7 @@ void TomoGuiGraphicsView::createNewUserInitArea(const QRectF brect)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::addNewInitArea(ReconstructionArea* userInitArea)
+void MRCGraphicsView::addNewInitArea(ReconstructionArea* userInitArea)
 {
  // std::cout << "EMMPMGraphicsView::addNewInitArea()" << std::endl;
 
@@ -668,27 +499,18 @@ void TomoGuiGraphicsView::addNewInitArea(ReconstructionArea* userInitArea)
   m_ReconstructionArea = userInitArea;
 
   // Hook up the signals and slots
-  connect (userInitArea, SIGNAL(fireUserInitAreaAboutToDelete(ReconstructionArea*)),
-           m_MainGui, SLOT(deleteUserInitArea(ReconstructionArea*)), Qt::DirectConnection);
-
-  connect (userInitArea, SIGNAL (fireUserInitAreaUpdated(ReconstructionArea*)),
-           m_MainGui, SLOT(userInitAreaUpdated(ReconstructionArea*)), Qt::QueuedConnection);
-
-  connect (userInitArea, SIGNAL(fireUserInitAreaSelected(ReconstructionArea*)),
-           m_MainGui, SLOT(userInitAreaSelected(ReconstructionArea*)), Qt::QueuedConnection);
-
-  connect (userInitArea, SIGNAL (fireUserInitAreaUpdated(ReconstructionArea*)),
-           this, SLOT(userInitAreaUpdated(ReconstructionArea*)), Qt::QueuedConnection);
+//  connect (userInitArea, SIGNAL (fireReconstructionVOIUpdated(ReconstructionArea*)),
+//           this, SLOT(userInitAreaUpdated(ReconstructionArea*)), Qt::QueuedConnection);
 
 
-  emit fireUserInitAreaAdded(userInitArea);
+  emit fireReconstructionVOIAdded(userInitArea);
 }
 
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::setTomoGui(TomoGui* gui)
+void MRCGraphicsView::setWidget(QWidget* gui)
 {
   m_MainGui = gui;
 }
@@ -697,7 +519,7 @@ void TomoGuiGraphicsView::setTomoGui(TomoGui* gui)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGuiGraphicsView::setCompositeMode(TomoGui_Constants::CompositeType mode)
+void MRCGraphicsView::setCompositeMode(TomoGui_Constants::CompositeType mode)
 {
   m_ImageDisplayType = TomoGui_Constants::CompositedImage;
   switch(mode)

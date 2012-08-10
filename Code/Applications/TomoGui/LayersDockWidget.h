@@ -33,7 +33,7 @@
 #include <QtGui/QDockWidget>
 
 #include "ui_LayersDockWidget.h"
-#include "TomoGuiGraphicsView.h"
+#include "MRCGraphicsView.h"
 
 
 
@@ -45,7 +45,7 @@ class LayersDockWidget : public QDockWidget , private Ui::LayersDockWidget
     LayersDockWidget(QWidget *parent = 0);
     virtual ~LayersDockWidget();
 
-    void setGraphicsView(TomoGuiGraphicsView* view);
+    void setGraphicsView(MRCGraphicsView* view);
 
     QCheckBox* getSegmentedImageCheckBox();
     QCheckBox* getOriginalImageCheckBox();
@@ -68,7 +68,7 @@ class LayersDockWidget : public QDockWidget , private Ui::LayersDockWidget
 
 
   private:
-    TomoGuiGraphicsView* m_GraphicsView;
+    MRCGraphicsView* m_GraphicsView;
 
     LayersDockWidget(const LayersDockWidget&); // Copy Constructor Not Implemented
     void operator=(const LayersDockWidget&); // Operator '=' Not Implemented

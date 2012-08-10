@@ -61,19 +61,20 @@ enum CompositeType
 }
 
 
-class TomoGuiGraphicsView : public QGraphicsView
+class MRCGraphicsView : public QGraphicsView
 {
     Q_OBJECT;
 
   public:
 
-    TomoGuiGraphicsView( QWidget *parent = NULL);
+    MRCGraphicsView( QWidget *parent = NULL);
 
-
-
-    void setTomoGui(TomoGui* gui);
+    void setWidget(QWidget* gui);
 
     void setAddUserArea(bool b);
+
+    void disableVOISelection(bool disable);
+
 
     /**
     * @brief Over-riding implementation from base class
@@ -97,18 +98,10 @@ class TomoGuiGraphicsView : public QGraphicsView
     void mouseMoveEvent( QMouseEvent* event );
     void mouseReleaseEvent( QMouseEvent* event );
 
-    //void setBaseImage(QImage image);
+
     QImage getBaseImage();
 
-    //void setOverlayImage(QImage image);
-    QImage getOverlayImage();
-
-    QImage getCompositedImage();
-
     void loadBaseImageFile(QImage image);
-    void loadOverlayImageFile(const QString &filename);
-
-    QImage& blend(QImage& src, QImage& dst, float opacity);
 
     void addNewInitArea(ReconstructionArea* userInitArea);
     void createNewUserInitArea(const QRectF brect);
@@ -131,19 +124,26 @@ class TomoGuiGraphicsView : public QGraphicsView
 
     void addUserInitArea(bool b);
 
-    void setOverlayImage(QImage image);
-
     void updateDisplay();
 
-    void userInitAreaUpdated(ReconstructionArea* uia);
+  //  void userInitAreaUpdated(ReconstructionArea* uia);
 
   signals:
-   void fireBaseMRCFileLoaded();
-   void fireOverlayImageFileLoaded(const QString &filename);
+    void fireBaseMRCFileLoaded();
 
-   void fireUserInitAreaAdded(ReconstructionArea* uia);
-   void fireUserInitAreaLostFocus();
-   void fireSingleSliceSelected();
+    void fireImageFileLoaded(const QString &filename);
+
+    void fireSingleSliceSelected(int y);
+
+    void fireReconstructionVOIAdded(ReconstructionArea* reconVOI);
+
+   /*
+   void fireReconstructionVOIUpdated(ReconstructionArea* reconVOI);
+   void fireReconstructionVOISelected(ReconstructionArea* reconVOI);
+
+   void fireUserInitAreaAboutToDelete(ReconstructionArea* reconVOI);
+    */
+     void fireReconstructionVOILostFocus();
 
   protected:
 
@@ -151,16 +151,14 @@ class TomoGuiGraphicsView : public QGraphicsView
   private:
    QGraphicsItem* m_ImageGraphicsItem;
    QImage         m_BaseImage;
-   QImage         m_OverlayImage;
-   QImage         m_CompositedImage;
-
+   bool           m_DisableVOISelection;
    bool           m_AddUserInitArea;
    QRubberBand*   m_RubberBand;
    QPoint         m_MouseClickOrigin;
    float          m_ZoomFactors[10];
    QGraphicsPolygonItem m_XZLine;
 
-   TomoGui*      m_MainGui;
+   QWidget*       m_MainGui;
    TomoGui_Constants::ImageDisplayType  m_ImageDisplayType;
    bool                                 m_ShowOverlayImage;
    QPainter::CompositionMode            m_composition_mode;
@@ -168,8 +166,8 @@ class TomoGuiGraphicsView : public QGraphicsView
 
    ReconstructionArea*                  m_ReconstructionArea;
 
-   TomoGuiGraphicsView(const TomoGuiGraphicsView&); // Copy Constructor Not Implemented
-   void operator=(const TomoGuiGraphicsView&); // Operator '=' Not Implemented
+   MRCGraphicsView(const MRCGraphicsView&); // Copy Constructor Not Implemented
+   void operator=(const MRCGraphicsView&); // Operator '=' Not Implemented
 };
 
 #endif /* _TomoGui_GRAPHICS_VIEW_H_ */

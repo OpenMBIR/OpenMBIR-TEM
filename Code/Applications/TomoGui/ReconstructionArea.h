@@ -36,7 +36,7 @@
 #include <QtGui/QGraphicsRectItem>
 #include <QtGui/QBrush>
 
-class TomoGuiGraphicsView;
+class MRCGraphicsView;
 
 
 
@@ -68,7 +68,7 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
 
-    void setGraphicsView(TomoGuiGraphicsView* gView);
+    void setGraphicsView(MRCGraphicsView* gView);
     void setControlPointMultiplier(float f);
 
   public slots:
@@ -90,10 +90,11 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
 
   signals:
 
-    void fireUserInitAreaUpdated(ReconstructionArea*);
-    void fireUserInitAreaAboutToDelete(ReconstructionArea*);
-    void fireUserInitAreaDeleted(ReconstructionArea*);
-    void fireUserInitAreaSelected(ReconstructionArea*);
+    void fireReconstructionVOIUpdated(ReconstructionArea* reconVOI);
+    void fireReconstructionVOISelected(ReconstructionArea* reconVOI);
+    void fireReconstructionVOILostFocus();
+    void fireReconstructionVOIAboutToDelete(ReconstructionArea* reconVOI);
+    void fireReconstructionVOIDeleted(ReconstructionArea* reconVOI);
 
   protected:
     virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
@@ -118,7 +119,7 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
 
     qreal m_LineWidth;
     bool m_Visible;
-    TomoGuiGraphicsView* m_GView;
+    MRCGraphicsView* m_GView;
 
 };
 
