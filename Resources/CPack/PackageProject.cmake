@@ -89,6 +89,10 @@ set (TomoEngine_WEBSITE_SCP_USERNAME "mjackson")
 configure_file(${PROJECT_RESOURCES_DIR}/upload.sh.in 
                ${PROJECT_BINARY_DIR}/upload.sh)  
 
+set (TomoEngine_WEBSITE_SERVER_PATH "/var/www/www.openmbir.org/binaries/.")
+configure_file(${PROJECT_RESOURCES_DIR}/upload.sh.in 
+${PROJECT_BINARY_DIR}/web_upload.sh)  
+			   
 # Create an NSIS based installer for Windows Systems
 IF(WIN32 AND NOT UNIX)
   # There is a bug in NSIS that does not handle full unix paths properly. Make
