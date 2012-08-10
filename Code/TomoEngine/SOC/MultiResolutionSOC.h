@@ -42,6 +42,7 @@
 #include "TomoEngine/TomoEngine.h"
 #include "TomoEngine/Common/FilterPipeline.h"
 #include "TomoEngine/SOC/SOCStructures.h"
+#include "TomoEngine/SOC/SOCEngine.h"
 
 /*
  *
@@ -54,6 +55,12 @@ class MultiResolutionSOC : public FilterPipeline
     MXA_STATIC_NEW_MACRO(MultiResolutionSOC)
 
     virtual ~MultiResolutionSOC();
+
+    /**
+     * @brief Cancel the operation
+     */
+    virtual void setCancel(bool value);
+    virtual bool getCancel();
 
     MXA_INSTANCE_PROPERTY(bool, Debug);
 
@@ -99,13 +106,16 @@ class MultiResolutionSOC : public FilterPipeline
     virtual void execute();
 
     void printInputs(TomoInputsPtr inputs, std::ostream &out);
-    
+
     void memCalculate(TomoInputsPtr inputs,TomoInputsPtr bf_inputs);
 
   protected:
     MultiResolutionSOC();
 
   private:
+    bool                 m_Cancel;
+    SOCEngine::Pointer   m_CurrentEngine;
+
     MultiResolutionSOC(const MultiResolutionSOC&); // Copy Constructor Not Implemented
     void operator=(const MultiResolutionSOC&); // Operator '=' Not Implemented
 };

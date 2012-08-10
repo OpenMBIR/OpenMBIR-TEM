@@ -44,12 +44,12 @@
 #include "MXA/Utilities/StringUtils.h"
 #include "TomoEngine/Common/EIMMath.h"
 
-#include "TomoEngine/SOC/SOCEngine.h"
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
 MultiResolutionSOC::MultiResolutionSOC() :
+FilterPipeline(),
 m_Debug(false),
 m_InputFile(""),
 m_TempDir(""),
@@ -71,7 +71,8 @@ m_ExtendObject(true),
 m_InterpolateInitialReconstruction(false),
 m_DefaultVariance(1.0f),
 m_InitialReconstructionValue(0.0f),
-m_TiltSelection(SOC::A_Tilt)
+m_TiltSelection(SOC::A_Tilt),
+m_Cancel(false)
 {
 
 }
@@ -137,6 +138,28 @@ void MultiResolutionSOC::printInputs(TomoInputsPtr inputs, std::ostream &out)
 	out << "------------------ TomoInputs End ------------------" << std::endl;
 #endif
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void MultiResolutionSOC::setCancel(bool value)
+{
+ m_Cancel = value;
+ if (NULL != m_CurrentEngine.get())
+ {
+   m_CurrentEngine->setCancel(value);
+ }
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+bool MultiResolutionSOC::getCancel()
+{
+  return m_Cancel;
+}
+
 
 // -----------------------------------------------------------------------------
 //
@@ -296,8 +319,8 @@ void MultiResolutionSOC::execute()
     inputs->excludedViews = m_ViewMasks;
     bf_inputs->excludedViews = m_ViewMasks;
 
-	
-      
+
+
     SinogramPtr sinogram = SinogramPtr(new Sinogram);
     SinogramPtr bf_sinogram = SinogramPtr(new Sinogram);
     GeometryPtr geometry = GeometryPtr(new Geometry);
@@ -307,17 +330,17 @@ void MultiResolutionSOC::execute()
     SOCEngine::InitializeGeometry(geometry);
     SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
     SOCEngine::InitializeSinogram(bf_sinogram);
-	  
+
 	//Calculate approximate memory required
-	memCalculate(inputs, bf_inputs);  
-	  
-	  
+    memCalculate(inputs, bf_inputs);
+
     //Create an Engine and initialize all the structures
-	SOCEngine::Pointer engine = SOCEngine::New();
-	engine->setTomoInputs(inputs);
+    SOCEngine::Pointer engine = SOCEngine::New();
+    m_CurrentEngine = engine;
+    engine->setTomoInputs(inputs);
     engine->setSinogram(sinogram);
-	engine->setGeometry(geometry);
-	engine->setAdvParams(m_AdvParams);
+    engine->setGeometry(geometry);
+    engine->setAdvParams(m_AdvParams);
     engine->setNuisanceParams(nuisanceParams);
     engine->setBFTomoInputs(bf_inputs);
     engine->setBFSinogram(bf_sinogram);
@@ -350,33 +373,33 @@ void MultiResolutionSOC::memCalculate(TomoInputsPtr inputs, TomoInputsPtr bf_inp
     SinoNr = inputs->xEnd - inputs->xStart+1;
     SinoNt = inputs->yEnd - inputs->yStart+1;
     SinoNtheta = inputs->zEnd - inputs->zStart+1;
-    
+
 	AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
     SOCEngine::InitializeAdvancedParams(advancedParams);
-	
+
 	//std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
 
-	
+
     if(inputs->extendObject == 1)
     {
-        GeomNx = (SinoNr/m_FinalResolution)*4;//TODO:Need to access X_Stretch and 
-		//m_Sinogram->cosine and 
-		
+        GeomNx = (SinoNr/m_FinalResolution)*4;//TODO:Need to access X_Stretch and
+		//m_Sinogram->cosine and
+
 //      float LengthZ = m_SampleThickness*advancedParams->Z_STRETCH;
 //		float temp = advancedParams->X_SHRINK_FACTOR * ((SinoN_r * sinogram->delta_r) / cos(maxTilt * M_PI / 180)) + input->LengthZ * tan(max * M_PI / 180);
 //		temp/= (input->interpolateFactor * sinogram->delta_r);
 //		float GeomLengthX = floor(temp + 0.5) * inputs->interpolateFactor * sinogram->delta_r;
 //		GeomN_x = floor(GeomLengthX / inputs->delta_xz);
     }
-    else 
+    else
 	{
         GeomNx = SinoNr/m_FinalResolution;
     }
-    
+
     GeomNy = SinoNt/m_FinalResolution;
-    GeomNz = advancedParams->Z_STRETCH*(m_SampleThickness/(m_FinalResolution));// TODO: need to access Sinogram_deltar and z_stretch. 
-	//This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm 
-    
+    GeomNz = advancedParams->Z_STRETCH*(m_SampleThickness/(m_FinalResolution));// TODO: need to access Sinogram_deltar and z_stretch.
+	//This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm
+
     float dataTypeMem = sizeof(Real_t);
     float ObjectMem = GeomNx*GeomNy*GeomNz*dataTypeMem;
     float SinogramMem = SinoNr*SinoNt*SinoNtheta*dataTypeMem;
@@ -385,7 +408,7 @@ void MultiResolutionSOC::memCalculate(TomoInputsPtr inputs, TomoInputsPtr bf_inp
     float A_MatrixMem;
     if(0 == inputs->extendObject)
     {
-    A_MatrixMem = GeomNx*GeomNz*(m_FinalResolution*3*(dataTypeMem+4)*SinoNtheta);// 4 is the bytes to store the counts 
+    A_MatrixMem = GeomNx*GeomNz*(m_FinalResolution*3*(dataTypeMem+4)*SinoNtheta);// 4 is the bytes to store the counts
    //*+4 correspodns to bytes to store a single double and a unsigned into to
    //store the offset. 3*m_FinalRes is the approximate number of detector elements hit per voxel
     }
@@ -393,12 +416,12 @@ void MultiResolutionSOC::memCalculate(TomoInputsPtr inputs, TomoInputsPtr bf_inp
         A_MatrixMem = GeomNx*GeomNz*(m_FinalResolution*(dataTypeMem+4)*SinoNtheta); //Since we are reconstructing a larger region there are several voxels with no projection data. so instead of each voxel hitting 3*m_FinalRes det entries we aproximate it by m_FinalRes
     }
     float NuisanceParamMem = SinoNtheta*dataTypeMem*3;//3 is for gains offsets and noise var
-        
+
     float TotalMem = ObjectMem+SinogramMem*2+ErroSinoMem+WeightMem+A_MatrixMem+NuisanceParamMem;//in bytes
-    
+
     TotalMem/=(1e9);//To get answer in Gb
-    
+
     std::cout<<"Total Max Mem needed = "<<TotalMem<<" Gb"<<std::endl;
-    
-    
+
+
 }
