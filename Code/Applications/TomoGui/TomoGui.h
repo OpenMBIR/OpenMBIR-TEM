@@ -150,7 +150,6 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void on_m_SingleSliceReconstructionBtn_clicked();
 
 
-
     /**
      * @brief Qt Slot that fires in response to a click on a "Recent File' Menu entry.
      */
@@ -180,12 +179,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void on_initialReconstructionPathBtn_clicked();
     void on_initialReconstructionPath_textChanged(const QString & text);
 
-
-
-
     void singleSlicePlaneSet(int y);
-
-
 
   protected:
 

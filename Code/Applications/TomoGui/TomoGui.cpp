@@ -1578,7 +1578,19 @@ void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
   connect (reconVOI, SIGNAL(fireReconstructionVOISelected(ReconstructionArea*)),
            this, SLOT(reconstructionVOISelected(ReconstructionArea*)), Qt::QueuedConnection);
 
+
+  connect(xMin, SIGNAL(textEdited ( const QString &)),
+          reconVOI, SLOT(setXMin(const QString &)));
+  connect(xMax, SIGNAL(textEdited ( const QString &)),
+          reconVOI, SLOT(setXMax(const QString &)));
+  connect(yMin, SIGNAL(textEdited ( const QString &)),
+          reconVOI, SLOT(setYMin(const QString &)));
+  connect(yMax, SIGNAL(textEdited ( const QString &)),
+          reconVOI, SLOT(setYMax(const QString &)));
+
+
 }
+
 
 // -----------------------------------------------------------------------------
 //

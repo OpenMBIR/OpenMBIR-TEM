@@ -88,6 +88,12 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
     qreal getLineWidth();
     void setVisible(bool visible);
 
+    void setXMin(const QString &xMin);
+    void setYMin(const QString &yMin);
+    void setXMax(const QString &xMax);
+    void setYMax(const QString &yMax);
+
+
   signals:
 
     void fireReconstructionVOIUpdated(ReconstructionArea* reconVOI);

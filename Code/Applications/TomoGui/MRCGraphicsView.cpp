@@ -484,29 +484,30 @@ void MRCGraphicsView::createNewUserInitArea(const QRectF brect)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MRCGraphicsView::addNewInitArea(ReconstructionArea* userInitArea)
+void MRCGraphicsView::addNewInitArea(ReconstructionArea* reconVOI)
 {
  // std::cout << "EMMPMGraphicsView::addNewInitArea()" << std::endl;
 
 
   // Set the Parent Item
-  userInitArea->setParentItem(m_ImageGraphicsItem);
+  reconVOI->setParentItem(m_ImageGraphicsItem);
   // Add it to the vector of UserInitAreas
   if (m_ReconstructionArea != NULL)
   {
     m_ReconstructionArea->deleteLater();
   }
-  m_ReconstructionArea = userInitArea;
+  m_ReconstructionArea = reconVOI;
 
-  // Hook up the signals and slots
-//  connect (userInitArea, SIGNAL (fireReconstructionVOIUpdated(ReconstructionArea*)),
-//           this, SLOT(userInitAreaUpdated(ReconstructionArea*)), Qt::QueuedConnection);
-
-
-  emit fireReconstructionVOIAdded(userInitArea);
+  emit fireReconstructionVOIAdded(reconVOI);
 }
 
-
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+ReconstructionArea* MRCGraphicsView::reconstructionArea()
+{
+  return m_ReconstructionArea;
+}
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------

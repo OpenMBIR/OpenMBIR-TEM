@@ -106,6 +106,7 @@ class MRCGraphicsView : public QGraphicsView
     void addNewInitArea(ReconstructionArea* userInitArea);
     void createNewUserInitArea(const QRectF brect);
 
+    ReconstructionArea* reconstructionArea();
 
     QLineF getXZPlane();
 

@@ -112,12 +112,6 @@ void ReconstructionArea::getUpperLeft(unsigned int &x, unsigned int &y)
   y = m_UpperLeft[1];
 }
 
-//void ReconstructionArea::setLowerRight(unsigned int x, unsigned int y)
-//{
-//  m_LowerRight[0] = x;
-//  m_LowerRight[1] = y;
-//}
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -391,6 +385,70 @@ void ReconstructionArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     QGraphicsItem::mouseMoveEvent(event);
   }
   emit fireReconstructionVOIUpdated(this);
+}
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ReconstructionArea::setXMin(const QString &xMin)
+{
+  quint32 xmin = 0;
+  quint32 xmax = 0;
+  quint32 ymin = 0;
+  quint32 ymax = 0;
+  getUpperLeft(xmin, ymin);
+  getLowerRight(xmax, ymax);
+
+  bool ok = false;
+  xmin = xMin.toInt(&ok);
+
+  QRectF newRect(xmin, ymin, (xmax - xmin), (ymax - ymin));
+  prepareGeometryChange();
+  setPolygon(QPolygonF(newRect));
+}
+
+void ReconstructionArea::setYMin(const QString &yMin)
+{
+  quint32 xmin = 0;
+  quint32 xmax = 0;
+  quint32 ymin = 0;
+  quint32 ymax = 0;
+  getUpperLeft(xmin, ymin);
+  getLowerRight(xmax, ymax);
+  bool ok = false;
+  ymin = yMin.toInt(&ok);
+  QRectF newRect(xmin, ymin, (xmax - xmin), (ymax - ymin));
+  prepareGeometryChange();
+  setPolygon(QPolygonF(newRect));
+}
+void ReconstructionArea::setXMax(const QString &xMax)
+{
+  quint32 xmin = 0;
+  quint32 xmax = 0;
+  quint32 ymin = 0;
+  quint32 ymax = 0;
+  getUpperLeft(xmin, ymin);
+  getLowerRight(xmax, ymax);
+  bool ok = false;
+  xmax = xMax.toInt(&ok);
+  QRectF newRect(xmin, ymin, (xmax - xmin), (ymax - ymin));
+  prepareGeometryChange();
+  setPolygon(QPolygonF(newRect));
+}
+void ReconstructionArea::setYMax(const QString &yMax)
+{
+  quint32 xmin = 0;
+  quint32 xmax = 0;
+  quint32 ymin = 0;
+  quint32 ymax = 0;
+  getUpperLeft(xmin, ymin);
+  getLowerRight(xmax, ymax);
+  bool ok = false;
+  ymax = yMax.toInt(&ok);
+  QRectF newRect(xmin, ymin, (xmax - xmin), (ymax - ymin));
+  prepareGeometryChange();
+  setPolygon(QPolygonF(newRect));
 }
 
 // -----------------------------------------------------------------------------
