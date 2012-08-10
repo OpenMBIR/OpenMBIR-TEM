@@ -37,14 +37,18 @@
 
 #include "QMRCDisplayWidget.h"
 
+// STL includes
+#include <limits>
+
+//-- Qt Core Includes
 #include <QtCore/QTimer>
 #include <QtCore/QDir>
 
+//-- Qt GUI Includes
 #include <QtGui/QFileDialog>
 #include <QtGui/QImage>
 #include <QtGui/QMenu>
 #include <QtGui/QAction>
-
 
 //-- TomoEngine Includes
 #include "TomoEngine/TomoEngine.h"

@@ -46,7 +46,7 @@
 
 
 #include "ui_QMRCDisplayWidget.h"
-
+#include "TomoEngine/TomoEngine.h"
 #include "TomoEngine/IO/MRCHeader.h"
 
 
