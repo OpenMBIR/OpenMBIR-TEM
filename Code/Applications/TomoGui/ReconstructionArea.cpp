@@ -43,7 +43,7 @@
 
 
 #include "ReconstructionArea.h"
-#include "TomoGuiGraphicsView.h"
+#include "MRCGraphicsView.h"
 
 namespace UIA
 {
@@ -139,7 +139,7 @@ void ReconstructionArea::getLowerRight(unsigned int &x, unsigned int &y)
 void ReconstructionArea::setLineWidth(qreal w)
 {
   m_LineWidth = w;
-  emit fireUserInitAreaUpdated(this);
+  emit fireReconstructionVOIUpdated(this);
 }
 
 // -----------------------------------------------------------------------------
@@ -277,7 +277,7 @@ void ReconstructionArea::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionArea::setGraphicsView(TomoGuiGraphicsView* gView)
+void ReconstructionArea::setGraphicsView(MRCGraphicsView* gView)
 {
   m_GView = gView;
 }
@@ -301,7 +301,7 @@ void ReconstructionArea::mousePressEvent(QGraphicsSceneMouseEvent *event)
     scene()->clearSelection();
     setSelected(true);
     QGraphicsItem::mousePressEvent(event);
-    emit fireUserInitAreaSelected(this);
+    emit fireReconstructionVOISelected(this);
   }
 
   if (m_GView != NULL)
@@ -320,7 +320,7 @@ void ReconstructionArea::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     } else {
         QGraphicsItem::mouseReleaseEvent(event);
     }
-    emit fireUserInitAreaUpdated(this);
+    emit fireReconstructionVOIUpdated(this);
 }
 
 // -----------------------------------------------------------------------------
@@ -390,7 +390,7 @@ void ReconstructionArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
   {
     QGraphicsItem::mouseMoveEvent(event);
   }
-  emit fireUserInitAreaUpdated(this);
+  emit fireReconstructionVOIUpdated(this);
 }
 
 // -----------------------------------------------------------------------------
@@ -517,6 +517,6 @@ int ReconstructionArea::type() const
 void ReconstructionArea::setColor(QColor color)
 {
   setBrush(QBrush(color));
-  emit fireUserInitAreaUpdated(this);
+  emit fireReconstructionVOIUpdated(this);
 }
 

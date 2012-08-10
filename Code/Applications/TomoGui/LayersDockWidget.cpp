@@ -135,7 +135,7 @@ void LayersDockWidget::updateDisplayState()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void LayersDockWidget::setGraphicsView(TomoGuiGraphicsView* view)
+void LayersDockWidget::setGraphicsView(MRCGraphicsView* view)
 {
   m_GraphicsView = view;
 }

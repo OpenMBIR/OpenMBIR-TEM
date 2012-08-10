@@ -48,7 +48,7 @@ class GainsOffsetsTableModel;
 class ReconstructionArea;
 
 //-- UIC generated Header
-#include <ui_TomoGui.h>
+#include "ui_TomoGui.h"
 #include "QMultiResolutionSOC.h"
 
 #include "TomoEngine/IO/MRCHeader.h"
@@ -99,16 +99,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
      */
     void loadSingleSliceReconstruction(QString filepath);
 
-
-
-
-    void openOverlayImage(QString mountImage);
-
-    QImage signed16Image(qint16* data, MRCHeader &header);
-
-    void getColorCorrespondingTovalue(int16_t val,
-                                       float &r, float &g, float &b,
-                                       float max, float min);
+   // void openReconstructedMRCFile(QString reconMrcFilePath);
 
     void readGainsOffsetsFile(QString file);
 
@@ -125,35 +116,31 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
   public slots:
 
   // Manual hookup slots to get signals from the graphics view
-    void overlayImageFileLoaded(const QString &filename);
+    void mrcInputFileLoaded(const QString &filename);
 
-    void deleteUserInitArea(ReconstructionArea* recon);
-    void userInitAreaUpdated(ReconstructionArea* recon);
-    void userInitAreaSelected(ReconstructionArea* recon);
-    void userInitAreaAdded(ReconstructionArea* recon);
+
+    void reconstructionVOIAdded(ReconstructionArea* recon);
+    void reconstructionVOIUpdated(ReconstructionArea* recon);
+    void reconstructionVOISelected(ReconstructionArea* recon);
+    void reconstructionVOIDeleted(ReconstructionArea* recon);
 
 
   protected slots:
   //Manual Hookup Menu Actions
   // File Menu
     void on_actionOpenMRCFile_triggered(); // Open a Data File
-    void on_actionOpenOverlayImage_triggered();
-    void on_actionSaveCanvas_triggered();
+ //   void on_actionOpenOverlayImage_triggered();
     void on_actionAbout_triggered();
     void on_actionExit_triggered();
     void on_actionSave_Config_File_triggered();
     void on_actionLoad_Config_File_triggered();
-
+    void on_actionSaveCanvas_triggered();
 
 //Window Menu
     void on_actionParameters_triggered();
     void on_actionLayers_Palette_triggered();
 
-    void on_playBtn_clicked();
-    void on_skipStart_clicked();
-    void on_skipEnd_clicked();
-    void stepForwardFromTimer();
-
+    void memCalculate();
 
     /* slots for the buttons in the GUI */
     void on_m_GoBtn_clicked();
@@ -162,18 +149,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     void on_m_SingleSliceReconstructionBtn_clicked();
 
-    void z10_triggered();
-    void z25_triggered();
-    void z50_triggered();
-    void z100_triggered();
-    void z125_triggered();
-    void z150_triggered();
-    void z200_triggered();
-    void z400_triggered();
-    void z600_triggered();
-    void on_fitToWindow_clicked();
-    void on_layersPalette_clicked();
-    void on_originCB_currentIndexChanged(int i);
+
 
     /**
      * @brief Qt Slot that fires in response to a click on a "Recent File' Menu entry.
@@ -205,11 +181,11 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void on_initialReconstructionPath_textChanged(const QString & text);
 
 
-    void on_currentTiltIndex_valueChanged(int i);
 
-    void singleSlicePlaneSet();
 
-    void memCalculate();
+    void singleSlicePlaneSet(int y);
+
+
 
   protected:
 
@@ -261,8 +237,6 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     void displayDialogBox(QString title, QString text, QMessageBox::Icon icon);
 
-    QImage xzSigned16CrossSection(qint16* data, size_t nVoxels, int* voxelMin, int* voxelMax);
-    QImage xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, int* voxelMax);
 
   signals:
 
@@ -303,19 +277,16 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     LayersDockWidget*  m_LayersPalette;
     QMap<QObject*, QWidget*> m_TasksMap;
 
-    QList<QWidget*> m_WidgetList;
-    QList<QWidget*> m_ImageWidgets;
-  //  QVector<QWidget*>     m_TomoInputs;
-    bool                  m_StopAnimation;     // Trigger to stop a running animation
-    QTimer*               m_AnimationTimer;
-    QVector<QRgb>         m_ColorTable;
-    int                   m_CurrentCorner;
-    QImage                m_CurrentImage;
+    QList<QWidget*>       m_WidgetList;
+
+    float                 m_CachedLargestAngle;
+    float                 m_CachedPixelSize;
+
     QString               m_GainsFile;
     QString               m_OffsetsFile;
     QString               m_VarianceFile;
     QThread*              m_WorkerThread;
-    QMultiResolutionSOC*           m_MultiResSOC;
+    QMultiResolutionSOC*   m_MultiResSOC;
     GainsOffsetsTableModel*  m_GainsOffsetsTableModel;
 
     bool                  m_SingleSliceReconstructionActive;
@@ -323,8 +294,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     QString               m_OpenDialogLastDirectory;
 
-    float                 m_CachedPixelSize;
-    float                 m_CachedLargestAngle;
+
 
 
     TomoGui(const TomoGui&); // Copy Constructor Not Implemented

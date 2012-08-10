@@ -53,7 +53,8 @@ configure_file( ${PROJECT_CODE_DIR}/QtSupport/QObserverWrapper.h.in
 SET( TomoGui_SRCS
   ${TomoGui_SOURCE_DIR}/main.cpp
   ${TomoGui_SOURCE_DIR}/TomoGui.cpp
-  ${TomoGui_SOURCE_DIR}/TomoGuiGraphicsView.cpp
+  ${TomoGui_SOURCE_DIR}/QMRCDisplayWidget.cpp
+  ${TomoGui_SOURCE_DIR}/MRCGraphicsView.cpp
   ${TomoGui_SOURCE_DIR}/LayersDockWidget.cpp
   ${TomoGui_SOURCE_DIR}/GainsOffsetsTableModel.cpp
   ${TomoGui_SOURCE_DIR}/CheckBoxDelegate.cpp
@@ -64,7 +65,8 @@ SET( TomoGui_SRCS
 #  be treated with moc
 SET( TomoGui_MOC_HDRS
   ${TomoGui_SOURCE_DIR}/TomoGui.h
-  ${TomoGui_SOURCE_DIR}/TomoGuiGraphicsView.h
+  ${TomoGui_SOURCE_DIR}/QMRCDisplayWidget.h
+  ${TomoGui_SOURCE_DIR}/MRCGraphicsView.h
   ${TomoGui_SOURCE_DIR}/LayersDockWidget.h
   ${TomoGui_SOURCE_DIR}/GainsOffsetsItemDelegate.h
   ${TomoGui_SOURCE_DIR}/GainsOffsetsTableModel.h
@@ -79,6 +81,7 @@ cmp_IDE_SOURCE_PROPERTIES(TomoGui "${TomoGui_MOC_HDRS}" "${TomoGui_SRCS}" "0")
 SET( TomoGui_UIS
  ${TomoGui_SOURCE_DIR}/UI_Files/TomoGui.ui
  ${TomoGui_SOURCE_DIR}/UI_Files/LayersDockWidget.ui
+ ${TomoGui_SOURCE_DIR}/UI_Files/QMRCDisplayWidget.ui
 )
 cmp_IDE_SOURCE_PROPERTIES(TomoGui/UI_Files "${TomoGui_UIS}" "" "0")
 
