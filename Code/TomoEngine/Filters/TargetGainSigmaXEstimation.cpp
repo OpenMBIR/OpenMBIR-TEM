@@ -93,6 +93,8 @@ void TargetGainSigmaXEstimation::execute()
   Real_t sum1 = 0;
   Real_t targetMin = std::numeric_limits<Real_t>::max();
   Real_t targetMax = std::numeric_limits<Real_t>::min();
+	Real_t min = std::numeric_limits<Real_t>::max();
+    Real_t max = std::numeric_limits<Real_t>::min();
 
   std::vector<Real_t> sum2s(header.nz);
 
@@ -109,8 +111,7 @@ void TargetGainSigmaXEstimation::execute()
     }
     progress = (i_theta/header.nz) * 100.0f;
 
-    Real_t min = std::numeric_limits<Real_t>::max();
-    Real_t max = std::numeric_limits<Real_t>::min();
+    
     Real_t sum2 = 0;
     switch(header.mode)
     {
@@ -137,10 +138,6 @@ void TargetGainSigmaXEstimation::execute()
     if (max > targetMax) { targetMax = max; }
     sum2s[i_theta] = sum2;
 	  
-	  //Subtract off any offset in the data 
-	  sum2s[i_theta] -= min*header.nx * header.ny;
-	  
-	 
 	  
     notify("Estimating Target Gain and Sigma X from Data. ", (int)progress, Observable::UpdateProgressValueAndMessage);
   }
@@ -151,17 +148,24 @@ void TargetGainSigmaXEstimation::execute()
 
   // Now Calculate the Sigma X estimation
   for(int i_theta = 0; i_theta < header.nz; ++i_theta)
-  {	  
+  {	
+	//Subtract off any offset in the data 
+	sum2s[i_theta] -= min*header.nx * header.ny;
+	  	  
     sum2s[i_theta] /= header.nx * header.ny * m_TargetGainEstimate;
+	  
+	  
     Real_t cosine = 0.0;
     if (m_TiltAngles == 0)
     {
-      cosine = cos(header.feiHeaders[i_theta].a_tilt);
+      cosine = cos(header.feiHeaders[i_theta].a_tilt*(M_PI/180));
     }
     else
     {
-      cosine = cos(header.feiHeaders[i_theta].b_tilt);
+      cosine = cos(header.feiHeaders[i_theta].b_tilt*(M_PI/180));
     }
+	  
+
     sum1 += ( sum2s[i_theta] * cosine) / (m_SampleThickness);
   }
 
