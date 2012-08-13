@@ -102,8 +102,7 @@ class TomoArray
     typedef boost::weak_ptr<TomoArray<T, Ptr, SIZE> > WeakPointer;
     typedef boost::weak_ptr<TomoArray<T, Ptr, SIZE> > ConstWeakPointer;
 
-    /** This is the raw pointer to the data. For multi-dimensional data one can
-     * use [][][] notation to get the value
+    /** This is the raw pointer to the data.
      */
     Ptr d;
 
@@ -125,6 +124,8 @@ class TomoArray
      */
     static Pointer New(size_t* dims, const std::string &name)
     {
+      assert(SIZE > 4);
+
       Pointer sharedPtr(new TomoArray<T, Ptr, SIZE>(dims));
       sharedPtr->setName(name);
       return sharedPtr;
