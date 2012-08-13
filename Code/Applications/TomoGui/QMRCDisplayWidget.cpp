@@ -143,6 +143,22 @@ void QMRCDisplayWidget::on_fitToWindow_clicked()
   m_GraphicsView->setZoomIndex(9);
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void QMRCDisplayWidget::disableVOISelection()
+{
+  if (m_GraphicsView != NULL) { m_GraphicsView->disableVOISelection(true); }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void QMRCDisplayWidget::enableVOISelection()
+{
+  if (m_GraphicsView != NULL) { m_GraphicsView->disableVOISelection(false); }
+}
+
 
 // -----------------------------------------------------------------------------
 //
@@ -380,6 +396,7 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
   }
 
   FREE_FEI_HEADERS( header.feiHeaders)
+
 
   // put the origin in the lower left corner
   m_CurrentImage = image.mirrored(false, true);

@@ -376,7 +376,7 @@ void TomoGui::setupGui()
 #endif
 
   reconstructedVolumeFileName->setText("");
-
+  m_ReconstructedDisplayWidget->disableVOISelection();
 
 #if 0
   compositeModeCB->blockSignals(true);
@@ -466,6 +466,9 @@ void TomoGui::setupGui()
 #endif
 
   advancedParametersGroupBox->setChecked(false);
+
+  ySingleSliceValue_Label->hide();
+  ySingleSliceValue->hide();
 
 }
 
@@ -817,8 +820,8 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
 
     subvolume[0] = xMin->text().toUShort(&ok);
     subvolume[3] = xMax->text().toUShort(&ok);
-    subvolume[1] = yMin->text().toUShort(&ok);
-    subvolume[4] = yMax->text().toUShort(&ok);
+    subvolume[4] = size.height() - yMin->text().toUShort(&ok);
+    subvolume[1] = size.height() - yMax->text().toUShort(&ok);
     m_MultiResSOC->setSubvolume(subvolume);
   }
   else

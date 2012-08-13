@@ -1570,7 +1570,7 @@ font-size: 10px;
                    </widget>
                   </item>
                   <item row="7" column="0">
-                   <widget class="QLabel" name="label_51">
+                   <widget class="QLabel" name="ySingleSliceValue_Label">
                     <property name="styleSheet">
                      <string notr="true">QLabel {
 font-weight: bold;

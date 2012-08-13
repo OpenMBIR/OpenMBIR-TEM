@@ -101,6 +101,14 @@ void MRCGraphicsView::addUserInitArea(bool b)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+void MRCGraphicsView::disableVOISelection(bool b)
+{
+  m_DisableVOISelection = b;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void MRCGraphicsView::zoomIn()
 {
   scale(1.1, 1.1);
@@ -404,12 +412,12 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
     m_XZLine.setPolygon(polygon);
     m_XZLine.setVisible(true);
 
-    int y = getXZPlane().y1();
+    int y = m_BaseImage.size().height() - getXZPlane().y1();
 
 
     emit fireSingleSliceSelected(y);
   }
-  else if (m_AddUserInitArea == true)
+  else if (m_AddUserInitArea == true && NULL != m_RubberBand)
   {
     m_RubberBand->hide();
     QPoint endPoint = event->pos();

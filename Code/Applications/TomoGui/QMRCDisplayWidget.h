@@ -82,6 +82,8 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     void fireOriginCB_Changed();
     void saveCanvas();
     void loadXZSliceReconstruction(QString reconMRCFilePath);
+    void disableVOISelection();
+    void enableVOISelection();
 
   protected:
     void setupGui();

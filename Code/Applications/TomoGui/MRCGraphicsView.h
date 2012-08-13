@@ -60,7 +60,13 @@ enum CompositeType
 
 }
 
-
+/**
+ * @class MRCGraphicsView MRCGraphicsView.h APplications/TomoGui/MRCGraphicsView.h
+ * @brief
+ * @author Michael A. Jackson for BlueQuartz Software
+ * @date March 13, 2012
+ * @version 1.0
+ */
 class MRCGraphicsView : public QGraphicsView
 {
     Q_OBJECT;
