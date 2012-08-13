@@ -467,9 +467,8 @@ void TomoGui::setupGui()
 
   advancedParametersGroupBox->setChecked(false);
 
-  ySingleSliceValue_Label->hide();
-  ySingleSliceValue->hide();
-
+ // ySingleSliceValue_Label->hide();
+ // ySingleSliceValue->hide();
 
 
 }
@@ -841,8 +840,8 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
 
     subvolume[0] = x_min;
     subvolume[3] = x_max;
-    subvolume[4] = y_min;
-    subvolume[1] = y_max;
+    subvolume[4] = size.height() - y_min - 1;
+    subvolume[1] = size.height() - y_max - 1;
     m_MultiResSOC->setSubvolume(subvolume);
   }
   else
@@ -1604,9 +1603,6 @@ void TomoGui::updateProgressAndMessage(const std::string &msg, int progress)
 // -----------------------------------------------------------------------------
 void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
 {
-  QImage image = m_MRCDisplayWidget->graphicsView()->getBaseImage();
-  QSize size = image.size();
-
   unsigned int xmin, ymin;
   reconVOI->getUpperLeft(xmin, ymin);
 
@@ -1616,8 +1612,8 @@ void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
   xMin->setText(QString::number(xmin));
   xMax->setText(QString::number(xmax));
 
-  yMin->setText(QString::number(size.height() - ymax));
-  yMax->setText(QString::number(size.height() - ymin));
+  yMin->setText(QString::number(ymin));
+  yMax->setText(QString::number(ymax));
 
   connect (reconVOI, SIGNAL(fireReconstructionVOIAboutToDelete(ReconstructionArea*)),
            this, SLOT(reconstructionVOIDeleted(ReconstructionArea*)), Qt::DirectConnection);
@@ -1645,23 +1641,20 @@ void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::reconstructionVOIUpdated(ReconstructionArea* reconVOI)
+void TomoGui::reconstructionVOIUpdated(ReconstructionArea* recon)
 {
 
-  QImage image = m_MRCDisplayWidget->graphicsView()->getBaseImage();
-  QSize size = image.size();
-
   unsigned int xmin, ymin;
-  reconVOI->getUpperLeft(xmin, ymin);
+  recon->getUpperLeft(xmin, ymin);
 
   unsigned int xmax, ymax;
-  reconVOI->getLowerRight(xmax, ymax);
+  recon->getLowerRight(xmax, ymax);
 
   xMin->setText(QString::number(xmin));
   xMax->setText(QString::number(xmax));
 
-  yMin->setText(QString::number(size.height() - ymax));
-  yMax->setText(QString::number(size.height() - ymin));
+  yMin->setText(QString::number(ymin));
+  yMax->setText(QString::number(ymax));
 
 }
 
