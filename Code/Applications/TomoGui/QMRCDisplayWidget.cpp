@@ -399,7 +399,10 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
 
 
   // put the origin in the lower left corner
-  m_CurrentImage = image.mirrored(false, true);
+  image = image.mirrored(false, true);
+
+  drawOrigin(image);
+  //m_CurrentImage = image;
 
   // This will display the image in the graphics scene
   m_GraphicsView->loadBaseImageFile(m_CurrentImage);
@@ -655,8 +658,8 @@ void QMRCDisplayWidget::drawOrigin(QImage image)
   int pyOffset = 2 * pxHigh;
   // Get a QPainter object to add some more details to the image
 
-  int pImageWidth = imageWidth + pxOffset * 2;
-  int pImageHeight = imageHeight + pyOffset * 2;
+  int pImageWidth = imageWidth;// + pxOffset * 2;
+  int pImageHeight = imageHeight;// + pyOffset * 2;
 
   QImage pImage(pImageWidth, pImageHeight, QImage::Format_ARGB32_Premultiplied);
   pImage.fill(0xFFFFFFFF); // All white background
@@ -671,19 +674,19 @@ void QMRCDisplayWidget::drawOrigin(QImage image)
   pxHigh = metrics.height();
   pxWide = metrics.width(QString("TD"));
 
-  QPoint point(pxOffset, pyOffset);
+  QPoint point(0, 0);
   painter.drawImage(point, image); // Draw the image we just generated into the QPainter's canvas
 
   qint32 penWidth = 2;
-  painter.setPen(QPen(QColor(0, 0, 0, 255), penWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+  painter.setPen(QPen(QColor(255, 0, 0, 255), penWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 
 
   pxWide = metrics.width(QString("(0,0)"));
-  painter.drawText(0, pImageHeight - pyOffset + pxHigh + 2, "(0,0)");
+  painter.drawText(5, pImageHeight - 5, "(0,0)");
 
 
   // Draw slightly transparent lines
-  painter.setPen(QPen(QColor(0, 0, 0, 180), penWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+  painter.setPen(QPen(QColor(255, 255, 0, 180), penWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 //  painter.drawLine(pImageWidth / 2, pImageHeight / 2, pImageWidth - pxOffset, pImageHeight / 2);
 //  painter.drawLine(pImageWidth / 2, pImageHeight / 2, pImageWidth / 2, pImageHeight - pyOffset);
 
