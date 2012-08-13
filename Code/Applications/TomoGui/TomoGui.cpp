@@ -467,8 +467,8 @@ void TomoGui::setupGui()
 
   advancedParametersGroupBox->setChecked(false);
 
-  ySingleSliceValue_Label->hide();
-  ySingleSliceValue->hide();
+ // ySingleSliceValue_Label->hide();
+ // ySingleSliceValue->hide();
 
 
 }
@@ -847,18 +847,33 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   else
   {
     QLineF line = m_MRCDisplayWidget->graphicsView()->getXZPlane();
-  //  std::cout << "p1: " << line.p1().x() << ", " << line.p1().y()
-  //   << "   p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
+    std::cout << "p1: " << line.p1().x() << ", " << line.p1().y()
+     << "   p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
+
+    QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
+    QSize size = image.size();
 
     unsigned short x = m_XDim->text().toUShort(&ok);
     // Only reconstruct the middle section of data along the x axis
     subvolume[0] = 0 + x/4;
     subvolume[3] = x - x/4;
 
+    // This is how many slices we are going to reconstruct
     int ySlices = 3 * finalResolution->value();
-    // Try and center on the line best we can
-    subvolume[1] = line.p1().y() - (ySlices/2);
-    subvolume[4] = subvolume[1] + ySlices - 1;
+
+    // The top of our Reconstruction Volume
+    quint16 y_min = size.height() - line.p1().y();
+    // The bottom of our Reconstruction Volume
+    quint16 y_max = y_min + ySlices - 1;
+
+    if (y_max >= size.height())
+    {
+        y_min = y_min - (y_max - size.height());
+        y_max = size.height() - 1;
+    }
+
+    subvolume[1] = y_min;
+    subvolume[4] = y_max;
 
     path = QDir::toNativeSeparators(tempDirPath->text());
     QString tempFolder = QDir::tempPath() + QDir::separator() + QString("EIMTomo");
