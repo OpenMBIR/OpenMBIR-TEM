@@ -124,7 +124,7 @@ class TomoArray
      */
     static Pointer New(size_t* dims, const std::string &name)
     {
-      assert(SIZE < 4);
+      //assert(SIZE < 4);
 
       Pointer sharedPtr(new TomoArray<T, Ptr, SIZE>(dims));
       sharedPtr->setName(name);
