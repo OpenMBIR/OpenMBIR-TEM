@@ -467,8 +467,9 @@ void TomoGui::setupGui()
 
   advancedParametersGroupBox->setChecked(false);
 
- // ySingleSliceValue_Label->hide();
- // ySingleSliceValue->hide();
+  ySingleSliceValue_Label->hide();
+  ySingleSliceValue->hide();
+
 
 
 }
