@@ -470,6 +470,7 @@ void TomoGui::setupGui()
   ySingleSliceValue_Label->hide();
   ySingleSliceValue->hide();
 
+
 }
 
 // -----------------------------------------------------------------------------
@@ -680,8 +681,32 @@ void TomoGui::on_m_GoBtn_clicked()
 #else
   QSettings prefs(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
 #endif
-    writeSettings(prefs);
-    writeWindowSettings(prefs);
+  writeSettings(prefs);
+  writeWindowSettings(prefs);
+
+// Sanity Check the Geometry
+
+  {
+// Sanity Check the Input dimensions
+    QImage image = m_MRCDisplayWidget->graphicsView()->getBaseImage();
+    QSize size = image.size();
+
+    bool ok = false;
+    quint16 x_min = xMin->text().toUShort(&ok);
+    quint16 x_max = xMax->text().toUShort(&ok);
+    quint16 y_min = yMin->text().toUShort(&ok);
+    quint16 y_max = yMax->text().toUShort(&ok);
+
+    if(x_max <= x_min || x_max >= size.width())
+    {
+      return;
+    }
+    if(y_max <= y_min || y_max >= size.height())
+    {
+      return;
+    }
+
+  }
 
 
   // Create a Worker Thread that will run the Reconstruction
@@ -806,22 +831,17 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
     // Sanity Check the Input dimensions
     QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
     QSize size = image.size();
-    quint16 value = xMin->text().toUShort(&ok);
-    if (value < 0) { xMin->setText("0");}
 
-    value = yMin->text().toUShort(&ok);
-    if (value < 0) { yMin->setText("0"); }
 
-    value = xMax->text().toUShort(&ok);
-    if (value >= size.width()) { xMax->setText(QString::number(size.width()-1)); }
+    quint16 x_min = xMin->text().toUShort(&ok);
+    quint16 x_max = xMax->text().toUShort(&ok);
+    quint16 y_min = yMin->text().toUShort(&ok);
+    quint16 y_max = yMax->text().toUShort(&ok);
 
-    value =  yMax->text().toUShort(&ok);
-    if (value >= size.height()) { yMax->setText(QString::number(size.height()-1)); }
-
-    subvolume[0] = xMin->text().toUShort(&ok);
-    subvolume[3] = xMax->text().toUShort(&ok);
-    subvolume[4] = size.height() - yMin->text().toUShort(&ok);
-    subvolume[1] = size.height() - yMax->text().toUShort(&ok);
+    subvolume[0] = x_min;
+    subvolume[3] = x_max;
+    subvolume[4] = size.height() - y_min - 1;
+    subvolume[1] = size.height() - y_max - 1;
     m_MultiResSOC->setSubvolume(subvolume);
   }
   else
@@ -1432,6 +1452,19 @@ void TomoGui::readMRCHeader(QString filepath)
   yMin->setText("0");
   xMax->setText(QString::number(header.nx-1));
   yMax->setText(QString::number(header.ny-1));
+
+  {
+    QIntValidator* val = new QIntValidator(0, header.nx-1, this);
+    xMin->setValidator(val);
+    xMax->setValidator(val);
+  }
+
+  {
+    QIntValidator* val = new QIntValidator(0, header.ny-1, this);
+    yMin->setValidator(val);
+    yMax->setValidator(val);
+  }
+
 
   // If we have the FEI headers get that information
   if(header.feiHeaders != NULL)
