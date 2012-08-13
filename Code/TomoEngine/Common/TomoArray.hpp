@@ -147,6 +147,25 @@ class TomoArray
       }
     }
 
+    inline size_t numElements()
+    {
+      size_t count = 1;
+      for(int i = 0; i < SIZE; ++i)
+      {
+        count += m_Dims[i];
+      }
+      return count;
+    }
+
+    inline void initializeWithZeros()
+    {
+      size_t count = 1;
+      for(int i = 0; i < SIZE; ++i)
+      {
+        count += m_Dims[i];
+      }
+      ::memset(d, 0, count * sizeof(T));
+    }
 
     /* ******************* These are 3D array methods ********************* */
     inline size_t calcIndex(size_t z, size_t y, size_t x)
