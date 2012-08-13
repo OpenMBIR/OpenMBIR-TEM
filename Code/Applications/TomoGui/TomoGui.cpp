@@ -847,8 +847,8 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   else
   {
     QLineF line = m_MRCDisplayWidget->graphicsView()->getXZPlane();
-    std::cout << "p1: " << line.p1().x() << ", " << line.p1().y()
-     << "   p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
+   // std::cout << "p1: " << line.p1().x() << ", " << line.p1().y()
+   //  << "   p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
 
     QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
     QSize size = image.size();

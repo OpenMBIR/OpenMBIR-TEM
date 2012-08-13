@@ -86,7 +86,7 @@ MultiResolutionSOC::~MultiResolutionSOC()
 
 
 #define PRINT_VAR(out, inputs, var)\
-	out << #var << ": " << inputs->var << std::endl;
+    out << #var << ": " << inputs->var << std::endl;
 
 // -----------------------------------------------------------------------------
 //
@@ -94,7 +94,7 @@ MultiResolutionSOC::~MultiResolutionSOC()
 void MultiResolutionSOC::printInputs(TomoInputsPtr inputs, std::ostream &out)
 {
 #if 1
-	out << "------------------ TomoInputs Begin ------------------" << std::endl;
+    out << "------------------ TomoInputs Begin ------------------" << std::endl;
   PRINT_VAR(out, inputs, NumIter);
   PRINT_VAR(out, inputs, NumOuterIter);
   PRINT_VAR(out, inputs, SigmaX);
@@ -135,7 +135,7 @@ void MultiResolutionSOC::printInputs(TomoInputsPtr inputs, std::ostream &out)
   PRINT_VAR(out, inputs, offsetsOutputFile);
   PRINT_VAR(out, inputs, varianceOutputFile);
 
-	out << "------------------ TomoInputs End ------------------" << std::endl;
+    out << "------------------ TomoInputs End ------------------" << std::endl;
 #endif
 }
 
@@ -192,8 +192,8 @@ void MultiResolutionSOC::execute()
     /* ******* this is bad. Remove this for production work ****** */
     inputs->extendObject = getExtendObject();
 
-	  ss<<"Extend Object Flag"<<inputs->extendObject<<std::endl;
-	  pipelineProgressMessage(ss.str());
+      ss<<"Extend Object Flag"<<inputs->extendObject<<std::endl;
+      pipelineProgressMessage(ss.str());
 
     /* Get our input files from the last resolution iteration */
     inputs->gainsInputFile = prevInputs->gainsOutputFile;
@@ -232,7 +232,7 @@ void MultiResolutionSOC::execute()
       return;
     }
 
-	  /***************TO DO - Fix This*********************/
+      /***************TO DO - Fix This*********************/
     if(m_NumberResolutions - 1 == i)
     {
       ss.str("");
@@ -267,7 +267,7 @@ void MultiResolutionSOC::execute()
     }
     else
     {
-		inputs->NumIter = 1;//getInnerIterations();
+        inputs->NumIter = 1;//getInnerIterations();
     }
     inputs->p = getMRFShapeParameter()+1; //NEW: Now we are going to compute p = Diffuseness(input) + 1
     inputs->StopThreshold = getStopThreshold();
@@ -279,12 +279,12 @@ void MultiResolutionSOC::execute()
     inputs->SigmaX =pow(2,(getNumberResolutions()-1-i)*(1-3/inputs->p)) * getSigmaX();
     ss.str("");
     ss << "SigmaX=" << inputs->SigmaX;
-	  pipelineProgressMessage(ss.str());
-	  if (i == 0)
-	  {
-	    inputs->defaultInitialRecon = getInitialReconstructionValue();
+      pipelineProgressMessage(ss.str());
+      if (i == 0)
+      {
+        inputs->defaultInitialRecon = getInitialReconstructionValue();
       inputs->defaultVariance = getDefaultVariance();
-	  }
+      }
     inputs->delta_xy = powf(2.0f, getNumberResolutions()-i-1)*m_FinalResolution;
     inputs->delta_xz = powf(2.0f, getNumberResolutions()-i-1)*m_FinalResolution;
 
@@ -331,7 +331,7 @@ void MultiResolutionSOC::execute()
     SOCEngine::InitializeScaleOffsetParams(nuisanceParams);
     SOCEngine::InitializeSinogram(bf_sinogram);
 
-	//Calculate approximate memory required
+    //Calculate approximate memory required
     memCalculate(inputs, bf_inputs);
 
     //Create an Engine and initialize all the structures
@@ -374,16 +374,16 @@ void MultiResolutionSOC::memCalculate(TomoInputsPtr inputs, TomoInputsPtr bf_inp
     SinoNt = inputs->yEnd - inputs->yStart+1;
     SinoNtheta = inputs->zEnd - inputs->zStart+1;
 
-	AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
+    AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
     SOCEngine::InitializeAdvancedParams(advancedParams);
 
-	//std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
+    //std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
 
 
     if(inputs->extendObject == 1)
     {
         GeomNx = (SinoNr/m_FinalResolution)*4;//TODO:Need to access X_Stretch and
-		//m_Sinogram->cosine and
+        //m_Sinogram->cosine and
 
 //      float LengthZ = m_SampleThickness*advancedParams->Z_STRETCH;
 //		float temp = advancedParams->X_SHRINK_FACTOR * ((SinoN_r * sinogram->delta_r) / cos(maxTilt * M_PI / 180)) + input->LengthZ * tan(max * M_PI / 180);
@@ -392,13 +392,13 @@ void MultiResolutionSOC::memCalculate(TomoInputsPtr inputs, TomoInputsPtr bf_inp
 //		GeomN_x = floor(GeomLengthX / inputs->delta_xz);
     }
     else
-	{
+    {
         GeomNx = SinoNr/m_FinalResolution;
     }
 
     GeomNy = SinoNt/m_FinalResolution;
     GeomNz = advancedParams->Z_STRETCH*(m_SampleThickness/(m_FinalResolution));// TODO: need to access Sinogram_deltar and z_stretch.
-	//This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm
+    //This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm
 
     float dataTypeMem = sizeof(Real_t);
     float ObjectMem = GeomNx*GeomNy*GeomNz*dataTypeMem;
