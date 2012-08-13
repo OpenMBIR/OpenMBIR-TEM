@@ -4,43 +4,14 @@
 
 *Display image with lowerleft as default and make the y go from 0 - ? from bottom to top 
 
-*Fix the smoothness and SigmaX calculation. SigmaX needs to be computed and multiplied by 1/smoothness internally. 
-
-*Code fails if the extension .bin is not given in OutputReconstructionFile  
-
-* When in single slice mode we need to FORCE the num resolutions to 1
-
-* The check box for default offset is being placed near Stop threshold incorrectly
-
-* Move : Target Gain, Stop Threshold, Outer, Inner Iterations, Default OFfset, Default variance, Default Initial Recon value, Num Resolutions to a Advanced Params Tab
-
-
-
-* Do we allow the user to set the SigmaX or do we always calculate it 
-internally.
-
 * Streamline progress feedback to the GUI
 * Add more "Cancel" checks in the code
 * Turn doubles to floats to save memory. 
-* Add an option to switch off #define for Joint_Estimation and #Noise estimation
+ 
 * Need to enable a quick load option to continue the reconstruction for a few 
 more iterations. This will need reading the final rec, offset, gain and var.
 
 * Allow user to define the XZ Plane that is shown during the reconstruction
-
-I just noticed. In the data load section I think we should rename MRC File -> HAADF Data File.
-
-Also Inner Iterations, Outer Iterations, Default Offset , Default Variance need to be
-moved to a advanced parameters tab. After that previous session we demoed I think only
-the Full Reconstruction , SigmaX (to be renamed later), Final Resolution multiple 
-are really what a typical user needs to set. The rest all we should have in advanced 
-parameters. 
-
-
-Would it be possible to put a zoom capability on the single slice reconstruction?
-I've been messing around with it, and when I change the final resolution to make 
-it run faster it makes the output slice smaller.  Is there an existing way to change
-the image size without running a final resolution of 1?
 
 
 *Enable data sets in which max tilt is 90 degrees - there is a dividide by cos(max angle) which will break if this occurs 
@@ -57,3 +28,14 @@ to be a proper multiple of xz size at all resolutions - Done. Venkat 6/14/2012
 * Do more tests of the automatic SigmaX calculation based on TargetGain - is it robust? - Done. Venkat 6/14/2012
 * Make a command line version of the code so that user can run multiple instances using script files if needed. - Done. Venkat 6/24/2012
 * The shape parameter can only take values from 1 to 2. Right now it goes right to zero.
+*Fix the smoothness and SigmaX calculation. SigmaX needs to be computed and multiplied by 1/smoothness internally. - Done. Venkat 
+*Code fails if the extension .bin is not given in OutputReconstructionFile  - Done Mike?
+* When in single slice mode we need to FORCE the num resolutions to 1 - Seems to be done by Mike. 
+* Move : Target Gain, Stop Threshold, Outer, Inner Iterations, Default OFfset, Default variance, Default Initial Recon value, Num Resolutions to a Advanced Params Tab - done by Mike. 
+* The check box for default offset is being placed near Stop threshold incorrectly - fixed. Venkat
+* Do we allow the user to set the SigmaX or do we always calculate it 
+internally.- taken care of with smoothness. Venkat
+* Add an option to switch off #define for Joint_Estimation and #Noise estimation - done by Mike.
+I just noticed. In the data load section I think we should rename MRC File -> HAADF Data File. - Done
+
+Would it be possible to put a zoom capability on the single slice reconstruction? - Done. Mike.
