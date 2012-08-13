@@ -840,8 +840,8 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
 
     subvolume[0] = x_min;
     subvolume[3] = x_max;
-    subvolume[4] = size.height() - y_min - 1;
-    subvolume[1] = size.height() - y_max - 1;
+    subvolume[4] = y_min;
+    subvolume[1] = y_max;
     m_MultiResSOC->setSubvolume(subvolume);
   }
   else
@@ -1603,6 +1603,9 @@ void TomoGui::updateProgressAndMessage(const std::string &msg, int progress)
 // -----------------------------------------------------------------------------
 void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
 {
+  QImage image = m_MRCDisplayWidget->graphicsView()->getBaseImage();
+  QSize size = image.size();
+
   unsigned int xmin, ymin;
   reconVOI->getUpperLeft(xmin, ymin);
 
@@ -1612,8 +1615,8 @@ void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
   xMin->setText(QString::number(xmin));
   xMax->setText(QString::number(xmax));
 
-  yMin->setText(QString::number(ymin));
-  yMax->setText(QString::number(ymax));
+  yMin->setText(QString::number(size.height() - ymax));
+  yMax->setText(QString::number(size.height() - ymin));
 
   connect (reconVOI, SIGNAL(fireReconstructionVOIAboutToDelete(ReconstructionArea*)),
            this, SLOT(reconstructionVOIDeleted(ReconstructionArea*)), Qt::DirectConnection);
@@ -1641,20 +1644,23 @@ void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::reconstructionVOIUpdated(ReconstructionArea* recon)
+void TomoGui::reconstructionVOIUpdated(ReconstructionArea* reconVOI)
 {
 
+  QImage image = m_MRCDisplayWidget->graphicsView()->getBaseImage();
+  QSize size = image.size();
+
   unsigned int xmin, ymin;
-  recon->getUpperLeft(xmin, ymin);
+  reconVOI->getUpperLeft(xmin, ymin);
 
   unsigned int xmax, ymax;
-  recon->getLowerRight(xmax, ymax);
+  reconVOI->getLowerRight(xmax, ymax);
 
   xMin->setText(QString::number(xmin));
   xMax->setText(QString::number(xmax));
 
-  yMin->setText(QString::number(ymin));
-  yMax->setText(QString::number(ymax));
+  yMin->setText(QString::number(size.height() - ymax));
+  yMax->setText(QString::number(size.height() - ymin));
 
 }
 
