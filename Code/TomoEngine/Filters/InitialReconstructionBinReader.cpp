@@ -109,6 +109,8 @@ void InitialReconstructionBinReader::initializeData()
     uint16_t xEnd = geometry->N_x / 2;
     uint16_t zEnd = geometry->N_z / 2;
 
+    geometry->Object->initializeWithZeros();
+
     for (uint16_t y = 0; y < yEnd; y++)
     {
       for (uint16_t x = 0; x < xEnd; x++)
