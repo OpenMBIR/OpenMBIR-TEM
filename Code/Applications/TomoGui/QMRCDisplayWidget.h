@@ -74,7 +74,7 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
 
     MRCGraphicsView* graphicsView();
     QImage currentImage();
-    int currentCorner();
+  //  int currentCorner();
 
     void loadMRCFile(QString mrcFilePath);
 
@@ -110,7 +110,7 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     void z600_triggered();
     void on_fitToWindow_clicked();
 
-    void on_originCB_currentIndexChanged(int i);
+//    void on_originCB_currentIndexChanged(int i);
 
     void on_currentTiltIndex_valueChanged(int i);
 
@@ -126,7 +126,7 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     QList<QWidget*>       m_ImageWidgets;
     QList<QWidget*>       m_MovieWidgets;
 
-    int                   m_CurrentCorner;
+ //   int                   m_CurrentCorner;
     QImage                m_CurrentImage;
     QString               m_CurrentMRCFilePath;
     QString               m_OpenDialogLastDirectory;

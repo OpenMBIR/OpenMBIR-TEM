@@ -63,8 +63,7 @@
 // -----------------------------------------------------------------------------
 QMRCDisplayWidget::QMRCDisplayWidget(QWidget *parent) :
 QWidget(parent),
-m_StopAnimation(true),
-m_CurrentCorner(0)
+m_StopAnimation(true)
 {
   m_OpenDialogLastDirectory = QDir::homePath();
   setupUi(this);
@@ -101,10 +100,10 @@ QImage QMRCDisplayWidget::currentImage()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int QMRCDisplayWidget::currentCorner()
-{
-  return m_CurrentCorner;
-}
+//int QMRCDisplayWidget::currentCorner()
+//{
+//  return m_CurrentCorner;
+//}
 
 
 // -----------------------------------------------------------------------------
@@ -173,7 +172,7 @@ void QMRCDisplayWidget::setupGui()
   connect(zoomIn, SIGNAL(clicked()), m_GraphicsView, SLOT(zoomIn()), Qt::QueuedConnection);
   connect(zoomOut, SIGNAL(clicked()), m_GraphicsView, SLOT(zoomOut()), Qt::QueuedConnection);
 
-  m_ImageWidgets << zoomButton << zoomIn << zoomOut << fitToWindow << originCB;
+  m_ImageWidgets << zoomButton << zoomIn << zoomOut << fitToWindow;
 
   m_MovieWidgets << indexLabel << currentTiltIndex << skipEnd << skipStart << playBtn;
   setImageWidgetsEnabled(false);
@@ -265,7 +264,7 @@ void QMRCDisplayWidget::on_currentTiltIndex_valueChanged(int i)
   loadMRCTiltImage(m_CurrentMRCFilePath, i);
   // Be sure to properly orient the image which will in turn load the image into
   // the graphics scene
-  on_originCB_currentIndexChanged(originCB->currentIndex());
+//  on_originCB_currentIndexChanged(originCB->currentIndex());
 }
 
 
@@ -363,7 +362,6 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
   { header.nx - 1, header.ny - 1, tiltIndex };
 
   err = reader->read(mrcFilePath.toStdString(), voxelMin, voxelMax);
-  m_CurrentCorner = 0; // Reset the corner
 
   if(err >= 0)
   {
@@ -383,14 +381,18 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
 
   FREE_FEI_HEADERS( header.feiHeaders)
 
-  m_GraphicsView->loadBaseImageFile(image);
+  // put the origin in the lower left corner
+  m_CurrentImage = image.mirrored(false, true);
 
-  m_CurrentImage = image;
+  // This will display the image in the graphics scene
+  m_GraphicsView->loadBaseImageFile(m_CurrentImage);
+
+  // Calculate the approx memory usage
+  emit memoryCalculationNeedsUpdated();
+
   setImageWidgetsEnabled(true);
   showWidgets(true, m_MovieWidgets);
 }
-
-
 
 // -----------------------------------------------------------------------------
 //
@@ -677,14 +679,15 @@ void QMRCDisplayWidget::drawOrigin(QImage image)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void QMRCDisplayWidget::fireOriginCB_Changed()
-{
-  on_originCB_currentIndexChanged(originCB->currentIndex());
-}
+//void QMRCDisplayWidget::fireOriginCB_Changed()
+//{
+//  on_originCB_currentIndexChanged(originCB->currentIndex());
+//}
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+#if 0
 void QMRCDisplayWidget::on_originCB_currentIndexChanged(int corner)
 {
 
@@ -722,6 +725,7 @@ void QMRCDisplayWidget::on_originCB_currentIndexChanged(int corner)
   // This will display the image in the graphics scene
   m_GraphicsView->loadBaseImageFile(m_CurrentImage);
 }
+#endif
 
 ///getColorCorrespondingToValue ////////////////////////////////////////////////
 //

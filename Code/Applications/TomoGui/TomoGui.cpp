@@ -1111,13 +1111,8 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
     readMRCHeader(filepath);
     // Now load up the first tilt from the file
     m_MRCDisplayWidget->loadMRCTiltImage(filepath, 0);
-    // Be sure to properly orient the image which will in turn load the image into
-    // the graphics scene
-    m_MRCDisplayWidget->fireOriginCB_Changed();
 
     m_GainsFile = ""; // We are reading a new .mrc file so we probably need a new Gains Offsets File
-
-
 
     setWindowTitle(filepath);
     this->setWindowFilePath(filepath);

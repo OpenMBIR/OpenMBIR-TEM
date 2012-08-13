@@ -197,52 +197,6 @@
       </spacer>
      </item>
      <item>
-      <widget class="QComboBox" name="originCB">
-       <property name="toolTip">
-        <string>Set the orientation of the image</string>
-       </property>
-       <property name="currentIndex">
-        <number>3</number>
-       </property>
-       <item>
-        <property name="text">
-         <string>Upper Left</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Upper Right</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Lower Right</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Lower Left</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_7">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>12</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
       <widget class="QLabel" name="indexLabel">
        <property name="font">
         <font>
