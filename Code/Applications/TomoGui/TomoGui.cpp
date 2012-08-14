@@ -80,7 +80,7 @@
 #include "LayersDockWidget.h"
 #include "GainsOffsetsTableModel.h"
 #include "ReconstructionArea.h"
-
+#include "MRCInfoWidget.h"
 
 
 
@@ -138,6 +138,7 @@ m_MultiResSOC(NULL),
    m_OpenDialogLastDirectory = QDir::homePath();
   setupUi(this);
   setupGui();
+
 
 
 #if defined (Q_OS_MAC)
@@ -470,7 +471,8 @@ void TomoGui::setupGui()
  // ySingleSliceValue_Label->hide();
  // ySingleSliceValue->hide();
 
-
+  m_MRCInfoWidget = new MRCInfoWidget(this);
+  m_MRCInfoWidget->hide();
 }
 
 // -----------------------------------------------------------------------------
@@ -825,7 +827,7 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
 
   std::vector<uint16_t> subvolume(6);
   subvolume[2] = 0;
-  subvolume[5] = m_nTilts->text().toUShort(&ok) - 1;
+  subvolume[5] = m_nTilts - 1;
   if (fullReconstruction == true)
   {
     // Sanity Check the Input dimensions
@@ -853,7 +855,7 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
     QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
     QSize size = image.size();
 
-    unsigned short x = m_XDim->text().toUShort(&ok);
+    unsigned short x = m_XDim;
     // Only reconstruct the middle section of data along the x axis
     subvolume[0] = 0 + x/4;
     subvolume[3] = x - x/4;
@@ -1450,6 +1452,9 @@ void TomoGui::readMRCHeader(QString filepath)
   }
   int tiltIndex = 0;
   // Transfer the meta data from the MRC Header to the GUI
+  m_XDim = header.nx;
+  m_nTilts = header.nz;
+  /*
   m_XDim->setText(QString::number(header.nx));
   m_YDim->setText(QString::number(header.ny));
   m_nTilts->setText(QString::number(header.nz));
@@ -1462,7 +1467,7 @@ void TomoGui::readMRCHeader(QString filepath)
   m_XOrigin->setText(QString::number(header.xorg));
   m_YOrigin->setText(QString::number(header.yorg));
   m_ZOrigin->setText(QString::number(header.zorg));
-
+*/
   xMin->setText("0");
   yMin->setText("0");
   xMax->setText(QString::number(header.nx-1));
@@ -1485,6 +1490,7 @@ void TomoGui::readMRCHeader(QString filepath)
   if(header.feiHeaders != NULL)
   {
     FEIHeader fei = header.feiHeaders[tiltIndex];
+    /*
     a_tilt->setText(QString::number(fei.a_tilt));
     b_tilt->setText(QString::number(fei.b_tilt));
     x_stage->setText(QString::number(fei.x_stage));
@@ -1499,6 +1505,7 @@ void TomoGui::readMRCHeader(QString filepath)
     pixelsize->setText(QString::number(fei.pixelsize));
     magnification->setText(QString::number(fei.magnification));
     voltage->setText(QString::number(fei.voltage));
+    */
     QVector<int> indices(header.nz);
     QVector<float> a_tilts(header.nz);
     QVector<float> b_tilts(header.nz);
@@ -1736,7 +1743,7 @@ void TomoGui::memCalculate()
 
   float SinoN_r = xMax->text().toInt(&ok) - xMin->text().toInt(&ok) + 1;
   float SinoN_t = yMax->text().toInt(&ok) - yMin->text().toInt(&ok) + 1;
-  float SinoNtheta = m_nTilts->text().toInt(&ok) - 0 + 1;
+  float SinoNtheta = m_nTilts - 0 + 1;
 
   float sample_thickness = sampleThickness->text().toFloat(&ok);
   int final_resolution = finalResolution->value();
@@ -1807,3 +1814,11 @@ void TomoGui::on_actionSaveCanvas_triggered()
 }
 
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_actionMRC_Info_triggered()
+{
+  m_MRCInfoWidget->setInfo(inputMRCFilePath->text());
+  m_MRCInfoWidget->show();
+}
