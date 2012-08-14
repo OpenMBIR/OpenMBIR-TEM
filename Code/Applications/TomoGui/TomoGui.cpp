@@ -1603,17 +1603,7 @@ void TomoGui::updateProgressAndMessage(const std::string &msg, int progress)
 // -----------------------------------------------------------------------------
 void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
 {
-  unsigned int xmin, ymin;
-  reconVOI->getUpperLeft(xmin, ymin);
-
-  unsigned int xmax, ymax;
-  reconVOI->getLowerRight(xmax, ymax);
-
-  xMin->setText(QString::number(xmin));
-  xMax->setText(QString::number(xmax));
-
-  yMin->setText(QString::number(ymin));
-  yMax->setText(QString::number(ymax));
+  reconstructionVOIUpdated(reconVOI);
 
   connect (reconVOI, SIGNAL(fireReconstructionVOIAboutToDelete(ReconstructionArea*)),
            this, SLOT(reconstructionVOIDeleted(ReconstructionArea*)), Qt::DirectConnection);
@@ -1644,6 +1634,10 @@ void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
 void TomoGui::reconstructionVOIUpdated(ReconstructionArea* recon)
 {
 
+  QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
+  QSize size = image.size();
+
+
   unsigned int xmin, ymin;
   recon->getUpperLeft(xmin, ymin);
 
@@ -1653,8 +1647,8 @@ void TomoGui::reconstructionVOIUpdated(ReconstructionArea* recon)
   xMin->setText(QString::number(xmin));
   xMax->setText(QString::number(xmax));
 
-  yMin->setText(QString::number(ymin));
-  yMax->setText(QString::number(ymax));
+  yMin->setText(QString::number(size.height() - ymax));
+  yMax->setText(QString::number(size.height() - ymin));
 
 }
 
