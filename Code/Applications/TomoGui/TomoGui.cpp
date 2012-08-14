@@ -35,6 +35,7 @@
 #include <limits>
 #include <fstream>
 
+
 //-- Qt Includes
 #include <QtCore/QPluginLoader>
 #include <QtCore/QFileInfo>
@@ -529,6 +530,23 @@ bool TomoGui::sanityCheckOutputDirectory(QLineEdit* le, QString msgTitle)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+bool TomoGui::checkTiltAngles(QVector<float> &tilts)
+{
+  float sum = 0.0;
+  for(int i = 0; i < tilts.count(); ++i)
+  {
+    sum = sum + abs(tilts[i]);
+  }
+  if (sum > 1.0)
+  {
+    return true;
+  }
+  return false;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void TomoGui::on_m_SingleSliceReconstructionBtn_clicked()
 {
   // First make sure we are not already running a reconstruction
@@ -709,7 +727,24 @@ void TomoGui::on_m_GoBtn_clicked()
     }
 
   }
-
+  GainsOffsetsTableModel* tableModel = qobject_cast<GainsOffsetsTableModel*>(gainsOffsetsTableView->model());
+  bool goodTilts = false;
+  // Sanity Check the Tilt Selection
+  if (tiltSelection->currentIndex() == 0)
+  {
+    QVector<float> tilts = tableModel->getATilts();
+    goodTilts = checkTiltAngles(tilts);
+  }
+  else
+  {
+    QVector<float> tilts = tableModel->getBTilts();
+    goodTilts = checkTiltAngles(tilts);
+  }
+  if (false == goodTilts)
+  {
+    QMessageBox::critical(this, tr("Tilt Selection Error"), tr("The Tilt Selection does not seem to be correct. Please check to make sure you have selected the correct tilts."), QMessageBox::Ok);
+    return;
+  }
 
   // Create a Worker Thread that will run the Reconstruction
   if(m_WorkerThread != NULL)

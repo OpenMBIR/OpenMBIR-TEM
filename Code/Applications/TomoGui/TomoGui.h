@@ -235,6 +235,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     void displayDialogBox(QString title, QString text, QMessageBox::Icon icon);
 
+    bool checkTiltAngles(QVector<float> &tilts);
 
   signals:
 
