@@ -1680,17 +1680,17 @@ void TomoGui::reconstructionVOIUpdated(ReconstructionArea* recon)
   QSize size = image.size();
 
 
-  unsigned int xmin, ymin;
+  int xmin, ymin;
   recon->getUpperLeft(xmin, ymin);
 
-  unsigned int xmax, ymax;
+  int xmax, ymax;
   recon->getLowerRight(xmax, ymax);
 
   xMin->setText(QString::number(xmin));
-  xMax->setText(QString::number(xmax));
+  xMax->setText(QString::number(xmax - 1));
 
   yMin->setText(QString::number(size.height() - ymax));
-  yMax->setText(QString::number(size.height() - ymin));
+  yMax->setText(QString::number(size.height() - ymin - 1));
 
 }
 
