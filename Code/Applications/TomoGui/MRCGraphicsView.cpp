@@ -306,6 +306,13 @@ void MRCGraphicsView::loadBaseImageFile(QImage image)
   emit fireBaseMRCFileLoaded();
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QGraphicsItem* MRCGraphicsView::getImageGraphicsItem()
+{
+  return m_ImageGraphicsItem;
+}
 
 // -----------------------------------------------------------------------------
 //
@@ -476,7 +483,8 @@ QLineF MRCGraphicsView::getXZPlane()
 // -----------------------------------------------------------------------------
 void MRCGraphicsView::createNewUserInitArea(const QRectF brect)
 {
-  ReconstructionArea* userInitArea = new ReconstructionArea( brect);
+
+  ReconstructionArea* userInitArea = new ReconstructionArea(brect, m_BaseImage.size());
   userInitArea->setGraphicsView(this);
   // Line Color
   userInitArea->setPen(QPen(QColor(225, 225, 225, UIA::Alpha)));

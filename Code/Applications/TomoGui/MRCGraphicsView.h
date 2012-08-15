@@ -116,6 +116,8 @@ class MRCGraphicsView : public QGraphicsView
 
     QLineF getXZPlane();
 
+    QGraphicsItem* getImageGraphicsItem();
+
   public slots:
     void zoomIn();
 
