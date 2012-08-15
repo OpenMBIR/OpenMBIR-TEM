@@ -255,8 +255,8 @@ namespace SOC {
         indexPtr = UInt32ArrayType::New(dims, "VoxelLineResponse_index");
         index = indexPtr->getPointer(0);
         count = c;
-        d0 = 0xABABABABABABABAB;
-        d1 = 0xCACACACACACACACA;
+        d0 = 0xABABABABABABABABull;
+        d1 = 0xCACACACACACACACAull;
       }
     private:
 

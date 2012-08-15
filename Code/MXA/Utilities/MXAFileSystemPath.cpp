@@ -33,6 +33,7 @@
 #else
 #define UNLINK ::unlink
 #include <dirent.h>
+#include <limits.h>
 #define MXA_PATH_MAX PATH_MAX
 #define MXA_GET_CWD ::getcwd
 #endif
