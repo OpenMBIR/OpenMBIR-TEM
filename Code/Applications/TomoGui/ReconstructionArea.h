@@ -42,8 +42,7 @@ class MRCGraphicsView;
 
 class ReconstructionArea : public QObject, public QGraphicsPolygonItem
 {
-  Q_OBJECT
-    ;
+  Q_OBJECT;
 
   public:
     enum
@@ -63,7 +62,7 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
       BOTTOM_CTRL_POINT
     };
 
-    ReconstructionArea(const QPolygonF &polygon, QGraphicsItem *parent = 0);
+    ReconstructionArea(const QPolygonF &polygon, QSize imageSize, QGraphicsItem *parent = 0);
     virtual ~ReconstructionArea();
 
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
@@ -80,10 +79,10 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
     }
 
     //  void setUpperLeft(unsigned int x, unsigned int y);
-    void getUpperLeft(unsigned int &x, unsigned int &y);
+    void getUpperLeft (int &x, int &y);
 
     //  void setLowerRight(unsigned int x, unsigned int y);
-    void getLowerRight(unsigned int &x, unsigned int &y);
+    void getLowerRight (int &x, int &y);
     void setLineWidth(qreal w);
     qreal getLineWidth();
     void setVisible(bool visible);
@@ -126,6 +125,7 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
     qreal m_LineWidth;
     bool m_Visible;
     MRCGraphicsView* m_GView;
+    QSize            m_ImageSize;
 
 };
 

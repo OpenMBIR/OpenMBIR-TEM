@@ -55,32 +55,33 @@ namespace UIA
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ReconstructionArea::ReconstructionArea(const QPolygonF &polygon,  QGraphicsItem *parent) :
+ReconstructionArea::ReconstructionArea(const QPolygonF &polygon, QSize imageSize, QGraphicsItem *parent) :
 QGraphicsPolygonItem(polygon, parent),
-m_GView(NULL)
+m_GView(NULL),
+m_ImageSize(imageSize)
 {
   setFlag(QGraphicsItem::ItemIsMovable, true);
-   setFlag(QGraphicsItem::ItemIsSelectable, true);
-   setFlag(QGraphicsItem::ItemIsFocusable, true);
+  setFlag(QGraphicsItem::ItemIsSelectable, true);
+  setFlag(QGraphicsItem::ItemIsFocusable, true);
   // setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
-   setAcceptHoverEvents(true);
-   m_isResizing = false;
-   m_CurrentResizeHandle = ReconstructionArea::NO_CTRL_POINT;
-   ctrlPointSize = CTRL_POINT_SIZE;
-   m_GrayLevel = 0 + (255/16 * 0);
+  setAcceptHoverEvents(true);
+  m_isResizing = false;
+  m_CurrentResizeHandle = ReconstructionArea::NO_CTRL_POINT;
+  ctrlPointSize = CTRL_POINT_SIZE;
+  m_GrayLevel = 0 + (255 / 16 * 0);
 
-   m_LineWidth = 1.0;
-   m_Visible = true;
+  m_LineWidth = 1.0;
+  m_Visible = true;
 
-   QPoint p = pos().toPoint();
-   QRect b = boundingRect().toAlignedRect();
-   m_UpperLeft[0] = b.x() + p.x();
-   m_UpperLeft[1] = b.y() + p.y();
-   m_LowerRight[0] = b.x() + p.x() + b.width();
-   m_LowerRight[1] = b.y() + p.y() + b.height();
+  QPoint p = pos().toPoint();
+  QRect b = boundingRect().toAlignedRect();
+  m_UpperLeft[0] = b.x() + p.x();
+  m_UpperLeft[1] = b.y() + p.y();
+  m_LowerRight[0] = b.x() + p.x() + b.width();
+  m_LowerRight[1] = b.y() + p.y() + b.height();
 
-   QStringList colorNames = QColor::colorNames();
-   setBrush(QBrush(QColor(colorNames[21])));
+  QStringList colorNames = QColor::colorNames();
+  setBrush(QBrush(QColor(colorNames[21])));
 }
 
 // -----------------------------------------------------------------------------
@@ -101,10 +102,11 @@ void ReconstructionArea::setControlPointMultiplier(float f)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionArea::getUpperLeft(unsigned int &x, unsigned int &y)
+void ReconstructionArea::getUpperLeft( int &x, int &y)
 {
-  QPoint p = pos().toPoint();
+  QPointF p = pos();//.toPoint();
   QRect b = boundingRect().toAlignedRect();
+
   m_UpperLeft[0] = b.x() + p.x();
   m_UpperLeft[1] = b.y() + p.y();
 
@@ -115,10 +117,11 @@ void ReconstructionArea::getUpperLeft(unsigned int &x, unsigned int &y)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionArea::getLowerRight(unsigned int &x, unsigned int &y)
+void ReconstructionArea::getLowerRight( int &x, int &y)
 {
-  QPoint p = pos().toPoint();
+  QPointF p = pos();//.toPoint();
   QRect b = boundingRect().toAlignedRect();
+
   m_LowerRight[0] = b.x() + p.x() + b.width();
   m_LowerRight[1] = b.y() + p.y() + b.height();
 
@@ -377,8 +380,82 @@ void ReconstructionArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     {
       newRect.setHeight(h + deltaY);
     }
+
+  //  std::cout << "A-newRect:" << newRect.x() << ", " << newRect.y() << "   " << newRect.width() << " x " << newRect.height() << std::endl;
+
+    QRectF point = mapRectToItem(m_GView->getImageGraphicsItem(), newRect);
+  //  QRect pointInt(point.x(), point.y(), point.width(), point.height());
+
+    // This section sanity checks the rubber band box to make sure it stays in the
+    // boundaries of the underlying image
+    // Check the x,y corner first and adjust if necessary
+    if (point.x() < 0)
+    {
+      newRect.setX(newRect.x() - point.x());
+      point.setX(0.0);
+    }
+    if (point.y() < 0)
+    {
+      newRect.setY(newRect.y() - point.y() );
+      point.setY(0.0);
+    }
+  //  std::cout << "point:" << point.x() << ", " << point.y() << "   " << point.width() << " x " << point.height() << std::endl;
+
+    // Now check the width and Height of the image
+    //point = mapRectToItem(m_GView->getImageGraphicsItem(), newRect);
+
+    qreal delta = m_ImageSize.width() - (point.x() + point.width());
+    if (delta < 0.0 )
+    {
+  //    std::cout << "delta X:" << delta << std::endl;
+      newRect.setWidth(newRect.width() + delta);
+    }
+    delta = m_ImageSize.height() - (point.y() + point.height());
+    if (delta < 0.0 )
+    {
+  //    std::cout << "delta Y:" << delta << std::endl;
+      newRect.setHeight(newRect.height() + delta);
+    }
+
+  //  std::cout << "B-newRect:" << newRect.x() << ", " << newRect.y() << "   " << newRect.width() << " x " << newRect.height() << std::endl;
+
+
     prepareGeometryChange();
     setPolygon(QPolygonF(newRect));
+
+
+
+#if 0
+    {
+      int xmin, ymin;
+      getUpperLeft(xmin, ymin);
+      int xmax, ymax;
+      getLowerRight(xmax, ymax);
+      std::cout << "Corners:" << xmin << ", " << ymin << "   " << xmax << ", " << ymax << std::endl;
+
+      if (xmin < 0)
+      {
+
+      }
+    }
+#endif
+
+
+
+#if 0
+    QPoint p = pos().toPoint();
+    QRect b = boundingRect().toAlignedRect();
+    m_UpperLeft[0] = b.x() + p.x();
+    m_UpperLeft[1] = b.y() + p.y();
+    m_LowerRight[0] = b.x() + p.x() + b.width();
+    m_LowerRight[1] = b.y() + p.y() + b.height();
+
+    std::cout << "----------------------------------" << std::endl;
+    std::cout << "m_UpperLeft[0]: " << m_UpperLeft[0] << std::endl;
+    std::cout << "m_UpperLeft[1]: " << m_UpperLeft[1] << std::endl;
+    std::cout << "m_LowerRight[0]: " << m_LowerRight[0] << std::endl;
+    std::cout << "m_LowerRight[1]: " << m_LowerRight[1] << std::endl;
+#endif
   }
   else
   {
@@ -393,10 +470,10 @@ void ReconstructionArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 // -----------------------------------------------------------------------------
 void ReconstructionArea::setXMin(const QString &xMin)
 {
-  quint32 xmin = 0;
-  quint32 xmax = 0;
-  quint32 ymin = 0;
-  quint32 ymax = 0;
+  qint32 xmin = 0;
+  qint32 xmax = 0;
+  qint32 ymin = 0;
+  qint32 ymax = 0;
   getUpperLeft(xmin, ymin);
   getLowerRight(xmax, ymax);
 
@@ -410,10 +487,10 @@ void ReconstructionArea::setXMin(const QString &xMin)
 
 void ReconstructionArea::setYMin(const QString &yMin)
 {
-  quint32 xmin = 0;
-  quint32 xmax = 0;
-  quint32 ymin = 0;
-  quint32 ymax = 0;
+  qint32 xmin = 0;
+  qint32 xmax = 0;
+  qint32 ymin = 0;
+  qint32 ymax = 0;
   getUpperLeft(xmin, ymin);
   getLowerRight(xmax, ymax);
   bool ok = false;
@@ -424,10 +501,10 @@ void ReconstructionArea::setYMin(const QString &yMin)
 }
 void ReconstructionArea::setXMax(const QString &xMax)
 {
-  quint32 xmin = 0;
-  quint32 xmax = 0;
-  quint32 ymin = 0;
-  quint32 ymax = 0;
+  qint32 xmin = 0;
+  qint32 xmax = 0;
+  qint32 ymin = 0;
+  qint32 ymax = 0;
   getUpperLeft(xmin, ymin);
   getLowerRight(xmax, ymax);
   bool ok = false;
@@ -438,10 +515,10 @@ void ReconstructionArea::setXMax(const QString &xMax)
 }
 void ReconstructionArea::setYMax(const QString &yMax)
 {
-  quint32 xmin = 0;
-  quint32 xmax = 0;
-  quint32 ymin = 0;
-  quint32 ymax = 0;
+  qint32 xmin = 0;
+  qint32 xmax = 0;
+  qint32 ymin = 0;
+  qint32 ymax = 0;
   getUpperLeft(xmin, ymin);
   getLowerRight(xmax, ymax);
   bool ok = false;
