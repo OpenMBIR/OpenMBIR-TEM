@@ -82,10 +82,10 @@ void InitialReconstructionBinReader::initializeData()
   //number of voxels along each dimension as the output
 
   std::stringstream outPath;
-  outPath << input->tempDir << MXADir::Separator << "UpsampledObject.bin";
+  outPath << input->tempDir << MXADir::Separator << ScaleOffsetCorrection::UpsampledBinFile;
 
   FILE* Fp = fopen(input->initialReconFile.c_str(), "rb");
-  std::cout << "Reading Geom from File: " << input->initialReconFile << std::endl;
+  if (getVeryVerbose()) { std::cout << "Reading Geom from File: " << input->initialReconFile << std::endl;}
   if(NULL == Fp)
   {
     ss << "Error opening Input file '" << input->initialReconFile << "'";
@@ -104,7 +104,7 @@ void InitialReconstructionBinReader::initializeData()
   std::cout << input->InterpFlag << std::endl;
   if(1 == input->InterpFlag)
   {
-    std::cout << "Interpolating the initial input file by a factor of 2" << std::endl;
+    if (getVeryVerbose()) { std::cout << "Interpolating the initial input file by a factor of 2" << std::endl; }
     uint16_t yEnd = geometry->N_y / 2;
     uint16_t xEnd = geometry->N_x / 2;
     uint16_t zEnd = geometry->N_z / 2;
