@@ -68,6 +68,9 @@ class TomoEngine_EXPORT MRCWriter : public TomoFilter
     MXA_INSTANCE_STRING_PROPERTY(OutputFile)
     MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
     MXA_INSTANCE_PROPERTY(MRCHeader*, MRCHeader)
+    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, XDims)
+    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, YDims)
+    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, ZDims)
 
     void execute();
 

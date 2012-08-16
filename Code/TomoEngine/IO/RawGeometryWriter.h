@@ -55,6 +55,10 @@ class TomoEngine_EXPORT RawGeometryWriter : public TomoFilter
 
     MXA_INSTANCE_STRING_PROPERTY(FilePath)
 
+    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, XDims)
+    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, YDims)
+    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, ZDims)
+
     void execute();
 
 
