@@ -63,7 +63,9 @@
 // -----------------------------------------------------------------------------
 QMRCDisplayWidget::QMRCDisplayWidget(QWidget *parent) :
 QWidget(parent),
-m_StopAnimation(true)
+m_StopAnimation(true),
+m_ImageWidgetsEnabled(false),
+m_MovieWidgetsEnabled(false)
 {
   m_OpenDialogLastDirectory = QDir::homePath();
   setupUi(this);
@@ -188,11 +190,12 @@ void QMRCDisplayWidget::setupGui()
   connect(zoomIn, SIGNAL(clicked()), m_GraphicsView, SLOT(zoomIn()), Qt::QueuedConnection);
   connect(zoomOut, SIGNAL(clicked()), m_GraphicsView, SLOT(zoomOut()), Qt::QueuedConnection);
 
-  m_ImageWidgets << zoomButton << zoomIn << zoomOut << fitToWindow;
+  m_ImageWidgets << m_SaveCanvasBtn << zoomButton << zoomIn << zoomOut << fitToWindow;
 
-  m_MovieWidgets << indexLabel << currentTiltIndex << skipEnd << skipStart << playBtn;
-  setImageWidgetsEnabled(false);
-  showWidgets(false, m_MovieWidgets);
+  m_MovieWidgets << indexLabel << currentTiltIndex << skipEnd << skipStart << playBtn << stopBtn;
+
+  showWidgets(m_ImageWidgetsEnabled, m_ImageWidgets);
+  showWidgets(m_MovieWidgetsEnabled, m_MovieWidgets);
 }
 
 // -----------------------------------------------------------------------------
@@ -200,21 +203,24 @@ void QMRCDisplayWidget::setupGui()
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::on_playBtn_clicked()
 {
-  if (playBtn->text().compare(QString(">") ) == 0)
-  {
-    playBtn->setText(QString("||") );
- //   qint32 currentIndex = framesPerSecComboBox->currentIndex();
-    double rate = 500;
-    double update = 1.0/rate * 1000.0;
-    this->m_StopAnimation = false;
-    m_AnimationTimer->setSingleShot(true);
-    m_AnimationTimer->start(static_cast<int>(update) );
-  }
-  else
-  {
-    playBtn->setText(">");
-    this->m_StopAnimation = true;
-  }
+  playBtn->setEnabled(false);
+  stopBtn->setEnabled(true);
+  double rate = 500;
+  double update = 1.0 / rate * 1000.0;
+  this->m_StopAnimation = false;
+  m_AnimationTimer->setSingleShot(true);
+  m_AnimationTimer->start(static_cast<int>(update));
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void QMRCDisplayWidget::on_stopBtn_clicked()
+{
+  playBtn->setEnabled(true);
+  stopBtn->setEnabled(false);
+  this->m_StopAnimation = true;
 }
 
 // -----------------------------------------------------------------------------
@@ -239,11 +245,10 @@ void QMRCDisplayWidget::on_skipStart_clicked()
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::stepForwardFromTimer()
 {
-  //Stop Playing if the user clicked the play button again
+  //Stop Playing if the user clicked the stop button
   if (m_StopAnimation)
   {
     this->m_AnimationTimer->stop();
-    playBtn->setText(QString(">") );
     return;
   }
   QCoreApplication::processEvents();
@@ -287,6 +292,15 @@ void QMRCDisplayWidget::on_currentTiltIndex_valueChanged(int i)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+void QMRCDisplayWidget::on_m_SaveCanvasBtn_clicked()
+{
+  saveCanvas();
+}
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void QMRCDisplayWidget::saveCanvas()
 {
   QImage image = m_GraphicsView->getBaseImage();
@@ -299,8 +313,8 @@ void QMRCDisplayWidget::saveCanvas()
   int err = 0;
 #endif
   int err = 0;
-  QString outputFile = this->m_OpenDialogLastDirectory + QDir::separator() + "Segmented.tif";
-  outputFile = QFileDialog::getSaveFileName(this, tr("Save Processed Image As ..."), outputFile, tr("Images (*.tif *.bmp *.jpg *.png)"));
+  QString outputFile = this->m_OpenDialogLastDirectory + QDir::separator() + "Untitled.tif";
+  outputFile = QFileDialog::getSaveFileName(this, tr("Save Image As ..."), outputFile, tr("Images (*.tif *.bmp *.jpg *.png)"));
   if (!outputFile.isEmpty())
   {
     bool ok = image.save(outputFile);
@@ -369,7 +383,6 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
      magnification->setText(QString::number(fei.magnification));
      voltage->setText(QString::number(fei.voltage));
      */
-
   }
   // Read the first image from the file
   int voxelMin[3] =
@@ -410,8 +423,8 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
   // Calculate the approx memory usage
   emit memoryCalculationNeedsUpdated();
 
-  setImageWidgetsEnabled(true);
-  showWidgets(true, m_MovieWidgets);
+  if (m_ImageWidgetsEnabled == true) { showWidgets(true, m_ImageWidgets); }
+  if (m_MovieWidgetsEnabled == true) { showWidgets(true, m_MovieWidgets); }
 }
 
 // -----------------------------------------------------------------------------
@@ -419,10 +432,17 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::setImageWidgetsEnabled(bool b)
 {
-  foreach (QWidget* w, m_ImageWidgets)
-  {
-    w->setEnabled(b);
-  }
+  m_ImageWidgetsEnabled = b;
+  showWidgets(b, m_ImageWidgets);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void QMRCDisplayWidget::setMovieWidgetsEnabled(bool b)
+{
+  m_MovieWidgetsEnabled = b;
+  showWidgets(b, m_MovieWidgets);
 }
 
 // -----------------------------------------------------------------------------
@@ -802,6 +822,7 @@ void QMRCDisplayWidget::getColorCorrespondingTovalue(int16_t val,
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::loadXZSliceReconstruction(QString reconMRCFilePath)
 {
+ // std::cout << "QMRCDisplayWidget::loadXZSliceReconstruction(" << reconMRCFilePath.toStdString() << ")" << std::endl;
   MRCHeader header;
   header.feiHeaders = NULL;
   ::memset(&header, 0, 1024); // Splat zeros across the entire structure
@@ -854,9 +875,12 @@ void QMRCDisplayWidget::loadXZSliceReconstruction(QString reconMRCFilePath)
   }
 
   m_CurrentImage = image.mirrored(false, true);
-  setImageWidgetsEnabled(true);
-  showWidgets(false, m_MovieWidgets);
+
+  if (m_ImageWidgetsEnabled == true) { showWidgets(true, m_ImageWidgets); }
+  if (m_MovieWidgetsEnabled == true) { showWidgets(true, m_MovieWidgets); }
 
   m_GraphicsView->loadBaseImageFile(m_CurrentImage);
+ // std::cout << "QMRCDisplayWidget::loadXZSliceReconstruction( COMPLETE )" << std::endl;
+
 }
 

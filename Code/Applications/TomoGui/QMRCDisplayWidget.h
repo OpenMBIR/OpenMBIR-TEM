@@ -82,14 +82,17 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     void fireOriginCB_Changed();
     void saveCanvas();
     void loadXZSliceReconstruction(QString reconMRCFilePath);
+
     void disableVOISelection();
     void enableVOISelection();
 
+    void setImageWidgetsEnabled(bool b);
+    void setMovieWidgetsEnabled(bool b);
   protected:
     void setupGui();
 
     void showWidgets(bool b, QList<QWidget*> &list);
-    void setImageWidgetsEnabled(bool b);
+
 
     QImage signed16Image(qint16* data, MRCHeader &header);
     void drawOrigin(QImage image);
@@ -98,8 +101,12 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
 
   protected slots:
     void on_playBtn_clicked();
+    void on_stopBtn_clicked();
     void on_skipStart_clicked();
     void on_skipEnd_clicked();
+    void on_m_SaveCanvasBtn_clicked();
+
+
     void stepForwardFromTimer();
     void z10_triggered();
     void z25_triggered();
@@ -127,11 +134,12 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     QTimer*               m_AnimationTimer;
     QList<QWidget*>       m_ImageWidgets;
     QList<QWidget*>       m_MovieWidgets;
-
- //   int                   m_CurrentCorner;
     QImage                m_CurrentImage;
     QString               m_CurrentMRCFilePath;
     QString               m_OpenDialogLastDirectory;
+    bool                  m_ImageWidgetsEnabled;
+    bool                  m_MovieWidgetsEnabled;
+
 
     QMRCDisplayWidget(const QMRCDisplayWidget&); // Copy Constructor Not Implemented
     void operator=(const QMRCDisplayWidget&); // Operator '=' Not Implemented
