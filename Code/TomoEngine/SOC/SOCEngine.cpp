@@ -867,6 +867,9 @@ void SOCEngine::execute()
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
   writeSinogramFile(NuisanceParams, Final_Sinogram); // Writes the sinogram to a file
+
+  cropReconstruction();//Crop the object so the "extended part is removed"
+	
   writeReconstructionFile(); // Writes the m_Geometry to a file
   // Write out the VTK file
   {

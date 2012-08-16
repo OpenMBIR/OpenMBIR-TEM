@@ -361,7 +361,41 @@ void SOCEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
     }
   }
 }
-
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::cropReconstruction()
+{
+	uint16_t cropStart=0,cropEnd=m_Geometry->N_x-1;
+	Real_t x;
+	for (uint16_t j = 0; j < m_Geometry->N_x; j++)
+	{
+			x = m_Geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
+			if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= 
+			   (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 )
+			{
+				cropStart =j;
+				break;
+			}
+			
+	}
+	
+	for (uint16_t j = m_Geometry->N_x-1; j >= 0; j--)
+	{
+		x = m_Geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
+		if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= 
+		   (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 )
+		{
+			cropEnd =j;
+			break;
+		}		
+	}
+	
+	uint16_t newN_x = cropEnd - cropStart + 1;
+	//Now take M_Geometry->Object and crop out (:,cropStart,:) to (:,cropEnd,:)
+	std::cout<<"New N_x="<<newN_x<<std::endl;
+   //m_Geometry->Nx=newN_x;
+}
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
