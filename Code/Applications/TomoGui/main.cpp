@@ -45,18 +45,28 @@ int main(int argc, char **argv)
   app.setQuitOnLastWindowClosed( true );
 #endif //APPLE
 
-  #if defined (Q_OS_MAC)
-  QSettings prefs(QSettings::NativeFormat, QSettings::UserScope, "bluequartz.net", "TomoGui");
+#if defined (Q_OS_MAC)
+  QSettings prefs(QSettings::NativeFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
 #else
-  QSettings prefs(QSettings::IniFormat, QSettings::UserScope, "bluequartz.net", "TomoGui");
+  QSettings prefs(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
 #endif
+
+
   QRecentFileList::instance()->readList(prefs);
 
   TomoGui *viewer = new TomoGui;
+  viewer->readWindowSettings(prefs);
   viewer->show();
   viewer->raise();
   viewer->activateWindow();
+  // Now read the user settings which may load an MRC file
+  viewer->readSettings(prefs);
+
+  // Run the App - This is a BLOCKING call
   int app_return = app.exec();
+
+  // Remove any temp files
+  viewer->deleteTempFiles();
 
   QRecentFileList::instance()->writeList(prefs);
 
