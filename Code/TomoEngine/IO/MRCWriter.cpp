@@ -43,12 +43,13 @@
 #include "MXA/Common/IO/MXAFileWriter64.h"
 
 
-#include "TomoEngine/IO/MRCHeader.h"
+
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-MRCWriter::MRCWriter()
+MRCWriter::MRCWriter() :
+m_MRCHeader(NULL)
 {
 
 }
@@ -77,6 +78,90 @@ int MRCWriter::writeHeader()
 
 
   return err;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void MRCWriter::initializeMRCHeader(MRCHeader* header)
+{
+
+  header->nx = m_Geometry->N_x;
+  header->ny = m_Geometry->N_y;
+  header->nz = m_Geometry->N_z;
+
+  header->mode = 2;
+
+  header->nxstart = 0;
+  header->nystart = 0;
+  header->nzstart = 0;
+  header->mx = m_Geometry->N_x;
+  header->my = m_Geometry->N_y;
+  header->mz = m_Geometry->N_z;
+
+  header->xlen = m_Geometry->N_x;
+  header->ylen = m_Geometry->N_y;
+  header->zlen = m_Geometry->N_z;
+
+  header->alpha = 90.0;
+  header->beta = 90.0;
+  header->gamma = 90.0;
+
+  header->mapc = 1;
+  header->mapr = 2;
+  header->maps = 3;
+
+  /* ** These need to be calculated from the data ** */
+  header->amin = 0.0;
+  header->amax = 0.0;
+  header->amean = 0.0;
+
+  header->ispg = 0;
+  header->nsymbt = 0;
+  /* ** Calculate the size of the extended header */
+  header->next = sizeof(FEIHeader) * m_Geometry->N_z;
+  header->creatid = 0;
+  ::memset(&header->extra_data, 0, 30);
+
+  header->nint = 0;
+  header->nreal = 0;
+  ::memset(&header->extra_data_2, 0, 20);
+  header->imodStamp = 0;
+  header->imodFlags = 0;
+  header->idtype = 0;
+  header->lens = 0;
+  header->nd1 = 0;
+  header->nd2 = 0;
+  header->vd1 = 0;
+  header->vd2 = 0;
+
+  ::memset(&header->tiltangles, 0, 6 * sizeof(float));
+  header->xorg = 0.0f;
+  header->yorg = 0.0f;
+  header->zorg = 0.0f;
+  header->cmap[0] = 'M';
+  header->cmap[1] = 'A';
+  header->cmap[2] = 'P';
+  header->cmap[3] = ' ';
+#if defined (CMP_WORDS_BIGENDIAN)
+  header->stamp[0] = 17;
+  header->stamp[1] = 17;
+#else
+  header->stamp[0] = 68;
+  header->stamp[1] = 65;
+#endif
+  header->stamp[2] = 0;
+  header->stamp[3] = 0;
+  header->rms = 0.0f;
+  header->nLabels = 3;
+  for(int i = 0; i < 10; ++i)
+  {
+    ::memset(header->labels[i], 0, 80);
+  }
+  snprintf(header->labels[0], 80, "Fei Company (C) Copyright 2003");
+  snprintf(header->labels[1], 80, "Reconstruction by OpenMBIR");
+  snprintf(header->labels[2], 80, "EIM TomoEngine code developed by Purdue University & BlueQuartz Software");
+
 }
 
 // -----------------------------------------------------------------------------
@@ -114,85 +199,17 @@ int MRCWriter::write()
 //  std::cout << "  N_z: " << m_Geometry->N_z << std::endl;
 //  std::cout << "  N_x: " << m_Geometry->N_x << std::endl;
 //  std::cout << "  N_y: " << m_Geometry->N_y << std::endl;
-
-
-  MRCHeader header;
-  header.nx = m_Geometry->N_x;
-  header.ny = m_Geometry->N_y;
-  header.nz = m_Geometry->N_z;
-
-  header.mode = 2;
-
-  header.nxstart = 0;
-  header.nystart = 0;
-  header.nzstart = 0;
-  header.mx = m_Geometry->N_x;
-  header.my = m_Geometry->N_y;
-  header.mz = m_Geometry->N_z;
-
-  header.xlen = m_Geometry->N_x;
-  header.ylen = m_Geometry->N_y;
-  header.zlen = m_Geometry->N_z;
-
-  header.alpha = 90.0;
-  header.beta = 90.0;
-  header.gamma = 90.0;
-
-  header.mapc = 1;
-  header.mapr = 2;
-  header.maps = 3;
-
-  /* ** These need to be calculated from the data ** */
-  header.amin = 0.0;
-  header.amax = 0.0;
-  header.amean = 0.0;
-
-  header.ispg = 0;
-  header.nsymbt = 0;
-  /* ** Calculate the size of the extended header */
-  header.next = sizeof(FEIHeader) * m_Geometry->N_z;
-  header.creatid = 0;
-  ::memset(&header.extra_data, 0, 30);
-
-  header.nint = 0;
-  header.nreal = 0;
-  ::memset(&header.extra_data_2, 0, 20);
-  header.imodStamp = 0;
-  header.imodFlags = 0;
-  header.idtype = 0;
-  header.lens = 0;
-  header.nd1 = 0;
-  header.nd2 = 0;
-  header.vd1 = 0;
-  header.vd2 = 0;
-
-  ::memset(&header.tiltangles, 0, 6 * sizeof(float));
-  header.xorg = 0.0f;
-  header.yorg = 0.0f;
-  header.zorg = 0.0f;
-  header.cmap[0] = 'c';
-  header.cmap[1] = 'm';
-  header.cmap[2] = 'a';
-  header.cmap[3] = 'p';
-#if defined (CMP_WORDS_BIGENDIAN)
-  header.stamp[0] = 17;
-  header.stamp[1] = 17;
-#else
-  header.stamp[0] = 68;
-  header.stamp[1] = 65;
-#endif
-  header.rms = 0.0f;
-  header.nLabels = 3;
-  for(int i = 0; i < 10; ++i)
+  MRCHeader mrcHeader; // Put one on the stack in case the programmer supplied a NULL pointer
+  ::memset(&mrcHeader, 0, 1024);
+  bool detachHeaderReference = false;
+  if (NULL == m_MRCHeader)
   {
-    ::memset(header.labels[i], 0, 80);
+    m_MRCHeader = &mrcHeader;
+    initializeMRCHeader(m_MRCHeader);
+    detachHeaderReference = true;
   }
-  snprintf(header.labels[0], 80, "Fei Company");
-  snprintf(header.labels[1], 80, "Reconstruction by EIM Tomography Engine");
-  snprintf(header.labels[2], 80, "EIM TomoEngine code developed by Purdue University & BlueQuartz Software");
-
   // Write the header
-  writer.write(reinterpret_cast<char*>(&header), 1024);
+  writer.write(reinterpret_cast<char*>(m_MRCHeader), 1024);
   for(uint16_t i = 0; i < m_Geometry->N_z; ++i)
   {
     FEIHeader fei;
@@ -205,42 +222,12 @@ int MRCWriter::write()
   float* slice = (float*)(malloc(size));
   size_t index = 0;
   Real_t d = 0.0;
+  size_t count = 0;
 
-#if 0
-  // Find the max and min value so we can scale correctly (or at least try)
-  size_t nVoxels = m_Geometry->N_z * m_Geometry->N_y * m_Geometry->N_x;
-  Real_t dmax = std::numeric_limits<Real_t>::min();
-  Real_t dmin = std::numeric_limits<Real_t>::max();
+  float mean = 0.0;
+  float dmax = std::numeric_limits<Real_t>::min();
+  float dmin = std::numeric_limits<Real_t>::max();
 
-  for (size_t i = 0; i < nVoxels; ++i)
-  {
-    if(d[i] > dmax) dmax = d[i];
-    if(d[i] < dmin) dmin = d[i];
-  }
-
-  Real_t k_1 = 1.0;
-  if (dmax - dmin > 0.0) {
-    k_1 = std::numeric_limits<uint16_t>::max() / (dmax - dmin);
-  }
-#endif
-
-
-#if 0
-  float t;
-  for (int z = m_Geometry->N_z - 1; z >= 0; z--)
-  {
-    for (int y = 0; y < m_Geometry->N_y; ++y)
-    {
-      for (int x = 0; x < m_Geometry->N_x; x++)
-      {
-        t = static_cast<float>(m_Geometry->Object->getValue(z, x, y));
-      }
-    }
-  }
-#endif
-  Real_t dmax = std::numeric_limits<Real_t>::min();
-  Real_t dmin = std::numeric_limits<Real_t>::max();
- // float t = 0.0f;
   for (int z = m_Geometry->N_z - 1; z >= 0; z--)
   {
     index = 0;
@@ -251,22 +238,30 @@ int MRCWriter::write()
         //index = (x * m_Geometry->N_y) + y;
         d = m_Geometry->Object->getValue(z, x, y);
         slice[index] = static_cast<float>(d);
+        mean += slice[index];
+        count++;
         if(d > dmax) dmax = d;
         if(d < dmin) dmin = d;
         ++index;
       }
     }
     writer.write(reinterpret_cast<char*>(slice), size);
- //   std::cout << "  Writing Slice " << z << " to file at " << writer.getFilePointer64() << std::endl;
   }
 
-
-//  std::cout << "  Min float MRC Value:" << dmin << std::endl;
-//  std::cout << "  Max float MRC Value:" << dmax << std::endl;
-//  std::cout << "-----------------------------" << std::endl;
+  // Calculate the mean value
+  mean = mean / count;
+  // Update the values in the header of the file
+  writer.setFilePointer64(76); // Set the position to the "amin" header entry
+  writer.writeValue(&dmin);
+  writer.writeValue(&dmax);
+  writer.writeValue(&mean);
 
   free(slice);
 
+  if (detachHeaderReference == true)
+  {
+    m_MRCHeader = NULL;
+  }
 
   setErrorCondition(0);
   setErrorMessage("");
