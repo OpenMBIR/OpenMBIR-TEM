@@ -104,3 +104,12 @@ std::string MXA_FILESYSTEM_BASE_CLASS::fileNameWithOutExtension(const std::strin
     return fname;
 //  }
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+bool MXA_FILESYSTEM_BASE_CLASS::remove(const std::string &fsPath)
+{
+  return UNLINK(MXA_FILESYSTEM_BASE_CLASS::toNativeSeparators(fsPath).c_str()) == 0;
+}
+

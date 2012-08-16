@@ -95,6 +95,7 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
 
 
     QImage signed16Image(qint16* data, MRCHeader &header);
+    QImage floatImage(float* data, MRCHeader &header);
     void drawOrigin(QImage image);
 
 

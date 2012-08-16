@@ -141,8 +141,6 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void on_actionSaveCanvas_triggered();
     void on_actionMRC_Info_triggered();
 
-
-
 //Window Menu
     void on_actionParameters_triggered();
     void on_actionLayers_Palette_triggered();
@@ -152,7 +150,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     /* slots for the buttons in the GUI */
     void on_m_GoBtn_clicked();
 
-    void on_estimateGainSigma_clicked();
+    void on_estimateSigmaX_clicked();
 
     void on_m_SingleSliceReconstructionBtn_clicked();
 
@@ -181,10 +179,13 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void on_reconstructedVolumeFileName_textChanged(const QString & text);
 
     void on_outputDirectoryPathBtn_clicked();
-    void on_tempDirPath_textChanged(const QString & text);
+    void on_outputDirectoryPath_textChanged(const QString & text);
 
     void on_initialReconstructionPathBtn_clicked();
     void on_initialReconstructionPath_textChanged(const QString & text);
+
+    void on_smoothness_textChanged(const QString & text);
+    void on_sigma_x_textChanged(const QString & text);
 
     void singleSlicePlaneSet(int y);
 
@@ -239,6 +240,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void displayDialogBox(QString title, QString text, QMessageBox::Icon icon);
 
     bool checkTiltAngles(QVector<float> &tilts);
+
+    void sigmaX_ShouldUpdate(bool b);
 
   signals:
 
@@ -300,7 +303,6 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     qreal                 m_CachedSigmaX;
     bool                  m_UpdateCachedSigmaX;
     QVector<QString>      m_TempFilesToDelete;
-
 
 
     TomoGui(const TomoGui&); // Copy Constructor Not Implemented

@@ -402,6 +402,7 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
         image = signed16Image(reinterpret_cast<qint16*>(reader->getDataPointer()), header);
         break;
       case 2:
+        image = floatImage(reinterpret_cast<float*>(reader->getDataPointer()), header);
         break;
       default:
         break;
@@ -463,8 +464,8 @@ QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header)
 {
   qint16 dmax = std::numeric_limits<qint16>::min();
   qint16 dmin = std::numeric_limits<qint16>::max();
-  size_t size = header.nx * header.ny;
-  for (size_t i = 0; i < size; ++i)
+  size_t nVoxels = header.nx * header.ny;
+  for (size_t i = 0; i < nVoxels; ++i)
   {
     if(data[i] > dmax) dmax = data[i];
     if(data[i] < dmin) dmin = data[i];
@@ -511,6 +512,68 @@ QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header)
   return image;
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QImage QMRCDisplayWidget::floatImage(float* data, MRCHeader &header)
+{
+
+  float dmax = std::numeric_limits<float>::min();
+  float dmin = std::numeric_limits<float>::max();
+  size_t nVoxels = header.nx * header.ny;
+  for (size_t i = 0; i < nVoxels; ++i)
+  {
+    if(data[i] > dmax) dmax = data[i];
+    if(data[i] < dmin) dmin = data[i];
+  }
+
+  //Scale all the values to 0 and 255 in place over writing the float values with 32 bit ints
+  int* iData = reinterpret_cast<int*>(data);
+  int imax = std::numeric_limits<int>::min();
+  int imin = std::numeric_limits<int>::max();
+
+  for (size_t i = 0; i < nVoxels; ++i)
+  {
+    iData[i] = (data[i]-dmin) / (dmax - dmin) * 255.0;
+    if(iData[i] > imax) imax = iData[i];
+    if(iData[i] < imin) imin = iData[i];
+  }
+
+  // Generate a Color Table
+  int numColors = 256; // We are going to fix this at 256 colors
+  QVector<QRgb> colorTable(numColors);
+  // generate the color table
+  dmin = 0.0;
+  dmax = 255;
+  float range = 256;
+  float r, g, b;
+  for (int i = 0; i < numColors; i++)
+  {
+    int16_t val = static_cast<int16_t>(dmin + ((float)i / numColors) * range);
+    QMRCDisplayWidget::getColorCorrespondingTovalue(val, r, g, b, dmax, dmin);
+    colorTable[i] = qRgba(r * 255, g * 255, b * 255, 255);
+  }
+
+  // Create an RGB Image
+  QImage image(header.nx, header.ny, QImage::Format_ARGB32);
+
+  int idx = 0;
+  for (int y = 0; y < header.ny; ++y)
+  {
+    for (int x = 0; x < header.nx; ++x)
+    {
+      idx = (header.nx * y) + x;
+      int colorIndex = iData[idx] - static_cast<int>(imin);
+      image.setPixel(x, y, colorTable[colorIndex]);
+    }
+  }
+
+//  std::cout << "Min int QImage Value:" << imin << std::endl;
+//  std::cout << "Max int QImage Value:" << imax << std::endl;
+//  xzImage.save("/tmp/xz_image.tif");
+  return image;
+
+}
 
 // -----------------------------------------------------------------------------
 //

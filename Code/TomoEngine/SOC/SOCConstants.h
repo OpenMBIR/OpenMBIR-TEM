@@ -96,6 +96,8 @@ namespace ScaleOffsetCorrection
   const std::string ReconstructedBinFile("ReconstructedSinogram.bin");
   const std::string ReconstructedMrcFile("ReconstructedVolume.rec");
 
+  const std::string UpsampledBinFile("UpsampledObject.bin");
+
   namespace VTK
   {
     const std::string TomoVoxelScalarName("TomoVoxel");
