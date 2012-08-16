@@ -35,6 +35,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QString>
 #include <QtCore/QSettings>
+#include <QtCore/QFile>
 #include <QtGui/QCloseEvent>
 #include <QtGui/QMainWindow>
 #include <QtGui/QWidget>
@@ -113,6 +114,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
       */
      virtual void updateProgressAndMessage(const char* message, int progress);
      virtual void updateProgressAndMessage(const std::string &msg, int progress);
+
+     void deleteTempFiles();
 
   public slots:
 
@@ -294,7 +297,9 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     quint16               m_XDim;
     quint16               m_nTilts;
     QString               m_OpenDialogLastDirectory;
-
+    qreal                 m_CachedSigmaX;
+    bool                  m_UpdateCachedSigmaX;
+    QVector<QString>      m_TempFilesToDelete;
 
 
 

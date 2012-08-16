@@ -39,7 +39,6 @@
 //-- Qt Includes
 #include <QtCore/QPluginLoader>
 #include <QtCore/QFileInfo>
-#include <QtCore/QFile>
 #include <QtCore/QDir>
 #include <QtCore/QString>
 #include <QtCore/QUrl>
@@ -82,8 +81,7 @@
 #include "GainsOffsetsTableModel.h"
 #include "ReconstructionArea.h"
 #include "MRCInfoWidget.h"
-
-
+#include "ImageOpenDialog.h"
 
 
 #define READ_STRING_SETTING(prefs, var, emptyValue)\
@@ -133,22 +131,13 @@ m_OutputExistsCheck(false),
 m_LayersPalette(NULL),
 m_WorkerThread(NULL),
 m_MultiResSOC(NULL),
-  m_SingleSliceReconstructionActive(false),
-  m_FullReconstrucionActive(false)
+m_SingleSliceReconstructionActive(false),
+m_FullReconstrucionActive(false),
+m_UpdateCachedSigmaX(true)
 {
    m_OpenDialogLastDirectory = QDir::homePath();
   setupUi(this);
   setupGui();
-
-
-
-#if defined (Q_OS_MAC)
-  QSettings prefs(QSettings::NativeFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
-#else
-  QSettings prefs(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
-#endif
-  readSettings(prefs);
-  readWindowSettings(prefs);
 
   QRecentFileList* recentFileList = QRecentFileList::instance();
   connect(recentFileList, SIGNAL (fileListChanged(const QString &)), this, SLOT(updateBaseRecentFileList(const QString &)));
@@ -203,11 +192,11 @@ void TomoGui::readSettings(QSettings &prefs)
 
   READ_STRING_SETTING(prefs, inputMRCFilePath, "");
   // This will auto load the MRC File
-  on_inputMRCFilePath_textChanged(inputMRCFilePath->text());
+//  on_inputMRCFilePath_textChanged(inputMRCFilePath->text());
 
   READ_STRING_SETTING(prefs, inputBrightFieldFilePath, "");
   // This will auto load the MRC File
-  on_inputBrightFieldFilePath_textChanged(inputBrightFieldFilePath->text());
+//  on_inputBrightFieldFilePath_textChanged(inputBrightFieldFilePath->text());
 
 
   READ_STRING_SETTING(prefs, initialReconstructionPath, "");
@@ -560,6 +549,12 @@ void TomoGui::on_m_SingleSliceReconstructionBtn_clicked()
     return;
   }
 
+  // Remove Any Temp files that have accumulated
+  deleteTempFiles();
+
+
+  m_GoBtn->setEnabled(false);
+
   // Create a Worker Thread that will run the Reconstruction
   if(m_WorkerThread != NULL)
   {
@@ -616,8 +611,6 @@ void TomoGui::on_m_SingleSliceReconstructionBtn_clicked()
   m_FullReconstrucionActive = false;
 }
 
-
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -633,6 +626,8 @@ void TomoGui::on_m_GoBtn_clicked()
     }
     return;
   }
+
+  m_SingleSliceReconstructionBtn->setEnabled(false);
 
   // Make sure we have an output directory setup and created
   if(false == sanityCheckOutputDirectory(tempDirPath, QString("Tomography Reconstruction")))
@@ -705,7 +700,6 @@ void TomoGui::on_m_GoBtn_clicked()
   writeWindowSettings(prefs);
 
 // Sanity Check the Geometry
-
   {
 // Sanity Check the Input dimensions
     QImage image = m_MRCDisplayWidget->graphicsView()->getBaseImage();
@@ -745,6 +739,13 @@ void TomoGui::on_m_GoBtn_clicked()
     QMessageBox::critical(this, tr("Tilt Selection Error"), tr("The Tilt Selection does not seem to be correct. Please check to make sure you have selected the correct tilts."), QMessageBox::Ok);
     return;
   }
+
+
+  // Remove Any Temp files that have accumulated
+  deleteTempFiles();
+
+
+
 
   // Create a Worker Thread that will run the Reconstruction
   if(m_WorkerThread != NULL)
@@ -949,6 +950,7 @@ void TomoGui::singleSliceComplete()
 {
   //std::cout << "TomoGui::singleSliceComplete" << std::endl;
   m_SingleSliceReconstructionBtn->setText("Single Slice Reconstruction");
+  m_GoBtn->setEnabled(true);
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
   QString reconVolumeFile = QString::fromStdString(m_MultiResSOC->getTempDir()) + QDir::separator() +
@@ -962,53 +964,43 @@ void TomoGui::singleSliceComplete()
   QString path = QString::fromStdString(m_MultiResSOC->getTempDir()) + QDir::separator() + finalResolution->text() + QString("x")+ QDir::separator();
   {
     QString filePath = path + QString::fromStdString(m_MultiResSOC->getOutputFile());
-    QFile f(filePath);
-    f.remove();
+    m_TempFilesToDelete.push_back(filePath);
   }
   {
     QString filePath = path + ScaleOffsetCorrection::CostFunctionFile.c_str();
-    QFile f(filePath);
-    f.remove();
+    m_TempFilesToDelete.push_back(filePath);
   }
   {
     QString filePath = path + ScaleOffsetCorrection::DetectorResponseFile.c_str();
-    QFile f(filePath);
-    f.remove();
+    m_TempFilesToDelete.push_back(filePath);
   }
   {
     QString filePath = path + ScaleOffsetCorrection::FinalGainParametersFile.c_str();
-    QFile f(filePath);
-    f.remove();
+    m_TempFilesToDelete.push_back(filePath);
   }
   {
     QString filePath = path + ScaleOffsetCorrection::FinalOffsetParametersFile.c_str();
-    QFile f(filePath);
-    f.remove();
+    m_TempFilesToDelete.push_back(filePath);
   }
   {
     QString filePath = path + ScaleOffsetCorrection::FinalVariancesFile.c_str();
-    QFile f(filePath);
-    f.remove();
+    m_TempFilesToDelete.push_back(filePath);
   }
   {
     QString filePath = path + ScaleOffsetCorrection::ReconstructedBinFile.c_str();
-    QFile f(filePath);
-    f.remove();
+    m_TempFilesToDelete.push_back(filePath);
   }
   {
     QString filePath = path + ScaleOffsetCorrection::ReconstructedMrcFile.c_str();
-    QFile f(filePath);
-    f.remove();
+    m_TempFilesToDelete.push_back(filePath);
   }
   {
     QString filePath = path + ScaleOffsetCorrection::ReconstructedVtkFile.c_str();
-    QFile f(filePath);
-    f.remove();
+    m_TempFilesToDelete.push_back(filePath);
   }
   {
     QString filePath = path + ScaleOffsetCorrection::VoxelProfileFile.c_str();
-    QFile f(filePath);
-    f.remove();
+    m_TempFilesToDelete.push_back(filePath);
   }
   // Delete the top level directory
   QDir dir(path);
@@ -1027,8 +1019,8 @@ void TomoGui::loadProgressMRCFile(QString mrcfilePath)
 {
 //  std::cout << "Loading Progress MRC File: " << filePath.toStdString() << std::endl;
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(mrcfilePath);
-  QFile fi(mrcfilePath);
-  fi.remove();
+  m_ReconstructedDisplayWidget->setImageWidgetsEnabled(true);
+  m_TempFilesToDelete.push_back(mrcfilePath);
 }
 
 // -----------------------------------------------------------------------------
@@ -1038,6 +1030,7 @@ void TomoGui::pipelineComplete()
 {
   // std::cout << "ReconstructionWidget::threadFinished()" << std::endl;
   m_GoBtn->setText("Reconstruct");
+  m_SingleSliceReconstructionBtn->setEnabled(true);
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
   emit pipelineEnded();
@@ -1180,18 +1173,25 @@ void TomoGui::on_inputMRCFilePathBtn_clicked()
 // -----------------------------------------------------------------------------
 void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
 {
-  if (verifyPathExists(inputMRCFilePath->text(), inputMRCFilePath))
+  if(verifyPathExists(inputMRCFilePath->text(), inputMRCFilePath))
   {
     // Read the header info from the file and populate the GUI with those values
-    readMRCHeader(filepath);
-    // Now load up the first tilt from the file
-    m_MRCDisplayWidget->loadMRCTiltImage(filepath, 0);
-
-    m_GainsFile = ""; // We are reading a new .mrc file so we probably need a new Gains Offsets File
+    {
+      ImageOpenDialog d(this);
+      d.show();
+      d.activateWindow();
+      d.setModal(true);
+      readMRCHeader(filepath);
+      // Now load up the first tilt from the file
+      m_MRCDisplayWidget->loadMRCTiltImage(filepath, 0);
+      m_MRCDisplayWidget->setImageWidgetsEnabled(true);
+      m_MRCDisplayWidget->setMovieWidgetsEnabled(true);
+      m_GainsFile = ""; // We are reading a new .mrc file so we probably need a new Gains Offsets File
+      on_estimateGainSigma_clicked();
+    }
 
     setWindowTitle(filepath);
     this->setWindowFilePath(filepath);
-
 #if 0
     m_LayersPalette->getOriginalImageCheckBox()->setChecked(true);
     m_LayersPalette->getSegmentedImageCheckBox()->setChecked(false);
@@ -1203,7 +1203,6 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
 
     updateBaseRecentFileList(filepath);
   }
-
 
 }
 
@@ -1381,18 +1380,17 @@ void TomoGui::on_actionLayers_Palette_triggered()
 void TomoGui::on_actionOpenMRCFile_triggered()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
-  QString file = QFileDialog::getOpenFileName(this, tr("Open Image File"),
-    m_OpenDialogLastDirectory,
-    tr("Images (*.tif *.tiff *.bmp *.jpg *.jpeg *.png)") );
+  QString file = QFileDialog::getOpenFileName(this, tr("Open Image File"), m_OpenDialogLastDirectory, tr("Images (*.mrc *.rec *.ali)"));
 
-  if ( true == file.isEmpty() )
+  if(true == file.isEmpty())
   {
     return;
   }
   QFileInfo fi(file);
   m_OpenDialogLastDirectory = fi.absolutePath();
-  inputMRCFilePath->setText( file );
+  inputMRCFilePath->setText(file);
 }
+
 #if 0
 // -----------------------------------------------------------------------------
 //
@@ -1614,8 +1612,6 @@ void TomoGui::on_estimateGainSigma_clicked()
 //  sigmaX->setText(QString::number(estimate->getSigmaXEstimate()));
 //NEW: The user inputs the Smoothness. We take (1/Smoothness)*EstimatedSigmaX = SigmaX
   sigma_x->setText(QString::number(estimate->getSigmaXEstimate()*(1.0/smoothness->text().toDouble(&ok))));
-
-
 }
 
 // -----------------------------------------------------------------------------
@@ -1856,4 +1852,18 @@ void TomoGui::on_actionMRC_Info_triggered()
 {
   m_MRCInfoWidget->setInfo(inputMRCFilePath->text());
   m_MRCInfoWidget->show();
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::deleteTempFiles()
+{
+  // Remove Any Temp files that have accumulated
+  for(int i = 0; i < m_TempFilesToDelete.size(); ++i)
+  {
+    QFile f(m_TempFilesToDelete.at(i));
+    f.remove();
+  }
+  m_TempFilesToDelete.clear();
 }

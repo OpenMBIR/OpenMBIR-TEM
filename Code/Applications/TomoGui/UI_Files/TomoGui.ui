@@ -319,14 +319,11 @@ font-size: 10px;
        <property name="title">
         <string>Input Tilt Series</string>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout_5">
-        <property name="spacing">
-         <number>0</number>
-        </property>
+       <layout class="QGridLayout" name="gridLayout">
         <property name="margin">
          <number>0</number>
         </property>
-        <item>
+        <item row="0" column="0">
          <widget class="QMRCDisplayWidget" name="m_MRCDisplayWidget" native="true"/>
         </item>
        </layout>
@@ -346,7 +343,7 @@ font-size: 10px;
          <number>0</number>
         </property>
         <property name="spacing">
-         <number>5</number>
+         <number>-1</number>
         </property>
         <item row="0" column="0">
          <widget class="QMRCDisplayWidget" name="m_ReconstructedDisplayWidget" native="true">
