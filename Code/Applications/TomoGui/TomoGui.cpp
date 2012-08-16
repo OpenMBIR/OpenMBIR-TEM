@@ -200,7 +200,7 @@ void TomoGui::readSettings(QSettings &prefs)
 
 
   READ_STRING_SETTING(prefs, initialReconstructionPath, "");
-  READ_STRING_SETTING(prefs, outputDirectory, "");
+  READ_STRING_SETTING(prefs, outputDirectoryPath, "");
   READ_STRING_SETTING(prefs, reconstructedVolumeFileName, "");
 
   READ_STRING_SETTING(prefs, sampleThickness, "");
@@ -247,7 +247,7 @@ void TomoGui::writeSettings(QSettings &prefs)
   WRITE_STRING_SETTING(prefs, inputBrightFieldFilePath);
 
   WRITE_STRING_SETTING(prefs, initialReconstructionPath);
-  WRITE_STRING_SETTING(prefs, outputDirectory);
+  WRITE_STRING_SETTING(prefs, outputDirectoryPath);
   WRITE_STRING_SETTING(prefs, reconstructedVolumeFileName);
 
   WRITE_STRING_SETTING(prefs, sampleThickness);
@@ -457,6 +457,15 @@ void TomoGui::setupGui()
   gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Exclude, cbDelegate);
 #endif
 
+  QDoubleValidator* dVal = new QDoubleValidator(this);
+  dVal->setDecimals(6);
+  smoothness->setValidator(dVal);
+
+  QDoubleValidator* dVal2 = new QDoubleValidator(this);
+  dVal2->setDecimals(6);
+  sigma_x->setValidator(dVal2);
+
+
   advancedParametersGroupBox->setChecked(false);
 
  // ySingleSliceValue_Label->hide();
@@ -631,7 +640,7 @@ void TomoGui::on_m_GoBtn_clicked()
   m_SingleSliceReconstructionBtn->setEnabled(false);
 
   // Make sure we have an output directory setup and created
-  if(false == sanityCheckOutputDirectory(outputDirectory, QString("Tomography Reconstruction")))
+  if(false == sanityCheckOutputDirectory(outputDirectoryPath, QString("Tomography Reconstruction")))
   {
     return;
   }
@@ -818,7 +827,7 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   path = QDir::toNativeSeparators(inputMRCFilePath->text());
   m_MultiResSOC->setInputFile(path.toStdString());
 
-  path = QDir::toNativeSeparators(outputDirectory->text());
+  path = QDir::toNativeSeparators(outputDirectoryPath->text());
   m_MultiResSOC->setTempDir(path.toStdString());
 
   path = QDir::toNativeSeparators(reconstructedVolumeFileName->text());
@@ -914,7 +923,7 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
     subvolume[1] = y_min;
     subvolume[4] = y_max;
 
-    path = QDir::toNativeSeparators(outputDirectory->text());
+    path = QDir::toNativeSeparators(outputDirectoryPath->text());
     QString tempFolder = QDir::tempPath() + QDir::separator() + QString("EIMTomo");
     m_MultiResSOC->setTempDir(tempFolder.toStdString());
   }
@@ -1055,7 +1064,7 @@ void TomoGui::pipelineComplete()
 
   setCurrentImageFile(inputMRCFilePath->text());
 
-  QString s = outputDirectory->text();
+  QString s = outputDirectoryPath->text();
   s = s.append(QDir::separator());
   s = s.append(QString::number(finalResolution->value())).append(QString("x"));
   s = s.append(QDir::separator());
@@ -1122,7 +1131,7 @@ void TomoGui::on_outputDirectoryPathBtn_clicked()
     QFileInfo fi(aDir);
     canWrite = fi.isWritable();
     if (canWrite) {
-      this->outputDirectory->setText(m_OpenDialogLastDirectory);
+      this->outputDirectoryPath->setText(m_OpenDialogLastDirectory);
     }
     else
     {
@@ -1193,7 +1202,8 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
       m_MRCDisplayWidget->setImageWidgetsEnabled(true);
       m_MRCDisplayWidget->setMovieWidgetsEnabled(true);
       m_GainsFile = ""; // We are reading a new .mrc file so we probably need a new Gains Offsets File
-      on_estimateGainSigma_clicked();
+      on_estimateSigmaX_clicked();
+
     }
 
     setWindowTitle(filepath);
@@ -1250,9 +1260,9 @@ void TomoGui::on_reconstructedVolumeFileName_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_tempDirPath_textChanged(const QString & text)
+void TomoGui::on_outputDirectoryPath_textChanged(const QString & text)
 {
-  verifyPathExists(outputDirectory->text(), outputDirectory);
+  verifyPathExists(outputDirectoryPath->text(), outputDirectoryPath);
 }
 
 // -----------------------------------------------------------------------------
@@ -1597,7 +1607,7 @@ void TomoGui::displayDialogBox(QString title, QString text, QMessageBox::Icon ic
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_estimateGainSigma_clicked()
+void TomoGui::on_estimateSigmaX_clicked()
 {
  // std::cout << "on_estimateGainSigma_clicked" << std::endl;
   bool ok = false;
@@ -1610,9 +1620,41 @@ void TomoGui::on_estimateGainSigma_clicked()
   estimate->execute();
   this->progressBar->setValue(0);
   targetGain->setText(QString::number(estimate->getTargetGainEstimate()));
-//  sigmaX->setText(QString::number(estimate->getSigmaXEstimate()));
-//NEW: The user inputs the Smoothness. We take (1/Smoothness)*EstimatedSigmaX = SigmaX
-  sigma_x->setText(QString::number(estimate->getSigmaXEstimate()*(1.0/smoothness->text().toDouble(&ok))));
+
+  m_CachedSigmaX = estimate->getSigmaXEstimate();
+  std::cout << "m_CachedSigmaX: " << m_CachedSigmaX << std::endl;
+  qreal smth = 1.0/smoothness->text().toDouble(&ok);
+  //sigma_x->blockSignals(true);
+  sigma_x->setText(QString::number(m_CachedSigmaX * smth));
+  //sigma_x->blockSignals(false);
+
+  sigmaX_ShouldUpdate(false);
+}
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_sigma_x_textChanged(const QString & text)
+{
+  bool ok = false;
+  qreal sigx = sigma_x->text().toDouble(&ok);
+  qreal smth = m_CachedSigmaX / sigx;
+  smoothness->blockSignals(true);
+  smoothness->setText(QString::number(smth));
+  smoothness->blockSignals(false);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_smoothness_textChanged(const QString & text)
+{
+  bool ok = false;
+  qreal smth = 1.0/smoothness->text().toDouble(&ok);
+  sigma_x->blockSignals(true);
+  sigma_x->setText(QString::number(m_CachedSigmaX * smth));
+  sigma_x->blockSignals(false);
 }
 
 // -----------------------------------------------------------------------------
@@ -1688,6 +1730,8 @@ void TomoGui::reconstructionVOIUpdated(ReconstructionArea* recon)
 
   yMin->setText(QString::number(size.height() - ymax));
   yMax->setText(QString::number(size.height() - ymin - 1));
+
+  sigmaX_ShouldUpdate(true);
 
 }
 
@@ -1868,3 +1912,17 @@ void TomoGui::deleteTempFiles()
   }
   m_TempFilesToDelete.clear();
 }
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::sigmaX_ShouldUpdate(bool b)
+{
+  estimateSigmaX->setEnabled(b);
+  estimateSigmaX->setDefault(b);
+  m_UpdateCachedSigmaX = b;
+}
+
+
+
