@@ -41,6 +41,7 @@
 #include <iostream>
 
 #include "MXA/Utilities/MXADir.h"
+#include "MXA/Utilities/MXAFileInfo.h"
 #include "MXA/Utilities/StringUtils.h"
 #include "TomoEngine/Common/EIMMath.h"
 
@@ -56,6 +57,7 @@ m_TempDir(""),
 m_OutputFile(""),
 m_BrightFieldFile(""),
 m_InitialReconstructionFile(""),
+m_DeleteTempFiles(false),
 m_NumberResolutions(1),
 m_SampleThickness(100.0f),
 m_TargetGain(0.0f),
@@ -166,6 +168,7 @@ bool MultiResolutionSOC::getCancel()
 // -----------------------------------------------------------------------------
 void MultiResolutionSOC::execute()
 {
+  std::vector<std::string>  tempFiles;
 
   pipelineProgressMessage("MultiResolutionSOC::execute");
   int err = 0;
@@ -182,7 +185,11 @@ void MultiResolutionSOC::execute()
 
   for (int i = 0; i < m_NumberResolutions; ++i)
   {
-    if (getCancel() == true) { setErrorCondition(-999); return; }
+    if(getCancel() == true)
+    {
+      setErrorCondition(-999);
+      return;
+    }
 
     TomoInputsPtr inputs = TomoInputsPtr(new TomoInputs);
     SOCEngine::InitializeTomoInputs(inputs);
@@ -192,14 +199,15 @@ void MultiResolutionSOC::execute()
     /* ******* this is bad. Remove this for production work ****** */
     inputs->extendObject = getExtendObject();
 
-      ss<<"Extend Object Flag"<<inputs->extendObject<<std::endl;
-      pipelineProgressMessage(ss.str());
+    ss << "Extend Object Flag" << inputs->extendObject << std::endl;
+    pipelineProgressMessage(ss.str());
 
     /* Get our input files from the last resolution iteration */
     inputs->gainsInputFile = prevInputs->gainsOutputFile;
     inputs->offsetsInputFile = prevInputs->offsetsOutputFile;
     inputs->varianceInputFile = prevInputs->varianceOutputFile;
-    if ( i == 0) {
+    if(i == 0)
+    {
       inputs->initialReconFile = getInitialReconstructionFile();
     }
     else
@@ -207,23 +215,24 @@ void MultiResolutionSOC::execute()
       inputs->initialReconFile = prevInputs->reconstructedOutputFile;
     }
 
-    if (i == 0)
+    if(i == 0)
     {
       inputs->InterpFlag = (getInterpolateInitialReconstruction() == false) ? 0 : 1;
     }
     else
-    { inputs->InterpFlag = 1; }//If at a finer resolution need to interpolate
+    {
+      inputs->InterpFlag = 1;
+    } //If at a finer resolution need to interpolate
 
-
-    inputs->interpolateFactor = powf((float)2, (float)getNumberResolutions()-1) * m_FinalResolution;
+    inputs->interpolateFactor = powf((float)2, (float)getNumberResolutions() - 1) * m_FinalResolution;
 
     /* Now set the input files for this resolution */
     inputs->sinoFile = m_InputFile;
-    inputs->tempDir  = m_TempDir + MXADir::Separator + StringUtils::numToString(inputs->interpolateFactor/(powf(2.0f,i))) + std::string("x");
+    inputs->tempDir = m_TempDir + MXADir::Separator + StringUtils::numToString(inputs->interpolateFactor / (powf(2.0f, i))) + std::string("x");
 
     //Make sure the directory is created:
     bool success = MXADir::mkdir(inputs->tempDir, true);
-    if (!success)
+    if(!success)
     {
       ss.str("");
       ss << "Could not create path: " << inputs->tempDir << std::endl;
@@ -232,7 +241,7 @@ void MultiResolutionSOC::execute()
       return;
     }
 
-      /***************TO DO - Fix This*********************/
+    /***************TO DO - Fix This*********************/
     if(m_NumberResolutions - 1 == i)
     {
       ss.str("");
@@ -250,14 +259,36 @@ void MultiResolutionSOC::execute()
     ss.str("");
     ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
     inputs->gainsOutputFile = ss.str();
+    tempFiles.push_back(ss.str());
 
     ss.str("");
     ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalOffsetParametersFile;
     inputs->offsetsOutputFile = ss.str();
+    tempFiles.push_back(ss.str());
 
     ss.str("");
     ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalVariancesFile;
     inputs->varianceOutputFile = ss.str();
+    tempFiles.push_back(ss.str());
+
+
+    // Create the paths for all the temp files that we want to delete
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::CostFunctionFile;
+    tempFiles.push_back(ss.str());
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::DetectorResponseFile;
+    tempFiles.push_back(ss.str());
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedBinFile;
+    tempFiles.push_back(ss.str());
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::VoxelProfileFile;
+    tempFiles.push_back(ss.str());
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::UpsampledBinFile;
+    tempFiles.push_back(ss.str());
+
 
     inputs->NumOuterIter = getOuterIterations();
     if(i == 0)
@@ -267,28 +298,28 @@ void MultiResolutionSOC::execute()
     }
     else
     {
-        inputs->NumIter = 1;//getInnerIterations();
+      inputs->NumIter = 1; //getInnerIterations();
     }
-    inputs->p = getMRFShapeParameter()+1; //NEW: Now we are going to compute p = Diffuseness(input) + 1
+    inputs->p = getMRFShapeParameter() + 1; //NEW: Now we are going to compute p = Diffuseness(input) + 1
     inputs->StopThreshold = getStopThreshold();
-    if (i >= 2)
+    if(i >= 2)
     {
-      inputs->StopThreshold = getStopThreshold()*2.0f;
+      inputs->StopThreshold = getStopThreshold() * 2.0f;
     }
     /** SIGMA_X needs to be calculated here based on some formula**/
-    inputs->SigmaX =pow(2,(getNumberResolutions()-1-i)*(1-3/inputs->p)) * getSigmaX();
+    inputs->SigmaX = pow(2, (getNumberResolutions() - 1 - i) * (1 - 3 / inputs->p)) * getSigmaX();
     ss.str("");
     ss << "SigmaX=" << inputs->SigmaX;
-      pipelineProgressMessage(ss.str());
-      if (i == 0)
-      {
-        inputs->defaultInitialRecon = getInitialReconstructionValue();
+    pipelineProgressMessage(ss.str());
+    if(i == 0)
+    {
+      inputs->defaultInitialRecon = getInitialReconstructionValue();
       inputs->defaultVariance = getDefaultVariance();
-      }
-    inputs->delta_xy = powf(2.0f, getNumberResolutions()-i-1)*m_FinalResolution;
-    inputs->delta_xz = powf(2.0f, getNumberResolutions()-i-1)*m_FinalResolution;
+    }
+    inputs->delta_xy = powf(2.0f, getNumberResolutions() - i - 1) * m_FinalResolution;
+    inputs->delta_xz = powf(2.0f, getNumberResolutions() - i - 1) * m_FinalResolution;
 
-    if (i == 0)
+    if(i == 0)
     {
       inputs->defaultOffset = getDefaultOffsetValue();
       inputs->useDefaultOffset = getUseDefaultOffset();
@@ -319,8 +350,6 @@ void MultiResolutionSOC::execute()
     inputs->excludedViews = m_ViewMasks;
     bf_inputs->excludedViews = m_ViewMasks;
 
-
-
     SinogramPtr sinogram = SinogramPtr(new Sinogram);
     SinogramPtr bf_sinogram = SinogramPtr(new Sinogram);
     GeometryPtr geometry = GeometryPtr(new Geometry);
@@ -346,7 +375,7 @@ void MultiResolutionSOC::execute()
     engine->setBFSinogram(bf_sinogram);
     // We need to get messages to the gui or command line
     engine->addObserver(this);
-    engine->setMessagePrefix( StringUtils::numToString(inputs->interpolateFactor/(powf(2.0f,i))) + std::string("x: ") );
+    engine->setMessagePrefix(StringUtils::numToString(inputs->interpolateFactor / (powf(2.0f, i))) + std::string("x: "));
     ss.str("");
     ss << "Sinogram Inputs -----------------------------------------" << std::endl;
     printInputs(inputs, ss);
@@ -360,6 +389,14 @@ void MultiResolutionSOC::execute()
     engine = SOCEngine::NullPointer();
 
     prevInputs = inputs;
+  }
+
+  if (getDeleteTempFiles() == true)
+  {
+    for(size_t i = 0; i < tempFiles.size(); ++i)
+    {
+      MXAFileInfo::remove(tempFiles[i]);
+    }
   }
 
   updateProgressAndMessage("MultiResolution SOC Complete", 100);

@@ -185,7 +185,7 @@ font-size: 10px;
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QFSDropLineEdit" name="tempDirPath">
+         <widget class="QFSDropLineEdit" name="outputDirectory">
           <property name="toolTip">
            <string>The output image to be written at the conclusion of the segmentation</string>
           </property>
@@ -535,7 +535,7 @@ font-size: 10px;
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
+              <y>-204</y>
               <width>263</width>
               <height>917</height>
              </rect>
@@ -1007,25 +1007,6 @@ font-style: italic;
                     </property>
                    </widget>
                   </item>
-                  <item row="13" column="0" colspan="2">
-                   <widget class="QCheckBox" name="extendObject">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>25</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>Extend Object</string>
-                    </property>
-                   </widget>
-                  </item>
                   <item row="1" column="0">
                    <widget class="QLabel" name="label_49">
                     <property name="sizePolicy">
@@ -1065,6 +1046,32 @@ Threshold:</string>
                     </property>
                     <property name="text">
                      <string>0.004</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="14" column="0">
+                   <widget class="QCheckBox" name="m_DeleteTempFiles">
+                    <property name="text">
+                     <string>Delete Temp Files</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="13" column="0">
+                   <widget class="QCheckBox" name="extendObject">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>25</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Extend Object</string>
                     </property>
                    </widget>
                   </item>
