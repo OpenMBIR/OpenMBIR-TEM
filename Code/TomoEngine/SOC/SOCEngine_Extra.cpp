@@ -380,13 +380,13 @@ void SOCEngine::cropReconstruction()
 			
 	}
 	
-	for (uint16_t j = m_Geometry->N_x-1; j >= 0; j--)
+	for (int16_t j = m_Geometry->N_x-1; j >= 0; j--)
 	{
 		x = m_Geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
 		if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= 
 		   (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 )
 		{
-			cropEnd =j;
+			cropEnd =(uint16_t)j;
 			break;
 		}		
 	}
