@@ -77,6 +77,8 @@ void TargetGainSigmaXEstimation::execute()
 {
 
   MRCHeader header;
+  ::memset(&header, 0, 1024);
+  header.feiHeaders = NULL;
   MRCReader::Pointer reader = MRCReader::New(true);
   int err = reader->readHeader(m_InputFile, &header);
   if (err < 0)
@@ -111,7 +113,7 @@ void TargetGainSigmaXEstimation::execute()
     }
     progress = (i_theta/header.nz) * 100.0f;
 
-    
+
     Real_t sum2 = 0;
     switch(header.mode)
     {
@@ -137,24 +139,24 @@ void TargetGainSigmaXEstimation::execute()
     if (min < targetMin) { targetMin = min; }
     if (max > targetMax) { targetMax = max; }
     sum2s[i_theta] = sum2;
-	  
-	  
+
+
     notify("Estimating Target Gain and Sigma X from Data. ", (int)progress, Observable::UpdateProgressValueAndMessage);
   }
-	
+
   //m_TargetGainEstimate = (targetMax - targetMin) * 10;
 	m_TargetGainEstimate = 1.0; //Setting this to one so that user can then
 	//modify it based on any knowledge they have about the tx. attenuation
 
   // Now Calculate the Sigma X estimation
   for(int i_theta = 0; i_theta < header.nz; ++i_theta)
-  {	
-	//Subtract off any offset in the data 
+  {
+	//Subtract off any offset in the data
 	sum2s[i_theta] -= min*header.nx * header.ny;
-	  	  
+
     sum2s[i_theta] /= header.nx * header.ny * m_TargetGainEstimate;
-	  
-	  
+
+
     Real_t cosine = 0.0;
     if (m_TiltAngles == 0)
     {
@@ -164,7 +166,7 @@ void TargetGainSigmaXEstimation::execute()
     {
       cosine = cos(header.feiHeaders[i_theta].b_tilt*(M_PI/180));
     }
-	  
+
 
     sum1 += ( sum2s[i_theta] * cosine) / (m_SampleThickness);
   }
