@@ -112,21 +112,24 @@ void InitialReconstructionInitializer::execute()
   input->delta_xy = input->delta_xz;
   //Find the maximum absolute tilt angle
   max = absMaxArray(sinogram->angles);
+  // Convert Max to radians
+  max = max * M_PI / 180.0;
   input->LengthZ *= advParams->Z_STRETCH;
   input->LengthZ /= (input->interpolateFactor * sinogram->delta_r);
   //interpolation_factor;
   input->LengthZ = floor(input->LengthZ + 0.5) * input->interpolateFactor * sinogram->delta_r; //interpolation_factor;
+
+  geometry->LengthX = ((sinogram->N_r * sinogram->delta_r));
+  geometry->N_x = floor(geometry->LengthX / input->delta_xz); //Number of voxels in x direction
+
   if(1 == input->extendObject)
   {
     std::cout << "KNOWN BUG FIX NEEDED HERE IF MAX = 90 degrees" << std::endl;
-    geometry->LengthX = advParams->X_SHRINK_FACTOR * ((sinogram->N_r * sinogram->delta_r) / cos(max * M_PI / 180)) + input->LengthZ * tan(max * M_PI / 180);
+    geometry->LengthX = advParams->X_SHRINK_FACTOR * ((sinogram->N_r * sinogram->delta_r) / cos(max)) + input->LengthZ * tan(max);
     geometry->LengthX /= (input->interpolateFactor * sinogram->delta_r);
     geometry->LengthX = floor(geometry->LengthX + 0.5) * input->interpolateFactor * sinogram->delta_r;
   }
-  else
-  {
-    geometry->LengthX = ((sinogram->N_r * sinogram->delta_r));
-  }
+
 
 #else
   geometry->LengthX = ((sinogram->N_r * sinogram->delta_r));
@@ -163,6 +166,10 @@ void InitialReconstructionInitializer::execute()
   ss << "Geometry->Y0=" << geometry->y0 << std::endl;
   ss << "Geometry->Z0=" << geometry->z0 << std::endl;
 
+  if(getVeryVerbose())
+  {
+    std::cout << ss.str() << std::endl;
+  }
   // Now we actually initialize the data to something. If a subclass is involved
   // then the subclasses version of initializeData() will be used instead
   initializeData();
