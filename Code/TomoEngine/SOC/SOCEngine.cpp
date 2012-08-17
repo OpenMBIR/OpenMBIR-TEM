@@ -440,8 +440,10 @@ void SOCEngine::execute()
   // Get the actual boundaries in the X Direction since we "Extend Object" which makes
   // the output mrc file much wider than they really need to be.
   uint16_t cropStart=0;
-  uint16_t cropEnd=m_Geometry->N_x-1;
- // computeOriginalXDims(cropStart, cropEnd);
+  uint16_t cropEnd=m_Geometry->N_x;
+  computeOriginalXDims(cropStart, cropEnd);
+  std::cout << "Crop Start: " << cropStart << std::endl;
+  std::cout << "Crop End:   " << cropEnd << std::endl;
 
 
   //Gain, Offset and Variance Parameter Structures
