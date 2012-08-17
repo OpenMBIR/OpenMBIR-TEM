@@ -441,7 +441,7 @@ void SOCEngine::execute()
   // the output mrc file much wider than they really need to be.
   uint16_t cropStart=0;
   uint16_t cropEnd=m_Geometry->N_x-1;
-  computeOriginalXDims(cropStart, cropEnd);
+ // computeOriginalXDims(cropStart, cropEnd);
 
 
   //Gain, Offset and Variance Parameter Structures
