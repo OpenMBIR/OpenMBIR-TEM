@@ -203,10 +203,11 @@ void TomoGui::readSettings(QSettings &prefs)
   READ_STRING_SETTING(prefs, outputDirectoryPath, "");
   READ_STRING_SETTING(prefs, reconstructedVolumeFileName, "");
 
-  READ_STRING_SETTING(prefs, sampleThickness, "");
+  READ_STRING_SETTING(prefs, sampleThickness, "150");
   READ_STRING_SETTING(prefs, targetGain, "0")
-  READ_STRING_SETTING(prefs, sigma_x, ".00000045");
-  READ_STRING_SETTING(prefs, smoothness, ".00000045");
+  READ_STRING_SETTING(prefs, smoothness, "1.0");
+  READ_STRING_SETTING(prefs, sigma_x, "1.0");
+
 
   READ_SETTING(prefs, numResolutions, ok, i, 1, Int);
   READ_SETTING(prefs, finalResolution, ok, i, 1, Int);
@@ -234,6 +235,8 @@ void TomoGui::readSettings(QSettings &prefs)
   i = prefs.value("tiltSelection").toInt(&ok);
   if (false == ok) {i = 0;}
   tiltSelection->setCurrentIndex(i);
+
+  prefs.endGroup();
 
 }
 
@@ -339,12 +342,66 @@ void TomoGui::on_actionLoad_Config_File_triggered()
 {
   QString file = QFileDialog::getOpenFileName(this, tr("Select Configuration File"),
                                                  m_OpenDialogLastDirectory,
-                                                 tr("Configuration File (*.config)") );
+                                                 tr("Configuration File (*.config *.txt)") );
   if ( true == file.isEmpty() ){return;  }
   QFileInfo fi(file);
   m_OpenDialogLastDirectory = fi.absolutePath();
   QSettings prefs(file, QSettings::IniFormat, this);
-  readSettings(prefs);
+
+
+  QString val;
+  bool ok;
+  qint32 i;
+  double d;
+  prefs.beginGroup("Parameters");
+
+
+  QString filePath =  prefs.value("inputMRCFilePath").toString();
+  if (filePath.isEmpty() == false) {
+    inputMRCFilePath->setText(filePath);
+  }
+
+  READ_STRING_SETTING(prefs, inputBrightFieldFilePath, "");
+  // This will auto load the MRC File
+//  on_inputBrightFieldFilePath_textChanged(inputBrightFieldFilePath->text());
+
+
+  READ_STRING_SETTING(prefs, initialReconstructionPath, "");
+  READ_STRING_SETTING(prefs, outputDirectoryPath, "");
+  READ_STRING_SETTING(prefs, reconstructedVolumeFileName, "");
+
+  READ_STRING_SETTING(prefs, sampleThickness, "150");
+  READ_STRING_SETTING(prefs, targetGain, "0");
+  READ_STRING_SETTING(prefs, smoothness, "1.0");
+  READ_STRING_SETTING(prefs, sigma_x, "1.0");
+
+
+  READ_SETTING(prefs, numResolutions, ok, i, 1, Int);
+  READ_SETTING(prefs, finalResolution, ok, i, 1, Int);
+  READ_SETTING(prefs, outerIterations, ok, i, 1, Int);
+  READ_SETTING(prefs, innerIterations, ok, i, 1, Int);
+
+  READ_BOOL_SETTING(prefs, useDefaultOffset, false);
+  READ_STRING_SETTING(prefs, defaultOffset, "0");
+  READ_STRING_SETTING(prefs, stopThreshold, "0.001");
+  READ_SETTING(prefs, mrf, ok, d, 1.2, Double);
+  READ_BOOL_SETTING(prefs, extendObject, false);
+  READ_BOOL_SETTING(prefs, m_DeleteTempFiles, false);
+
+  READ_STRING_SETTING(prefs, xMin, "0");
+  READ_STRING_SETTING(prefs, xMax, "0");
+  READ_STRING_SETTING(prefs, yMin, "0");
+  READ_STRING_SETTING(prefs, yMax, "0");
+
+  ok = false;
+  i = prefs.value("tiltSelection").toInt(&ok);
+  if (false == ok) {i = 0;}
+  tiltSelection->setCurrentIndex(i);
+
+  prefs.endGroup();
+
+
+
 }
 
 // -----------------------------------------------------------------------------
@@ -432,7 +489,6 @@ void TomoGui::setupGui()
   // setup the Widget List
   m_WidgetList << inputBrightFieldFilePath << inputBrightFieldFilePathBtn << outputDirectoryPath << outputDirectoryPathBtn;
   m_WidgetList << reconstructedVolumeFileName << reconstructedVolumeFileNameBtn << initialReconstructionPath << initialReconstructionPathBtn;
-  m_WidgetList << m_MRCDisplayWidget << m_ReconstructedDisplayWidget << progressBar << m_GoBtn;
   m_WidgetList << parametersDockWidget << dockWidgetContents_2;
 
   setWidgetListEnabled(false);
