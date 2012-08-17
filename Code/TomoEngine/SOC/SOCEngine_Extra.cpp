@@ -364,37 +364,30 @@ void SOCEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::cropReconstruction()
+void SOCEngine::computeOriginalXDims(uint16_t &cropStart, uint16_t &cropEnd)
 {
-	uint16_t cropStart=0,cropEnd=m_Geometry->N_x-1;
-	Real_t x;
-	for (uint16_t j = 0; j < m_Geometry->N_x; j++)
-	{
-			x = m_Geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
-			if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= 
-			   (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 )
-			{
-				cropStart =j;
-				break;
-			}
-			
-	}
-	
-	for (int16_t j = m_Geometry->N_x-1; j >= 0; j--)
-	{
-		x = m_Geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
-		if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= 
-		   (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 )
-		{
-			cropEnd =(uint16_t)j;
-			break;
-		}		
-	}
-	
-	uint16_t newN_x = cropEnd - cropStart + 1;
-	//Now take M_Geometry->Object and crop out (:,cropStart,:) to (:,cropEnd,:)
-	std::cout<<"New N_x="<<newN_x<<std::endl;
-   //m_Geometry->Nx=newN_x;
+
+  Real_t x;
+  for (uint16_t j = 0; j < m_Geometry->N_x; j++)
+  {
+    x = m_Geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
+    if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= (m_Sinogram->N_r * m_Sinogram->delta_r) / 2)
+    {
+      cropStart = j;
+      break;
+    }
+
+  }
+
+  for (int16_t j = m_Geometry->N_x - 1; j >= 0; j--)
+  {
+    x = m_Geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
+    if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= (m_Sinogram->N_r * m_Sinogram->delta_r) / 2)
+    {
+      cropEnd = (uint16_t)j;
+      break;
+    }
+  }
 }
 // -----------------------------------------------------------------------------
 //
@@ -1123,13 +1116,14 @@ void SOCEngine::writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolum
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::writeReconstructionFile()
+void SOCEngine::writeReconstructionFile(uint16_t cropStart, uint16_t cropEnd)
 {
   // Write the Reconstruction out to a file
   RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
   writer->setGeometry(m_Geometry);
   writer->setFilePath(m_TomoInputs->reconstructedOutputFile);
   writer->setAdvParams(m_AdvParams);
+  writer->setXDims(cropStart, cropEnd);
   writer->setObservers(getObservers());
   writer->execute();
   if (writer->getErrorCondition() < 0)
@@ -1143,7 +1137,7 @@ void SOCEngine::writeReconstructionFile()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::writeVtkFile(const std::string &vtkFile)
+void SOCEngine::writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd)
 {
   std::stringstream ss;
   ss << "Writing VTK file to '" << vtkFile << "'";
@@ -1151,6 +1145,7 @@ void SOCEngine::writeVtkFile(const std::string &vtkFile)
 
   VTKStructuredPointsFileWriter vtkWriter;
   vtkWriter.setWriteBinaryFiles(true);
+  vtkWriter.setXDims(cropStart, cropEnd);
   DimsAndRes dimsAndRes;
   dimsAndRes.dim0 = m_Geometry->N_x;
   dimsAndRes.dim1 = m_Geometry->N_y;
@@ -1179,7 +1174,7 @@ void SOCEngine::writeVtkFile(const std::string &vtkFile)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::writeMRCFile(const std::string &mrcFile)
+void SOCEngine::writeMRCFile(const std::string &mrcFile, uint16_t cropStart, uint16_t cropEnd)
 {
   /* Write the output to the MRC File */
   std::stringstream ss;
@@ -1191,6 +1186,9 @@ void SOCEngine::writeMRCFile(const std::string &mrcFile)
   mrcWriter->setOutputFile(mrcFile);
   mrcWriter->setGeometry(m_Geometry);
   mrcWriter->setAdvParams(m_AdvParams);
+  mrcWriter->setXDims(cropStart, cropEnd);
+  mrcWriter->setYDims(0, m_Geometry->N_y);
+  mrcWriter->setZDims(0, m_Geometry->N_z);
   mrcWriter->setObservers(getObservers());
   mrcWriter->execute();
   if(mrcWriter->getErrorCondition() < 0)

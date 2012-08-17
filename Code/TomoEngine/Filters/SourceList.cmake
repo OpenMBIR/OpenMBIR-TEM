@@ -16,7 +16,7 @@ set (TomoEngine_Filters_SRCS
     ${TomoEngine_SOURCE_DIR}/Filters/ComputeInitialOffsets.cpp
     ${TomoEngine_SOURCE_DIR}/Filters/DetectorResponse.cpp
     ${TomoEngine_SOURCE_DIR}/Filters/DetectorResponseWriter.cpp
-    ${TomoEngine_SOURCE_DIR}/Filters/TargetGainSigmaXEstimation.cpp
+    ${TomoEngine_SOURCE_DIR}/Filters/SigmaXEstimation.cpp
 )
 
 set (TomoEngine_Filters_HDRS
@@ -31,7 +31,7 @@ set (TomoEngine_Filters_HDRS
     ${TomoEngine_SOURCE_DIR}/Filters/ComputeInitialOffsets.h 
     ${TomoEngine_SOURCE_DIR}/Filters/DetectorResponse.h
     ${TomoEngine_SOURCE_DIR}/Filters/DetectorResponseWriter.h
-    ${TomoEngine_SOURCE_DIR}/Filters/TargetGainSigmaXEstimation.h
+    ${TomoEngine_SOURCE_DIR}/Filters/SigmaXEstimation.h
 )
 
 cmp_IDE_SOURCE_PROPERTIES( "TomoEngine/Filters" "${TomoEngine_Filters_HDRS}" "${TomoEngine_Filters_SRCS}" "${CMP_INSTALL_FILES}")

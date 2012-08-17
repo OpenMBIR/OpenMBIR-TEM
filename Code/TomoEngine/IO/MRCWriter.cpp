@@ -51,7 +51,12 @@
 MRCWriter::MRCWriter() :
 m_MRCHeader(NULL)
 {
-
+m_XDims[0] = 0;
+m_XDims[1] = 0;
+m_YDims[0] = 0;
+m_YDims[1] = 0;
+m_ZDims[0] = 0;
+m_ZDims[1] = 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -160,7 +165,7 @@ void MRCWriter::initializeMRCHeader(MRCHeader* header)
   }
   snprintf(header->labels[0], 80, "Fei Company (C) Copyright 2003");
   snprintf(header->labels[1], 80, "Reconstruction by OpenMBIR");
-  snprintf(header->labels[2], 80, "EIM TomoEngine code developed by Purdue University & BlueQuartz Software");
+  snprintf(header->labels[2], 80, "OpenMBIR code developed by Purdue University & BlueQuartz Software");
 
 }
 
@@ -208,6 +213,19 @@ int MRCWriter::write()
     initializeMRCHeader(m_MRCHeader);
     detachHeaderReference = true;
   }
+  // Update the header with our Dimensions
+  m_MRCHeader->nx = (m_XDims[1] - m_XDims[0]);
+  m_MRCHeader->ny = (m_YDims[1] - m_YDims[0]);
+  m_MRCHeader->nz = (m_ZDims[1] - m_ZDims[0]);
+  m_MRCHeader->mx = m_MRCHeader->nx;
+  m_MRCHeader->my = m_MRCHeader->ny;
+  m_MRCHeader->mz = m_MRCHeader->nz;
+
+  m_MRCHeader->xlen = m_MRCHeader->nx;
+  m_MRCHeader->ylen = m_MRCHeader->ny;
+  m_MRCHeader->zlen = m_MRCHeader->nz;
+  m_MRCHeader->next = sizeof(FEIHeader) * m_MRCHeader->nz;
+
   // Write the header
   writer.write(reinterpret_cast<char*>(m_MRCHeader), 1024);
   for(uint16_t i = 0; i < m_Geometry->N_z; ++i)
@@ -218,8 +236,11 @@ int MRCWriter::write()
     writer.write(reinterpret_cast<char*>(&fei), sizeof(FEIHeader));
   }
 
-  size_t size = sizeof(float) * m_Geometry->N_x * m_Geometry->N_y;
-  float* slice = (float*)(malloc(size));
+  size_t dims[2] = {m_MRCHeader->nx, m_MRCHeader->ny};
+  FloatImageType::Pointer sliceData = FloatImageType::New(dims, "temp slice data");
+  float* slice = sliceData->getPointer(0);
+
+
   size_t index = 0;
   Real_t d = 0.0;
   size_t count = 0;
@@ -228,12 +249,12 @@ int MRCWriter::write()
   float dmax = std::numeric_limits<Real_t>::min();
   float dmin = std::numeric_limits<Real_t>::max();
 
-  for (int z = m_Geometry->N_z - 1; z >= 0; z--)
+  for (int z = m_ZDims[1]; z >= m_ZDims[0]; z--)
   {
     index = 0;
-    for (int y = 0; y < m_Geometry->N_y; ++y)
+    for (int y = m_YDims[0]; y < m_YDims[1]; ++y)
     {
-      for (int x = 0; x < m_Geometry->N_x; ++x)
+      for (int x = m_XDims[0]; x < m_XDims[1]; ++x)
       {
         //index = (x * m_Geometry->N_y) + y;
         d = m_Geometry->Object->getValue(z, x, y);
@@ -245,7 +266,7 @@ int MRCWriter::write()
         ++index;
       }
     }
-    writer.write(reinterpret_cast<char*>(slice), size);
+    writer.write(reinterpret_cast<char*>(slice), sizeof(float) * dims[0] * dims[1]);
   }
 
   // Calculate the mean value
@@ -256,7 +277,6 @@ int MRCWriter::write()
   writer.writeValue(&dmax);
   writer.writeValue(&mean);
 
-  free(slice);
 
   if (detachHeaderReference == true)
   {

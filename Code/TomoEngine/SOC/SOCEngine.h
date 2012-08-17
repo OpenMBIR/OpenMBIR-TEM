@@ -136,7 +136,10 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     int createInitialVariancesData();
     int initializeRoughReconstructionData();
     void initializeROIMask(UInt8Image_t::Pointer Mask);
-	void cropReconstruction();
+    /**
+     * @brief Calculates the x boundaries so the writers do not write extra data
+     */
+    void computeOriginalXDims(uint16_t &cropStart, uint16_t &cropEnd);
     void gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams);
     void initializeHt(RealVolumeType::Pointer H_t);
     void storeVoxelResponse(RealVolumeType::Pointer H_t, std::vector<AMatrixCol::Pointer> &VoxelLineResponse);
@@ -162,9 +165,9 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
 #endif
 
     void writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram);
-    void writeReconstructionFile();
-    void writeVtkFile(const std::string &vtkFile);
-    void writeMRCFile(const std::string &vtkFile);
+    void writeReconstructionFile(uint16_t cropStart, uint16_t cropEnd);
+    void writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
+    void writeMRCFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
 
   private:
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered

@@ -428,6 +428,7 @@ void SOCEngine::execute()
 	processRawCounts();
 #endif
 
+
   // Initialize the Geometry data from a rough reconstruction
   err = initializeRoughReconstructionData();
   if(err < 0)
@@ -435,6 +436,12 @@ void SOCEngine::execute()
     return;
   }
   if (getCancel() == true) { setErrorCondition(-999); return; }
+
+  // Get the actual boundaries in the X Direction since we "Extend Object" which makes
+  // the output mrc file much wider than they really need to be.
+  uint16_t cropStart=0;
+  uint16_t cropEnd=m_Geometry->N_x-1;
+  computeOriginalXDims(cropStart, cropEnd);
 
 
   //Gain, Offset and Variance Parameter Structures
@@ -768,7 +775,7 @@ void SOCEngine::execute()
       {
         ss.str("");
         ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << reconInnerIter << "_" << ScaleOffsetCorrection::ReconstructedMrcFile;
-        writeMRCFile(ss.str());
+        writeMRCFile(ss.str(), cropStart, cropEnd);
         notify(ss.str(), 0, Observable::UpdateIntermediateImage);
       }
 
@@ -868,20 +875,18 @@ void SOCEngine::execute()
 
   writeSinogramFile(NuisanceParams, Final_Sinogram); // Writes the sinogram to a file
 
-  cropReconstruction();//Crop the object so the "extended part is removed"
-	
-  writeReconstructionFile(); // Writes the m_Geometry to a file
+  writeReconstructionFile(cropStart, cropEnd); // Writes the m_Geometry to a file
   // Write out the VTK file
   {
     std::stringstream ss;
     ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedVtkFile;
-    writeVtkFile(ss.str());
+    writeVtkFile(ss.str(), cropStart, cropEnd);
   }
   // Write out the MRC File
   {
     std::stringstream ss;
     ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedMrcFile;
-    writeMRCFile(ss.str());
+    writeMRCFile(ss.str(), cropStart, cropEnd);
   }
 
   std::cout << "Final Dimensions of Object: " << std::endl;

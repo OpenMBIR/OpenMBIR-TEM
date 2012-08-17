@@ -58,6 +58,9 @@ typedef TomoArray<Real_t, Real_t*, 3> RealVolumeType;
 typedef TomoArray<Real_t, Real_t*, 2> RealImageType;
 typedef TomoArray<Real_t, Real_t*, 1> RealArrayType;
 
+typedef TomoArray<float, float*, 3> FloatVolumeType;
+typedef TomoArray<float, float*, 2> FloatImageType;
+typedef TomoArray<float, float*, 1> FloatArrayType;
 
 namespace SOC {
   enum TiltSelection {

@@ -72,7 +72,7 @@
 #include "TomoEngine/IO/MRCHeader.h"
 #include "TomoEngine/IO/MRCReader.h"
 #include "TomoEngine/Filters/GainsOffsetsReader.h"
-#include "TomoEngine/Filters/TargetGainSigmaXEstimation.h"
+#include "TomoEngine/Filters/SigmaXEstimation.h"
 
 #include "License/LicenseFiles.h"
 
@@ -204,7 +204,7 @@ void TomoGui::readSettings(QSettings &prefs)
   READ_STRING_SETTING(prefs, reconstructedVolumeFileName, "");
 
   READ_STRING_SETTING(prefs, sampleThickness, "150");
-  READ_STRING_SETTING(prefs, targetGain, "0")
+  READ_STRING_SETTING(prefs, targetGain, "1")
   READ_STRING_SETTING(prefs, smoothness, "1.0");
   READ_STRING_SETTING(prefs, sigma_x, "1.0");
 
@@ -489,7 +489,7 @@ void TomoGui::setupGui()
   // setup the Widget List
   m_WidgetList << inputBrightFieldFilePath << inputBrightFieldFilePathBtn << outputDirectoryPath << outputDirectoryPathBtn;
   m_WidgetList << reconstructedVolumeFileName << reconstructedVolumeFileNameBtn << initialReconstructionPath << initialReconstructionPathBtn;
-  m_WidgetList << parametersDockWidget << dockWidgetContents_2;
+  m_WidgetList << parametersTab << advancedParametersGroupBox;
 
   setWidgetListEnabled(false);
 
@@ -675,6 +675,7 @@ void TomoGui::on_m_SingleSliceReconstructionBtn_clicked()
           this, SLOT(loadProgressMRCFile(QString) ));
 
   setWidgetListEnabled(false);
+  m_SingleSliceReconstructionBtn->setEnabled(true);
   emit pipelineStarted();
   m_WorkerThread->start();
   m_SingleSliceReconstructionBtn->setText("Cancel");
@@ -1672,7 +1673,7 @@ void TomoGui::displayDialogBox(QString title, QString text, QMessageBox::Icon ic
 // -----------------------------------------------------------------------------
 void TomoGui::on_estimateSigmaX_clicked()
 {
-  std::cout << "on_estimateGainSigma_clicked" << std::endl;
+//  std::cout << "on_estimateGainSigma_clicked" << std::endl;
   bool ok = false;
   if (sampleThickness->text().isEmpty() == true)
   {
@@ -1682,18 +1683,24 @@ void TomoGui::on_estimateSigmaX_clicked()
   {
     return;
   }
+  if (targetGain->text().isEmpty() == true)
+  {
+    return;
+  }
 
   if (verifyPathExists(inputMRCFilePath->text(), inputMRCFilePath))
   {
-    TargetGainSigmaXEstimation::Pointer estimate = TargetGainSigmaXEstimation::New();
+    SigmaXEstimation::Pointer estimate = SigmaXEstimation::New();
     estimate->setInputFile(inputMRCFilePath->text().toStdString());
     estimate->setSampleThickness(sampleThickness->text().toDouble(&ok));
     estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
+    estimate->setTargetGain(targetGain->text().toDouble(&ok));
     estimate->setTiltAngles(tiltSelection->currentIndex());
     estimate->addObserver(this);
     estimate->execute();
     this->progressBar->setValue(0);
-    targetGain->setText(QString::number(estimate->getTargetGainEstimate()));
+
+    //targetGain->setText(QString::number(estimate->getTargetGainEstimate()));
 
     m_CachedSigmaX = estimate->getSigmaXEstimate();
     std::cout << "m_CachedSigmaX: " << m_CachedSigmaX << std::endl;
@@ -1713,7 +1720,7 @@ void TomoGui::on_estimateSigmaX_clicked()
 // -----------------------------------------------------------------------------
 void TomoGui::on_sigma_x_textChanged(const QString & text)
 {
-  std::cout << "on_sigma_x_textChanged" << std::endl;
+//  std::cout << "on_sigma_x_textChanged" << std::endl;
   bool ok = false;
   qreal sigx = sigma_x->text().toDouble(&ok);
   qreal smth = m_CachedSigmaX / sigx;
@@ -1727,7 +1734,7 @@ void TomoGui::on_sigma_x_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
 void TomoGui::on_smoothness_textChanged(const QString & text)
 {
-  std::cout << "on_smoothness_textChanged" << std::endl;
+//  std::cout << "on_smoothness_textChanged" << std::endl;
   bool ok = false;
   qreal smth = 1.0/smoothness->text().toDouble(&ok);
   sigma_x->blockSignals(true);

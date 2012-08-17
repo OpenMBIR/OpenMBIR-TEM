@@ -420,13 +420,6 @@ void MultiResolutionSOC::memCalculate(TomoInputsPtr inputs, TomoInputsPtr bf_inp
     if(inputs->extendObject == 1)
     {
         GeomNx = (SinoNr/m_FinalResolution)*4;//TODO:Need to access X_Stretch and
-        //m_Sinogram->cosine and
-
-//      float LengthZ = m_SampleThickness*advancedParams->Z_STRETCH;
-//		float temp = advancedParams->X_SHRINK_FACTOR * ((SinoN_r * sinogram->delta_r) / cos(maxTilt * M_PI / 180)) + input->LengthZ * tan(max * M_PI / 180);
-//		temp/= (input->interpolateFactor * sinogram->delta_r);
-//		float GeomLengthX = floor(temp + 0.5) * inputs->interpolateFactor * sinogram->delta_r;
-//		GeomN_x = floor(GeomLengthX / inputs->delta_xz);
     }
     else
     {
