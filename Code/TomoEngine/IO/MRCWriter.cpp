@@ -240,7 +240,6 @@ int MRCWriter::write()
   FloatImageType::Pointer sliceData = FloatImageType::New(dims, "temp slice data");
   float* slice = sliceData->getPointer(0);
 
-
   size_t index = 0;
   Real_t d = 0.0;
   size_t count = 0;
