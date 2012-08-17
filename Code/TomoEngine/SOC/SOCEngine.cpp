@@ -442,7 +442,7 @@ void SOCEngine::execute()
   uint16_t cropStart=0;
   uint16_t cropEnd=m_Geometry->N_x-1;
   computeOriginalXDims(cropStart, cropEnd);
-
+	std::cout<<cropStart<<" "<<cropEnd<<std::endl;
 
   //Gain, Offset and Variance Parameter Structures
   ScaleOffsetParamsPtr NuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
