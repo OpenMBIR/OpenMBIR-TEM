@@ -176,7 +176,7 @@ int MRCWriter::write()
 {
   int err = -1;
   std::stringstream ss;
- // std::cout << "MRC Output File: '" << m_OutputFile << "'" << std::endl;
+  std::cout << "MRC Output File:\n  " << m_OutputFile << std::endl;
   if (m_OutputFile.empty())
   {
       ss.str("");
@@ -248,7 +248,7 @@ int MRCWriter::write()
   float dmax = std::numeric_limits<Real_t>::min();
   float dmin = std::numeric_limits<Real_t>::max();
 
-  for (int z = m_ZDims[1]; z >= m_ZDims[0]; z--)
+  for (int z = m_ZDims[1]-1; z >= m_ZDims[0]; z--)
   {
     index = 0;
     for (int y = m_YDims[0]; y < m_YDims[1]; ++y)
