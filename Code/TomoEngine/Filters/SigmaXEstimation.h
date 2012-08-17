@@ -92,7 +92,7 @@ class TomoEngine_EXPORT SigmaXEstimation : public TomoFilter
       {
           if(data[i] > max) max = data[i];
           if(data[i] < min) min = data[i];
-          sum2 += (data[i] - m_DefaultOffset);
+          sum2 += (data[i]);
       }
     }
 
