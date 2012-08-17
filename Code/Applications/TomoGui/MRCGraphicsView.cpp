@@ -250,6 +250,28 @@ void MRCGraphicsView::setImageDisplayType(TomoGui_Constants::ImageDisplayType di
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+void MRCGraphicsView::clearContent()
+{
+  QGraphicsScene* gScene = scene();
+
+  if (gScene != NULL)
+  {
+
+    gScene->removeItem(m_ImageGraphicsItem);
+    if(NULL != m_ReconstructionArea)
+    {
+      m_ReconstructionArea->setParentItem(NULL);
+    }
+    delete m_ImageGraphicsItem; // Will delete its children
+    m_ImageGraphicsItem = NULL;
+  }
+
+}
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void MRCGraphicsView::loadBaseImageFile(QImage image)
 {
   m_BaseImage = image;
@@ -258,7 +280,6 @@ void MRCGraphicsView::loadBaseImageFile(QImage image)
     return;
   }
   QSize pSize(0, 0);
-
 
   m_BaseImage = m_BaseImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 

@@ -186,6 +186,15 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     void on_smoothness_textChanged(const QString & text);
     void on_sigma_x_textChanged(const QString & text);
+    void on_targetGain_editingFinished();
+    void on_sampleThickness_editingFinished();
+    void on_resetSigmaXBtn_clicked();
+    void on_defaultOffset_editingFinished();
+    void on_tiltSelection_currentIndexChanged(int index);
+
+
+
+
 
     void singleSlicePlaneSet(int y);
 
@@ -242,6 +251,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     bool checkTiltAngles(QVector<float> &tilts);
 
     void sigmaX_ShouldUpdate(bool b);
+
+    void enableWidgets(bool b);
 
   signals:
 

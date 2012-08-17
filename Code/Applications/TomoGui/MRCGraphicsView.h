@@ -118,6 +118,8 @@ class MRCGraphicsView : public QGraphicsView
 
     QGraphicsItem* getImageGraphicsItem();
 
+    void clearContent();
+
   public slots:
     void zoomIn();
 

@@ -355,6 +355,8 @@ void TomoGui::on_actionParameters_triggered()
   parametersDockWidget->show();
 }
 
+
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -428,9 +430,12 @@ void TomoGui::setupGui()
   QObject::connect(com4, SIGNAL(activated(const QString &)), this, SLOT(on_reconstructedVolumeFileName_textChanged(const QString &)));
 
   // setup the Widget List
-  m_WidgetList << inputMRCFilePath << inputMRCFilePathBtn;
+  m_WidgetList << inputBrightFieldFilePath << inputBrightFieldFilePathBtn << outputDirectoryPath << outputDirectoryPathBtn;
+  m_WidgetList << reconstructedVolumeFileName << reconstructedVolumeFileNameBtn << initialReconstructionPath << initialReconstructionPathBtn;
+  m_WidgetList << m_MRCDisplayWidget << m_ReconstructedDisplayWidget << progressBar << m_GoBtn;
+  m_WidgetList << parametersDockWidget << dockWidgetContents_2;
 
-  setWidgetListEnabled(true);
+  setWidgetListEnabled(false);
 
   connect(m_MRCDisplayWidget, SIGNAL(memoryCalculationNeedsUpdated()),
           this, SLOT(memCalculate()));
@@ -1202,8 +1207,8 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
       m_MRCDisplayWidget->setImageWidgetsEnabled(true);
       m_MRCDisplayWidget->setMovieWidgetsEnabled(true);
       m_GainsFile = ""; // We are reading a new .mrc file so we probably need a new Gains Offsets File
+      smoothness->setText(QString("1.0"));
       on_estimateSigmaX_clicked();
-
     }
 
     setWindowTitle(filepath);
@@ -1219,7 +1224,14 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
 
     updateBaseRecentFileList(filepath);
   }
-
+  else
+  {
+    sigma_x->setText(0);
+    smoothness->setText(0);
+    m_CachedSigmaX = 0.0;
+    m_MRCDisplayWidget->loadMRCFile(QString(""));
+    setWidgetListEnabled(false);
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -1297,11 +1309,6 @@ void TomoGui::setWidgetListEnabled(bool b)
   {
     w->setEnabled(b);
   }
-
-  if (b == true) {
-
-  }
-
 }
 
 
@@ -1609,26 +1616,39 @@ void TomoGui::displayDialogBox(QString title, QString text, QMessageBox::Icon ic
 // -----------------------------------------------------------------------------
 void TomoGui::on_estimateSigmaX_clicked()
 {
- // std::cout << "on_estimateGainSigma_clicked" << std::endl;
+  std::cout << "on_estimateGainSigma_clicked" << std::endl;
   bool ok = false;
-  TargetGainSigmaXEstimation::Pointer estimate = TargetGainSigmaXEstimation::New();
-  estimate->setInputFile(inputMRCFilePath->text().toStdString());
-  estimate->setSampleThickness(sampleThickness->text().toDouble(&ok));
-  estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
-  estimate->setTiltAngles(tiltSelection->currentIndex());
-  estimate->addObserver(this);
-  estimate->execute();
-  this->progressBar->setValue(0);
-  targetGain->setText(QString::number(estimate->getTargetGainEstimate()));
+  if (sampleThickness->text().isEmpty() == true)
+  {
+    return;
+  }
+  if (defaultOffset->text().isEmpty() == true)
+  {
+    return;
+  }
 
-  m_CachedSigmaX = estimate->getSigmaXEstimate();
-  std::cout << "m_CachedSigmaX: " << m_CachedSigmaX << std::endl;
-  qreal smth = 1.0/smoothness->text().toDouble(&ok);
-  //sigma_x->blockSignals(true);
-  sigma_x->setText(QString::number(m_CachedSigmaX * smth));
-  //sigma_x->blockSignals(false);
+  if (verifyPathExists(inputMRCFilePath->text(), inputMRCFilePath))
+  {
+    TargetGainSigmaXEstimation::Pointer estimate = TargetGainSigmaXEstimation::New();
+    estimate->setInputFile(inputMRCFilePath->text().toStdString());
+    estimate->setSampleThickness(sampleThickness->text().toDouble(&ok));
+    estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
+    estimate->setTiltAngles(tiltSelection->currentIndex());
+    estimate->addObserver(this);
+    estimate->execute();
+    this->progressBar->setValue(0);
+    targetGain->setText(QString::number(estimate->getTargetGainEstimate()));
 
-  sigmaX_ShouldUpdate(false);
+    m_CachedSigmaX = estimate->getSigmaXEstimate();
+    std::cout << "m_CachedSigmaX: " << m_CachedSigmaX << std::endl;
+    qreal smth = 1.0/smoothness->text().toDouble(&ok);
+    //sigma_x->blockSignals(true);
+    sigma_x->setText(QString::number(m_CachedSigmaX * smth));
+    //sigma_x->blockSignals(false);
+
+    sigmaX_ShouldUpdate(false);
+  }
+
 }
 
 
@@ -1637,6 +1657,7 @@ void TomoGui::on_estimateSigmaX_clicked()
 // -----------------------------------------------------------------------------
 void TomoGui::on_sigma_x_textChanged(const QString & text)
 {
+  std::cout << "on_sigma_x_textChanged" << std::endl;
   bool ok = false;
   qreal sigx = sigma_x->text().toDouble(&ok);
   qreal smth = m_CachedSigmaX / sigx;
@@ -1650,11 +1671,61 @@ void TomoGui::on_sigma_x_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
 void TomoGui::on_smoothness_textChanged(const QString & text)
 {
+  std::cout << "on_smoothness_textChanged" << std::endl;
   bool ok = false;
   qreal smth = 1.0/smoothness->text().toDouble(&ok);
   sigma_x->blockSignals(true);
   sigma_x->setText(QString::number(m_CachedSigmaX * smth));
   sigma_x->blockSignals(false);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_targetGain_editingFinished()
+{
+  sigmaX_ShouldUpdate(true);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_sampleThickness_editingFinished()
+{
+  sigmaX_ShouldUpdate(true);
+}
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_defaultOffset_editingFinished()
+{
+  sigmaX_ShouldUpdate(true);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_tiltSelection_currentIndexChanged(int index)
+{
+  sigmaX_ShouldUpdate(true);
+}
+
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_resetSigmaXBtn_clicked()
+{
+  sigma_x->blockSignals(true);
+  sigma_x->setText(QString::number(m_CachedSigmaX));
+  sigma_x->blockSignals(false);
+
+  smoothness->blockSignals(true);
+  smoothness->setText("1.0");
+  smoothness->blockSignals(false);
 }
 
 // -----------------------------------------------------------------------------
@@ -1921,7 +1992,14 @@ void TomoGui::sigmaX_ShouldUpdate(bool b)
 {
   estimateSigmaX->setEnabled(b);
   estimateSigmaX->setDefault(b);
+
   m_UpdateCachedSigmaX = b;
+
+  targetGain->setEnabled(!b);
+  sampleThickness->setEnabled(!b);
+  sigma_x->setEnabled(!b);
+  smoothness->setEnabled(!b);
+  tiltSelection->setEnabled(!b);
 }
 
 

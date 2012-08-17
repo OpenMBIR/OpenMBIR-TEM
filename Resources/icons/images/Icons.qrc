@@ -14,7 +14,7 @@
     <file>media_end.png</file>
     <file>media_play_green.png</file>
     <file>media_stop_red.png</file>
-
+    <file>undo.png</file>
     <file>Link_Left.png</file>
     <file>Link_Right.png</file>
  </qresource>

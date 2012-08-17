@@ -347,6 +347,10 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
 {
 
   m_CurrentMRCFilePath = mrcFilePath;
+  if (m_CurrentMRCFilePath.isEmpty() == true)
+  {
+    m_GraphicsView->clearContent();
+  }
 
   QImage image;
 
