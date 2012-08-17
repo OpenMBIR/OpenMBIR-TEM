@@ -489,7 +489,6 @@ void TomoGui::setupGui()
   // setup the Widget List
   m_WidgetList << inputBrightFieldFilePath << inputBrightFieldFilePathBtn << outputDirectoryPath << outputDirectoryPathBtn;
   m_WidgetList << reconstructedVolumeFileName << reconstructedVolumeFileNameBtn << initialReconstructionPath << initialReconstructionPathBtn;
-  m_WidgetList << parametersGroupBox << advancedParametersGroupBox;
 
   setWidgetListEnabled(false);
 
@@ -1230,7 +1229,7 @@ void TomoGui::on_inputMRCFilePathBtn_clicked()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString imageFile =
-      QFileDialog::getOpenFileName(this, tr("Select MRC Data file"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc *.ali)"));
+      QFileDialog::getOpenFileName(this, tr("Select MRC Data file"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc);;Aligned MRC Files (*.ali);;Reconstructed MRC Files (*.rec);;All Files (*.*)"));
 
   if (true == imageFile.isEmpty())
   {

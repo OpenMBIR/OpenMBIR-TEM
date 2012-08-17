@@ -58,6 +58,9 @@ class VtkScalarWriter
     VtkScalarWriter() : m_WriteBinaryFiles(true){}
     virtual ~VtkScalarWriter(){}
 
+    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, XDims)
+    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, YDims)
+    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, ZDims)
 
     void setWriteBinaryFiles(bool v) {
       m_WriteBinaryFiles = v;
@@ -79,51 +82,6 @@ class VtkScalarWriter
     VtkScalarWriter(const VtkScalarWriter&); // Copy Constructor Not Implemented
     void operator=(const VtkScalarWriter&); // Operator '=' Not Implemented
 };
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-typedef struct
-{
-    int dim0;
-    int dim1;
-    int dim2;
-    float resx;
-    float resy;
-    float resz;
-}  DimsAndRes;
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-
-class TomoOutputScalarWriter : public VtkScalarWriter
-{
-  public:
-  TomoOutputScalarWriter(Geometry* r) : r(r) {}
-  virtual ~TomoOutputScalarWriter(){}
-
-  int writeScalars(FILE* f)
-  {
-    int err = 0;
-    std::string file;
-    if (getWriteBinaryFiles() == true)
-    {
-      WRITE_VTK_FLOAT_VOXEL_BINARY(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName, double);
-    }
-    else
-    {
-      WRITE_VTK_FLOAT_VOXEL_ASCII(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName)
-    }
-    return err;
-  }
-
-  private:
-    Geometry* r;
-    TomoOutputScalarWriter(const TomoOutputScalarWriter&); // Copy Constructor Not Implemented
-    void operator=(const TomoOutputScalarWriter&); // Operator '=' Not Implemented
-};
-
 
 
 /**
@@ -311,6 +269,111 @@ class VTKRectilinearGridFileWriter
 };
 
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+typedef struct
+{
+    int xStart;
+    int xEnd;
+    int yStart;
+    int yEnd;
+    int zStart;
+    int zEnd;
+    float resx;
+    float resy;
+    float resz;
+}  DimsAndRes;
+
+
+
+#define WRITE_STRUCTURED_POINTS_HEADER_2(FILE_TYPE, ptr)\
+  fprintf(f, "# vtk DataFile Version 2.0\n");\
+  fprintf(f, "data set from DREAM3D\n");\
+  fprintf(f, FILE_TYPE); fprintf(f, "\n");\
+  fprintf(f, "DATASET STRUCTURED_POINTS\n");\
+  int xDim = ptr->xEnd - ptr->xStart;\
+  int yDim = ptr->yEnd - ptr->yStart;\
+  int zDim = ptr->zEnd - ptr->zStart;\
+  fprintf(f, "DIMENSIONS %d %d %d\n", xDim, yDim, zDim);\
+  fprintf(f, "ORIGIN 0.0 0.0 0.0\n");\
+  fprintf(f, "SPACING %f %f %f\n", ptr->resx, ptr->resy, ptr->resz);\
+  fprintf(f, "POINT_DATA %d\n\n", xDim * yDim * zDim );\
+
+
+#define WRITE_VTK_FLOAT_VOXEL_BINARY_2(ptr, ScalarName, type)  \
+  fprintf(f, "SCALARS %s float 1\n", ScalarName.c_str() );\
+  fprintf(f, "LOOKUP_TABLE default\n"); \
+  { \
+    float t;\
+    uint16_t xStart, xEnd, yStart, yEnd, zStart, zEnd;\
+    getXDims(xStart, xEnd);\
+    getYDims(yStart, yEnd);\
+    getZDims(zStart, zEnd);\
+    for (int16_t i = zEnd - 1; i >= zStart; i--) {\
+     for (uint16_t j = yStart; j < yEnd; ++j) {\
+      for (uint16_t k = xStart; k < xEnd; k++) {\
+          t = static_cast<float>(ptr->Object->getValue(i, k, j) );\
+          MXA::Endian::FromSystemToBig::convert<float>(t); \
+          fwrite(&t, sizeof(float), 1, f);\
+        }\
+      }\
+    }\
+  }
+
+
+#define WRITE_VTK_FLOAT_VOXEL_ASCII_2(ptr, ScalarName)  \
+  fprintf(f, "SCALARS %s float 1\n", ScalarName.c_str() );\
+  fprintf(f, "LOOKUP_TABLE default\n"); \
+  { \
+    uint16_t xStart, xEnd, yStart, yEnd, zStart, zEnd;\
+    getXDims(xStart, xEnd);\
+    getYDims(yStart, yEnd);\
+    getZDims(zStart, zEnd);\
+    for (int16_t i = zEnd -1; i >= zStart; i--) {\
+     for (uint16_t j = yStart; j < yEnd; ++j) {\
+      for (uint16_t k = xStart; k < xEnd; k++) {\
+          fprintf(f, "%0.6f ", ptr->Object->getValue(i, k, j) );\
+        }\
+        fprintf(f, "\n");\
+      }\
+    }\
+  }
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+class TomoOutputScalarWriter : public VtkScalarWriter
+{
+  public:
+  TomoOutputScalarWriter(Geometry* r) : r(r) {}
+  virtual ~TomoOutputScalarWriter(){}
+
+  int writeScalars(FILE* f)
+  {
+    int err = 0;
+    std::string file;
+    if (getWriteBinaryFiles() == true)
+    {
+      WRITE_VTK_FLOAT_VOXEL_BINARY_2(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName, float)
+      }
+    else
+    {
+      WRITE_VTK_FLOAT_VOXEL_ASCII_2(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName)
+    }
+    return err;
+  }
+
+  private:
+    Geometry* r;
+    TomoOutputScalarWriter(const TomoOutputScalarWriter&); // Copy Constructor Not Implemented
+    void operator=(const TomoOutputScalarWriter&); // Operator '=' Not Implemented
+};
+
+
+
+
 /**
  *
  */
@@ -341,11 +404,11 @@ class VTKStructuredPointsFileWriter
       // Write the correct header
       if (m_WriteBinaryFiles == true)
       {
-        WRITE_STRUCTURED_POINTS_HEADER("BINARY", r)
+        WRITE_STRUCTURED_POINTS_HEADER_2("BINARY", r)
       }
       else
       {
-        WRITE_STRUCTURED_POINTS_HEADER("ASCII", r)
+        WRITE_STRUCTURED_POINTS_HEADER_2("ASCII", r)
       }
 
       //size_t total = r->getXPoints() * r->getYPoints() * r->getZPoints();

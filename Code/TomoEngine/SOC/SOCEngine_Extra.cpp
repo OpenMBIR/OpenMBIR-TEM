@@ -1145,11 +1145,15 @@ void SOCEngine::writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uin
 
   VTKStructuredPointsFileWriter vtkWriter;
   vtkWriter.setWriteBinaryFiles(true);
-  vtkWriter.setXDims(cropStart, cropEnd);
+
+
   DimsAndRes dimsAndRes;
-  dimsAndRes.dim0 = m_Geometry->N_x;
-  dimsAndRes.dim1 = m_Geometry->N_y;
-  dimsAndRes.dim2 = m_Geometry->N_z;
+  dimsAndRes.xStart = cropStart;
+  dimsAndRes.xEnd = cropEnd;
+  dimsAndRes.yStart = 0;
+  dimsAndRes.yEnd = m_Geometry->N_y;
+  dimsAndRes.zStart = 0;
+  dimsAndRes.zEnd = m_Geometry->N_z;
   dimsAndRes.resx = 1.0f;
   dimsAndRes.resy = 1.0f;
   dimsAndRes.resz = 1.0f;
@@ -1157,6 +1161,9 @@ void SOCEngine::writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uin
   std::vector<VtkScalarWriter*> scalarsToWrite;
 
   VtkScalarWriter* w0 = static_cast<VtkScalarWriter*>(new TomoOutputScalarWriter(m_Geometry.get()));
+  w0->setXDims(cropStart, cropEnd);
+  w0->setYDims(0, m_Geometry->N_y);
+  w0->setZDims(0, m_Geometry->N_z);
   w0->setWriteBinaryFiles(true);
   scalarsToWrite.push_back(w0);
 
