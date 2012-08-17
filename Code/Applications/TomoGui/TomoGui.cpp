@@ -489,7 +489,7 @@ void TomoGui::setupGui()
   // setup the Widget List
   m_WidgetList << inputBrightFieldFilePath << inputBrightFieldFilePathBtn << outputDirectoryPath << outputDirectoryPathBtn;
   m_WidgetList << reconstructedVolumeFileName << reconstructedVolumeFileNameBtn << initialReconstructionPath << initialReconstructionPathBtn;
-  m_WidgetList << parametersTab << advancedParametersGroupBox;
+  m_WidgetList << parametersGroupBox << advancedParametersGroupBox;
 
   setWidgetListEnabled(false);
 
@@ -623,9 +623,6 @@ void TomoGui::on_m_SingleSliceReconstructionBtn_clicked()
   // Remove Any Temp files that have accumulated
   deleteTempFiles();
 
-
-  m_GoBtn->setEnabled(false);
-
   // Create a Worker Thread that will run the Reconstruction
   if(m_WorkerThread != NULL)
   {
@@ -676,6 +673,7 @@ void TomoGui::on_m_SingleSliceReconstructionBtn_clicked()
 
   setWidgetListEnabled(false);
   m_SingleSliceReconstructionBtn->setEnabled(true);
+  m_GoBtn->setEnabled(false);
   emit pipelineStarted();
   m_WorkerThread->start();
   m_SingleSliceReconstructionBtn->setText("Cancel");
@@ -812,12 +810,8 @@ void TomoGui::on_m_GoBtn_clicked()
     return;
   }
 
-
   // Remove Any Temp files that have accumulated
   deleteTempFiles();
-
-
-
 
   // Create a Worker Thread that will run the Reconstruction
   if(m_WorkerThread != NULL)
@@ -1703,7 +1697,7 @@ void TomoGui::on_estimateSigmaX_clicked()
     //targetGain->setText(QString::number(estimate->getTargetGainEstimate()));
 
     m_CachedSigmaX = estimate->getSigmaXEstimate();
-    std::cout << "m_CachedSigmaX: " << m_CachedSigmaX << std::endl;
+    //std::cout << "m_CachedSigmaX: " << m_CachedSigmaX << std::endl;
     qreal smth = 1.0/smoothness->text().toDouble(&ok);
     //sigma_x->blockSignals(true);
     sigma_x->setText(QString::number(m_CachedSigmaX * smth));
