@@ -1116,14 +1116,13 @@ void SOCEngine::writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolum
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void SOCEngine::writeReconstructionFile(uint16_t cropStart, uint16_t cropEnd)
+void SOCEngine::writeReconstructionFile(const std::string &filepath)
 {
   // Write the Reconstruction out to a file
   RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
   writer->setGeometry(m_Geometry);
-  writer->setFilePath(m_TomoInputs->reconstructedOutputFile);
+  writer->setFilePath(filepath);
   writer->setAdvParams(m_AdvParams);
-  writer->setXDims(cropStart, cropEnd);
   writer->setObservers(getObservers());
   writer->execute();
   if (writer->getErrorCondition() < 0)
@@ -1211,18 +1210,18 @@ void SOCEngine::writeMRCFile(const std::string &mrcFile, uint16_t cropStart, uin
 #ifdef BF_RECON
 void SOCEngine::processRawCounts()
 {
-	for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
-	{
-		for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-		{
-			for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-			{
-				size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
-				m_Sinogram->counts->d[counts_idx] += BF_OFFSET;
-				m_Sinogram->counts->d[counts_idx] = -log(m_Sinogram->counts->d[counts_idx]/BF_MAX);
-			}
-		}
-	}
+    for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
+    {
+        for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+        {
+            for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+            {
+                size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
+                m_Sinogram->counts->d[counts_idx] += BF_OFFSET;
+                m_Sinogram->counts->d[counts_idx] = -log(m_Sinogram->counts->d[counts_idx]/BF_MAX);
+            }
+        }
+    }
 }
 
 #endif //BF Recon

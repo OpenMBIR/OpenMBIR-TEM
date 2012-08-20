@@ -161,11 +161,11 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
                        RealVolumeType::Pointer ErrorSino);
     void writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams);
 #ifdef BF_RECON
-	void processRawCounts();
+    void processRawCounts();
 #endif
 
     void writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram);
-    void writeReconstructionFile(uint16_t cropStart, uint16_t cropEnd);
+    void writeReconstructionFile(const std::string &filepath);
     void writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
     void writeMRCFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
 
@@ -288,7 +288,7 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     */
     void UpdateVoxelLine(uint16_t j_new,uint16_t k_new);
 
-	/**
+    /**
      * Code to take the magnitude map and filter it with a hamming window
      * Returns the filtered magnitude map
      */

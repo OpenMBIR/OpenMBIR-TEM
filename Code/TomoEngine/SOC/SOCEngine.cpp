@@ -425,7 +425,7 @@ void SOCEngine::execute()
   }
 
 #ifdef BF_RECON //Take log of the input data after subtracting offset
-	processRawCounts();
+    processRawCounts();
 #endif
 
 
@@ -792,31 +792,31 @@ void SOCEngine::execute()
       }
     } //Joint estimation endif
 
-	if(m_AdvParams->NOISE_MODEL)
-	{
-		  updateWeights(Weight, NuisanceParams, ErrorSino);
+    if(m_AdvParams->NOISE_MODEL)
+    {
+          updateWeights(Weight, NuisanceParams, ErrorSino);
 #ifdef COST_CALCULATE
-		  err = calculateCost(cost, Weight, ErrorSino);
-		  if (err < 0)
-		  {
-			  std::cout<<"Cost went up after variance update"<<std::endl;
-			  break;
-		  }
+          err = calculateCost(cost, Weight, ErrorSino);
+          if (err < 0)
+          {
+              std::cout<<"Cost went up after variance update"<<std::endl;
+              break;
+          }
 #endif//cost
-		  if(0 == status && reconOuterIter >= 1) //&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
-		  {
-			  std::cout << "Exiting the code because status =0" << std::endl;
-			  break;
-		  }
-	  }
-	else
-	{
-		  if(0 == status && reconOuterIter >= 1)
-		  {//&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
-			  std::cout << "Exiting the code because status =0" << std::endl;
-			  break;
-		  }
-	  } //Noise Model
+          if(0 == status && reconOuterIter >= 1) //&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+          {
+              std::cout << "Exiting the code because status =0" << std::endl;
+              break;
+          }
+      }
+    else
+    {
+          if(0 == status && reconOuterIter >= 1)
+          {//&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+              std::cout << "Exiting the code because status =0" << std::endl;
+              break;
+          }
+      } //Noise Model
 
 
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
@@ -846,17 +846,17 @@ void SOCEngine::execute()
     for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
     {
 
-		if(m_AdvParams->NOISE_MODEL)
-		{
+        if(m_AdvParams->NOISE_MODEL)
+        {
       std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
       "\t" << NuisanceParams->mu->d[i_theta] <<
       "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
-		}
-		else
-		{
-			std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
-			"\t" << NuisanceParams->mu->d[i_theta] << std::endl;
-		}
+        }
+        else
+        {
+            std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
+            "\t" << NuisanceParams->mu->d[i_theta] << std::endl;
+        }
     }
   }
 
@@ -875,20 +875,28 @@ void SOCEngine::execute()
 
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
+ // This is writing the "ReconstructedSinogram.bin" file
   writeSinogramFile(NuisanceParams, Final_Sinogram); // Writes the sinogram to a file
 
-  writeReconstructionFile(cropStart, cropEnd); // Writes the m_Geometry to a file
-  // Write out the VTK file
+  // Writes ReconstructedObject.bin file
   {
-    std::stringstream ss;
-    ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedVtkFile;
-    writeVtkFile(ss.str(), cropStart, cropEnd);
+      std::stringstream ss;
+      ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedObjectFile;
+      writeReconstructionFile(ss.str());
+  }
+  // Write out the VTK file
+  if (m_TomoInputs->vtkOutputFile.empty() == false)
+  {
+  //  std::stringstream ss;
+  //  ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedVtkFile;
+    writeVtkFile(m_TomoInputs->vtkOutputFile, cropStart, cropEnd);
   }
   // Write out the MRC File
+  if (m_TomoInputs->mrcOutputFile.empty() == false)
   {
-    std::stringstream ss;
-    ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedMrcFile;
-    writeMRCFile(ss.str(), cropStart, cropEnd);
+  //  std::stringstream ss;
+  //  ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedMrcFile;
+    writeMRCFile(m_TomoInputs->mrcOutputFile, cropStart, cropEnd);
   }
 
   std::cout << "Final Dimensions of Object: " << std::endl;
