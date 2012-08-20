@@ -49,6 +49,7 @@
 #include <QtGui/QImage>
 #include <QtGui/QMenu>
 #include <QtGui/QAction>
+#include <QtGui/QMessageBox>
 
 //-- TomoEngine Includes
 #include "TomoEngine/TomoEngine.h"
@@ -746,8 +747,8 @@ void QMRCDisplayWidget::drawOrigin(QImage image)
     painter.end();
   }
 
-  int pxOffset = 2 * pxWide;
-  int pyOffset = 2 * pxHigh;
+//  int pxOffset = 2 * pxWide;
+//  int pyOffset = 2 * pxHigh;
   // Get a QPainter object to add some more details to the image
 
   int pImageWidth = imageWidth;// + pxOffset * 2;
