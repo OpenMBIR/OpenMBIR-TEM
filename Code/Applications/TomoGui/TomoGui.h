@@ -105,7 +105,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     void readGainsOffsetsFile(QString file);
 
-    bool sanityCheckOutputDirectory(QLineEdit* le, QString msgTitle);
+    bool sanityCheckOutputDirectory(QString le, QString msgTitle);
 
     /**
       * @brief Either prints a message or sends the message to the User Interface

@@ -63,7 +63,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab_4">
        <attribute name="title">
@@ -169,7 +169,7 @@ File:</string>
          <number>4</number>
         </property>
         <item row="1" column="0">
-         <widget class="QLabel" name="label_9">
+         <widget class="QLabel" name="outputDirectoryLabel">
           <property name="toolTip">
            <string>The output image to be written at the conclusion of the segmentation</string>
           </property>
@@ -185,7 +185,7 @@ font-size: 10px;
          </widget>
         </item>
         <item row="1" column="1">
-         <widget class="QFSDropLineEdit" name="outputDirectoryPath">
+         <widget class="QFSDropLineEdit" name="outputDirectoryPath_OLD">
           <property name="toolTip">
            <string>The output image to be written at the conclusion of the segmentation</string>
           </property>
@@ -536,7 +536,7 @@ font-size: 10px;
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>258</width>
+              <width>256</width>
               <height>861</height>
              </rect>
             </property>

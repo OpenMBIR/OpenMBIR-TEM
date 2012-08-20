@@ -200,7 +200,7 @@ void TomoGui::readSettings(QSettings &prefs)
 
 
   READ_STRING_SETTING(prefs, initialReconstructionPath, "");
-  READ_STRING_SETTING(prefs, outputDirectoryPath, "");
+//  READ_STRING_SETTING(prefs, outputDirectoryPath, "");
   READ_STRING_SETTING(prefs, reconstructedVolumeFileName, "");
 
   READ_STRING_SETTING(prefs, sampleThickness, "150");
@@ -250,7 +250,7 @@ void TomoGui::writeSettings(QSettings &prefs)
   WRITE_STRING_SETTING(prefs, inputBrightFieldFilePath);
 
   WRITE_STRING_SETTING(prefs, initialReconstructionPath);
-  WRITE_STRING_SETTING(prefs, outputDirectoryPath);
+  //WRITE_STRING_SETTING(prefs, outputDirectoryPath);
   WRITE_STRING_SETTING(prefs, reconstructedVolumeFileName);
 
   WRITE_STRING_SETTING(prefs, sampleThickness);
@@ -367,7 +367,7 @@ void TomoGui::on_actionLoad_Config_File_triggered()
 
 
   READ_STRING_SETTING(prefs, initialReconstructionPath, "");
-  READ_STRING_SETTING(prefs, outputDirectoryPath, "");
+  //READ_STRING_SETTING(prefs, outputDirectoryPath, "");
   READ_STRING_SETTING(prefs, reconstructedVolumeFileName, "");
 
   READ_STRING_SETTING(prefs, sampleThickness, "150");
@@ -487,7 +487,7 @@ void TomoGui::setupGui()
   QObject::connect(com4, SIGNAL(activated(const QString &)), this, SLOT(on_reconstructedVolumeFileName_textChanged(const QString &)));
 
   // setup the Widget List
-  m_WidgetList << inputBrightFieldFilePath << inputBrightFieldFilePathBtn << outputDirectoryPath << outputDirectoryPathBtn;
+  m_WidgetList << inputBrightFieldFilePath << inputBrightFieldFilePathBtn;
   m_WidgetList << reconstructedVolumeFileName << reconstructedVolumeFileNameBtn << initialReconstructionPath << initialReconstructionPathBtn;
 
   setWidgetListEnabled(false);
@@ -530,6 +530,9 @@ void TomoGui::setupGui()
 
  // ySingleSliceValue_Label->hide();
  // ySingleSliceValue->hide();
+   outputDirectoryPath_OLD->hide();
+   outputDirectoryPathBtn->hide();
+   outputDirectoryLabel->hide();
 
   m_MRCInfoWidget = new MRCInfoWidget(this);
   m_MRCInfoWidget->hide();
@@ -538,10 +541,10 @@ void TomoGui::setupGui()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool TomoGui::sanityCheckOutputDirectory(QLineEdit* le, QString msgTitle)
+bool TomoGui::sanityCheckOutputDirectory(QString le, QString msgTitle)
 {
 
-  if (le->text().isEmpty() == true)
+  if (le.isEmpty() == true)
   {
     QMessageBox::critical(this, msgTitle,
                           "The output directory has NOT been set. Please set a directory path and try again.",
@@ -549,10 +552,10 @@ bool TomoGui::sanityCheckOutputDirectory(QLineEdit* le, QString msgTitle)
     return false;
   }
 
-  if (verifyPathExists(le->text(), le) == false)
+  if (verifyPathExists(le, NULL) == false)
   {
     QString msg("The Output Directory '");
-    msg.append(le->text()).append("'\ndoes not exist. Would you like to create it?");
+    msg.append(le).append("'\ndoes not exist. Would you like to create it?");
     int ret = QMessageBox::warning(this, msgTitle,
                                    msg,
                                    QMessageBox::Yes | QMessageBox::Default,
@@ -563,7 +566,7 @@ bool TomoGui::sanityCheckOutputDirectory(QLineEdit* le, QString msgTitle)
     }
     else if (ret == QMessageBox::Yes)
     {
-      QDir outputDir(le->text());
+      QDir outputDir(le);
       if (outputDir.exists() == false)
       {
         bool ok = outputDir.mkpath(".");
@@ -582,7 +585,7 @@ bool TomoGui::sanityCheckOutputDirectory(QLineEdit* le, QString msgTitle)
       }
     }
   }
-  verifyPathExists(le->text(), le);
+  verifyPathExists(le, NULL);
   return true;
 }
 
@@ -698,11 +701,7 @@ void TomoGui::on_m_GoBtn_clicked()
 
   m_SingleSliceReconstructionBtn->setEnabled(false);
 
-  // Make sure we have an output directory setup and created
-  if(false == sanityCheckOutputDirectory(outputDirectoryPath, QString("Tomography Reconstruction")))
-  {
-    return;
-  }
+
 
   // Now check the input file to make sure it does exist
   QFileInfo fi(inputMRCFilePath->text());
@@ -720,13 +719,21 @@ void TomoGui::on_m_GoBtn_clicked()
   }
 
   fi = QFileInfo(reconstructedVolumeFileName->text());
-  if (fi.suffix().compare("bin") != 0)
+  if (fi.suffix().compare("rec") != 0)
   {
     QString t = reconstructedVolumeFileName->text();
-    t.append(".bin");
+    t.append(".rec");
     reconstructedVolumeFileName->blockSignals(true);
     reconstructedVolumeFileName->setText(t);
     reconstructedVolumeFileName->blockSignals(false);
+  }
+
+  fi = QFileInfo(reconstructedVolumeFileName->text());
+  QString parentPath = fi.path();
+  // Make sure we have an output directory setup and created
+  if(false == sanityCheckOutputDirectory(parentPath, QString("OpenMBIR Reconstruction")))
+  {
+    return;
   }
 
   // We have a name, make sure the user wants to over write the file
@@ -882,7 +889,9 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   path = QDir::toNativeSeparators(inputMRCFilePath->text());
   m_MultiResSOC->setInputFile(path.toStdString());
 
-  path = QDir::toNativeSeparators(outputDirectoryPath->text());
+  QFileInfo fi(reconstructedVolumeFileName->text());
+  path = fi.path();
+  //path = QDir::toNativeSeparators(outputDirectoryPath->text());
   m_MultiResSOC->setTempDir(path.toStdString());
 
   path = QDir::toNativeSeparators(reconstructedVolumeFileName->text());
@@ -978,8 +987,8 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
     subvolume[1] = y_min;
     subvolume[4] = y_max;
 
-    path = QDir::toNativeSeparators(outputDirectoryPath->text());
-    QString tempFolder = QDir::tempPath() + QDir::separator() + QString("EIMTomo");
+//    path = QDir::toNativeSeparators(outputDirectoryPath->text());
+    QString tempFolder = QDir::tempPath() + QDir::separator() + QString("OpenMBIR");
     m_MultiResSOC->setTempDir(tempFolder.toStdString());
   }
   m_MultiResSOC->setSubvolume(subvolume);
@@ -1022,6 +1031,7 @@ void TomoGui::singleSliceComplete()
           finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(ScaleOffsetCorrection::ReconstructedMrcFile);
 
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(reconVolumeFile);
+  m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(false);
 
 
   // Remove all the files that just got created:
@@ -1052,7 +1062,11 @@ void TomoGui::singleSliceComplete()
     m_TempFilesToDelete.push_back(filePath);
   }
   {
-    QString filePath = path + ScaleOffsetCorrection::ReconstructedBinFile.c_str();
+    QString filePath = path + ScaleOffsetCorrection::ReconstructedObjectFile.c_str();
+    m_TempFilesToDelete.push_back(filePath);
+  }
+  {
+    QString filePath = path + ScaleOffsetCorrection::ReconstructedSinogramFile.c_str();
     m_TempFilesToDelete.push_back(filePath);
   }
   {
@@ -1119,14 +1133,15 @@ void TomoGui::pipelineComplete()
 
   setCurrentImageFile(inputMRCFilePath->text());
 
-  QString s = outputDirectoryPath->text();
-  s = s.append(QDir::separator());
-  s = s.append(QString::number(finalResolution->value())).append(QString("x"));
-  s = s.append(QDir::separator());
-  s = s.append(reconstructedVolumeFileName->text());
-  setCurrentProcessedFile(s);
+//  QString s = outputDirectoryPath->text();
+//  s = s.append(QDir::separator());
+//  s = s.append(QString::number(finalResolution->value())).append(QString("x"));
+//  s = s.append(QDir::separator());
+//  s = s.append(reconstructedVolumeFileName->text());
+  setCurrentProcessedFile(reconstructedVolumeFileName->text());
 
-  m_ReconstructedDisplayWidget->loadMRCFile(s);
+  m_ReconstructedDisplayWidget->loadMRCFile(reconstructedVolumeFileName->text());
+  m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(true);
 
   setWindowTitle(m_CurrentImageFile);
   setWidgetListEnabled(true);
@@ -1186,7 +1201,7 @@ void TomoGui::on_outputDirectoryPathBtn_clicked()
     QFileInfo fi(aDir);
     canWrite = fi.isWritable();
     if (canWrite) {
-      this->outputDirectoryPath->setText(m_OpenDialogLastDirectory);
+      this->outputDirectoryPath_OLD->setText(m_OpenDialogLastDirectory);
     }
     else
     {
@@ -1202,8 +1217,8 @@ void TomoGui::on_outputDirectoryPathBtn_clicked()
 // -----------------------------------------------------------------------------
 void TomoGui::on_reconstructedVolumeFileNameBtn_clicked()
 {
-  QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled.bin";
-  outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("All files (*.bin)"));
+  QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled.rec";
+  outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("MRC Files (*.mrc);;REC Files (*.rec)"));
   if (outputFile.isEmpty())
   {
     return;
@@ -1324,7 +1339,7 @@ void TomoGui::on_reconstructedVolumeFileName_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
 void TomoGui::on_outputDirectoryPath_textChanged(const QString & text)
 {
-  verifyPathExists(outputDirectoryPath->text(), outputDirectoryPath);
+  verifyPathExists(outputDirectoryPath_OLD->text(), outputDirectoryPath_OLD);
 }
 
 // -----------------------------------------------------------------------------
