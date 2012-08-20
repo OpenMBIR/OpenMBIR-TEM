@@ -1827,14 +1827,46 @@ void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
           reconVOI, SLOT(setXMin(const QString &)));
   connect(xMax, SIGNAL(textEdited ( const QString &)),
           reconVOI, SLOT(setXMax(const QString &)));
+
   connect(yMin, SIGNAL(textEdited ( const QString &)),
-          reconVOI, SLOT(setYMin(const QString &)));
-  connect(yMax, SIGNAL(textEdited ( const QString &)),
           reconVOI, SLOT(setYMax(const QString &)));
+  connect(yMax, SIGNAL(textEdited ( const QString &)),
+          reconVOI, SLOT(setYMin(const QString &)));
 
 
 }
 
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::geometryChanged()
+{
+    std::cout << "TomoGui::geometryChanged()" << std::endl;
+    bool ok = false;
+    qint32 x_min = xMin->text().toInt(&ok);
+    qint32 y_min = yMin->text().toInt(&ok);
+    qint32 x_max = xMax->text().toInt(&ok);
+    qint32 y_max = yMax->text().toInt(&ok);
+    if (x_max < x_min )
+    {
+          xMin->setStyleSheet("border: 1px solid red;");
+          xMax->setStyleSheet("border: 1px solid red;");
+    }
+    else if (y_max < y_min)
+    {
+        yMin->setStyleSheet("border: 1px solid red;");
+        yMax->setStyleSheet("border: 1px solid red;");
+    }
+    else
+    {
+        xMin->setStyleSheet("");
+        yMin->setStyleSheet("");
+        xMax->setStyleSheet("");
+        yMax->setStyleSheet("");
+        emit reconstructionVOIGeometryChanged(x_min, y_min, x_max, y_max);
+    }
+}
 
 // -----------------------------------------------------------------------------
 //

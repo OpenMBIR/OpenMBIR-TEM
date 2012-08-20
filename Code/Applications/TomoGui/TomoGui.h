@@ -192,11 +192,12 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void on_defaultOffset_editingFinished();
     void on_tiltSelection_currentIndexChanged(int index);
 
-
-
-
-
     void singleSlicePlaneSet(int y);
+
+    /**
+     * @brief The geometry widgets signal for 'textFinished' connects to this
+     */
+    void geometryChanged();
 
   protected:
 
@@ -277,6 +278,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     */
     void pipelineWarningMessage(const QString &);
     void pipelineErrorMessage(const QString &);
+
+    void reconstructionVOIGeometryChanged(int xmin, int ymin, int xmax, int ymax);
 
   private slots:
     // slots for our worker thread to communicate

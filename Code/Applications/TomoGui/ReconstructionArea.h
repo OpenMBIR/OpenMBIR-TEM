@@ -87,11 +87,13 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
     qreal getLineWidth();
     void setVisible(bool visible);
 
-    void setXMin(const QString &xMin);
-    void setYMin(const QString &yMin);
-    void setXMax(const QString &xMax);
-    void setYMax(const QString &yMax);
+    void updateGeometry(int xmin, int ymin, int xmax, int ymax);
 
+
+    void setXMin(const QString &str);
+    void setYMin(const QString &str);
+    void setXMax(const QString &str);
+    void setYMax(const QString &str);
 
   signals:
 
