@@ -304,6 +304,11 @@ void QMRCDisplayWidget::on_m_SaveCanvasBtn_clicked()
 void QMRCDisplayWidget::saveCanvas()
 {
   QImage image = m_GraphicsView->getBaseImage();
+  if (image.isNull() == true)
+  {
+      QMessageBox::critical(this, tr("Save File Error"), tr("The QImage returned by the GraphicsView was NULL. Report this to the developers."), QMessageBox::Ok);
+      return;
+  }
 #if 0
   if (m_LayersPalette->getOriginalImageCheckBox()->isChecked()
        && m_LayersPalette->getSegmentedImageCheckBox()->isChecked())

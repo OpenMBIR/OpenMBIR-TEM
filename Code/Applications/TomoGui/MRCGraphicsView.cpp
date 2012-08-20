@@ -277,6 +277,7 @@ void MRCGraphicsView::loadBaseImageFile(QImage image)
   m_BaseImage = image;
   if(m_BaseImage.isNull() == true)
   {
+ //   std::cout << "MRCGraphicsView::loadBaseImageFile() - Input Image was NULL" << std::endl;
     return;
   }
   QSize pSize(0, 0);
