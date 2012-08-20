@@ -62,7 +62,7 @@ class MultiResolutionSOC : public FilterPipeline
     virtual void setCancel(bool value);
     virtual bool getCancel();
 
-    MXA_INSTANCE_PROPERTY(bool, Debug);
+    MXA_INSTANCE_PROPERTY(bool, Debug)
 
     MXA_INSTANCE_STRING_PROPERTY(InputFile)
     MXA_INSTANCE_STRING_PROPERTY(TempDir)

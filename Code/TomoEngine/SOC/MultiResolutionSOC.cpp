@@ -241,21 +241,23 @@ void MultiResolutionSOC::execute()
       return;
     }
 
-    /***************TO DO - Fix This*********************/
-    if(m_NumberResolutions - 1 == i)
+    // Only write the mrc and vtk files on the last iteration
+    if(m_NumberResolutions - 1 == i) // Last Iteration
     {
-      ss.str("");
-      ss << inputs->tempDir << MXADir::Separator << m_OutputFile; // << ScaleOffsetCorrection::ReconstructedBinFile;
-      inputs->reconstructedOutputFile = ss.str();
+        inputs->vtkOutputFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + ".vtk";
+        inputs->mrcOutputFile = m_OutputFile;
     }
     else
     {
-      ss.str("");
-      ss << inputs->tempDir << MXADir::Separator << m_OutputFile; //<< ScaleOffsetCorrection::ReconstructedBinFile;
-      inputs->reconstructedOutputFile = ss.str();
-    }
-    /************************************/
+        ss.str("");
+        ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedObjectFile;
+        inputs->reconstructedOutputFile = ss.str();
 
+        inputs->vtkOutputFile = "";
+        inputs->mrcOutputFile = "";
+    }
+
+    // Line up all the temp files that we are going to delete
     ss.str("");
     ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
     inputs->gainsOutputFile = ss.str();
@@ -271,20 +273,27 @@ void MultiResolutionSOC::execute()
     inputs->varianceOutputFile = ss.str();
     tempFiles.push_back(ss.str());
 
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedSinogramFile;
+    tempFiles.push_back(ss.str());
 
     // Create the paths for all the temp files that we want to delete
     ss.str("");
     ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::CostFunctionFile;
     tempFiles.push_back(ss.str());
+
     ss.str("");
     ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::DetectorResponseFile;
     tempFiles.push_back(ss.str());
+
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedBinFile;
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedObjectFile;
     tempFiles.push_back(ss.str());
+
     ss.str("");
     ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::VoxelProfileFile;
     tempFiles.push_back(ss.str());
+
     ss.str("");
     ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::UpsampledBinFile;
     tempFiles.push_back(ss.str());
