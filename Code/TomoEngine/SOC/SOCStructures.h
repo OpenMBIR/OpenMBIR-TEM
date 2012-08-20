@@ -154,7 +154,7 @@ namespace SOC {
     Real_t delta_xz;//Voxel size in the x-z plane (assuming square shaped voxels in the x-z plane)
     Real_t delta_xy;//Voxel size in the x-y plane
 
-  	bool extendObject; //In case the sinogram data corresponding to voxels outside it
+    bool extendObject; //In case the sinogram data corresponding to voxels outside it
     Real_t interpolateFactor;
     Real_t targetGain;
     bool useDefaultOffset;
@@ -177,7 +177,8 @@ namespace SOC {
     std::string gainsOutputFile;
     std::string offsetsOutputFile;
     std::string varianceOutputFile;
-
+    std::string vtkOutputFile;
+    std::string mrcOutputFile;
 
     std::vector<uint8_t> excludedViews;// Indices of views to exclude from reconstruction
     std::vector<int> goodViews; // Contains the indices of the views to use for reconstruction
