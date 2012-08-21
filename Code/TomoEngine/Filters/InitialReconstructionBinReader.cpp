@@ -152,8 +152,7 @@ void InitialReconstructionBinReader::initializeData()
   }
   double buffer = 0.0;
   fclose(Fp);
-  notify("Done Reading Initial Reconstruction", 0, UpdateProgressMessage);
-  notify("Writng Upsampled File....", 0, UpdateProgressMessage);
+  notify("Done Reading Initial Reconstruction. Writing Upsampled File....", 0, UpdateProgressMessage);
   for (uint16_t i = 0; i < geometry->N_y; i++)
   {
     for (uint16_t j = 0; j < geometry->N_x; j++)
