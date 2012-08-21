@@ -422,7 +422,7 @@ void MultiResolutionSOC::execute()
   {
     for(size_t i = 0; i < tempFiles.size(); ++i)
     {
-        std::cout << "Removing: " << tempFiles[i] << std::endl;
+       // std::cout << "Removing: " << tempFiles[i] << std::endl;
         if(MXADir::isDirectory(tempFiles[i]) == true )
         {
             (*__error()) = 0;
