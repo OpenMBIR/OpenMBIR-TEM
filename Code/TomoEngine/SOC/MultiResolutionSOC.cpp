@@ -38,6 +38,8 @@
 
 #include "MultiResolutionSOC.h"
 
+#include <errno.h>
+
 #include <iostream>
 
 #include "MXA/Utilities/MXADir.h"
@@ -398,13 +400,39 @@ void MultiResolutionSOC::execute()
     engine = SOCEngine::NullPointer();
 
     prevInputs = inputs;
+
+    // Tack on the output temp directory last since we delete in the order we placed them
+    // in the vector. This will make sure the directory is empty before we try to delete it.
+    // If the directory is NOT empty then the user added something to it that we don't know
+    // about so DO NOT try to delete the directory
+    ss.str("");
+    ss << inputs->tempDir;
+    tempFiles.push_back(ss.str());
   }
+
 
   if (getDeleteTempFiles() == true)
   {
     for(size_t i = 0; i < tempFiles.size(); ++i)
     {
-      MXAFileInfo::remove(tempFiles[i]);
+        std::cout << "Removing: " << tempFiles[i] << std::endl;
+        if(MXADir::isDirectory(tempFiles[i]) == true )
+        {
+            (*__error()) = 0;
+            if (false == MXADir::rmdir(tempFiles[i], false) )
+            {
+                std::cout << (*__error()) << " - Could NOT remove Directory: " << tempFiles[i] << std::endl;
+                std::vector<std::string> dirList = MXADir::entryList(tempFiles[i]);
+                for(size_t i = 0; i < dirList.size(); ++i)
+                {
+                    std::cout << "   " << dirList[i] << std::endl;
+                }
+            }
+        }
+        else
+        {
+            MXAFileInfo::remove(tempFiles[i]);
+        }
     }
   }
 
