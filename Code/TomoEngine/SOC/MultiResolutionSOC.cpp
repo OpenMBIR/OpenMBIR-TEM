@@ -401,6 +401,13 @@ void MultiResolutionSOC::execute()
 
     prevInputs = inputs;
 
+    // Get any tempfiles created by the process such as intermediate files for display
+    // during the reconstruction
+    for(size_t i = 0; i < inputs->tempFiles.size(); ++i)
+    {
+        tempFiles.push_back(inputs->tempFiles[i]);
+    }
+
     // Tack on the output temp directory last since we delete in the order we placed them
     // in the vector. This will make sure the directory is empty before we try to delete it.
     // If the directory is NOT empty then the user added something to it that we don't know

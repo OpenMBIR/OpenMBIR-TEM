@@ -778,6 +778,7 @@ void SOCEngine::execute()
         ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << reconInnerIter << "_" << ScaleOffsetCorrection::ReconstructedMrcFile;
         writeMRCFile(ss.str(), cropStart, cropEnd);
         notify(ss.str(), 0, Observable::UpdateIntermediateImage);
+        m_TomoInputs->tempFiles.push_back(ss.str());
       }
 
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */

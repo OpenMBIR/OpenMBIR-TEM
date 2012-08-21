@@ -1106,8 +1106,8 @@ void TomoGui::loadProgressMRCFile(QString mrcfilePath)
 //  std::cout << "Loading Progress MRC File: " << filePath.toStdString() << std::endl;
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(mrcfilePath);
   m_ReconstructedDisplayWidget->setImageWidgetsEnabled(true);
-  deleteTempFiles();
-  m_TempFilesToDelete.push_back(mrcfilePath);
+//  deleteTempFiles();
+//  m_TempFilesToDelete.push_back(mrcfilePath);
 }
 
 // -----------------------------------------------------------------------------
