@@ -95,14 +95,13 @@
 #define PRINT_TIME(msg)\
     std::cout << indent << msg << ": " << ((double)stopm-startm)/1000.0 << " seconds" << std::endl;
 
-#define MAKE_OUTPUT_FILE(Fp, err, outdir, filename)\
+#define MAKE_OUTPUT_FILE(Fp, outdir, filename)\
     {\
     std::string filepath(outdir);\
     filepath = filepath.append(MXADir::getSeparator()).append(filename);\
     errno = 0;\
-    err = 0;\
     Fp = fopen(filepath.c_str(),"wb");\
-    if (Fp == NULL) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl; err = -1; }\
+    if (Fp == NULL || errno > 0) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl;}\
     }
 
 #define COPY_333_ARRAY(i_max, j_max, k_max, src, dest)\
@@ -159,8 +158,8 @@ namespace Detail {
 #else
     m_NumThreads = 1;
 #endif
-    setVerbose(true); //set this to enable cout::'s
-    setVeryVerbose(true); //set this to ennable even more cout:: s
+    setVerbose(false); //set this to enable cout::'s
+    setVeryVerbose(false); //set this to ennable even more cout:: s
  }
 
 // -----------------------------------------------------------------------------
@@ -442,8 +441,8 @@ void SOCEngine::execute()
   uint16_t cropStart=0;
   uint16_t cropEnd=m_Geometry->N_x;
   computeOriginalXDims(cropStart, cropEnd);
-  std::cout << "Crop Start: " << cropStart << std::endl;
-  std::cout << "Crop End:   " << cropEnd << std::endl;
+//  std::cout << "Crop Start: " << cropStart << std::endl;
+//  std::cout << "Crop End:   " << cropEnd << std::endl;
 
 
   //Gain, Offset and Variance Parameter Structures
@@ -559,7 +558,7 @@ void SOCEngine::execute()
   responseWriter->execute();
   if(responseWriter->getErrorCondition() < 0)
   {
-    std::cout << "Error writing detector response to file." << __FILE__ << "(" << __LINE__ << ")" << std::endl;
+    std::cout << __FILE__ << "(" << __LINE__ << ") " << "Error writing detector response to file." <<  std::endl;
     setErrorCondition(-2);
     notify("Error Encountered During Reconstruction", 100, Observable::UpdateProgressValueAndMessage);
     return;
@@ -962,11 +961,12 @@ RealImageType::Pointer SOCEngine::calculateVoxelProfile()
   Real_t checksum=0;
   uint16_t i,j;
   FILE* Fp = NULL;
-  int fileError = 0;
-  MAKE_OUTPUT_FILE(Fp, fileError, m_TomoInputs->tempDir, ScaleOffsetCorrection::VoxelProfileFile);
-  if (fileError < 0)
+  MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::VoxelProfileFile);
+  if ((*__error()) > 0)
   {
-
+    std::string filepath(m_TomoInputs->tempDir);
+    filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::VoxelProfileFile);\
+    std::cout << "VoxelProfile will NOT be written to file '" << filepath << std::endl;
   }
 
   for (i=0;i<m_Sinogram->N_theta;i++)
@@ -1007,14 +1007,19 @@ RealImageType::Pointer SOCEngine::calculateVoxelProfile()
       else
         VoxProfile->setValue(MaxValLineIntegral*(t-LeftCorner)/(LeftNear-LeftCorner), i, j);
 
-      fwrite( VoxProfile->getPointer(i, j), sizeof(Real_t),1,Fp);
+      if (Fp != NULL)
+      {
+        fwrite( VoxProfile->getPointer(i, j), sizeof(Real_t),1,Fp);
+      }
       checksum+=VoxProfile->getValue(i, j);
     }
 
   }
 
   //printf("Pixel Profile Check sum =%lf\n",checksum);
-  fclose(Fp);
+  if (Fp != NULL) {
+    fclose(Fp);
+  }
   return VoxProfile;
 }
 
@@ -1618,10 +1623,10 @@ Real_t SOCEngine::absMaxArray(std::vector<Real_t> &Array)
 void SOCEngine::ComputeVSC()
 {
   Real_t filter_op = 0;
-  int err = 0;
+ // int err = 0;
   FILE *Fp = NULL;
-  MAKE_OUTPUT_FILE(Fp, err, m_TomoInputs->tempDir, ScaleOffsetCorrection::MagnitudeMapFile);
-  if(err < 0)
+  MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::MagnitudeMapFile);
+  if((*__error()) < 0)
   {
 
   }
@@ -1658,8 +1663,8 @@ void SOCEngine::ComputeVSC()
     }
   }
 
-  MAKE_OUTPUT_FILE(Fp, err, m_TomoInputs->tempDir, ScaleOffsetCorrection::FilteredMagMapFile);
-  if(err < 0)
+  MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::FilteredMagMapFile);
+  if((*__error()) < 0)
   {
 
   }
