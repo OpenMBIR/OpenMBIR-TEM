@@ -1125,30 +1125,13 @@ void TomoGui::pipelineComplete()
   m_FullReconstrucionActive = false;
   m_SingleSliceReconstructionActive = false;
 
-#if 0
-  if (m_LayersPalette != NULL)
-  {
-    m_LayersPalette->getSegmentedImageCheckBox()->setEnabled(true);
-    m_LayersPalette->getOriginalImageCheckBox()->setChecked(true);
-    m_LayersPalette->getSegmentedImageCheckBox()->setChecked(false);
-    m_LayersPalette->getCompositeTypeComboBox()->setCurrentIndex(EmMpm_Constants::Alpha_Blend);
-    m_LayersPalette->getOpacitySlider()->setEnabled(true);
-    m_LayersPalette->getOpacitySpinBox()->setEnabled(true);
-    m_LayersPalette->getCompositeTypeComboBox()->setEnabled(true);
-  }
-#endif
-
   setCurrentImageFile(inputMRCFilePath->text());
-
-//  QString s = outputDirectoryPath->text();
-//  s = s.append(QDir::separator());
-//  s = s.append(QString::number(finalResolution->value())).append(QString("x"));
-//  s = s.append(QDir::separator());
-//  s = s.append(reconstructedVolumeFileName->text());
   setCurrentProcessedFile(reconstructedVolumeFileName->text());
 
-  m_ReconstructedDisplayWidget->loadMRCFile(reconstructedVolumeFileName->text());
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(true);
+  m_ReconstructedDisplayWidget->setDrawOrigin(false);
+  m_ReconstructedDisplayWidget->loadMRCFile(reconstructedVolumeFileName->text());
+
 
   setWindowTitle(m_CurrentImageFile);
   setWidgetListEnabled(true);
