@@ -192,17 +192,19 @@ void TomoGui::readSettings(QSettings &prefs)
   double d;
   prefs.beginGroup("Parameters");
 
+
+  READ_STRING_SETTING(prefs, xMin, "0");
+  READ_STRING_SETTING(prefs, xMax, "0");
+  READ_STRING_SETTING(prefs, yMin, "0");
+  READ_STRING_SETTING(prefs, yMax, "0");
+
+  // This will auto load the MRC File
   READ_STRING_SETTING(prefs, inputMRCFilePath, "");
-  // This will auto load the MRC File
-//  on_inputMRCFilePath_textChanged(inputMRCFilePath->text());
 
+  // This will auto load the MRC File
   READ_STRING_SETTING(prefs, inputBrightFieldFilePath, "");
-  // This will auto load the MRC File
-//  on_inputBrightFieldFilePath_textChanged(inputBrightFieldFilePath->text());
-
 
   READ_STRING_SETTING(prefs, initialReconstructionPath, "");
-//  READ_STRING_SETTING(prefs, outputDirectoryPath, "");
   READ_STRING_SETTING(prefs, reconstructedVolumeFileName, "");
 
   READ_STRING_SETTING(prefs, sampleThickness, "150");
@@ -222,16 +224,6 @@ void TomoGui::readSettings(QSettings &prefs)
   READ_SETTING(prefs, mrf, ok, d, 1.2, Double);
   READ_BOOL_SETTING(prefs, extendObject, false);
   READ_BOOL_SETTING(prefs, m_DeleteTempFiles, false);
-
-//  READ_BOOL_SETTING(prefs, useSubVolume, false);
-  READ_STRING_SETTING(prefs, xMin, "0");
-  READ_STRING_SETTING(prefs, xMax, "0");
-  READ_STRING_SETTING(prefs, yMin, "0");
-  READ_STRING_SETTING(prefs, yMax, "0");
-//  READ_STRING_SETTING(prefs, zMin, "0");
-//  READ_STRING_SETTING(prefs, zMax, "0");
-
-
 
   ok = false;
   i = prefs.value("tiltSelection").toInt(&ok);
@@ -1671,44 +1663,52 @@ void TomoGui::displayDialogBox(QString title, QString text, QMessageBox::Icon ic
 // -----------------------------------------------------------------------------
 void TomoGui::on_estimateSigmaX_clicked()
 {
-//  std::cout << "on_estimateGainSigma_clicked" << std::endl;
-  bool ok = false;
-  if (sampleThickness->text().isEmpty() == true)
-  {
-    return;
-  }
-  if (defaultOffset->text().isEmpty() == true)
-  {
-    return;
-  }
-  if (targetGain->text().isEmpty() == true)
-  {
-    return;
-  }
+    //  std::cout << "on_estimateGainSigma_clicked" << std::endl;
+    bool ok = false;
+    if (sampleThickness->text().isEmpty() == true)
+    {
+        return;
+    }
+    if (defaultOffset->text().isEmpty() == true)
+    {
+        return;
+    }
+    if (targetGain->text().isEmpty() == true)
+    {
+        return;
+    }
 
-  if (verifyPathExists(inputMRCFilePath->text(), inputMRCFilePath))
-  {
-    SigmaXEstimation::Pointer estimate = SigmaXEstimation::New();
-    estimate->setInputFile(inputMRCFilePath->text().toStdString());
-    estimate->setSampleThickness(sampleThickness->text().toDouble(&ok));
-    estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
-    estimate->setTargetGain(targetGain->text().toDouble(&ok));
-    estimate->setTiltAngles(tiltSelection->currentIndex());
-    estimate->addObserver(this);
-    estimate->execute();
-    this->progressBar->setValue(0);
 
-    //targetGain->setText(QString::number(estimate->getTargetGainEstimate()));
+    quint16 xmin = xMin->text().toUShort(&ok);
+    quint16 xmax = xMax->text().toUShort(&ok);
+    quint16 ymin = yMin->text().toUShort(&ok);
+    quint16 ymax = yMax->text().toUShort(&ok);
 
-    m_CachedSigmaX = estimate->getSigmaXEstimate();
-    //std::cout << "m_CachedSigmaX: " << m_CachedSigmaX << std::endl;
-    qreal smth = 1.0/smoothness->text().toDouble(&ok);
-    //sigma_x->blockSignals(true);
-    sigma_x->setText(QString::number(m_CachedSigmaX * smth));
-    //sigma_x->blockSignals(false);
+    if (verifyPathExists(inputMRCFilePath->text(), inputMRCFilePath))
+    {
+        SigmaXEstimation::Pointer estimate = SigmaXEstimation::New();
+        estimate->setInputFile(inputMRCFilePath->text().toStdString());
+        estimate->setSampleThickness(sampleThickness->text().toDouble(&ok));
+        estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
+        estimate->setTargetGain(targetGain->text().toDouble(&ok));
+        estimate->setTiltAngles(tiltSelection->currentIndex());
+        estimate->setXDims(xmin, xmax);
+        estimate->setYDims(ymin, ymax);
+        estimate->addObserver(this);
+        estimate->execute();
+        this->progressBar->setValue(0);
 
-    sigmaX_ShouldUpdate(false);
-  }
+        //targetGain->setText(QString::number(estimate->getTargetGainEstimate()));
+
+        m_CachedSigmaX = estimate->getSigmaXEstimate();
+        //std::cout << "m_CachedSigmaX: " << m_CachedSigmaX << std::endl;
+        qreal smth = 1.0/smoothness->text().toDouble(&ok);
+        //sigma_x->blockSignals(true);
+        sigma_x->setText(QString::number(m_CachedSigmaX * smth));
+        //sigma_x->blockSignals(false);
+
+        sigmaX_ShouldUpdate(false);
+    }
 
 }
 
