@@ -63,7 +63,7 @@ class EIMImage
   */
   static EIMImage::Pointer NewFromSourceMosaic(EIMImage::Pointer image, bool allocateBuffer = true);
 
-  MXA_INSTANCE_2DVECTOR_PROPERTY(int, ImagePixelDimension);
+  MXA_INSTANCE_VEC2_PROPERTY(int, ImagePixelDimension);
   const int32_t* getImagePixelDimension()
   {
     return m_ImagePixelDimension;

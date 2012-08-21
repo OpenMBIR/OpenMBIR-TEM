@@ -58,9 +58,9 @@ class VtkScalarWriter
     VtkScalarWriter() : m_WriteBinaryFiles(true){}
     virtual ~VtkScalarWriter(){}
 
-    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, XDims)
-    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, YDims)
-    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, ZDims)
+    MXA_INSTANCE_VEC2_PROPERTY(uint16_t, XDims)
+    MXA_INSTANCE_VEC2_PROPERTY(uint16_t, YDims)
+    MXA_INSTANCE_VEC2_PROPERTY(uint16_t, ZDims)
 
     void setWriteBinaryFiles(bool v) {
       m_WriteBinaryFiles = v;
@@ -387,9 +387,9 @@ class VTKStructuredPointsFileWriter
 
     MXA_INSTANCE_PROPERTY(bool, WriteBinaryFiles)
 
-    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, XDims)
-    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, YDims)
-    MXA_INSTANCE_2DVECTOR_PROPERTY(uint16_t, ZDims)
+    MXA_INSTANCE_VEC2_PROPERTY(uint16_t, XDims)
+    MXA_INSTANCE_VEC2_PROPERTY(uint16_t, YDims)
+    MXA_INSTANCE_VEC2_PROPERTY(uint16_t, ZDims)
 
     template<typename T>
     int write(const std::string &file, T* r, std::vector<VtkScalarWriter*> scalars)
