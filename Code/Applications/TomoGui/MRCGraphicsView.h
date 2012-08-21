@@ -81,7 +81,6 @@ class MRCGraphicsView : public QGraphicsView
 
     void disableVOISelection(bool disable);
 
-
     /**
     * @brief Over-riding implementation from base class
     * @param event QDragEnterEvent Event fired when dragging enters the QGraphicsView

@@ -66,7 +66,8 @@ QMRCDisplayWidget::QMRCDisplayWidget(QWidget *parent) :
 QWidget(parent),
 m_StopAnimation(true),
 m_ImageWidgetsEnabled(false),
-m_MovieWidgetsEnabled(false)
+m_MovieWidgetsEnabled(false),
+m_DrawOrigin(true)
 {
   m_OpenDialogLastDirectory = QDir::homePath();
   setupUi(this);
@@ -162,6 +163,13 @@ void QMRCDisplayWidget::enableVOISelection()
   if (m_GraphicsView != NULL) { m_GraphicsView->disableVOISelection(false); }
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void QMRCDisplayWidget::setDrawOrigin(bool b)
+{
+    m_DrawOrigin = b;
+}
 
 // -----------------------------------------------------------------------------
 //
@@ -367,6 +375,7 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
   int err = reader->readHeader(mrcFilePath.toStdString(), &header);
   if(err < 0)
   {
+    QMessageBox::critical(this, tr("MRC File Load Error"), tr("The MRC file could not be loaded."), QMessageBox::Ok);
     FREE_FEI_HEADERS( header.feiHeaders)
     return;
   }
@@ -424,9 +433,7 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
 
   // put the origin in the lower left corner
   image = image.mirrored(false, true);
-
   drawOrigin(image);
-  //m_CurrentImage = image;
 
   // This will display the image in the graphics scene
   m_GraphicsView->loadBaseImageFile(m_CurrentImage);
@@ -727,13 +734,18 @@ QImage QMRCDisplayWidget::xzFloatCrossSection(float* data, size_t nVoxels, int* 
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::drawOrigin(QImage image)
 {
+    if (m_DrawOrigin == false)
+    {
+        m_CurrentImage = image;
+        return;
+    }
   int imageWidth = image.width();
   int imageHeight = image.height();
 
   int pxHigh = 0;
   int pxWide = 0;
 
-  QFont font("Ariel", 16, QFont::Bold);
+  QFont font("Arial", 16, QFont::Bold);
   {
     QPainter painter;
     QImage pImage(100, 100, QImage::Format_ARGB32_Premultiplied);
@@ -789,57 +801,6 @@ void QMRCDisplayWidget::drawOrigin(QImage image)
 
 }
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-//void QMRCDisplayWidget::fireOriginCB_Changed()
-//{
-//  on_originCB_currentIndexChanged(originCB->currentIndex());
-//}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-#if 0
-void QMRCDisplayWidget::on_originCB_currentIndexChanged(int corner)
-{
-
-  switch(m_CurrentCorner)
-  {
-
-    case 0:
-      if (corner == 1) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
-      if (corner == 2) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
-      if (corner == 3) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
-      break;
-    case 1:
-      if (corner == 0) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
-      if (corner == 2) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
-      if (corner == 3) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
-      break;
-    case 2:
-      if (corner == 0) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
-      if (corner == 1) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
-      if (corner == 3) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
-      break;
-    case 3:
-      if (corner == 0) {m_CurrentImage = m_CurrentImage.mirrored(false, true);}
-      if (corner == 1) {m_CurrentImage = m_CurrentImage.mirrored(true, true);}
-      if (corner == 2) {m_CurrentImage = m_CurrentImage.mirrored(true, false);}
-      break;
-    default:
-      break;
-  }
-  m_CurrentCorner = corner;
-
-  // Calculate the approx memory usage
-  emit memoryCalculationNeedsUpdated();
-
-  // This will display the image in the graphics scene
-  m_GraphicsView->loadBaseImageFile(m_CurrentImage);
-}
-#endif
-
 ///getColorCorrespondingToValue ////////////////////////////////////////////////
 //
 // Assumes you've already generated min and max -- the extrema for the data
@@ -886,9 +847,6 @@ void QMRCDisplayWidget::getColorCorrespondingTovalue(int16_t val,
     }
   }
 }
-
-
-
 
 // -----------------------------------------------------------------------------
 //

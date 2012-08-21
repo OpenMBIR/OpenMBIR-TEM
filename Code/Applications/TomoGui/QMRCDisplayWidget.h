@@ -74,7 +74,7 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
 
     MRCGraphicsView* graphicsView();
     QImage currentImage();
-  //  int currentCorner();
+    void setDrawOrigin(bool b);
 
     void loadMRCFile(QString mrcFilePath);
 
@@ -140,6 +140,7 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     QString               m_OpenDialogLastDirectory;
     bool                  m_ImageWidgetsEnabled;
     bool                  m_MovieWidgetsEnabled;
+    bool                  m_DrawOrigin;
 
 
     QMRCDisplayWidget(const QMRCDisplayWidget&); // Copy Constructor Not Implemented
