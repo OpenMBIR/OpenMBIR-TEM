@@ -72,6 +72,9 @@ class TomoEngine_EXPORT SigmaXEstimation : public TomoFilter
     MXA_INSTANCE_PROPERTY(Real_t, DefaultOffset);
     MXA_INSTANCE_PROPERTY(Real_t, TargetGain);
 
+    MXA_INSTANCE_VEC2_PROPERTY(int, XDims)
+    MXA_INSTANCE_VEC2_PROPERTY(int, YDims)
+
     // Outputs
     MXA_INSTANCE_PROPERTY(Real_t, SigmaXEstimate);
 

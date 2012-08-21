@@ -46,6 +46,11 @@
 #include "TomoEngine/SOC/SOCConstants.h"
 
 
+namespace Detail
+{
+    const float DegToRad = 0.017453292519943f;
+}
+
 
 // -----------------------------------------------------------------------------
 //
@@ -57,7 +62,10 @@ m_DefaultOffset(0.0),
 m_TargetGain(1.0),
 m_SigmaXEstimate(0.0)
 {
-
+    m_XDims[0] = -1;
+    m_XDims[1] = -1;
+    m_YDims[0] = -1;
+    m_YDims[1] = -1;
 }
 
 // -----------------------------------------------------------------------------
@@ -76,103 +84,108 @@ SigmaXEstimation::~SigmaXEstimation()
 void SigmaXEstimation::execute()
 {
 
-  MRCHeader header;
-  ::memset(&header, 0, 1024);
-  header.feiHeaders = NULL;
-  MRCReader::Pointer reader = MRCReader::New(true);
-  int err = reader->readHeader(m_InputFile, &header);
-  if (err < 0)
-  {
-    FREE_FEI_HEADERS( header.feiHeaders )
-    notify("Error reading the MRC input file", 0, Observable::UpdateErrorMessage);
-    setErrorCondition(-1);
-    return;
-  }
+    MRCHeader header;
+    ::memset(&header, 0, 1024);
+    header.feiHeaders = NULL;
+    MRCReader::Pointer reader = MRCReader::New(true);
+    int err = reader->readHeader(m_InputFile, &header);
+    if (err < 0)
+    {
+        FREE_FEI_HEADERS( header.feiHeaders )
+        notify("Error reading the MRC input file", 0, Observable::UpdateErrorMessage);
+        setErrorCondition(-1);
+        return;
+    }
 
-  // Loop over each tilt angle to compute the Target Gain Estimation
-  int voxelMin[3] = { 0, 0, 0};
-  int voxelMax[3] = { header.nx, header.ny, 0};
-  Real_t sum1 = 0;
-  Real_t targetMin = std::numeric_limits<Real_t>::max();
-  Real_t targetMax = std::numeric_limits<Real_t>::min();
-	Real_t min = std::numeric_limits<Real_t>::max();
+  //Make sure min/max have been set otherwise just use the dimensions of the data from the header
+    if (m_XDims[0] < 0) { m_XDims[0] = 0; }
+    if (m_XDims[1] < 0) { m_XDims[1] = header.nx;}
+    if (m_YDims[0] < 0) { m_YDims[0] = 0;}
+    if (m_YDims[1] < 0) { m_YDims[1] = header.ny;}
+
+    int voxelMin[3] = { m_XDims[0], m_YDims[0], 0};
+    int voxelMax[3] = { m_XDims[1], m_YDims[1], 0};
+    Real_t sum1 = 0;
+    Real_t targetMin = std::numeric_limits<Real_t>::max();
+    Real_t targetMax = std::numeric_limits<Real_t>::min();
+    Real_t min = std::numeric_limits<Real_t>::max();
     Real_t max = std::numeric_limits<Real_t>::min();
 
-  std::vector<Real_t> sum2s(header.nz);
-
-  float progress = 0.0;
-
-  for(int i_theta = 0; i_theta < header.nz; ++i_theta)
-  {
-    voxelMin[2] = i_theta;
-    voxelMax[2] = i_theta;
-    err = reader->read(m_InputFile, voxelMin, voxelMax);
-    if(err < 0)
+    std::vector<Real_t> sum2s(header.nz);
+    int voxelCount = (m_XDims[1] - m_XDims[0]) * (m_YDims[1] - m_YDims[0]);
+    float progress = 0.0;
+  // Loop over each tilt angle to compute the Target Gain Estimation
+    for(int i_theta = 0; i_theta < header.nz; ++i_theta)
     {
+        voxelMin[2] = i_theta;
+        voxelMax[2] = i_theta;
+        err = reader->read(m_InputFile, voxelMin, voxelMax); // This should read the subvolume define by voxelMin and voxelMax
+        if(err < 0)
+        {
+            break;
+        }
+        progress = (i_theta/header.nz) * 100.0f;
 
+
+        Real_t sum2 = 0;
+        switch(header.mode)
+        {
+        case 0:
+            calcMinMax<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
+            break;
+        case 1:
+            calcMinMax<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
+            break;
+        case 2:
+            calcMinMax<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, min, max, sum2);
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        case 6:
+            calcMinMax<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
+            break;
+        case 16:
+            break;
+        }
+        if (min < targetMin) { targetMin = min; }
+        if (max > targetMax) { targetMax = max; }
+        sum2s[i_theta] = sum2;
+
+        notify("Estimating Target Gain and Sigma X from Data. ", (int)progress, Observable::UpdateProgressValueAndMessage);
     }
-    progress = (i_theta/header.nz) * 100.0f;
 
 
-    Real_t sum2 = 0;
-    switch(header.mode)
-    {
-      case 0:
-        calcMinMax<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), header.nx * header.ny, min, max, sum2);
-        break;
-      case 1:
-        calcMinMax<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), header.nx * header.ny, min, max, sum2);
-        break;
-      case 2:
-        calcMinMax<float>(static_cast<float*>(reader->getDataPointer()), header.nx * header.ny, min, max, sum2);
-        break;
-      case 3:
-        break;
-      case 4:
-        break;
-      case 6:
-        calcMinMax<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), header.nx * header.ny, min, max, sum2);
-        break;
-      case 16:
-        break;
-    }
-    if (min < targetMin) { targetMin = min; }
-    if (max > targetMax) { targetMax = max; }
-    sum2s[i_theta] = sum2;
+    //modify it based on any knowledge they have about the tx. attenuation
 
-
-    notify("Estimating Target Gain and Sigma X from Data. ", (int)progress, Observable::UpdateProgressValueAndMessage);
-  }
-
-
-	//modify it based on any knowledge they have about the tx. attenuation
-
-  // Now Calculate the Sigma X estimation
-  for(int i_theta = 0; i_theta < header.nz; ++i_theta)
-  {
-    //Subtract off any offset in the data
-    sum2s[i_theta] -= min * header.nx * header.ny;
-
-    sum2s[i_theta] /= header.nx * header.ny * m_TargetGain;
-
+    // Now Calculate the Sigma X estimation
     Real_t cosine = 0.0;
-    if(m_TiltAngles == 0)
+    for(int i_theta = 0; i_theta < header.nz; ++i_theta)
     {
-      cosine = cos(header.feiHeaders[i_theta].a_tilt * (M_PI / 180));
+        //Subtract off any offset in the data
+        sum2s[i_theta] -= min * voxelCount;
+
+        sum2s[i_theta] /= voxelCount * m_TargetGain;
+
+
+        if(m_TiltAngles == 0)
+        {
+            cosine = cos(header.feiHeaders[i_theta].a_tilt * (Detail::DegToRad));
+        }
+        else
+        {
+            cosine = cos(header.feiHeaders[i_theta].b_tilt * (Detail::DegToRad));
+        }
+
+        sum1 += (sum2s[i_theta] * cosine) / (m_SampleThickness);
     }
-    else
-    {
-      cosine = cos(header.feiHeaders[i_theta].b_tilt * (M_PI / 180));
-    }
 
-    sum1 += (sum2s[i_theta] * cosine) / (m_SampleThickness);
-  }
+    m_SigmaXEstimate = sum1/header.nz;///10.0;
+    FREE_FEI_HEADERS( header.feiHeaders );
 
-	m_SigmaXEstimate = sum1/header.nz;///10.0;
-  FREE_FEI_HEADERS( header.feiHeaders )
-
-//  std::cout << "Estimated Target Gain: " << m_TargetGainEstimate << std::endl;
-//  std::cout << "Estimated Sigma X: " << m_SigmaXEstimate << std::endl;
-  notify("Estimating Target Gain and Sigma X Complete ", 100, Observable::UpdateProgressValueAndMessage);
+    //  std::cout << "Estimated Target Gain: " << m_TargetGainEstimate << std::endl;
+    //  std::cout << "Estimated Sigma X: " << m_SigmaXEstimate << std::endl;
+    notify("Estimating Target Gain and Sigma X Complete ", 100, Observable::UpdateProgressValueAndMessage);
 
 }
