@@ -88,14 +88,15 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
 
     void setImageWidgetsEnabled(bool b);
     void setMovieWidgetsEnabled(bool b);
+
   protected:
     void setupGui();
 
     void showWidgets(bool b, QList<QWidget*> &list);
 
 
-    QImage signed16Image(qint16* data, MRCHeader &header);
-    QImage floatImage(float* data, MRCHeader &header);
+    QImage signed16Image(qint16* data, MRCHeader &header, bool flipYAxis);
+    QImage floatImage(float* data, MRCHeader &header, bool flipYAxis);
     void drawOrigin(QImage image);
 
 

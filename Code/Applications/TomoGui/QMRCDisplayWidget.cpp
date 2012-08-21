@@ -418,10 +418,10 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
       case 0:
         break;
       case 1:
-        image = signed16Image(reinterpret_cast<qint16*>(reader->getDataPointer()), header);
+        image = signed16Image(reinterpret_cast<qint16*>(reader->getDataPointer()), header, true);
         break;
       case 2:
-        image = floatImage(reinterpret_cast<float*>(reader->getDataPointer()), header);
+        image = floatImage(reinterpret_cast<float*>(reader->getDataPointer()), header, true);
         break;
       default:
         break;
@@ -430,9 +430,6 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
 
   FREE_FEI_HEADERS( header.feiHeaders)
 
-
-  // put the origin in the lower left corner
-  image = image.mirrored(false, true);
   drawOrigin(image);
 
   // This will display the image in the graphics scene
@@ -477,7 +474,7 @@ void QMRCDisplayWidget::showWidgets(bool b, QList<QWidget*> &list)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header)
+QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header, bool flipYAxis)
 {
   qint16 dmax = std::numeric_limits<qint16>::min();
   qint16 dmin = std::numeric_limits<qint16>::max();
@@ -495,7 +492,6 @@ QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header)
 
   QVector<QRgb>         colorTable;
 
-
   // Only generate the color table if the number of colors does not match
   if(colorTable.size() != numColors)
   {
@@ -510,20 +506,22 @@ QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header)
       colorTable[i] = qRgba(r * 255, g * 255, b * 255, 255);
     }
   }
-
-
-  // Create an RGB Image
+  QRgb* colorTablePtr = colorTable.data();
   QImage image(header.nx, header.ny, QImage::Format_ARGB32);
-
-
   int idx = 0;
+  QRgb* scanLine = NULL;
+  int scanIndex = 0;
   for (int y = 0; y < header.ny; ++y)
   {
+    if (flipYAxis == true) { scanIndex = header.ny - 1 - y; }
+    else { scanIndex = y; }
+    scanLine = reinterpret_cast<QRgb*>(image.scanLine(scanIndex));
     for (int x = 0; x < header.nx; ++x)
     {
       idx = (header.nx * y) + x;
       int colorIndex = data[idx] - static_cast<int>(dmin);
-      image.setPixel(x, y, colorTable[colorIndex]);
+      scanLine[x] = colorTablePtr[colorIndex]; // Access the value directly through a memory reference
+      //image.setPixel(x, y, colorTable[colorIndex]);
     }
   }
   return image;
@@ -532,9 +530,8 @@ QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QImage QMRCDisplayWidget::floatImage(float* data, MRCHeader &header)
+QImage QMRCDisplayWidget::floatImage(float* data, MRCHeader &header, bool flipYAxis)
 {
-
   float dmax = std::numeric_limits<float>::min();
   float dmin = std::numeric_limits<float>::max();
   size_t nVoxels = header.nx * header.ny;
@@ -571,17 +568,22 @@ QImage QMRCDisplayWidget::floatImage(float* data, MRCHeader &header)
     colorTable[i] = qRgba(r * 255, g * 255, b * 255, 255);
   }
 
-  // Create an RGB Image
+  QRgb* colorTablePtr = colorTable.data();
   QImage image(header.nx, header.ny, QImage::Format_ARGB32);
-
   int idx = 0;
+  QRgb* scanLine = NULL;
+  int scanIndex = 0;
   for (int y = 0; y < header.ny; ++y)
   {
+    if (flipYAxis == true) { scanIndex = header.ny - 1 - y; }
+    else { scanIndex = y; }
+    scanLine = reinterpret_cast<QRgb*>(image.scanLine(scanIndex));
     for (int x = 0; x < header.nx; ++x)
     {
       idx = (header.nx * y) + x;
       int colorIndex = iData[idx] - static_cast<int>(imin);
-      image.setPixel(x, y, colorTable[colorIndex]);
+      scanLine[x] = colorTablePtr[colorIndex]; // Access the value directly through a memory reference
+      //image.setPixel(x, y, colorTable[colorIndex]);
     }
   }
 
