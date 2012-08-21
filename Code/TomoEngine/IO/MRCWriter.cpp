@@ -176,7 +176,7 @@ int MRCWriter::write()
 {
   int err = -1;
   std::stringstream ss;
-  std::cout << "MRC Output File:\n  " << m_OutputFile << std::endl;
+ // std::cout << "MRC Output File:\n  " << m_OutputFile << std::endl;
   if (m_OutputFile.empty())
   {
       ss.str("");
