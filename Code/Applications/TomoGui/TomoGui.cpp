@@ -30,6 +30,8 @@
 
 #include "TomoGui.h"
 
+#include <errno.h>
+
 #include <iostream>
 #include <sstream>
 #include <limits>
@@ -582,12 +584,14 @@ bool TomoGui::sanityCheckOutputDirectory(QString le, QString msgTitle)
         {
           return true;
         }
+
       }
     }
   }
   verifyPathExists(le, NULL);
   return true;
 }
+
 
 // -----------------------------------------------------------------------------
 //
@@ -728,8 +732,11 @@ void TomoGui::on_m_GoBtn_clicked()
     reconstructedVolumeFileName->blockSignals(false);
   }
 
+  // Get the absolute path to the users choice for the output file
   fi = QFileInfo(reconstructedVolumeFileName->text());
-  QString parentPath = fi.path();
+  // Get the absolute path to the parent directory of that file
+  QString parentPath = fi.absolutePath();
+
   // Make sure we have an output directory setup and created
   if(false == sanityCheckOutputDirectory(parentPath, QString("OpenMBIR Reconstruction")))
   {
@@ -737,10 +744,10 @@ void TomoGui::on_m_GoBtn_clicked()
   }
 
   // We have a name, make sure the user wants to over write the file
-  QFile file(reconstructedVolumeFileName->text());
+  QFile file(fi.absoluteFilePath());
   if(file.exists() == true)
   {
-    int ret = QMessageBox::warning(this, tr("EIM Tomo GUI"), tr("The Output File Already Exists\nDo you want to over write the existing file?"), QMessageBox::No
+    int ret = QMessageBox::warning(this, tr("OpenMBIR"), tr("The Output File Already Exists\nDo you want to over write the existing file?"), QMessageBox::No
                                        | QMessageBox::Default, QMessageBox::Yes, QMessageBox::Cancel);
     if(ret == QMessageBox::Cancel)
     {
@@ -752,8 +759,8 @@ void TomoGui::on_m_GoBtn_clicked()
     }
     else
     {
-      QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled.bin";
-      outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("Bin (*.bin)"));
+      QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled.rec";
+      outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("MRC Reconstruction Files (*.rec)"));
       if(!outputFile.isNull())
       {
         setCurrentProcessedFile("");
@@ -890,11 +897,11 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   m_MultiResSOC->setInputFile(path.toStdString());
 
   QFileInfo fi(reconstructedVolumeFileName->text());
-  path = fi.path();
+  path = fi.absolutePath();
   //path = QDir::toNativeSeparators(outputDirectoryPath->text());
   m_MultiResSOC->setTempDir(path.toStdString());
 
-  path = QDir::toNativeSeparators(reconstructedVolumeFileName->text());
+  path = QDir::toNativeSeparators(fi.absoluteFilePath());
   m_MultiResSOC->setOutputFile(path.toStdString());
 
   path = QDir::toNativeSeparators(inputBrightFieldFilePath->text());
