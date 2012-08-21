@@ -216,25 +216,25 @@ static Pointer New args \
     void set##prpty(type value) { this->var = value; }\
 
 
-#define MXA_SET_2DVECTOR_PROPERTY(type, prpty, varname)\
+#define MXA_SET_VEC2_PROPERTY(type, prpty, varname)\
   void set##prpty(type value[2]) {\
       varname[0] = value[0]; varname[1] = value[1]; }\
   void set##prpty(type value_0, type value_1) {\
       varname[0] = value_0; varname[1] = value_1; }
 
-#define MXA_GET_2DVECTOR_PROPERTY(type, prpty, varname)\
+#define MXA_GET_VEC2_PROPERTY(type, prpty, varname)\
   void get##prpty(type value[2]) {\
       value[0] = varname[0]; value[1] = varname[1]; }\
   void get##prpty(type &value_0, type &value_1) {\
       value_0 = varname[0]; value_1 = varname[1]; }
 
 
-#define MXA_INSTANCE_2DVECTOR_PROPERTY(type, prpty)\
+#define MXA_INSTANCE_VEC2_PROPERTY(type, prpty)\
   private:\
     type   m_##prpty[2];\
   public:\
-    MXA_SET_2DVECTOR_PROPERTY(type, prpty, m_##prpty)\
-    MXA_GET_2DVECTOR_PROPERTY(type, prpty, m_##prpty)
+    MXA_SET_VEC2_PROPERTY(type, prpty, m_##prpty)\
+    MXA_GET_VEC2_PROPERTY(type, prpty, m_##prpty)
 
 
 #define MXA_SET_VEC3_PROPERTY(type, prpty, varname)\
