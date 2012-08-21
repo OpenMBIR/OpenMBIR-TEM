@@ -230,7 +230,7 @@ void MultiResolutionSOC::execute()
 
     /* Now set the input files for this resolution */
     inputs->sinoFile = m_InputFile;
-    inputs->tempDir = m_TempDir + MXADir::Separator + StringUtils::numToString(inputs->interpolateFactor / (powf(2.0f, i))) + std::string("x");
+    inputs->tempDir = m_TempDir + MXADir::Separator + StringUtils::numToString(inputs->interpolateFactor / static_cast<int>(powf(2.0f, i))) + std::string("x");
 
     //Make sure the directory is created:
     bool success = MXADir::mkdir(inputs->tempDir, true);
@@ -327,8 +327,8 @@ void MultiResolutionSOC::execute()
       inputs->defaultInitialRecon = getInitialReconstructionValue();
       inputs->defaultVariance = getDefaultVariance();
     }
-    inputs->delta_xy = powf(2.0f, getNumberResolutions() - i - 1) * m_FinalResolution;
-    inputs->delta_xz = powf(2.0f, getNumberResolutions() - i - 1) * m_FinalResolution;
+    inputs->delta_xy = powf(2.0f, getNumberResolutions() - i - 1) * static_cast<Real_t>(m_FinalResolution);
+    inputs->delta_xz = powf(2.0f, getNumberResolutions() - i - 1) * static_cast<Real_t>(m_FinalResolution);
 
     if(i == 0)
     {
@@ -386,7 +386,7 @@ void MultiResolutionSOC::execute()
     engine->setBFSinogram(bf_sinogram);
     // We need to get messages to the gui or command line
     engine->addObserver(this);
-    engine->setMessagePrefix(StringUtils::numToString(inputs->interpolateFactor / (powf(2.0f, i))) + std::string("x: "));
+    engine->setMessagePrefix(StringUtils::numToString(inputs->interpolateFactor / static_cast<int>(powf(2.0f, i))) + std::string("x: "));
     ss.str("");
     ss << "Sinogram Inputs -----------------------------------------" << std::endl;
     printInputs(inputs, ss);
@@ -425,10 +425,10 @@ void MultiResolutionSOC::execute()
        // std::cout << "Removing: " << tempFiles[i] << std::endl;
         if(MXADir::isDirectory(tempFiles[i]) == true )
         {
-            (*__error()) = 0;
+            errno = 0;
             if (false == MXADir::rmdir(tempFiles[i], false) )
             {
-                std::cout << (*__error()) << " - Could NOT remove Directory: " << tempFiles[i] << std::endl;
+                std::cout << errno << " - Could NOT remove Directory: " << tempFiles[i] << std::endl;
                 std::vector<std::string> dirList = MXADir::entryList(tempFiles[i]);
                 for(size_t i = 0; i < dirList.size(); ++i)
                 {
@@ -451,9 +451,9 @@ void MultiResolutionSOC::memCalculate(TomoInputsPtr inputs, TomoInputsPtr bf_inp
 {
     float GeomNx,GeomNy,GeomNz;
     float SinoNr,SinoNt,SinoNtheta;
-    SinoNr = inputs->xEnd - inputs->xStart+1;
-    SinoNt = inputs->yEnd - inputs->yStart+1;
-    SinoNtheta = inputs->zEnd - inputs->zStart+1;
+    SinoNr = static_cast<float>(inputs->xEnd - inputs->xStart+1);
+    SinoNt = static_cast<float>(inputs->yEnd - inputs->yStart+1);
+    SinoNtheta = static_cast<float>(inputs->zEnd - inputs->zStart+1);
 
     AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
     SOCEngine::InitializeAdvancedParams(advancedParams);

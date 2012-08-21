@@ -963,7 +963,7 @@ RealImageType::Pointer SOCEngine::calculateVoxelProfile()
   uint16_t i,j;
   FILE* Fp = NULL;
   MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::VoxelProfileFile);
-  if ((*__error()) > 0)
+  if (errno > 0)
   {
     std::string filepath(m_TomoInputs->tempDir);
     filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::VoxelProfileFile);\
@@ -1627,7 +1627,7 @@ void SOCEngine::ComputeVSC()
  // int err = 0;
   FILE *Fp = NULL;
   MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::MagnitudeMapFile);
-  if((*__error()) < 0)
+  if(errno < 0)
   {
 
   }
@@ -1665,7 +1665,7 @@ void SOCEngine::ComputeVSC()
   }
 
   MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::FilteredMagMapFile);
-  if((*__error()) < 0)
+  if(errno < 0)
   {
 
   }

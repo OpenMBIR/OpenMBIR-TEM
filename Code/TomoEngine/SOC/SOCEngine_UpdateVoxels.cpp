@@ -128,7 +128,8 @@ class UpdateYSlice
       NumberDistribution distribution(rangeMin, rangeMax);
       RandomNumberGenerator generator;
       Generator numberGenerator(generator, distribution);
-      generator.seed(EIMTOMO_getMilliSeconds()); // seed with the current time
+      boost::uint32_t arg = static_cast<boost::uint32_t>(EIMTOMO_getMilliSeconds());
+      generator.seed(arg); // seed with the current time
 
 
       int32_t ArraySize = m_Geometry->N_x * m_Geometry->N_z;
