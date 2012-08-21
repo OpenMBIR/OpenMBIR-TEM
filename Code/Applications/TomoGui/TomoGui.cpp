@@ -1209,7 +1209,7 @@ void TomoGui::on_reconstructedVolumeFileNameBtn_clicked()
   QFileInfo fi(outputFile);
   QFileInfo fi2(fi.absolutePath());
   if (fi2.isWritable() == true) {
-    reconstructedVolumeFileName->setText(fi.fileName());
+    reconstructedVolumeFileName->setText(outputFile);
   }
   else
   {
