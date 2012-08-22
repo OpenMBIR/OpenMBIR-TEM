@@ -348,9 +348,22 @@ void QMRCDisplayWidget::saveCanvas()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+QString QMRCDisplayWidget::getMRCFilePath()
+{
+    return m_CurrentMRCFilePath;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void QMRCDisplayWidget::loadMRCFile(QString mrcFilePath)
 {
     m_CurrentMRCFilePath = mrcFilePath;
+    if (m_CurrentMRCFilePath.isEmpty() == true)
+    {
+        m_GraphicsView->clearContent();
+        return;
+    }
     loadMRCTiltImage(m_CurrentMRCFilePath, 0);
 }
 
@@ -364,6 +377,7 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
   if (m_CurrentMRCFilePath.isEmpty() == true)
   {
     m_GraphicsView->clearContent();
+    return;
   }
 
   QImage image;

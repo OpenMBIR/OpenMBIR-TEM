@@ -79,6 +79,9 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     void loadMRCFile(QString mrcFilePath);
 
     void loadMRCTiltImage(QString filepath, int tiltIndex);
+
+    QString getMRCFilePath();
+
     void fireOriginCB_Changed();
     void saveCanvas();
     void loadXZSliceReconstruction(QString reconMRCFilePath);
