@@ -476,6 +476,7 @@ void QMRCDisplayWidget::showWidgets(bool b, QList<QWidget*> &list)
 // -----------------------------------------------------------------------------
 QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header, bool flipYAxis)
 {
+#if 0
   qint16 dmax = std::numeric_limits<qint16>::min();
   qint16 dmin = std::numeric_limits<qint16>::max();
   size_t nVoxels = header.nx * header.ny;
@@ -489,7 +490,11 @@ QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header, bool fl
   float max = static_cast<float>(dmax);
   float min = static_cast<float>(dmin);
   int numColors = static_cast<int>((max - min) + 1);
-
+#else
+  float max = static_cast<float>(header.amax);
+  float min = static_cast<float>(header.amin);
+  int numColors = static_cast<int>((max - min) + 1);
+#endif
   QVector<QRgb>         colorTable;
 
   // Only generate the color table if the number of colors does not match
@@ -519,7 +524,7 @@ QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header, bool fl
     for (int x = 0; x < header.nx; ++x)
     {
       idx = (header.nx * y) + x;
-      int colorIndex = data[idx] - static_cast<int>(dmin);
+      int colorIndex = data[idx] - static_cast<int>(min);
       scanLine[x] = colorTablePtr[colorIndex]; // Access the value directly through a memory reference
       //image.setPixel(x, y, colorTable[colorIndex]);
     }
@@ -532,15 +537,20 @@ QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header, bool fl
 // -----------------------------------------------------------------------------
 QImage QMRCDisplayWidget::floatImage(float* data, MRCHeader &header, bool flipYAxis)
 {
+    size_t nVoxels = header.nx * header.ny;
+#if 0
   float dmax = std::numeric_limits<float>::min();
   float dmin = std::numeric_limits<float>::max();
-  size_t nVoxels = header.nx * header.ny;
+
   for (size_t i = 0; i < nVoxels; ++i)
   {
     if(data[i] > dmax) dmax = data[i];
     if(data[i] < dmin) dmin = data[i];
   }
-
+#else
+  float dmax = header.amax;
+  float dmin = header.amin;
+#endif
   //Scale all the values to 0 and 255 in place over writing the float values with 32 bit ints
   int* iData = reinterpret_cast<int*>(data);
   int imax = std::numeric_limits<int>::min();
@@ -597,24 +607,27 @@ QImage QMRCDisplayWidget::floatImage(float* data, MRCHeader &header, bool flipYA
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QImage QMRCDisplayWidget::xzSigned16CrossSection(qint16* data, size_t nVoxels, int* voxelMin, int* voxelMax)
+QImage QMRCDisplayWidget::xzSigned16CrossSection(qint16* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader &header)
 {
+#if 0
   qint16 dmax = std::numeric_limits<qint16>::min();
   qint16 dmin = std::numeric_limits<qint16>::max();
+  size_t nVoxels = header.nx * header.ny;
   for (size_t i = 0; i < nVoxels; ++i)
   {
     if(data[i] > dmax) dmax = data[i];
     if(data[i] < dmin) dmin = data[i];
   }
 
-//  std::cout << "Min MRC Value:" << dmin << std::endl;
-//  std::cout << "Max MRC Value:" << dmax << std::endl;
-
-
   // Generate a Color Table
   float max = static_cast<float>(dmax);
   float min = static_cast<float>(dmin);
   int numColors = static_cast<int>((max - min) + 1);
+#else
+  float max = static_cast<float>(header.amax);
+  float min = static_cast<float>(header.amin);
+  int numColors = static_cast<int>((max - min) + 1);
+#endif
   QVector<QRgb> colorTable(numColors);
 
   float range = max - min;
@@ -637,7 +650,7 @@ QImage QMRCDisplayWidget::xzSigned16CrossSection(qint16* data, size_t nVoxels, i
     for (int x = voxelMin[0]; x < voxelMax[0]; ++x)
     {
       idx = (voxelMin[0] * z) + x;
-      int colorIndex = data[idx] - static_cast<int>(dmin);
+      int colorIndex = data[idx] - static_cast<int>(min);
       image.setPixel(x, z, colorTable[colorIndex]);
     }
   }
@@ -648,19 +661,21 @@ QImage QMRCDisplayWidget::xzSigned16CrossSection(qint16* data, size_t nVoxels, i
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QImage QMRCDisplayWidget::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, int* voxelMax)
+QImage QMRCDisplayWidget::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader &header)
 {
+#if 0
   float dmax = std::numeric_limits<float>::min();
   float dmin = std::numeric_limits<float>::max();
+
   for (size_t i = 0; i < nVoxels; ++i)
   {
     if(data[i] > dmax) dmax = data[i];
     if(data[i] < dmin) dmin = data[i];
   }
-
-//  std::cout << "Min float MRC Value:" << dmin << std::endl;
-//  std::cout << "Max float MRC Value:" << dmax << std::endl;
-
+#else
+  float dmax = header.amax;
+  float dmin = header.amin;
+#endif
   //Scale all the values to 0 and 255 in place over writing the float values with 32 bit ints
   int* iData = reinterpret_cast<int*>(data);
   int imax = std::numeric_limits<int>::min();
@@ -899,12 +914,12 @@ void QMRCDisplayWidget::loadXZSliceReconstruction(QString reconMRCFilePath)
   if(dataType == 1)
   {
     qint16* data = reinterpret_cast<qint16*>(reader->getDataPointer());
-    image = QMRCDisplayWidget::xzSigned16CrossSection(data, nVoxels, voxelMin, voxelMax);
+    image = QMRCDisplayWidget::xzSigned16CrossSection(data, nVoxels, voxelMin, voxelMax, header);
   }
   else if(dataType == 2)
   {
     float* data = reinterpret_cast<float*>(reader->getDataPointer());
-    image = QMRCDisplayWidget::xzFloatCrossSection(data, nVoxels, voxelMin, voxelMax);
+    image = QMRCDisplayWidget::xzFloatCrossSection(data, nVoxels, voxelMin, voxelMax, header);
   }
 
   m_CurrentImage = image.mirrored(false, true);

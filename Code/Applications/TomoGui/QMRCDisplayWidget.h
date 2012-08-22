@@ -65,8 +65,8 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     QMRCDisplayWidget(QWidget *parent = 0);
     virtual ~QMRCDisplayWidget();
 
-    static QImage xzSigned16CrossSection(qint16* data, size_t nVoxels, int* voxelMin, int* voxelMax);
-    static QImage xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, int* voxelMax);
+    static QImage xzSigned16CrossSection(qint16* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader &header);
+    static QImage xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader &header);
     static void getColorCorrespondingTovalue(int16_t val,
                                        float &r, float &g, float &b,
                                        float max, float min);
