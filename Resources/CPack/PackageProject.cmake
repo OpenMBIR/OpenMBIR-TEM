@@ -7,17 +7,17 @@
 #///////////////////////////////////////////////////////////////////////////////
 
 
-# ------------------------------------------------------------------------------ 
+# ------------------------------------------------------------------------------
 # This CMake code sets up for CPack to be used to generate native installers
 # ------------------------------------------------------------------------------
 if (MSVC)
     # Skip the install rules, we only want to gather a list of the system libraries
     SET(CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS_SKIP 1)
     #SET(CMAKE_INSTALL_DEBUG_LIBRARIES OFF)
-    
+
     # Gather the list of system level runtime libraries
     INCLUDE (InstallRequiredSystemLibraries)
-    
+
     # Our own Install rule for Release builds of the MSVC runtime libs
     IF (CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS)
       INSTALL(FILES ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS}
@@ -66,15 +66,15 @@ IF (APPLE)
     # anything else then you need to update this.
     set (UPLOAD_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}.tar.gz)
 elseif(WIN32)
-	if ( "${CMAKE_SIZEOF_VOID_P}" EQUAL "8" )
-		set(CPACK_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-Win64")
-		set (UPLOAD_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}.zip)
-	elseif( "${CMAKE_SIZEOF_VOID_P}" EQUAL "4" )
-		set(CPACK_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-Win32")
-		set (UPLOAD_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}.zip)
-	else()
-	    set(CPACK_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-Unknown")
-	    set (UPLOAD_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}.zip)
+  if ( "${CMAKE_SIZEOF_VOID_P}" EQUAL "8" )
+    set(CPACK_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-Win64")
+    set (UPLOAD_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}.zip)
+  elseif( "${CMAKE_SIZEOF_VOID_P}" EQUAL "4" )
+    set(CPACK_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-Win32")
+    set (UPLOAD_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}.zip)
+  else()
+      set(CPACK_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-Unknown")
+      set (UPLOAD_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}.zip)
     endif()
 else()
   set(CPACK_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-${CMAKE_SYSTEM_NAME}")
@@ -84,15 +84,15 @@ endif()
 
 set (TomoEngine_WEBSITE_SERVER "www.bluequartz.net")
 set (TomoEngine_WEBSITE_SERVER_PATH "/var/www/www.bluequartz.net/binaries/to81/.")
-set (TomoEngine_WEBSITE_SCP_USERNAME "mjackson") 
+set (TomoEngine_WEBSITE_SCP_USERNAME "mjackson")
 #-- Create a bash script file that will upload the latest version to the web server
-configure_file(${PROJECT_RESOURCES_DIR}/upload.sh.in 
-               ${PROJECT_BINARY_DIR}/upload.sh)  
+configure_file(${PROJECT_RESOURCES_DIR}/upload.sh.in
+               ${PROJECT_BINARY_DIR}/upload.sh)
 
 set (TomoEngine_WEBSITE_SERVER_PATH "/var/www/www.openmbir.org/binaries/.")
-configure_file(${PROJECT_RESOURCES_DIR}/upload.sh.in 
-${PROJECT_BINARY_DIR}/web_upload.sh)  
-			   
+configure_file(${PROJECT_RESOURCES_DIR}/upload.sh.in
+${PROJECT_BINARY_DIR}/web_upload.sh)
+
 # Create an NSIS based installer for Windows Systems
 IF(WIN32 AND NOT UNIX)
   # There is a bug in NSIS that does not handle full unix paths properly. Make
@@ -124,6 +124,12 @@ ENDIF(WIN32 AND NOT UNIX)
 
 SET(CPACK_SOURCE_GENERATOR "ZIP")
 SET(CPACK_SOURCE_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-Source")
+
+#-- Create a bash script file that will upload the latest version to the web server
+set (UPLOAD_FILE_NAME ${CPACK_SOURCE_PACKAGE_FILE_NAME}.zip)
+configure_file(${PROJECT_RESOURCES_DIR}/upload.sh.in
+               ${PROJECT_BINARY_DIR}/src_upload.sh)
+
 SET(CPACK_SOURCE_TOPLEVEL_TAG "Source")
 SET(CPACK_IGNORE_FILES "/i386/;/x64/;/VS2008/;/zRel/;/Build/;/\\\\.git/;\\\\.*project")
 SET(CPACK_SOURCE_IGNORE_FILES "/i386/;/x64/;/VS2008/;/zRel/;/Build/;/\\\\.git/;\\\\.*project")
