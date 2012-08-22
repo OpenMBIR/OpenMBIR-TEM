@@ -1769,6 +1769,7 @@ void TomoGui::on_targetGain_editingFinished()
 void TomoGui::on_sampleThickness_editingFinished()
 {
   sigmaX_ShouldUpdate(true);
+  memCalculate();
 }
 
 // -----------------------------------------------------------------------------
