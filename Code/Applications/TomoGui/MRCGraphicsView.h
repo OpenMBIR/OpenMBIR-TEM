@@ -77,7 +77,7 @@ class MRCGraphicsView : public QGraphicsView
 
     void setWidget(QWidget* gui);
 
-    void setAddUserArea(bool b);
+    void setAddReconstructionArea(bool b);
 
     void disableVOISelection(bool disable);
 
@@ -108,8 +108,8 @@ class MRCGraphicsView : public QGraphicsView
 
     void loadBaseImageFile(QImage image);
 
-    void addNewInitArea(ReconstructionArea* userInitArea);
-    void createNewUserInitArea(const QRectF brect);
+    void addNewReconstructionArea(ReconstructionArea* userInitArea);
+    void createNewReconstructionArea(const QRectF brect);
 
     ReconstructionArea* reconstructionArea();
 
@@ -132,7 +132,7 @@ class MRCGraphicsView : public QGraphicsView
 
     void setCompositeMode(TomoGui_Constants::CompositeType mode);
 
-    void addUserInitArea(bool b);
+    void addReconstructionArea(bool b);
 
     void updateDisplay();
 
@@ -147,12 +147,6 @@ class MRCGraphicsView : public QGraphicsView
 
     void fireReconstructionVOIAdded(ReconstructionArea* reconVOI);
 
-   /*
-   void fireReconstructionVOIUpdated(ReconstructionArea* reconVOI);
-   void fireReconstructionVOISelected(ReconstructionArea* reconVOI);
-
-   void fireUserInitAreaAboutToDelete(ReconstructionArea* reconVOI);
-    */
      void fireReconstructionVOILostFocus();
 
   protected:
@@ -162,7 +156,7 @@ class MRCGraphicsView : public QGraphicsView
    QGraphicsItem* m_ImageGraphicsItem;
    QImage         m_BaseImage;
    bool           m_DisableVOISelection;
-   bool           m_AddUserInitArea;
+   bool           m_AddReconstructionArea;
    QRubberBand*   m_RubberBand;
    QPoint         m_MouseClickOrigin;
    float          m_ZoomFactors[10];

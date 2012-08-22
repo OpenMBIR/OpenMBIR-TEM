@@ -68,7 +68,8 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
 
     void setGraphicsView(MRCGraphicsView* gView);
-    void setControlPointMultiplier(float f);
+//    void setControlPointMultiplier(float f);
+//    float getControlPointMultiplier();
 
   public slots:
 
@@ -118,7 +119,7 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
   private:
     bool m_isResizing;
     CTRL_POINTS m_CurrentResizeHandle;
-    float ctrlPointSize;
+    float m_CtrlPointSize;
     int m_GrayLevel;
 
     int m_UpperLeft[2];
@@ -128,6 +129,7 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
     bool m_Visible;
     MRCGraphicsView* m_GView;
     QSize            m_ImageSize;
+    float            m_ControlPointMultiplier;
 
 };
 

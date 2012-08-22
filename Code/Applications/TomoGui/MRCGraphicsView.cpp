@@ -62,7 +62,7 @@ MRCGraphicsView::MRCGraphicsView(QWidget *parent)
 {
   setAcceptDrops(true);
   setDragMode(RubberBandDrag);
-  m_AddUserInitArea = true;
+  m_AddReconstructionArea = true;
 
   m_ZoomFactors[0] = 0.1f;
   m_ZoomFactors[1] = 0.25f;
@@ -93,9 +93,9 @@ void MRCGraphicsView::setOverlayTransparency(float f)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MRCGraphicsView::addUserInitArea(bool b)
+void MRCGraphicsView::addReconstructionArea(bool b)
 {
-  m_AddUserInitArea = b;
+  m_AddReconstructionArea = b;
 }
 
 // -----------------------------------------------------------------------------
@@ -112,6 +112,10 @@ void MRCGraphicsView::disableVOISelection(bool b)
 void MRCGraphicsView::zoomIn()
 {
   scale(1.1, 1.1);
+//  if (NULL != m_ReconstructionArea)
+//  {
+//    m_ReconstructionArea->setControlPointMultiplier(m_ReconstructionArea->getControlPointMultiplier() * 1.1f);
+//  }
 }
 
 // -----------------------------------------------------------------------------
@@ -120,6 +124,10 @@ void MRCGraphicsView::zoomIn()
 void MRCGraphicsView::zoomOut()
 {
   scale(1.0 / 1.1, 1.0 / 1.1);
+//  if (NULL != m_ReconstructionArea)
+//  {
+//    m_ReconstructionArea->setControlPointMultiplier(m_ReconstructionArea->getControlPointMultiplier() / 1.1f);
+//  }
 }
 
 
@@ -138,6 +146,10 @@ void MRCGraphicsView::setZoomIndex(int index)
     QTransform transform;
     transform.scale(m_ZoomFactors[index], m_ZoomFactors[index]);
     setTransform(transform);
+//    if (NULL != m_ReconstructionArea)
+//    {
+//        m_ReconstructionArea->setControlPointMultiplier(m_ReconstructionArea->getControlPointMultiplier() * m_ZoomFactors[index]);
+//    }
   }
 
 }
@@ -348,9 +360,9 @@ QImage MRCGraphicsView::getBaseImage()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MRCGraphicsView::setAddUserArea(bool b)
+void MRCGraphicsView::setAddReconstructionArea(bool b)
 {
-  m_AddUserInitArea = b;
+  m_AddReconstructionArea = b;
 }
 
 // -----------------------------------------------------------------------------
@@ -359,7 +371,7 @@ void MRCGraphicsView::setAddUserArea(bool b)
 void MRCGraphicsView::mousePressEvent(QMouseEvent *event)
 {
   // std::cout << "TomoGuiGraphicsView::mousePressEvent accepted:" << (int)(event->isAccepted()) << std::endl;
-  m_AddUserInitArea = true;
+  m_AddReconstructionArea = true;
   QGraphicsView::mousePressEvent(event);
   if (m_DisableVOISelection == true)
   {
@@ -385,7 +397,7 @@ void MRCGraphicsView::mousePressEvent(QMouseEvent *event)
   }
 
   // std::cout << "    event->accepted() == false" << std::endl;
-  if(m_AddUserInitArea == true)
+  if(m_AddReconstructionArea == true)
   {
  //   m_MouseClickOrigin = event->pos();
     if(!m_RubberBand) m_RubberBand = new QRubberBand(QRubberBand::Rectangle, this);
@@ -401,7 +413,7 @@ void MRCGraphicsView::mousePressEvent(QMouseEvent *event)
 // -----------------------------------------------------------------------------
 void MRCGraphicsView::mouseMoveEvent(QMouseEvent *event)
 {
-  if(m_AddUserInitArea == true && m_RubberBand != NULL)
+  if(m_AddReconstructionArea == true && m_RubberBand != NULL)
   {
     m_RubberBand->setGeometry(QRect(m_MouseClickOrigin, event->pos()).normalized());
   }
@@ -446,7 +458,7 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 
     emit fireSingleSliceSelected(y);
   }
-  else if (m_AddUserInitArea == true && NULL != m_RubberBand)
+  else if (m_AddReconstructionArea == true && NULL != m_RubberBand)
   {
     m_RubberBand->hide();
     QPoint endPoint = event->pos();
@@ -470,8 +482,8 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
     }
 
 
-    createNewUserInitArea(boxf);
-    m_AddUserInitArea = false;
+    createNewReconstructionArea(boxf);
+    m_AddReconstructionArea = false;
   }
   else
   {
@@ -503,7 +515,7 @@ QLineF MRCGraphicsView::getXZPlane()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MRCGraphicsView::createNewUserInitArea(const QRectF brect)
+void MRCGraphicsView::createNewReconstructionArea(const QRectF brect)
 {
 
   ReconstructionArea* userInitArea = new ReconstructionArea(brect, m_BaseImage.size());
@@ -515,18 +527,15 @@ void MRCGraphicsView::createNewUserInitArea(const QRectF brect)
   userInitArea->setZValue(1);
   userInitArea->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 
-  addNewInitArea(userInitArea);
+  addNewReconstructionArea(userInitArea);
 }
 
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MRCGraphicsView::addNewInitArea(ReconstructionArea* reconVOI)
+void MRCGraphicsView::addNewReconstructionArea(ReconstructionArea* reconVOI)
 {
- // std::cout << "EMMPMGraphicsView::addNewInitArea()" << std::endl;
-
-
   // Set the Parent Item
   reconVOI->setParentItem(m_ImageGraphicsItem);
   // Add it to the vector of UserInitAreas

@@ -58,7 +58,8 @@ namespace UIA
 ReconstructionArea::ReconstructionArea(const QPolygonF &polygon, QSize imageSize, QGraphicsItem *parent) :
 QGraphicsPolygonItem(polygon, parent),
 m_GView(NULL),
-m_ImageSize(imageSize)
+m_ImageSize(imageSize),
+m_ControlPointMultiplier(1.0f)
 {
   setFlag(QGraphicsItem::ItemIsMovable, true);
   setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -67,7 +68,8 @@ m_ImageSize(imageSize)
   setAcceptHoverEvents(true);
   m_isResizing = false;
   m_CurrentResizeHandle = ReconstructionArea::NO_CTRL_POINT;
-  ctrlPointSize = CTRL_POINT_SIZE;
+  int maxDim = (imageSize.height() > imageSize.width()) ? imageSize.height() : imageSize.width() ;
+  m_CtrlPointSize = maxDim * 0.020; // CTRL_POINT_SIZE * m_ControlPointMultiplier;
   m_GrayLevel = 0 + (255 / 16 * 0);
 
   m_LineWidth = 1.0;
@@ -91,13 +93,23 @@ ReconstructionArea::~ReconstructionArea()
 {
 }
 
+#if 0
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
 void ReconstructionArea::setControlPointMultiplier(float f)
 {
-  ctrlPointSize = CTRL_POINT_SIZE * f;
+    m_ControlPointMultiplier = f;
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+float ReconstructionArea::getControlPointMultiplier()
+{
+    return m_ControlPointMultiplier;
+}
+#endif
 
 // -----------------------------------------------------------------------------
 //
@@ -188,29 +200,30 @@ void ReconstructionArea::paint(QPainter *painter, const QStyleOptionGraphicsItem
   float w = boundingRect().width();
   float h = boundingRect().height();
 
-  painter->setPen(QPen(QColor(0, 255, 0, UIA::Alpha), 1.0));
-  QRectF left(x-ctrlPointSize, y, 2*ctrlPointSize, h);
-  QRectF right(x+w-ctrlPointSize, y, 2*ctrlPointSize, h);
-  QRectF top(x, y-ctrlPointSize, w, 2*ctrlPointSize);
-  QRectF bottom(x, y+h-ctrlPointSize, w, 2*ctrlPointSize);
-  painter->drawRect(left);
-  painter->drawRect(right);
-  painter->drawRect(top);
-  painter->drawRect(bottom);
+  float ctrlPointSize = m_CtrlPointSize; // m_CtrlPointSize * m_ControlPointMultiplier;
 
 
-  painter->setPen(QPen(QColor(255, 25, 25, UIA::Alpha), 1.0));
+//  painter->setPen(QPen(QColor(0, 255, 0, UIA::Alpha), 1.0));
+//  QRectF left(x-ctrlPointSize, y, 2*ctrlPointSize, h);
+//  QRectF right(x+w-ctrlPointSize, y, 2*ctrlPointSize, h);
+//  QRectF top(x, y-ctrlPointSize, w, 2*ctrlPointSize);
+//  QRectF bottom(x, y+h-ctrlPointSize, w, 2*ctrlPointSize);
+//  painter->drawRect(left);
+//  painter->drawRect(right);
+//  painter->drawRect(top);
+//  painter->drawRect(bottom);
+
+
+  painter->setPen(QPen(QColor(0, 255, 25, 255), 2.0));
   painter->drawLine(x, y, x+w, y);
   painter->drawLine(x+w, y, x+w, y+h);
   painter->drawLine(x+w, y+h, x, y+h);
   painter->drawLine(x, y+h, x, y);
 
 
-  if (option->state & QStyle::State_Selected)
+//  if (option->state & QStyle::State_Selected)
   {
-
-
-    painter->setPen(QPen(QColor(255, 25, 255, UIA::Alpha)));
+    painter->setPen(QPen(QColor(0, 255, 25, 255)));
     painter->setBrush( QBrush(QColor(25, 25, 25, UIA::Alpha)));
     //Upper Left
     painter->drawRect((int)x, (int)y, (int)ctrlPointSize, (int)ctrlPointSize);
@@ -303,7 +316,7 @@ void ReconstructionArea::mousePressEvent(QGraphicsSceneMouseEvent *event)
 
   if (m_GView != NULL)
   {
-    m_GView->setAddUserArea(false);
+    m_GView->setAddReconstructionArea(false);
   }
 }
 
@@ -638,7 +651,7 @@ ReconstructionArea::CTRL_POINTS ReconstructionArea::isInResizeArea(const QPointF
   float w = boundingRect().width();
   float h = boundingRect().height();
 
-
+  float ctrlPointSize = m_CtrlPointSize; // m_CtrlPointSize * m_ControlPointMultiplier;
   QRectF upLeft(x, y, ctrlPointSize, ctrlPointSize);
   QRectF upRight(x + w - ctrlPointSize, y, ctrlPointSize, ctrlPointSize);
   QRectF lowRight(x + w - ctrlPointSize, y + h - ctrlPointSize, ctrlPointSize, ctrlPointSize);
