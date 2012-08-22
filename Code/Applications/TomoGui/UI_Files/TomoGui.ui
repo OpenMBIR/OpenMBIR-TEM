@@ -253,7 +253,7 @@ font-size: 10px;
          </widget>
         </item>
         <item row="3" column="0">
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="initialReconstructionLabel">
           <property name="enabled">
            <bool>true</bool>
           </property>
@@ -328,7 +328,7 @@ font-size: 10px;
         </item>
        </layout>
       </widget>
-      <widget class="QGroupBox" name="groupBox_4">
+      <widget class="QGroupBox" name="reconstructedDisplayGroupBox">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -336,7 +336,7 @@ font-size: 10px;
         </size>
        </property>
        <property name="title">
-        <string>XZ Single Slice Reconstruction</string>
+        <string>XZ Reconstruction Plane</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_5">
         <property name="margin">
@@ -447,6 +447,7 @@ font-size: 10px;
      <addaction name="separator"/>
     </widget>
     <addaction name="actionOpenMRCFile"/>
+    <addaction name="action_OpenReconstructedMRC"/>
     <addaction name="menu_FixedRecentFiles"/>
     <addaction name="separator"/>
     <addaction name="actionSaveCanvas"/>
@@ -462,7 +463,8 @@ font-size: 10px;
      <string>Window</string>
     </property>
     <addaction name="actionParameters"/>
-    <addaction name="actionMRC_Info"/>
+    <addaction name="action_InputMRCInfo"/>
+    <addaction name="action_OutputMRCInfo"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuWindow"/>
@@ -537,7 +539,7 @@ font-size: 10px;
               <x>0</x>
               <y>0</y>
               <width>258</width>
-              <height>871</height>
+              <height>878</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -548,7 +550,7 @@ font-size: 10px;
               <number>0</number>
              </property>
              <property name="topMargin">
-              <number>0</number>
+              <number>10</number>
              </property>
              <property name="rightMargin">
               <number>0</number>
@@ -556,6 +558,109 @@ font-size: 10px;
              <property name="bottomMargin">
               <number>5</number>
              </property>
+             <item>
+              <widget class="QDisclosableGroupBox" name="singleSliceGroupBox">
+               <property name="styleSheet">
+                <string notr="true">QGroupBox
+{
+/*background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #FFFFFF, stop: 1 #DCDCDC); */
+background-image: url(:/DisclosableGroupBoxHeader.png);
+background-position: top ;
+background-repeat: repeat-x;
+padding: 30 0 0 0px;
+font: 85 italic 12pt &quot;Arial&quot;;
+font-weight: bold;
+border: 0px solid gray;
+margin: 0px;
+}
+ 
+QGroupBox::title
+{    
+subcontrol-origin: padding;    
+subcontrol-position: top left;    
+padding: 5 5px;    
+background-color: rgba(255, 255, 255, 0);
+}
+QGroupBox::indicator {    
+width: 17px;    
+height: 17px;
+}
+
+QGroupBox::indicator:unchecked {
+ image: url(:/bullet_triangle_grey.png);
+}
+QGroupBox::indicator:unchecked:pressed {
+ image: url(:/bullet_triangle_grey.png);
+}
+QGroupBox::indicator:checked { 
+image: url(:/bullet_triangle_grey_down.png);
+}
+QGroupBox::indicator:checked:pressed { 
+image: url(:/bullet_triangle_grey_down.png);
+}
+</string>
+               </property>
+               <property name="title">
+                <string>Single Slice Reconstruction Geometry</string>
+               </property>
+               <property name="flat">
+                <bool>true</bool>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <layout class="QGridLayout" name="gridLayout_4">
+                <property name="leftMargin">
+                 <number>3</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>3</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
+                <property name="spacing">
+                 <number>6</number>
+                </property>
+                <item row="0" column="1">
+                 <widget class="QLabel" name="ySingleSliceValue">
+                  <property name="text">
+                   <string>0</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="ySingleSliceValue_Label">
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>Y:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="0" colspan="2">
+                 <widget class="QPushButton" name="m_SingleSliceReconstructionBtn">
+                  <property name="enabled">
+                   <bool>false</bool>
+                  </property>
+                  <property name="text">
+                   <string>Single Slice Reconstruction</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
              <item>
               <widget class="QDisclosableGroupBox" name="fullReconstructionGroupBox">
                <property name="styleSheet">
@@ -614,6 +719,52 @@ image: url(:/bullet_triangle_grey_down.png);
                 <property name="margin">
                  <number>0</number>
                 </property>
+                <item row="5" column="1">
+                 <widget class="QComboBox" name="tiltSelection">
+                  <item>
+                   <property name="text">
+                    <string>X Tilts</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Y Tilts</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QLineEdit" name="yMin">
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>--</string>
+                  </property>
+                  <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="1">
+                 <widget class="QLineEdit" name="yMax">
+                  <property name="maximumSize">
+                   <size>
+                    <width>100</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>--</string>
+                  </property>
+                  <property name="readOnly">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
                 <item row="0" column="0">
                  <widget class="QLabel" name="label_41">
                   <property name="styleSheet">
@@ -779,98 +930,6 @@ font-size: 10px;
                   </property>
                   <property name="wordWrap">
                    <bool>false</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="5" column="1">
-                 <widget class="QComboBox" name="tiltSelection">
-                  <item>
-                   <property name="text">
-                    <string>X Tilts</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Y Tilts</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-                <item row="6" column="0" colspan="2">
-                 <widget class="QLabel" name="label_50">
-                  <property name="font">
-                   <font>
-                    <weight>75</weight>
-                    <bold>true</bold>
-                   </font>
-                  </property>
-                  <property name="text">
-                   <string>Single Slice Geometry</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="7" column="0">
-                 <widget class="QLabel" name="ySingleSliceValue_Label">
-                  <property name="styleSheet">
-                   <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                  </property>
-                  <property name="text">
-                   <string>Y:</string>
-                  </property>
-                  <property name="alignment">
-                   <set>Qt::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="7" column="1">
-                 <widget class="QLabel" name="ySingleSliceValue">
-                  <property name="text">
-                   <string>0</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="8" column="0" colspan="2">
-                 <widget class="QPushButton" name="m_SingleSliceReconstructionBtn">
-                  <property name="enabled">
-                   <bool>false</bool>
-                  </property>
-                  <property name="text">
-                   <string>Single Slice Reconstruction</string>
-                  </property>
-                 </widget>
-                </item>
-                <item row="3" column="1">
-                 <widget class="QLineEdit" name="yMax">
-                  <property name="maximumSize">
-                   <size>
-                    <width>100</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>--</string>
-                  </property>
-                  <property name="readOnly">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="1">
-                 <widget class="QLineEdit" name="yMin">
-                  <property name="maximumSize">
-                   <size>
-                    <width>100</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>--</string>
-                  </property>
-                  <property name="readOnly">
-                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
@@ -1879,9 +1938,22 @@ font-size: 10px;
     <string>Info</string>
    </property>
   </action>
-  <action name="actionMRC_Info">
+  <action name="action_InputMRCInfo">
    <property name="text">
-    <string>MRC Info</string>
+    <string>Input MRC Info</string>
+   </property>
+  </action>
+  <action name="action_OutputMRCInfo">
+   <property name="text">
+    <string>Output MRC Info</string>
+   </property>
+  </action>
+  <action name="action_OpenReconstructedMRC">
+   <property name="text">
+    <string>Open Reconstructed MRC</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
    </property>
   </action>
  </widget>
