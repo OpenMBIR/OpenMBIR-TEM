@@ -37,7 +37,6 @@
 #include <limits>
 #include <fstream>
 
-
 //-- Qt Includes
 #include <QtCore/QPluginLoader>
 #include <QtCore/QFileInfo>
@@ -63,7 +62,6 @@
 #include "QtSupport/ApplicationAboutBoxDialog.h"
 #include "QtSupport/QRecentFileList.h"
 #include "QtSupport/QFileCompleter.h"
-
 
 //-- TomoEngine Includes
 #include "TomoEngine/TomoEngine.h"
@@ -156,7 +154,6 @@ TomoGui::~TomoGui()
 
 }
 
-
 // -----------------------------------------------------------------------------
 //  Called when the main window is closed.
 // -----------------------------------------------------------------------------
@@ -179,7 +176,6 @@ void TomoGui::closeEvent(QCloseEvent *event)
     event->accept();
   }
 }
-
 
 // -----------------------------------------------------------------------------
 //  Read the prefs from the local storage file
@@ -342,7 +338,6 @@ void TomoGui::on_actionLoad_Config_File_triggered()
   m_OpenDialogLastDirectory = fi.absolutePath();
   QSettings prefs(file, QSettings::IniFormat, this);
 
-
   QString val;
   bool ok;
   qint32 i;
@@ -393,9 +388,6 @@ void TomoGui::on_actionLoad_Config_File_triggered()
   tiltSelection->setCurrentIndex(i);
 
   prefs.endGroup();
-
-
-
 }
 
 // -----------------------------------------------------------------------------
@@ -405,8 +397,6 @@ void TomoGui::on_actionParameters_triggered()
 {
   parametersDockWidget->show();
 }
-
-
 
 // -----------------------------------------------------------------------------
 //
@@ -583,7 +573,6 @@ bool TomoGui::sanityCheckOutputDirectory(QString le, QString msgTitle)
   verifyPathExists(le, NULL);
   return true;
 }
-
 
 // -----------------------------------------------------------------------------
 //
@@ -1358,7 +1347,6 @@ void TomoGui::setWidgetListEnabled(bool b)
   }
 }
 
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -1441,7 +1429,9 @@ void TomoGui::on_actionLayers_Palette_triggered()
   m_LayersPalette->show();
 }
 
-
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void TomoGui::on_actionOpenMRCFile_triggered()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
@@ -1552,7 +1542,7 @@ void TomoGui::readMRCHeader(QString filepath)
   // Transfer the meta data from the MRC Header to the GUI
   m_XDim = header.nx;
   m_nTilts = header.nz;
-  /*
+ /*
   m_XDim->setText(QString::number(header.nx));
   m_YDim->setText(QString::number(header.ny));
   m_nTilts->setText(QString::number(header.nz));
@@ -1640,9 +1630,6 @@ void TomoGui::readMRCHeader(QString filepath)
   }
 }
 
-
-
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -1678,7 +1665,6 @@ void TomoGui::on_estimateSigmaX_clicked()
         return;
     }
 
-
     quint16 xmin = xMin->text().toUShort(&ok);
     quint16 xmax = xMax->text().toUShort(&ok);
     quint16 ymin = yMin->text().toUShort(&ok);
@@ -1709,9 +1695,7 @@ void TomoGui::on_estimateSigmaX_clicked()
 
         sigmaX_ShouldUpdate(false);
     }
-
 }
-
 
 // -----------------------------------------------------------------------------
 //
@@ -1756,7 +1740,6 @@ void TomoGui::on_sampleThickness_editingFinished()
   sigmaX_ShouldUpdate(true);
 }
 
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -1772,8 +1755,6 @@ void TomoGui::on_tiltSelection_currentIndexChanged(int index)
 {
   sigmaX_ShouldUpdate(true);
 }
-
-
 
 // -----------------------------------------------------------------------------
 //
@@ -1841,7 +1822,6 @@ void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
 
 }
 
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -1878,25 +1858,24 @@ void TomoGui::geometryChanged()
 // -----------------------------------------------------------------------------
 void TomoGui::reconstructionVOIUpdated(ReconstructionArea* recon)
 {
+    QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
+    QSize size = image.size();
 
-  QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
-  QSize size = image.size();
 
+    int xmin, ymin;
+    recon->getUpperLeft(xmin, ymin);
 
-  int xmin, ymin;
-  recon->getUpperLeft(xmin, ymin);
+    int xmax, ymax;
+    recon->getLowerRight(xmax, ymax);
 
-  int xmax, ymax;
-  recon->getLowerRight(xmax, ymax);
+    xMin->setText(QString::number(xmin));
+    xMax->setText(QString::number(xmax - 1));
 
-  xMin->setText(QString::number(xmin));
-  xMax->setText(QString::number(xmax - 1));
+    yMin->setText(QString::number(size.height() - ymax));
+    yMax->setText(QString::number(size.height() - ymin - 1));
 
-  yMin->setText(QString::number(size.height() - ymax));
-  yMax->setText(QString::number(size.height() - ymin - 1));
-
-  sigmaX_ShouldUpdate(true);
-
+    sigmaX_ShouldUpdate(true);
+    memCalculate();
 }
 
 // -----------------------------------------------------------------------------
@@ -1914,8 +1893,6 @@ void TomoGui::reconstructionVOIDeleted(ReconstructionArea* recon)
 {
 
 }
-
-
 
 #if 0
 // -----------------------------------------------------------------------------
