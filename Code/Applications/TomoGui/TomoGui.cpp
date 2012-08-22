@@ -1097,6 +1097,8 @@ void TomoGui::loadProgressMRCFile(QString mrcfilePath)
 //  std::cout << "Loading Progress MRC File: " << filePath.toStdString() << std::endl;
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(mrcfilePath);
   m_ReconstructedDisplayWidget->setImageWidgetsEnabled(true);
+  m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(false);
+  m_ReconstructedDisplayWidget->setDrawOrigin(false);
 //  deleteTempFiles();
 //  m_TempFilesToDelete.push_back(mrcfilePath);
 }
@@ -1474,6 +1476,7 @@ void TomoGui::on_action_OpenReconstructedMRC_triggered()
   m_OpenDialogLastDirectory = fi.absolutePath();
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(true);
   m_ReconstructedDisplayWidget->setImageWidgetsEnabled(true);
+  m_ReconstructedDisplayWidget->setDrawOrigin(false);
   m_ReconstructedDisplayWidget->loadMRCFile(file);
 }
 

@@ -145,6 +145,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void on_actionParameters_triggered();
     void on_actionLayers_Palette_triggered();
 
+
     void memCalculate();
 
     /* slots for the buttons in the GUI */
