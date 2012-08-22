@@ -518,8 +518,14 @@ void TomoGui::setupGui()
    outputDirectoryPathBtn->hide();
    outputDirectoryLabel->hide();
 
-  m_MRCInfoWidget = new MRCInfoWidget(this);
-  m_MRCInfoWidget->hide();
+   initialReconstructionPath->hide();
+   initialReconstructionLabel->hide();
+
+  m_MRCInputInfoWidget = new MRCInfoWidget(this);
+  m_MRCInputInfoWidget->hide();
+
+  m_MRCOutputInfoWidget = new MRCInfoWidget(this);
+  m_MRCOutputInfoWidget->hide();
 }
 
 // -----------------------------------------------------------------------------
@@ -624,6 +630,8 @@ void TomoGui::on_m_SingleSliceReconstructionBtn_clicked()
   // Move the Reconstruction object into the thread that we just created.
   m_MultiResSOC->moveToThread(m_WorkerThread);
   initializeSOCEngine(false);
+
+  reconstructedDisplayGroupBox->setTitle(QString("XZ Reconstruction Plane"));
 
   /* Connect the signal 'started()' from the QThread to the 'run' slot of the
    * SOCEngine object. Since the SOCEngine object has been moved to another
@@ -821,6 +829,8 @@ void TomoGui::on_m_GoBtn_clicked()
   // Move the Reconstruction object into the thread that we just created.
   m_MultiResSOC->moveToThread(m_WorkerThread);
   initializeSOCEngine(true);
+
+  reconstructedDisplayGroupBox->setTitle(QString("XZ Reconstruction Plane"));
 
   /* Connect the signal 'started()' from the QThread to the 'run' slot of the
    * SOCEngine object. Since the SOCEngine object has been moved to another
@@ -1117,6 +1127,8 @@ void TomoGui::pipelineComplete()
   setWindowTitle(m_CurrentImageFile);
   setWidgetListEnabled(true);
 
+  reconstructedDisplayGroupBox->setTitle(QString("Reconstructed Volume"));
+
   // Remove all the temp files that were generated
   deleteTempFiles();
 }
@@ -1229,7 +1241,8 @@ void TomoGui::on_inputMRCFilePathBtn_clicked()
 // -----------------------------------------------------------------------------
 void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
 {
-  if(verifyPathExists(inputMRCFilePath->text(), inputMRCFilePath))
+  QFileInfo fi(inputMRCFilePath->text());
+  if(fi.exists() == true && fi.isDir() == false)
   {
     // Read the header info from the file and populate the GUI with those values
     {
@@ -1435,7 +1448,7 @@ void TomoGui::on_actionLayers_Palette_triggered()
 void TomoGui::on_actionOpenMRCFile_triggered()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
-  QString file = QFileDialog::getOpenFileName(this, tr("Open Image File"), m_OpenDialogLastDirectory, tr("Images (*.mrc *.rec *.ali)"));
+  QString file = QFileDialog::getOpenFileName(this, tr("Open MRC File"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc *.rec *.ali)"));
 
   if(true == file.isEmpty())
   {
@@ -1444,6 +1457,24 @@ void TomoGui::on_actionOpenMRCFile_triggered()
   QFileInfo fi(file);
   m_OpenDialogLastDirectory = fi.absolutePath();
   inputMRCFilePath->setText(file);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_action_OpenReconstructedMRC_triggered()
+{
+  QString file = QFileDialog::getOpenFileName(this, tr("Open MRC File"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc *.rec *.ali)"));
+
+  if(true == file.isEmpty())
+  {
+    return;
+  }
+  QFileInfo fi(file);
+  m_OpenDialogLastDirectory = fi.absolutePath();
+  m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(true);
+  m_ReconstructedDisplayWidget->setImageWidgetsEnabled(true);
+  m_ReconstructedDisplayWidget->loadMRCFile(file);
 }
 
 #if 0
@@ -2034,10 +2065,19 @@ void TomoGui::on_actionSaveCanvas_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_actionMRC_Info_triggered()
+void TomoGui::on_action_InputMRCInfo_triggered()
 {
-  m_MRCInfoWidget->setInfo(inputMRCFilePath->text());
-  m_MRCInfoWidget->show();
+  m_MRCInputInfoWidget->setInfo(inputMRCFilePath->text());
+  m_MRCInputInfoWidget->show();
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_action_OutputMRCInfo_triggered()
+{
+  m_MRCOutputInfoWidget->setInfo(m_ReconstructedDisplayWidget->getMRCFilePath());
+  m_MRCOutputInfoWidget->show();
 }
 
 // -----------------------------------------------------------------------------

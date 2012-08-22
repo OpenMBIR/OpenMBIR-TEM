@@ -133,14 +133,14 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
   //Manual Hookup Menu Actions
   // File Menu
     void on_actionOpenMRCFile_triggered(); // Open a Data File
- //   void on_actionOpenOverlayImage_triggered();
+    void on_action_OpenReconstructedMRC_triggered(); // Open an MRC file in the Right side display
     void on_actionAbout_triggered();
     void on_actionExit_triggered();
     void on_actionSave_Config_File_triggered();
     void on_actionLoad_Config_File_triggered();
     void on_actionSaveCanvas_triggered();
-    void on_actionMRC_Info_triggered();
-
+    void on_action_InputMRCInfo_triggered();
+    void on_action_OutputMRCInfo_triggered();
 //Window Menu
     void on_actionParameters_triggered();
     void on_actionLayers_Palette_triggered();
@@ -310,7 +310,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     bool                  m_SingleSliceReconstructionActive;
     bool                  m_FullReconstrucionActive;
-    MRCInfoWidget*        m_MRCInfoWidget;
+    MRCInfoWidget*        m_MRCInputInfoWidget;
+    MRCInfoWidget*        m_MRCOutputInfoWidget;
     quint16               m_XDim;
     quint16               m_nTilts;
     QString               m_OpenDialogLastDirectory;
