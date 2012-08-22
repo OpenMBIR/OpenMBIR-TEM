@@ -74,17 +74,19 @@ void MRCSinogramInitializer::execute()
 
   MRCReader::Pointer reader = MRCReader::New(true);
   MRCHeader header;
+  ::memset(&header, 0, 1024);
+  header.feiHeaders = NULL;
   int err = reader->readHeader(inputs->sinoFile, &header);
   //reader->printHeader(&header, std::cout);
-	if (err < 0)
+    if (err < 0)
   {
-	  FREE_FEI_HEADERS( header.feiHeaders )
+      FREE_FEI_HEADERS( header.feiHeaders )
   }
 
   if (header.mode != 1)
   {
     FREE_FEI_HEADERS( header.feiHeaders )
-    ss << "16 bit integers are only supported. Error at line  " << __LINE__ << " in file " << __FILE__ << std::endl;
+    ss << __FILE__ << "(" << __LINE__ << ") - 16 bit integers are only supported. Error at line  "  << std::endl;
     setErrorCondition(-1);
     notify(ss.str(), 0, Observable::UpdateErrorMessage);
     return;
@@ -259,15 +261,15 @@ void MRCSinogramInitializer::execute()
   sinogram->counts = RealVolumeType::New(dims, "Sinogram.counts");
 
 
-	//If the bright field image is included initialize space for it
-	/*if(inputs->BrightFieldFile != NULL)
-	{
-	size_t dims[3] = {sinogram->N_theta,
-	inputs->xEnd - inputs->xStart+1,
-	inputs->yEnd - inputs->yStart+1};
-	sinogram->counts_BF = RealVolumeType::New(dims);
-	sinogram->counts_BF->setName("Sinogram.counts_BrightField");
-	}*/
+    //If the bright field image is included initialize space for it
+    /*if(inputs->BrightFieldFile != NULL)
+    {
+    size_t dims[3] = {sinogram->N_theta,
+    inputs->xEnd - inputs->xStart+1,
+    inputs->yEnd - inputs->yStart+1};
+    sinogram->counts_BF = RealVolumeType::New(dims);
+    sinogram->counts_BF->setName("Sinogram.counts_BrightField");
+    }*/
 
 
   sinogram->angles.resize(sinogram->N_theta);
@@ -318,13 +320,13 @@ void MRCSinogramInitializer::execute()
 
   if(getVerbose())
   {
-	  //display tilt angles
-	  std::cout<<"The tilt angles are"<<std::endl;
-	  for (uint16_t i = 0; i < sinogram->N_theta; i++)
-	  {
-		  std::cout<<sinogram->angles[i]<<std::endl;
-	  }
-   
+      //display tilt angles
+      std::cout<<"The tilt angles are"<<std::endl;
+      for (uint16_t i = 0; i < sinogram->N_theta; i++)
+      {
+          std::cout<<sinogram->angles[i]<<std::endl;
+      }
+
     //check sum calculation
     for (uint16_t i = 0; i < sinogram->N_theta; i++)
     {
