@@ -81,6 +81,7 @@ void MRCInfoWidget::setInfo(QString mrcFilePath)
   int err = reader->readHeader(mrcFilePath.toStdString(), &header);
   if(err < 0)
   {
+      std::cout << "Failed to open MRC File: " << mrcFilePath.toStdString() << std::endl;
     return;
   }
   int tiltIndex = 0;
