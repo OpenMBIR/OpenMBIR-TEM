@@ -131,26 +131,30 @@ void SigmaXEstimation::execute()
         switch(header.mode)
         {
         case 0:
-            calcMinMax<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
+            //calcMinMax<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
+			calcAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2);	
             break;
         case 1:
-            calcMinMax<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
+            //calcMinMax<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
+			calcAvgDeviation<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, sum2);		
             break;
         case 2:
-            calcMinMax<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, min, max, sum2);
+            //calcMinMax<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, min, max, sum2);
+			calcAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2);	
             break;
         case 3:
             break;
         case 4:
             break;
         case 6:
-            calcMinMax<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
+            //calcMinMax<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
+			calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2);		
             break;
         case 16:
             break;
         }
-        if (min < targetMin) { targetMin = min; }
-        if (max > targetMax) { targetMax = max; }
+//        if (min < targetMin) { targetMin = min; }
+//        if (max > targetMax) { targetMax = max; }
         sum2s[i_theta] = sum2;
 
         notify("Estimating Target Gain and Sigma X from Data. ", (int)progress, Observable::UpdateProgressValueAndMessage);
@@ -164,10 +168,10 @@ void SigmaXEstimation::execute()
     for(int i_theta = 0; i_theta < header.nz; ++i_theta)
     {
         //Subtract off any offset in the data
-        sum2s[i_theta] -= min * voxelCount;
+  //      sum2s[i_theta] -= min * voxelCount;
 
-        sum2s[i_theta] /= voxelCount * m_TargetGain;
-
+  //      sum2s[i_theta] /= voxelCount * m_TargetGain;
+		sum2s[i_theta]/=m_TargetGain;
 
         if(m_TiltAngles == 0)
         {

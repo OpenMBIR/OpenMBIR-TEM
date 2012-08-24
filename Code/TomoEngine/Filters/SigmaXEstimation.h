@@ -95,8 +95,25 @@ class TomoEngine_EXPORT SigmaXEstimation : public TomoFilter
       {
           if(data[i] > max) max = data[i];
           if(data[i] < min) min = data[i];
-          sum2 += (data[i]);//-defaultOffset
+          sum2 += (data[i]);
       }
+    }
+	
+	template<typename T>
+    void calcAvgDeviation(T* data, int total, Real_t &dev)
+    {
+		dev=0;
+		Real_t mean=0;
+		for (int i = 0; i < total; i++)
+		{
+			mean+=data[i];
+		}
+		mean/=total;
+		for (int i = 0; i < total; i++)
+		{
+			dev+=fabs(data[i]-mean);
+		}
+		dev/=total;
     }
 
 
