@@ -79,7 +79,7 @@ MRCGraphicsView::MRCGraphicsView(QWidget *parent)
   m_ImageDisplayType = TomoGui_Constants::OriginalImage;
   m_composition_mode = QPainter::CompositionMode_SourceOver;
   m_OverlayTransparency = 1.0f; // Fully opaque
-
+//  setBackgroundBrush(QPixmap(":/background4.png"));
 }
 
 // -----------------------------------------------------------------------------
@@ -426,6 +426,31 @@ void MRCGraphicsView::mouseMoveEvent(QMouseEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+void MRCGraphicsView::updateXZLine(float percentWidth)
+{
+    float remWidth = m_BaseImage.size().width() * percentWidth/2.0;
+
+    float midWidth = m_BaseImage.size().width()/2.0f;
+
+    QLineF currentLine = getXZPlane();
+    float xStart = midWidth - remWidth;
+    float xEnd = midWidth + remWidth;
+
+    QPointF p0(xStart, currentLine.y1());
+    QPointF p1(xEnd, currentLine.y1());
+
+
+    QVector<QPointF> line;
+    line.push_back(p0);
+    line.push_back(p1);
+    QPolygonF polygon(line);
+    m_XZLine.setPolygon(polygon);
+    m_XZLine.setVisible(true);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 {
 
@@ -441,8 +466,14 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
       mappedPoint.setY(m_BaseImage.size().height());
     }
 
-    QPointF p0(0, mappedPoint.y());
-    QPointF p1(sr.width(), mappedPoint.y());
+    float percentWidth = 0.9; // Start with a 90% width for single slice reconstructions
+    float remWidth = m_BaseImage.size().width() * percentWidth/2.0;
+    float midWidth = m_BaseImage.size().width()/2.0f;
+    float xStart = midWidth - remWidth;
+    float xEnd = midWidth + remWidth;
+
+    QPointF p0(xStart, mappedPoint.y());
+    QPointF p1(xEnd, mappedPoint.y());
 
   //  std::cout << "SceneRect: " << sr.x() << ", " << sr.y() << "  " << sr.width() << ", " << sr.height() << std::endl;
     QVector<QPointF> line;

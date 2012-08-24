@@ -136,6 +136,8 @@ class MRCGraphicsView : public QGraphicsView
 
     void updateDisplay();
 
+    void updateXZLine(float percentWidth);
+
   //  void userInitAreaUpdated(ReconstructionArea* uia);
 
   signals:

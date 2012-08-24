@@ -48,6 +48,7 @@
  */
 class MRCInfoWidget : public QWidget, private Ui::MRCInfoWidget
 {
+   Q_OBJECT;
   public:
     MRCInfoWidget(QWidget *parent = 0);
     virtual ~MRCInfoWidget();

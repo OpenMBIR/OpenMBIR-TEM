@@ -122,6 +122,9 @@
 #define WRITE_VALUE(prefs, var)\
     prefs.setValue(#var, var);
 
+static int tiffCount;
+
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -681,6 +684,7 @@ void TomoGui::on_m_SingleSliceReconstructionBtn_clicked()
 // -----------------------------------------------------------------------------
 void TomoGui::on_m_GoBtn_clicked()
 {
+  tiffCount = 0;
   // First make sure we are not already running a reconstruction
   if(m_GoBtn->text().compare("Cancel") == 0)
   {
@@ -889,11 +893,21 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
 
   QFileInfo fi(reconstructedVolumeFileName->text());
   path = fi.absolutePath();
-  //path = QDir::toNativeSeparators(outputDirectoryPath->text());
-  m_MultiResSOC->setTempDir(path.toStdString());
+  if (fullReconstruction == true)
+  {
+    m_MultiResSOC->setTempDir(path.toStdString());
+    path = QDir::toNativeSeparators(fi.absoluteFilePath());
+    m_MultiResSOC->setOutputFile(path.toStdString());
+  }
+  else
+  {
+    QString tempFolder = QDir::tempPath() + QDir::separator() + QString("OpenMBIR");
+    m_MultiResSOC->setTempDir(tempFolder.toStdString());
+    QString reconVolumeFile = tempFolder + QDir::separator() +
+          finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(ScaleOffsetCorrection::ReconstructedMrcFile);
 
-  path = QDir::toNativeSeparators(fi.absoluteFilePath());
-  m_MultiResSOC->setOutputFile(path.toStdString());
+    m_MultiResSOC->setOutputFile(reconVolumeFile.toStdString());
+  }
 
   path = QDir::toNativeSeparators(inputBrightFieldFilePath->text());
   m_MultiResSOC->setBrightFieldFile(path.toStdString());
@@ -963,11 +977,14 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
     QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
     QSize size = image.size();
 
-    unsigned short x = m_XDim;
     // Only reconstruct the middle section of data along the x axis
-    subvolume[0] = 0 + x/4;
-    subvolume[3] = x - x/4;
+    float remWidth = m_XDim * (singleSliceXWidth->value()/100.0f)/2.0f;
+    float midWidth = m_XDim/2.0f;
 
+    subvolume[0] = midWidth - remWidth;
+    subvolume[3] = midWidth + remWidth;
+
+//    std::cout << subvolume[0] << ", " << subvolume[3] << std::endl;
     // This is how many slices we are going to reconstruct
     int ySlices = 3 * finalResolution->value();
 
@@ -986,8 +1003,6 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
     subvolume[4] = y_max;
 
 //    path = QDir::toNativeSeparators(outputDirectoryPath->text());
-    QString tempFolder = QDir::tempPath() + QDir::separator() + QString("OpenMBIR");
-    m_MultiResSOC->setTempDir(tempFolder.toStdString());
   }
   m_MultiResSOC->setSubvolume(subvolume);
 
@@ -1009,6 +1024,14 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+void TomoGui::on_singleSliceXWidth_valueChanged(int value)
+{
+    m_MRCDisplayWidget->graphicsView()->updateXZLine( static_cast<float>(value/100.0));
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void TomoGui::singleSlicePlaneSet(int y)
 {
     m_SingleSliceReconstructionBtn->setEnabled(true);
@@ -1020,7 +1043,7 @@ void TomoGui::singleSlicePlaneSet(int y)
 // -----------------------------------------------------------------------------
 void TomoGui::singleSliceComplete()
 {
-  //std::cout << "TomoGui::singleSliceComplete" << std::endl;
+  std::cout << "TomoGui::singleSliceComplete" << std::endl;
   m_SingleSliceReconstructionBtn->setText("Single Slice Reconstruction");
   m_GoBtn->setEnabled(true);
   setWidgetListEnabled(true);
@@ -1099,8 +1122,16 @@ void TomoGui::loadProgressMRCFile(QString mrcfilePath)
   m_ReconstructedDisplayWidget->setImageWidgetsEnabled(true);
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(false);
   m_ReconstructedDisplayWidget->setDrawOrigin(false);
-//  deleteTempFiles();
-//  m_TempFilesToDelete.push_back(mrcfilePath);
+#if 0
+  QFileInfo fi(mrcfilePath);
+  QString parentPath = fi.path();
+  QDir dir(parentPath);
+
+  QString filepath("/tmp/");
+  filepath = filepath.append(QString::number(tiffCount)).append(".tiff");
+  m_ReconstructedDisplayWidget->graphicsView()->getBaseImage().save(filepath);
+  tiffCount++;
+  #endif
 }
 
 // -----------------------------------------------------------------------------
@@ -1108,7 +1139,7 @@ void TomoGui::loadProgressMRCFile(QString mrcfilePath)
 // -----------------------------------------------------------------------------
 void TomoGui::pipelineComplete()
 {
-  // std::cout << "ReconstructionWidget::threadFinished()" << std::endl;
+   std::cout << "TomoGui::pipelineComplete()" << std::endl;
   m_GoBtn->setText("Reconstruct");
   m_SingleSliceReconstructionBtn->setEnabled(true);
   setWidgetListEnabled(true);
@@ -1130,9 +1161,6 @@ void TomoGui::pipelineComplete()
   setWidgetListEnabled(true);
 
   reconstructedDisplayGroupBox->setTitle(QString("Reconstructed Volume"));
-
-  // Remove all the temp files that were generated
-  deleteTempFiles();
 }
 
 // -----------------------------------------------------------------------------

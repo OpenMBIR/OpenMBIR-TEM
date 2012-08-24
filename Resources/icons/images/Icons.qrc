@@ -1,6 +1,8 @@
  <!DOCTYPE RCC>
  <RCC version="1.0">
  <qresource>
+   <file>background3.png</file>
+   <file>background4.png</file>
     <file>bullet_triangle_grey_down.png</file>
     <file>bullet_triangle_grey.png</file>
     <file>DisclosableGroupBoxHeader.png</file>

@@ -155,6 +155,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     void on_m_SingleSliceReconstructionBtn_clicked();
 
+    void on_singleSliceXWidth_valueChanged(int value);
 
     /**
      * @brief Qt Slot that fires in response to a click on a "Recent File' Menu entry.

@@ -310,7 +310,7 @@ int SOCEngine::initializeRoughReconstructionData()
   }
   else if (extension.compare("mrc") == 0)
   {
-    notify("We are not dealing with mrc volume files. The program will now end.", 0, Observable::UpdateErrorMessage);
+    notify("We are not dealing with mrc volume files.", 0, Observable::UpdateErrorMessage);
     return -1;
   }
   else
