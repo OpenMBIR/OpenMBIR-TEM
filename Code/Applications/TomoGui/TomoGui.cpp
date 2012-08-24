@@ -916,7 +916,7 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   m_MultiResSOC->setInitialReconstructionFile(path.toStdString());
 
   bool ok = false;
-  if (fullReconstruction == true)
+  if (fullReconstruction == true || singleSliceMultiRes->isChecked() == true)
   {
     m_MultiResSOC->setNumberResolutions(numResolutions->value());
   }

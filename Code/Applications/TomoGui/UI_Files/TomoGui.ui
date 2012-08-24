@@ -538,8 +538,8 @@ font-size: 10px;
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>258</width>
-              <height>909</height>
+              <width>261</width>
+              <height>928</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -625,6 +625,38 @@ image: url(:/bullet_triangle_grey_down.png);
                 <property name="spacing">
                  <number>6</number>
                 </property>
+                <item row="0" column="1">
+                 <widget class="QSpinBox" name="singleSliceXWidth">
+                  <property name="suffix">
+                   <string> %</string>
+                  </property>
+                  <property name="maximum">
+                   <number>100</number>
+                  </property>
+                  <property name="singleStep">
+                   <number>5</number>
+                  </property>
+                  <property name="value">
+                   <number>90</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
+                 <widget class="QLabel" name="ySingleSliceValue_Label_2">
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>X Width:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignCenter</set>
+                  </property>
+                 </widget>
+                </item>
                 <item row="1" column="1">
                  <widget class="QLabel" name="ySingleSliceValue">
                   <property name="text">
@@ -648,7 +680,7 @@ font-size: 10px;
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="0" colspan="2">
+                <item row="3" column="0" colspan="2">
                  <widget class="QPushButton" name="m_SingleSliceReconstructionBtn">
                   <property name="enabled">
                    <bool>false</bool>
@@ -658,35 +690,13 @@ font-size: 10px;
                   </property>
                  </widget>
                 </item>
-                <item row="0" column="0">
-                 <widget class="QLabel" name="ySingleSliceValue_Label_2">
-                  <property name="styleSheet">
-                   <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                  </property>
+                <item row="2" column="0" colspan="2">
+                 <widget class="QCheckBox" name="singleSliceMultiRes">
                   <property name="text">
-                   <string>X Width:</string>
+                   <string>Use Multi-Resolution Reconstruction</string>
                   </property>
-                  <property name="alignment">
-                   <set>Qt::AlignCenter</set>
-                  </property>
-                 </widget>
-                </item>
-                <item row="0" column="1">
-                 <widget class="QSpinBox" name="singleSliceXWidth">
-                  <property name="suffix">
-                   <string> %</string>
-                  </property>
-                  <property name="maximum">
-                   <number>100</number>
-                  </property>
-                  <property name="singleStep">
-                   <number>5</number>
-                  </property>
-                  <property name="value">
-                   <number>90</number>
+                  <property name="checked">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
