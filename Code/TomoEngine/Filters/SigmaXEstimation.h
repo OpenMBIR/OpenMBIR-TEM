@@ -43,6 +43,7 @@
 #include "MXA/Common/MXASetGetMacros.h"
 
 #include "TomoEngine/TomoEngine.h"
+#include "TomoEngine/Common/EIMMath.h"
 #include "TomoEngine/Filters/TomoFilter.h"
 #include "TomoEngine/SOC/SOCStructures.h"
 
@@ -86,37 +87,6 @@ class TomoEngine_EXPORT SigmaXEstimation : public TomoFilter
     SigmaXEstimation();
 
   private:
-
-
-    template<typename T>
-    void calcMinMax(T* data, int total, Real_t &min, Real_t &max, Real_t &sum2)
-    {
-      for (int i = 0; i < total; i++)
-      {
-          if(data[i] > max) max = data[i];
-          if(data[i] < min) min = data[i];
-          sum2 += (data[i]);
-      }
-    }
-	
-	template<typename T>
-    void calcAvgDeviation(T* data, int total, Real_t &dev)
-    {
-		dev=0;
-		Real_t mean=0;
-		for (int i = 0; i < total; i++)
-		{
-			mean+=data[i];
-		}
-		mean/=total;
-		for (int i = 0; i < total; i++)
-		{
-			dev+=fabs(data[i]-mean);
-		}
-		dev/=total;
-    }
-
-
     SigmaXEstimation(const SigmaXEstimation&); // Copy Constructor Not Implemented
     void operator=(const SigmaXEstimation&); // Operator '=' Not Implemented
 };

@@ -49,6 +49,35 @@
 namespace Detail
 {
     const float DegToRad = 0.017453292519943f;
+
+template<typename T>
+void calcMinMax(T* data, int total, Real_t &min, Real_t &max, Real_t &sum2)
+{
+  for (int i = 0; i < total; i++)
+  {
+      if(data[i] > max) max = data[i];
+      if(data[i] < min) min = data[i];
+      sum2 += (data[i]);
+  }
+}
+
+template<typename T>
+void calcAvgDeviation(T* data, int total, Real_t &dev)
+{
+    dev=0;
+    Real_t mean=0;
+    for (int i = 0; i < total; i++)
+    {
+        mean+=data[i];
+    }
+    mean/=total;
+    for (int i = 0; i < total; i++)
+    {
+        dev+=fabs(data[i]-mean);
+    }
+    dev/=total;
+}
+
 }
 
 
@@ -132,15 +161,15 @@ void SigmaXEstimation::execute()
         {
         case 0:
             //calcMinMax<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-			calcAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2);	
+            Detail::calcAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2);
             break;
         case 1:
             //calcMinMax<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-			calcAvgDeviation<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, sum2);		
+            Detail::calcAvgDeviation<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, sum2);
             break;
         case 2:
             //calcMinMax<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-			calcAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2);	
+            Detail::calcAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2);
             break;
         case 3:
             break;
@@ -148,7 +177,7 @@ void SigmaXEstimation::execute()
             break;
         case 6:
             //calcMinMax<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-			calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2);		
+            Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2);
             break;
         case 16:
             break;
@@ -171,7 +200,7 @@ void SigmaXEstimation::execute()
   //      sum2s[i_theta] -= min * voxelCount;
 
   //      sum2s[i_theta] /= voxelCount * m_TargetGain;
-		sum2s[i_theta]/=m_TargetGain;
+        sum2s[i_theta]/=m_TargetGain;
 
         if(m_TiltAngles == 0)
         {
