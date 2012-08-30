@@ -578,7 +578,7 @@ void SOCEngine::execute()
   dims[2] = 0;
 
   MagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
-  FiltMagUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
+  FiltMagUpdateMap = RealImageType::New(dims, "Filter Update Map for voxel lines");
   MagUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");
 
 #if ROI
@@ -608,10 +608,8 @@ void SOCEngine::execute()
   ss << "Calculating AMatrix....";
   notify(ss.str(), 0, Observable::UpdateProgressMessage);
 
-  //TODO: All this needs to be deallocated at some point
 
 
-  //AMatrixCol* VoxelLineResponse = (AMatrixCol*)get_spc(m_Geometry->N_y, sizeof(AMatrixCol));
   std::vector<AMatrixCol::Pointer> VoxelLineResponse(m_Geometry->N_y);
 
   MaxNumberOfDetectorElts = (uint16_t)((m_TomoInputs->delta_xy / m_Sinogram->delta_t) + 2);
@@ -727,7 +725,7 @@ void SOCEngine::execute()
     ss.str(""); // Clear the string stream
     indent = "";
 
-    //The first time we may need to update voxels multiple times and then on just optimize over I,d,\sigma,f once each outer loop
+    //The first time we may need to update voxels multiple times and then on just optimize over I,d,sigma,f once each outer loop
     if(reconOuterIter != 0)
     {
       m_TomoInputs->NumIter = 1;
@@ -794,29 +792,29 @@ void SOCEngine::execute()
 
     if(m_AdvParams->NOISE_MODEL)
     {
-          updateWeights(Weight, NuisanceParams, ErrorSino);
+      updateWeights(Weight, NuisanceParams, ErrorSino);
 #ifdef COST_CALCULATE
-          err = calculateCost(cost, Weight, ErrorSino);
-          if (err < 0)
-          {
-              std::cout<<"Cost went up after variance update"<<std::endl;
-              break;
-          }
-#endif//cost
-          if(0 == status && reconOuterIter >= 1) //&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
-          {
-              std::cout << "Exiting the code because status =0" << std::endl;
-              break;
-          }
+      err = calculateCost(cost, Weight, ErrorSino);
+      if (err < 0)
+      {
+        std::cout<<"Cost went up after variance update"<<std::endl;
+        break;
       }
+#endif//cost
+      if(0 == status && reconOuterIter >= 1) //&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+      {
+        std::cout << "Exiting the code because status =0" << std::endl;
+        break;
+      }
+    }
     else
     {
-          if(0 == status && reconOuterIter >= 1)
-          {//&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
-              std::cout << "Exiting the code because status =0" << std::endl;
-              break;
-          }
-      } //Noise Model
+      if(0 == status && reconOuterIter >= 1)
+      { //&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+        std::cout << "Exiting the code because status =0" << std::endl;
+        break;
+      }
+    } //Noise Model
 
 
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
@@ -841,22 +839,21 @@ void SOCEngine::execute()
   /* Write the Gains and Offsets to an output file */
   writeNuisanceParameters(NuisanceParams);
 
-  if(getVerbose()) {
+  if(getVerbose())
+  {
     std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
     for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
     {
 
-        if(m_AdvParams->NOISE_MODEL)
-        {
-      std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
-      "\t" << NuisanceParams->mu->d[i_theta] <<
-      "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
-        }
-        else
-        {
-            std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] <<
-            "\t" << NuisanceParams->mu->d[i_theta] << std::endl;
-        }
+      if(m_AdvParams->NOISE_MODEL)
+      {
+        std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] << "\t" << NuisanceParams->mu->d[i_theta] << "\t" << NuisanceParams->alpha->d[i_theta]
+            << std::endl;
+      }
+      else
+      {
+        std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] << "\t" << NuisanceParams->mu->d[i_theta] << std::endl;
+      }
     }
   }
 

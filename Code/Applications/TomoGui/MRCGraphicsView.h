@@ -163,6 +163,7 @@ class MRCGraphicsView : public QGraphicsView
    QPoint         m_MouseClickOrigin;
    float          m_ZoomFactors[10];
    QGraphicsPolygonItem m_XZLine;
+   float          m_XZWidth;
 
    QWidget*       m_MainGui;
    TomoGui_Constants::ImageDisplayType  m_ImageDisplayType;
@@ -171,6 +172,7 @@ class MRCGraphicsView : public QGraphicsView
    float                                m_OverlayTransparency;
 
    ReconstructionArea*                  m_ReconstructionArea;
+
 
    MRCGraphicsView(const MRCGraphicsView&); // Copy Constructor Not Implemented
    void operator=(const MRCGraphicsView&); // Operator '=' Not Implemented

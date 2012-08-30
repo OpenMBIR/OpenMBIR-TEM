@@ -220,8 +220,8 @@ void ReconstructionArea::paint(QPainter *painter, const QStyleOptionGraphicsItem
   painter->drawLine(x+w, y+h, x, y+h);
   painter->drawLine(x, y+h, x, y);
 
-
-//  if (option->state & QStyle::State_Selected)
+#if 0
+  if (option->state & QStyle::State_Selected)
   {
     painter->setPen(QPen(QColor(0, 255, 25, 255)));
     painter->setBrush( QBrush(QColor(25, 25, 25, UIA::Alpha)));
@@ -234,7 +234,7 @@ void ReconstructionArea::paint(QPainter *painter, const QStyleOptionGraphicsItem
     // Lower Left
     painter->drawRect((int)x, (int)y + (int)h - (int)ctrlPointSize, (int)ctrlPointSize, (int)ctrlPointSize);
   }
-
+#endif
   painter->setRenderHint(QPainter::Antialiasing, false);
 }
 
@@ -353,6 +353,7 @@ void ReconstructionArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
   //  std::cout << "newRect: " << x << ", " << y << " (" << w << " x " << h << ")" << std::endl;
     QRectF newRect = boundingRect();
     // Move the upper left corner as it is grown
+#if 0
     if (m_CurrentResizeHandle == ReconstructionArea::UPPER_LEFT_CTRL_POINT)
     {
       newRect.setX(x + deltaX);
@@ -380,14 +381,18 @@ void ReconstructionArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
       newRect.setX(x + deltaX);
       newRect.setWidth(w - deltaX);
     }
-    else if (m_CurrentResizeHandle == ReconstructionArea::TOP_CTRL_POINT)
-    {
-      newRect.setY(y + deltaY);
-      newRect.setHeight(h - deltaY);
-    }
+
     else if (m_CurrentResizeHandle == ReconstructionArea::RIGHT_CTRL_POINT)
     {
       newRect.setWidth(w + deltaX);
+    }
+
+    else
+#endif
+      if (m_CurrentResizeHandle == ReconstructionArea::TOP_CTRL_POINT)
+    {
+      newRect.setY(y + deltaY);
+      newRect.setHeight(h - deltaY);
     }
     else if (m_CurrentResizeHandle == ReconstructionArea::BOTTOM_CTRL_POINT)
     {
@@ -431,48 +436,12 @@ void ReconstructionArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     }
 
   //  std::cout << "B-newRect:" << newRect.x() << ", " << newRect.y() << "   " << newRect.width() << " x " << newRect.height() << std::endl;
-
-
     prepareGeometryChange();
     setPolygon(QPolygonF(newRect));
-
-
-
-#if 0
-    {
-      int xmin, ymin;
-      getUpperLeft(xmin, ymin);
-      int xmax, ymax;
-      getLowerRight(xmax, ymax);
-      std::cout << "Corners:" << xmin << ", " << ymin << "   " << xmax << ", " << ymax << std::endl;
-
-      if (xmin < 0)
-      {
-
-      }
-    }
-#endif
-
-
-
-#if 0
-    QPoint p = pos().toPoint();
-    QRect b = boundingRect().toAlignedRect();
-    m_UpperLeft[0] = b.x() + p.x();
-    m_UpperLeft[1] = b.y() + p.y();
-    m_LowerRight[0] = b.x() + p.x() + b.width();
-    m_LowerRight[1] = b.y() + p.y() + b.height();
-
-    std::cout << "----------------------------------" << std::endl;
-    std::cout << "m_UpperLeft[0]: " << m_UpperLeft[0] << std::endl;
-    std::cout << "m_UpperLeft[1]: " << m_UpperLeft[1] << std::endl;
-    std::cout << "m_LowerRight[0]: " << m_LowerRight[0] << std::endl;
-    std::cout << "m_LowerRight[1]: " << m_LowerRight[1] << std::endl;
-#endif
   }
   else
   {
-    QGraphicsItem::mouseMoveEvent(event);
+   // QGraphicsItem::mouseMoveEvent(event);
   }
   emit fireReconstructionVOIUpdated(this);
 }
@@ -498,6 +467,30 @@ void ReconstructionArea::updateGeometry(int xmin, int ymin, int xmax, int ymax)
 
     prepareGeometryChange();
     setPolygon(QPolygonF(newRect));
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ReconstructionArea::updateWidth(float percentWidth)
+{
+  float remWidth = m_ImageSize.width() * percentWidth/2.0;
+  float midWidth = m_ImageSize.width()/2.0f;
+
+  qint32 xmin = 0;
+  qint32 xmax = 0;
+  qint32 ymin = 0;
+  qint32 ymax = 0;
+  getUpperLeft(xmin, ymin);
+  getLowerRight(xmax, ymax);
+
+  float x_min = midWidth - remWidth;
+  float x_max = midWidth + remWidth;
+
+  QRectF newRect(x_min, ymin, (x_max - x_min), (ymax - ymin));
+  prepareGeometryChange();
+  setPolygon(QPolygonF(newRect));
+
 }
 
 // -----------------------------------------------------------------------------
@@ -661,7 +654,7 @@ ReconstructionArea::CTRL_POINTS ReconstructionArea::isInResizeArea(const QPointF
   QRectF right(x+w-5, y, 2*ctrlPointSize, h);
   QRectF top(x, y-ctrlPointSize, w, 2*ctrlPointSize);
   QRectF bottom(x, y+h-ctrlPointSize, w, 2*ctrlPointSize);
-
+#if 0
   if (upLeft.contains(pos))
   {
    // std::cout << "UPPER_LEFT_CTRL_POINT" << std::endl;
@@ -683,18 +676,21 @@ ReconstructionArea::CTRL_POINTS ReconstructionArea::isInResizeArea(const QPointF
   //  std::cout << "LEFT_CTRL_POINT" << std::endl;
     return LEFT_CTRL_POINT;
   }
-  if (top.contains(pos)) {
-  //  std::cout << "TOP_CTRL_POINT" << std::endl;
-    return TOP_CTRL_POINT;
-  }
   if (right.contains(pos)) {
   //  std::cout << "RIGHT_CTRL_POINT" << std::endl;
     return RIGHT_CTRL_POINT;
   }
+#endif
+  if (top.contains(pos)) {
+  //  std::cout << "TOP_CTRL_POINT" << std::endl;
+    return TOP_CTRL_POINT;
+  }
+
   if (bottom.contains(pos)) {
   //  std::cout << "BOTTOM_CTRL_POINT" << std::endl;
     return BOTTOM_CTRL_POINT;
   }
+
   return NO_CTRL_POINT;
 }
 

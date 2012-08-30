@@ -228,17 +228,19 @@ class UpdateYSlice
             {
 
               //Neighborhood of (i,j,k) should be initialized to zeros each time
-              for (int32_t p = 0; p <= 2; p++)
-              {
-                for (int32_t q = 0; q <= 2; q++)
-                {
-                  for (int32_t r = 0; r <= 2; r++)
-                  {
-                    NEIGHBORHOOD[INDEX_3(p, q, r)] = 0.0;
-                    BOUNDARYFLAG[INDEX_3(p, q, r)] = 0;
-                  }
-                }
-              }
+              ::memset(NEIGHBORHOOD, 0, 27*sizeof(Real_t));
+              ::memset(BOUNDARYFLAG, 0, 27*sizeof(uint8_t));
+//              for (int32_t p = 0; p <= 2; p++)
+//              {
+//                for (int32_t q = 0; q <= 2; q++)
+//                {
+//                  for (int32_t r = 0; r <= 2; r++)
+//                  {
+//                    NEIGHBORHOOD[INDEX_3(p, q, r)] = 0.0;
+//                    BOUNDARYFLAG[INDEX_3(p, q, r)] = 0;
+//                  }
+//                }
+//              }
               //For a given (i,j,k) store its 26 point neighborhood
               for (int32_t p = -1; p <= 1; p++)
               {
@@ -525,17 +527,7 @@ uint8_t SOCEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
   uint16_t subIterations = 1;
   std::string indent("    ");
   uint8_t err = 0;
-//  uint32_t zero_count = 0;
-//  Real_t UpdatedVoxelValue;
-//  Real_t accuracy=1e-8;
-//  uint16_t binarysearch_count
-//  Real_t accuracy = 1e-9; //This is the rooting accuracy for x
-//  uint32_t binarysearch_count = 10; //Accuracy is 1/(2^10)
-//  int32_t errorcode = -1;
-//  int16_t Idx;
 
-//  //FIXME: Where are these Initialized? Or what values should they be initialized to?
-//  Real_t low = 0.0, high = 0.0;
 
   if(updateType == RegularRandomOrderUpdate)
   {

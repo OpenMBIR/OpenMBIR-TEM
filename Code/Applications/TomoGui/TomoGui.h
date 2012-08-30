@@ -157,6 +157,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     void on_singleSliceXWidth_valueChanged(int value);
 
+    void on_xWidthFullRecon_valueChanged(int value);
+
     /**
      * @brief Qt Slot that fires in response to a click on a "Recent File' Menu entry.
      */
@@ -320,6 +322,9 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     qreal                 m_CachedSigmaX;
     bool                  m_UpdateCachedSigmaX;
     QVector<QString>      m_TempFilesToDelete;
+
+    QLineEdit*            xMin;
+    QLineEdit*            xMax;
 
 
     TomoGui(const TomoGui&); // Copy Constructor Not Implemented

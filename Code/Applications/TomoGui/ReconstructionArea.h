@@ -84,11 +84,14 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
 
     //  void setLowerRight(unsigned int x, unsigned int y);
     void getLowerRight (int &x, int &y);
+
     void setLineWidth(qreal w);
     qreal getLineWidth();
     void setVisible(bool visible);
 
     void updateGeometry(int xmin, int ymin, int xmax, int ymax);
+
+    void updateWidth(float percentWidth);
 
 
     void setXMin(const QString &str);

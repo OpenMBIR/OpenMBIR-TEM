@@ -57,12 +57,13 @@ namespace UIA
 MRCGraphicsView::MRCGraphicsView(QWidget *parent)
 : QGraphicsView(parent),
   m_ImageGraphicsItem(NULL),
-  m_DisableVOISelection(false),
+  m_DisableVOISelection(true),
+  m_AddReconstructionArea(false),
+  m_XZWidth(.90),
   m_ReconstructionArea(NULL)
 {
   setAcceptDrops(true);
-  setDragMode(RubberBandDrag);
-  m_AddReconstructionArea = true;
+ // setDragMode(RubberBandDrag);
 
   m_ZoomFactors[0] = 0.1f;
   m_ZoomFactors[1] = 0.25f;
@@ -372,7 +373,10 @@ void MRCGraphicsView::mousePressEvent(QMouseEvent *event)
 {
   // std::cout << "TomoGuiGraphicsView::mousePressEvent accepted:" << (int)(event->isAccepted()) << std::endl;
   m_AddReconstructionArea = true;
+
   QGraphicsView::mousePressEvent(event);
+  m_MouseClickOrigin = event->pos();
+
   if (m_DisableVOISelection == true)
   {
     return;
@@ -382,7 +386,7 @@ void MRCGraphicsView::mousePressEvent(QMouseEvent *event)
   // and if it is not then it forcefully sets it there. It only checks if we
   // are to the left or above the image. If we are right or below the image
   // the mouseRelease event will take care of that sanity check.
-  m_MouseClickOrigin = event->pos();
+
   QRect box = QRect(m_MouseClickOrigin, event->pos()).normalized();
   QPolygonF sceneBox = mapToScene(box);
   QRectF rectf = sceneBox.boundingRect();
@@ -428,24 +432,24 @@ void MRCGraphicsView::mouseMoveEvent(QMouseEvent *event)
 // -----------------------------------------------------------------------------
 void MRCGraphicsView::updateXZLine(float percentWidth)
 {
-    float remWidth = m_BaseImage.size().width() * percentWidth/2.0;
+  m_XZWidth = percentWidth;
+  float remWidth = m_BaseImage.size().width() * m_XZWidth / 2.0;
 
-    float midWidth = m_BaseImage.size().width()/2.0f;
+  float midWidth = m_BaseImage.size().width() / 2.0f;
 
-    QLineF currentLine = getXZPlane();
-    float xStart = midWidth - remWidth;
-    float xEnd = midWidth + remWidth;
+  QLineF currentLine = getXZPlane();
+  float xStart = midWidth - remWidth;
+  float xEnd = midWidth + remWidth;
 
-    QPointF p0(xStart, currentLine.y1());
-    QPointF p1(xEnd, currentLine.y1());
+  QPointF p0(xStart, currentLine.y1());
+  QPointF p1(xEnd, currentLine.y1());
 
-
-    QVector<QPointF> line;
-    line.push_back(p0);
-    line.push_back(p1);
-    QPolygonF polygon(line);
-    m_XZLine.setPolygon(polygon);
-    m_XZLine.setVisible(true);
+  QVector<QPointF> line;
+  line.push_back(p0);
+  line.push_back(p1);
+  QPolygonF polygon(line);
+  m_XZLine.setPolygon(polygon);
+  m_XZLine.setVisible(true);
 }
 
 // -----------------------------------------------------------------------------
@@ -456,7 +460,7 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 
   if (event->modifiers() == Qt::ShiftModifier)
   {
-    m_RubberBand->hide();
+    if(m_RubberBand) m_RubberBand->hide();
     QRectF sr = sceneRect();
 
     QPointF mappedPoint = mapToScene(QPoint(0, m_MouseClickOrigin.y()));
@@ -466,8 +470,7 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
       mappedPoint.setY(m_BaseImage.size().height());
     }
 
-    float percentWidth = 0.9; // Start with a 90% width for single slice reconstructions
-    float remWidth = m_BaseImage.size().width() * percentWidth/2.0;
+    float remWidth = m_BaseImage.size().width() * m_XZWidth/2.0;
     float midWidth = m_BaseImage.size().width()/2.0f;
     float xStart = midWidth - remWidth;
     float xEnd = midWidth + remWidth;

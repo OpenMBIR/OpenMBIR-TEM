@@ -413,48 +413,14 @@ void TomoGui::setupGui()
   resize(mySize);
 #endif
 
+  xMin = new QLineEdit(QString("0"),this);
+  xMin->hide();
+  xMax = new QLineEdit(QString("0"),this);
+  xMax->hide();
+
   reconstructedVolumeFileName->setText("");
   m_ReconstructedDisplayWidget->disableVOISelection();
 
-#if 0
-  compositeModeCB->blockSignals(true);
-
-  compositeModeCB->insertItem(0, "Exclusion", QVariant(EmMpm_Constants::Exclusion));
-  compositeModeCB->insertItem(1, "Difference", QVariant(EmMpm_Constants::Difference));
-  compositeModeCB->insertItem(2, "Alpha Blend", QVariant(EmMpm_Constants::Alpha_Blend));
-#endif
-
-#if 0
-  compositeModeCB->insertItem(2, "Plus");
-  compositeModeCB->insertItem(3, "Multiply");
-  compositeModeCB->insertItem(4, "Screen");
-  compositeModeCB->insertItem(5, "Darken");
-  compositeModeCB->insertItem(6, "Lighten");
-  compositeModeCB->insertItem(7, "Color Dodge");
-  compositeModeCB->insertItem(8, "Color Burn");
-  compositeModeCB->insertItem(9, "Hard Light");
-  compositeModeCB->insertItem(10, "Soft Light");
-
-  compositeModeCB->insertItem(12, "Destination");
-  compositeModeCB->insertItem(13, "Source Over");
-  compositeModeCB->insertItem(14, "Destination Over");
-  compositeModeCB->insertItem(15, "Source In");
-  compositeModeCB->insertItem(16, "Dest In");
-
-  compositeModeCB->insertItem(17, "Dest Out");
-  compositeModeCB->insertItem(18, "Source Atop");
-  compositeModeCB->insertItem(19, "Dest Atop");
-
-  compositeModeCB->insertItem(20, "Overlay");
-  compositeModeCB->insertItem(21, "Clear");
-#endif
-
-#if 0
-  compositeModeCB->setCurrentIndex(2);
-  compositeModeCB->blockSignals(false);
-
-  compositeModeCB->setEnabled(false);
-#endif
 
   connect(m_MRCDisplayWidget->graphicsView(), SIGNAL(fireImageFileLoaded(const QString &)),
           this, SLOT(mrcInputFileLoaded(const QString &)), Qt::QueuedConnection);
@@ -511,7 +477,6 @@ void TomoGui::setupGui()
   QDoubleValidator* dVal2 = new QDoubleValidator(this);
   dVal2->setDecimals(6);
   sigma_x->setValidator(dVal2);
-
 
   advancedParametersGroupBox->setChecked(false);
 
@@ -1032,6 +997,14 @@ void TomoGui::on_singleSliceXWidth_valueChanged(int value)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+void TomoGui::on_xWidthFullRecon_valueChanged(int value)
+{
+  m_MRCDisplayWidget->graphicsView()->reconstructionArea()->updateWidth(static_cast<float>(value/100.0));
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void TomoGui::singleSlicePlaneSet(int y)
 {
     m_SingleSliceReconstructionBtn->setEnabled(true);
@@ -1285,6 +1258,10 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
       m_MRCDisplayWidget->loadMRCTiltImage(filepath, 0);
       m_MRCDisplayWidget->setImageWidgetsEnabled(true);
       m_MRCDisplayWidget->setMovieWidgetsEnabled(true);
+
+      QSize imageSize = m_MRCDisplayWidget->currentImage().size();
+      QRectF rect(0.0, 0.0, imageSize.width(), imageSize.height() );
+      m_MRCDisplayWidget->graphicsView()->createNewReconstructionArea(rect);
       m_GainsFile = ""; // We are reading a new .mrc file so we probably need a new Gains Offsets File
       smoothness->setText(QString("1.0"));
       on_estimateSigmaX_clicked();
@@ -1618,16 +1595,9 @@ void TomoGui::readMRCHeader(QString filepath)
   m_YOrigin->setText(QString::number(header.yorg));
   m_ZOrigin->setText(QString::number(header.zorg));
 */
-  xMin->setText("0");
-  yMin->setText("0");
-  xMax->setText(QString::number(header.nx-1));
-  yMax->setText(QString::number(header.ny-1));
 
-  {
-    QIntValidator* val = new QIntValidator(0, header.nx-1, this);
-    xMin->setValidator(val);
-    xMax->setValidator(val);
-  }
+  yMin->setText("0");
+  yMax->setText(QString::number(header.ny-1));
 
   {
     QIntValidator* val = new QIntValidator(0, header.ny-1, this);
