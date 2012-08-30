@@ -1210,6 +1210,7 @@ void SOCEngine::writeMRCFile(const std::string &mrcFile, uint16_t cropStart, uin
 #ifdef BF_RECON
 void SOCEngine::processRawCounts()
 {
+	Real_t mean=0;
     for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
     {
         for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
@@ -1219,9 +1220,16 @@ void SOCEngine::processRawCounts()
                 size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
                 m_Sinogram->counts->d[counts_idx] += BF_OFFSET;
                 m_Sinogram->counts->d[counts_idx] = -log(m_Sinogram->counts->d[counts_idx]/BF_MAX);
+				
+				if(m_Sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
+					m_Sinogram->counts->d[counts_idx] = 0; 
+				
+				mean+=m_Sinogram->counts->d[counts_idx];
             }
         }
     }
+	mean/=(m_Sinogram->N_theta*m_Sinogram->N_r*m_Sinogram->N_t);
+	std::cout<<"Mean log value ="<<mean<<std::endl;
 }
 
 #endif //BF Recon

@@ -60,8 +60,8 @@
 //#define WRITE_INTERMEDIATE_RESULTS
 //#define COST_CALCULATE
 //#define BF_RECON //Bright Field Reconstruction
-#define BF_OFFSET 32768
-#define BF_MAX 20700
+#define BF_OFFSET 0//0 //23696 - Bio data set 
+#define BF_MAX  1865//5689//42122 
 
 #define IDENTITY_NOISE_MODEL
 
@@ -71,9 +71,6 @@
 //#define NHICD
 
 #define NUM_NON_HOMOGENOUS_ITER 20
-
-
-
 
 
 namespace ScaleOffsetCorrection
