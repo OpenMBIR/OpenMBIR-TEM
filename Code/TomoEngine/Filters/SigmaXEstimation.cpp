@@ -135,10 +135,10 @@ void SigmaXEstimation::execute()
     int voxelMin[3] = { m_XDims[0], m_YDims[0], 0};
     int voxelMax[3] = { m_XDims[1], m_YDims[1], 0};
     Real_t sum1 = 0;
-    Real_t targetMin = std::numeric_limits<Real_t>::max();
-    Real_t targetMax = std::numeric_limits<Real_t>::min();
-    Real_t min = std::numeric_limits<Real_t>::max();
-    Real_t max = std::numeric_limits<Real_t>::min();
+//    Real_t targetMin = std::numeric_limits<Real_t>::max();
+ //   Real_t targetMax = std::numeric_limits<Real_t>::min();
+//    Real_t min = std::numeric_limits<Real_t>::max();
+//    Real_t max = std::numeric_limits<Real_t>::min();
 
     std::vector<Real_t> sum2s(header.nz);
     int voxelCount = (m_XDims[1] - m_XDims[0]) * (m_YDims[1] - m_YDims[0]);
