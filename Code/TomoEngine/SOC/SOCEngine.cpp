@@ -66,6 +66,7 @@
 #include "TomoEngine/IO/NuisanceParamReader.h"
 #include "TomoEngine/IO/SinogramBinWriter.h"
 #include "TomoEngine/IO/VTKFileWriters.hpp"
+#include "TomoEngine/IO/AvizoUniformCoordinateWriter.h"
 #include "TomoEngine/SOC/SOCConstants.h"
 #include "TomoEngine/SOC/ForwardProject.h"
 
@@ -894,6 +895,12 @@ void SOCEngine::execute()
   //  std::stringstream ss;
   //  ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedMrcFile;
     writeMRCFile(m_TomoInputs->mrcOutputFile, cropStart, cropEnd);
+  }
+
+ // std::cout << "Should be writing .am file....  '" << m_TomoInputs->avizoOutputFile << "'"  << std::endl;
+  if (m_TomoInputs->avizoOutputFile.empty() == false)
+  {
+    writeAvizoFile(m_TomoInputs->avizoOutputFile, cropStart, cropEnd);
   }
 
   std::cout << "Final Dimensions of Object: " << std::endl;

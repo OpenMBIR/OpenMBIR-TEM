@@ -5,6 +5,7 @@
 #-- This code was partly written under US Air Force Contract FA8650-07-D-5800
 #--////////////////////////////////////////////////////////////////////////////
 set (TomoEngine_IO_SRCS
+    ${TomoEngine_SOURCE_DIR}/IO/AvizoUniformCoordinateWriter.cpp
     ${TomoEngine_SOURCE_DIR}/IO/RawGeometryWriter.cpp
     ${TomoEngine_SOURCE_DIR}/IO/MRCReader.cpp
     ${TomoEngine_SOURCE_DIR}/IO/MRCWriter.cpp
@@ -14,6 +15,7 @@ set (TomoEngine_IO_SRCS
     )
 
 set (TomoEngine_IO_HDRS
+    ${TomoEngine_SOURCE_DIR}/IO/AvizoUniformCoordinateWriter.h
     ${TomoEngine_SOURCE_DIR}/IO/VTKFileWriters.hpp
     ${TomoEngine_SOURCE_DIR}/IO/VTKWriterMacros.h
     ${TomoEngine_SOURCE_DIR}/IO/RawGeometryWriter.h

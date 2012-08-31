@@ -179,6 +179,7 @@ namespace SOC {
     std::string varianceOutputFile;
     std::string vtkOutputFile;
     std::string mrcOutputFile;
+    std::string avizoOutputFile;
     std::vector<std::string> tempFiles;
 
     std::vector<uint8_t> excludedViews;// Indices of views to exclude from reconstruction

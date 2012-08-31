@@ -1207,10 +1207,44 @@ void SOCEngine::writeMRCFile(const std::string &mrcFile, uint16_t cropStart, uin
 
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void SOCEngine::writeAvizoFile(const std::string &file, uint16_t cropStart, uint16_t cropEnd)
+{
+  //  std::cout << "Writing Avizo file " << file << std::endl;
+
+  /* Write the output to the Avizo File */
+  std::stringstream ss;
+  ss.str("");
+  ss << "Writing Avizo file to '" << file << "'";
+  notify(ss.str(), 0, Observable::UpdateProgressMessage);
+
+  AvizoUniformCoordinateWriter::Pointer writer = AvizoUniformCoordinateWriter::New();
+  writer->setOutputFile(file);
+  writer->setGeometry(m_Geometry);
+  writer->setAdvParams(m_AdvParams);
+  writer->setTomoInputs(m_TomoInputs);
+  writer->setXDims(cropStart, cropEnd);
+  writer->setYDims(0, m_Geometry->N_y);
+  writer->setZDims(0, m_Geometry->N_z);
+  writer->setObservers(getObservers());
+  writer->setWriteBinaryFile(true);
+  writer->execute();
+  if(writer->getErrorCondition() < 0)
+  {
+    ss.str("");
+    ss << "Error writing Avizo file\n    '" << file << "'" << std::endl;
+    setErrorCondition(writer->getErrorCondition());
+    notify(ss.str(), 0, Observable::UpdateErrorMessage);
+  }
+
+}
+
 #ifdef BF_RECON
 void SOCEngine::processRawCounts()
 {
-	Real_t mean=0;
+    Real_t mean=0;
     for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
     {
         for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
@@ -1220,16 +1254,16 @@ void SOCEngine::processRawCounts()
                 size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
                 m_Sinogram->counts->d[counts_idx] += BF_OFFSET;
                 m_Sinogram->counts->d[counts_idx] = -log(m_Sinogram->counts->d[counts_idx]/BF_MAX);
-				
-				if(m_Sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
-					m_Sinogram->counts->d[counts_idx] = 0; 
-				
-				mean+=m_Sinogram->counts->d[counts_idx];
+
+                if(m_Sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
+                    m_Sinogram->counts->d[counts_idx] = 0;
+
+                mean+=m_Sinogram->counts->d[counts_idx];
             }
         }
     }
-	mean/=(m_Sinogram->N_theta*m_Sinogram->N_r*m_Sinogram->N_t);
-	std::cout<<"Mean log value ="<<mean<<std::endl;
+    mean/=(m_Sinogram->N_theta*m_Sinogram->N_r*m_Sinogram->N_t);
+    std::cout<<"Mean log value ="<<mean<<std::endl;
 }
 
 #endif //BF Recon

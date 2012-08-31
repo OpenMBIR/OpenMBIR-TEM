@@ -168,6 +168,8 @@ class TomoEngine_EXPORT SOCEngine : public AbstractFilter
     void writeReconstructionFile(const std::string &filepath);
     void writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
     void writeMRCFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
+    void writeAvizoFile(const std::string &file, uint16_t cropStart, uint16_t cropEnd);
+
 
   private:
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered

@@ -247,6 +247,7 @@ void MultiResolutionSOC::execute()
     if(m_NumberResolutions - 1 == i) // Last Iteration
     {
         inputs->vtkOutputFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + ".vtk";
+        inputs->avizoOutputFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + ".am";
         inputs->mrcOutputFile = m_OutputFile;
     }
     else
@@ -257,6 +258,7 @@ void MultiResolutionSOC::execute()
 
         inputs->vtkOutputFile = "";
         inputs->mrcOutputFile = "";
+        inputs->avizoOutputFile = "";
     }
 
     // Line up all the temp files that we are going to delete
