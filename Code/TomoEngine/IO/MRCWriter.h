@@ -91,8 +91,6 @@ class TomoEngine_EXPORT MRCWriter : public TomoFilter
 
     /**
      * @brief Constructur
-     * @param deleteMemory Should this class delete the memory allocated to hold
-     * the voxel data.
      */
     explicit MRCWriter();
 
