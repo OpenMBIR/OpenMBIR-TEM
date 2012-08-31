@@ -372,7 +372,7 @@ void QMRCDisplayWidget::loadMRCFile(QString mrcFilePath)
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
 {
-
+  //  std::cout << "QMRCDisplayWidget::loadMRCTiltImage(): " << mrcFilePath.toStdString() << std::endl;
   m_CurrentMRCFilePath = mrcFilePath;
   if (m_CurrentMRCFilePath.isEmpty() == true)
   {
@@ -389,7 +389,8 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
   int err = reader->readHeader(mrcFilePath.toStdString(), &header);
   if(err < 0)
   {
-    QMessageBox::critical(this, tr("MRC File Load Error"), tr("The MRC file could not be loaded."), QMessageBox::Ok);
+    QString str = QString("The MRC file could not be loaded. ") + QString(mrcFilePath);
+    QMessageBox::critical(this, tr("MRC File Load Error"), str , QMessageBox::Ok);
     FREE_FEI_HEADERS( header.feiHeaders)
     return;
   }
