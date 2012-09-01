@@ -69,13 +69,12 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 {
     Q_OBJECT;
 
-  public:
+public:
     TomoGui(QWidget *parent = 0);
     virtual ~TomoGui();
 
     MXA_INSTANCE_PROPERTY(QString, CurrentImageFile)
     MXA_INSTANCE_PROPERTY(QString, CurrentProcessedFile)
-
     MXA_INSTANCE_PROPERTY(bool, OutputExistsCheck)
 
     /**
@@ -88,11 +87,31 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
      */
     void writeSettings(QSettings &prefs);
 
+
+    /**
+     * @brief Read the Window Settings from the prefs file
+     * @param prefs
+     */
     void readWindowSettings(QSettings &prefs);
+
+    /**
+     * @brief Write the Window settings to the prefs file
+     * @param prefs
+     */
     void writeWindowSettings(QSettings &prefs);
 
+    /**
+     * @brief Reads the header from the mrc file
+     * @param filepath
+     */
     void readMRCHeader(QString filepath);
 
+    /**
+     * @brief Loads a specific Tilt image from the MRC file
+     * @param filepath The path to the MRC File
+     * @param tiltIndex The index of the tilt to load
+     * @return
+     */
     QImage loadMRCTiltImage(QString filepath, int tiltIndex);
 
     /**
@@ -101,7 +120,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
      */
     void loadSingleSliceReconstruction(QString filepath);
 
-   // void openReconstructedMRCFile(QString reconMrcFilePath);
+    // void openReconstructedMRCFile(QString reconMrcFilePath);
 
     void readGainsOffsetsFile(QString file);
 
@@ -112,26 +131,34 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
       * @param message The message to print
       * @param progress The progress of the GrainGenerator normalized to a value between 0 and 100
       */
-     virtual void updateProgressAndMessage(const char* message, int progress);
-     virtual void updateProgressAndMessage(const std::string &msg, int progress);
+    virtual void updateProgressAndMessage(const char* message, int progress);
+    /**
+      * @brief Either prints a message or sends the message to the User Interface
+      * @param message The message to print
+      * @param progress The progress of the GrainGenerator normalized to a value between 0 and 100
+      */
+    virtual void updateProgressAndMessage(const std::string &msg, int progress);
 
-     void deleteTempFiles();
+    /**
+      * @brief Delete all the built up temp files
+      */
+    void deleteTempFiles();
 
-  public slots:
+public slots:
 
-  // Manual hookup slots to get signals from the graphics view
+    // Manual hookup slots to get signals from the graphics view
     void mrcInputFileLoaded(const QString &filename);
-
-
+    // Slots to deal with events emitted from the Reconstruction Area when it changes
     void reconstructionVOIAdded(ReconstructionArea* recon);
     void reconstructionVOIUpdated(ReconstructionArea* recon);
     void reconstructionVOISelected(ReconstructionArea* recon);
     void reconstructionVOIDeleted(ReconstructionArea* recon);
 
 
-  protected slots:
-  //Manual Hookup Menu Actions
-  // File Menu
+protected slots:
+    //Manual Hookup Menu Actions
+
+    // File Menu
     void on_actionOpenMRCFile_triggered(); // Open a Data File
     void on_action_OpenReconstructedMRC_triggered(); // Open an MRC file in the Right side display
     void on_actionAbout_triggered();
@@ -141,28 +168,46 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void on_actionSaveCanvas_triggered();
     void on_action_InputMRCInfo_triggered();
     void on_action_OutputMRCInfo_triggered();
-//Window Menu
+
+    //Window Menu
     void on_actionParameters_triggered();
     void on_actionLayers_Palette_triggered();
 
-
+    /**
+     * @brief Calculate the estimated memory needed to run the reconstruction
+     */
     void memCalculate();
 
-    /* slots for the buttons in the GUI */
+    /**
+     * @brief The Reconstruction button is clicked
+     */
     void on_m_GoBtn_clicked();
 
+    /**
+     * @brief Estimate Sigam X button was clicked
+     */
     void on_estimateSigmaX_clicked();
 
+    /**
+     * @brief Estimate Sigam X button was clicked
+     */
     void on_m_SingleSliceReconstructionBtn_clicked();
-
+    /**
+     * @brief Single Slice button was clicked
+     */
     void on_singleSliceXWidth_valueChanged(int value);
-
+    /**
+     * @brief X Width Full Recon button was clicked
+     */
     void on_xWidthFullRecon_valueChanged(int value);
-
-#if 1
+    /**
+     * @brief Y Min text has changed
+     */
     void on_yMin_textChanged(const QString &string);
+    /**
+     * @brief Y Max text has changed
+     */
     void on_yMax_textChanged(const QString &string);
-#endif
 
     /**
      * @brief Qt Slot that fires in response to a click on a "Recent File' Menu entry.
@@ -176,35 +221,38 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
      */
     void updateBaseRecentFileList(const QString &file);
 
+    /**
+     * @brief Loads a configuration file for a reconstruction
+     * @param file The path to the configuration file
+     */
     void loadConfigurationFile(QString file);
 
     // -----------------------------------------------------------------------------
     //  Input Tab Widgets
     void on_inputMRCFilePathBtn_clicked();
+
     void on_inputMRCFilePath_textChanged(const QString &string);
 
     void on_inputBrightFieldFilePathBtn_clicked();
+
     void on_inputBrightFieldFilePath_textChanged(const QString &string);
 
     void on_reconstructedVolumeFileNameBtn_clicked();
+
     void on_reconstructedVolumeFileName_textChanged(const QString & text);
 
     void on_outputDirectoryPathBtn_clicked();
-//    void on_outputDirectoryPath_textChanged(const QString & text);
 
     void on_initialReconstructionPathBtn_clicked();
+
     void on_initialReconstructionPath_textChanged(const QString & text);
 
     void on_resetSigmaXBtn_clicked();
 
     void on_smoothness_textChanged(const QString & text);
+
     void on_sigma_x_textChanged(const QString & text);
-#if 0
-    void on_targetGain_editingFinished();
-    void on_sampleThickness_editingFinished();
-    void on_defaultOffset_editingFinished();
-    void on_tiltSelection_currentIndexChanged(int index);
-#endif
+
     void singleSlicePlaneSet(int y);
 
     /**
@@ -212,7 +260,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
      */
     void geometryChanged();
 
-  protected:
+protected:
 
     /**
     * @brief Implements the CloseEvent to Quit the application and write settings
@@ -252,23 +300,52 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     */
     bool verifyOutputPathParentExists(QString outFilePath, QLineEdit* lineEdit);
 
+    /**
+     * @brief Initializes the SOCEngine Object with all the parameters from the GUI
+     * @param fullReconstruction Are we doing a full reconstruction or just a "Quick" single Slice reconstruction
+     */
     void initializeSOCEngine(bool fullReconstruction);
 
+    /**
+     * @brief Initializes the various image views
+     * @return
+     */
     qint32 initImageViews();
 
+    /**
+     * @brief Sets if specific widgets in the GUI should be enabled or disabled.
+     * @param b
+     */
     void setImageWidgetsEnabled(bool b);
 
+    /**
+     * @brief Do we draw the origin in the Display area or not
+     * @param image
+     */
     void drawOrigin(QImage image);
 
+    /**
+     * @brief Display a Dialog box
+     * @param title The title of the dialog box
+     * @param text The text to display
+     * @param icon THe icon to use
+     */
     void displayDialogBox(QString title, QString text, QMessageBox::Icon icon);
 
+    /**
+     * @brief Sanity checks if the appropriate set of tilt angles are being used.
+     * @param tilts Which tilts were selected
+     * @return
+     */
     bool checkTiltAngles(QVector<float> &tilts);
 
- //   void sigmaX_ShouldUpdate(bool b);
-
+    /**
+     * @brief Enables specific widgets in the GUI
+     * @param b
+     */
     void enableWidgets(bool b);
 
-  signals:
+signals:
 
     /**
     * @brief Signal emitted when a process is started
@@ -287,26 +364,70 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     /**
     * @brief Signal emitted when a message is available for display to the user
-    * @param
+    * @param s The warning message
     */
-    void pipelineWarningMessage(const QString &);
-    void pipelineErrorMessage(const QString &);
+    void pipelineWarningMessage(const QString &s);
 
+    /**
+     * @brief If the pipeline throws an error this signal will emit it.
+     * @param s The message to display
+     */
+    void pipelineErrorMessage(const QString &s);
+
+    /**
+     * @brief The Reconstruction Area has changed.
+     * @param xmin Min x value
+     * @param ymin Min y value
+     * @param xmax Max x value
+     * @param ymax Max y value
+     */
     void reconstructionVOIGeometryChanged(int xmin, int ymin, int xmax, int ymax);
 
-  private slots:
+private slots:
     // slots for our worker thread to communicate
+
+    /**
+     * @brief Displays Error messages
+     * @param message
+     */
     virtual void addErrorMessage(QString message);
+
+    /**
+     * @brief Displays Warning messages
+     * @param message
+     */
     virtual void addWarningMessage(QString message);
+
+    /**
+     * @brief Displays progress messages
+     * @param message
+     */
     virtual void addProgressMessage(QString message);
+
+    /**
+     * @brief Loads an MRC file that just holds a temp reconstruction
+     * @param filePath
+     */
     virtual void loadProgressMRCFile(QString filePath);
 
+    /**
+     * @brief The Reconstruction Pipeline is complete
+     */
     virtual void pipelineComplete();
+
+    /**
+     * @brief The Pipeline is progressing
+     * @param value
+     */
     virtual void pipelineProgress(int value);
+
+    /**
+     * @brief A single slice reconstruction is complete
+     */
     virtual void singleSliceComplete();
 
-  private:
-    LayersDockWidget*  m_LayersPalette;
+private:
+    LayersDockWidget*        m_LayersPalette;
     QMap<QObject*, QWidget*> m_TasksMap;
 
     QList<QWidget*>       m_WidgetList;
@@ -331,10 +452,6 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     qreal                 m_CachedSigmaX;
     bool                  m_UpdateCachedSigmaX;
     QVector<QString>      m_TempFilesToDelete;
-
-//    QLineEdit*            xMin;
-//    QLineEdit*            xMax;
-
 
     TomoGui(const TomoGui&); // Copy Constructor Not Implemented
     void operator=(const TomoGui&); // Operator '=' Not Implemented
