@@ -343,7 +343,7 @@ font-size: 10px;
          <number>0</number>
         </property>
         <property name="spacing">
-         <number>-1</number>
+         <number>6</number>
         </property>
         <item row="0" column="0">
          <widget class="QMRCDisplayWidget" name="m_ReconstructedDisplayWidget" native="true">
@@ -377,7 +377,6 @@ font-size: 10px;
           <property name="autoFillBackground">
            <bool>false</bool>
           </property>
-          <zorder>outputTabWidget</zorder>
          </widget>
         </item>
        </layout>
@@ -434,7 +433,7 @@ font-size: 10px;
      <x>0</x>
      <y>0</y>
      <width>1165</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -498,7 +497,7 @@ font-size: 10px;
         <enum>QTabWidget::South</enum>
        </property>
        <property name="tabShape">
-        <enum>QTabWidget::Triangular</enum>
+        <enum>QTabWidget::Rounded</enum>
        </property>
        <property name="currentIndex">
         <number>0</number>
@@ -542,25 +541,16 @@ font-size: 10px;
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>270</width>
-              <height>905</height>
+              <width>269</width>
+              <height>869</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_6">
              <property name="spacing">
               <number>5</number>
              </property>
-             <property name="leftMargin">
+             <property name="margin">
               <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>10</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>5</number>
              </property>
              <item>
               <widget class="QDisclosableGroupBox" name="singleSliceGroupBox">
@@ -572,7 +562,7 @@ background-image: url(:/DisclosableGroupBoxHeader.png);
 background-position: top ;
 background-repeat: repeat-x;
 padding: 30 0 0 0px;
-font: 85 italic 12pt &quot;Arial&quot;;
+font: 85% italic 12pt &quot;Arial&quot;;
 font-weight: bold;
 border: 0px solid gray;
 margin: 0px;
@@ -717,7 +707,7 @@ background-image: url(:/DisclosableGroupBoxHeader.png);
 background-position: top ;
 background-repeat: repeat-x;
 padding: 30 0 0 0px;
-font: 85 italic 12pt &quot;Arial&quot;;
+font: 85% italic 12pt &quot;Arial&quot;;
 font-weight: bold;
 border: 0px solid gray;
 margin: 0px;
@@ -963,7 +953,7 @@ background-image: url(:/DisclosableGroupBoxHeader.png);
 background-position: top ;
 background-repeat: repeat-x;
 padding: 30 0 0 0px;
-font: 85 italic 12pt &quot;Arial&quot;;
+font: 85% italic 12pt &quot;Arial&quot;;
 font-weight: bold;
 border: 0px solid gray;
 margin: 0px;
@@ -1291,7 +1281,7 @@ background-image: url(:/DisclosableGroupBoxHeader.png);
 background-position: top ;
 background-repeat: repeat-x;
 padding: 30 0 0 0px;
-font: 85 italic 12pt &quot;Arial&quot;;
+font: 85% italic 12pt &quot;Arial&quot;;
 font-weight: bold;
 border: 0px solid gray;
 margin: 0px;
@@ -1548,7 +1538,7 @@ Value:</string>
                 <item row="11" column="1">
                  <layout class="QHBoxLayout" name="horizontalLayout">
                   <property name="spacing">
-                   <number>-1</number>
+                   <number>6</number>
                   </property>
                   <item>
                    <widget class="QCheckBox" name="useDefaultOffset">
@@ -1994,6 +1984,8 @@ font-size: 10px;
   </customwidget>
  </customwidgets>
  <resources>
+  <include location="../../../../Resources/icons/images/Icons.qrc"/>
+  <include location="../../../../Resources/icons/images/Icons.qrc"/>
   <include location="../../../../Resources/icons/images/Icons.qrc"/>
  </resources>
  <connections/>
