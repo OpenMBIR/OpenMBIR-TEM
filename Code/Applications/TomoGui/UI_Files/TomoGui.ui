@@ -483,17 +483,8 @@ font-size: 10px;
      <property name="spacing">
       <number>4</number>
      </property>
-     <property name="leftMargin">
-      <number>4</number>
-     </property>
-     <property name="topMargin">
-      <number>12</number>
-     </property>
-     <property name="rightMargin">
-      <number>4</number>
-     </property>
-     <property name="bottomMargin">
-      <number>4</number>
+     <property name="margin">
+      <number>0</number>
      </property>
      <item>
       <widget class="QTabWidget" name="tabWidget">
@@ -503,8 +494,20 @@ font-size: 10px;
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="tabPosition">
+        <enum>QTabWidget::South</enum>
+       </property>
+       <property name="tabShape">
+        <enum>QTabWidget::Triangular</enum>
+       </property>
        <property name="currentIndex">
         <number>0</number>
+       </property>
+       <property name="usesScrollButtons">
+        <bool>false</bool>
+       </property>
+       <property name="documentMode">
+        <bool>true</bool>
        </property>
        <widget class="QWidget" name="parametersTab">
         <property name="minimumSize">
@@ -539,7 +542,7 @@ font-size: 10px;
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>261</width>
+              <width>270</width>
               <height>905</height>
              </rect>
             </property>

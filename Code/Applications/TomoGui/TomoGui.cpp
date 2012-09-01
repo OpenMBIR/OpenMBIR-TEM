@@ -1275,7 +1275,11 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
       d.setModal(true);
       readMRCHeader(filepath);
       // Now load up the first tilt from the file
-      m_MRCDisplayWidget->loadMRCTiltImage(filepath, 0);
+
+      quint16 halfTilts = m_nTilts/2;
+
+      // Load up the middle tilt which we are assuming is the actual "zero" tilt.
+      m_MRCDisplayWidget->loadMRCTiltImage(filepath, halfTilts);
       m_MRCDisplayWidget->setImageWidgetsEnabled(true);
       m_MRCDisplayWidget->setMovieWidgetsEnabled(true);
 
