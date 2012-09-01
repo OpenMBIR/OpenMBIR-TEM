@@ -85,6 +85,8 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
     //  void setLowerRight(unsigned int x, unsigned int y);
     void getLowerRight (int &x, int &y);
 
+    void getXMinMax(int &min, int &max);
+
     void setLineWidth(qreal w);
     qreal getLineWidth();
     void setVisible(bool visible);
@@ -93,7 +95,7 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
 
     void updateWidth(float percentWidth);
 
-
+    // These are here to get signals from a GUI Widget that holds the X/Y min/max values
     void setXMin(const QString &str);
     void setYMin(const QString &str);
     void setXMax(const QString &str);

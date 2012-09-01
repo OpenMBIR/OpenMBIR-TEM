@@ -138,7 +138,7 @@ m_SingleSliceReconstructionActive(false),
 m_FullReconstrucionActive(false),
 m_UpdateCachedSigmaX(true)
 {
-   m_OpenDialogLastDirectory = QDir::homePath();
+  m_OpenDialogLastDirectory = QDir::homePath();
   setupUi(this);
   setupGui();
 
@@ -191,11 +191,10 @@ void TomoGui::readSettings(QSettings &prefs)
   double d;
   prefs.beginGroup("Parameters");
 
-
-  READ_STRING_SETTING(prefs, xMin, "0");
-  READ_STRING_SETTING(prefs, xMax, "0");
+  READ_SETTING(prefs, xWidthFullRecon, ok, i, 100, Int);
   READ_STRING_SETTING(prefs, yMin, "0");
   READ_STRING_SETTING(prefs, yMax, "0");
+
 
   // This will auto load the MRC File
   READ_STRING_SETTING(prefs, inputMRCFilePath, "");
@@ -205,6 +204,7 @@ void TomoGui::readSettings(QSettings &prefs)
 
   READ_STRING_SETTING(prefs, initialReconstructionPath, "");
   READ_STRING_SETTING(prefs, reconstructedVolumeFileName, "");
+
 
   READ_STRING_SETTING(prefs, sampleThickness, "150");
   READ_STRING_SETTING(prefs, targetGain, "1")
@@ -264,8 +264,7 @@ void TomoGui::writeSettings(QSettings &prefs)
   WRITE_CHECKBOX_SETTING(prefs, m_DeleteTempFiles)
 
 //  WRITE_BOOL_SETTING(prefs, useSubVolume, useSubVolume->isChecked());
-  WRITE_STRING_SETTING(prefs, xMin);
-  WRITE_STRING_SETTING(prefs, xMax);
+  WRITE_SETTING(prefs, xWidthFullRecon);
   WRITE_STRING_SETTING(prefs, yMin);
   WRITE_STRING_SETTING(prefs, yMax);
 //  WRITE_STRING_SETTING(prefs, zMin);
@@ -317,15 +316,18 @@ void TomoGui::writeWindowSettings(QSettings &prefs)
 // -----------------------------------------------------------------------------
 void TomoGui::on_actionSave_Config_File_triggered()
 {
-  QString proposedFile = m_OpenDialogLastDirectory + QDir::separator() + "Tomo-Config.config";
-  QString file = QFileDialog::getSaveFileName(this, tr("Save Tomo Configuration"),
-                                              proposedFile,
-                                              tr("*.config") );
-  if ( true == file.isEmpty() ){ return;  }
-  QFileInfo fi(file);
-  m_OpenDialogLastDirectory = fi.absolutePath();
-  QSettings prefs(file, QSettings::IniFormat, this);
-  writeSettings(prefs);
+    QString proposedFile = m_OpenDialogLastDirectory + QDir::separator() + "Tomo-Config.config";
+    QString file = QFileDialog::getSaveFileName(this, tr("Save Tomo Configuration"),
+                                                proposedFile,
+                                                tr("*.config") );
+    if ( true == file.isEmpty() ){ return;  }
+    QFileInfo fi(file);
+    m_OpenDialogLastDirectory = fi.absolutePath();
+    QSettings prefs(file, QSettings::IniFormat, this);
+    writeSettings(prefs);
+
+    // Tell the RecentFileList to update itself then broadcast those changes.
+    QRecentFileList::instance()->addFile(file);
 }
 
 // -----------------------------------------------------------------------------
@@ -333,10 +335,21 @@ void TomoGui::on_actionSave_Config_File_triggered()
 // -----------------------------------------------------------------------------
 void TomoGui::on_actionLoad_Config_File_triggered()
 {
-  QString file = QFileDialog::getOpenFileName(this, tr("Select Configuration File"),
-                                                 m_OpenDialogLastDirectory,
-                                                 tr("Configuration File (*.config *.txt)") );
-  if ( true == file.isEmpty() ){return;  }
+    QString file = QFileDialog::getOpenFileName(this, tr("Select Configuration File"),
+                                                m_OpenDialogLastDirectory,
+                                                tr("Configuration Files (*.config *.txt)") );
+    if ( true == file.isEmpty() )
+    {
+        return;
+    }
+    loadConfigurationFile(file);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::loadConfigurationFile(QString file)
+{
   QFileInfo fi(file);
   m_OpenDialogLastDirectory = fi.absolutePath();
   QSettings prefs(file, QSettings::IniFormat, this);
@@ -380,8 +393,8 @@ void TomoGui::on_actionLoad_Config_File_triggered()
   READ_BOOL_SETTING(prefs, extendObject, false);
   READ_BOOL_SETTING(prefs, m_DeleteTempFiles, false);
 
-  READ_STRING_SETTING(prefs, xMin, "0");
-  READ_STRING_SETTING(prefs, xMax, "0");
+//  READ_STRING_SETTING(prefs, xMin, "0");
+//  READ_STRING_SETTING(prefs, xMax, "0");
   READ_STRING_SETTING(prefs, yMin, "0");
   READ_STRING_SETTING(prefs, yMax, "0");
 
@@ -391,6 +404,7 @@ void TomoGui::on_actionLoad_Config_File_triggered()
   tiltSelection->setCurrentIndex(i);
 
   prefs.endGroup();
+
 }
 
 // -----------------------------------------------------------------------------
@@ -407,93 +421,95 @@ void TomoGui::on_actionParameters_triggered()
 void TomoGui::setupGui()
 {
 #ifdef Q_WS_MAC
-  // Adjust for the size of the menu bar which is at the top of the screen not in the window
-  QSize mySize = size();
-  mySize.setHeight(mySize.height() - 30);
-  resize(mySize);
+    // Adjust for the size of the menu bar which is at the top of the screen not in the window
+    QSize mySize = size();
+    mySize.setHeight(mySize.height() - 30);
+    resize(mySize);
 #endif
 
-  xMin = new QLineEdit(QString("0"),this);
-  xMin->hide();
-  xMax = new QLineEdit(QString("0"),this);
-  xMax->hide();
+    //  xMin = new QLineEdit(QString("0"),this);
+    //  xMin->hide();
+    //  xMax = new QLineEdit(QString("0"),this);
+    //  xMax->hide();
 
-  reconstructedVolumeFileName->setText("");
-  m_ReconstructedDisplayWidget->disableVOISelection();
+    reconstructedVolumeFileName->setText("");
+    m_ReconstructedDisplayWidget->disableVOISelection();
 
 
-  connect(m_MRCDisplayWidget->graphicsView(), SIGNAL(fireImageFileLoaded(const QString &)),
-          this, SLOT(mrcInputFileLoaded(const QString &)), Qt::QueuedConnection);
+    connect(m_MRCDisplayWidget->graphicsView(), SIGNAL(fireImageFileLoaded(const QString &)),
+            this, SLOT(mrcInputFileLoaded(const QString &)), Qt::QueuedConnection);
 
-  connect(m_MRCDisplayWidget->graphicsView(), SIGNAL(fireReconstructionVOIAdded(ReconstructionArea*)),
-          this, SLOT(reconstructionVOIAdded(ReconstructionArea*)), Qt::QueuedConnection);
+    connect(m_MRCDisplayWidget->graphicsView(), SIGNAL(fireReconstructionVOIAdded(ReconstructionArea*)),
+            this, SLOT(reconstructionVOIAdded(ReconstructionArea*)), Qt::QueuedConnection);
 
-  connect(m_MRCDisplayWidget->graphicsView(), SIGNAL(fireSingleSliceSelected(int)),
-           this, SLOT(singleSlicePlaneSet(int)));
+    connect(m_MRCDisplayWidget->graphicsView(), SIGNAL(fireSingleSliceSelected(int)),
+            this, SLOT(singleSlicePlaneSet(int)));
 
-  QFileCompleter* com = new QFileCompleter(this, false);
-  inputMRCFilePath->setCompleter(com);
-  QObject::connect(com, SIGNAL(activated(const QString &)), this, SLOT(on_inputMRCFilePath_textChanged(const QString &)));
+    QFileCompleter* com = new QFileCompleter(this, false);
+    inputMRCFilePath->setCompleter(com);
+    QObject::connect(com, SIGNAL(activated(const QString &)), this, SLOT(on_inputMRCFilePath_textChanged(const QString &)));
 
-  QFileCompleter* com4 = new QFileCompleter(this, false);
-  reconstructedVolumeFileName->setCompleter(com4);
-  QObject::connect(com4, SIGNAL(activated(const QString &)), this, SLOT(on_reconstructedVolumeFileName_textChanged(const QString &)));
+    QFileCompleter* com4 = new QFileCompleter(this, false);
+    reconstructedVolumeFileName->setCompleter(com4);
+    QObject::connect(com4, SIGNAL(activated(const QString &)), this, SLOT(on_reconstructedVolumeFileName_textChanged(const QString &)));
 
-  // setup the Widget List
-  m_WidgetList << inputBrightFieldFilePath << inputBrightFieldFilePathBtn;
-  m_WidgetList << reconstructedVolumeFileName << reconstructedVolumeFileNameBtn << initialReconstructionPath << initialReconstructionPathBtn;
+    // setup the Widget List
+    m_WidgetList << inputBrightFieldFilePath << inputBrightFieldFilePathBtn;
+    m_WidgetList << reconstructedVolumeFileName << reconstructedVolumeFileNameBtn << initialReconstructionPath << initialReconstructionPathBtn;
 
-  setWidgetListEnabled(false);
+    setWidgetListEnabled(false);
 
-  connect(m_MRCDisplayWidget, SIGNAL(memoryCalculationNeedsUpdated()),
-          this, SLOT(memCalculate()));
+    connect(m_MRCDisplayWidget, SIGNAL(memoryCalculationNeedsUpdated()),
+            this, SLOT(memCalculate()));
 
-  m_GainsOffsetsTableModel = NULL;
+    m_GainsOffsetsTableModel = NULL;
 #if 1
-  // Setup the TableView and Table Models
-  QHeaderView* headerView = new QHeaderView(Qt::Horizontal, gainsOffsetsTableView);
-  headerView->setResizeMode(QHeaderView::Interactive);
-  gainsOffsetsTableView->setHorizontalHeader(headerView);
-  headerView->show();
+    // Setup the TableView and Table Models
+    QHeaderView* headerView = new QHeaderView(Qt::Horizontal, gainsOffsetsTableView);
+    headerView->setResizeMode(QHeaderView::Interactive);
+    gainsOffsetsTableView->setHorizontalHeader(headerView);
+    headerView->show();
 
-  m_GainsOffsetsTableModel = new GainsOffsetsTableModel;
-  m_GainsOffsetsTableModel->setInitialValues();
-  gainsOffsetsTableView->setModel(m_GainsOffsetsTableModel);
-  QAbstractItemDelegate* idelegate = m_GainsOffsetsTableModel->getItemDelegate();
-  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::TiltIndex, idelegate);
-  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::A_Tilt, idelegate);
-  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::B_Tilt, idelegate);
-//  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Gains, idelegate);
- // gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Offsets, idelegate);
+    m_GainsOffsetsTableModel = new GainsOffsetsTableModel;
+    m_GainsOffsetsTableModel->setInitialValues();
+    gainsOffsetsTableView->setModel(m_GainsOffsetsTableModel);
+    QAbstractItemDelegate* idelegate = m_GainsOffsetsTableModel->getItemDelegate();
+    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::TiltIndex, idelegate);
+    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::A_Tilt, idelegate);
+    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::B_Tilt, idelegate);
+    //  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Gains, idelegate);
+    // gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Offsets, idelegate);
 
-  QAbstractItemDelegate* cbDelegate = new CheckBoxDelegate;
-  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Exclude, cbDelegate);
+    QAbstractItemDelegate* cbDelegate = new CheckBoxDelegate;
+    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Exclude, cbDelegate);
 #endif
 
-  QDoubleValidator* dVal = new QDoubleValidator(this);
-  dVal->setDecimals(6);
-  smoothness->setValidator(dVal);
+    QDoubleValidator* dVal = new QDoubleValidator(this);
+    dVal->setDecimals(6);
+    smoothness->setValidator(dVal);
 
-  QDoubleValidator* dVal2 = new QDoubleValidator(this);
-  dVal2->setDecimals(6);
-  sigma_x->setValidator(dVal2);
+    QDoubleValidator* dVal2 = new QDoubleValidator(this);
+    dVal2->setDecimals(6);
+    sigma_x->setValidator(dVal2);
 
-  advancedParametersGroupBox->setChecked(false);
+    advancedParametersGroupBox->setChecked(false);
 
- // ySingleSliceValue_Label->hide();
- // ySingleSliceValue->hide();
-   outputDirectoryPath_OLD->hide();
-   outputDirectoryPathBtn->hide();
-   outputDirectoryLabel->hide();
+    // ySingleSliceValue_Label->hide();
+    // ySingleSliceValue->hide();
+    outputDirectoryPath_OLD->hide();
+    outputDirectoryPathBtn->hide();
+    outputDirectoryLabel->hide();
 
-   initialReconstructionPath->hide();
-   initialReconstructionLabel->hide();
 
-  m_MRCInputInfoWidget = new MRCInfoWidget(this);
-  m_MRCInputInfoWidget->hide();
+    outputTabWidget->removeTab(1);
+    initialReconstructionPath->hide();
+    initialReconstructionLabel->hide();
 
-  m_MRCOutputInfoWidget = new MRCInfoWidget(this);
-  m_MRCOutputInfoWidget->hide();
+    m_MRCInputInfoWidget = new MRCInfoWidget(this);
+    m_MRCInputInfoWidget->hide();
+
+    m_MRCOutputInfoWidget = new MRCInfoWidget(this);
+    m_MRCOutputInfoWidget->hide();
 }
 
 // -----------------------------------------------------------------------------
@@ -747,8 +763,11 @@ void TomoGui::on_m_GoBtn_clicked()
     QSize size = image.size();
 
     bool ok = false;
-    quint16 x_min = xMin->text().toUShort(&ok);
-    quint16 x_max = xMax->text().toUShort(&ok);
+    int x_min = 0;
+    int x_max = 0;
+    m_MRCDisplayWidget->graphicsView()->reconstructionArea()->getXMinMax(x_min, x_max);
+
+
     quint16 y_min = yMin->text().toUShort(&ok);
     quint16 y_max = yMax->text().toUShort(&ok);
 
@@ -921,9 +940,10 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
     QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
     QSize size = image.size();
 
+    int x_min = 0;
+    int x_max = 0;
+    m_MRCDisplayWidget->graphicsView()->reconstructionArea()->getXMinMax(x_min, x_max);
 
-    quint16 x_min = xMin->text().toUShort(&ok);
-    quint16 x_max = xMax->text().toUShort(&ok);
     quint16 y_min = yMin->text().toUShort(&ok);
     quint16 y_max = yMax->text().toUShort(&ok);
 
@@ -1328,10 +1348,10 @@ void TomoGui::on_reconstructedVolumeFileName_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_outputDirectoryPath_textChanged(const QString & text)
-{
-  verifyPathExists(outputDirectoryPath_OLD->text(), outputDirectoryPath_OLD);
-}
+//void TomoGui::on_outputDirectoryPath_textChanged(const QString & text)
+//{
+//  verifyPathExists(outputDirectoryPath_OLD->text(), outputDirectoryPath_OLD);
+//}
 
 // -----------------------------------------------------------------------------
 //
@@ -1437,7 +1457,15 @@ void TomoGui::openRecentBaseImageFile()
   {
     //std::cout << "Opening Recent file: " << action->data().toString().toStdString() << std::endl;
     QString file = action->data().toString();
-    inputMRCFilePath->setText( file );
+    QFileInfo fi(file);
+    if (fi.suffix().compare("mrc") == 0 || fi.suffix().compare("ali") == 0)
+    {
+        inputMRCFilePath->setText( file );
+    }
+    else if (fi.suffix().compare("txt") == 0 || fi.suffix().compare("config") == 0)
+    {
+        loadConfigurationFile(file);
+    }
   }
 }
 
@@ -1596,13 +1624,15 @@ void TomoGui::readMRCHeader(QString filepath)
   m_ZOrigin->setText(QString::number(header.zorg));
 */
 
-  yMin->setText("0");
-  yMax->setText(QString::number(header.ny-1));
-
   {
-    QIntValidator* val = new QIntValidator(0, header.ny-1, this);
+    QIntValidator* val = new QIntValidator(0, header.ny-2, this);
     yMin->setValidator(val);
+    yMin->setText("0");
+  }
+  {
+    QIntValidator* val = new QIntValidator(1, header.ny-1, this);
     yMax->setValidator(val);
+    yMax->setText(QString::number(header.ny-1));
   }
 
 
@@ -1697,8 +1727,15 @@ void TomoGui::on_estimateSigmaX_clicked()
         return;
     }
 
-    quint16 xmin = xMin->text().toUShort(&ok);
-    quint16 xmax = xMax->text().toUShort(&ok);
+    int xmin = 0;
+    int xmax = 0;
+    ReconstructionArea* reconArea = m_MRCDisplayWidget->graphicsView()->reconstructionArea();
+    if (NULL == reconArea)
+    {
+    return;
+    }
+    reconArea->getXMinMax(xmin, xmax);
+
     quint16 ymin = yMin->text().toUShort(&ok);
     quint16 ymax = yMax->text().toUShort(&ok);
 
@@ -1725,7 +1762,7 @@ void TomoGui::on_estimateSigmaX_clicked()
         sigma_x->setText(QString::number(m_CachedSigmaX * smth));
         //sigma_x->blockSignals(false);
 
-        sigmaX_ShouldUpdate(false);
+        //sigmaX_ShouldUpdate(false);
     }
 }
 
@@ -1756,6 +1793,7 @@ void TomoGui::on_smoothness_textChanged(const QString & text)
   sigma_x->blockSignals(false);
 }
 
+#if 0
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -1788,6 +1826,7 @@ void TomoGui::on_tiltSelection_currentIndexChanged(int index)
 {
   sigmaX_ShouldUpdate(true);
 }
+#endif
 
 // -----------------------------------------------------------------------------
 //
@@ -1842,10 +1881,10 @@ void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
            this, SLOT(reconstructionVOISelected(ReconstructionArea*)), Qt::QueuedConnection);
 
 
-  connect(xMin, SIGNAL(textEdited ( const QString &)),
-          reconVOI, SLOT(setXMin(const QString &)));
-  connect(xMax, SIGNAL(textEdited ( const QString &)),
-          reconVOI, SLOT(setXMax(const QString &)));
+//  connect(xMin, SIGNAL(textEdited ( const QString &)),
+//          reconVOI, SLOT(setXMin(const QString &)));
+//  connect(xMax, SIGNAL(textEdited ( const QString &)),
+//          reconVOI, SLOT(setXMax(const QString &)));
 
   connect(yMin, SIGNAL(textEdited ( const QString &)),
           reconVOI, SLOT(setYMax(const QString &)));
@@ -1855,34 +1894,60 @@ void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
 
 }
 
+#if 1
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_yMin_textChanged(const QString &string)
+{
+    geometryChanged();
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomoGui::on_yMax_textChanged(const QString &string)
+{
+    geometryChanged();
+}
+#endif
+
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
 void TomoGui::geometryChanged()
 {
-    std::cout << "TomoGui::geometryChanged()" << std::endl;
+ //   std::cout << "TomoGui::geometryChanged()" << std::endl;
     bool ok = false;
-    qint32 x_min = xMin->text().toInt(&ok);
-    qint32 y_min = yMin->text().toInt(&ok);
-    qint32 x_max = xMax->text().toInt(&ok);
-    qint32 y_max = yMax->text().toInt(&ok);
-    if (x_max < x_min )
+
+    int x_min = 0;
+    int x_max = 0;
+    ReconstructionArea* reconArea = m_MRCDisplayWidget->graphicsView()->reconstructionArea();
+    if (NULL == reconArea)
     {
-          xMin->setStyleSheet("border: 1px solid red;");
-          xMax->setStyleSheet("border: 1px solid red;");
+        return;
     }
-    else if (y_max < y_min)
+    reconArea->getXMinMax(x_min, x_max);
+
+//    qint32 x_min = xMin->text().toInt(&ok);
+    qint32 y_min = yMin->text().toInt(&ok);
+//    qint32 x_max = xMax->text().toInt(&ok);
+    qint32 y_max = yMax->text().toInt(&ok);
+    if (y_max < y_min)
     {
         yMin->setStyleSheet("border: 1px solid red;");
         yMax->setStyleSheet("border: 1px solid red;");
+        statusBar()->showMessage("The Y End Value is Less than the Y Start Value. Please Correct.");
+        m_GoBtn->setEnabled(false);
     }
     else
     {
-        xMin->setStyleSheet("");
         yMin->setStyleSheet("");
-        xMax->setStyleSheet("");
         yMax->setStyleSheet("");
         emit reconstructionVOIGeometryChanged(x_min, y_min, x_max, y_max);
+        m_GoBtn->setEnabled(true);
+        statusBar()->showMessage("");
     }
 }
 
@@ -1901,13 +1966,13 @@ void TomoGui::reconstructionVOIUpdated(ReconstructionArea* recon)
     int xmax, ymax;
     recon->getLowerRight(xmax, ymax);
 
-    xMin->setText(QString::number(xmin));
-    xMax->setText(QString::number(xmax - 1));
+//    xMin->setText(QString::number(xmin));
+//    xMax->setText(QString::number(xmax - 1));
 
     yMin->setText(QString::number(size.height() - ymax));
     yMax->setText(QString::number(size.height() - ymin - 1));
 
-    sigmaX_ShouldUpdate(true);
+    //sigmaX_ShouldUpdate(true);
     memCalculate();
 }
 
@@ -1986,71 +2051,78 @@ void TomoGui::on_removeResolution_clicked()
 // -----------------------------------------------------------------------------
 void TomoGui::memCalculate()
 {
+    bool ok = false;
+    float GeomN_x, GeomN_y, GeomN_z;
 
+    int x_min = 0;
+    int x_max = 0;
+    ReconstructionArea* reconArea = m_MRCDisplayWidget->graphicsView()->reconstructionArea();
+    if (NULL == reconArea)
+    {
+        return;
+    }
+    reconArea->getXMinMax(x_min, x_max);
 
-  bool ok = false;
-  float GeomN_x, GeomN_y, GeomN_z;
+    float SinoN_r = x_max - x_min + 1;
+    float SinoN_t = yMax->text().toInt(&ok) - yMin->text().toInt(&ok) + 1;
+    float SinoNtheta = m_nTilts - 0 + 1;
 
-  float SinoN_r = xMax->text().toInt(&ok) - xMin->text().toInt(&ok) + 1;
-  float SinoN_t = yMax->text().toInt(&ok) - yMin->text().toInt(&ok) + 1;
-  float SinoNtheta = m_nTilts - 0 + 1;
+    float sample_thickness = sampleThickness->text().toFloat(&ok);
+    int final_resolution = finalResolution->value();
+    int num_resolutions = numResolutions->text().toInt(&ok);
+    float interpolate_factor = powf((float)2, (float)num_resolutions-1) * final_resolution;
+    float delta_r = m_CachedPixelSize * 1.0e9;
+    float delta_xz = delta_r*final_resolution;
+    AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
+    SOCEngine::InitializeAdvancedParams(advancedParams);
 
-  float sample_thickness = sampleThickness->text().toFloat(&ok);
-  int final_resolution = finalResolution->value();
-  int num_resolutions = numResolutions->text().toInt(&ok);
-  float interpolate_factor = powf((float)2, (float)num_resolutions-1) * final_resolution;
-  float delta_r = m_CachedPixelSize * 1.0e9;
-  float delta_xz = delta_r*final_resolution;
-  AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
-  SOCEngine::InitializeAdvancedParams(advancedParams);
+    //std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
 
-  //std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
+    if(extendObject->isChecked() == true)
+    {
+        float maxTilt = m_CachedLargestAngle;
+        //    float LengthZ = sample_thickness * advancedParams->Z_STRETCH;
+        float temp = advancedParams->X_SHRINK_FACTOR * ((SinoN_r * delta_r) / cos(maxTilt * M_PI / 180)) + sample_thickness * tan(maxTilt * M_PI / 180);
+        temp /= (interpolate_factor * delta_r);
+        float GeomLengthX = floor(temp + 0.5) * interpolate_factor * delta_r;
+        GeomN_x = floor(GeomLengthX / delta_xz);
+    }
+    else
+    {
+        GeomN_x = SinoN_r / final_resolution;
+    }
 
-  if(extendObject->isChecked() == true)
-  {
-    float maxTilt = m_CachedLargestAngle;
-//    float LengthZ = sample_thickness * advancedParams->Z_STRETCH;
-    float temp = advancedParams->X_SHRINK_FACTOR * ((SinoN_r * delta_r) / cos(maxTilt * M_PI / 180)) + sample_thickness * tan(maxTilt * M_PI / 180);
-    temp /= (interpolate_factor * delta_r);
-    float GeomLengthX = floor(temp + 0.5) * interpolate_factor * delta_r;
-    GeomN_x = floor(GeomLengthX / delta_xz);
-  }
-  else
-  {
-    GeomN_x = SinoN_r / final_resolution;
-  }
+    GeomN_y = SinoN_t / final_resolution;
+    GeomN_z = advancedParams->Z_STRETCH * (sample_thickness / (final_resolution * delta_r)); // TODO: need to access Sinogram_deltar and z_stretch.
+    //This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm
 
-  GeomN_y = SinoN_t / final_resolution;
-  GeomN_z = advancedParams->Z_STRETCH * (sample_thickness / (final_resolution * delta_r)); // TODO: need to access Sinogram_deltar and z_stretch.
-  //This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm
+    float dataTypeMem = sizeof(Real_t);
+    float ObjectMem = GeomN_x * GeomN_y * GeomN_z * dataTypeMem;
+    float SinogramMem = SinoN_r * SinoN_t * SinoNtheta * dataTypeMem;
+    float ErroSinoMem = SinogramMem;
+    float WeightMem = SinogramMem; //Weight matrix
+    float A_MatrixMem;
+    if(extendObject->isChecked() == true)
+    {
+        A_MatrixMem = GeomN_x * GeomN_z * (final_resolution * 3 * (dataTypeMem + 4) * SinoNtheta); // 4 is the bytes to store the counts
+        //*+4 correspodns to bytes to store a single double and a unsigned into to
+        //store the offset. 3*m_FinalRes is the approximate number of detector elements hit per voxel
+    }
+    else
+    {
+        A_MatrixMem = GeomN_x * GeomN_z * (final_resolution * (dataTypeMem + 4) * SinoNtheta); //Since we are reconstructing a larger region there are several voxels with no projection data. so instead of each voxel hitting 3*m_FinalRes det entries we aproximate it by m_FinalRes
+    }
+    float NuisanceParamMem = SinoNtheta * dataTypeMem * 3; //3 is for gains offsets and noise var
 
-  float dataTypeMem = sizeof(Real_t);
-  float ObjectMem = GeomN_x * GeomN_y * GeomN_z * dataTypeMem;
-  float SinogramMem = SinoN_r * SinoN_t * SinoNtheta * dataTypeMem;
-  float ErroSinoMem = SinogramMem;
-  float WeightMem = SinogramMem; //Weight matrix
-  float A_MatrixMem;
-  if(extendObject->isChecked() == true)
-  {
-    A_MatrixMem = GeomN_x * GeomN_z * (final_resolution * 3 * (dataTypeMem + 4) * SinoNtheta); // 4 is the bytes to store the counts
-    //*+4 correspodns to bytes to store a single double and a unsigned into to
-    //store the offset. 3*m_FinalRes is the approximate number of detector elements hit per voxel
-  }
-  else
-  {
-    A_MatrixMem = GeomN_x * GeomN_z * (final_resolution * (dataTypeMem + 4) * SinoNtheta); //Since we are reconstructing a larger region there are several voxels with no projection data. so instead of each voxel hitting 3*m_FinalRes det entries we aproximate it by m_FinalRes
-  }
-  float NuisanceParamMem = SinoNtheta * dataTypeMem * 3; //3 is for gains offsets and noise var
+    if(inputBrightFieldFilePath->text().isEmpty() == false) {
+        SinogramMem *= 2;
+    }
 
-  if(inputBrightFieldFilePath->text().isEmpty() == false) {
-    SinogramMem *= 2;
-  }
+    float TotalMem = ObjectMem + SinogramMem + ErroSinoMem + WeightMem + A_MatrixMem + NuisanceParamMem; //in bytes
 
-  float TotalMem = ObjectMem + SinogramMem + ErroSinoMem + WeightMem + A_MatrixMem + NuisanceParamMem; //in bytes
+    TotalMem /= (1e9); //To get answer in Gb
 
-  TotalMem /= (1e9); //To get answer in Gb
-
-  memoryUse->setText(QString::number(TotalMem));
+    memoryUse->setText(QString::number(TotalMem));
 
 }
 
@@ -2096,7 +2168,7 @@ void TomoGui::deleteTempFiles()
   m_TempFilesToDelete.clear();
 }
 
-
+#if 0
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -2113,6 +2185,6 @@ void TomoGui::sigmaX_ShouldUpdate(bool b)
   smoothness->setEnabled(!b);
   tiltSelection->setEnabled(!b);
 }
-
+#endif
 
 

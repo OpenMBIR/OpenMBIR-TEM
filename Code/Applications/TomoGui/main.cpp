@@ -60,7 +60,7 @@ int main(int argc, char **argv)
   viewer->raise();
   viewer->activateWindow();
   // Now read the user settings which may load an MRC file
-  viewer->readSettings(prefs);
+  // viewer->readSettings(prefs);
 
   // Run the App - This is a BLOCKING call
   int app_return = app.exec();

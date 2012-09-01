@@ -55,7 +55,7 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QTabWidget" name="tabWidget_2">
+     <widget class="QTabWidget" name="outputTabWidget">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
         <horstretch>0</horstretch>
@@ -155,58 +155,6 @@ File:</string>
           </property>
          </widget>
         </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tab_5">
-       <attribute name="title">
-        <string>Outputs</string>
-       </attribute>
-       <layout class="QGridLayout" name="gridLayout_2">
-        <property name="margin">
-         <number>4</number>
-        </property>
-        <property name="spacing">
-         <number>4</number>
-        </property>
-        <item row="1" column="0">
-         <widget class="QLabel" name="outputDirectoryLabel">
-          <property name="toolTip">
-           <string>The output image to be written at the conclusion of the segmentation</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-          </property>
-          <property name="text">
-           <string>Output Directory:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QFSDropLineEdit" name="outputDirectoryPath_OLD">
-          <property name="toolTip">
-           <string>The output image to be written at the conclusion of the segmentation</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QPushButton" name="outputDirectoryPathBtn">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Select...</string>
-          </property>
-         </widget>
-        </item>
         <item row="2" column="0">
          <widget class="QLabel" name="label_7">
           <property name="enabled">
@@ -249,6 +197,32 @@ font-size: 10px;
           </property>
           <property name="text">
            <string>Save As...</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tab_5">
+       <attribute name="title">
+        <string>Outputs</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <property name="margin">
+         <number>4</number>
+        </property>
+        <property name="spacing">
+         <number>4</number>
+        </property>
+        <item row="1" column="2">
+         <widget class="QPushButton" name="outputDirectoryPathBtn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Select...</string>
           </property>
          </widget>
         </item>
@@ -297,6 +271,32 @@ font-size: 10px;
           </property>
           <property name="text">
            <string>Select...</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="outputDirectoryLabel">
+          <property name="toolTip">
+           <string>The output image to be written at the conclusion of the segmentation</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+          </property>
+          <property name="text">
+           <string>Output Directory:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QFSDropLineEdit" name="outputDirectoryPath_OLD">
+          <property name="toolTip">
+           <string>The output image to be written at the conclusion of the segmentation</string>
+          </property>
+          <property name="text">
+           <string/>
           </property>
          </widget>
         </item>
@@ -377,6 +377,7 @@ font-size: 10px;
           <property name="autoFillBackground">
            <bool>false</bool>
           </property>
+          <zorder>outputTabWidget</zorder>
          </widget>
         </item>
        </layout>

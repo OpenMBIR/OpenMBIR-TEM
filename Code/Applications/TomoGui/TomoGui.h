@@ -159,6 +159,11 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     void on_xWidthFullRecon_valueChanged(int value);
 
+#if 1
+    void on_yMin_textChanged(const QString &string);
+    void on_yMax_textChanged(const QString &string);
+#endif
+
     /**
      * @brief Qt Slot that fires in response to a click on a "Recent File' Menu entry.
      */
@@ -170,6 +175,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
      * @param file The newly added file.
      */
     void updateBaseRecentFileList(const QString &file);
+
+    void loadConfigurationFile(QString file);
 
     // -----------------------------------------------------------------------------
     //  Input Tab Widgets
@@ -183,19 +190,21 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     void on_reconstructedVolumeFileName_textChanged(const QString & text);
 
     void on_outputDirectoryPathBtn_clicked();
-    void on_outputDirectoryPath_textChanged(const QString & text);
+//    void on_outputDirectoryPath_textChanged(const QString & text);
 
     void on_initialReconstructionPathBtn_clicked();
     void on_initialReconstructionPath_textChanged(const QString & text);
 
+    void on_resetSigmaXBtn_clicked();
+
     void on_smoothness_textChanged(const QString & text);
     void on_sigma_x_textChanged(const QString & text);
+#if 0
     void on_targetGain_editingFinished();
     void on_sampleThickness_editingFinished();
-    void on_resetSigmaXBtn_clicked();
     void on_defaultOffset_editingFinished();
     void on_tiltSelection_currentIndexChanged(int index);
-
+#endif
     void singleSlicePlaneSet(int y);
 
     /**
@@ -255,7 +264,7 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
 
     bool checkTiltAngles(QVector<float> &tilts);
 
-    void sigmaX_ShouldUpdate(bool b);
+ //   void sigmaX_ShouldUpdate(bool b);
 
     void enableWidgets(bool b);
 
@@ -323,8 +332,8 @@ class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
     bool                  m_UpdateCachedSigmaX;
     QVector<QString>      m_TempFilesToDelete;
 
-    QLineEdit*            xMin;
-    QLineEdit*            xMax;
+//    QLineEdit*            xMin;
+//    QLineEdit*            xMax;
 
 
     TomoGui(const TomoGui&); // Copy Constructor Not Implemented

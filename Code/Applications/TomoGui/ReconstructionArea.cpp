@@ -141,6 +141,14 @@ void ReconstructionArea::getLowerRight( int &x, int &y)
   y = m_LowerRight[1];
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ReconstructionArea::getXMinMax(int &min, int &max)
+{
+    min = m_UpperLeft[0];
+    max = m_LowerRight[0];
+}
 
 // -----------------------------------------------------------------------------
 //
@@ -159,7 +167,6 @@ qreal ReconstructionArea::getLineWidth()
   return m_LineWidth;
 }
 
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -167,7 +174,6 @@ void ReconstructionArea::setVisible(bool visible)
 {
   m_Visible = visible;
 }
-
 
 // -----------------------------------------------------------------------------
 //
@@ -515,28 +521,6 @@ void ReconstructionArea::setXMin(const QString &str)
   }
 }
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void ReconstructionArea::setYMin(const QString &str)
-{
-  qint32 xmin = 0;
-  qint32 xmax = 0;
-  qint32 ymin = 0;
-  qint32 ymax = 0;
-  getUpperLeft(xmin, ymin);
-  getLowerRight(xmax, ymax);
-
-  bool ok = false;
-  qint32 y_min = m_ImageSize.height() - str.toInt(&ok);
-
- // if (y_min < ymax)
-  {
-    QRectF newRect(xmin, y_min, (xmax - xmin), (ymax - y_min));
-    prepareGeometryChange();
-    setPolygon(QPolygonF(newRect));
-  }
-}
 
 // -----------------------------------------------------------------------------
 //
@@ -559,6 +543,30 @@ void ReconstructionArea::setXMax(const QString &str)
   }
 }
 
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ReconstructionArea::setYMin(const QString &str)
+{
+  qint32 xmin = 0;
+  qint32 xmax = 0;
+  qint32 ymin = 0;
+  qint32 ymax = 0;
+  getUpperLeft(xmin, ymin);
+  getLowerRight(xmax, ymax);
+
+  bool ok = false;
+  qint32 y_min = m_ImageSize.height() - str.toInt(&ok);
+
+  if (y_min < ymax)
+  {
+    QRectF newRect(xmin, y_min, (xmax - xmin), (ymax - y_min));
+    prepareGeometryChange();
+    setPolygon(QPolygonF(newRect));
+  }
+}
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -573,7 +581,7 @@ void ReconstructionArea::setYMax(const QString &str)
 
   bool ok = false;
   qint32 y_max = m_ImageSize.height() - str.toInt(&ok);
- // if (y_max > ymin)
+  if (y_max > ymin)
   {
     QRectF newRect(xmin, ymin, (xmax - xmin), (y_max - ymin));
     prepareGeometryChange();
