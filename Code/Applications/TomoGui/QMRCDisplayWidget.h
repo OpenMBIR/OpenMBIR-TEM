@@ -104,7 +104,7 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
 
 
 
-  protected slots:
+  public slots:
     void on_playBtn_clicked();
     void on_stopBtn_clicked();
     void on_skipStart_clicked();
@@ -124,11 +124,7 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     void z600_triggered();
     void on_fitToWindow_clicked();
 
-//    void on_originCB_currentIndexChanged(int i);
-
     void on_currentTiltIndex_valueChanged(int i);
-
-
 
   signals:
     void memoryCalculationNeedsUpdated();
