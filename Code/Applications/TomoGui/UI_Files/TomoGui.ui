@@ -342,9 +342,6 @@ font-size: 10px;
         <property name="margin">
          <number>0</number>
         </property>
-        <property name="spacing">
-         <number>6</number>
-        </property>
         <item row="0" column="0">
          <widget class="QMRCDisplayWidget" name="m_ReconstructedDisplayWidget" native="true">
           <property name="sizePolicy">
@@ -433,7 +430,7 @@ font-size: 10px;
      <x>0</x>
      <y>0</y>
      <width>1165</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -540,9 +537,9 @@ font-size: 10px;
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
-              <width>269</width>
-              <height>869</height>
+              <y>-169</y>
+              <width>264</width>
+              <height>898</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -1552,7 +1549,7 @@ Value:</string>
                      <string/>
                     </property>
                     <property name="checked">
-                     <bool>true</bool>
+                     <bool>false</bool>
                     </property>
                    </widget>
                   </item>
@@ -1713,6 +1710,9 @@ Threshold:</string>
                   <property name="text">
                    <string>Delete Temp Files</string>
                   </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
                  </widget>
                 </item>
                 <item row="14" column="0">
@@ -1731,6 +1731,9 @@ Threshold:</string>
                   </property>
                   <property name="text">
                    <string>Extend Object</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
@@ -1984,8 +1987,6 @@ font-size: 10px;
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../../../../Resources/icons/images/Icons.qrc"/>
-  <include location="../../../../Resources/icons/images/Icons.qrc"/>
   <include location="../../../../Resources/icons/images/Icons.qrc"/>
  </resources>
  <connections/>
