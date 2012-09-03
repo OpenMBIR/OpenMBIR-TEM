@@ -771,11 +771,11 @@ void TomoGui::on_m_GoBtn_clicked()
     quint16 y_min = yMin->text().toUShort(&ok);
     quint16 y_max = yMax->text().toUShort(&ok);
 
-    if(x_max <= x_min || x_max >= size.width())
+    if(x_max <= x_min || x_max > size.width())
     {
       return;
     }
-    if(y_max <= y_min || y_max >= size.height())
+    if(y_max <= y_min || y_max > size.height())
     {
       return;
     }
