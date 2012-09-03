@@ -948,9 +948,10 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
     quint16 y_max = yMax->text().toUShort(&ok);
 
     subvolume[0] = x_min;
+    subvolume[1] = y_min;// size.height() - y_max - 1;
     subvolume[3] = x_max;
-    subvolume[4] = size.height() - y_min - 1;
-    subvolume[1] = size.height() - y_max - 1;
+    subvolume[4] = y_max - 1; // size.height() - y_min - 1;
+
     m_MultiResSOC->setSubvolume(subvolume);
   }
   else
