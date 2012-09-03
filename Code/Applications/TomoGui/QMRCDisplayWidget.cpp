@@ -365,6 +365,7 @@ void QMRCDisplayWidget::loadMRCFile(QString mrcFilePath)
         return;
     }
     loadMRCTiltImage(m_CurrentMRCFilePath, 0);
+    on_fitToWindow_clicked();
 }
 
 // -----------------------------------------------------------------------------

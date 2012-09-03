@@ -1282,7 +1282,7 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
       m_MRCDisplayWidget->loadMRCTiltImage(filepath, halfTilts);
       m_MRCDisplayWidget->setImageWidgetsEnabled(true);
       m_MRCDisplayWidget->setMovieWidgetsEnabled(true);
-      m_MRCDisplayWidget->on_fitToWindow_clicked();
+
 
       QSize imageSize = m_MRCDisplayWidget->currentImage().size();
       QRectF rect(0.0, 0.0, imageSize.width(), imageSize.height() );
