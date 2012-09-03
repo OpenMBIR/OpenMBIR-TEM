@@ -260,6 +260,15 @@ void QMRCDisplayWidget::stepForwardFromTimer()
     this->m_AnimationTimer->stop();
     return;
   }
+
+  QFileInfo fi(m_CurrentMRCFilePath);
+  if (fi.exists() == false)
+  {
+      this->m_AnimationTimer->stop();
+      return;
+  }
+
+
   QCoreApplication::processEvents();
 
   int idx = currentTiltIndex->value();
