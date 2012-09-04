@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 #endif
     // Make sure the output directory is created if it does not exist
     // Get the absolute path to the users choice for the output file
-    std::string parentPath = MXAFileInfo::absolutePath(engine->getOutputFile());
+    std::string parentPath = engine->getTempDir();
 
 
     if(MXADir::exists(parentPath) == false)

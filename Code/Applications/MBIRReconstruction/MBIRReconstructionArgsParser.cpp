@@ -142,90 +142,75 @@ int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiRes
 
     TCLAP::ValueArg<std::string> in_MRCFile("s", "sinofile", "The Sinogram File", true, "", "");
     cmd.add(in_MRCFile);
+    TCLAP::ValueArg<std::string> inputBrightFieldFilePath("", "brightfield", "Acquired Bright Field tilt series", false, "", "");
+    cmd.add(inputBrightFieldFilePath);
+    TCLAP::ValueArg<std::string> reconstructedVolumeFileName("", "outputfile", "The Output File", true, "", "");
+    cmd.add(reconstructedVolumeFileName);
 
-    TCLAP::ValueArg<std::string> initialReconstructionPath("i", "ini_recon", "Initial Reconstruction to initialize algorithm", false, "", "");
-    cmd.add(initialReconstructionPath);
 
+    TCLAP::ValueArg<std::string> subvolume("", "subvolume", "SubVolume to Reconstruct in the form xmin,ymin,zmin,xmax,ymax,zmax", false, "", "");
+    cmd.add(subvolume);
+    TCLAP::ValueArg<Real_t> sampleThickness("", "thickness", "Thickness of sample in nm", true, 0, "");
+    cmd.add(sampleThickness);
+    TCLAP::ValueArg<unsigned int> tiltSelection("", "tilt_selection", "Which Tilt Values to use from file. Default is 'A'", true, SOC::A_Tilt, "0");
+    cmd.add(tiltSelection);
+    TCLAP::ValueArg<double> mrf("", "diffuseness", "Diffuseness Parameter (Markov Random Field Parameter)", true, 0.200, "0.2");
+    cmd.add(mrf);
+    TCLAP::ValueArg<int> finalResolution("", "final_resolution", "The final resolution multiple for the reconstruction" , true, 4, "4");
+    cmd.add(finalResolution);
+    TCLAP::ValueArg<double> sigma_x("", "sigma_x", "Sigma X Value", true, 1.0, "1.0");
+    cmd.add(sigma_x);
+
+
+    TCLAP::ValueArg<double> stopThreshold("", "stop_threshold", "Stopping Threshold for inner loop", false, .009, "");
+    cmd.add(stopThreshold);
+    TCLAP::ValueArg<int> numResolutions("", "num_resolutions", "The number of resolutions to use" , true, 3, "3");
+    cmd.add(numResolutions);
+    TCLAP::ValueArg<double> targetGain("", "target_gain", "Target Gain for unscattered electrons", true, 1, "");
+    cmd.add(targetGain);
     TCLAP::SwitchArg interpolateInitialRecontruction ("", "interpolate_initial_recon", "Interpolate Initial Reconstruction Value", false);
     cmd.add(interpolateInitialRecontruction);
-
+    TCLAP::ValueArg<int> outerIterations("", "outer_iterations", "Outer Iterations to use", true, 30, "30");
+    cmd.add(outerIterations);
+    TCLAP::ValueArg<int> innerIterations("", "inner_iterations", "Number of Inner Iterations", true, 10, "10");
+    cmd.add(innerIterations);
+    TCLAP::ValueArg<double> defaultOffset("", "default_offset", "Default offset for all Tilts", false, 0.0, "");
+    cmd.add(defaultOffset);
+    TCLAP::SwitchArg useDefaultOffset("", "use_default_offset", "Use the Default Offset Value" , false);
+    cmd.add(useDefaultOffset);
+    TCLAP::ValueArg<double> defaultVariance("", "default_variance", "Default variance for all Tilts", false, 1.0, "");
+    cmd.add(defaultVariance);
+    TCLAP::ValueArg<double> defaultInitialRecon("", "default_recon_value", "Default initial value of reconstruction", false, 0.0, "");
+    cmd.add(defaultInitialRecon);
+    TCLAP::SwitchArg extendObject("", "extend_object", "To extend the object or not", false);
+    cmd.add(extendObject);
     TCLAP::SwitchArg m_DeleteTempFiles ("", "delete_tmp_files", "Delete all the Temp files that are created", false);
     cmd.add(m_DeleteTempFiles);
 
-    //Normalizing Bright Field Scan
 
-    TCLAP::ValueArg<std::string> inputBrightFieldFilePath("", "brightfield", "Acquired Bright Field tilt series", false, "", "");
-    cmd.add(inputBrightFieldFilePath);
+    TCLAP::ValueArg<std::string> initialReconstructionPath("i", "initial_recon_file", "Initial Reconstruction to initialize algorithm", false, "", "");
+    cmd.add(initialReconstructionPath);
 
-    TCLAP::ValueArg<double> targetGain("", "TargetGain", "Target Gain for unscattered electrons", true, 1, "");
-    cmd.add(targetGain);
-
+#if 0
     TCLAP::ValueArg<std::string> in_Gains("", "gains", "Initial Gains to use.", false, "", "");
     cmd.add(in_Gains);
 
     TCLAP::ValueArg<std::string> in_Offsets("", "offsets", "Initial Offsets to use.", false, "", "");
     cmd.add(in_Offsets);
 
-    TCLAP::ValueArg<double> defaultOffset("", "defaultOffset", "Default offset for all Tilts", false, 0.0, "");
-    cmd.add(defaultOffset);
-
-    TCLAP::SwitchArg useDefaultOffset("", "use_default_offset", "Use the Default Offset Value" , false);
-    cmd.add(useDefaultOffset);
-
     TCLAP::ValueArg<std::string> in_Variance("", "variance", "Initial Variance to use.", false, "", "");
     cmd.add(in_Variance);
 
-    TCLAP::ValueArg<double> defaultVariance("", "defaultVariance", "Default variance for all Tilts", false, 1.0, "");
-    cmd.add(defaultVariance);
-
-    TCLAP::ValueArg<double> defaultInitialRecon("", "defaultInitialRecon", "Default initial value of reconstruction", false, 0.0, "");
-    cmd.add(defaultInitialRecon);
-
-    //Whether to interpolate initial file or not
     TCLAP::ValueArg<double> in_InterpFactor("", "interpFactor", "Interpolate Factor", false, 0.0, "");
     cmd.add(in_InterpFactor);
-
-    TCLAP::ValueArg<bool> extendObject("", "extendObject", "To extend the object or not", false, 1, "");
-    cmd.add(extendObject);
-
-    TCLAP::ValueArg<std::string> reconstructedVolumeFileName("o", "outputfile", "The Output File", true, "", "");
-    cmd.add(reconstructedVolumeFileName);
-
-
-    TCLAP::ValueArg<double> stopThreshold("", "stopThreshold", "Stopping Threshold for inner loop", false, .009, "");
-    cmd.add(stopThreshold);
-
-    TCLAP::ValueArg<std::string> subvolume("", "subvolume", "SubVolume to Reconstruct in the form xmin,ymin,zmin,xmax,ymax,zmax", false, "", "");
-    cmd.add(subvolume);
-    TCLAP::ValueArg<int> outerIterations("", "outer_iterations", "Outer Iterations to use", true, 30, "30");
-    cmd.add(outerIterations);
-    TCLAP::ValueArg<int> innerIterations("", "inner_iterations", "Number of Inner Iterations", true, 10, "10");
-    cmd.add(innerIterations);
-    TCLAP::ValueArg<double> sigma_x("", "sigma_x", "Sigma X Value", true, 1.0, "1.0");
-    cmd.add(sigma_x);
-
-    TCLAP::ValueArg<double> mrf("", "mrf", "Markov Random Field Parameter", true, 0.200, "0.2");
-    cmd.add(mrf);
 
     TCLAP::ValueArg<Real_t> xz_size("", "xz_size", "Size in nm of output pixel xz plane", true, 1, "1");
     cmd.add(xz_size);
     TCLAP::ValueArg<Real_t> xy_size("", "xy_size", "Size in nm of output pixel xy plane", true, 1, "1");
     cmd.add(xy_size);
-
-    TCLAP::ValueArg<Real_t> sampleThickness("", "thickness", "Thickness of sample in nm", true, 0, "");
-    cmd.add(sampleThickness);
-
+#endif
     TCLAP::ValueArg<std::string> viewMask("", "exclude_views", "Comma separated list of tilts to exclude by index", false, "", "");
     cmd.add(viewMask);
-
-    TCLAP::ValueArg<unsigned int> tiltSelection("", "tilt_selection", "Which Tilt Values to use from file. Default is 'A'", true, SOC::A_Tilt, "0");
-    cmd.add(tiltSelection);
-
-    TCLAP::ValueArg<int> numResolutions("", "num_resolutions", "The number of resolutions to use" , true, 3, "3");
-    cmd.add(numResolutions);
-
-    TCLAP::ValueArg<int> finalResolution("", "final_resolution", "The final resolution multiple for the reconstruction" , true, 4, "4");
-    cmd.add(finalResolution);
 
 
     if(argc < 2)
@@ -247,13 +232,11 @@ int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiRes
         m_MultiResSOC->setInputFile(path);
 
         //MXAFileInfo fi(reconstructedVolumeFileName.getValue());
-        path = MXAFileInfo::absolutePath(reconstructedVolumeFileName.getValue());
-
+        path = MXAFileInfo::parentPath(reconstructedVolumeFileName.getValue());
         m_MultiResSOC->setTempDir(path);
+
         path = MXADir::toNativeSeparators(MXAFileInfo::absolutePath(reconstructedVolumeFileName.getValue()));
         m_MultiResSOC->setOutputFile(path);
-
-
 
         path = MXADir::toNativeSeparators(inputBrightFieldFilePath.getValue());
         m_MultiResSOC->setBrightFieldFile(path);
