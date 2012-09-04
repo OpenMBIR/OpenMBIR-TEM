@@ -46,10 +46,10 @@
 #cmakedefine ReconstructionCoreLib_BUILT_AS_DYNAMIC_LIB @ReconstructionCoreLib_BUILT_AS_DYNAMIC_LIB@
 
 /* Did we compile with HDF5 support */
-#define ReconstructionCoreLib_HDF5_SUPPORT @ReconstructionCoreLib_HDF5_SUPPORT@
+// #define ReconstructionCoreLib_HDF5_SUPPORT @ReconstructionCoreLib_HDF5_SUPPORT@
 
 /* Are we compiling Tiff support using an external libTiff */
-#define ReconstructionCoreLib_TIFF_SUPPORT @ReconstructionCoreLib_TIFF_SUPPORT@
+// #define ReconstructionCoreLib_TIFF_SUPPORT @ReconstructionCoreLib_TIFF_SUPPORT@
 
 /* define to 1 if we are using parallel algorithms */
 #cmakedefine OpenMBIR_USE_PARALLEL_ALGORITHMS @OpenMBIR_USE_PARALLEL_ALGORITHMS@

@@ -83,7 +83,7 @@
 
 
 #define USE_TBB_TASK_GROUP 1
-#if defined (TomoEngine_USE_PARALLEL_ALGORITHMS)
+#if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
 #include <tbb/task_scheduler_init.h>
 #include <tbb/task_group.h>
 #include <tbb/task.h>
@@ -152,7 +152,7 @@ namespace Detail {
  HaadfMbirEngine::HaadfMbirEngine()
  {
    initVariables();
-#if defined (TomoEngine_USE_PARALLEL_ALGORITHMS)
+#if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
     tbb::task_scheduler_init init;
     m_NumThreads = init.default_num_threads();
 #else
@@ -341,7 +341,7 @@ void HaadfMbirEngine::execute()
   cost->initOutputFile(filepath);
 //#endif
 
-#if TomoEngine_USE_PARALLEL_ALGORITHMS
+#if OpenMBIR_USE_PARALLEL_ALGORITHMS
   tbb::task_scheduler_init init;
 #endif
 
@@ -669,7 +669,7 @@ void HaadfMbirEngine::execute()
   // This next section looks crazy with all the #if's but this makes sure we are
   // running the exact same code whether in parallel or serial.
 
-#if TomoEngine_USE_PARALLEL_ALGORITHMS
+#if OpenMBIR_USE_PARALLEL_ALGORITHMS
   tbb::task_group* g = new tbb::task_group;
   if (getVerbose())
   {
@@ -687,7 +687,7 @@ void HaadfMbirEngine::execute()
   // threads.
   for (uint16_t t = 0; t < m_Geometry->N_z; t++)
   {
-#if TomoEngine_USE_PARALLEL_ALGORITHMS
+#if OpenMBIR_USE_PARALLEL_ALGORITHMS
     g->run(ForwardProject(m_Sinogram.get(), m_Geometry.get(), TempCol, VoxelLineResponse, Y_Est, NuisanceParams.get(), t, this));
 #else
     ForwardProject fp(m_Sinogram.get(), m_Geometry.get(), TempCol, VoxelLineResponse, Y_Est, NuisanceParams.get(), t, this);
@@ -695,7 +695,7 @@ void HaadfMbirEngine::execute()
     fp();
 #endif
   }
-#if TomoEngine_USE_PARALLEL_ALGORITHMS
+#if OpenMBIR_USE_PARALLEL_ALGORITHMS
   g->wait(); // Wait for all the threads to complete before moving on.
   delete g;
 #endif

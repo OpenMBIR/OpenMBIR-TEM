@@ -46,10 +46,10 @@
 #cmakedefine HaadfMbirLib_BUILT_AS_DYNAMIC_LIB @HaadfMbirLib_BUILT_AS_DYNAMIC_LIB@
 
 /* Did we compile with HDF5 support */
-#define HaadfMbirLib_HDF5_SUPPORT @HaadfMbirLib_HDF5_SUPPORT@
+//#define HaadfMbirLib_HDF5_SUPPORT @HaadfMbirLib_HDF5_SUPPORT@
 
 /* Are we compiling Tiff support using an external libTiff */
-#define HaadfMbirLib_TIFF_SUPPORT @HaadfMbirLib_TIFF_SUPPORT@
+//#define HaadfMbirLib_TIFF_SUPPORT @HaadfMbirLib_TIFF_SUPPORT@
 
 /* define to 1 if we are using parallel algorithms */
 #cmakedefine HaadfMbirLib_USE_PARALLEL_ALGORITHMS @HaadfMbirLib_USE_PARALLEL_ALGORITHMS@

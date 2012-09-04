@@ -77,7 +77,7 @@
 
 
 class UpdateYSlice
-#if defined (TomoEngine_USE_PARALLEL_ALGORITHMS)
+#if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
 : public tbb::task
 #endif
 {
@@ -139,7 +139,7 @@ class UpdateYSlice
   /**
    *
    */
-#if defined (TomoEngine_USE_PARALLEL_ALGORITHMS)
+#if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
     tbb::task*
 #else
     void
@@ -466,7 +466,7 @@ class UpdateYSlice
       }
 #endif
 
-#if defined (TomoEngine_USE_PARALLEL_ALGORITHMS)
+#if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
       return NULL;
 #endif
     }
@@ -617,7 +617,7 @@ uint8_t HaadfMbirEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
 #endif
 
     START_TIMER;
-#if defined (TomoEngine_USE_PARALLEL_ALGORITHMS)
+#if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
     std::vector<int> yCount(m_NumThreads, 0);
     int t = 0;
     for(int y = 0; y < m_Geometry->N_y; ++y)
