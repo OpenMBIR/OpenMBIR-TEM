@@ -343,6 +343,8 @@ void TomoGui::on_actionLoad_Config_File_triggered()
         return;
     }
     loadConfigurationFile(file);
+    QRecentFileList::instance()->addFile(file);
+    updateBaseRecentFileList(file);
 }
 
 // -----------------------------------------------------------------------------

@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 {
   QApplication app(argc, argv);
   QCoreApplication::setOrganizationName("BlueQuartz Software");
-  QCoreApplication::setOrganizationDomain("bluequartz.net");
+  QCoreApplication::setOrganizationDomain("openmbir.org");
   QCoreApplication::setApplicationName("TomoGui");
 
 #if defined( Q_WS_MAC )
