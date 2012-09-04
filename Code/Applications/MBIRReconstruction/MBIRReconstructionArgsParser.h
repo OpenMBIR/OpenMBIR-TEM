@@ -36,23 +36,23 @@
 
 
 #include "TomoEngine/SOC/SOCStructures.h"
-
+#include "TomoEngine/SOC/MultiResolutionSOC.h"
 
 
 /**
- * @class SOCArgsParser SOCArgsParser.h ScaleOffsetCorrectionAlgorithm/SOCArgsParser.h
+ * @class MBIRReconstructionArgsParser MBIRReconstructionArgsParser.h ScaleOffsetCorrectionAlgorithm/MBIRReconstructionArgsParser.h
  * @brief
  * @author
  * @date Nov 16, 2011
  * @version 1.0
  */
-class SOCArgsParser
+class MBIRReconstructionArgsParser
 {
   public:
-    SOCArgsParser();
-    virtual ~SOCArgsParser();
+    MBIRReconstructionArgsParser();
+    virtual ~MBIRReconstructionArgsParser();
 
-    int parseArguments(int argc, char **argv, TomoInputs* Input, TomoInputs* BF_Inputs);
+    int parseArguments(int argc, char **argv, MultiResolutionSOC::Pointer multiRes);
 
     void printInputs(TomoInputsPtr inputs, std::ostream &out);
 
@@ -60,8 +60,8 @@ class SOCArgsParser
     uint64_t startm;
     uint64_t stopm;
 
-    SOCArgsParser(const SOCArgsParser&); // Copy Constructor Not Implemented
-    void operator=(const SOCArgsParser&); // Operator '=' Not Implemented
+    MBIRReconstructionArgsParser(const MBIRReconstructionArgsParser&); // Copy Constructor Not Implemented
+    void operator=(const MBIRReconstructionArgsParser&); // Operator '=' Not Implemented
 
 };
 

@@ -268,7 +268,6 @@ void QMRCDisplayWidget::stepForwardFromTimer()
       return;
   }
 
-
   QCoreApplication::processEvents();
 
   int idx = currentTiltIndex->value();

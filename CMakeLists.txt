@@ -152,7 +152,7 @@ add_subdirectory( ${PROJECT_CODE_DIR}/MXA ${PROJECT_BINARY_DIR}/MXA)
 
 add_subdirectory( ${PROJECT_CODE_DIR}/TomoEngine ${PROJECT_BINARY_DIR}/TomoEngine)
 
-add_subdirectory( ${PROJECT_CODE_DIR}/Applications/ScaleOffsetCorrection ${PROJECT_BINARY_DIR}/Applications/ScaleOffsetCorrection)
+add_subdirectory( ${PROJECT_CODE_DIR}/Applications/MBIRReconstruction ${PROJECT_BINARY_DIR}/Applications/MBIRReconstruction)
 
 # --------------------------------------------------------------------
 # Macro that takes a subdirectory and creates a cmake option variable
