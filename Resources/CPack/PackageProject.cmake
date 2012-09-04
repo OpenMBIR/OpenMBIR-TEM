@@ -57,7 +57,7 @@ SET(CPACK_PACKAGE_VERSION ${TomoEngine_VERSION})
 #set(CPACK_COMPONENT_RUNTIME_REQUIRED 1)
 
 set(CPACK_PACKAGE_EXECUTABLES
-    TomoGui TomoGui)
+    TomoGui TomoGui MRCSubset MRCSubset MbirReconstruction MbirReconstruction)
 set(UPLOAD_FILE_NAME "")
 
 IF (APPLE)

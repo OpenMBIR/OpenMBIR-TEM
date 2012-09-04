@@ -5,8 +5,9 @@
 #-- This code was partly written under US Air Force Contract FA8650-07-D-5800
 #--////////////////////////////////////////////////////////////////////////////
 
-project(MbirReconstruction)
+project(MRCSubset)
 cmake_minimum_required(VERSION 2.8.5)
+
 
 # --------------------------------------------------------------------
 # Setup the install rules for the various platforms
@@ -15,22 +16,20 @@ if (WIN32)
     set (install_dir ".")
 endif()
 
-set(MbirReconstruction_SRCS
-    ${MbirReconstruction_SOURCE_DIR}/main.cpp
-    ${MbirReconstruction_SOURCE_DIR}/MBIRReconstructionArgsParser.cpp
-    ${MbirReconstruction_SOURCE_DIR}/MBIRReconstructionArgsParser.h
-)
+set(MRCSubset_SRCS
+    ${MRCSubset_SOURCE_DIR}/MRCSubset.cpp
+    )
 
-BuildToolBundle(TARGET MbirReconstruction
-            SOURCES ${MbirReconstruction_SRCS}
+BuildToolBundle(TARGET MRCSubset
+            SOURCES ${MRCSubset_SRCS}
             DEBUG_EXTENSION ${EXE_DEBUG_EXTENSION}
             VERSION_MAJOR
             VERSION_MAJOR ${TomoEngine_VER_MAJOR}
             VERSION_MINOR ${TomoEngine_VER_MINOR}
             VERSION_PATCH ${TomoEngine_VER_PATCH}
-            BINARY_DIR    ${PROJECT_BINARY_DIR}/MbirReconstruction
+            BINARY_DIR    ${PROJECT_BINARY_DIR}/MRCSubset
             COMPONENT     Applications
             INSTALL_DEST  ${install_dir}
-            LINK_LIBRARIES TomoEngine
+            LINK_LIBRARIES MXA TomoEngine
             LIB_SEARCH_DIRS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 )

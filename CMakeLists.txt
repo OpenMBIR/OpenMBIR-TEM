@@ -154,6 +154,8 @@ add_subdirectory( ${PROJECT_CODE_DIR}/TomoEngine ${PROJECT_BINARY_DIR}/TomoEngin
 
 add_subdirectory( ${PROJECT_CODE_DIR}/Applications/MBIRReconstruction ${PROJECT_BINARY_DIR}/Applications/MBIRReconstruction)
 
+add_subdirectory( ${PROJECT_CODE_DIR}/Applications/MRCSubset ${PROJECT_BINARY_DIR}/Applications/MRCSubset)
+
 # --------------------------------------------------------------------
 # Macro that takes a subdirectory and creates a cmake option variable
 # which allows developers to turn off those sub projects if needed.
