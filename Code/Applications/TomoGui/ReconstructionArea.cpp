@@ -558,7 +558,6 @@ void ReconstructionArea::setYMin(const QString &str)
 
   bool ok = false;
   qint32 y_min = m_ImageSize.height() - str.toInt(&ok);
-
   if (y_min < ymax)
   {
     QRectF newRect(xmin, y_min, (xmax - xmin), (ymax - y_min));
