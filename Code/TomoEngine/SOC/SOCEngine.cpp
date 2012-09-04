@@ -606,7 +606,7 @@ void SOCEngine::execute()
   checksum = 0;
 
   ss.str("");
-  ss << "Calculating AMatrix....";
+  ss << "Calculating A Matrix....";
   notify(ss.str(), 0, Observable::UpdateProgressMessage);
 
 
