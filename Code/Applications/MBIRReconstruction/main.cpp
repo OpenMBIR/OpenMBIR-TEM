@@ -28,7 +28,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "TomoEngine/TomoEngine.h"
+#include "ReconstructionCoreLib/ReconstructionCoreLib.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -41,19 +41,19 @@
 #include "MXA/Utilities/MXADir.h"
 #include "MXA/Utilities/MXAFileInfo.h"
 
-#include "TomoEngine/TomoEngineVersion.h"
-#include "TomoEngine/SOC/SOCStructures.h"
-#include "TomoEngine/SOC/SOCEngine.h"
-#include "TomoEngine/SOC/MultiResolutionSOC.h"
+#include "ReconstructionCoreLib/ReconstructionCoreLibVersion.h"
+#include "HaadfMbirLib/HaadfMbirStructures.h"
+#include "HaadfMbirLib/HaadfMbirEngine.h"
+#include "HaadfMbirLib/MultiResolutionHaadfMbir.h"
 #include "MBIRReconstructionArgsParser.h"
 
 int main(int argc, char **argv)
 {
-    std::cout << "Starting MBIR Reconstruction Version " << TomoEngine::Version::Complete << std::endl;
+    std::cout << "Starting MBIR Reconstruction Version " << ReconstructionCoreLib::Version::Complete << std::endl;
 
 
 
-    MultiResolutionSOC::Pointer engine = MultiResolutionSOC::New();
+    MultiResolutionHaadfMbir::Pointer engine = MultiResolutionHaadfMbir::New();
 
     MBIRReconstructionArgsParser argParser;
     int err = argParser.parseArguments(argc, argv, engine);

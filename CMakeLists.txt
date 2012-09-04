@@ -8,7 +8,7 @@
 #-- This code was partly written under US Air Force Contract FA8650-07-D-5800
 #--
 #--////////////////////////////////////////////////////////////////////////////
-project (EIMTomo)
+project (OpenMBIR)
 cmake_minimum_required(VERSION 2.8.5)
 
 # We setup all the libraries and exectuables to all be placed into a single directory
@@ -35,14 +35,14 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY
 
 
 if (NOT DEFINED CMP_SOURCE_DIR)
-set(CMP_SOURCE_DIR ${EIMTomo_SOURCE_DIR}/Support/cmp)
+set(CMP_SOURCE_DIR ${OpenMBIR_SOURCE_DIR}/Support/cmp)
 endif()
 
 
 
 SET (PROJECT_CODE_DIR ${PROJECT_SOURCE_DIR}/Code)
 SET (PROJECT_RESOURCES_DIR ${PROJECT_SOURCE_DIR}/Resources)
-SET (PROJECT_PREFIX "EIMTOMO" CACHE STRING "The 3 Letter Prefix to be used for Preprocessor definitions")
+SET (PROJECT_PREFIX "OpenMBIR" CACHE STRING "The Prefix to be used for Preprocessor definitions")
 SET (EXE_DEBUG_EXTENSION "_debug")
 SET (PROJECT_INSTALL_HEADERS "0")
 SET (PROJECT_INSTALL_EXECUTABLES "0")
@@ -51,38 +51,44 @@ SET (PROJECT_INSTALL_EXECUTABLES "0")
 # Include the cmp project to perform all the basic configuration tests for the 
 # project.
 #------------------------------------------------------------------------------- 
-set (CMP_HEADER_DIR ${EIMTomo_BINARY_DIR}/DONOTUSE)
+set (CMP_HEADER_DIR ${OpenMBIR_BINARY_DIR}/DONOTUSE)
 set (CMP_INSTALL_FILES 1)
 set (CMP_CONFIGURED_FILES_SOURCE_DIR ${CMP_SOURCE_DIR}/ConfiguredFiles)
+set (CMP_MODULES_SOURCE_DIR ${CMP_SOURCE_DIR}/Modules CACHE INTERNAL "")
+include( ${CMP_SOURCE_DIR}/cmpCMakeMacros.cmake)
+
+# --------------------------------------------------------------------
+# Over ride CMake's built in module directory by prepending cmp's module
+# directory first
+SET (CMAKE_MODULE_PATH ${CMP_MODULES_SOURCE_DIR} ${CMAKE_MODULE_PATH})
+
 
 # We need to add the binary directory to our list of include directories so the source files
 # can find the generated header files
-include_directories(${EIMTomo_BINARY_DIR})
+include_directories(${OpenMBIR_BINARY_DIR})
 include_directories(${PROJECT_CODE_DIR})
 
 # --------------------------------------------------------------------
 # Generate our ReadMe and License Files
-configure_file(${PROJECT_RESOURCES_DIR}/EIMTomo/License.txt.in
+configure_file(${PROJECT_RESOURCES_DIR}/OpenMBIR/License.txt.in
                 ${PROJECT_BINARY_DIR}/License.txt )
-configure_file(${PROJECT_RESOURCES_DIR}/EIMTomo/ReadMe.txt.in
+configure_file(${PROJECT_RESOURCES_DIR}/OpenMBIR/ReadMe.txt.in
                 ${PROJECT_BINARY_DIR}/ReadMe.txt )
                 
 # --------------------------------------------------------------------
 # Build shared libraries
 OPTION (BUILD_SHARED_LIBS "Build Shared Libraries" OFF)
-set (EIMTomo_BUILT_AS_DYNAMIC_LIB )
+set (OpenMBIR_BUILT_AS_DYNAMIC_LIB )
 SET (LIB_TYPE STATIC)
 IF (BUILD_SHARED_LIBS)
   SET (LIB_TYPE SHARED)
-  SET (EIMTomo_BUILT_AS_DYNAMIC_LIB 1)
+  SET (OpenMBIR_BUILT_AS_DYNAMIC_LIB 1)
     IF (WIN32)
-    ADD_DEFINITIONS("-DEIMTomo_BUILT_AS_DYNAMIC_LIB")
+    ADD_DEFINITIONS("-DOpenMBIR_BUILT_AS_DYNAMIC_LIB")
   ENDIF (WIN32)
 ENDIF (BUILD_SHARED_LIBS)
 
-#OPTION (EIMTomo_HDF5_SUPPORT "Add HDF5 Support" OFF)
-set (TomoEngine_HDF5_SUPPORT 0)
-#OPTION (EIMTomo_USE_MERSENNE_TWISTER "Use the Mersenne Twister RNG" OFF)
+set (OpenMBIR_HDF5_SUPPORT 0)
 
 # ---------- Find Boost Headers/Libraries -----------------------
 #SET (Boost_FIND_REQUIRED FALSE)
@@ -97,15 +103,35 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
 # --------------------------------------------------------------------
+# Should we use Intel Threading Building Blocks
+# --------------------------------------------------------------------
+set(OpenMBIR_USE_PARALLEL_ALGORITHMS 0)
+option(OpenMBIR_USE_MultiThreading "Use MultiThreaded Algorithms where possible" ON)
+if (OpenMBIR_USE_MultiThreading)
+    find_package(TBB)
+    if (TBB_FOUND)
+        set(OpenMBIR_USE_PARALLEL_ALGORITHMS 1)
+        include_directories(${TBB_INCLUDE_DIRS} )
+        CMP_COPY_DEPENDENT_LIBRARIES("tbb;tbb_malloc")
+        # Append the locations of the TBB libraries to our Library Search Paths
+        list(APPEND CMP_LIB_SEARCH_DIRS ${TBB_BINARY_DIR} ${TBBG_LIBRARY_DIR} )
+        # Create an install rule to copy the dependent shared library over to the installed location
+        CMP_LIBRARIES_INSTALL_RULES("tbb;tbb_malloc" ".")
+    else()
+        message(FATAL_ERROR "The Intel Threading Building Blocks library is needed to enable the multithreaded algorithms. Please make sure it is installed properly")
+    endif()
+endif()
+
+# --------------------------------------------------------------------
 # Look for Lib Tiff
 # --------------------------------------------------------------------
-set (TomoEngine_TIFF_SUPPORT "0")
-OPTION (EIMTomo_USE_TIFF "Add libTiff Support" OFF)
-if (EIMTomo_USE_TIFF)
+set (OpenMBIR_TIFF_SUPPORT "0")
+OPTION (OpenMBIR_USE_TIFF "Add libTiff Support" OFF)
+if (OpenMBIR_USE_TIFF)
     set(CMAKE_MODULE_PATH ${CMP_MODULES_SOURCE_DIR} ${CMAKE_MODULE_PATH} )
     FIND_PACKAGE(Tiff)
     IF (TIFF_FOUND)
-        set (TomoEngine_TIFF_SUPPORT "1")
+        set (OpenMBIR_TIFF_SUPPORT "1")
         INCLUDE_DIRECTORIES(${TIFF_INCLUDE_DIRS})
         # Copy DLL libraries into the correct build location on MSVC platforms
         if (HAVE_TIFF_DLL)
@@ -114,8 +140,8 @@ if (EIMTomo_USE_TIFF)
         endif()  
     else()
        message(STATUS "Tiff was asked to be used but was not located on your system. Tiff Support will be disabled")
-       set(EIMTomo_USE_TIFF "OFF")
-       set (TomoEngine_TIFF_SUPPORT "0")
+       set(OpenMBIR_USE_TIFF "OFF")
+       set (OpenMBIR_TIFF_SUPPORT "0")
     ENDIF ()
 endif()
 
@@ -150,7 +176,8 @@ include(${PROJECT_SOURCE_DIR}/License/License.cmake)
 # Add the MXA as a library project
 add_subdirectory( ${PROJECT_CODE_DIR}/MXA ${PROJECT_BINARY_DIR}/MXA)
 
-add_subdirectory( ${PROJECT_CODE_DIR}/TomoEngine ${PROJECT_BINARY_DIR}/TomoEngine)
+add_subdirectory( ${PROJECT_CODE_DIR}/ReconstructionCoreLib ${PROJECT_BINARY_DIR}/ReconstructionCoreLib)
+add_subdirectory( ${PROJECT_CODE_DIR}/HaadfMbirLib ${PROJECT_BINARY_DIR}/HaadfMbirLib)
 
 add_subdirectory( ${PROJECT_CODE_DIR}/Applications/MBIRReconstruction ${PROJECT_BINARY_DIR}/Applications/MBIRReconstruction)
 
@@ -161,26 +188,19 @@ add_subdirectory( ${PROJECT_CODE_DIR}/Applications/MRCSubset ${PROJECT_BINARY_DI
 # which allows developers to turn off those sub projects if needed.
 # --------------------------------------------------------------------
 macro(Add_Algorithm name)
-    option( EIMTomo_BUILD_${name} "" ON )
-    if ( ${EIMTomo_BUILD_${name}} )
-        add_subdirectory( ${PROJECT_CODE_DIR}/EIMTomo/${name})
+    option( OpenMBIR_BUILD_${name} "" ON )
+    if ( ${OpenMBIR_BUILD_${name}} )
+        add_subdirectory( ${PROJECT_CODE_DIR}/OpenMBIR/${name})
     endif()
 endmacro()
-# Add our executables
-
-#Add_Algorithm(JointEstimationAlgorithm)
-#Add_Algorithm(NonHomogeniousICD)
-#Add_Algorithm(BasicReconstructionAlgorithm)
-#Add_Algorithm(ScaleOffsetCorrectionAlgorithm)
-#Add_Algorithm(ScaleOffsetMotionCorrectionAlgorithm)
 
 
 add_subdirectory(${PROJECT_CODE_DIR}/Test ${PROJECT_BINARY_DIR}/Test)
 
 # --------------------------------------------------------------------
 # Build the Qt Based GUI
-option(EIMTomo_BUILD_GUI "Build the Qt Based Gui Application" ON)
-if (EIMTomo_BUILD_GUI)
+option(OpenMBIR_BUILD_GUI "Build the Qt Based Gui Application" ON)
+if (OpenMBIR_BUILD_GUI)
 # ------------------------------------------------------------------------------
 #  Qt 4 Section
 #  if we are going to build Qt based applications then we need to find Qt 4 first
@@ -212,9 +232,9 @@ if (EIMTomo_BUILD_GUI)
    
     # Build the static QtSupport library - which MUST be a static library or the linking
     # will not work due to signals/slots mechanism.
-    add_subdirectory(${EIMTomo_SOURCE_DIR}/Code/QtSupport ${PROJECT_BINARY_DIR}/QtSupport)
+    add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/QtSupport ${PROJECT_BINARY_DIR}/QtSupport)
    
-    add_subdirectory(${EIMTomo_SOURCE_DIR}/Code/Applications/TomoGui ${PROJECT_BINARY_DIR}/Applications/TomoGui)
+    add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/Applications/TomoGui ${PROJECT_BINARY_DIR}/Applications/TomoGui)
 
 endif()
 

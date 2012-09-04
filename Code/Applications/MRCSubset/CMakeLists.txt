@@ -24,12 +24,12 @@ BuildToolBundle(TARGET MRCSubset
             SOURCES ${MRCSubset_SRCS}
             DEBUG_EXTENSION ${EXE_DEBUG_EXTENSION}
             VERSION_MAJOR
-            VERSION_MAJOR ${TomoEngine_VER_MAJOR}
-            VERSION_MINOR ${TomoEngine_VER_MINOR}
-            VERSION_PATCH ${TomoEngine_VER_PATCH}
+            VERSION_MAJOR ${OpenMBIR_VER_MAJOR}
+            VERSION_MINOR ${OpenMBIR_VER_MINOR}
+            VERSION_PATCH ${OpenMBIR_VER_PATCH}
             BINARY_DIR    ${PROJECT_BINARY_DIR}/MRCSubset
             COMPONENT     Applications
             INSTALL_DEST  ${install_dir}
-            LINK_LIBRARIES MXA TomoEngine
+            LINK_LIBRARIES MXA ReconstructionCoreLib HaadfMbirLib
             LIB_SEARCH_DIRS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 )

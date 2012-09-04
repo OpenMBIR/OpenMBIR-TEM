@@ -30,7 +30,7 @@
 #ifndef _TIFF_UTILITIES_H_
 #define _TIFF_UTILITIES_H_
 
-#include "TomoEngine/TomoEngine.h"
+#include "ReconstructionCoreLib/ReconstructionCoreLib.h"
 
 #ifdef CMP_HAVE_STDLIB_H
 #include <stdlib.h>

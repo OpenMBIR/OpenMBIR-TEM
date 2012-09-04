@@ -9,9 +9,9 @@
 #include <iostream>
 
 
-#include "TomoEngine/TomoEngine.h"
-#include "TomoEngine/Common/TomoArray.hpp"
-#include "TomoEngine/SOC/SOCStructures.h"
+#include "ReconstructionCoreLib/ReconstructionCoreLib.h"
+#include "ReconstructionCoreLib/Common/TomoArray.hpp"
+#include "HaadfMbirLib/HaadfMbirStructures.h"
 
 
 int main(int argc, char **argv)

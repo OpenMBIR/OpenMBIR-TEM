@@ -25,12 +25,12 @@ BuildToolBundle(TARGET MbirReconstruction
             SOURCES ${MbirReconstruction_SRCS}
             DEBUG_EXTENSION ${EXE_DEBUG_EXTENSION}
             VERSION_MAJOR
-            VERSION_MAJOR ${TomoEngine_VER_MAJOR}
-            VERSION_MINOR ${TomoEngine_VER_MINOR}
-            VERSION_PATCH ${TomoEngine_VER_PATCH}
+            VERSION_MAJOR ${OpenMBIR_VER_MAJOR}
+            VERSION_MINOR ${OpenMBIR_VER_MINOR}
+            VERSION_PATCH ${OpenMBIR_VER_PATCH}
             BINARY_DIR    ${PROJECT_BINARY_DIR}/MbirReconstruction
             COMPONENT     Applications
             INSTALL_DEST  ${install_dir}
-            LINK_LIBRARIES TomoEngine
+            LINK_LIBRARIES ReconstructionCoreLib HaadfMbirLib
             LIB_SEARCH_DIRS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 )

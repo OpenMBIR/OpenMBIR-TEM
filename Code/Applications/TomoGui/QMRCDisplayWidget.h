@@ -46,8 +46,8 @@
 
 
 #include "ui_QMRCDisplayWidget.h"
-#include "TomoEngine/TomoEngine.h"
-#include "TomoEngine/IO/MRCHeader.h"
+#include "ReconstructionCoreLib/ReconstructionCoreLib.h"
+#include "ReconstructionCoreLib/IOFilters/MRCHeader.h"
 
 
 class QTimer;

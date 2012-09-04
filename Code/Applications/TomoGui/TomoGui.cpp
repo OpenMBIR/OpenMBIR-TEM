@@ -64,15 +64,15 @@
 #include "QtSupport/QFileCompleter.h"
 
 //-- TomoEngine Includes
-#include "TomoEngine/TomoEngine.h"
-#include "TomoEngine/TomoEngineVersion.h"
-#include "TomoEngine/Common/EIMMath.h"
-#include "TomoEngine/SOC/SOCStructures.h"
-#include "TomoEngine/SOC/SOCEngine.h"
-#include "TomoEngine/IO/MRCHeader.h"
-#include "TomoEngine/IO/MRCReader.h"
-#include "TomoEngine/Filters/GainsOffsetsReader.h"
-#include "TomoEngine/Filters/SigmaXEstimation.h"
+#include "ReconstructionCoreLib/ReconstructionCoreLib.h"
+#include "ReconstructionCoreLib/ReconstructionCoreLibVersion.h"
+#include "ReconstructionCoreLib/Common/EIMMath.h"
+#include "HaadfMbirLib/HaadfMbirStructures.h"
+#include "HaadfMbirLib/HaadfMbirEngine.h"
+#include "ReconstructionCoreLib/IOFilters/MRCHeader.h"
+#include "ReconstructionCoreLib/IOFilters/MRCReader.h"
+#include "ReconstructionCoreLib/IOFilters/GainsOffsetsReader.h"
+#include "ReconstructionCoreLib/GenericFilters/SigmaXEstimation.h"
 
 #include "License/LicenseFiles.h"
 
@@ -609,7 +609,7 @@ void TomoGui::on_m_SingleSliceReconstructionBtn_clicked()
   }
   m_WorkerThread = new QThread(); // Create a new Thread Resource
 
-  m_MultiResSOC = new QMultiResolutionSOC(NULL);
+  m_MultiResSOC = new QMultiResolutionHaadfMbir(NULL);
 
   // Move the Reconstruction object into the thread that we just created.
   m_MultiResSOC->moveToThread(m_WorkerThread);
@@ -812,7 +812,7 @@ void TomoGui::on_m_GoBtn_clicked()
   }
   m_WorkerThread = new QThread(); // Create a new Thread Resource
 
-  m_MultiResSOC = new QMultiResolutionSOC(NULL);
+  m_MultiResSOC = new QMultiResolutionHaadfMbir(NULL);
 
   // Move the Reconstruction object into the thread that we just created.
   m_MultiResSOC->moveToThread(m_WorkerThread);
@@ -927,7 +927,7 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
   m_MultiResSOC->setInterpolateInitialReconstruction(interpolateInitialRecontruction->isChecked());
   m_MultiResSOC->setDeleteTempFiles(m_DeleteTempFiles->isChecked());
   AdvancedParametersPtr advParams = AdvancedParametersPtr(new AdvancedParameters);
-  SOCEngine::InitializeAdvancedParams(advParams);
+  HaadfMbirEngine::InitializeAdvancedParams(advParams);
   m_MultiResSOC->setAdvParams(advParams);
 
 
@@ -1545,10 +1545,10 @@ void TomoGui::on_actionOpenOverlayImage_triggered()
 // -----------------------------------------------------------------------------
 void TomoGui::on_actionAbout_triggered()
 {
-  ApplicationAboutBoxDialog about(EIMTOMO::LicenseList, this);
+  ApplicationAboutBoxDialog about(OpenMBIR::LicenseList, this);
   QString an = QCoreApplication::applicationName();
   QString version("");
-  version.append(TomoEngine::Version::PackageComplete.c_str());
+  version.append(ReconstructionCoreLib::Version::PackageComplete.c_str());
   about.setApplicationInfo(an, version);
   about.exec();
 }
@@ -2080,7 +2080,7 @@ void TomoGui::memCalculate()
     float delta_r = m_CachedPixelSize * 1.0e9;
     float delta_xz = delta_r*final_resolution;
     AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
-    SOCEngine::InitializeAdvancedParams(advancedParams);
+    HaadfMbirEngine::InitializeAdvancedParams(advancedParams);
 
     //std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
 

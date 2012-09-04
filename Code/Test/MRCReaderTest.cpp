@@ -34,9 +34,9 @@
 #include <vector>
 
 
-#include "TomoEngine/TomoEngineVersion.h"
-#include "TomoEngine/IO/MRCReader.h"
-#include "TomoEngine/IO/MRCHeader.h"
+#include "ReconstructionCoreLib/ReconstructionCoreLibVersion.h"
+#include "ReconstructionCoreLib/IOFilters/MRCReader.h"
+#include "ReconstructionCoreLib/IOFilters/MRCHeader.h"
 
 #include "MXA/Utilities/MXAFileInfo.h"
 #include "MXA/Utilities/MXADir.h"

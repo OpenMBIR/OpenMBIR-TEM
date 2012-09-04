@@ -48,9 +48,9 @@
 #include "MXA/Utilities/MXAFileInfo.h"
 #include "MXA/Utilities/MXADir.h"
 
-#include "TomoEngine/TomoEngineVersion.h"
-#include "TomoEngine/IO/MRCReader.h"
-#include "TomoEngine/IO/MRCWriter.h"
+#include "ReconstructionCoreLib/ReconstructionCoreLibVersion.h"
+#include "ReconstructionCoreLib/IOFilters/MRCReader.h"
+#include "ReconstructionCoreLib/IOFilters/MRCWriter.h"
 
 
 
@@ -162,7 +162,7 @@ int copyData(MRCHeader &header, int* voxelMin, int* voxelMax, int* subsetValues,
 int main(int argc, char **argv)
 {
 
-  TCLAP::CmdLine cmd("", ' ', TomoEngine::Version::Complete);
+  TCLAP::CmdLine cmd("", ' ', ReconstructionCoreLib::Version::Complete);
 
   TCLAP::ValueArg<std::string> inputFile("", "inputfile", "The Input MRC File", true, "", "");
   cmd.add(inputFile);

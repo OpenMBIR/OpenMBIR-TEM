@@ -40,11 +40,11 @@ include_directories( ${PROJECT_CODE_DIR}/Applications )
 include_directories( ${PROJECT_CODE_DIR}/Applications/TomoGui )
 include_directories( ${PROJECT_CODE_DIR}/QtSupport )
 include_directories( ${TomoGui_BINARY_DIR} )
-include_directories( ${EIMTomo_BINARY_DIR}/QtSupport )
+include_directories( ${OpenMBIR_BINARY_DIR}/QtSupport )
 
 
-set(CLASS_NAME "MultiResolutionSOC")
-SET(ENGINE_INCLUDE_PATH "TomoEngine/SOC")
+set(CLASS_NAME "MultiResolutionHaadfMbir")
+SET(ENGINE_INCLUDE_PATH "HaadfMbirLib")
 configure_file( ${PROJECT_CODE_DIR}/QtSupport/QObserverWrapper.h.in
                 ${TomoGui_BINARY_DIR}/Q${CLASS_NAME}.h @ONLY IMMEDIATE)
                 
@@ -147,7 +147,7 @@ BuildQtAppBundle(
     VERSION_MINOR ${QTomoGui_VER_MINOR}
     VERSION_PATCH ${QTomoGui_VER_PATCH}
     BINARY_DIR    ${${PROJECT_NAME}_BINARY_DIR}
-    LINK_LIBRARIES ${QT_LIBRARIES} QtSupport TomoEngine
+    LINK_LIBRARIES ${QT_LIBRARIES} QtSupport ReconstructionCoreLib HaadfMbirLib
     LIB_SEARCH_DIRS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     QT_PLUGINS    ${QT_PLUGINS}
 #        OTHER_PLUGINS ${OTHER_PLUGINS}

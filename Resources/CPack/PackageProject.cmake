@@ -34,17 +34,17 @@ install(FILES ${PROJECT_RESOURCES_DIR}/CPack/OS_X_ReadMe.txt DESTINATION .)
 endif()
 
 # Get a shorter version number:
-set(TomoEngine_VERSION_SHORT "${TomoEngine_VER_MAJOR}.${TomoEngine_VER_MINOR}")
+set(OpenMBIR_VERSION_SHORT "${ReconstructionCoreLib_VER_MAJOR}.${ReconstructionCoreLib_VER_MINOR}")
 
 
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "EIM Tomography Tools")
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "OpenMBIR Tools")
 SET(CPACK_PACKAGE_VENDOR "BlueQuartz Software, Michael A. Jackson")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${PROJECT_BINARY_DIR}/ReadMe.txt")
 SET(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_BINARY_DIR}/License.txt")
-SET(CPACK_PACKAGE_VERSION_MAJOR ${TomoEngine_VER_MAJOR})
-SET(CPACK_PACKAGE_VERSION_MINOR ${TomoEngine_VER_MINOR})
-SET(CPACK_PACKAGE_VERSION_PATCH ${TomoEngine_VER_PATCH})
-SET(CPACK_PACKAGE_VERSION ${TomoEngine_VERSION})
+SET(CPACK_PACKAGE_VERSION_MAJOR ${OpenMBIR_VER_MAJOR})
+SET(CPACK_PACKAGE_VERSION_MINOR ${OpenMBIR_VER_MINOR})
+SET(CPACK_PACKAGE_VERSION_PATCH ${OpenMBIR_VER_PATCH})
+SET(CPACK_PACKAGE_VERSION ${OpenMBIR_VERSION})
 #SET(CPACK_COMPONENTS_ALL Applications Headers)
 #set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "Applications")
 #set(CPACK_COMPONENT_APPLICATIONS_DESCRIPTION  "The DREAM3D Software Tools Suite")
@@ -61,35 +61,35 @@ set(CPACK_PACKAGE_EXECUTABLES
 set(UPLOAD_FILE_NAME "")
 
 IF (APPLE)
-    set(CPACK_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-OSX")
+    set(CPACK_PACKAGE_FILE_NAME "OpenMBIR-${OpenMBIR_VERSION_SHORT}-OSX")
     # This ASSUMES we are creating a tar.gz package. If you change that below to
     # anything else then you need to update this.
     set (UPLOAD_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}.tar.gz)
 elseif(WIN32)
   if ( "${CMAKE_SIZEOF_VOID_P}" EQUAL "8" )
-    set(CPACK_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-Win64")
+    set(CPACK_PACKAGE_FILE_NAME "OpenMBIR-${OpenMBIR_VERSION_SHORT}-Win64")
     set (UPLOAD_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}.zip)
   elseif( "${CMAKE_SIZEOF_VOID_P}" EQUAL "4" )
-    set(CPACK_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-Win32")
+    set(CPACK_PACKAGE_FILE_NAME "OpenMBIR-${OpenMBIR_VERSION_SHORT}-Win32")
     set (UPLOAD_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}.zip)
   else()
-      set(CPACK_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-Unknown")
+      set(CPACK_PACKAGE_FILE_NAME "OpenMBIR-${OpenMBIR_VERSION_SHORT}-Unknown")
       set (UPLOAD_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}.zip)
     endif()
 else()
-  set(CPACK_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-${CMAKE_SYSTEM_NAME}")
+  set(CPACK_PACKAGE_FILE_NAME "OpenMBIR-${OpenMBIR_VERSION_SHORT}-${CMAKE_SYSTEM_NAME}")
   set (UPLOAD_FILE_NAME ${CPACK_PACKAGE_FILE_NAME}.tar.gz)
 endif()
 
 
-set (TomoEngine_WEBSITE_SERVER "www.bluequartz.net")
-set (TomoEngine_WEBSITE_SERVER_PATH "/var/www/www.bluequartz.net/binaries/to81/.")
-set (TomoEngine_WEBSITE_SCP_USERNAME "mjackson")
+set (OpenMBIR_WEBSITE_SERVER "www.bluequartz.net")
+set (OpenMBIR_WEBSITE_SERVER_PATH "/var/www/www.bluequartz.net/binaries/to81/.")
+set (OpenMBIR_WEBSITE_SCP_USERNAME "mjackson")
 #-- Create a bash script file that will upload the latest version to the web server
 configure_file(${PROJECT_RESOURCES_DIR}/upload.sh.in
                ${PROJECT_BINARY_DIR}/upload.sh)
 
-set (TomoEngine_WEBSITE_SERVER_PATH "/var/www/www.openmbir.org/binaries/.")
+set (OpenMBIR_WEBSITE_SERVER_PATH "/var/www/www.openmbir.org/binaries/.")
 configure_file(${PROJECT_RESOURCES_DIR}/upload.sh.in
 ${PROJECT_BINARY_DIR}/web_upload.sh)
 
@@ -97,14 +97,14 @@ ${PROJECT_BINARY_DIR}/web_upload.sh)
 IF(WIN32 AND NOT UNIX)
   # There is a bug in NSIS that does not handle full unix paths properly. Make
   # sure there is at least one set of four (4) backlasshes.
-  SET(CPACK_NSIS_DISPLAY_NAME "EIM Tomography Software Tools")
+  SET(CPACK_NSIS_DISPLAY_NAME "OpenMBIR Software Tools")
   SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\www.bluequartz.net")
   SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\www.bluequartz.net")
   SET(CPACK_NSIS_CONTACT "mike.jackson@bluequartz.net")
   SET(CPACK_NSIS_MODIFY_PATH ON)
   SET(CPACK_GENERATOR "ZIP")
   SET(CPACK_BINARY_ZIP "ON")
-  SET(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "EIM Tomography Software Tools")
+  SET(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "OpenMBIR Software Tools")
 ELSE(WIN32 AND NOT UNIX)
     SET(CPACK_BINARY_BUNDLE "OFF")
     SET(CPACK_BINARY_CYGWIN "OFF")
@@ -123,7 +123,7 @@ ELSE(WIN32 AND NOT UNIX)
 ENDIF(WIN32 AND NOT UNIX)
 
 SET(CPACK_SOURCE_GENERATOR "ZIP")
-SET(CPACK_SOURCE_PACKAGE_FILE_NAME "TomoGui-${TomoEngine_VERSION_SHORT}-Source")
+SET(CPACK_SOURCE_PACKAGE_FILE_NAME "OpenMBIR-${OpenMBIR_VERSION_SHORT}-Source")
 
 #-- Create a bash script file that will upload the latest version to the web server
 set (UPLOAD_FILE_NAME ${CPACK_SOURCE_PACKAGE_FILE_NAME}.zip)

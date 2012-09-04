@@ -45,7 +45,6 @@
 #include <QApplication>
 #include <QtCore/QObject>
 
-#include "TomoEngine/TomoEngine.h"
 #include "@ENGINE_INCLUDE_PATH@/@CLASS_NAME@.h"
 
 /**

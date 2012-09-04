@@ -40,8 +40,8 @@
 #include <QtCore/QFileInfo>
 
 
-#include "TomoEngine/IO/MRCHeader.h"
-#include "TomoEngine/IO/MRCReader.h"
+#include "ReconstructionCoreLib/IOFilters/MRCHeader.h"
+#include "ReconstructionCoreLib/IOFilters/MRCReader.h"
 
 // -----------------------------------------------------------------------------
 //
