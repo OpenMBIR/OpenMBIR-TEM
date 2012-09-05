@@ -40,8 +40,8 @@
 #include <QtCore/QFileInfo>
 
 
-#include "ReconstructionCoreLib/IOFilters/MRCHeader.h"
-#include "ReconstructionCoreLib/IOFilters/MRCReader.h"
+#include "MBIRLib/IOFilters/MRCHeader.h"
+#include "MBIRLib/IOFilters/MRCReader.h"
 
 // -----------------------------------------------------------------------------
 //

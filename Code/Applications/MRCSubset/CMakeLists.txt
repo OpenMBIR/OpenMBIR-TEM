@@ -30,6 +30,6 @@ BuildToolBundle(TARGET MRCSubset
             BINARY_DIR    ${PROJECT_BINARY_DIR}/MRCSubset
             COMPONENT     Applications
             INSTALL_DEST  ${install_dir}
-            LINK_LIBRARIES MXA ReconstructionCoreLib HaadfMbirLib
+            LINK_LIBRARIES MXA MBIRLib 
             LIB_SEARCH_DIRS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 )

@@ -52,10 +52,10 @@
 #include <QtGui/QMessageBox>
 
 //-- TomoEngine Includes
-#include "ReconstructionCoreLib/ReconstructionCoreLib.h"
-#include "ReconstructionCoreLib/ReconstructionCoreLibVersion.h"
-#include "ReconstructionCoreLib/IOFilters/MRCHeader.h"
-#include "ReconstructionCoreLib/IOFilters/MRCReader.h"
+#include "MBIRLib/MBIRLib.h"
+#include "MBIRLib/MBIRLibVersion.h"
+#include "MBIRLib/IOFilters/MRCHeader.h"
+#include "MBIRLib/IOFilters/MRCReader.h"
 
 #define GRAY_SCALE 1
 

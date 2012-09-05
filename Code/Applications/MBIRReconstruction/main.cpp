@@ -28,7 +28,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "ReconstructionCoreLib/ReconstructionCoreLib.h"
+#include "MBIRLib/MBIRLib.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -41,19 +41,19 @@
 #include "MXA/Utilities/MXADir.h"
 #include "MXA/Utilities/MXAFileInfo.h"
 
-#include "ReconstructionCoreLib/ReconstructionCoreLibVersion.h"
-#include "HaadfMbirLib/HaadfMbirStructures.h"
-#include "HaadfMbirLib/HaadfMbirEngine.h"
-#include "HaadfMbirLib/MultiResolutionHaadfMbir.h"
+#include "MBIRLib/MBIRLibVersion.h"
+#include "MBIRLib/Reconstruction/ReconstructionStructures.h"
+#include "MBIRLib/Reconstruction/ReconstructionEngine.h"
+#include "MBIRLib/Reconstruction/MultiResolutionReconstruction.h"
 #include "MBIRReconstructionArgsParser.h"
 
 int main(int argc, char **argv)
 {
-    std::cout << "Starting MBIR Reconstruction Version " << ReconstructionCoreLib::Version::Complete << std::endl;
+    std::cout << "Starting MBIR Reconstruction Version " << MBIRLib::Version::Complete << std::endl;
 
 
 
-    MultiResolutionHaadfMbir::Pointer engine = MultiResolutionHaadfMbir::New();
+    MultiResolutionReconstruction::Pointer engine = MultiResolutionReconstruction::New();
 
     MBIRReconstructionArgsParser argParser;
     int err = argParser.parseArguments(argc, argv, engine);

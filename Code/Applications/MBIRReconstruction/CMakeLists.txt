@@ -31,6 +31,6 @@ BuildToolBundle(TARGET MbirReconstruction
             BINARY_DIR    ${PROJECT_BINARY_DIR}/MbirReconstruction
             COMPONENT     Applications
             INSTALL_DEST  ${install_dir}
-            LINK_LIBRARIES ReconstructionCoreLib HaadfMbirLib
+            LINK_LIBRARIES MBIRLib 
             LIB_SEARCH_DIRS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 )

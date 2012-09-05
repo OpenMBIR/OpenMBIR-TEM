@@ -176,8 +176,8 @@ include(${PROJECT_SOURCE_DIR}/License/License.cmake)
 # Add the MXA as a library project
 add_subdirectory( ${PROJECT_CODE_DIR}/MXA ${PROJECT_BINARY_DIR}/MXA)
 
-add_subdirectory( ${PROJECT_CODE_DIR}/ReconstructionCoreLib ${PROJECT_BINARY_DIR}/ReconstructionCoreLib)
-add_subdirectory( ${PROJECT_CODE_DIR}/HaadfMbirLib ${PROJECT_BINARY_DIR}/HaadfMbirLib)
+
+add_subdirectory( ${PROJECT_CODE_DIR}/MBIRLib ${PROJECT_BINARY_DIR}/MBIRLib)
 
 add_subdirectory( ${PROJECT_CODE_DIR}/Applications/MBIRReconstruction ${PROJECT_BINARY_DIR}/Applications/MBIRReconstruction)
 

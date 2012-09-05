@@ -9,9 +9,9 @@
 #include <iostream>
 
 
-#include "ReconstructionCoreLib/ReconstructionCoreLib.h"
-#include "ReconstructionCoreLib/Common/TomoArray.hpp"
-#include "HaadfMbirLib/HaadfMbirStructures.h"
+#include "MBIRLib/MBIRLib.h"
+#include "MBIRLib/Common/TomoArray.hpp"
+#include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 
 
 int main(int argc, char **argv)

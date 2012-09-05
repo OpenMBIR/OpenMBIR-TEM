@@ -46,8 +46,8 @@
 
 
 #include "ui_QMRCDisplayWidget.h"
-#include "ReconstructionCoreLib/ReconstructionCoreLib.h"
-#include "ReconstructionCoreLib/IOFilters/MRCHeader.h"
+#include "MBIRLib/MBIRLib.h"
+#include "MBIRLib/IOFilters/MRCHeader.h"
 
 
 class QTimer;

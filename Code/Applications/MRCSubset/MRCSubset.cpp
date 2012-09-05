@@ -48,9 +48,9 @@
 #include "MXA/Utilities/MXAFileInfo.h"
 #include "MXA/Utilities/MXADir.h"
 
-#include "ReconstructionCoreLib/ReconstructionCoreLibVersion.h"
-#include "ReconstructionCoreLib/IOFilters/MRCReader.h"
-#include "ReconstructionCoreLib/IOFilters/MRCWriter.h"
+#include "MBIRLib/MBIRLibVersion.h"
+#include "MBIRLib/IOFilters/MRCReader.h"
+#include "MBIRLib/IOFilters/MRCWriter.h"
 
 
 
@@ -162,7 +162,7 @@ int copyData(MRCHeader &header, int* voxelMin, int* voxelMax, int* subsetValues,
 int main(int argc, char **argv)
 {
 
-  TCLAP::CmdLine cmd("", ' ', ReconstructionCoreLib::Version::Complete);
+  TCLAP::CmdLine cmd("", ' ', MBIRLib::Version::Complete);
 
   TCLAP::ValueArg<std::string> inputFile("", "inputfile", "The Input MRC File", true, "", "");
   cmd.add(inputFile);

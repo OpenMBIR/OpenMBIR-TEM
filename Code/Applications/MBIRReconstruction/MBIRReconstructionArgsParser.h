@@ -35,8 +35,8 @@
 #include <iostream>
 
 
-#include "HaadfMbirLib/HaadfMbirStructures.h"
-#include "HaadfMbirLib/MultiResolutionHaadfMbir.h"
+#include "MBIRLib/Reconstruction/ReconstructionStructures.h"
+#include "MBIRLib/Reconstruction/MultiResolutionReconstruction.h"
 
 
 /**
@@ -52,7 +52,7 @@ class MBIRReconstructionArgsParser
     MBIRReconstructionArgsParser();
     virtual ~MBIRReconstructionArgsParser();
 
-    int parseArguments(int argc, char **argv, MultiResolutionHaadfMbir::Pointer multiRes);
+    int parseArguments(int argc, char **argv, MultiResolutionReconstruction::Pointer multiRes);
 
     void printInputs(TomoInputsPtr inputs, std::ostream &out);
 

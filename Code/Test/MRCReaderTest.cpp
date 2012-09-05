@@ -34,9 +34,9 @@
 #include <vector>
 
 
-#include "ReconstructionCoreLib/ReconstructionCoreLibVersion.h"
-#include "ReconstructionCoreLib/IOFilters/MRCReader.h"
-#include "ReconstructionCoreLib/IOFilters/MRCHeader.h"
+#include "MBIRLib/MBIRLibVersion.h"
+#include "MBIRLib/IOFilters/MRCReader.h"
+#include "MBIRLib/IOFilters/MRCHeader.h"
 
 #include "MXA/Utilities/MXAFileInfo.h"
 #include "MXA/Utilities/MXADir.h"

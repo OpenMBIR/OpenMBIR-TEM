@@ -51,10 +51,10 @@ class MRCInfoWidget;
 
 //-- UIC generated Header
 #include "ui_TomoGui.h"
-#include "QMultiResolutionHaadfMbir.h"
+#include "QMultiResolutionReconstruction.h"
 
-#include "ReconstructionCoreLib/IOFilters/MRCHeader.h"
-#include "ReconstructionCoreLib/Common/Observer.h"
+#include "MBIRLib/IOFilters/MRCHeader.h"
+#include "MBIRLib/Common/Observer.h"
 
 
 /**
@@ -439,7 +439,7 @@ private:
     QString               m_OffsetsFile;
     QString               m_VarianceFile;
     QThread*              m_WorkerThread;
-    QMultiResolutionHaadfMbir*   m_MultiResSOC;
+    QMultiResolutionReconstruction*   m_MultiResSOC;
     GainsOffsetsTableModel*  m_GainsOffsetsTableModel;
 
     bool                  m_SingleSliceReconstructionActive;

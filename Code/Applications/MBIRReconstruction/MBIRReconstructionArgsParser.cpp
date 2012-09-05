@@ -40,14 +40,14 @@
 #include "MXA/Utilities/MXADir.h"
 #include "MXA/Utilities/MXAFileInfo.h"
 
-#include "ReconstructionCoreLib/ReconstructionCoreLib.h"
-#include "ReconstructionCoreLib/ReconstructionCoreLibVersion.h"
-#include "ReconstructionCoreLib/Common/EIMTime.h"
-#include "ReconstructionCoreLib/Common/EIMMath.h"
-#include "ReconstructionCoreLib/Common/allocate.h"
-#include "ReconstructionCoreLib/IOFilters/MRCReader.h"
-#include "ReconstructionCoreLib/IOFilters/MRCHeader.h"
-#include "HaadfMbirLib/HaadfMbirConstants.h"
+#include "MBIRLib/MBIRLib.h"
+#include "MBIRLib/MBIRLibVersion.h"
+#include "MBIRLib/Common/EIMTime.h"
+#include "MBIRLib/Common/EIMMath.h"
+#include "MBIRLib/Common/allocate.h"
+#include "MBIRLib/IOFilters/MRCReader.h"
+#include "MBIRLib/IOFilters/MRCHeader.h"
+#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 
 /**
  * @brief Parses numeric values from a delimited string into a preallocated array storage.
@@ -130,7 +130,7 @@ MBIRReconstructionArgsParser::~MBIRReconstructionArgsParser()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiResolutionHaadfMbir::Pointer m_MultiResSOC)
+int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiResolutionReconstruction::Pointer m_MultiResSOC)
 {
     if(NULL == m_MultiResSOC)
     {
@@ -138,7 +138,7 @@ int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiRes
         return -1;
     }
 
-    TCLAP::CmdLine cmd("", ' ', ReconstructionCoreLib::Version::Complete);
+    TCLAP::CmdLine cmd("", ' ', MBIRLib::Version::Complete);
 
     TCLAP::ValueArg<std::string> in_MRCFile("s", "sinofile", "The Sinogram File", true, "", "");
     cmd.add(in_MRCFile);
@@ -265,7 +265,7 @@ int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiRes
         m_MultiResSOC->setInterpolateInitialReconstruction(interpolateInitialRecontruction.getValue());
         m_MultiResSOC->setDeleteTempFiles(m_DeleteTempFiles.getValue());
         AdvancedParametersPtr advParams = AdvancedParametersPtr(new AdvancedParameters);
-        HaadfMbirEngine::InitializeAdvancedParams(advParams);
+        ReconstructionEngine::InitializeAdvancedParams(advParams);
         m_MultiResSOC->setAdvParams(advParams);
 
         int subvolumeValues[6];
