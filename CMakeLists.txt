@@ -9,7 +9,7 @@
 #--
 #--////////////////////////////////////////////////////////////////////////////
 project (OpenMBIR)
-cmake_minimum_required(VERSION 2.8.5)
+cmake_minimum_required(VERSION 2.8.6)
 
 # We setup all the libraries and exectuables to all be placed into a single directory
 # ---------- Setup Library output Directories -------------------------

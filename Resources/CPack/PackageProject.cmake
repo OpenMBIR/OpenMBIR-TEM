@@ -34,7 +34,7 @@ install(FILES ${PROJECT_RESOURCES_DIR}/CPack/OS_X_ReadMe.txt DESTINATION .)
 endif()
 
 # Get a shorter version number:
-set(OpenMBIR_VERSION_SHORT "${ReconstructionCoreLib_VER_MAJOR}.${ReconstructionCoreLib_VER_MINOR}")
+set(OpenMBIR_VERSION_SHORT "${MBIRLib_VER_MAJOR}.${MBIRLib_VER_MINOR}")
 
 
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "OpenMBIR Tools")
