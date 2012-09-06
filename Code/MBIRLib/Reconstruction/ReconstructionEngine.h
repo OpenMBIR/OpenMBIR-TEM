@@ -154,12 +154,18 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
                          RealVolumeType::Pointer ErrorSino,
                          RealVolumeType::Pointer Y_Est,
                          CostData::Pointer cost);
+    void costInitialization(SinogramPtr sinogram);
     int calculateCost(CostData::Pointer cost,
                       RealVolumeType::Pointer Weight,
                       RealVolumeType::Pointer ErrorSino);
     void updateWeights(RealVolumeType::Pointer Weight,
                        ScaleOffsetParamsPtr NuisanceParams,
                        RealVolumeType::Pointer ErrorSino);
+
+    int createNuisanceParameters(SinogramPtr sinogram);
+    void printNuisanceParameters(SinogramPtr sinogram);
+    ScaleOffsetParamsPtr allocateNuisanceParameters(SinogramPtr sinogram);
+
     void writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams);
 #ifdef BF_RECON
     void processRawCounts();

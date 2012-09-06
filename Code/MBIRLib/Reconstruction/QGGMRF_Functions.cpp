@@ -77,6 +77,18 @@ namespace Detail {
 
 namespace QGGMRF {
 
+void initializePriorModel(TomoInputsPtr tomoInputs, QGGMRF_Values* qggmrf_values)
+{
+    qggmrf_values->MRF_P = 2;
+    qggmrf_values->MRF_Q = tomoInputs->p;
+    qggmrf_values->MRF_C = 0.01;
+    qggmrf_values->MRF_ALPHA = 1.5;
+    qggmrf_values->SIGMA_X_P = pow(tomoInputs->SigmaX, qggmrf_values->MRF_P);
+    qggmrf_values->SIGMA_X_P_Q = pow(tomoInputs->SigmaX, (qggmrf_values->MRF_P - qggmrf_values->MRF_Q));
+    qggmrf_values->SIGMA_X_Q = pow(tomoInputs->SigmaX, qggmrf_values->MRF_Q);
+
+}
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------

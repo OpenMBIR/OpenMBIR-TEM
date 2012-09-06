@@ -381,17 +381,7 @@ void ReconstructionEngine::execute()
   }
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
-  err = createInitialGainsData();
-  if(err < 0)
-  {
-    return;
-  }
-  err = createInitialOffsetsData();
-  if(err < 0)
-  {
-    return;
-  }
-  err = createInitialVariancesData();
+  err = createNuisanceParameters(m_Sinogram);
   if(err < 0)
   {
     return;
@@ -399,29 +389,7 @@ void ReconstructionEngine::execute()
 
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
-
-  if(getVeryVerbose())
-  {
-    // Print out the Initial Gains, Offsets, Variances
-    std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
-    std::cout << "Tilt\tGain\tOffset";
-
-    if(NULL != m_Sinogram->InitialVariance.get())
-    {
-      std::cout << "\tVariance";
-    }
-    std::cout << std::endl;
-
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      std::cout << i_theta << "\t" << m_Sinogram->InitialGain->d[i_theta] << "\t" << m_Sinogram->InitialOffset->d[i_theta];
-      if(NULL != m_Sinogram->InitialVariance.get())
-      {
-        std::cout << "\t" << m_Sinogram->InitialVariance->d[i_theta];
-      }
-      std::cout << std::endl;
-    }
-  }
+  printNuisanceParameters(m_Sinogram);
 
 #ifdef BF_RECON //Take log of the input data after subtracting offset
     processRawCounts();
@@ -444,22 +412,8 @@ void ReconstructionEngine::execute()
 //  std::cout << "Crop Start: " << cropStart << std::endl;
 //  std::cout << "Crop End:   " << cropEnd << std::endl;
 
+  ScaleOffsetParamsPtr NuisanceParams = allocateNuisanceParameters(m_Sinogram);
 
-  //Gain, Offset and Variance Parameter Structures
-  ScaleOffsetParamsPtr NuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
-  dims[1] = m_Sinogram->N_t;
-  dims[0] = m_Sinogram->N_theta;
-  NuisanceParams->I_0 = RealArrayType::New(dims, "NuisanceParams->I_0");
-  NuisanceParams->mu = RealArrayType::New(dims, "NuisanceParams->mu");
-  if(m_AdvParams->NOISE_MODEL)
-  {
-    //alpha is the noise variance adjustment factor
-    NuisanceParams->alpha = RealArrayType::New(dims, "NuisanceParams->alpha");
-  }
-  else
-  {
-    NuisanceParams->alpha = RealArrayType::NullPointer();
-  }
 
 #if ROI
   UInt8Image_t::Pointer Mask;
@@ -479,50 +433,37 @@ void ReconstructionEngine::execute()
   Weight = RealVolumeType::New(dims, "Weight");
   Final_Sinogram = RealVolumeType::New(dims, "Final Sinogram");
 
-  //Setting the value of all the private members
+  //calculate the trapezoidal voxel profile for each angle. Also the angles in the Sinogram
+  // Structure are converted to radians. Note that this initialization MUST come before the
+  // calculateSinCos() and initializeBeamProfile() functions.
+  VoxelProfile = calculateVoxelProfile(); //Verified with ML
+
+  //Pre compute sine and cos theta to speed up computations
   OffsetR = ((m_TomoInputs->delta_xz / sqrt(3.0)) + m_Sinogram->delta_r / 2) / m_AdvParams->DETECTOR_RESPONSE_BINS;
   OffsetT = ((m_TomoInputs->delta_xz / 2) + m_Sinogram->delta_t / 2) / m_AdvParams->DETECTOR_RESPONSE_BINS;
-
   BEAM_WIDTH = m_Sinogram->delta_r;
+  calculateSinCos();
+  //Initialize the e-beam
+  initializeBeamProfile(); //verified with ML
 
 #ifdef EIMTOMO_USE_QGGMRF
-  m_QGGMRF_Values.MRF_P = 2;
-  m_QGGMRF_Values.MRF_Q = m_TomoInputs->p;
-  m_QGGMRF_Values.MRF_C = 0.01;
-  m_QGGMRF_Values.MRF_ALPHA = 1.5;
-  m_QGGMRF_Values.SIGMA_X_P = pow(m_TomoInputs->SigmaX, m_QGGMRF_Values.MRF_P);
-  m_QGGMRF_Values.SIGMA_X_P_Q = pow(m_TomoInputs->SigmaX, (m_QGGMRF_Values.MRF_P - m_QGGMRF_Values.MRF_Q));
-  m_QGGMRF_Values.SIGMA_X_Q = pow(m_TomoInputs->SigmaX, m_QGGMRF_Values.MRF_Q);
+  // Initialize the Prior Model parameters - here we are using a QGGMRF Prior Model
+    QGGMRF::initializePriorModel(m_TomoInputs, &m_QGGMRF_Values);
 #else
   MRF_P = m_TomoInputs->p;
   SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
 #endif //QGGMRF
-  //globals assosiated with finding the optimal gain and offset parameters
 
+  //globals assosiated with finding the optimal gain and offset parameters
   dims[0] = m_Sinogram->N_theta;
   dims[1] = 3;
   dims[2] = 0;
   //Hold the coefficients of a quadratic equation
-  QuadraticParameters = RealImageType::New(dims, "QuadraticParameters");
-  Qk_cost = RealImageType::New(dims, "Qk_cost");
-  dims[1] = 2;
-  bk_cost = RealImageType::New(dims, "bk_cost");
-
-  dims[0] = m_Sinogram->N_theta;
-  ck_cost = RealArrayType::New(dims, "ck_cost");
-
   NumOfViews = m_Sinogram->N_theta;
   LogGain = m_Sinogram->N_theta * log(m_Sinogram->targetGain);
-  dims[0] = m_Sinogram->N_theta;
-  d1 = RealArrayType::New(dims, "d1");
-  d2 = RealArrayType::New(dims, "d2");
 
-  //calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram Structure are converted to radians
-  VoxelProfile = calculateVoxelProfile(); //Verified with ML
-  //Pre compute sine and cos theta to speed up computations
-  calculateSinCos();
-  //Initialize the e-beam
-  initializeBeamProfile(); //verified with ML
+  costInitialization(m_Sinogram);
+
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
   //calculate sine and cosine of all angles and store in the global arrays sine and cosine
@@ -1742,5 +1683,105 @@ Real_t ReconstructionEngine::SetNonHomThreshold()
 }
 
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+int ReconstructionEngine::createNuisanceParameters(SinogramPtr sinogram)
+{
+    int err = createInitialGainsData();
+    if(err < 0)
+    {
+        return -1;
+    }
+    err = createInitialOffsetsData();
+    if(err < 0)
+    {
+        return -1;
+    }
+    err = createInitialVariancesData();
+    if(err < 0)
+    {
+        return -1;
+    }
+    return 0;
+}
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ReconstructionEngine::printNuisanceParameters(SinogramPtr sinogram)
+{
+    if(getVeryVerbose())
+    {
+      // Print out the Initial Gains, Offsets, Variances
+      std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
+      std::cout << "Tilt\tGain\tOffset";
 
+      if(NULL != sinogram->InitialVariance.get())
+      {
+        std::cout << "\tVariance";
+      }
+      std::cout << std::endl;
+
+      for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+      {
+        std::cout << i_theta << "\t" << sinogram->InitialGain->d[i_theta] << "\t" << sinogram->InitialOffset->d[i_theta];
+        if(NULL != sinogram->InitialVariance.get())
+        {
+          std::cout << "\t" << sinogram->InitialVariance->d[i_theta];
+        }
+        std::cout << std::endl;
+      }
+    }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+ScaleOffsetParamsPtr ReconstructionEngine::allocateNuisanceParameters(SinogramPtr sinogram)
+{
+
+    //Gain, Offset and Variance Parameter Structures
+    ScaleOffsetParamsPtr NuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
+    size_t dims[2];
+    dims[1] = sinogram->N_t;
+    dims[0] = sinogram->N_theta;
+    NuisanceParams->I_0 = RealArrayType::New(dims, "NuisanceParams->I_0");
+    NuisanceParams->mu = RealArrayType::New(dims, "NuisanceParams->mu");
+    if(m_AdvParams->NOISE_MODEL)
+    {
+      //alpha is the noise variance adjustment factor
+      NuisanceParams->alpha = RealArrayType::New(dims, "NuisanceParams->alpha");
+    }
+    else
+    {
+      NuisanceParams->alpha = RealArrayType::NullPointer();
+    }
+    return NuisanceParams;
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void ReconstructionEngine::costInitialization(SinogramPtr sinogram)
+{
+    size_t dims[3];
+
+    dims[0] = sinogram->N_theta;
+    dims[1] = 3;
+    dims[2] = 0;
+
+    QuadraticParameters = RealImageType::New(dims, "QuadraticParameters");
+
+    Qk_cost = RealImageType::New(dims, "Qk_cost");
+    dims[1] = 2;
+    bk_cost = RealImageType::New(dims, "bk_cost");
+
+    dims[0] = sinogram->N_theta;
+    ck_cost = RealArrayType::New(dims, "ck_cost");
+
+    dims[0] = sinogram->N_theta;
+    d1 = RealArrayType::New(dims, "d1");
+    d2 = RealArrayType::New(dims, "d2");
+}

@@ -39,6 +39,7 @@
 #define QGGMRF_FUNCTIONS_H_
 
 #include "MBIRLib/MBIRLib.h"
+#include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 
@@ -56,6 +57,13 @@ namespace QGGMRF {
       Real_t SIGMA_X_P_Q;
       Real_t SIGMA_X_Q;
   } QGGMRF_Values;
+
+  /**
+   * @brief initializePriorModel
+   * @param tomoInputs
+   * @param qggmrf_values
+   */
+  void initializePriorModel(TomoInputsPtr tomoInputs, QGGMRF_Values* qggmrf_values);
 
 /**
  *
