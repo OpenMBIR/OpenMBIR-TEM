@@ -404,6 +404,9 @@ void ReconstructionEngine::execute()
   m_ForwardModel->weightInitialization(dims);
   Final_Sinogram = RealVolumeType::New(dims, "Final Sinogram");
 
+  //calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram
+  // Structure are converted to radians
+  VoxelProfile = calculateVoxelProfile(); //Verified with ML
 
   //Pre compute sine and cos theta to speed up computations
   HAADFDetectorParameters::Pointer haadfParameters = HAADFDetectorParameters::New();
@@ -431,10 +434,6 @@ void ReconstructionEngine::execute()
   LogGain = m_Sinogram->N_theta * log(m_ForwardModel->getTargetGain());
 
   m_ForwardModel->costInitialization(m_Sinogram);
-
-  //calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram Structure are converted to radians
-  VoxelProfile = calculateVoxelProfile(); //Verified with ML
-
 
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
@@ -790,74 +789,74 @@ void ReconstructionEngine::minMax(Real_t *low,Real_t *high, Real_t currentVoxelV
 // -----------------------------------------------------------------------------
 RealImageType::Pointer ReconstructionEngine::calculateVoxelProfile()
 {
-  Real_t angle,MaxValLineIntegral;
-  Real_t temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
-  size_t dims[2] = {m_Sinogram->N_theta ,m_AdvParams->PROFILE_RESOLUTION};
-  RealImageType::Pointer VoxProfile = RealImageType::New(dims, "VoxelProfile");
+    Real_t angle,MaxValLineIntegral;
+    Real_t temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
+    size_t dims[2] = {m_Sinogram->N_theta ,m_AdvParams->PROFILE_RESOLUTION};
+    RealImageType::Pointer VoxProfile = RealImageType::New(dims, "VoxelProfile");
 
-  Real_t checksum=0;
-  uint16_t i,j;
-  FILE* Fp = NULL;
-  MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::VoxelProfileFile);
-  if (errno > 0)
-  {
-    std::string filepath(m_TomoInputs->tempDir);
-    filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::VoxelProfileFile);\
-    std::cout << "VoxelProfile will NOT be written to file '" << filepath << std::endl;
-  }
-
-  for (i=0;i<m_Sinogram->N_theta;i++)
-  {
-    m_Sinogram->angles[i]=m_Sinogram->angles[i]*(M_PI/180.0);
-    angle=m_Sinogram->angles[i];
-    while(angle > M_PI_2)
-      angle -= M_PI_2;
-
-    while(angle < 0)
-      angle +=M_PI_2;
-
-    if(angle <= M_PI_4)
+    Real_t checksum=0;
+    uint16_t i,j;
+    FILE* Fp = NULL;
+    MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::VoxelProfileFile);
+    if (errno > 0)
     {
-      MaxValLineIntegral = m_TomoInputs->delta_xz/cos(angle);
-    }
-    else
-    {
-      MaxValLineIntegral = m_TomoInputs->delta_xz/cos(M_PI_2-angle);
-    }
-    temp=cos(M_PI_4);
-    dist1 = temp * cos((M_PI_4 - angle));
-    dist2 = temp * fabs((cos((M_PI_4 + angle))));
-    LeftCorner = 1-dist1;
-    LeftNear = 1-dist2;
-    RightNear = 1+dist2;
-    RightCorner = 1+dist1;
-
-    for(j = 0;j<m_AdvParams->PROFILE_RESOLUTION;j++)
-    {
-      t = 2.0*j /m_AdvParams->PROFILE_RESOLUTION;//2 is the normalized length of the profile (basically equl to 2*delta_xz)
-      if(t <= LeftCorner || t >= RightCorner)
-        VoxProfile->setValue(0, i, j);
-      else if(t > RightNear)
-        VoxProfile->setValue(MaxValLineIntegral*(RightCorner-t)/(RightCorner-RightNear), i, j);
-      else if(t >= LeftNear)
-        VoxProfile->setValue(MaxValLineIntegral, i, j);
-      else
-        VoxProfile->setValue(MaxValLineIntegral*(t-LeftCorner)/(LeftNear-LeftCorner), i, j);
-
-      if (Fp != NULL)
-      {
-        fwrite( VoxProfile->getPointer(i, j), sizeof(Real_t),1,Fp);
-      }
-      checksum+=VoxProfile->getValue(i, j);
+        std::string filepath(m_TomoInputs->tempDir);
+        filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::VoxelProfileFile);\
+        std::cout << "VoxelProfile will NOT be written to file '" << filepath << std::endl;
     }
 
-  }
+    for (i=0;i<m_Sinogram->N_theta;i++)
+    {
+        m_Sinogram->angles[i]=m_Sinogram->angles[i]*(M_PI/180.0);
+        angle=m_Sinogram->angles[i];
+        while(angle > M_PI_2)
+            angle -= M_PI_2;
 
-  //printf("Pixel Profile Check sum =%lf\n",checksum);
-  if (Fp != NULL) {
-    fclose(Fp);
-  }
-  return VoxProfile;
+        while(angle < 0)
+            angle +=M_PI_2;
+
+        if(angle <= M_PI_4)
+        {
+            MaxValLineIntegral = m_TomoInputs->delta_xz/cos(angle);
+        }
+        else
+        {
+            MaxValLineIntegral = m_TomoInputs->delta_xz/cos(M_PI_2-angle);
+        }
+        temp=cos(M_PI_4);
+        dist1 = temp * cos((M_PI_4 - angle));
+        dist2 = temp * fabs((cos((M_PI_4 + angle))));
+        LeftCorner = 1-dist1;
+        LeftNear = 1-dist2;
+        RightNear = 1+dist2;
+        RightCorner = 1+dist1;
+
+        for(j = 0;j<m_AdvParams->PROFILE_RESOLUTION;j++)
+        {
+            t = 2.0*j /m_AdvParams->PROFILE_RESOLUTION;//2 is the normalized length of the profile (basically equl to 2*delta_xz)
+            if(t <= LeftCorner || t >= RightCorner)
+                VoxProfile->setValue(0, i, j);
+            else if(t > RightNear)
+                VoxProfile->setValue(MaxValLineIntegral*(RightCorner-t)/(RightCorner-RightNear), i, j);
+            else if(t >= LeftNear)
+                VoxProfile->setValue(MaxValLineIntegral, i, j);
+            else
+                VoxProfile->setValue(MaxValLineIntegral*(t-LeftCorner)/(LeftNear-LeftCorner), i, j);
+
+            if (Fp != NULL)
+            {
+                fwrite( VoxProfile->getPointer(i, j), sizeof(Real_t),1,Fp);
+            }
+            checksum+=VoxProfile->getValue(i, j);
+        }
+
+    }
+
+    //printf("Pixel Profile Check sum =%lf\n",checksum);
+    if (Fp != NULL) {
+        fclose(Fp);
+    }
+    return VoxProfile;
 }
 
 #if 0
