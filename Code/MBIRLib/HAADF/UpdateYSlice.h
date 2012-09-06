@@ -1,0 +1,173 @@
+/* ============================================================================
+ * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
+ *
+ * Redistributions in binary form must reproduce the above copyright notice, this
+ * list of conditions and the following disclaimer in the documentation and/or
+ * other materials provided with the distribution.
+ *
+ * Neither the name of Singanallur Venkatakrishnan, Michael A. Jackson, the Pudue
+ * Univeristy, BlueQuartz Software nor the names of its contributors may be used
+ * to endorse or promote products derived from this software without specific
+ * prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *  This code was written under United States Air Force Contract number
+ *                           FA8650-07-D-5800
+ *
+ * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+
+#ifndef UPDATEYSLICE_H_
+#define UPDATEYSLICE_H_
+
+
+#include <vector>
+
+//-- Boost Headers for Random Numbers
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/variate_generator.hpp>
+
+
+#include "MBIRLib/MBIRLib.h"
+#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+#include "MBIRLib/Reconstruction/ReconstructionStructures.h"
+#include "MBIRLib/Reconstruction/ReconstructionEngine.h"
+#include "MBIRLib/HAADF/HAADFAMatrixCol.h"
+#include "MBIRLib/HAADF/HAADFForwardModel.h"
+
+
+
+#define USE_TBB_TASK_GROUP 1
+#if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
+#include <tbb/task_scheduler_init.h>
+#include <tbb/task_group.h>
+#include <tbb/task.h>
+
+#endif
+
+
+//Updates a line of voxels
+//Required Global vars / Private members
+//ErrorSino
+//Weights
+//m_Geometry->Object - This is alrady available
+//TempCol
+//VoxelLine
+//NuisanceParams
+
+
+/* - These get initialized to Zero each time so they are essentially local variables */
+//NEIGHBORHOOD
+//BOUNDARYFLAG
+
+
+class UpdateYSlice
+#if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
+: public tbb::task
+#endif
+{
+  public:
+    UpdateYSlice(uint16_t yStart, uint16_t yEnd,
+                 GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
+                 SinogramPtr  sinogram,
+                 std::vector<HAADFAMatrixCol::Pointer> &tempCol,
+                 RealVolumeType::Pointer errorSino,
+                 RealVolumeType::Pointer weight,
+                 std::vector<HAADFAMatrixCol::Pointer> &voxelLineResponse,
+                 HAADFForwardModel* forwardModel,
+                 UInt8Image_t::Pointer mask,
+                 RealImageType::Pointer magUpdateMap,//Hold the magnitude of the reconstuction along each voxel line
+                 UInt8Image_t::Pointer magUpdateMask,
+                 unsigned int voxelUpdateType,
+                 Real_t nh_Threshold,
+                 Real_t* averageUpdate,
+                 Real_t* averageMagnitudeOfRecon,
+                 unsigned int zeroSkipping,
+                 QGGMRF::QGGMRF_Values* qggmrf_values);
+
+    ~UpdateYSlice();
+
+    /**
+     *
+     * @return
+     */
+    int getZeroCount();
+
+  /**
+   *
+   */
+#if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
+    tbb::task*
+#else
+    void
+#endif
+    execute();
+
+
+  private:
+    uint16_t m_YStart;
+    uint16_t m_YEnd;
+    GeometryPtr m_Geometry;
+    int16_t m_OuterIter;
+    int16_t m_InnerIter;
+    SinogramPtr  m_Sinogram;
+  //  SinogramPtr  m_BFSinogram;
+    std::vector<HAADFAMatrixCol::Pointer> &m_TempCol;
+    RealVolumeType::Pointer m_ErrorSino;
+    RealVolumeType::Pointer m_Weight;
+    std::vector<HAADFAMatrixCol::Pointer> m_VoxelLineResponse;
+    HAADFForwardModel* m_ForwardModel;
+    UInt8Image_t::Pointer m_Mask;
+    RealImageType::Pointer m_MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
+    UInt8Image_t::Pointer m_MagUpdateMask;
+    unsigned int m_VoxelUpdateType;
+
+    Real_t m_NH_Threshold;
+
+    int m_ZeroCount;
+    Real_t m_CurrentVoxelValue;
+#if ROI
+    //variables used to stop the process
+    Real_t* m_AverageUpdate;
+    Real_t* m_AverageMagnitudeOfRecon;
+#endif
+    unsigned int m_ZeroSkipping;
+
+    QGGMRF::QGGMRF_Values* m_QggmrfValues;
+
+    //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
+    uint8_t BOUNDARYFLAG[27];
+    //Markov Random Field Prior parameters - Globals DATA_TYPE
+    Real_t FILTER[27];
+    Real_t HAMMING_WINDOW[5][5];
+    Real_t THETA1;
+    Real_t THETA2;
+    Real_t NEIGHBORHOOD[27];
+
+    // -----------------------------------------------------------------------------
+    //
+    // -----------------------------------------------------------------------------
+    void initVariables();
+};
+
+#endif /* UPDATEYSLICE_H_ */

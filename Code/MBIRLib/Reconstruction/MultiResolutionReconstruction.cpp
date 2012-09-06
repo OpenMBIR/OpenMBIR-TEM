@@ -46,6 +46,7 @@
 #include "MXA/Utilities/MXAFileInfo.h"
 #include "MXA/Utilities/StringUtils.h"
 #include "MBIRLib/Common/EIMMath.h"
+#include "MBIRLib/HAADF/HAADFForwardModel.h"
 
 
 // -----------------------------------------------------------------------------
@@ -121,11 +122,14 @@ void MultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std::ostre
   PRINT_VAR(out, inputs, delta_xy);
   PRINT_VAR(out, inputs, extendObject);
   PRINT_VAR(out, inputs, interpolateFactor);
+  PRINT_VAR(out, inputs, defaultInitialRecon);
+
+#if 0
   PRINT_VAR(out, inputs, targetGain);
   PRINT_VAR(out, inputs, useDefaultOffset);
   PRINT_VAR(out, inputs, defaultOffset);
-  PRINT_VAR(out, inputs, defaultInitialRecon);
   PRINT_VAR(out, inputs, defaultVariance);
+#endif
 
   PRINT_VAR(out, inputs, sinoFile);
   PRINT_VAR(out, inputs, initialReconFile);
@@ -187,6 +191,9 @@ void MultiResolutionReconstruction::execute()
 
   for (int i = 0; i < m_NumberResolutions; ++i)
   {
+    HAADFForwardModel::Pointer forwardModel = HAADFForwardModel::New();
+
+
     if(getCancel() == true)
     {
       setErrorCondition(-999);
@@ -327,18 +334,19 @@ void MultiResolutionReconstruction::execute()
     if(i == 0)
     {
       inputs->defaultInitialRecon = getInitialReconstructionValue();
-      inputs->defaultVariance = getDefaultVariance();
+//      inputs->defaultVariance = getDefaultVariance();
+      forwardModel->setDefaultVariance(getDefaultVariance());
     }
     inputs->delta_xy = powf(2.0f, getNumberResolutions() - i - 1) * static_cast<Real_t>(m_FinalResolution);
     inputs->delta_xz = powf(2.0f, getNumberResolutions() - i - 1) * static_cast<Real_t>(m_FinalResolution);
 
     if(i == 0)
     {
-      inputs->defaultOffset = getDefaultOffsetValue();
-      inputs->useDefaultOffset = getUseDefaultOffset();
+      forwardModel->setDefaultOffset(getDefaultOffsetValue());
+      forwardModel->setUseDefaultOffset(getUseDefaultOffset());
     }
     inputs->LengthZ = m_SampleThickness;
-    inputs->targetGain = m_TargetGain;
+    forwardModel->setTargetGain(getTargetGain());
     inputs->tiltSelection = m_TiltSelection;
     if(m_Subvolume.size() > 0)
     {
@@ -366,15 +374,26 @@ void MultiResolutionReconstruction::execute()
     SinogramPtr sinogram = SinogramPtr(new Sinogram);
     SinogramPtr bf_sinogram = SinogramPtr(new Sinogram);
     GeometryPtr geometry = GeometryPtr(new Geometry);
-    ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
+    //ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
 
     ReconstructionEngine::InitializeSinogram(sinogram);
     ReconstructionEngine::InitializeGeometry(geometry);
-    ReconstructionEngine::InitializeScaleOffsetParams(nuisanceParams);
+    //ReconstructionEngine::InitializeScaleOffsetParams(nuisanceParams);
     ReconstructionEngine::InitializeSinogram(bf_sinogram);
 
     //Calculate approximate memory required
     memCalculate(inputs, bf_inputs);
+
+    forwardModel->setAdvParams(m_AdvParams);
+    forwardModel->setTomoInputs(inputs);
+
+    forwardModel->setBFTomoInputs(bf_inputs);
+    forwardModel->setBFSinogram(bf_sinogram);
+    forwardModel->addObserver(this);
+    forwardModel->setMessagePrefix(StringUtils::numToString(inputs->interpolateFactor / static_cast<int>(powf(2.0f, i))) + std::string("x: "));
+
+    forwardModel->setVerbose(true);
+    forwardModel->setVeryVerbose(true);
 
     //Create an Engine and initialize all the structures
     ReconstructionEngine::Pointer engine = ReconstructionEngine::New();
@@ -383,9 +402,12 @@ void MultiResolutionReconstruction::execute()
     engine->setSinogram(sinogram);
     engine->setGeometry(geometry);
     engine->setAdvParams(m_AdvParams);
-    engine->setNuisanceParams(nuisanceParams);
-    engine->setBFTomoInputs(bf_inputs);
-    engine->setBFSinogram(bf_sinogram);
+    engine->setForwardModel(forwardModel);
+
+    engine->setVerbose(true);
+    engine->setVeryVerbose(true);
+
+
     // We need to get messages to the gui or command line
     engine->addObserver(this);
     engine->setMessagePrefix(StringUtils::numToString(inputs->interpolateFactor / static_cast<int>(powf(2.0f, i))) + std::string("x: "));

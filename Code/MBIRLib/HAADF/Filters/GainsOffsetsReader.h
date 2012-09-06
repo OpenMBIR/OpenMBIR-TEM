@@ -33,47 +33,43 @@
  *                           FA8650-07-D-5800
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+#ifndef GAINSOFFSETSREADER_H_
+#define GAINSOFFSETSREADER_H_
 
-#ifndef DETECTORRESPONSE_H_
-#define DETECTORRESPONSE_H_
-
-#include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
+
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/GenericFilters/TomoFilter.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/HAADF/HAADFDetectorParameters.h"
+#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+#include "MBIRLib/HAADF/HAADFForwardModel.h"
+
 
 /*
  *
  */
-class MBIRLib_EXPORT DetectorResponse : public TomoFilter
+class MBIRLib_EXPORT GainsOffsetsReader : public TomoFilter
 {
   public:
-    MXA_SHARED_POINTERS(DetectorResponse)
-    MXA_STATIC_NEW_MACRO(DetectorResponse);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, DetectorResponse);
-    MXA_TYPE_MACRO_SUPER(DetectorResponse, TomoFilter)
+    MXA_SHARED_POINTERS(GainsOffsetsReader)
+    MXA_STATIC_NEW_MACRO(GainsOffsetsReader);
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, GainsOffsetsReader);
+    MXA_TYPE_MACRO_SUPER(GainsOffsetsReader, TomoFilter)
 
-    virtual ~DetectorResponse();
+    virtual ~GainsOffsetsReader();
+
+    MXA_INSTANCE_PROPERTY(HAADFForwardModel::Pointer, ForwardModel);
 
 
-    MXA_INSTANCE_PROPERTY(HAADFDetectorParameters::Pointer, DetectorParameters)
-
-    MXA_INSTANCE_PROPERTY(RealImageType::Pointer, VoxelProfile);
-
-    MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Response);
-
-    virtual void execute();
-
+     virtual void execute();
 
   protected:
-    DetectorResponse();
+    GainsOffsetsReader();
 
   private:
-    DetectorResponse(const DetectorResponse&); // Copy Constructor Not Implemented
-    void operator=(const DetectorResponse&); // Operator '=' Not Implemented
+    GainsOffsetsReader(const GainsOffsetsReader&); // Copy Constructor Not Implemented
+    void operator=(const GainsOffsetsReader&); // Operator '=' Not Implemented
 };
 
 
-#endif /* DETECTORRESPONSE_H_ */
+#endif /* GAINSOFFSETSREADER_H_ */

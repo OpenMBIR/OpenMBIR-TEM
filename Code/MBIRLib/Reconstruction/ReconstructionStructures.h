@@ -99,13 +99,16 @@ namespace SOC {
     std::vector<Real_t> angles;//Holds the angles through which the object is tilted
     Real_t R0,RMax;
     Real_t T0,TMax;
+
+#if 0
+    /* ****************** These should be moved to the ForwardModel Class ****/
     Real_t targetGain;//,InitialOffset;//Initial scale and offset of the sinogram data
     bool BF_Flag;
-
     RealArrayType::Pointer InitialGain;//Reads in the initial value for the gain for each view
     RealArrayType::Pointer InitialOffset;
     RealArrayType::Pointer InitialVariance;
-
+    /* ****************** End Forward Model Variables ****/
+#endif
   } Sinogram;
 
   typedef boost::shared_ptr<Sinogram> SinogramPtr;
@@ -156,12 +159,17 @@ namespace SOC {
 
     bool extendObject; //In case the sinogram data corresponding to voxels outside it
     Real_t interpolateFactor;
-    Real_t targetGain;
-    bool useDefaultOffset;
-    Real_t defaultOffset;
-    Real_t defaultInitialRecon;
-    Real_t defaultVariance;
 
+    Real_t defaultInitialRecon;
+
+#if 0
+    /* ****************** These should be moved to the ForwardModel Class ****/
+    Real_t defaultVariance;
+    Real_t targetGain;
+    Real_t defaultOffset;
+    bool useDefaultOffset;
+    /* ****************** End Forward Model Variables ****/
+#endif
 
     /* These are input files */
     std::string sinoFile; /* .mrc formatted files are accepted currently */
@@ -208,78 +216,8 @@ namespace SOC {
   } AdvancedParameters;
   typedef boost::shared_ptr<AdvancedParameters> AdvancedParametersPtr;
 
-  //Structure to store a single column(A_i) of the A-matrix
-//  typedef struct
-//  {
-//      Real_t* values; //Store the non zero entries
-//      uint32_t count; //The number of non zero values present in the column
-//      uint32_t* index; //This maps each value to its location in the column. The entries in this can vary from 0 to Sinogram.N_x Sinogram.N_theta-1
-//  } AMatrixCol;
 
 
-  class AMatrixCol
-  {
-    public:
-      typedef AMatrixCol                      Self;
-      typedef boost::shared_ptr<Self >        Pointer;
-      typedef boost::shared_ptr<const Self >  ConstPointer;
-      typedef boost::weak_ptr<AMatrixCol > WeakPointer;
-      typedef boost::weak_ptr<AMatrixCol > ConstWeakPointer;
-      static Pointer NullPointer(void)
-      {
-        return Pointer(static_cast<AMatrixCol*>(0));
-      }
-      static Pointer New(size_t* dims, int32_t count)
-      {
-        Pointer sharedPtr (new AMatrixCol(dims, count));
-        return sharedPtr;
-      }
-
-      virtual ~AMatrixCol(){}
-
-      RealArrayType::Pointer valuesPtr;
-      Real_t*                values;
-      UInt32ArrayType::Pointer indexPtr;
-      uint32_t*                index;
-      uint64_t                 d0;
-      uint64_t                 d1;
-
-      uint32_t count; //The number of non zero values present in the column
-      void setCount(uint32_t c)
-      {
-        if(c > valuesPtr->getDims()[0])
-        {
-          std::cout << "BAD!!! c: " << c << "  count: " << count << std::endl;
-          assert(false);
-        }
-        count = c;
-      }
-    protected:
-      AMatrixCol(size_t* dims, int32_t c) {
-        valuesPtr = RealArrayType::New(dims, "VoxelLineResponse_Values");
-        values = valuesPtr->getPointer(0);
-        indexPtr = UInt32ArrayType::New(dims, "VoxelLineResponse_index");
-        index = indexPtr->getPointer(0);
-        count = c;
-        d0 = 0xABABABABABABABABull;
-        d1 = 0xCACACACACACACACAull;
-      }
-    private:
-
-
-      AMatrixCol(const AMatrixCol&); // Copy Constructor Not Implemented
-      void operator=(const AMatrixCol&); // Operator '=' Not Implemented
-  };
-
-
-
-  typedef struct
-  {
-    RealArrayType::Pointer I_0; //Gains
-    RealArrayType::Pointer mu; //Offset
-    RealArrayType::Pointer alpha;//Noise variance refinement factor
-  } ScaleOffsetParams;
-  typedef boost::shared_ptr<ScaleOffsetParams> ScaleOffsetParamsPtr;
 
 
 #endif /* SCALEOFFSETMOTIONSTRUCTURES_H_ */

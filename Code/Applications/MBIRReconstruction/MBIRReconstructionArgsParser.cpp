@@ -336,12 +336,7 @@ void MBIRReconstructionArgsParser::printInputs(TomoInputsPtr inputs, std::ostrea
   PRINT_VAR(out, inputs, delta_xy);
   PRINT_VAR(out, inputs, extendObject);
   PRINT_VAR(out, inputs, interpolateFactor);
-  PRINT_VAR(out, inputs, targetGain);
-  PRINT_VAR(out, inputs, useDefaultOffset);
-  PRINT_VAR(out, inputs, defaultOffset);
   PRINT_VAR(out, inputs, defaultInitialRecon);
-  PRINT_VAR(out, inputs, defaultVariance);
-
   PRINT_VAR(out, inputs, sinoFile);
   PRINT_VAR(out, inputs, initialReconFile);
   PRINT_VAR(out, inputs, gainsInputFile);

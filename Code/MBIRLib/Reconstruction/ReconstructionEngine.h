@@ -51,7 +51,10 @@
 #include "MBIRLib/GenericFilters/CostData.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-#include "MBIRLib/Reconstruction/QGGMRF_Functions.h"
+#include "MBIRLib/HAADF/QGGMRFPriorModel.h"
+
+#include "MBIRLib/HAADF/HAADFForwardModel.h"
+#include "MBIRLib/HAADF/HAADFAMatrixCol.h"
 
 
 /**
@@ -72,26 +75,17 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
     MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
     MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)
     MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
-    MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams)
     MXA_INSTANCE_PROPERTY(AdvancedParametersPtr, AdvParams)
 
-    MXA_INSTANCE_PROPERTY(bool, UseBrightFieldData)
-    MXA_INSTANCE_PROPERTY(TomoInputsPtr, BFTomoInputs)
-    MXA_INSTANCE_PROPERTY(SinogramPtr, BFSinogram)
+    MXA_INSTANCE_PROPERTY(HAADFForwardModel::Pointer, ForwardModel);
 
     static void InitializeTomoInputs(TomoInputsPtr);
     static void InitializeSinogram(SinogramPtr);
     static void InitializeGeometry(GeometryPtr);
-    static void InitializeScaleOffsetParams(ScaleOffsetParamsPtr);
     static void InitializeAdvancedParams(AdvancedParametersPtr v);
 
     virtual ~ReconstructionEngine();
 
-    enum VoxelUpdateType {
-      RegularRandomOrderUpdate = 0,
-      HomogeniousUpdate = 1,
-      NonHomogeniousUpdate = 2
-    };
 
     /**
      * @brief overload from super class
@@ -107,7 +101,6 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 
     void initVariables();
 
-    void calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams);
     void calculateArithmeticMean();
 
     /**
@@ -115,57 +108,28 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
      */
     void updateVoxelValues_NHICD();
 
-    /**
-     *
-     */
-    uint8_t updateVoxels(int16_t OuterIter, int16_t Iter,
-                         VoxelUpdateType updateType,
-                         UInt8Image_t::Pointer VisitCount,
-                         std::vector<AMatrixCol::Pointer> &TempCol,
-                         RealVolumeType::Pointer ErrorSino,
-                         RealVolumeType::Pointer Weight,
-                         std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
-                         ScaleOffsetParams* NuisanceParams,
-                         UInt8Image_t::Pointer Mask,
-                         CostData::Pointer cost);
-
-
     int readInputData();
-    int initializeBrightFieldData();
-    int createInitialGainsData();
-    int createInitialOffsetsData();
-    int createInitialVariancesData();
+
     int initializeRoughReconstructionData();
-    void initializeROIMask(UInt8Image_t::Pointer Mask);
+
     /**
      * @brief Calculates the x boundaries so the writers do not write extra data
      */
     void computeOriginalXDims(uint16_t &cropStart, uint16_t &cropEnd);
-    void gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams);
-    void initializeHt(RealVolumeType::Pointer H_t);
-    void storeVoxelResponse(RealVolumeType::Pointer H_t, std::vector<AMatrixCol::Pointer> &VoxelLineResponse);
+
+    void initializeHt(RealVolumeType::Pointer H_t, Real_t OffsetT);
+
+    void storeVoxelResponse(RealVolumeType::Pointer H_t,
+                            std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
+                            HAADFDetectorParameters::Pointer haadfParameters);
+
     void initializeVolume(RealVolumeType::Pointer Y_Est, double value);
-    void calculateMeasurementWeight(RealVolumeType::Pointer Weight,
-                                               ScaleOffsetParamsPtr NuisanceParams,
-                                               RealVolumeType::Pointer ErrorSino,
-                                               RealVolumeType::Pointer Y_Est);
-    int jointEstimation(RealVolumeType::Pointer Weight,
-                         ScaleOffsetParamsPtr NuisanceParams,
-                         RealVolumeType::Pointer ErrorSino,
-                         RealVolumeType::Pointer Y_Est,
-                         CostData::Pointer cost);
-    int calculateCost(CostData::Pointer cost,
-                      RealVolumeType::Pointer Weight,
-                      RealVolumeType::Pointer ErrorSino);
-    void updateWeights(RealVolumeType::Pointer Weight,
-                       ScaleOffsetParamsPtr NuisanceParams,
-                       RealVolumeType::Pointer ErrorSino);
-    void writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams);
+
 #ifdef BF_RECON
     void processRawCounts();
 #endif
 
-    void writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram);
+
     void writeReconstructionFile(const std::string &filepath);
     void writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
     void writeMRCFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
@@ -175,41 +139,11 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
   private:
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
     uint8_t BOUNDARYFLAG[27];
-    //Markov Random Field Prior parameters - Globals DATA_TYPE
-    Real_t FILTER[27];
-    Real_t HAMMING_WINDOW[5][5];
+
     Real_t THETA1;
     Real_t THETA2;
     Real_t NEIGHBORHOOD[27];
 
-
-#ifdef EIMTOMO_USE_QGGMRF
-    QGGMRF::QGGMRF_Values m_QGGMRF_Values;
-#else
-    Real_t MRF_P;
-    Real_t SIGMA_X_P;
-#endif
-
-
-    //used to store cosine and sine of all angles through which sample is tilted
-    RealArrayType::Pointer cosine;
-    RealArrayType::Pointer sine;
-    RealArrayType::Pointer BeamProfile; //used to store the shape of the e-beam
-    Real_t BEAM_WIDTH;
-    Real_t OffsetR;
-    Real_t OffsetT;
-
-    RealImageType::Pointer QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
-
-    RealImageType::Pointer MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
-    RealImageType::Pointer FiltMagUpdateMap;//Filters the above to compute threshold
-    UInt8Image_t::Pointer MagUpdateMask;//Masks only the voxels of interest
-
-    RealImageType::Pointer Qk_cost;
-    RealImageType::Pointer bk_cost;
-    RealArrayType::Pointer ck_cost; //these are the terms of the quadratic cost function
-    RealArrayType::Pointer d1;
-    RealArrayType::Pointer d2; //hold the intermediate values needed to compute optimal mu_k
     uint16_t NumOfViews; //this is kind of redundant but in order to avoid repeatedly send this info to the rooting function we save number of views
     Real_t LogGain; //again these information  are available but to prevent repeatedly sending it to the rooting functions we store it in a variable
 
@@ -219,23 +153,7 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
     int m_NumThreads;
 
 
-    /**
-     * @brief
-     * @param DetectorResponse
-     * @param H_t
-     * @return
-     */
-    RealVolumeType::Pointer forwardProject(RealVolumeType::Pointer DetectorResponse, RealVolumeType::Pointer H_t);
 
-    /**
-     * @brief
-     */
-    void calculateSinCos();
-
-    /**
-     * @brief
-     */
-    void initializeBeamProfile();
 
     /**
      * @brief
@@ -256,15 +174,8 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
      * @param slice
      * @param VoxelProfile
      */
-   // void* calculateAMatrixColumn(uint16_t row, uint16_t col, uint16_t slice, DATA_TYPE** VoxelProfile);
+   // void* calculateHAADFAMatrixColumn(uint16_t row, uint16_t col, uint16_t slice, DATA_TYPE** VoxelProfile);
 
-    /**
-     * @brief
-     * @param ErrorSino
-     * @param Weight
-     * @return
-     */
-    Real_t computeCost(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight);
 
     /**
      * @brief
@@ -273,7 +184,7 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
      * @param slice
      * @param DetectorResponse
      */
-    AMatrixCol::Pointer calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, RealVolumeType::Pointer DetectorResponse);
+ //   HAADFAMatrixCol::Pointer calculateHAADFAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, RealVolumeType::Pointer DetectorResponse);
 
     /**
      * @brief
@@ -291,14 +202,7 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
     */
     void UpdateVoxelLine(uint16_t j_new,uint16_t k_new);
 
-    /**
-     * Code to take the magnitude map and filter it with a hamming window
-     * Returns the filtered magnitude map
-     */
-    void ComputeVSC();
 
-    //Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
-    Real_t SetNonHomThreshold();
 
 
     template<typename T>

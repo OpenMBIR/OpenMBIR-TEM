@@ -36,7 +36,7 @@
 
 
 #ifndef EIMTOMO_USE_QGGMRF_FUNCTIONS_H_
-#define QGGMRF_FUNCTIONS_H_
+#define EIMTOMO_USE_QGGMRF_FUNCTIONS_H_
 
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
@@ -114,7 +114,11 @@ Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue
                                  QGGMRF_Values* qggmrf_values);
 
 
-
+/**
+ * @brief HAADFForwardModel::initializePriorModel
+ * @param m_TomoInputs
+ */
+void initializePriorModel(TomoInputsPtr m_TomoInputs, QGGMRF::QGGMRF_Values* m_QGGMRF_Values);
 
 } /* end namespace QGGMRF */
 

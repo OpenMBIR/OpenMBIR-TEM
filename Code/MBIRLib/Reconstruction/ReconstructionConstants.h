@@ -45,6 +45,13 @@
 #define INDEX_3(i, j, k)\
     ((9*(i)) + (3*(j)) + ((k)))
 
+namespace VoxelUpdateType
+{
+  const unsigned int RegularRandomOrderUpdate = 0;
+  const unsigned int HomogeniousUpdate = 1;
+  const unsigned int NonHomogeniousUpdate = 2;
+}
+
 
 
 //#define FORWARD_PROJECT_MODE
@@ -60,8 +67,8 @@
 //#define WRITE_INTERMEDIATE_RESULTS
 //#define COST_CALCULATE
 //#define BF_RECON //Bright Field Reconstruction
-#define BF_OFFSET 0//0 //23696 - Bio data set 
-#define BF_MAX  1865//5689//42122 
+#define BF_OFFSET 0//0 //23696 - Bio data set
+#define BF_MAX  1865//5689//42122
 
 #define IDENTITY_NOISE_MODEL
 

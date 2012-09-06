@@ -69,10 +69,11 @@
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 #include "MBIRLib/Reconstruction/ReconstructionEngine.h"
+#include "MBIRLib/GenericFilters/SigmaXEstimation.h"
 #include "MBIRLib/IOFilters/MRCHeader.h"
 #include "MBIRLib/IOFilters/MRCReader.h"
-#include "MBIRLib/IOFilters/GainsOffsetsReader.h"
-#include "MBIRLib/GenericFilters/SigmaXEstimation.h"
+
+#include "MBIRLib/HAADF/Filters/GainsOffsetsReader.h"
 
 #include "License/LicenseFiles.h"
 

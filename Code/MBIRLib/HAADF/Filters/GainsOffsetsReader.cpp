@@ -62,7 +62,8 @@ void GainsOffsetsReader::execute()
   TomoInputsPtr inputs = getTomoInputs();
 
 
-  std::vector<double> fileGains(inputs->fileZSize, inputs->targetGain);//Default value is TARGET_GAIN
+
+  std::vector<double> fileGains(inputs->fileZSize, m_ForwardModel->getTargetGain());//Default value is TARGET_GAIN
   std::vector<double> fileOffsets(inputs->fileZSize, 0);//Defaulted to zero
   std::vector<double> fileVariance(inputs->fileZSize, 1);//Default set to 1
 
@@ -91,7 +92,8 @@ void GainsOffsetsReader::execute()
 		// Allocate the proper amount of memory for the gains and offsets
 		//The normalization and offset parameters for the views
 		size_t dims[1] = {sinogram->N_theta};
-		sinogram->InitialGain = RealArrayType::New(dims, "InitialGain");
+		RealArrayType::Pointer initialGain = RealArrayType::New(dims, "InitialGain");
+		m_ForwardModel->setInitialGain(initialGain);
 
 		// Copy just the values of the gains we need from the data read
 		// from the file. The indices into the fileGains array are stored
@@ -105,14 +107,14 @@ void GainsOffsetsReader::execute()
 		//This has been changed since the # of gains = # of good views
 		for (size_t i = 0; i < inputs->goodViews.size(); i++)
 		{
-			sinogram->InitialGain->d[i] = fileGains[i];
+		  initialGain->d[i] = fileGains[i];
 		}
 
 #if 1
 		std::cout << "------------Initial Gains-----------" << std::endl;
 		for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 		{
-			std::cout << "Tilt: " << i_theta<< "  Gain: "<< sinogram->InitialGain->d[i_theta]<< std::endl;
+			std::cout << "Tilt: " << i_theta<< "  Gain: "<< initialGain->d[i_theta]<< std::endl;
 		}
 
 #endif
@@ -124,12 +126,16 @@ void GainsOffsetsReader::execute()
 	{
 		//If no gains file is given just use default values
 		std::cout<<"**************************"<<std::endl;
-		std::cout<<"Setting Gains to the default value="<<inputs->targetGain<<std::endl;
+		std::cout<<"Setting Gains to the default value="<< m_ForwardModel->getTargetGain() <<std::endl;
 		std::cout<<"**************************"<<std::endl;
 		size_t dims[1] = {sinogram->N_theta};
-		sinogram->InitialGain = RealArrayType::New(dims, "InitialGain");
+		RealArrayType::Pointer initialGain = RealArrayType::New(dims, "InitialGain");
+		m_ForwardModel->setInitialGain(initialGain);
+
 		for(uint16_t i_theta=0; i_theta < inputs->goodViews.size(); i_theta++)
-			sinogram->InitialGain->d[i_theta]=inputs->targetGain;
+		{
+			initialGain->d[i_theta] = m_ForwardModel->getTargetGain();
+		}
 		/*setErrorCondition(-1);
 		setErrorMessage("Could not open Gains File");
 		notify(getErrorMessage().c_str(), 100, UpdateErrorMessage);
@@ -155,7 +161,8 @@ void GainsOffsetsReader::execute()
 		// Allocate the proper amount of memory for the gains and offsets
 		//The normalization and offset parameters for the views
 		size_t dims[1] = {sinogram->N_theta};
-		sinogram->InitialOffset = RealArrayType::New(dims, "InitialOffset");
+		RealArrayType::Pointer initialOffset = RealArrayType::New(dims, "InitialOffset");
+		m_ForwardModel->setInitialOffset(initialOffset);
 
 		// Copy just the values of the gains and offsets we need from the data read
 		// from the file. The indices into the fileGains/fileOffsets array are stored
@@ -167,16 +174,16 @@ void GainsOffsetsReader::execute()
 
 		//This has been changed since the # of gains = # of good views
 		for (size_t i = 0; i < inputs->goodViews.size(); i++)
-	    {
-	    sinogram->InitialOffset->d[i] = fileOffsets[i];
-	    }
+    {
+      initialOffset->d[i] = fileOffsets[i];
+    }
 
 #if 1
 
 		std::cout << "------------Initial Offsets-----------" << std::endl;
 		for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 		{
-			std::cout << "Tilt: " << i_theta << "  Offset: "<< sinogram->InitialOffset->d[i_theta] << std::endl;
+			std::cout << "Tilt: " << i_theta << "  Offset: "<< initialOffset->d[i_theta] << std::endl;
 		}
 #endif
 		setErrorCondition(0);
@@ -212,7 +219,8 @@ void GainsOffsetsReader::execute()
 		// Allocate the proper amount of memory for the gains and offsets
 		//The normalization and offset parameters for the views
 		size_t dims[1] = {sinogram->N_theta};
-		sinogram->InitialVariance = RealArrayType::New(dims, "InitialVariance");
+		RealArrayType::Pointer initialVariance = RealArrayType::New(dims, "InitialVariance");
+		m_ForwardModel->setInitialVariance(initialVariance);
 
 		// Copy just the values of the gains and offsets we need from the data read
 		// from the file. The indices into the fileGains/fileOffsets array are stored
@@ -224,14 +232,14 @@ void GainsOffsetsReader::execute()
 
 		for (size_t i = 0; i < inputs->goodViews.size(); i++)
 		{
-			sinogram->InitialVariance->d[i] = fileVariance[i];
+		  initialVariance->d[i] = fileVariance[i];
 		}
 
 #if 1
 		std::cout << "------------Initial Variance-----------" << std::endl;
 		for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 		{
-			std::cout << "Tilt: " << i_theta<< "  Variance: "<< sinogram->InitialVariance->d[i_theta]<< std::endl;
+			std::cout << "Tilt: " << i_theta<< "  Variance: "<< initialVariance->d[i_theta]<< std::endl;
 		}
 #endif
 		setErrorCondition(0);
@@ -244,9 +252,12 @@ void GainsOffsetsReader::execute()
 		std::cout<<"Setting Variance to the default value=1"<<std::endl;
 		std::cout<<"**************************"<<std::endl;
 		size_t dims[1] = {sinogram->N_theta};
-		sinogram->InitialVariance = RealArrayType::New(dims, "InitialVariance");
+    RealArrayType::Pointer initialVariance = RealArrayType::New(dims, "InitialVariance");
+    m_ForwardModel->setInitialVariance(initialVariance);
 		for(uint16_t i_theta=0; i_theta < inputs->goodViews.size(); i_theta++)
-			sinogram->InitialVariance->d[i_theta]=1;
+		{
+		  initialVariance->d[i_theta]=1;
+		}
 		/*
 		setErrorCondition(-1);
 		setErrorMessage("Could not open Variance File");

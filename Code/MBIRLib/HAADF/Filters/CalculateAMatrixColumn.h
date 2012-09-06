@@ -33,54 +33,47 @@
  *                           FA8650-07-D-5800
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+#ifndef CALCULATEAMATRIX_H_
+#define CALCULATEAMATRIX_H_
 
-
-
-#ifndef FORWARDPROJECT_H_
-#define FORWARDPROJECT_H_
-
-#include <iostream>
-
+#include "MXA/Common/MXASetGetMacros.h"
 
 #include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/Common/Observable.h"
+#include "MBIRLib/GenericFilters/TomoFilter.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
+#include "MBIRLib/HAADF/HAADFAMatrixCol.h"
 
-
-
-/**
- * @class ForwardProject ForwardProject.h TomoEngine/SOC/ForwardProject.h
- * @brief
- * @author Michael A. Jackson for BlueQuartz Software
- * @author Singanallur Venkatakrishnan (Purdue University)
- * @date Dec 12, 2011
- * @version 1.0
+/*
+ *
  */
-class MBIRLib_EXPORT ForwardProject
+class MBIRLib_EXPORT CalculateAMatrixColumn : public TomoFilter
 {
   public:
-    ForwardProject(Sinogram* sinogram,
-                   Geometry* geometry,
-                   std::vector<AMatrixCol::Pointer> &tempCol,
-                   std::vector<AMatrixCol::Pointer> &voxelLineResponse,
-                   RealVolumeType::Pointer yEst,
-                   ScaleOffsetParams* nuisanceParams,
-                   uint16_t tilt,
-                   Observable* obs);
+    MXA_SHARED_POINTERS(CalculateAMatrixColumn)
+    MXA_STATIC_NEW_MACRO(CalculateAMatrixColumn);
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, CalculateAMatrixColumn);
+    MXA_TYPE_MACRO_SUPER(CalculateAMatrixColumn, TomoFilter)
 
-    virtual ~ForwardProject();
+    virtual ~CalculateAMatrixColumn();
 
-    void operator()() const;
 
-  private:
-    Sinogram* m_Sinogram;
-    Geometry* m_Geometry;
-    std::vector<AMatrixCol::Pointer> TempCol;
-    std::vector<AMatrixCol::Pointer> VoxelLineResponse;
-    RealVolumeType::Pointer Y_Est;
-    ScaleOffsetParams* NuisanceParams;
-    uint16_t m_Tilt;
-    Observable* m_Observable;
+    MXA_INSTANCE_PROPERTY_OLD(Real_t*, Cosine, cosine);
+    MXA_INSTANCE_PROPERTY_OLD(Real_t*, Sine, sine);
+
+    MXA_INSTANCE_PROPERTY_OLD(Real_t, BeamWidth, BEAM_WIDTH);
+    MXA_INSTANCE_PROPERTY_OLD(uint16_t, row, row);
+    MXA_INSTANCE_PROPERTY_OLD(uint16_t, col, col);
+    MXA_INSTANCE_PROPERTY_OLD(uint16_t, Slice, slice);
+    MXA_INSTANCE_PROPERTY_OLD(Real_t**, VoxelProfile, VoxelProfile);
+    MXA_INSTANCE_PROPERTY_OLD(Real_t*, D1, d1);
+    MXA_INSTANCE_PROPERTY_OLD(Real_t*, D2, d2);
+    MXA_INSTANCE_PROPERTY_OLD(HAADFAMatrixCol::Pointer, AMatrixCol, Ai)
+
+
+    virtual void execute();
+
+  protected:
+    CalculateAMatrixColumn();
 };
 
-#endif /* FORWARDPROJECT_H_ */
+#endif /* CALCULATEAMATRIX_H_ */

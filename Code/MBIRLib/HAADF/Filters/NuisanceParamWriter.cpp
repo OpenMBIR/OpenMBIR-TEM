@@ -64,7 +64,7 @@
 // -----------------------------------------------------------------------------
 NuisanceParamWriter::NuisanceParamWriter() :
 m_WriteBinary(true),
-m_NuisanceParams(NULL)
+m_Ntheta(0)
 {
 }
 
@@ -81,24 +81,12 @@ NuisanceParamWriter::~NuisanceParamWriter()
 void NuisanceParamWriter::execute()
 {
   std::stringstream ss;
-  if(NULL == getTomoInputs())
+
+
+  if(NULL == m_ForwardModel)
   {
     setErrorCondition(-1);
-    setErrorMessage("NuisanceBinWriter::TomoInputs not initialized Correctly");
-    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-    return;
-  }
-  if(NULL == getSinogram())
-  {
-    setErrorCondition(-1);
-    setErrorMessage("NuisanceBinWriter::Sinogram not initialized Correctly");
-    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-    return;
-  }
-  if(NULL == m_NuisanceParams)
-  {
-    setErrorCondition(-1);
-    setErrorMessage("NuisanceBinWriter:: NuisanceParams not initialized Correctly");
+    setErrorMessage("NuisanceBinWriter:: ForwardModel not initialized Correctly");
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
@@ -116,27 +104,23 @@ void NuisanceParamWriter::execute()
     return;
   }
 
-  RealArrayType::Pointer src = RealArrayType::NullPointer();
   std::string printTitle("UNKNOWN DATA");
   switch(m_DataToWrite)
   {
     case Nuisance_I_O:
-      src = m_NuisanceParams->I_0;
       printTitle = "Gains";
       break;
     case Nuisance_mu:
-      src = m_NuisanceParams->mu;
       printTitle = "Offsets";
       break;
     case Nuisance_alpha:
-      src = m_NuisanceParams->alpha;
       printTitle = "Variances";
       break;
     default:
       break;
   }
 
-  if(NULL == src.get() || NULL == src->d)
+  if(NULL == m_Data.get() || NULL == m_Data->d)
   {
     setErrorCondition(-1);
     setErrorMessage("NuisanceBinWriter: The array to write was NULL");
@@ -151,13 +135,13 @@ void NuisanceParamWriter::execute()
 
   if(m_WriteBinary == true)
   {
-    fwrite(src->d, sizeof(Real_t), getSinogram()->N_theta, file);
+    fwrite(m_Data->d, sizeof(Real_t), m_Ntheta, file);
   }
   else
   {
-    for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
+    for (uint16_t i_theta = 0; i_theta < m_Ntheta; i_theta++)
     {
-      fprintf(file, "%lf\n", src->d[i_theta]);
+      fprintf(file, "%lf\n", m_Data->d[i_theta]);
     }
   }
   fclose(file);

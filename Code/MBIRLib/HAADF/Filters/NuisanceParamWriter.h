@@ -1,6 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
- * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
+ * Copyright (c) 2011 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2011 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -35,45 +35,57 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#ifndef COMPUTEGAINSOFFETS_H_
-#define COMPUTEGAINSOFFETS_H_
+#ifndef NUISANCEBINWRITER_H_
+#define NUISANCEBINWRITER_H_
 
+#include <string>
 
 #include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/GenericFilters/TomoFilter.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Common/allocate.h"
-#include "MBIRLib/Common/EIMMath.h"
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+#include "MBIRLib/HAADF/HAADFForwardModel.h"
+
 
 /**
- * @class ComputeInitialOffsets ComputeInitialOffsets.h SOC/ComputeInitialOffsets.h
+ * @class NuisanceBinWriter NuisanceBinWriter.h TomoEngine/IO/NuisanceBinWriter.h
  * @brief
- * @author
- * @date Jan 3, 2012
+ * @author Michael A. Jackson for BlueQuartz Software
+ * @date Dec 9, 2011
  * @version 1.0
  */
-class MBIRLib_EXPORT ComputeInitialOffsets : public TomoFilter
+class MBIRLib_EXPORT NuisanceParamWriter : public TomoFilter
 {
   public:
-    MXA_SHARED_POINTERS(ComputeInitialOffsets)
-    MXA_STATIC_NEW_MACRO(ComputeInitialOffsets);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, ComputeInitialOffsets);
-    MXA_TYPE_MACRO_SUPER(ComputeInitialOffsets, TomoFilter)
+    MXA_SHARED_POINTERS(NuisanceParamWriter)
+    MXA_STATIC_NEW_MACRO(NuisanceParamWriter);
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, NuisanceParamWriter);
+    MXA_TYPE_MACRO_SUPER(NuisanceParamWriter, TomoFilter)
 
-    virtual ~ComputeInitialOffsets();
+    virtual ~NuisanceParamWriter();
 
-    virtual void execute();
+    enum TargetArray {
+      Nuisance_I_O,
+      Nuisance_mu,
+      Nuisance_alpha
+    };
 
+    MXA_INSTANCE_PROPERTY(bool, WriteBinary);
+    MXA_INSTANCE_STRING_PROPERTY(FileName);
+    MXA_INSTANCE_PROPERTY(TargetArray, DataToWrite);
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Data);
+    MXA_INSTANCE_PROPERTY(HAADFForwardModel::Pointer, ForwardModel);
+    MXA_INSTANCE_PROPERTY(uint16_t, Ntheta);
+
+    void execute();
 
   protected:
-    ComputeInitialOffsets();
+    NuisanceParamWriter();
 
   private:
-    ComputeInitialOffsets(const ComputeInitialOffsets&); // Copy Constructor Not Implemented
-    void operator=(const ComputeInitialOffsets&); // Operator '=' Not Implemented
+    NuisanceParamWriter(const NuisanceParamWriter&); // Copy Constructor Not Implemented
+    void operator=(const NuisanceParamWriter&); // Operator '=' Not Implemented
 };
 
-#endif /* COMPUTEGAINSOFFETS_H_ */
+#endif /* NUISANCEBINWRITER_H_ */

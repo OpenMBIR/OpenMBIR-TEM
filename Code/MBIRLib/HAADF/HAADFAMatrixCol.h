@@ -1,6 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2011 Michael A. Jackson (BlueQuartz Software)
- * Copyright (c) 2011 Singanallur Venkatakrishnan (Purdue University)
+ * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -35,43 +35,58 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#ifndef SINOGRAMBINWRITER_H_
-#define SINOGRAMBINWRITER_H_
+#ifndef _HAADFAMATRIXCOL_H_
+#define _HAADFAMATRIXCOL_H_
 
-
-#include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
-#include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/GenericFilters/TomoFilter.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
+#include "MBIRLib/HAADF/HAADFDetectorParameters.h"
 
-/**
- * @class SinogramBinWriter SinogramBinWriter.h TomoEngine/IO/SinogramBinWriter.h
- * @brief
- * @author Michael A. Jackson for BlueQuartz Software
- * @date Dec 9, 2011
- * @version 1.0
+
+
+/*
+ *
  */
-class MBIRLib_EXPORT SinogramBinWriter : public TomoFilter
+class HAADFAMatrixCol
 {
   public:
-    MXA_SHARED_POINTERS(SinogramBinWriter)
-    MXA_STATIC_NEW_MACRO(SinogramBinWriter);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, SinogramBinWriter);
-    MXA_TYPE_MACRO_SUPER(SinogramBinWriter, TomoFilter)
 
-    virtual ~SinogramBinWriter();
+    MXA_SHARED_POINTERS(HAADFAMatrixCol);
+    static Pointer New(size_t* dims, int32_t count)
+    {
+      Pointer sharedPtr (new HAADFAMatrixCol(dims, count));
+      return sharedPtr;
+    }
 
-    MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Data);
-    MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams);
+    virtual ~HAADFAMatrixCol();
 
-    void execute();
+    RealArrayType::Pointer valuesPtr;
+    Real_t* values;
+    UInt32ArrayType::Pointer indexPtr;
+    uint32_t* index;
+    uint64_t d0;
+    uint64_t d1;
+
+    uint32_t count; //The number of non zero values present in the column
+    void setCount(uint32_t c);
+
+    static HAADFAMatrixCol::Pointer calculateHAADFAMatrixColumnPartial(SinogramPtr m_Sinogram,
+                                                                       GeometryPtr m_Geometry,
+                                                                       TomoInputsPtr m_TomoInputs,
+                                                                       AdvancedParametersPtr m_AdvParams,
+                                                                       uint16_t row,
+                                                                       uint16_t col,
+                                                                       uint16_t slice,
+                                                                       RealVolumeType::Pointer DetectorResponse,
+                                                                       HAADFDetectorParameters::Pointer haadfParameters);
 
   protected:
-    SinogramBinWriter();
+    HAADFAMatrixCol(size_t* dims, int32_t c);
+
 
   private:
-    SinogramBinWriter(const SinogramBinWriter&); // Copy Constructor Not Implemented
-    void operator=(const SinogramBinWriter&); // Operator '=' Not Implemented
+
+    HAADFAMatrixCol(const HAADFAMatrixCol&); // Copy Constructor Not Implemented
+    void operator=(const HAADFAMatrixCol&); // Operator '=' Not Implemented
 };
-#endif /* SINOGRAMBINWRITER_H_ */
+#endif /* _HAADFAMATRIXCOL_H_ */

@@ -78,6 +78,7 @@ endMacro()
 CMP_CompileDir(Common)
 CMP_CompileDir(GenericFilters)
 CMP_CompileDir(IOFilters)
+CMP_CompileDir(HAADF)
 CMP_CompileDir(Reconstruction)
 
 include_directories(${MBIRLib_SOURCE_DIR}/..)            

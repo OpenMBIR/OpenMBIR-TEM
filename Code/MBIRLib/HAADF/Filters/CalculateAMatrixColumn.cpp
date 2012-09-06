@@ -110,8 +110,8 @@ void CalculateAMatrixColumn::execute()
   MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements) * sinogram->N_theta;
 
   size_t dims[1] = { MaximumSpacePerColumn };
-  AMatrixCol::Pointer Temp = AMatrixCol::New(dims, 0);
-//  AMatrixCol* Temp = (AMatrixCol*)get_spc(1, sizeof(AMatrixCol)); //This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
+  HAADFAMatrixCol::Pointer Temp = HAADFAMatrixCol::New(dims, 0);
+//  HAADFAMatrixCol* Temp = (HAADFAMatrixCol*)get_spc(1, sizeof(HAADFAMatrixCol)); //This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
 //
 //  Temp->values = (Real_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(Real_t));
 //  Temp->index = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(uint32_t));
@@ -370,7 +370,7 @@ void CalculateAMatrixColumn::execute()
 #endif
   // printf("Final Space allocation for column %d %d\n",row,col);
   dims[0] = count;
-  AMatrixCol::Pointer Ai = AMatrixCol::New(dims, 0);
+  HAADFAMatrixCol::Pointer Ai = HAADFAMatrixCol::New(dims, 0);
 
 //  Ai->values = (Real_t*)get_spc(count, sizeof(Real_t));
 //  Ai->index = (uint32_t*)get_spc(count, sizeof(uint32_t));

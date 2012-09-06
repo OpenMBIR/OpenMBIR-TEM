@@ -1,6 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2011 Michael A. Jackson (BlueQuartz Software)
- * Copyright (c) 2011 Singanallur Venkatakrishnan (Purdue University)
+ * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -33,40 +33,50 @@
  *                           FA8650-07-D-5800
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-#ifndef GAINSOFFSETSREADER_H_
-#define GAINSOFFSETSREADER_H_
 
+
+#ifndef COMPUTEGAINSOFFETS_H_
+#define COMPUTEGAINSOFFETS_H_
+
+
+#include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
-
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/GenericFilters/TomoFilter.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
+#include "MBIRLib/Common/allocate.h"
+#include "MBIRLib/Common/EIMMath.h"
+#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"//Added by venkat on 1/26/2012
-
-
-/*
- *
+/**
+ * @class ComputeInitialOffsets ComputeInitialOffsets.h SOC/ComputeInitialOffsets.h
+ * @brief
+ * @author
+ * @date Jan 3, 2012
+ * @version 1.0
  */
-class MBIRLib_EXPORT GainsOffsetsReader : public TomoFilter
+class MBIRLib_EXPORT ComputeInitialOffsets : public TomoFilter
 {
   public:
-    MXA_SHARED_POINTERS(GainsOffsetsReader)
-    MXA_STATIC_NEW_MACRO(GainsOffsetsReader);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, GainsOffsetsReader);
-    MXA_TYPE_MACRO_SUPER(GainsOffsetsReader, TomoFilter)
+    MXA_SHARED_POINTERS(ComputeInitialOffsets)
+    MXA_STATIC_NEW_MACRO(ComputeInitialOffsets);
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, ComputeInitialOffsets);
+    MXA_TYPE_MACRO_SUPER(ComputeInitialOffsets, TomoFilter)
 
-    virtual ~GainsOffsetsReader();
+    virtual ~ComputeInitialOffsets();
 
-     virtual void execute();
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialOffset)
+
+
+    virtual void execute();
+
 
   protected:
-    GainsOffsetsReader();
+    ComputeInitialOffsets();
 
   private:
-    GainsOffsetsReader(const GainsOffsetsReader&); // Copy Constructor Not Implemented
-    void operator=(const GainsOffsetsReader&); // Operator '=' Not Implemented
+    ComputeInitialOffsets(const ComputeInitialOffsets&); // Copy Constructor Not Implemented
+    void operator=(const ComputeInitialOffsets&); // Operator '=' Not Implemented
 };
 
-
-#endif /* GAINSOFFSETSREADER_H_ */
+#endif /* COMPUTEGAINSOFFETS_H_ */

@@ -36,7 +36,7 @@
 
 
 
-#include "QGGMRF_Functions.h"
+#include "QGGMRFPriorModel.h"
 
 #include "MBIRLib/Common/EIMMath.h"
 
@@ -80,6 +80,27 @@ namespace QGGMRF {
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+void initializePriorModel(TomoInputsPtr m_TomoInputs, QGGMRF::QGGMRF_Values* m_QGGMRF_Values)
+{
+#ifdef EIMTOMO_USE_QGGMRF
+  m_QGGMRF_Values->MRF_P = 2;
+  m_QGGMRF_Values->MRF_Q = m_TomoInputs->p;
+  m_QGGMRF_Values->MRF_C = 0.01;
+  m_QGGMRF_Values->MRF_ALPHA = 1.5;
+  m_QGGMRF_Values->SIGMA_X_P = pow(m_TomoInputs->SigmaX, m_QGGMRF_Values->MRF_P);
+  m_QGGMRF_Values->SIGMA_X_P_Q = pow(m_TomoInputs->SigmaX, (m_QGGMRF_Values->MRF_P - m_QGGMRF_Values->MRF_Q));
+  m_QGGMRF_Values->SIGMA_X_Q = pow(m_TomoInputs->SigmaX, m_QGGMRF_Values->MRF_Q);
+#else
+  MRF_P = m_TomoInputs->p;
+  SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
+#endif //QGGMRF
+}
+
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 Real_t Value(Real_t delta, QGGMRF::QGGMRF_Values* qggmrf_values)
 {
   return ((pow(fabs(delta), qggmrf_values->MRF_P) / qggmrf_values->SIGMA_X_P) / (qggmrf_values->MRF_C + pow(fabs(delta), qggmrf_values->MRF_P - qggmrf_values->MRF_Q) / qggmrf_values->SIGMA_X_P_Q));
@@ -114,7 +135,7 @@ Real_t SecondDerivative(Real_t delta, QGGMRF::QGGMRF_Values* qggmrf_values)
 
 // -----------------------------------------------------------------------------
 //       Real_t QGGMRF_Params[26][3];
-// Function to compute parameters of thesurrogate function
+// Function to compute parameters of the surrogate function
 // -----------------------------------------------------------------------------
 void ComputeParameters(Real_t umin, Real_t umax, Real_t RefValue,
                        uint8_t* BOUNDARYFLAG, Real_t* NEIGHBORHOOD,
