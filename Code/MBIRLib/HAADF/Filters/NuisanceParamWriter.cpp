@@ -83,14 +83,6 @@ void NuisanceParamWriter::execute()
   std::stringstream ss;
 
 
-  if(NULL == m_ForwardModel)
-  {
-    setErrorCondition(-1);
-    setErrorMessage("NuisanceBinWriter:: ForwardModel not initialized Correctly");
-    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-    return;
-  }
-
   FILE* file = fopen(m_FileName.c_str(), "wb");
 
   if(file == 0)
