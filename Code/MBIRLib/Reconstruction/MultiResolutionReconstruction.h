@@ -44,8 +44,9 @@
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 #include "MBIRLib/Reconstruction/ReconstructionEngine.h"
 
-/*
- *
+/**
+ * @brief This class controls the multiresolution reconstruction of an input
+ * data set
  */
 class MultiResolutionReconstruction : public FilterPipeline
 {
@@ -106,8 +107,19 @@ class MultiResolutionReconstruction : public FilterPipeline
      */
     virtual void execute();
 
+
+  /**
+   * @brief Prints the values of the input variables
+   * @param inputs
+   * @param out
+   */
     void printInputs(TomoInputsPtr inputs, std::ostream &out);
 
+    /**
+     * @brief Trys to estimate the amount of memory that will be used.
+     * @param inputs
+     * @param bf_inputs
+     */
     void memCalculate(TomoInputsPtr inputs,TomoInputsPtr bf_inputs);
 
   protected:

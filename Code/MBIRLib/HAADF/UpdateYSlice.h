@@ -80,13 +80,40 @@
 //NEIGHBORHOOD
 //BOUNDARYFLAG
 
-
+/**
+ * @brief Updates one or more Y Slices of voxels. This can be run serial or in a multi-threaded
+ * fashion using the Threading Building Blocks library
+ *
+ */
 class UpdateYSlice
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
 : public tbb::task
 #endif
 {
   public:
+  /**
+   * @brief
+   * @param yStart
+   * @param yEnd
+   * @param geometry
+   * @param outerIter
+   * @param innerIter
+   * @param sinogram
+   * @param tempCol
+   * @param errorSino
+   * @param weight
+   * @param voxelLineResponse
+   * @param forwardModel
+   * @param mask
+   * @param magUpdateMap
+   * @param magUpdateMask
+   * @param voxelUpdateType
+   * @param nh_Threshold
+   * @param averageUpdate
+   * @param averageMagnitudeOfRecon
+   * @param zeroSkipping
+   * @param qggmrf_values
+   */
     UpdateYSlice(uint16_t yStart, uint16_t yEnd,
                  GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
                  SinogramPtr  sinogram,
@@ -108,7 +135,7 @@ class UpdateYSlice
     ~UpdateYSlice();
 
     /**
-     *
+     * @brief
      * @return
      */
     int getZeroCount();
@@ -123,6 +150,12 @@ class UpdateYSlice
 #endif
     execute();
 
+  protected:
+
+  /**
+   * @brief
+   */
+    void initVariables();
 
   private:
     uint16_t m_YStart;
@@ -156,18 +189,14 @@ class UpdateYSlice
     QGGMRF::QGGMRF_Values* m_QggmrfValues;
 
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
-    uint8_t BOUNDARYFLAG[27];
+    uint8_t m_BoundaryFlag[27];
     //Markov Random Field Prior parameters - Globals DATA_TYPE
-    Real_t FILTER[27];
-    Real_t HAMMING_WINDOW[5][5];
-    Real_t THETA1;
-    Real_t THETA2;
-    Real_t NEIGHBORHOOD[27];
+    Real_t m_Filter[27];
+    Real_t m_HammingWindow[5][5];
+    Real_t m_Theta1;
+    Real_t m_Theta2;
+    Real_t m_Neighborhood[27];
 
-    // -----------------------------------------------------------------------------
-    //
-    // -----------------------------------------------------------------------------
-    void initVariables();
 };
 
 #endif /* UPDATEYSLICE_H_ */

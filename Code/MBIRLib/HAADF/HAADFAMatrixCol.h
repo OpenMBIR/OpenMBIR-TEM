@@ -44,8 +44,9 @@
 
 
 
-/*
- *
+/**
+ * @brief Holds a column specific to the HAADF algorihms and inputs codes of the
+ * A Matrix for Tomographic reconstructions
  */
 class HAADFAMatrixCol
 {
@@ -70,14 +71,14 @@ class HAADFAMatrixCol
     uint32_t count; //The number of non zero values present in the column
     void setCount(uint32_t c);
 
-    static HAADFAMatrixCol::Pointer calculateHAADFAMatrixColumnPartial(SinogramPtr m_Sinogram,
-                                                                       GeometryPtr m_Geometry,
-                                                                       TomoInputsPtr m_TomoInputs,
-                                                                       AdvancedParametersPtr m_AdvParams,
+    static HAADFAMatrixCol::Pointer calculateHAADFAMatrixColumnPartial(SinogramPtr sinogram,
+                                                                       GeometryPtr geometry,
+                                                                       TomoInputsPtr tomoInputs,
+                                                                       AdvancedParametersPtr advParams,
                                                                        uint16_t row,
                                                                        uint16_t col,
                                                                        uint16_t slice,
-                                                                       RealVolumeType::Pointer DetectorResponse,
+                                                                       RealVolumeType::Pointer detectorResponse,
                                                                        HAADFDetectorParameters::Pointer haadfParameters);
 
   protected:

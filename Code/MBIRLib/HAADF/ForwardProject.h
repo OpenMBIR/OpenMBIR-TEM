@@ -77,9 +77,9 @@ class MBIRLib_EXPORT ForwardProject
   private:
     Sinogram* m_Sinogram;
     Geometry* m_Geometry;
-    std::vector<HAADFAMatrixCol::Pointer> TempCol;
-    std::vector<HAADFAMatrixCol::Pointer> VoxelLineResponse;
-    RealVolumeType::Pointer Y_Est;
+    std::vector<HAADFAMatrixCol::Pointer> m_TempCol;
+    std::vector<HAADFAMatrixCol::Pointer> m_VoxelLineResponse;
+    RealVolumeType::Pointer m_YEstimate;
     HAADFForwardModel* m_ForwardModel;
     uint16_t m_Tilt;
     Observable* m_Observable;

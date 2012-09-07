@@ -88,7 +88,7 @@
 
 #define START_TIMER startm = EIMTOMO_getMilliSeconds();
 #define STOP_TIMER stopm = EIMTOMO_getMilliSeconds();
-#define PRINT_TIME(msg)\
+#define PRINT_TIME(msg, startm, stopm)\
     std::cout << indent << msg << ": " << ((double)stopm-startm)/1000.0 << " seconds" << std::endl;
 
 #define MAKE_OUTPUT_FILE(Fp, outdir, filename)\
@@ -147,7 +147,7 @@ namespace Detail {
  // -----------------------------------------------------------------------------
  ReconstructionEngine::ReconstructionEngine()
  {
-   initVariables();
+
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
     tbb::task_scheduler_init init;
     m_NumThreads = init.default_num_threads();
@@ -257,18 +257,6 @@ void ReconstructionEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
 
 }
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void ReconstructionEngine::initVariables()
-{
-//  //Hamming Window here
-//  HAMMING_WINDOW[0][0]= 0.0013; HAMMING_WINDOW[0][1]=0.0086; HAMMING_WINDOW[0][2]=0.0159; HAMMING_WINDOW[0][3]=0.0086;HAMMING_WINDOW[0][4]=0.0013;
-//  HAMMING_WINDOW[1][0]= 0.0086; HAMMING_WINDOW[1][1]=0.0581;HAMMING_WINDOW[1][2]=0.1076;HAMMING_WINDOW[1][3]=0.0581;HAMMING_WINDOW[1][4]=0.0086;
-//  HAMMING_WINDOW[2][0]= 0.0159;HAMMING_WINDOW[2][1]=0.1076;HAMMING_WINDOW[2][2]=0.1993;HAMMING_WINDOW[2][3]=0.1076;HAMMING_WINDOW[2][4]=0.0159;
-//  HAMMING_WINDOW[3][0]= 0.0013;HAMMING_WINDOW[3][1]=0.0086;HAMMING_WINDOW[3][2]=0.0159;HAMMING_WINDOW[3][3]=0.0086;HAMMING_WINDOW[3][4]=0.0013;
-//  HAMMING_WINDOW[4][0]= 0.0086;HAMMING_WINDOW[4][1]=0.0581;HAMMING_WINDOW[4][2]=0.1076;HAMMING_WINDOW[4][3]=0.0581;HAMMING_WINDOW[4][4]=0.0086;
-}
 
 // -----------------------------------------------------------------------------
 //
@@ -283,21 +271,21 @@ void ReconstructionEngine::execute()
   // int16_t i,j,k,Idx;
   size_t dims[3];
 
-  Int32ArrayType::Pointer Counter;
-  UInt8Image_t::Pointer VisitCount;
+ // Int32ArrayType::Pointer Counter;
+  UInt8Image_t::Pointer visitCount;
 
-  uint16_t MaxNumberOfDetectorElts;
+  uint16_t maxNumberOfDetectorElts;
   uint8_t status; //set to 1 if ICD has converged
 
   Real_t checksum = 0, temp;
 
-  RealImageType::Pointer VoxelProfile;
+  RealImageType::Pointer voxelProfile;
   RealVolumeType::Pointer detectorResponse;
-  RealVolumeType::Pointer H_t;
+  RealVolumeType::Pointer h_t;
 
-  RealVolumeType::Pointer Y_Est; //Estimated Sinogram
-  RealVolumeType::Pointer Final_Sinogram; //To store and write the final sinogram resulting from our reconstruction
-  RealVolumeType::Pointer ErrorSino; //Error Sinogram
+  RealVolumeType::Pointer y_Est; //Estimated Sinogram
+  RealVolumeType::Pointer finalSinogram; //To store and write the final sinogram resulting from our reconstruction
+  RealVolumeType::Pointer errorSino; //Error Sinogram
 
   std::string indent("");
 
@@ -398,20 +386,20 @@ void ReconstructionEngine::execute()
   dims[1] = m_Sinogram->N_r;
   dims[2] = m_Sinogram->N_t;
 
-  Y_Est = RealVolumeType::New(dims, "Y_Est");
-  ErrorSino = RealVolumeType::New(dims, "ErrorSino");
+  y_Est = RealVolumeType::New(dims, "y_Est");
+  errorSino = RealVolumeType::New(dims, "ErrorSino");
   m_ForwardModel->weightInitialization(dims);
-  Final_Sinogram = RealVolumeType::New(dims, "Final Sinogram");
+  finalSinogram = RealVolumeType::New(dims, "Final Sinogram");
 
   //calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram
   // Structure are converted to radians
-  VoxelProfile = calculateVoxelProfile(); //Verified with ML
+  voxelProfile = calculateVoxelProfile(); //Verified with ML
 
   //Pre compute sine and cos theta to speed up computations
   HAADFDetectorParameters::Pointer haadfParameters = HAADFDetectorParameters::New();
   haadfParameters->setOffsetR ( ((m_TomoInputs->delta_xz / sqrt(3.0)) + m_Sinogram->delta_r / 2) / m_AdvParams->DETECTOR_RESPONSE_BINS);
   haadfParameters->setOffsetT ( ((m_TomoInputs->delta_xz / 2) + m_Sinogram->delta_t / 2) / m_AdvParams->DETECTOR_RESPONSE_BINS);
-  haadfParameters->setBEAM_WIDTH(m_Sinogram->delta_r);
+  haadfParameters->setBeamWidth(m_Sinogram->delta_r);
   haadfParameters->calculateSinCos(m_Sinogram);
   //Initialize the e-beam
   haadfParameters->initializeBeamProfile(m_Sinogram, m_AdvParams); //verified with ML
@@ -429,8 +417,6 @@ void ReconstructionEngine::execute()
   dims[1] = 3;
   dims[2] = 0;
   //Hold the coefficients of a quadratic equation
-  NumOfViews = m_Sinogram->N_theta;
-  LogGain = m_Sinogram->N_theta * log(m_ForwardModel->getTargetGain());
 
   m_ForwardModel->costInitialization(m_Sinogram);
 
@@ -442,7 +428,7 @@ void ReconstructionEngine::execute()
   dResponseFilter->setSinogram(m_Sinogram);
   dResponseFilter->setAdvParams(m_AdvParams);
   dResponseFilter->setDetectorParameters(haadfParameters);
-  dResponseFilter->setVoxelProfile(VoxelProfile);
+  dResponseFilter->setVoxelProfile(voxelProfile);
   dResponseFilter->setObservers(getObservers());
   dResponseFilter->setVerbose(getVerbose());
   dResponseFilter->setVeryVerbose(getVeryVerbose());
@@ -476,9 +462,9 @@ void ReconstructionEngine::execute()
   dims[0] = m_Geometry->N_z;
   dims[1] = m_Geometry->N_x;
   dims[2] = 0;
-  VisitCount = UInt8Image_t::New(dims, "VisitCount");
+  visitCount = UInt8Image_t::New(dims, "visitCount");
 // Initialize the Array to zero
-  ::memset(VisitCount->d, 0, dims[0] * dims[1] * sizeof(uint8_t));
+  ::memset(visitCount->d, 0, dims[0] * dims[1] * sizeof(uint8_t));
 #endif//Random update
 
 
@@ -491,8 +477,8 @@ void ReconstructionEngine::execute()
   dims[0] = 1;
   dims[1] = m_Sinogram->N_theta;
   dims[2] = m_AdvParams->DETECTOR_RESPONSE_BINS;
-  H_t = RealVolumeType::New(dims, "H_t");
-  initializeHt(H_t, haadfParameters->getOffsetT() );
+  h_t = RealVolumeType::New(dims, "h_t");
+  initializeHt(h_t, haadfParameters->getOffsetT() );
 
   checksum = 0;
 
@@ -502,20 +488,20 @@ void ReconstructionEngine::execute()
 
 
 
-  std::vector<HAADFAMatrixCol::Pointer> VoxelLineResponse(m_Geometry->N_y);
+  std::vector<HAADFAMatrixCol::Pointer> voxelLineResponse(m_Geometry->N_y);
 
-  MaxNumberOfDetectorElts = (uint16_t)((m_TomoInputs->delta_xy / m_Sinogram->delta_t) + 2);
-  dims[0] = MaxNumberOfDetectorElts;
+  maxNumberOfDetectorElts = (uint16_t)((m_TomoInputs->delta_xy / m_Sinogram->delta_t) + 2);
+  dims[0] = maxNumberOfDetectorElts;
   for (uint16_t i = 0; i < m_Geometry->N_y; i++)
   {
     HAADFAMatrixCol::Pointer vlr = HAADFAMatrixCol::New(dims, 0);
-    VoxelLineResponse[i] = vlr;
+    voxelLineResponse[i] = vlr;
   }
 
   //Calculating A-Matrix one column at a time
   //For each entry the idea is to initially allocate space for Sinogram.N_theta * Sinogram.N_x
   // And then store only the non zero entries by allocating a new array of the desired size
-  std::vector<HAADFAMatrixCol::Pointer> TempCol(m_Geometry->N_x * m_Geometry->N_z);
+  std::vector<HAADFAMatrixCol::Pointer> tempCol(m_Geometry->N_x * m_Geometry->N_z);
 
   checksum = 0;
   temp = 0;
@@ -524,10 +510,10 @@ void ReconstructionEngine::execute()
   {
     for (uint16_t x = 0; x < m_Geometry->N_x; x++)
     {
-      TempCol[voxel_count] = HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(m_Sinogram, m_Geometry, m_TomoInputs, m_AdvParams,
+      tempCol[voxel_count] = HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(m_Sinogram, m_Geometry, m_TomoInputs, m_AdvParams,
                                                                                  z, x, 0, detectorResponse, haadfParameters);
-      temp += TempCol[voxel_count]->count;
-      if(0 == TempCol[voxel_count]->count )
+      temp += tempCol[voxel_count]->count;
+      if(0 == tempCol[voxel_count]->count )
       {
         //If this line is never hit and the Object is badly initialized
         //set it to zero
@@ -540,7 +526,7 @@ void ReconstructionEngine::execute()
     }
   }
 
-  storeVoxelResponse(H_t, VoxelLineResponse, haadfParameters);
+  storeVoxelResponse(h_t, voxelLineResponse, haadfParameters);
 
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
@@ -550,13 +536,13 @@ void ReconstructionEngine::execute()
     printf("Geometry-Z %d\n", m_Geometry->N_z);
   }
 
-  initializeVolume(Y_Est, 0.0);
+  initializeVolume(y_Est, 0.0);
 
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
   //Forward Project Geometry->Object one slice at a time and compute the  Sinogram for each slice
   // Forward Project using the Forward Model
-  err = m_ForwardModel->forwardProject(m_Sinogram, m_Geometry, TempCol, VoxelLineResponse, Y_Est , ErrorSino);
+  err = m_ForwardModel->forwardProject(m_Sinogram, m_Geometry, tempCol, voxelLineResponse, y_Est , errorSino);
   if (err < 0)
   {
     return;
@@ -569,7 +555,7 @@ void ReconstructionEngine::execute()
 #endif//Forward Project mode
 
 #ifdef COST_CALCULATE
-  err = calculateCost(cost, Weight, ErrorSino);
+  err = calculateCost(cost, Weight, errorSino);
 #endif //Cost calculation endif
 //  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
 
@@ -598,8 +584,8 @@ void ReconstructionEngine::execute()
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
       status = m_ForwardModel->updateVoxels(m_Sinogram, m_Geometry,
                                             reconOuterIter, reconInnerIter,
-                                             VisitCount, TempCol,
-                                             ErrorSino, VoxelLineResponse,
+                                             visitCount, tempCol,
+                                             errorSino, voxelLineResponse,
                                              cost);
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
@@ -629,7 +615,7 @@ void ReconstructionEngine::execute()
 
     if(m_AdvParams->JOINT_ESTIMATION)
     {
-      err = m_ForwardModel->jointEstimation(m_Sinogram, ErrorSino, Y_Est, cost);
+      err = m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
       if(err < 0)
       {
         break;
@@ -638,9 +624,9 @@ void ReconstructionEngine::execute()
 
     if(m_AdvParams->NOISE_MODEL)
     {
-      m_ForwardModel->updateWeights(m_Sinogram, ErrorSino);
+      m_ForwardModel->updateWeights(m_Sinogram, errorSino);
 #ifdef COST_CALCULATE
-      err = calculateCost(cost, Weight, ErrorSino);
+      err = calculateCost(cost, Weight, errorSino);
       if (err < 0)
       {
         std::cout<<"Cost went up after variance update"<<std::endl;
@@ -694,8 +680,8 @@ void ReconstructionEngine::execute()
     {
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
-        temp_final = m_Sinogram->counts->getValue(i_theta, i_r, i_t) - ErrorSino->getValue(i_theta, i_r, i_t);
-        Final_Sinogram->setValue(temp_final, i_theta, i_r, i_t);
+        temp_final = m_Sinogram->counts->getValue(i_theta, i_r, i_t) - errorSino->getValue(i_theta, i_r, i_t);
+        finalSinogram->setValue(temp_final, i_theta, i_r, i_t);
       }
     }
   }
@@ -703,7 +689,7 @@ void ReconstructionEngine::execute()
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
  // This is writing the "ReconstructedSinogram.bin" file
-  m_ForwardModel->writeSinogramFile(m_Sinogram, Final_Sinogram); // Writes the sinogram to a file
+  m_ForwardModel->writeSinogramFile(m_Sinogram, finalSinogram); // Writes the sinogram to a file
 
   // Writes ReconstructedObject.bin file
   {
@@ -744,225 +730,79 @@ void ReconstructionEngine::execute()
 }
 
 
-/*****************************************************************************
- //Finds the min and max of the neighborhood . This is required prior to calling
- solve()
- *****************************************************************************/
-void ReconstructionEngine::minMax(Real_t *low,Real_t *high, Real_t currentVoxelValue)
-{
-  uint8_t i,j,k;
-  *low=NEIGHBORHOOD[INDEX_3(0,0,0)];
-  *high=NEIGHBORHOOD[INDEX_3(0,0,0)];
-
-  for(i = 0; i < 3;i++)
-  {
-    for(j=0; j < 3; j++)
-    {
-      for(k = 0; k < 3; k++)
-      {
-        //  if(NEIGHBORHOOD[i][j][k] != 0)
-        //  printf("%lf ", NEIGHBORHOOD[i][j][k]);
-
-        if(NEIGHBORHOOD[INDEX_3(i,j,k)] < *low)
-          *low = NEIGHBORHOOD[INDEX_3(i,j,k)];
-        if(NEIGHBORHOOD[INDEX_3(i,j,k)] > *high)
-          *high=NEIGHBORHOOD[INDEX_3(i,j,k)];
-      }
-      //  printf("\n");
-    }
-  }
-
-
-  if(THETA2 !=0)
-  {
-  *low = (*low > (currentVoxelValue - (THETA1/THETA2)) ? (currentVoxelValue - (THETA1/THETA2)): *low);
-
-  *high = (*high < (currentVoxelValue - (THETA1/THETA2)) ? (currentVoxelValue - (THETA1/THETA2)): *high);
-  }
-}
-
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
 RealImageType::Pointer ReconstructionEngine::calculateVoxelProfile()
 {
-    Real_t angle,MaxValLineIntegral;
-    Real_t temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
-    size_t dims[2] = {m_Sinogram->N_theta ,m_AdvParams->PROFILE_RESOLUTION};
-    RealImageType::Pointer VoxProfile = RealImageType::New(dims, "VoxelProfile");
+  Real_t angle, maxValLineIntegral;
+  Real_t temp, dist1, dist2, leftCorner, leftNear, rightNear, rightCorner, t;
+  size_t dims[2] =
+  { m_Sinogram->N_theta, m_AdvParams->PROFILE_RESOLUTION };
+  RealImageType::Pointer voxProfile = RealImageType::New(dims, "VoxelProfile");
 
-    Real_t checksum=0;
-    uint16_t i,j;
-    FILE* Fp = NULL;
-    MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::VoxelProfileFile);
-    if (errno > 0)
-    {
-        std::string filepath(m_TomoInputs->tempDir);
-        filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::VoxelProfileFile);\
-        std::cout << "VoxelProfile will NOT be written to file '" << filepath << std::endl;
-    }
-
-    for (i=0;i<m_Sinogram->N_theta;i++)
-    {
-        m_Sinogram->angles[i]=m_Sinogram->angles[i]*(M_PI/180.0);
-        angle=m_Sinogram->angles[i];
-        while(angle > M_PI_2)
-            angle -= M_PI_2;
-
-        while(angle < 0)
-            angle +=M_PI_2;
-
-        if(angle <= M_PI_4)
-        {
-            MaxValLineIntegral = m_TomoInputs->delta_xz/cos(angle);
-        }
-        else
-        {
-            MaxValLineIntegral = m_TomoInputs->delta_xz/cos(M_PI_2-angle);
-        }
-        temp=cos(M_PI_4);
-        dist1 = temp * cos((M_PI_4 - angle));
-        dist2 = temp * fabs((cos((M_PI_4 + angle))));
-        LeftCorner = 1-dist1;
-        LeftNear = 1-dist2;
-        RightNear = 1+dist2;
-        RightCorner = 1+dist1;
-
-        for(j = 0;j<m_AdvParams->PROFILE_RESOLUTION;j++)
-        {
-            t = 2.0*j /m_AdvParams->PROFILE_RESOLUTION;//2 is the normalized length of the profile (basically equl to 2*delta_xz)
-            if(t <= LeftCorner || t >= RightCorner)
-                VoxProfile->setValue(0, i, j);
-            else if(t > RightNear)
-                VoxProfile->setValue(MaxValLineIntegral*(RightCorner-t)/(RightCorner-RightNear), i, j);
-            else if(t >= LeftNear)
-                VoxProfile->setValue(MaxValLineIntegral, i, j);
-            else
-                VoxProfile->setValue(MaxValLineIntegral*(t-LeftCorner)/(LeftNear-LeftCorner), i, j);
-
-            if (Fp != NULL)
-            {
-                fwrite( VoxProfile->getPointer(i, j), sizeof(Real_t),1,Fp);
-            }
-            checksum+=VoxProfile->getValue(i, j);
-        }
-
-    }
-
-    //printf("Pixel Profile Check sum =%lf\n",checksum);
-    if (Fp != NULL) {
-        fclose(Fp);
-    }
-    return VoxProfile;
-}
-
-#if 0
-/*******************************************************************
- Forwards Projects the Object and stores it in a 3-D matrix
- ********************************************************************/
-RealVolumeType::Pointer ReconstructionEngine::forwardProject(RealVolumeType::Pointer DetectorResponse,
-                                                  RealVolumeType::Pointer H_t)
-{
-  notify("Executing Forward Projection", 50, Observable::UpdateProgressValueAndMessage);
-
-  Real_t x, z, y;
-  Real_t r, rmin, rmax, t, tmin, tmax;
-  Real_t w1, w2, f1, f2;
-  Real_t center_r, delta_r, center_t, delta_t;
-  int16_t index_min, index_max, slice_index_min, slice_index_max, i_r, i_t;
-
-  int16_t index_delta_t, index_delta_r;
-  size_t dims[3] =
-  { m_Sinogram->N_theta, m_Sinogram->N_r, m_Sinogram->N_t };
-  RealVolumeType::Pointer Y_Est = RealVolumeType::New(dims, "Y_Est");
-
-  for (int16_t j = 0; j < m_Geometry->N_z; j++)
+  Real_t checksum = 0;
+  uint16_t i, j;
+  FILE* fp = NULL;
+  MAKE_OUTPUT_FILE(fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::VoxelProfileFile);
+  if(errno > 0)
   {
-    for (int16_t k = 0; k < m_Geometry->N_x; k++)
+    std::string filepath(m_TomoInputs->tempDir);
+    filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::VoxelProfileFile);\
+    std::cout << "VoxelProfile will NOT be written to file '" << filepath << std::endl;
+  }
+
+  for (i = 0; i < m_Sinogram->N_theta; i++)
+  {
+    m_Sinogram->angles[i] = m_Sinogram->angles[i] * (M_PI / 180.0);
+    angle = m_Sinogram->angles[i];
+    while (angle > M_PI_2)
+      angle -= M_PI_2;
+
+    while (angle < 0)
+      angle += M_PI_2;
+
+    if(angle <= M_PI_4)
     {
-      x = m_Geometry->x0 + ((Real_t)k + 0.5) * m_TomoInputs->delta_xz; //0.5 is for center of voxel. x_0 is the left corner
-      z = m_Geometry->z0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz; //0.5 is for center of voxel. z_0 is the left corner
+      maxValLineIntegral = m_TomoInputs->delta_xz / cos(angle);
+    }
+    else
+    {
+      maxValLineIntegral = m_TomoInputs->delta_xz / cos(M_PI_2 - angle);
+    }
+    temp = cos(M_PI_4);
+    dist1 = temp * cos((M_PI_4 - angle));
+    dist2 = temp * fabs((cos((M_PI_4 + angle))));
+    leftCorner = 1 - dist1;
+    leftNear = 1 - dist2;
+    rightNear = 1 + dist2;
+    rightCorner = 1 + dist1;
 
-      for (int16_t i = 0; i < m_Geometry->N_y; i++)
+    for (j = 0; j < m_AdvParams->PROFILE_RESOLUTION; j++)
+    {
+      t = 2.0 * j / m_AdvParams->PROFILE_RESOLUTION; //2 is the normalized length of the profile (basically equl to 2*delta_xz)
+      if(t <= leftCorner || t >= rightCorner) {voxProfile->setValue(0, i, j);}
+      else if(t > rightNear) { voxProfile->setValue(maxValLineIntegral * (rightCorner - t) / (rightCorner - rightNear), i, j);}
+      else if(t >= leftNear) { voxProfile->setValue(maxValLineIntegral, i, j);}
+      else { voxProfile->setValue(maxValLineIntegral * (t - leftCorner) / (leftNear - leftCorner), i, j);}
+
+      if(fp != NULL)
       {
-        for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-        {
-          r = x * cosine->d[i_theta] - z * sine->d[i_theta];
-          rmin = r - m_TomoInputs->delta_xz;
-          rmax = r + m_TomoInputs->delta_xz;
-
-          if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax) continue;
-
-          index_min = static_cast<uint16_t>(floor(((rmin - m_Sinogram->R0) / m_Sinogram->delta_r)));
-          index_max = static_cast<uint16_t>(floor((rmax - m_Sinogram->R0) / m_Sinogram->delta_r));
-
-          if(index_max >= m_Sinogram->N_r) index_max = m_Sinogram->N_r - 1;
-
-          if(index_min < 0) index_min = 0;
-
-          y = m_Geometry->y0 + ((double)i + 0.5) * m_TomoInputs->delta_xy;
-          t = y;
-
-          tmin = (t - m_TomoInputs->delta_xy / 2) > m_Sinogram->T0 ? t - m_TomoInputs->delta_xy / 2 : m_Sinogram->T0;
-          tmax = (t + m_TomoInputs->delta_xy / 2) <= m_Sinogram->TMax ? t + m_TomoInputs->delta_xy / 2 : m_Sinogram->TMax;
-
-          slice_index_min = static_cast<uint16_t>(floor((tmin - m_Sinogram->T0) / m_Sinogram->delta_t));
-          slice_index_max = static_cast<uint16_t>(floor((tmax - m_Sinogram->T0) / m_Sinogram->delta_t));
-
-          if(slice_index_min < 0) slice_index_min = 0;
-          if(slice_index_max >= m_Sinogram->N_t) slice_index_max = m_Sinogram->N_t - 1;
-
-          for (i_r = index_min; i_r <= index_max; i_r++)
-          {
-            center_r = m_Sinogram->R0 + ((double)i_r + 0.5) * m_Sinogram->delta_r;
-            delta_r = fabs(center_r - r);
-            index_delta_r = static_cast<uint16_t>(floor((delta_r / OffsetR)));
-
-            if(index_delta_r < m_AdvParams->DETECTOR_RESPONSE_BINS)
-            {
-              w1 = delta_r - index_delta_r * OffsetR;
-              w2 = (index_delta_r + 1) * OffsetR - delta_r;
-              uint16_t iidx = index_delta_r + 1 < m_AdvParams->DETECTOR_RESPONSE_BINS ? index_delta_r + 1 : m_AdvParams->DETECTOR_RESPONSE_BINS - 1;
-              f1 = (w2 / OffsetR) * DetectorResponse->getValue(0, i_theta, index_delta_r)
-                  +(w1 / OffsetR) * DetectorResponse->getValue(0, i_theta, iidx);
-            }
-            else
-            {
-              f1 = 0;
-            }
-
-            for (i_t = slice_index_min; i_t <= slice_index_max; i_t++)
-            {
-              center_t = m_Sinogram->T0 + ((double)i_t + 0.5) * m_Sinogram->delta_t;
-              delta_t = fabs(center_t - t);
-              index_delta_t = static_cast<uint16_t>(floor((delta_t / OffsetT)));
-
-              if(index_delta_t < m_AdvParams->DETECTOR_RESPONSE_BINS)
-              {
-                w1 = delta_t - index_delta_t * OffsetT;
-                w2 = (index_delta_t + 1) * OffsetT - delta_t;
-                uint16_t iidx = index_delta_t + 1 < m_AdvParams->DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : m_AdvParams->DETECTOR_RESPONSE_BINS - 1;
-                f2 = (w2 / OffsetT) * H_t->getValue(0, i_theta, index_delta_t) + (w1 / OffsetT) * H_t->getValue(0, i_theta, iidx);
-              }
-              else
-              {
-                f2 = 0;
-              }
-              //Y_Est->d[i_theta][i_r][i_t] += f1*f2*m_Geometry->Object->getValue(j, k, i);
-              Y_Est->addToValue(f1 * f2 * m_Geometry->Object->getValue(j, k, i), i_theta, i_r, i_t);
-            }
-          }
-        }
+        fwrite(voxProfile->getPointer(i, j), sizeof(Real_t), 1, fp);
       }
-
+      checksum += voxProfile->getValue(i, j);
     }
 
   }
 
-  return Y_Est;
+  //printf("Pixel Profile Check sum =%lf\n",checksum);
+  if(fp != NULL)
+  {
+    fclose(fp);
+  }
+  return voxProfile;
 }
-#endif
 
 
 #ifndef EIMTOMO_USE_QGGMRF
@@ -983,10 +823,10 @@ double ReconstructionEngine::surrogateFunctionBasedMin(Real_t currentVoxelValue)
     {
       for (k = 0; k < 3; k++)
       {
-        if(currentVoxelValue != NEIGHBORHOOD[i][j][k])
+        if(currentVoxelValue != m_Neighborhood[i][j][k])
         {
-          product = ((double)FILTER[i][j][k] * pow(fabs(currentVoxelValue - NEIGHBORHOOD[i][j][k]), (MRF_P - 2.0)));
-          numerator_sum += (product * (currentVoxelValue - NEIGHBORHOOD[i][j][k]));
+          product = ((double)FILTER[i][j][k] * pow(fabs(currentVoxelValue - m_Neighborhood[i][j][k]), (MRF_P - 2.0)));
+          numerator_sum += (product * (currentVoxelValue - m_Neighborhood[i][j][k]));
           denominator_sum += product;
         }
       }
@@ -995,10 +835,10 @@ double ReconstructionEngine::surrogateFunctionBasedMin(Real_t currentVoxelValue)
   numerator_sum /= SIGMA_X_P;
   denominator_sum /= SIGMA_X_P;
 
-  numerator_sum += THETA1;
-  denominator_sum += THETA2;
+  numerator_sum += m_Theta1;
+  denominator_sum += m_Theta2;
 
-  if(THETA2 > 0)
+  if(m_Theta2 > 0)
   {
     alpha = (-1 * numerator_sum) / (denominator_sum);
     update = currentVoxelValue + Detail::Clip(alpha, -currentVoxelValue, std::numeric_limits<float>::infinity());

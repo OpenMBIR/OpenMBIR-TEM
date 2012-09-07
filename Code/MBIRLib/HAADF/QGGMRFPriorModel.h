@@ -58,6 +58,7 @@ namespace QGGMRF {
       Real_t SIGMA_X_Q;
   } QGGMRF_Values;
 
+
   /**
    * @brief initializePriorModel
    * @param tomoInputs
@@ -97,12 +98,12 @@ Real_t SecondDerivative(Real_t delta, QGGMRF_Values* qggmrf_values);
  * @param BOUNDARYFLAG
  * @param NEIGHBORHOOD
  * @param qggmrf_values
- * @param QGGMRF_Params
+ * @param qggmrf_params
  */
 void ComputeParameters(Real_t umin, Real_t umax, Real_t RefValue,
-                       uint8_t* BOUNDARYFLAG, Real_t* NEIGHBORHOOD,
+                       uint8_t* boundaryFlag, Real_t* neighborhood,
                        QGGMRF::QGGMRF_Values* qggmrf_values,
-                       Real_t* QGGMRF_Params);
+                       Real_t* qggmrf_params);
 /**
  *
  * @param umin
@@ -117,16 +118,11 @@ void ComputeParameters(Real_t umin, Real_t umax, Real_t RefValue,
  * @return
  */
 Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue,
-                                 uint8_t* BOUNDARYFLAG, Real_t* FILTER, Real_t* NEIGHBORHOOD,
-                                 Real_t THETA1, Real_t THETA2,
+                                 uint8_t* boundaryFlag, Real_t* filter, Real_t* neighborhood,
+                                 Real_t theta1, Real_t theta2,
                                  QGGMRF_Values* qggmrf_values);
 
 
-/**
- * @brief HAADFForwardModel::initializePriorModel
- * @param m_TomoInputs
- */
-void initializePriorModel(TomoInputsPtr m_TomoInputs, QGGMRF::QGGMRF_Values* m_QGGMRF_Values);
 
 } /* end namespace QGGMRF */
 

@@ -46,19 +46,19 @@
  *****************************************************************************/
 #define find_min_max(low, high, V)\
 {\
-  low=NEIGHBORHOOD[INDEX_3(0,0,0)];\
-  high=NEIGHBORHOOD[INDEX_3(0,0,0)];\
+  low = m_Neighborhood[INDEX_3(0,0,0)];\
+  high = m_Neighborhood[INDEX_3(0,0,0)];\
   for(uint8_t lcv_i = 0; lcv_i < 3;++lcv_i){\
     for(uint8_t lcv_j = 0; lcv_j < 3; ++lcv_j){\
       for(uint8_t lcv_k = 0; lcv_k < 3; ++lcv_k){\
-        if(NEIGHBORHOOD[INDEX_3(lcv_i,lcv_j,lcv_k)] < low) {low = NEIGHBORHOOD[INDEX_3(lcv_i,lcv_j,lcv_k)];}\
-        if(NEIGHBORHOOD[INDEX_3(lcv_i,lcv_j,lcv_k)] > high) {high=NEIGHBORHOOD[INDEX_3(lcv_i,lcv_j,lcv_k)];}\
+        if(m_Neighborhood[INDEX_3(lcv_i,lcv_j,lcv_k)] < low) {low = m_Neighborhood[INDEX_3(lcv_i,lcv_j,lcv_k)];}\
+        if(m_Neighborhood[INDEX_3(lcv_i,lcv_j,lcv_k)] > high) {high = m_Neighborhood[INDEX_3(lcv_i,lcv_j,lcv_k)];}\
       }\
     }\
   }\
-  if(THETA2 !=0){\
-    low = (low > (V - (THETA1/THETA2)) ? (V - (THETA1/THETA2)): low);\
-    high = (high < (V - (THETA1/THETA2)) ? (V - (THETA1/THETA2)): high);\
+  if(m_Theta2 !=0){\
+    low = (low > (V - (m_Theta1/m_Theta2)) ? (V - (m_Theta1/m_Theta2)): low);\
+    high = (high < (V - (m_Theta1/m_Theta2)) ? (V - (m_Theta1/m_Theta2)): high);\
   }\
 }
 
@@ -121,62 +121,62 @@ UpdateYSlice::~UpdateYSlice()
 // -----------------------------------------------------------------------------
 void UpdateYSlice::initVariables()
 {
-  FILTER[INDEX_3(0, 0, 0)] = 0.0302;
-  FILTER[INDEX_3(0, 0, 1)] = 0.0370;
-  FILTER[INDEX_3(0, 0, 2)] = 0.0302;
-  FILTER[INDEX_3(0, 1, 0)] = 0.0370;
-  FILTER[INDEX_3(0, 1, 1)] = 0.0523;
-  FILTER[INDEX_3(0, 1, 2)] = 0.0370;
-  FILTER[INDEX_3(0, 2, 0)] = 0.0302;
-  FILTER[INDEX_3(0, 2, 1)] = 0.0370;
-  FILTER[INDEX_3(0, 2, 2)] = 0.0302;
+  m_Filter[INDEX_3(0, 0, 0)] = 0.0302;
+  m_Filter[INDEX_3(0, 0, 1)] = 0.0370;
+  m_Filter[INDEX_3(0, 0, 2)] = 0.0302;
+  m_Filter[INDEX_3(0, 1, 0)] = 0.0370;
+  m_Filter[INDEX_3(0, 1, 1)] = 0.0523;
+  m_Filter[INDEX_3(0, 1, 2)] = 0.0370;
+  m_Filter[INDEX_3(0, 2, 0)] = 0.0302;
+  m_Filter[INDEX_3(0, 2, 1)] = 0.0370;
+  m_Filter[INDEX_3(0, 2, 2)] = 0.0302;
 
-  FILTER[INDEX_3(1, 0, 0)] = 0.0370;
-  FILTER[INDEX_3(1, 0, 1)] = 0.0523;
-  FILTER[INDEX_3(1, 0, 2)] = 0.0370;
-  FILTER[INDEX_3(1, 1, 0)] = 0.0523;
-  FILTER[INDEX_3(1, 1, 1)] = 0.0000;
-  FILTER[INDEX_3(1, 1, 2)] = 0.0523;
-  FILTER[INDEX_3(1, 2, 0)] = 0.0370;
-  FILTER[INDEX_3(1, 2, 1)] = 0.0523;
-  FILTER[INDEX_3(1, 2, 2)] = 0.0370;
+  m_Filter[INDEX_3(1, 0, 0)] = 0.0370;
+  m_Filter[INDEX_3(1, 0, 1)] = 0.0523;
+  m_Filter[INDEX_3(1, 0, 2)] = 0.0370;
+  m_Filter[INDEX_3(1, 1, 0)] = 0.0523;
+  m_Filter[INDEX_3(1, 1, 1)] = 0.0000;
+  m_Filter[INDEX_3(1, 1, 2)] = 0.0523;
+  m_Filter[INDEX_3(1, 2, 0)] = 0.0370;
+  m_Filter[INDEX_3(1, 2, 1)] = 0.0523;
+  m_Filter[INDEX_3(1, 2, 2)] = 0.0370;
 
-  FILTER[INDEX_3(2, 0, 0)] = 0.0302;
-  FILTER[INDEX_3(2, 0, 1)] = 0.0370;
-  FILTER[INDEX_3(2, 0, 2)] = 0.0302;
-  FILTER[INDEX_3(2, 1, 0)] = 0.0370;
-  FILTER[INDEX_3(2, 1, 1)] = 0.0523;
-  FILTER[INDEX_3(2, 1, 2)] = 0.0370;
-  FILTER[INDEX_3(2, 2, 0)] = 0.0302;
-  FILTER[INDEX_3(2, 2, 1)] = 0.0370;
-  FILTER[INDEX_3(2, 2, 2)] = 0.0302;
+  m_Filter[INDEX_3(2, 0, 0)] = 0.0302;
+  m_Filter[INDEX_3(2, 0, 1)] = 0.0370;
+  m_Filter[INDEX_3(2, 0, 2)] = 0.0302;
+  m_Filter[INDEX_3(2, 1, 0)] = 0.0370;
+  m_Filter[INDEX_3(2, 1, 1)] = 0.0523;
+  m_Filter[INDEX_3(2, 1, 2)] = 0.0370;
+  m_Filter[INDEX_3(2, 2, 0)] = 0.0302;
+  m_Filter[INDEX_3(2, 2, 1)] = 0.0370;
+  m_Filter[INDEX_3(2, 2, 2)] = 0.0302;
 
   //Hamming Window here
-  HAMMING_WINDOW[0][0] = 0.0013;
-  HAMMING_WINDOW[0][1] = 0.0086;
-  HAMMING_WINDOW[0][2] = 0.0159;
-  HAMMING_WINDOW[0][3] = 0.0086;
-  HAMMING_WINDOW[0][4] = 0.0013;
-  HAMMING_WINDOW[1][0] = 0.0086;
-  HAMMING_WINDOW[1][1] = 0.0581;
-  HAMMING_WINDOW[1][2] = 0.1076;
-  HAMMING_WINDOW[1][3] = 0.0581;
-  HAMMING_WINDOW[1][4] = 0.0086;
-  HAMMING_WINDOW[2][0] = 0.0159;
-  HAMMING_WINDOW[2][1] = 0.1076;
-  HAMMING_WINDOW[2][2] = 0.1993;
-  HAMMING_WINDOW[2][3] = 0.1076;
-  HAMMING_WINDOW[2][4] = 0.0159;
-  HAMMING_WINDOW[3][0] = 0.0013;
-  HAMMING_WINDOW[3][1] = 0.0086;
-  HAMMING_WINDOW[3][2] = 0.0159;
-  HAMMING_WINDOW[3][3] = 0.0086;
-  HAMMING_WINDOW[3][4] = 0.0013;
-  HAMMING_WINDOW[4][0] = 0.0086;
-  HAMMING_WINDOW[4][1] = 0.0581;
-  HAMMING_WINDOW[4][2] = 0.1076;
-  HAMMING_WINDOW[4][3] = 0.0581;
-  HAMMING_WINDOW[4][4] = 0.0086;
+  m_HammingWindow[0][0] = 0.0013;
+  m_HammingWindow[0][1] = 0.0086;
+  m_HammingWindow[0][2] = 0.0159;
+  m_HammingWindow[0][3] = 0.0086;
+  m_HammingWindow[0][4] = 0.0013;
+  m_HammingWindow[1][0] = 0.0086;
+  m_HammingWindow[1][1] = 0.0581;
+  m_HammingWindow[1][2] = 0.1076;
+  m_HammingWindow[1][3] = 0.0581;
+  m_HammingWindow[1][4] = 0.0086;
+  m_HammingWindow[2][0] = 0.0159;
+  m_HammingWindow[2][1] = 0.1076;
+  m_HammingWindow[2][2] = 0.1993;
+  m_HammingWindow[2][3] = 0.1076;
+  m_HammingWindow[2][4] = 0.0159;
+  m_HammingWindow[3][0] = 0.0013;
+  m_HammingWindow[3][1] = 0.0086;
+  m_HammingWindow[3][2] = 0.0159;
+  m_HammingWindow[3][3] = 0.0086;
+  m_HammingWindow[3][4] = 0.0013;
+  m_HammingWindow[4][0] = 0.0086;
+  m_HammingWindow[4][1] = 0.0581;
+  m_HammingWindow[4][2] = 0.1076;
+  m_HammingWindow[4][3] = 0.0581;
+  m_HammingWindow[4][4] = 0.0086;
 }
 
 // -----------------------------------------------------------------------------
@@ -311,8 +311,8 @@ int UpdateYSlice::getZeroCount()
            {
 
              //Neighborhood of (i,j,k) should be initialized to zeros each time
-             ::memset(NEIGHBORHOOD, 0, 27*sizeof(Real_t));
-             ::memset(BOUNDARYFLAG, 0, 27*sizeof(uint8_t));
+             ::memset(m_Neighborhood, 0, 27*sizeof(Real_t));
+             ::memset(m_BoundaryFlag, 0, 27*sizeof(uint8_t));
 //              for (int32_t p = 0; p <= 2; p++)
 //              {
 //                for (int32_t q = 0; q <= 2; q++)
@@ -320,7 +320,7 @@ int UpdateYSlice::getZeroCount()
 //                  for (int32_t r = 0; r <= 2; r++)
 //                  {
 //                    NEIGHBORHOOD[INDEX_3(p, q, r)] = 0.0;
-//                    BOUNDARYFLAG[INDEX_3(p, q, r)] = 0;
+//                    m_BoundaryFlag[INDEX_3(p, q, r)] = 0;
 //                  }
 //                }
 //              }
@@ -337,23 +337,23 @@ int UpdateYSlice::getZeroCount()
                      {
                        if(k_new + r >= 0 && k_new + r < m_Geometry->N_x)
                        {
-                         NEIGHBORHOOD[INDEX_3(p + 1, q + 1, r + 1)] = m_Geometry->Object->getValue(q + j_new, r + k_new, p + i);
-                         BOUNDARYFLAG[INDEX_3(p + 1, q + 1, r + 1)] = 1;
+                         m_Neighborhood[INDEX_3(p + 1, q + 1, r + 1)] = m_Geometry->Object->getValue(q + j_new, r + k_new, p + i);
+                         m_BoundaryFlag[INDEX_3(p + 1, q + 1, r + 1)] = 1;
                        }
                        else
                        {
-                         BOUNDARYFLAG[INDEX_3(p + 1, q + 1, r + 1)] = 0;
+                         m_BoundaryFlag[INDEX_3(p + 1, q + 1, r + 1)] = 0;
                        }
                      }
                    }
                  }
                }
              }
-             NEIGHBORHOOD[INDEX_3(1, 1, 1)] = 0.0;
+             m_Neighborhood[INDEX_3(1, 1, 1)] = 0.0;
              //Compute theta1 and theta2
              m_CurrentVoxelValue = m_Geometry->Object->getValue(j_new, k_new, i); //Store the present value of the voxel
-             THETA1 = 0.0;
-             THETA2 = 0.0;
+             m_Theta1 = 0.0;
+             m_Theta2 = 0.0;
              bool ZSFlag = true;
              if(m_ZeroSkipping == 1)
              {
@@ -366,7 +366,7 @@ int UpdateYSlice::getZeroCount()
                    for (uint8_t q = 0; q <= 2; q++)
                    {
                      for (uint8_t r = 0; r <= 2; r++)
-                       if(NEIGHBORHOOD[INDEX_3(p,q,r)] > 0.0)
+                       if(m_Neighborhood[INDEX_3(p,q,r)] > 0.0)
                        {
                          ZSFlag = false;
                          break;
@@ -399,20 +399,20 @@ int UpdateYSlice::getZeroCount()
                    Real_t ProjectionEntry = kConst0 * m_VoxelLineResponse[i]->values[VoxelLineAccessCounter];
                    if(m_ForwardModel->getBF_Flag() == false)
                    {
-                     THETA2 += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
-                     THETA1 += (m_ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
+                     m_Theta2 += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
+                     m_Theta1 += (m_ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
                    }
                    else
                    {
                      ProjectionEntry *= m_ForwardModel->getBFSinogram()->counts->d[error_idx];
-                     THETA2 += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
-                     THETA1 += (m_ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
+                     m_Theta2 += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
+                     m_Theta1 += (m_ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
                    }
                    VoxelLineAccessCounter++;
                  }
                }
 
-               THETA1 *= -1;
+               m_Theta1 *= -1;
                find_min_max(low, high, m_CurrentVoxelValue);
 
                //Solve the 1-D optimization problem
@@ -420,7 +420,7 @@ int UpdateYSlice::getZeroCount()
 #ifndef SURROGATE_FUNCTION
                //TODO : What if theta1 = 0 ? Then this will give error
 
-               DerivOfCostFunc docf(BOUNDARYFLAG, NEIGHBORHOOD, FILTER, V, THETA1, THETA2, SIGMA_X_P, MRF_P);
+               DerivOfCostFunc docf(m_BoundaryFlag, m_Neighborhood, m_Filter, V, m_Theta1, m_Theta2, SIGMA_X_P, MRF_P);
                UpdatedVoxelValue = (Real_t)solve < DerivOfCostFunc > (&docf, (double)low, (double)high, (double)accuracy, &errorcode, binarysearch_count);
 
                //std::cout<<low<<","<<high<<","<<UpdatedVoxelValue<<std::endl;
@@ -428,8 +428,8 @@ int UpdateYSlice::getZeroCount()
                errorcode = 0;
    #ifdef EIMTOMO_USE_QGGMRF
                    UpdatedVoxelValue = QGGMRF::FunctionalSubstitution(low, high, m_CurrentVoxelValue,
-                                                                      BOUNDARYFLAG, FILTER, NEIGHBORHOOD,
-                                                                      THETA1, THETA2,
+                                                                      m_BoundaryFlag, m_Filter, m_Neighborhood,
+                                                                      m_Theta1, m_Theta2,
                                                                       m_QggmrfValues);
    #else
                    SurrogateUpdate = surrogateFunctionBasedMin();
@@ -448,7 +448,7 @@ int UpdateYSlice::getZeroCount()
                }
                else
                {
-                 if(THETA1 == 0 && low == 0 && high == 0)
+                 if(m_Theta1 == 0 && low == 0 && high == 0)
                  {
                    UpdatedVoxelValue = 0;
                  }

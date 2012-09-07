@@ -79,14 +79,14 @@ void HAADFAMatrixCol::setCount(uint32_t c)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-HAADFAMatrixCol::Pointer HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(SinogramPtr m_Sinogram,
-                                                                             GeometryPtr m_Geometry,
-                                                                             TomoInputsPtr m_TomoInputs,
-                                                                             AdvancedParametersPtr m_AdvParams,
+HAADFAMatrixCol::Pointer HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(SinogramPtr sinogram,
+                                                                             GeometryPtr geometry,
+                                                                             TomoInputsPtr tomoInputs,
+                                                                             AdvancedParametersPtr advParams,
                                                                              uint16_t row,
                                                                              uint16_t col,
                                                                              uint16_t slice,
-                                                                             RealVolumeType::Pointer DetectorResponse,
+                                                                             RealVolumeType::Pointer detectorResponse,
                                                                              HAADFDetectorParameters::Pointer haadfParameters)
 {
 
@@ -117,16 +117,16 @@ HAADFAMatrixCol::Pointer HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(Sin
 
 
 
-  x = m_Geometry->x0 + ((Real_t)col + 0.5) * m_TomoInputs->delta_xz; //0.5 is for center of voxel. x_0 is the left corner
-  z = m_Geometry->z0 + ((Real_t)row + 0.5) * m_TomoInputs->delta_xz; //0.5 is for center of voxel. x_0 is the left corner
-  y = m_Geometry->y0 + ((Real_t)slice + 0.5) * m_TomoInputs->delta_xy;
+  x = geometry->x0 + ((Real_t)col + 0.5) * tomoInputs->delta_xz; //0.5 is for center of voxel. x_0 is the left corner
+  z = geometry->z0 + ((Real_t)row + 0.5) * tomoInputs->delta_xz; //0.5 is for center of voxel. x_0 is the left corner
+  y = geometry->y0 + ((Real_t)slice + 0.5) * tomoInputs->delta_xy;
 
-  TempConst = (m_AdvParams->PROFILE_RESOLUTION) / (2 * m_TomoInputs->delta_xz);
+  TempConst = (advParams->PROFILE_RESOLUTION) / (2 * tomoInputs->delta_xz);
 
   //alternately over estimate the maximum size require for a single AMatrix column
-  AvgNumXElements = ceil(3 * m_TomoInputs->delta_xz / m_Sinogram->delta_r);
-  AvgNumYElements = ceil(3 * m_TomoInputs->delta_xy / m_Sinogram->delta_t);
-  MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements) * m_Sinogram->N_theta;
+  AvgNumXElements = ceil(3 * tomoInputs->delta_xz / sinogram->delta_r);
+  AvgNumYElements = ceil(3 * tomoInputs->delta_xy / sinogram->delta_t);
+  MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements) * sinogram->N_theta;
 
   size_t dims[1] = { MaximumSpacePerColumn };
   HAADFAMatrixCol::Pointer Temp = HAADFAMatrixCol::New(dims, 0);
@@ -140,53 +140,53 @@ HAADFAMatrixCol::Pointer HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(Sin
   const Real_t OffsetR = haadfParameters->getOffsetR();
   const Real_t OffsetT = haadfParameters->getOffsetT();
 
-  if(m_AdvParams->AREA_WEIGHTED)
+  if(advParams->AREA_WEIGHTED)
   {
-    for (uint32_t i = 0; i < m_Sinogram->N_theta; i++)
+    for (uint32_t i = 0; i < sinogram->N_theta; i++)
     {
 
       r = x * cosine->d[i] - z * sine->d[i];
       t = y;
 
-      rmin = r - m_TomoInputs->delta_xz;
-      rmax = r + m_TomoInputs->delta_xz;
+      rmin = r - tomoInputs->delta_xz;
+      rmax = r + tomoInputs->delta_xz;
 
-      tmin = (t - m_TomoInputs->delta_xy / 2) > m_Sinogram->T0 ? t - m_TomoInputs->delta_xy / 2 : m_Sinogram->T0;
-      tmax = (t + m_TomoInputs->delta_xy / 2) <= m_Sinogram->TMax ? t + m_TomoInputs->delta_xy / 2 : m_Sinogram->TMax;
+      tmin = (t - tomoInputs->delta_xy / 2) > sinogram->T0 ? t - tomoInputs->delta_xy / 2 : sinogram->T0;
+      tmax = (t + tomoInputs->delta_xy / 2) <= sinogram->TMax ? t + tomoInputs->delta_xy / 2 : sinogram->TMax;
 
-      if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax) continue;
+      if(rmax < sinogram->R0 || rmin > sinogram->RMax) continue;
 
-      index_min = static_cast<int32_t>(floor(((rmin - m_Sinogram->R0) / m_Sinogram->delta_r)));
-      index_max = static_cast<int32_t>(floor((rmax - m_Sinogram->R0) / m_Sinogram->delta_r));
+      index_min = static_cast<int32_t>(floor(((rmin - sinogram->R0) / sinogram->delta_r)));
+      index_max = static_cast<int32_t>(floor((rmax - sinogram->R0) / sinogram->delta_r));
 
-      if(index_max >= m_Sinogram->N_r) index_max = m_Sinogram->N_r - 1;
+      if(index_max >= sinogram->N_r) index_max = sinogram->N_r - 1;
 
       if(index_min < 0) index_min = 0;
 
-      slice_index_min = static_cast<int32_t>(floor((tmin - m_Sinogram->T0) / m_Sinogram->delta_t));
-      slice_index_max = static_cast<int32_t>(floor((tmax - m_Sinogram->T0) / m_Sinogram->delta_t));
+      slice_index_min = static_cast<int32_t>(floor((tmin - sinogram->T0) / sinogram->delta_t));
+      slice_index_max = static_cast<int32_t>(floor((tmax - sinogram->T0) / sinogram->delta_t));
 
       if(slice_index_min < 0) slice_index_min = 0;
-      if(slice_index_max >= m_Sinogram->N_t) slice_index_max = m_Sinogram->N_t - 1;
+      if(slice_index_max >= sinogram->N_t) slice_index_max = sinogram->N_t - 1;
 
-      BaseIndex = i * m_Sinogram->N_r; //*Sinogram->N_t;
+      BaseIndex = i * sinogram->N_r; //*Sinogram->N_t;
 
       for (j = index_min; j <= index_max; j++) //Check
       {
 
         //Accounting for Beam width
-        R_Center = (m_Sinogram->R0 + (((Real_t)j) + 0.5) * (m_Sinogram->delta_r)); //the 0.5 is to get to the center of the detector
+        R_Center = (sinogram->R0 + (((Real_t)j) + 0.5) * (sinogram->delta_r)); //the 0.5 is to get to the center of the detector
 
         //Find the difference between the center of detector and center of projection and compute the Index to look up into
         delta_r = fabs(r - R_Center);
         index_delta_r = static_cast<int32_t>(floor((delta_r / OffsetR)));
 
-        if(index_delta_r >= 0 && index_delta_r < m_AdvParams->DETECTOR_RESPONSE_BINS)
+        if(index_delta_r >= 0 && index_delta_r < advParams->DETECTOR_RESPONSE_BINS)
         {
-          T_Center = (m_Sinogram->T0 + (((Real_t)sliceidx) + 0.5) * (m_Sinogram->delta_t));
+          T_Center = (sinogram->T0 + (((Real_t)sliceidx) + 0.5) * (sinogram->delta_t));
           delta_t = fabs(t - T_Center);
           index_delta_t = 0; //floor(delta_t/OffsetT);
-          if(index_delta_t >= 0 && index_delta_t < m_AdvParams->DETECTOR_RESPONSE_BINS)
+          if(index_delta_t >= 0 && index_delta_t < advParams->DETECTOR_RESPONSE_BINS)
           {
             //Using index_delta_t,index_delta_t+1,index_delta_r and index_delta_r+1 do bilinear interpolation
             w1 = delta_r - index_delta_r * OffsetR;
@@ -195,22 +195,21 @@ HAADFAMatrixCol::Pointer HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(Sin
             w3 = delta_t - index_delta_t * OffsetT;
             w4 = (index_delta_r + 1) * OffsetT - delta_t;
 
-            uint16_t iidx = index_delta_r + 1 < m_AdvParams->DETECTOR_RESPONSE_BINS ? index_delta_r + 1 : m_AdvParams->DETECTOR_RESPONSE_BINS - 1;
-            f1 = (w2 / OffsetR) * DetectorResponse->getValue(index_delta_t, i, index_delta_r)
-                + (w1 / OffsetR) * DetectorResponse->getValue(index_delta_t, i, iidx);
-            //  f2 = (w2/OffsetR)*DetectorResponse[index_delta_t+1 < m_AdvParams->DETECTOR_RESPONSE_BINS ?index_delta_t+1 : m_AdvParams->DETECTOR_RESPONSE_BINS-1][i][index_delta_r] + (w1/OffsetR)*DetectorResponse[index_delta_t+1 < m_AdvParams->DETECTOR_RESPONSE_BINS? index_delta_t+1:m_AdvParams->DETECTOR_RESPONSE_BINS][i][index_delta_r+1 < m_AdvParams->DETECTOR_RESPONSE_BINS? index_delta_r+1:m_AdvParams->DETECTOR_RESPONSE_BINS-1];
+            uint16_t iidx = index_delta_r + 1 < advParams->DETECTOR_RESPONSE_BINS ? index_delta_r + 1 : advParams->DETECTOR_RESPONSE_BINS - 1;
+            f1 = (w2 / OffsetR) * detectorResponse->getValue(index_delta_t, i, index_delta_r)
+                + (w1 / OffsetR) * detectorResponse->getValue(index_delta_t, i, iidx);
 
-            if(sliceidx == slice_index_min) ContributionAlongT = (sliceidx + 1) * m_Sinogram->delta_t - tmin;
-            else if(sliceidx == slice_index_max) ContributionAlongT = tmax - (sliceidx) * m_Sinogram->delta_t;
+            if(sliceidx == slice_index_min) ContributionAlongT = (sliceidx + 1) * sinogram->delta_t - tmin;
+            else if(sliceidx == slice_index_max) ContributionAlongT = tmax - (sliceidx) * sinogram->delta_t;
             else
             {
-              ContributionAlongT = m_Sinogram->delta_t;
+              ContributionAlongT = sinogram->delta_t;
             }
             InterpolatedValue = f1; //*ContributionAlongT;//(w3/OffsetT)*f2 + (w4/OffsetT)*f2;
             if(InterpolatedValue > 0)
             {
               FinalIndex = BaseIndex + (int32_t)j; //+ (int32_t)sliceidx * Sinogram->N_r;
-              Temp->values[count] = InterpolatedValue; //DetectorResponse[index_delta_t][i][index_delta_r];
+              Temp->values[count] = InterpolatedValue; //detectorResponse[index_delta_t][i][index_delta_r];
               Temp->index[count] = FinalIndex; //can instead store a triple (row,col,slice) for the sinogram
               count++;
             }
@@ -220,13 +219,9 @@ HAADFAMatrixCol::Pointer HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(Sin
     }
   }
 
-  //HAADFAMatrixCol* Ai = (HAADFAMatrixCol*)get_spc(1, sizeof(HAADFAMatrixCol));
-
   dims[0] = count;
   HAADFAMatrixCol::Pointer Ai = HAADFAMatrixCol::New(dims, 0);
-//
-//  Ai->values = (Real_t*)get_spc(count, sizeof(Real_t));
-//  Ai->index = (uint32_t*)get_spc(count, sizeof(uint32_t));
+
   k = 0;
   for (uint32_t i = 0; i < count; i++)
   {
@@ -240,8 +235,5 @@ HAADFAMatrixCol::Pointer HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(Sin
   }
   Ai->setCount(k);
 
-//  free(Temp->values);
-//  free(Temp->index);
-//  free(Temp);
   return Ai;
 }

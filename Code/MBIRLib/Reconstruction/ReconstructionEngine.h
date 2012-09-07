@@ -99,8 +99,9 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
     // Protect this constructor because we want to force the use of the other
     ReconstructionEngine();
 
-    void initVariables();
-
+    /**
+     * @brief
+     */
     void calculateArithmeticMean();
 
     /**
@@ -108,83 +109,91 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
      */
     void updateVoxelValues_NHICD();
 
+    /**
+     * @brief
+     */
     int readInputData();
 
+    /**
+     * @brief
+     */
     int initializeRoughReconstructionData();
 
     /**
      * @brief Calculates the x boundaries so the writers do not write extra data
+     * @param cropStart
+     * @param cropEnd
      */
     void computeOriginalXDims(uint16_t &cropStart, uint16_t &cropEnd);
 
+    /**
+     * @brief
+     * @param H_t
+     * @param OffsetT
+     */
     void initializeHt(RealVolumeType::Pointer H_t, Real_t OffsetT);
 
+    /**
+     * @brief
+     * @param H_t
+     * @param VoxelLineResponse
+     * @param haadfParameters
+     */
     void storeVoxelResponse(RealVolumeType::Pointer H_t,
                             std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
                             HAADFDetectorParameters::Pointer haadfParameters);
 
+    /**
+     * @brief
+     * @param Y_Est
+     * @param value
+     */
     void initializeVolume(RealVolumeType::Pointer Y_Est, double value);
 
 #ifdef BF_RECON
     void processRawCounts();
 #endif
 
-
+    /**
+     * @brief
+     * @param filepath
+     */
     void writeReconstructionFile(const std::string &filepath);
+
+    /**
+     * @brief
+     * @param vtkFile
+     * @param cropStart
+     * @param cropEnd
+     */
     void writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
-    void writeMRCFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
+
+    /**
+     * @brief
+     * @param mrcFile
+     * @param cropStart
+     * @param cropEnd
+     */
+    void writeMRCFile(const std::string &mrcFile, uint16_t cropStart, uint16_t cropEnd);
+
+    /**
+     * @brief
+     * @param file
+     * @param cropStart
+     * @param cropEnd
+     */
     void writeAvizoFile(const std::string &file, uint16_t cropStart, uint16_t cropEnd);
 
 
   private:
-    //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
-    uint8_t BOUNDARYFLAG[27];
-
-    Real_t THETA1;
-    Real_t THETA2;
-    Real_t NEIGHBORHOOD[27];
-
-    uint16_t NumOfViews; //this is kind of redundant but in order to avoid repeatedly send this info to the rooting function we save number of views
-    Real_t LogGain; //again these information  are available but to prevent repeatedly sending it to the rooting functions we store it in a variable
-
-    uint64_t startm;
-    uint64_t stopm;
 
     int m_NumThreads;
 
-
-
-
-    /**
-     * @brief
-     * @param low
-     * @param high
-     */
-    void minMax(Real_t *low, Real_t *high, Real_t currentVoxelValue);
 
     /**
      * @brief
      */
     RealImageType::Pointer calculateVoxelProfile();
-
-    /**
-     * @brief
-     * @param row
-     * @param col
-     * @param slice
-     * @param VoxelProfile
-     */
-   // void* calculateHAADFAMatrixColumn(uint16_t row, uint16_t col, uint16_t slice, DATA_TYPE** VoxelProfile);
-
-
-    /**
-     * @brief
-     * @param row
-     * @param col
-     * @param slice
-     * @param DetectorResponse
-     */
- //   HAADFAMatrixCol::Pointer calculateHAADFAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, RealVolumeType::Pointer DetectorResponse);
 
     /**
      * @brief
@@ -200,9 +209,7 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
     * @param j_new
     * @param k_new
     */
-    void UpdateVoxelLine(uint16_t j_new,uint16_t k_new);
-
-
+    void updateVoxelLine(uint16_t j_new,uint16_t k_new);
 
 
     template<typename T>

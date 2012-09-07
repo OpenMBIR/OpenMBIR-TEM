@@ -57,9 +57,9 @@ ForwardProject::ForwardProject(Sinogram* sinogram,
                                Observable* obs) :
 m_Sinogram(sinogram),
 m_Geometry(geometry),
-TempCol(tempCol),
-VoxelLineResponse(voxelLineResponse),
-Y_Est(yEst),
+m_TempCol(tempCol),
+m_VoxelLineResponse(voxelLineResponse),
+m_YEstimate(yEst),
 m_ForwardModel(forwardModel),
 m_Tilt(tilt),
 m_Observable(obs)
@@ -94,22 +94,22 @@ void ForwardProject::operator()() const
   for (uint32_t k = 0; k < m_Geometry->N_x; k++)
   {
     Index = j * m_Geometry->N_x + k;
-    if(TempCol[Index]->count > 0)
+    if(m_TempCol[Index]->count > 0)
     {
       for (uint32_t i = 0; i < m_Geometry->N_y; i++) //slice index
       {
-        for (uint32_t q = 0; q < TempCol[Index]->count; q++)
+        for (uint32_t q = 0; q < m_TempCol[Index]->count; q++)
         {
           //calculating the footprint of the voxel in the t-direction
-          int16_t i_theta = int16_t(floor(static_cast<float>(TempCol[Index]->index[q] / (m_Sinogram->N_r))));
-          int16_t i_r = (TempCol[Index]->index[q] % (m_Sinogram->N_r));
+          int16_t i_theta = int16_t(floor(static_cast<float>(m_TempCol[Index]->index[q] / (m_Sinogram->N_r))));
+          int16_t i_r = (m_TempCol[Index]->index[q] % (m_Sinogram->N_r));
           VoxelLineAccessCounter = 0;
-          for (uint32_t i_t = VoxelLineResponse[i]->index[0]; i_t < VoxelLineResponse[i]->index[0] + VoxelLineResponse[i]->count; i_t++) //CHANGED from <= to <
+          for (uint32_t i_t = m_VoxelLineResponse[i]->index[0]; i_t < m_VoxelLineResponse[i]->index[0] + m_VoxelLineResponse[i]->count; i_t++) //CHANGED from <= to <
           {
             ttmp = (I_0->d[i_theta]
-                * (TempCol[Index]->values[q] * VoxelLineResponse[i]->values[VoxelLineAccessCounter++] * m_Geometry->Object->getValue(j, k, i)));
+                * (m_TempCol[Index]->values[q] * m_VoxelLineResponse[i]->values[VoxelLineAccessCounter++] * m_Geometry->Object->getValue(j, k, i)));
 
-            Y_Est->addToValue(ttmp, i_theta, i_r, i_t);
+            m_YEstimate->addToValue(ttmp, i_theta, i_r, i_t);
 
           }
         }

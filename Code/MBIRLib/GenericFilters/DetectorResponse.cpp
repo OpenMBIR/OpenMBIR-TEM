@@ -71,7 +71,7 @@ void DetectorResponse::execute()
   TomoInputsPtr inputs = getTomoInputs();
   AdvancedParametersPtr advParams = getAdvParams();
 
-  Real_t beamWidth = m_DetectorParameters->getBEAM_WIDTH();
+  Real_t beamWidth = m_DetectorParameters->getBeamWidth();
   Real_t offsetR = m_DetectorParameters->getOffsetR();
   Real_t offsetT = m_DetectorParameters->getOffsetT();
   RealArrayType::Pointer beamProfile = m_DetectorParameters->getBeamProfile();

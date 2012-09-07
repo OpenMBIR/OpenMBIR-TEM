@@ -100,8 +100,8 @@ class HAADFForwardModel : public Observable
     MXA_INSTANCE_PROPERTY(AdvancedParametersPtr, AdvParams)
     MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
 
-  // BrightField Data
-    MXA_INSTANCE_PROPERTY(bool, UseBrightFieldData)
+    // Bright Field Data Flag
+    MXA_INSTANCE_PROPERTY(bool, BF_Flag)
     MXA_INSTANCE_PROPERTY(TomoInputsPtr, BFTomoInputs)
     MXA_INSTANCE_PROPERTY(SinogramPtr, BFSinogram)
 
@@ -114,8 +114,7 @@ class HAADFForwardModel : public Observable
     MXA_INSTANCE_PROPERTY(Real_t, DefaultVariance)
     MXA_INSTANCE_PROPERTY(bool, UseDefaultOffset)
 
-      // Bright Field Data Flag
-    MXA_INSTANCE_PROPERTY(bool, BF_Flag)
+
 
       // These are the Nuisance Parameters that we need to solve for
     MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, I_0) //Gains
@@ -126,133 +125,133 @@ class HAADFForwardModel : public Observable
 
     void setQGGMRFValues(QGGMRF::QGGMRF_Values* qggmrf_values);
 
-    void printNuisanceParameters(SinogramPtr m_Sinogram);
+    void printNuisanceParameters(SinogramPtr sinogram);
 
     /**
      * @brief Sets all the Nuisance Parameters Pointers to NULL.
      */
     void resetNuisanceParameters();
 
-    void allocateNuisanceParameters(SinogramPtr m_Sinogram);
+    void allocateNuisanceParameters(SinogramPtr sinogram);
 
     void gainAndOffsetInitialization(uint16_t N_theta);
 
     void weightInitialization(size_t dims[3]);
 
-    void costInitialization(SinogramPtr m_Sinogram);
+    void costInitialization(SinogramPtr sinogram);
 
   //  void initializePriorModel(TomoInputsPtr m_TomoInputs);
 
-    int initializeBrightFieldData(SinogramPtr m_Sinogram);
+    int initializeBrightFieldData(SinogramPtr sinogram);
 
-    void initializeROIMask(SinogramPtr m_Sinogram, GeometryPtr m_Geometry, UInt8Image_t::Pointer Mask);
+    void initializeROIMask(SinogramPtr sinogram, GeometryPtr geometry, UInt8Image_t::Pointer Mask);
 
-    int createNuisanceParameters(SinogramPtr m_Sinogram);
+    int createNuisanceParameters(SinogramPtr sinogram);
 
-    int createInitialGainsData(SinogramPtr m_Sinogram);
-    int createInitialOffsetsData(SinogramPtr m_Sinogram);
-    int createInitialVariancesData(SinogramPtr m_Sinogram);
+    int createInitialGainsData(SinogramPtr sinogram);
+    int createInitialOffsetsData(SinogramPtr sinogram);
+    int createInitialVariancesData(SinogramPtr sinogram);
 
     /**
      *
      * @return
      */
-    virtual int forwardProject(SinogramPtr m_Sinogram, GeometryPtr m_Geometry,
+    virtual int forwardProject(SinogramPtr sinogram, GeometryPtr geometry,
                                std::vector<HAADFAMatrixCol::Pointer> &TempCol,
                                std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
-                               RealVolumeType::Pointer Y_Est,
-                               RealVolumeType::Pointer ErrorSino);
+                               RealVolumeType::Pointer yEstimate,
+                               RealVolumeType::Pointer errorSinogram);
 
 
     /**
      *
      */
-    uint8_t updateVoxels(SinogramPtr m_Sinogram, GeometryPtr m_Geometry,
+    uint8_t updateVoxels(SinogramPtr sinogram, GeometryPtr geometry,
                          int16_t OuterIter, int16_t Iter,
                             UInt8Image_t::Pointer VisitCount,
                             std::vector<HAADFAMatrixCol::Pointer> &TempCol,
-                            RealVolumeType::Pointer ErrorSino,
+                            RealVolumeType::Pointer errorSinogram,
                             std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
                             CostData::Pointer cost );
 
     /**
      *
-     * @param m_Sinogram
-     * @param ErrorSino
-     * @param Y_Est
+     * @param sinogram
+     * @param errorSinogram
+     * @param yEstimate
      */
-    void calculateMeasurementWeight(SinogramPtr m_Sinogram, RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Y_Est);
+    void calculateMeasurementWeight(SinogramPtr sinogram, RealVolumeType::Pointer errorSinogram, RealVolumeType::Pointer yEstimate);
     /**
      *
-     * @param m_Sinogram
-     * @param ErrorSino
-     * @param Y_Est
+     * @param sinogram
+     * @param errorSinogram
+     * @param yEstimate
      * @param cost
      * @return
      */
-    int jointEstimation(SinogramPtr m_Sinogram,
-                        RealVolumeType::Pointer ErrorSino,
-                        RealVolumeType::Pointer Y_Est, CostData::Pointer cost);
+    int jointEstimation(SinogramPtr sinogram,
+                        RealVolumeType::Pointer errorSinogram,
+                        RealVolumeType::Pointer yEstimate, CostData::Pointer cost);
     /**
      *
      * @param cost
-     * @param m_Sinogram
-     * @param m_Geometry
-     * @param ErrorSino
+     * @param sinogram
+     * @param geometry
+     * @param errorSinogram
      * @return
      */
     int calculateCost(CostData::Pointer cost,
-                      SinogramPtr m_Sinogram,
-                      GeometryPtr m_Geometry,
-                      RealVolumeType::Pointer ErrorSino,
+                      SinogramPtr sinogram,
+                      GeometryPtr geometry,
+                      RealVolumeType::Pointer errorSinogram,
                       QGGMRF::QGGMRF_Values *qggmrf_Values);
     /**
      * @brief
-     * @param ErrorSino
+     * @param errorSinogram
      * @param Weight
      * @return
      */
-    Real_t computeCost(SinogramPtr m_Sinogram,
-                       GeometryPtr m_Geometry,
-                       RealVolumeType::Pointer ErrorSino,
+    Real_t computeCost(SinogramPtr sinogram,
+                       GeometryPtr geometry,
+                       RealVolumeType::Pointer errorSinogram,
                        QGGMRF::QGGMRF_Values* qggmrf_Values);
 
-    void updateWeights(SinogramPtr m_Sinogram,
-                       RealVolumeType::Pointer ErrorSino);
+    void updateWeights(SinogramPtr sinogram,
+                       RealVolumeType::Pointer errorSinogram);
 
     /**
      * Code to take the magnitude map and filter it with a hamming window
      * Returns the filtered magnitude map
      */
-    void ComputeVSC(RealImageType::Pointer MagUpdateMap,
-                    RealImageType::Pointer FiltMagUpdateMap,
-                    GeometryPtr m_Geometry);
+    void ComputeVSC(RealImageType::Pointer magUpdateMap,
+                    RealImageType::Pointer filtMagUpdateMap,
+                    GeometryPtr geometry);
 
-    //Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
-    Real_t SetNonHomThreshold(GeometryPtr m_Geometry, RealImageType::Pointer MagUpdateMap);
+    //Sort the entries of filtMagUpdateMap and set the threshold to be ? percentile
+    Real_t SetNonHomThreshold(GeometryPtr geometry, RealImageType::Pointer magUpdateMap);
 
 
-    void writeNuisanceParameters(SinogramPtr m_Sinogram);
+    void writeNuisanceParameters(SinogramPtr sinogram);
 
-    void writeSinogramFile(SinogramPtr m_Sinogram,
-                           RealVolumeType::Pointer Final_Sinogram);
+    void writeSinogramFile(SinogramPtr sinogram,
+                           RealVolumeType::Pointer finalSinogram);
 
   protected:
     HAADFForwardModel();
 
 
   private:
-    RealImageType::Pointer QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
-    RealImageType::Pointer Qk_cost;
-    RealImageType::Pointer bk_cost;
-    RealArrayType::Pointer ck_cost; //these are the terms of the quadratic cost function
-    RealArrayType::Pointer d1;
-    RealArrayType::Pointer d2; //hold the intermediate values needed to compute optimal mu_k
+    RealImageType::Pointer m_QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
+    RealImageType::Pointer m_QkCost;
+    RealImageType::Pointer m_BkCost;
+    RealArrayType::Pointer m_CkCost; //these are the terms of the quadratic cost function
+    RealArrayType::Pointer m_D1;
+    RealArrayType::Pointer m_D2; //hold the intermediate values needed to compute optimal mu_k
 
 
-    Real_t HAMMING_WINDOW[5][5];
-    //Markov Random Field Prior parameters - Globals DATA_TYPE
-    Real_t FILTER[27];
+    Real_t k_HamminWindow[5][5];
+    //Markov Random Field Prior parameters
+    Real_t k_Filter[27];
 
 
 #ifdef EIMTOMO_USE_QGGMRF
