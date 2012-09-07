@@ -28,7 +28,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "TomoGui.h"
+#include "TEMBIRGui.h"
 
 #include <errno.h>
 
@@ -129,7 +129,7 @@ static int tiffCount;
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-TomoGui::TomoGui(QWidget *parent) :
+TEMBIRGui::TEMBIRGui(QWidget *parent) :
 QMainWindow(parent),
 m_OutputExistsCheck(false),
 m_LayersPalette(NULL),
@@ -153,7 +153,7 @@ m_UpdateCachedSigmaX(true)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-TomoGui::~TomoGui()
+TEMBIRGui::~TEMBIRGui()
 {
 
 }
@@ -161,7 +161,7 @@ TomoGui::~TomoGui()
 // -----------------------------------------------------------------------------
 //  Called when the main window is closed.
 // -----------------------------------------------------------------------------
-void TomoGui::closeEvent(QCloseEvent *event)
+void TEMBIRGui::closeEvent(QCloseEvent *event)
 {
   qint32 err = checkDirtyDocument();
   if (err < 0)
@@ -184,7 +184,7 @@ void TomoGui::closeEvent(QCloseEvent *event)
 // -----------------------------------------------------------------------------
 //  Read the prefs from the local storage file
 // -----------------------------------------------------------------------------
-void TomoGui::readSettings(QSettings &prefs)
+void TEMBIRGui::readSettings(QSettings &prefs)
 {
   QString val;
   bool ok;
@@ -237,7 +237,7 @@ void TomoGui::readSettings(QSettings &prefs)
 // -----------------------------------------------------------------------------
 //  Write our prefs to file
 // -----------------------------------------------------------------------------
-void TomoGui::writeSettings(QSettings &prefs)
+void TEMBIRGui::writeSettings(QSettings &prefs)
 {
   prefs.beginGroup("Parameters");
   WRITE_STRING_SETTING(prefs, inputMRCFilePath);
@@ -281,7 +281,7 @@ void TomoGui::writeSettings(QSettings &prefs)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::readWindowSettings(QSettings &prefs)
+void TEMBIRGui::readWindowSettings(QSettings &prefs)
 {
   bool ok = false;
   prefs.beginGroup("WindodwSettings");
@@ -302,7 +302,7 @@ void TomoGui::readWindowSettings(QSettings &prefs)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::writeWindowSettings(QSettings &prefs)
+void TEMBIRGui::writeWindowSettings(QSettings &prefs)
 {
   prefs.beginGroup("WindodwSettings");
   QByteArray geo_data = saveGeometry();
@@ -315,7 +315,7 @@ void TomoGui::writeWindowSettings(QSettings &prefs)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_actionSave_Config_File_triggered()
+void TEMBIRGui::on_actionSave_Config_File_triggered()
 {
     QString proposedFile = m_OpenDialogLastDirectory + QDir::separator() + "Tomo-Config.config";
     QString file = QFileDialog::getSaveFileName(this, tr("Save Tomo Configuration"),
@@ -334,7 +334,7 @@ void TomoGui::on_actionSave_Config_File_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_actionLoad_Config_File_triggered()
+void TEMBIRGui::on_actionLoad_Config_File_triggered()
 {
     QString file = QFileDialog::getOpenFileName(this, tr("Select Configuration File"),
                                                 m_OpenDialogLastDirectory,
@@ -351,7 +351,7 @@ void TomoGui::on_actionLoad_Config_File_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::loadConfigurationFile(QString file)
+void TEMBIRGui::loadConfigurationFile(QString file)
 {
   QFileInfo fi(file);
   m_OpenDialogLastDirectory = fi.absolutePath();
@@ -413,7 +413,7 @@ void TomoGui::loadConfigurationFile(QString file)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_actionParameters_triggered()
+void TEMBIRGui::on_actionParameters_triggered()
 {
   parametersDockWidget->show();
 }
@@ -421,7 +421,7 @@ void TomoGui::on_actionParameters_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::setupGui()
+void TEMBIRGui::setupGui()
 {
 #ifdef Q_WS_MAC
     // Adjust for the size of the menu bar which is at the top of the screen not in the window
@@ -518,7 +518,7 @@ void TomoGui::setupGui()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool TomoGui::sanityCheckOutputDirectory(QString le, QString msgTitle)
+bool TEMBIRGui::sanityCheckOutputDirectory(QString le, QString msgTitle)
 {
 
   if (le.isEmpty() == true)
@@ -570,7 +570,7 @@ bool TomoGui::sanityCheckOutputDirectory(QString le, QString msgTitle)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool TomoGui::checkTiltAngles(QVector<float> &tilts)
+bool TEMBIRGui::checkTiltAngles(QVector<float> &tilts)
 {
   float sum = 0.0;
   for(int i = 0; i < tilts.count(); ++i)
@@ -587,7 +587,7 @@ bool TomoGui::checkTiltAngles(QVector<float> &tilts)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_m_SingleSliceReconstructionBtn_clicked()
+void TEMBIRGui::on_m_SingleSliceReconstructionBtn_clicked()
 {
   // First make sure we are not already running a reconstruction
   if(m_SingleSliceReconstructionBtn->text().compare("Cancel") == 0)
@@ -666,7 +666,7 @@ void TomoGui::on_m_SingleSliceReconstructionBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_m_GoBtn_clicked()
+void TEMBIRGui::on_m_GoBtn_clicked()
 {
   tiffCount = 0;
   // First make sure we are not already running a reconstruction
@@ -872,7 +872,7 @@ void TomoGui::on_m_GoBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::initializeSOCEngine(bool fullReconstruction)
+void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
 {
   QString path;
   path = QDir::toNativeSeparators(inputMRCFilePath->text());
@@ -1013,7 +1013,7 @@ void TomoGui::initializeSOCEngine(bool fullReconstruction)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_singleSliceXWidth_valueChanged(int value)
+void TEMBIRGui::on_singleSliceXWidth_valueChanged(int value)
 {
     m_MRCDisplayWidget->graphicsView()->updateXZLine( static_cast<float>(value/100.0));
 }
@@ -1021,7 +1021,7 @@ void TomoGui::on_singleSliceXWidth_valueChanged(int value)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_xWidthFullRecon_valueChanged(int value)
+void TEMBIRGui::on_xWidthFullRecon_valueChanged(int value)
 {
   m_MRCDisplayWidget->graphicsView()->reconstructionArea()->updateWidth(static_cast<float>(value/100.0));
 }
@@ -1029,7 +1029,7 @@ void TomoGui::on_xWidthFullRecon_valueChanged(int value)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::singleSlicePlaneSet(int y)
+void TEMBIRGui::singleSlicePlaneSet(int y)
 {
     m_SingleSliceReconstructionBtn->setEnabled(true);
     ySingleSliceValue->setText(QString::number(y));
@@ -1038,7 +1038,7 @@ void TomoGui::singleSlicePlaneSet(int y)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::singleSliceComplete()
+void TEMBIRGui::singleSliceComplete()
 {
   std::cout << "TomoGui::singleSliceComplete" << std::endl;
   m_SingleSliceReconstructionBtn->setText("Single Slice Reconstruction");
@@ -1112,7 +1112,7 @@ void TomoGui::singleSliceComplete()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::loadProgressMRCFile(QString mrcfilePath)
+void TEMBIRGui::loadProgressMRCFile(QString mrcfilePath)
 {
 //  std::cout << "Loading Progress MRC File: " << filePath.toStdString() << std::endl;
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(mrcfilePath);
@@ -1134,7 +1134,7 @@ void TomoGui::loadProgressMRCFile(QString mrcfilePath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::pipelineComplete()
+void TEMBIRGui::pipelineComplete()
 {
    std::cout << "TomoGui::pipelineComplete()" << std::endl;
   m_GoBtn->setText("Reconstruct");
@@ -1163,7 +1163,7 @@ void TomoGui::pipelineComplete()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::pipelineProgress(int val)
+void TEMBIRGui::pipelineProgress(int val)
 {
   this->progressBar->setValue( val );
 }
@@ -1171,7 +1171,7 @@ void TomoGui::pipelineProgress(int val)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::addErrorMessage(QString message)
+void TEMBIRGui::addErrorMessage(QString message)
 {
   QString title = "TomoGui Error";
   displayDialogBox(title, message, QMessageBox::Critical);
@@ -1180,7 +1180,7 @@ void TomoGui::addErrorMessage(QString message)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::addWarningMessage(QString message)
+void TEMBIRGui::addWarningMessage(QString message)
 {
   QString title = "TomoGui Warning";
   displayDialogBox(title, message, QMessageBox::Warning);
@@ -1189,7 +1189,7 @@ void TomoGui::addWarningMessage(QString message)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::addProgressMessage(QString message)
+void TEMBIRGui::addProgressMessage(QString message)
 {
   if (NULL != this->statusBar()) {
     this->statusBar()->showMessage(message);
@@ -1199,7 +1199,7 @@ void TomoGui::addProgressMessage(QString message)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_outputDirectoryPathBtn_clicked()
+void TEMBIRGui::on_outputDirectoryPathBtn_clicked()
 {
   bool canWrite = false;
   QString aDir = QFileDialog::getExistingDirectory(this, tr("Select Output Directory"), m_OpenDialogLastDirectory,
@@ -1225,7 +1225,7 @@ void TomoGui::on_outputDirectoryPathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_reconstructedVolumeFileNameBtn_clicked()
+void TEMBIRGui::on_reconstructedVolumeFileNameBtn_clicked()
 {
   QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled.rec";
   outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("MRC Files (*.mrc);;REC Files (*.rec)"));
@@ -1250,7 +1250,7 @@ void TomoGui::on_reconstructedVolumeFileNameBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_inputMRCFilePathBtn_clicked()
+void TEMBIRGui::on_inputMRCFilePathBtn_clicked()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString imageFile =
@@ -1266,7 +1266,7 @@ void TomoGui::on_inputMRCFilePathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
+void TEMBIRGui::on_inputMRCFilePath_textChanged(const QString & filepath)
 {
   QFileInfo fi(inputMRCFilePath->text());
   if(fi.exists() == true && fi.isDir() == false)
@@ -1322,7 +1322,7 @@ void TomoGui::on_inputMRCFilePath_textChanged(const QString & filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_inputBrightFieldFilePathBtn_clicked()
+void TEMBIRGui::on_inputBrightFieldFilePathBtn_clicked()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString imageFile =
@@ -1338,7 +1338,7 @@ void TomoGui::on_inputBrightFieldFilePathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_inputBrightFieldFilePath_textChanged(const QString & filepath)
+void TEMBIRGui::on_inputBrightFieldFilePath_textChanged(const QString & filepath)
 {
   if (verifyPathExists(inputBrightFieldFilePath->text(), inputBrightFieldFilePath))
   {
@@ -1349,7 +1349,7 @@ void TomoGui::on_inputBrightFieldFilePath_textChanged(const QString & filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_reconstructedVolumeFileName_textChanged(const QString & text)
+void TEMBIRGui::on_reconstructedVolumeFileName_textChanged(const QString & text)
 {
 
 }
@@ -1365,7 +1365,7 @@ void TomoGui::on_reconstructedVolumeFileName_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_initialReconstructionPathBtn_clicked()
+void TEMBIRGui::on_initialReconstructionPathBtn_clicked()
 {
   QString reconFile =
       QFileDialog::getOpenFileName(this, tr("Select Initial Reconstruction file"), m_OpenDialogLastDirectory, tr("All Files (*.*)"));
@@ -1380,7 +1380,7 @@ void TomoGui::on_initialReconstructionPathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_initialReconstructionPath_textChanged(const QString & text)
+void TEMBIRGui::on_initialReconstructionPath_textChanged(const QString & text)
 {
   verifyPathExists(initialReconstructionPath->text(), initialReconstructionPath);
 }
@@ -1388,7 +1388,7 @@ void TomoGui::on_initialReconstructionPath_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::setWidgetListEnabled(bool b)
+void TEMBIRGui::setWidgetListEnabled(bool b)
 {
   foreach (QWidget* w, m_WidgetList)
   {
@@ -1399,7 +1399,7 @@ void TomoGui::setWidgetListEnabled(bool b)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool TomoGui::verifyOutputPathParentExists(QString outFilePath, QLineEdit* lineEdit)
+bool TEMBIRGui::verifyOutputPathParentExists(QString outFilePath, QLineEdit* lineEdit)
 {
   QFileInfo fileinfo(outFilePath);
   QDir parent(fileinfo.dir());
@@ -1409,7 +1409,7 @@ bool TomoGui::verifyOutputPathParentExists(QString outFilePath, QLineEdit* lineE
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool TomoGui::verifyPathExists(QString outFilePath, QLineEdit* lineEdit)
+bool TEMBIRGui::verifyPathExists(QString outFilePath, QLineEdit* lineEdit)
 {
   QFileInfo fileinfo(outFilePath);
   if (false == fileinfo.exists() && lineEdit != NULL)
@@ -1426,7 +1426,7 @@ bool TomoGui::verifyPathExists(QString outFilePath, QLineEdit* lineEdit)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-qint32 TomoGui::checkDirtyDocument()
+qint32 TEMBIRGui::checkDirtyDocument()
 {
   qint32 err = -1;
   {
@@ -1438,7 +1438,7 @@ qint32 TomoGui::checkDirtyDocument()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::updateBaseRecentFileList(const QString &file)
+void TEMBIRGui::updateBaseRecentFileList(const QString &file)
 {
   // Clear the Recent Items Menu
   this->menu_FixedRecentFiles->clear();
@@ -1459,7 +1459,7 @@ void TomoGui::updateBaseRecentFileList(const QString &file)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::openRecentBaseImageFile()
+void TEMBIRGui::openRecentBaseImageFile()
 {
   QAction *action = qobject_cast<QAction *>(sender());
   if (action)
@@ -1481,7 +1481,7 @@ void TomoGui::openRecentBaseImageFile()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_actionLayers_Palette_triggered()
+void TEMBIRGui::on_actionLayers_Palette_triggered()
 {
   m_LayersPalette->show();
 }
@@ -1489,7 +1489,7 @@ void TomoGui::on_actionLayers_Palette_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_actionOpenMRCFile_triggered()
+void TEMBIRGui::on_actionOpenMRCFile_triggered()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString file = QFileDialog::getOpenFileName(this, tr("Open MRC File"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc *.rec *.ali)"));
@@ -1506,7 +1506,7 @@ void TomoGui::on_actionOpenMRCFile_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_action_OpenReconstructedMRC_triggered()
+void TEMBIRGui::on_action_OpenReconstructedMRC_triggered()
 {
   QString file = QFileDialog::getOpenFileName(this, tr("Open MRC File"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc *.rec *.ali)"));
 
@@ -1526,7 +1526,7 @@ void TomoGui::on_action_OpenReconstructedMRC_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_actionOpenOverlayImage_triggered()
+void TEMBIRGui::on_actionOpenOverlayImage_triggered()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString imageFile = QFileDialog::getOpenFileName(this, tr("Open Segmented Image File"),
@@ -1546,7 +1546,7 @@ void TomoGui::on_actionOpenOverlayImage_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_actionAbout_triggered()
+void TEMBIRGui::on_actionAbout_triggered()
 {
   ApplicationAboutBoxDialog about(OpenMBIR::LicenseList, this);
   QString an = QCoreApplication::applicationName();
@@ -1559,7 +1559,7 @@ void TomoGui::on_actionAbout_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_actionExit_triggered()
+void TEMBIRGui::on_actionExit_triggered()
 {
   this->close();
 }
@@ -1568,7 +1568,7 @@ void TomoGui::on_actionExit_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::openReconstructedMRCFile(QString reconMrcFilePath)
+void TEMBIRGui::openReconstructedMRCFile(QString reconMrcFilePath)
 {
   if ( true == reconMrcFilePath.isEmpty() ) // User cancelled the operation
   {
@@ -1590,7 +1590,7 @@ void TomoGui::openReconstructedMRCFile(QString reconMrcFilePath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::mrcInputFileLoaded(const QString &filename)
+void TEMBIRGui::mrcInputFileLoaded(const QString &filename)
 {
   // std::cout << "TomoGui::overlayImageFileLoaded" << std::endl;
   reconstructedVolumeFileName->blockSignals(true);
@@ -1601,7 +1601,7 @@ void TomoGui::mrcInputFileLoaded(const QString &filename)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::readMRCHeader(QString filepath)
+void TEMBIRGui::readMRCHeader(QString filepath)
 {
 
   MRCHeader header;
@@ -1704,7 +1704,7 @@ void TomoGui::readMRCHeader(QString filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::displayDialogBox(QString title, QString text, QMessageBox::Icon icon)
+void TEMBIRGui::displayDialogBox(QString title, QString text, QMessageBox::Icon icon)
 {
 
   QMessageBox msgBox;
@@ -1719,7 +1719,7 @@ void TomoGui::displayDialogBox(QString title, QString text, QMessageBox::Icon ic
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_estimateSigmaX_clicked()
+void TEMBIRGui::on_estimateSigmaX_clicked()
 {
     //  std::cout << "on_estimateGainSigma_clicked" << std::endl;
     bool ok = false;
@@ -1778,7 +1778,7 @@ void TomoGui::on_estimateSigmaX_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_sigma_x_textChanged(const QString & text)
+void TEMBIRGui::on_sigma_x_textChanged(const QString & text)
 {
 //  std::cout << "on_sigma_x_textChanged" << std::endl;
   bool ok = false;
@@ -1792,7 +1792,7 @@ void TomoGui::on_sigma_x_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_smoothness_textChanged(const QString & text)
+void TEMBIRGui::on_smoothness_textChanged(const QString & text)
 {
 //  std::cout << "on_smoothness_textChanged" << std::endl;
   bool ok = false;
@@ -1806,7 +1806,7 @@ void TomoGui::on_smoothness_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_targetGain_editingFinished()
+void TEMBIRGui::on_targetGain_editingFinished()
 {
   sigmaX_ShouldUpdate(true);
 }
@@ -1814,7 +1814,7 @@ void TomoGui::on_targetGain_editingFinished()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_sampleThickness_editingFinished()
+void TEMBIRGui::on_sampleThickness_editingFinished()
 {
   sigmaX_ShouldUpdate(true);
   memCalculate();
@@ -1823,7 +1823,7 @@ void TomoGui::on_sampleThickness_editingFinished()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_defaultOffset_editingFinished()
+void TEMBIRGui::on_defaultOffset_editingFinished()
 {
   sigmaX_ShouldUpdate(true);
 }
@@ -1831,7 +1831,7 @@ void TomoGui::on_defaultOffset_editingFinished()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_tiltSelection_currentIndexChanged(int index)
+void TEMBIRGui::on_tiltSelection_currentIndexChanged(int index)
 {
   sigmaX_ShouldUpdate(true);
 }
@@ -1840,7 +1840,7 @@ void TomoGui::on_tiltSelection_currentIndexChanged(int index)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_resetSigmaXBtn_clicked()
+void TEMBIRGui::on_resetSigmaXBtn_clicked()
 {
   sigma_x->blockSignals(true);
   sigma_x->setText(QString::number(m_CachedSigmaX));
@@ -1854,7 +1854,7 @@ void TomoGui::on_resetSigmaXBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::updateProgressAndMessage(const char* message, int progress)
+void TEMBIRGui::updateProgressAndMessage(const char* message, int progress)
 {
   this->progressBar->setValue(progress);
   if (NULL != this->statusBar()) {
@@ -1865,7 +1865,7 @@ void TomoGui::updateProgressAndMessage(const char* message, int progress)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::updateProgressAndMessage(const std::string &msg, int progress)
+void TEMBIRGui::updateProgressAndMessage(const std::string &msg, int progress)
 {
   this->progressBar->setValue(progress);
   if (NULL != this->statusBar()) {
@@ -1876,7 +1876,7 @@ void TomoGui::updateProgressAndMessage(const std::string &msg, int progress)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
+void TEMBIRGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
 {
   reconstructionVOIUpdated(reconVOI);
 
@@ -1907,7 +1907,7 @@ void TomoGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_yMin_textChanged(const QString &string)
+void TEMBIRGui::on_yMin_textChanged(const QString &string)
 {
     geometryChanged();
 }
@@ -1915,7 +1915,7 @@ void TomoGui::on_yMin_textChanged(const QString &string)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_yMax_textChanged(const QString &string)
+void TEMBIRGui::on_yMax_textChanged(const QString &string)
 {
     geometryChanged();
 }
@@ -1925,7 +1925,7 @@ void TomoGui::on_yMax_textChanged(const QString &string)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::geometryChanged()
+void TEMBIRGui::geometryChanged()
 {
  //   std::cout << "TomoGui::geometryChanged()" << std::endl;
     bool ok = false;
@@ -1963,7 +1963,7 @@ void TomoGui::geometryChanged()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::reconstructionVOIUpdated(ReconstructionArea* recon)
+void TEMBIRGui::reconstructionVOIUpdated(ReconstructionArea* recon)
 {
     QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
     QSize size = image.size();
@@ -1988,7 +1988,7 @@ void TomoGui::reconstructionVOIUpdated(ReconstructionArea* recon)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::reconstructionVOISelected(ReconstructionArea* recon)
+void TEMBIRGui::reconstructionVOISelected(ReconstructionArea* recon)
 {
 
 }
@@ -1996,7 +1996,7 @@ void TomoGui::reconstructionVOISelected(ReconstructionArea* recon)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::reconstructionVOIDeleted(ReconstructionArea* recon)
+void TEMBIRGui::reconstructionVOIDeleted(ReconstructionArea* recon)
 {
 
 }
@@ -2005,7 +2005,7 @@ void TomoGui::reconstructionVOIDeleted(ReconstructionArea* recon)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_addResolution_clicked()
+void TEMBIRGui::on_addResolution_clicked()
 {
   int count = tomoInputHorzLayout->count() - 1;
 
@@ -2029,7 +2029,7 @@ void TomoGui::on_addResolution_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_removeResolution_clicked()
+void TEMBIRGui::on_removeResolution_clicked()
 {
   // int count = tomoInputHorzLayout->count() -1;
   if(m_TomoInputs.count() == 1)
@@ -2058,7 +2058,7 @@ void TomoGui::on_removeResolution_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::memCalculate()
+void TEMBIRGui::memCalculate()
 {
     bool ok = false;
     float GeomN_x, GeomN_y, GeomN_z;
@@ -2139,7 +2139,7 @@ void TomoGui::memCalculate()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_actionSaveCanvas_triggered()
+void TEMBIRGui::on_actionSaveCanvas_triggered()
 {
   m_MRCDisplayWidget->saveCanvas();
 }
@@ -2148,7 +2148,7 @@ void TomoGui::on_actionSaveCanvas_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_action_InputMRCInfo_triggered()
+void TEMBIRGui::on_action_InputMRCInfo_triggered()
 {
   m_MRCInputInfoWidget->setInfo(inputMRCFilePath->text());
   m_MRCInputInfoWidget->show();
@@ -2157,7 +2157,7 @@ void TomoGui::on_action_InputMRCInfo_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::on_action_OutputMRCInfo_triggered()
+void TEMBIRGui::on_action_OutputMRCInfo_triggered()
 {
   m_MRCOutputInfoWidget->setInfo(m_ReconstructedDisplayWidget->getMRCFilePath());
   m_MRCOutputInfoWidget->show();
@@ -2166,7 +2166,7 @@ void TomoGui::on_action_OutputMRCInfo_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::deleteTempFiles()
+void TEMBIRGui::deleteTempFiles()
 {
   // Remove Any Temp files that have accumulated
   for(int i = 0; i < m_TempFilesToDelete.size(); ++i)
@@ -2181,7 +2181,7 @@ void TomoGui::deleteTempFiles()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TomoGui::sigmaX_ShouldUpdate(bool b)
+void TEMBIRGui::sigmaX_ShouldUpdate(bool b)
 {
   estimateSigmaX->setEnabled(b);
   estimateSigmaX->setDefault(b);
