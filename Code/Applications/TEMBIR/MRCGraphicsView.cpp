@@ -41,7 +41,7 @@
 #include <QtGui/QPixmap>
 #include <QtGui/QGraphicsPolygonItem>
 
-#include "TomoGui.h"
+#include "TEMBIRGui.h"
 #include "ReconstructionArea.h"
 
 namespace UIA

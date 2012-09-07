@@ -50,7 +50,7 @@ class ReconstructionArea;
 class MRCInfoWidget;
 
 //-- UIC generated Header
-#include "ui_TomoGui.h"
+#include "ui_TEMBIRGui.h"
 #include "QMultiResolutionReconstruction.h"
 
 #include "MBIRLib/IOFilters/MRCHeader.h"
@@ -65,13 +65,13 @@ class MRCInfoWidget;
  * @date Dec 26, 2011
  * @version 1.0
  */
-class TomoGui :  public QMainWindow, private Ui::TomoGui, public Observer
+class TEMBIRGui :  public QMainWindow, private Ui::TEMBIRGui, public Observer
 {
     Q_OBJECT;
 
 public:
-    TomoGui(QWidget *parent = 0);
-    virtual ~TomoGui();
+    TEMBIRGui(QWidget *parent = 0);
+    virtual ~TEMBIRGui();
 
     MXA_INSTANCE_PROPERTY(QString, CurrentImageFile)
     MXA_INSTANCE_PROPERTY(QString, CurrentProcessedFile)
@@ -453,8 +453,8 @@ private:
     bool                  m_UpdateCachedSigmaX;
     QVector<QString>      m_TempFilesToDelete;
 
-    TomoGui(const TomoGui&); // Copy Constructor Not Implemented
-    void operator=(const TomoGui&); // Operator '=' Not Implemented
+    TEMBIRGui(const TEMBIRGui&); // Copy Constructor Not Implemented
+    void operator=(const TEMBIRGui&); // Operator '=' Not Implemented
 };
 
 #endif /* EMMPMGUI_H_ */

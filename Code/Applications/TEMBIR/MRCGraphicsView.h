@@ -38,7 +38,7 @@
 #include <QtGui/QGraphicsItem>
 #include <QtGui/QRubberBand>
 
-class TomoGui;
+class TEMBIRGui;
 class ReconstructionArea;
 
 namespace TomoGui_Constants {
