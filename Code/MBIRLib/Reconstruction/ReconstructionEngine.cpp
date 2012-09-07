@@ -165,8 +165,7 @@ ReconstructionEngine::~ReconstructionEngine()
 {
 }
 
- // These files are just Factored out CPP code because this file was getting really long
-#include "ReconstructionEngine_UpdateVoxels.cpp"
+
 #include "ReconstructionEngine_Extra.cpp"
 
 // -----------------------------------------------------------------------------
@@ -551,12 +550,11 @@ void ReconstructionEngine::execute()
     printf("Geometry-Z %d\n", m_Geometry->N_z);
   }
 
-  //Forward Project Geometry->Object one slice at a time and compute the  Sinogram for each slice
-  //is Y_Est initailized to zero?
   initializeVolume(Y_Est, 0.0);
 
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
+  //Forward Project Geometry->Object one slice at a time and compute the  Sinogram for each slice
   // Forward Project using the Forward Model
   err = m_ForwardModel->forwardProject(m_Sinogram, m_Geometry, TempCol, VoxelLineResponse, Y_Est , ErrorSino);
   if (err < 0)
