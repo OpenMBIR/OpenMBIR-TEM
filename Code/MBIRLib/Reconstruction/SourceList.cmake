@@ -12,7 +12,6 @@
 
 set (MBIRLib_Reconstruction_SRCS
     ${MBIRLib_SOURCE_DIR}/Reconstruction/ReconstructionEngine.cpp
-    ${MBIRLib_SOURCE_DIR}/Reconstruction/ReconstructionEngine_UpdateVoxels.cpp
     ${MBIRLib_SOURCE_DIR}/Reconstruction/ReconstructionEngine_Extra.cpp
     ${MBIRLib_SOURCE_DIR}/Reconstruction/ReconstructionInputs.cpp
     ${MBIRLib_SOURCE_DIR}/Reconstruction/MultiResolutionReconstruction.cpp
