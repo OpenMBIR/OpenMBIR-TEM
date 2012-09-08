@@ -4,6 +4,8 @@
   Parts of OpenMBIR were written under US Air Force Contract FA8650-07-D-5800. The following
 is a list of contributors:
 
+@image html Images/Purdue_Logo.gif ""
+@image latex Images/Purdue_Logo.gif "" width=3.5in
 @li Dr. Charles Bouman (Purdue University)
 @li Singanallur Venkatakrishnan (Purdue University)
 
@@ -56,14 +58,16 @@ input parameters
 @li Allows user to export the display area to an image
 @li Export the configuration for a reconstruction to a text file
 @li Import the configuration for a reconstruction from a text file
-  When the image is loaded the y=0 is at the bottom of the image as marked by the "(0,0)"
+  
+When the image is loaded the y=0 is at the bottom of the image as 
+marked by the "(0,0)"
 indicator marker on the image.
 
 @page inputparameters TEMBIR Input Parameters
 
 
 @section ss1 Single Slice Reconstruction Geometry
-@li X Width:
+@li X Width: 
 @li Use Multi-Resolution Reconstruction
 
 
