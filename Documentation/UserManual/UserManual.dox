@@ -27,7 +27,70 @@ is a list of contributors:
 @li HAADF (High Angle Annular Dark Field)
 @li STEM  (Scanning Transmission Electron Microscopy)
 
-@page ui TEMBIR Application
+The input data must be encoded as a tilt series of images stored in the IMOD .mrc file format. The valid
+file extensions are .mrc and .ali.
 
+@page ui TEMBIR Application
+  The main graphical user interface based application is called TEMBIR (Tomographic Environment 
+for Model Based Iterative Reconstruction). The user launches it by double clicking the 
+TEMBIR.app or TEMBIR.exe icon on their system. After the program launches the user is presented
+with a window similar to the following:
+@image html TEMBIR_UI.png "TEMBIR Main User Interface Window"
+@image latex TEMBIR_UI.png "TEMBIR Main User Interface Window" width=6.0in
+
+@section mainui Main User Interface
+    There are several areas of the main user interface. The first is the <b>Inputs</b> tab where the user
+can select the input .mrc or .ali file from the filesystem of the local computer and set the
+output file that the reconstruction will be written to.
+
+<b>Features</b>@n
+@li Reads IMOD .mrc or .ali formatted files as input
+@li Writes IMOD formatted .rec files as output
+@li Writes ParaView compatible .vtk files
+@li Writes Avizo compatible .am files
+@li allows user to perform a quick single slice reconstruction to quickly refine
+input parameters
+@li Allows user to select a subarea of the input data to reconstruct
+@li Allows user to Zoom out/in and fit to window the current input data
+@li Allows user to display any slice from the data set.
+@li Allows user to export the display area to an image
+@li Export the configuration for a reconstruction to a text file
+@li Import the configuration for a reconstruction from a text file
+  When the image is loaded the y=0 is at the bottom of the image as marked by the "(0,0)"
+indicator marker on the image.
+
+@page inputparameters TEMBIR Input Parameters
+
+
+@section ss1 Single Slice Reconstruction Geometry
+@li X Width:
+@li Use Multi-Resolution Reconstruction
+
+
+@section ss2 Full Reconstruction Geometry
+@li X Width
+@li Y Start Slice
+@li Y End Slice
+@li Sample Thickness
+@li Tilt Axis
+
+@section ss3 Parameters
+@li Diffuseness
+@li Final Resolution Multiple
+@li Smoothness/Sigma X
+
+@section ss4 Advanced Parameters
+
+@li Stop Threshold
+@li Num. Resolutions
+@li Target Gain
+@li Interpolate Initial Reconstruction
+@li Outer Iterations
+@li Inner Iterations
+@li Default Offset Value
+@li Default Variance
+@li Default Initial Reconstruction Value
+@li Extend Object
+@li Delete Temp Files
 
 */
