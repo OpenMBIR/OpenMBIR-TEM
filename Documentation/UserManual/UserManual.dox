@@ -4,8 +4,8 @@
   Parts of OpenMBIR were written under US Air Force Contract FA8650-07-D-5800. The following
 is a list of contributors:
 
-@image html Images/Purdue_Logo.gif ""
-@image latex Images/Purdue_Logo.gif "" width=3.5in
+@image html Purdue_Logo.png ""
+@image latex Purdue_Logo.png "" width=3.5in
 @li Dr. Charles Bouman (Purdue University)
 @li Singanallur Venkatakrishnan (Purdue University)
 
