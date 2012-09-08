@@ -1,0 +1,33 @@
+/**
+
+@page ack Acknowledgements / Funding
+  Parts of OpenMBIR were written under US Air Force Contract FA8650-07-D-5800. The following
+is a list of contributors:
+
+@li Dr. Charles Bouman (Purdue University)
+@li Singanallur Venkatakrishnan (Purdue University)
+
+@image html BlueQuartzSoftware_Logo.png ""
+@image latex BlueQuartzSoftware_Logo.png "" width=3.5in
+@li Mike Jackson
+
+@image html CMU_MRSEC_Logo.png ""
+@image latex CMU_MRSEC_Logo.png "" width=2.5in
+@li Marc De Graef
+
+@li Dr. Larry Drummy (UES)
+
+@image html AFRL_Logo.png ""
+@image latex AFRL_Logo.png "" width=2.5in
+@li Jeff Simmons
+
+
+@page intro Introduction
+  The current implementation of OpenMBIR focuses on the reconstruction of HAADF STEM tomography data.
+@li HAADF (High Angle Annular Dark Field)
+@li STEM  (Scanning Transmission Electron Microscopy)
+
+@page ui TEMBIR Application
+
+
+*/
