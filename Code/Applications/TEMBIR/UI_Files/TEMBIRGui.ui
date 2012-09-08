@@ -767,7 +767,7 @@ image: url(:/bullet_triangle_grey_down.png);
                 <property name="verticalSpacing">
                  <number>6</number>
                 </property>
-                <item row="4" column="1">
+                <item row="5" column="1">
                  <widget class="QComboBox" name="tiltSelection">
                   <item>
                    <property name="text">
@@ -911,7 +911,7 @@ font-size: 10px;
                   </property>
                  </widget>
                 </item>
-                <item row="4" column="0">
+                <item row="5" column="0">
                  <widget class="QLabel" name="label_46">
                   <property name="styleSheet">
                    <string notr="true">QLabel {
@@ -943,6 +943,53 @@ font-size: 10px;
                   </property>
                   <property name="value">
                    <number>100</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0">
+                 <widget class="QLabel" name="label_34">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>Final Resolution Multiple:</string>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="1">
+                 <widget class="QSpinBox" name="finalResolution">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>125</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>100</number>
+                  </property>
+                  <property name="value">
+                   <number>4</number>
                   </property>
                  </widget>
                 </item>
@@ -1066,53 +1113,6 @@ font-size: 10px;
                   </property>
                   <property name="value">
                    <double>0.200000000000000</double>
-                  </property>
-                 </widget>
-                </item>
-                <item row="7" column="1">
-                 <widget class="QSpinBox" name="finalResolution">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>125</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>100</number>
-                  </property>
-                  <property name="value">
-                   <number>4</number>
-                  </property>
-                 </widget>
-                </item>
-                <item row="7" column="0">
-                 <widget class="QLabel" name="label_34">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="styleSheet">
-                   <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                  </property>
-                  <property name="text">
-                   <string>Final Resolution Multiple:</string>
-                  </property>
-                  <property name="wordWrap">
-                   <bool>true</bool>
                   </property>
                  </widget>
                 </item>
