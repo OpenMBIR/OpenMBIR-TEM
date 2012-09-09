@@ -1,12 +1,10 @@
+* Enable saving the latest reconstruction at time of cancellation.
 *Change the Advanced parameter -> Noise_Model to Noise_Esimation
-
 * Streamline progress feedback to the GUI
 * Add more "Cancel" checks in the code
 * Turn doubles to floats to save memory. 
- 
 * Need to enable a quick load option to continue the reconstruction for a few 
 more iterations. This will need reading the final rec, offset, gain and var.
-
 *Enable data sets in which max tilt is 90 degrees - there is a divide by cos(max angle) which will break if this occurs 
 
 Stuff Completed
