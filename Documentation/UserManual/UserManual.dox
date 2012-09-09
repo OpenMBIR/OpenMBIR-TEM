@@ -29,8 +29,10 @@ is a list of contributors:
 @li HAADF (High Angle Annular Dark Field)
 @li STEM  (Scanning Transmission Electron Microscopy)
 
-The input data must be encoded as a tilt series of images stored in the IMOD .mrc file format. The valid
-file extensions are .mrc and .ali.
+The input data must be encoded as a <b> aligned </b>tilt series of images 
+stored in the IMOD .mrc file format. The valid file extensions are 
+.mrc and .ali. The present version expects the tilts and the pixel
+sizes the be stored in the file header. 
 
 @page ui TEMBIR Application
   The main graphical user interface based application is called TEMBIR (Tomographic Environment 
@@ -72,13 +74,19 @@ what are the optimal parameter values to be used for reconstruction by
 reconstructing a few x-z slices of the object. To select the 
 location of the x-z slices which we need to reconstruct, 
 hold down the shift key and click 
-on the data display window at the appropriate location.
+on the data display window at the appropriate location. A yellow 
+line appears to indicate the location of the x-z slice 
+which we are going to reconstruct.
 
 @li X Width (percentage): Used for choosing what 
 percentage of the total pixels along the x direction is going to be 
 used for reconstruction. 
 @li Use Multi-Resolution Reconstruction: Checking this implements 
 the multiresolution algorithm which can speed up the reconstruction.
+
+Before hitting the Single Slice Reconstruction ensure that the 
+Sample Thickness and Final Resolution Multiple (see \ref ss2) 
+are entered.
 
 @section ss2 Full Reconstruction Geometry
 @li X Width: Used for choosing what 
@@ -97,7 +105,7 @@ done with voxels of size 5 nm X 5 nm X 5 nm).
 data.
 
 @section ss3 Parameters
-@li Diffuseness: A value in the interval [0 1] which can be used to 
+@li Diffuseness: A value in the interval \f$ [0 \, 1] \f$ which can be used to 
 incorporate knowledge of the the nature of interfaces between the 
 particles of interest and its support. A value of 0 corresponds to 
 sharp interfaces (Total Variation, Compressed sensing etc) while 
@@ -105,10 +113,10 @@ a value of 1 corresponds to smooth interfaces.
 @li Smoothness/Sigma X: Controls the levels of noise in the reconstruction. 
 The Smoothness (dimensionless) typically takes values in the 
 range of .1 - 10 and is used to compute the parameter SigmaX (uints of 
-nm^{-1}) which controls the level of noise in the reconstruction. 
+nm \f$ ^{-1} \f$) which controls the level of noise in the reconstruction. 
 A large value of smoothness makes the image less noisy but decreases 
 resolution while a small value can yield noisy reconstructions but 
-preserve detail. The optimal value can be easily learnt from doing 
+preserve detail. The optimal value can be learnt from doing 
 the single slice reconstruction. This parameter can be thought of 
 having some similarities to the filter parameters used in back projection 
 algorithms.  
@@ -116,18 +124,18 @@ algorithms.
 @section ss4 Advanced Parameters
 
 @li Stop Threshold: Stopping threshold used for terminating the optimization
-routine. A value of .005 has been found to work in several data sets. 
+routine. A value of \f$ .005 \,\left(.5\,\% \right) \f$ has been found to work in several data sets. 
 @li Num. Resolutions: The number of resolutions to be used for the multi-resolution method. A default value of 3 has been found to work well. Using too many 
 resolutions can slow down the overall speed of the reconstruction.
 @li Target Gain: Average value of the transmission normalization data (same 
-uints as the HAADF data). This can be set if the user has some knowledge 
+units as the HAADF data). This can be set if the user has some knowledge 
 of the average value of the transmission data so that the reconstructions
-are scaled in units of nm^{-1}.
+are scaled in units of nm \f$^{-1}\f$.
 @li Interpolate Initial Reconstruction: 
 @li Outer Iterations: Maximum number of iterations before the algorithm 
 terminates. 
 @li Inner Iterations: Number of iterations over the voxels at the coarsest 
-resolution. The default value is set to 10.  
+resolution. The default value is set to \f$ 10 \f$.  
 @li Default Offset Value: If there is a known offset in the acquired data 
 it can be entered here. If it is unknown the value is estimted as 
 a part of the reconstruction. 
