@@ -78,6 +78,10 @@ on the data display window at the appropriate location. A yellow
 line appears to indicate the location of the x-z slice 
 which we are going to reconstruct.
 
+@image html SingleSliceSelect.png "TEMBIR GUI showing a single x-z slice being selected for reconstruction. The yellow line shows the slice chosen and its width indicates the length along x chosen."
+
+@image latex SingleSliceSelect.png "TEMBIR GUI showing a single x-z slice being selected for reconstruction.The yellow line shows the slice chosen and its width indicates the length along x chosen." width=6in
+
 @li X Width (percentage): Used for choosing what 
 percentage of the total pixels along the x direction is going to be 
 used for reconstruction. 
