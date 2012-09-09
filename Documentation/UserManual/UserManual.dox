@@ -65,36 +65,78 @@ indicator marker on the image.
 
 @page inputparameters TEMBIR Input Parameters
 
-
 @section ss1 Single Slice Reconstruction Geometry
-@li X Width: 
-@li Use Multi-Resolution Reconstruction
 
+A single slice reconstruction can be used to quickly determine 
+what are the optimal parameter values to be used for reconstruction by 
+reconstructing a few x-z slices of the object. To select the 
+location of the x-z slices which we need to reconstruct, 
+hold down the shift key and click 
+on the data display window at the appropriate location.
+
+@li X Width (percentage): Used for choosing what 
+percentage of the total pixels along the x direction is going to be 
+used for reconstruction. 
+@li Use Multi-Resolution Reconstruction: Checking this implements 
+the multiresolution algorithm which can speed up the reconstruction.
 
 @section ss2 Full Reconstruction Geometry
-@li X Width
-@li Y Start Slice
-@li Y End Slice
-@li Sample Thickness
-@li Tilt Axis
+@li X Width: Used for choosing what 
+percentage of the total pixels along the x direction is going to be 
+used for reconstruction.
+@li Y Start Slice: The first slice along the y direction to reconstruct.  
+@li Y End Slice: The last slice along the y direction to reconstruct.  
+@li Sample Thickness: Thickness of the sample (in nano meters) which 
+is being imaged.
+@li Final Resolution Multiple: The desired size of voxels in the 
+reconstructed volume in terms of an integer multiple of the pixel size
+of the acquired data. (Example: Data has pixels of size =1 nm X 1nm and if 
+we set Final Resolution Multiple to 5, then the reconstruction will be 
+done with voxels of size 5 nm X 5 nm X 5 nm). 
+@li Tilt Axis: The axis along which the sample was tilted to acquire the 
+data.
 
 @section ss3 Parameters
-@li Diffuseness
-@li Final Resolution Multiple
-@li Smoothness/Sigma X
+@li Diffuseness: A value in the interval [0 1] which can be used to 
+incorporate knowledge of the the nature of interfaces between the 
+particles of interest and its support. A value of 0 corresponds to 
+sharp interfaces (Total Variation, Compressed sensing etc) while 
+a value of 1 corresponds to smooth interfaces.  
+@li Smoothness/Sigma X: Controls the levels of noise in the reconstruction. 
+The Smoothness (dimensionless) typically takes values in the 
+range of .1 - 10 and is used to compute the parameter SigmaX (uints of 
+nm^{-1}) which controls the level of noise in the reconstruction. 
+A large value of smoothness makes the image less noisy but decreases 
+resolution while a small value can yield noisy reconstructions but 
+preserve detail. The optimal value can be easily learnt from doing 
+the single slice reconstruction. This parameter can be thought of 
+having some similarities to the filter parameters used in back projection 
+algorithms.  
 
 @section ss4 Advanced Parameters
 
-@li Stop Threshold
-@li Num. Resolutions
-@li Target Gain
-@li Interpolate Initial Reconstruction
-@li Outer Iterations
-@li Inner Iterations
-@li Default Offset Value
-@li Default Variance
-@li Default Initial Reconstruction Value
-@li Extend Object
-@li Delete Temp Files
+@li Stop Threshold: Stopping threshold used for terminating the optimization
+routine. A value of .005 has been found to work in several data sets. 
+@li Num. Resolutions: The number of resolutions to be used for the multi-resolution method. A default value of 3 has been found to work well. Using too many 
+resolutions can slow down the overall speed of the reconstruction.
+@li Target Gain: Average value of the transmission normalization data (same 
+uints as the HAADF data). This can be set if the user has some knowledge 
+of the average value of the transmission data so that the reconstructions
+are scaled in units of nm^{-1}.
+@li Interpolate Initial Reconstruction: 
+@li Outer Iterations: Maximum number of iterations before the algorithm 
+terminates. 
+@li Inner Iterations: Number of iterations over the voxels at the coarsest 
+resolution. The default value is set to 10.  
+@li Default Offset Value: If there is a known offset in the acquired data 
+it can be entered here. If it is unknown the value is estimted as 
+a part of the reconstruction. 
+@li Default Variance: Scaling factor for variance in measurements. 
+@li Default Initial Reconstruction Value: Initial value of the voxels 
+to be used while minimizing the cost. 
+@li Extend Object: Indicates that the extent of the actual volume 
+being imaged extends beyond the region indicated for reconstruction. 
+@li Delete Temp Files: Remove all temporary files generated during the 
+multiresolution reconstruction.
 
 */
