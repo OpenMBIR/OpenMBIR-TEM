@@ -66,7 +66,7 @@ namespace VoxelUpdateType
 
 //#define WRITE_INTERMEDIATE_RESULTS
 //#define COST_CALCULATE
-//#define BF_RECON //Bright Field Reconstruction
+#define BF_RECON //Bright Field Reconstruction
 #define BF_OFFSET 0//0 //23696 - Bio data set
 #define BF_MAX  1865//5689//42122
 
