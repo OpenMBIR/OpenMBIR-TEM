@@ -1,3 +1,4 @@
+* Make file should be defaulted to release 
 * Enable saving the latest reconstruction at time of cancellation.
 *Change the Advanced parameter -> Noise_Model to Noise_Esimation
 * Streamline progress feedback to the GUI
