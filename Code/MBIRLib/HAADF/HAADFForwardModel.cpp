@@ -484,6 +484,12 @@ void HAADFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVol
         temp=yEstimate->d[i_theta][i_r][i_t]/m_I_0->d[i_theta];
         fwrite(&temp,sizeof(Real_t),1,Fp6);
 #endif
+		  
+		  //If its a bright field recon just over ride the weights
+#ifdef BF_RECON
+		  m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
+#endif //BF_RECON
+		  
 #ifdef DEBUG
         if(m_Weight->d[weight_idx] < 0)
         {

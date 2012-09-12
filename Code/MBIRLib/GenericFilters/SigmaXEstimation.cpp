@@ -64,8 +64,9 @@ void calcMinMax(T* data, int total, Real_t &min, Real_t &max, Real_t &sum2)
 template<typename T>
 void calcAvgDeviation(T* data, int total, Real_t &dev)
 {
-    dev=0;
+	dev=0;
     Real_t mean=0;
+#ifndef BF_RECON
     for (int i = 0; i < total; i++)
     {
         mean+=data[i];
@@ -76,6 +77,22 @@ void calcAvgDeviation(T* data, int total, Real_t &dev)
         dev+=fabs(data[i]-mean);
     }
     dev/=total;
+#else
+	for (int i = 0; i < total; i++)
+    {
+		Real_t temp = data[i] + BF_OFFSET;
+		if(temp < BF_MAX && temp > 0)
+			mean+=log(BF_MAX/(data[i]+BF_OFFSET));
+    }
+    mean/=total;
+    for (int i = 0; i < total; i++)
+    {
+		Real_t temp = data[i] + BF_OFFSET;
+		if(temp < BF_MAX && temp > 0)
+			dev+=fabs(log(BF_MAX/(data[i]+BF_OFFSET))-mean);
+    }
+    dev/=total;
+#endif//BF RECON
 }
 
 }
