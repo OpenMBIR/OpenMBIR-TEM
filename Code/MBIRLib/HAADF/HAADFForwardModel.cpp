@@ -477,6 +477,13 @@ void HAADFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVol
           m_Weight->d[weight_idx] = 1.0; //Set the weight to some small number
           //TODO: Make this something resonable
         }
+		
+		  //If its a bright field recon just over ride the weights
+#ifdef BF_RECON
+		  m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
+#endif //BF_RECON
+		  
+		  
 #else
         m_Weight->d[weight_idx] = 1.0;
 #endif //IDENTITY_NOISE_MODEL endif
@@ -485,10 +492,6 @@ void HAADFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVol
         fwrite(&temp,sizeof(Real_t),1,Fp6);
 #endif
 		  
-		  //If its a bright field recon just over ride the weights
-#ifdef BF_RECON
-		  m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
-#endif //BF_RECON
 		  
 #ifdef DEBUG
         if(m_Weight->d[weight_idx] < 0)
@@ -1034,6 +1037,9 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
         m_Weight->d[weight_idx] = 1.0;
 #endif//Identity noise Model
       }
+#ifdef BF_RECON //Override old weights
+		m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
+#endif //BF_RECON
     }
 
     for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
@@ -1067,10 +1073,18 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
         {
           m_Weight->d[weight_idx] = 1.0;
         }
+		
+#ifdef BF_RECON
+		  m_Weight->d[weight_idx] = (BF_MAX/exp(sinogram->counts->d[counts_idx]))/m_Alpha->d[i_theta];  
+#endif //BF_RECON
+		  
 #else
         m_Weight->d[weight_idx] = 1.0 / m_Alpha->d[i_theta];
 #endif //IDENTITY_NOISE_MODEL endif
-      }
+		  
+
+      
+	  }
     }
 
   }
