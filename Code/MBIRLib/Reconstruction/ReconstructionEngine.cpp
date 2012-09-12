@@ -253,7 +253,7 @@ void ReconstructionEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
   v->THRESHOLD_REDUCTION_FACTOR = 1;
   v->JOINT_ESTIMATION = 1;
   v->ZERO_SKIPPING = 1;
-  v->NOISE_MODEL = 1;
+  v->NOISE_ESTIMATION = 1;
 
 }
 
@@ -622,7 +622,7 @@ void ReconstructionEngine::execute()
       }
     } //Joint estimation endif
 
-    if(m_AdvParams->NOISE_MODEL)
+    if(m_AdvParams->NOISE_ESTIMATION)
     {
       m_ForwardModel->updateWeights(m_Sinogram, errorSino);
 #ifdef COST_CALCULATE

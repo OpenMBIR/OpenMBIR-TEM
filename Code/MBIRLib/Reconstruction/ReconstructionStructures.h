@@ -211,7 +211,7 @@ namespace SOC {
                                     is known the user might want to Turn this OFF. All
                                     other cases it needs be switched ON. */
       unsigned int ZERO_SKIPPING; /* This will always be ON in the end product I think. */
-      unsigned int NOISE_MODEL; /* This is a parameter that the user MAY or MAY NOT
+      unsigned int NOISE_ESTIMATION; /* This is a parameter that the user MAY or MAY NOT
                                   want turned ON. It is ON by default */
   } AdvancedParameters;
   typedef boost::shared_ptr<AdvancedParameters> AdvancedParametersPtr;

@@ -288,7 +288,7 @@ void HAADFForwardModel::allocateNuisanceParameters(SinogramPtr sinogram)
   dims[0] = sinogram->N_theta;
   m_I_0 = RealArrayType::New(dims, "HAADF::NuisanceParams->I_0");
   m_Mu = RealArrayType::New(dims, "HAADF::NuisanceParams->mu");
-  if(m_AdvParams->NOISE_MODEL)
+  if(m_AdvParams->NOISE_ESTIMATION)
   {
     //alpha is the noise variance adjustment factor
     m_Alpha = RealArrayType::New(dims, "HAADF::NuisanceParams->alpha");
@@ -442,7 +442,7 @@ void HAADFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVol
   START_TIMER;
   for (int16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++) //slice index
   {
-    if(m_AdvParams->NOISE_MODEL)
+    if(m_AdvParams->NOISE_ESTIMATION)
     {
       m_Alpha->d[i_theta] = m_InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
     } //Noise model
@@ -496,7 +496,7 @@ void HAADFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVol
           //  std::cout << sinogram->counts->d[counts_idx] << "    " << m_Alpha->d[i_theta] << std::endl;
         }
 #endif//Debug
-        if(m_AdvParams->NOISE_MODEL)
+        if(m_AdvParams->NOISE_ESTIMATION)
         {
           m_Weight->d[weight_idx] /= m_Alpha->d[i_theta];
         } // NOISE_MODEL
@@ -981,7 +981,7 @@ Real_t HAADFForwardModel::computeCost(SinogramPtr sinogram, GeometryPtr geometry
   //printf("Cost calculation End..\n");
 
 //Noise Error
-  if(m_AdvParams->NOISE_MODEL)
+  if(m_AdvParams->NOISE_ESTIMATION)
   {
     temp = 0;
     for (int16_t i = 0; i < sinogram->N_theta; i++)
@@ -1120,7 +1120,7 @@ void HAADFForwardModel::writeNuisanceParameters(SinogramPtr sinogram)
     }
   }
 
-  if(m_AdvParams->NOISE_MODEL)
+  if(m_AdvParams->NOISE_ESTIMATION)
   {
     nuisanceBinWriter->setFileName(m_TomoInputs->varianceOutputFile);
     nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_alpha);
@@ -1139,7 +1139,7 @@ void HAADFForwardModel::writeNuisanceParameters(SinogramPtr sinogram)
     for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
     {
 
-      if(m_AdvParams->NOISE_MODEL)
+      if(m_AdvParams->NOISE_ESTIMATION)
       {
         std::cout << i_theta << "\t" << m_I_0->d[i_theta] << "\t" << m_Mu->d[i_theta] << "\t" << m_Alpha->d[i_theta] << std::endl;
       }
