@@ -711,7 +711,8 @@ int HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Poi
     }
 
 #ifdef COST_CALCULATE
-    int16_t err = calculateCost(cost, Weight, errorSinogram);
+    //int16_t err = calculateCost(cost, Weight, errorSinogram);
+	int16_t err = calculateCost(cost,sinogram,geometry,errorSinogram,qggmrf_values);
     if (err < 0)
     {
       std::cout<<"Cost went up after Gain+Offset update"<<std::endl;
@@ -1025,21 +1026,23 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
         //    size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
         size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-        if(sinogram->counts->d[counts_idx] != 0)
+  /*      if(sinogram->counts->d[counts_idx] != 0)
         {
           m_Weight->d[weight_idx] = 1.0 / sinogram->counts->d[counts_idx];
         }
         else
         {
           m_Weight->d[weight_idx] = 1.0;
-        }
+        }*/
+#ifdef BF_RECON //Override old weights
+		  m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
+#endif //BF_RECON
+		  
 #else
         m_Weight->d[weight_idx] = 1.0;
 #endif//Identity noise Model
       }
-#ifdef BF_RECON //Override old weights
-		m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
-#endif //BF_RECON
+
     }
 
     for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
@@ -1065,14 +1068,14 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
         size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
         size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-        if(m_Alpha->d[i_theta] != 0 && sinogram->counts->d[counts_idx] != 0)
+  /*      if(m_Alpha->d[i_theta] != 0 && sinogram->counts->d[counts_idx] != 0)
         {
           m_Weight->d[weight_idx] = 1.0 / (sinogram->counts->d[counts_idx] * m_Alpha->d[i_theta]);
         }
         else
         {
           m_Weight->d[weight_idx] = 1.0;
-        }
+        }*/
 		
 #ifdef BF_RECON
 		  m_Weight->d[weight_idx] = (BF_MAX/exp(sinogram->counts->d[counts_idx]))/m_Alpha->d[i_theta];  
@@ -1081,14 +1084,37 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
 #else
         m_Weight->d[weight_idx] = 1.0 / m_Alpha->d[i_theta];
 #endif //IDENTITY_NOISE_MODEL endif
-		  
-
+	
       
 	  }
     }
 
   }
 
+	// This block averages the alphas so we have a single constant of proportionality for BF case 
+	sum=0;		  
+	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	{
+		sum+=m_Alpha->d[i_theta];
+	}
+	sum/=sinogram->N_theta;
+	
+	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	{
+		m_Alpha->d[i_theta]=sum;
+	}
+	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	    for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
+			for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
+			{
+				size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
+#ifndef IDENTITY_NOISE_MODEL
+				m_Weight->d[weight_idx] = (BF_MAX/exp(sinogram->counts->d[weight_idx]))/m_Alpha->d[i_theta];
+#else
+				m_Weight->d[weight_idx] = 1.0/m_Alpha->d[i_theta];
+#endif //IDENTITY_NOISE_MODEL
+			}
+	
   if(getVeryVerbose())
   {
     std::cout << "Noise Model Weights:" << std::endl;

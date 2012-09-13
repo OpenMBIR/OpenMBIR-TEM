@@ -555,7 +555,8 @@ void ReconstructionEngine::execute()
 #endif//Forward Project mode
 
 #ifdef COST_CALCULATE
-  err = calculateCost(cost, Weight, errorSino);
+ // err = calculateCost(cost, Weight, errorSino);
+    err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,qggmrf_values);
 #endif //Cost calculation endif
 //  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
 
@@ -626,8 +627,9 @@ void ReconstructionEngine::execute()
     {
       m_ForwardModel->updateWeights(m_Sinogram, errorSino);
 #ifdef COST_CALCULATE
-      err = calculateCost(cost, Weight, errorSino);
-      if (err < 0)
+      //err = calculateCost(cost, Weight, errorSino);
+		err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,qggmrf_values);
+	  if (err < 0)
       {
         std::cout<<"Cost went up after variance update"<<std::endl;
         break;
