@@ -519,7 +519,7 @@ void HAADFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVol
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Pointer errorSinogram, RealVolumeType::Pointer yEstimate, CostData::Pointer cost)
+void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Pointer errorSinogram, RealVolumeType::Pointer yEstimate, CostData::Pointer cost)
 {
   std::stringstream ss;
   std::string indent("  ");
@@ -710,15 +710,7 @@ int HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Poi
       }
     }
 
-#ifdef COST_CALCULATE
-    //int16_t err = calculateCost(cost, Weight, errorSinogram);
-	int16_t err = calculateCost(cost,sinogram,geometry,errorSinogram,qggmrf_values);
-    if (err < 0)
-    {
-      std::cout<<"Cost went up after Gain+Offset update"<<std::endl;
-      return err;
-    }
-#endif
+
     if(getVeryVerbose())
     {
       ss.str("");
@@ -765,25 +757,13 @@ int HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Poi
         std::cout << "Theta: " << i_theta << " Mu: " << m_Mu->d[i_theta] << std::endl;
       }
     }
-#ifdef COST_CALCULATE
-    /*********************Cost Calculation*************************************/
-    Real_t cost_value = computeCost(errorSinogram, Weight);
-    std::cout<<cost_value<<std::endl;
-    int increase = cost->addCostValue(cost_value);
-    if (increase ==1)
-    {
-      std::cout << "Cost just increased after offset update!" << std::endl;
-      //break;
-      return -1;
-    }
-    cost->writeCostValue(cost_value);
-    /**************************************************************************/
-#endif
+
 
   } //BFflag = true
-  return 0;
+  //return 0;
 }
 
+#if 0 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -1004,6 +984,8 @@ Real_t HAADFForwardModel::computeCost(SinogramPtr sinogram, GeometryPtr geometry
   return cost;
 }
 
+#endif
+
 // -----------------------------------------------------------------------------
 // Updating the Weights for Noise Model
 // -----------------------------------------------------------------------------
@@ -1114,6 +1096,7 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
 				m_Weight->d[weight_idx] = 1.0/m_Alpha->d[i_theta];
 #endif //IDENTITY_NOISE_MODEL
 			}
+		
 	
   if(getVeryVerbose())
   {
@@ -1568,20 +1551,7 @@ uint8_t HAADFForwardModel::updateVoxels(SinogramPtr sinogram,
     ss << "Inner Iter: " << Iter << " Voxel Update";
     PRINT_TIME(ss.str());
 
-#ifdef COST_CALCULATE
 
-    /*********************Cost Calculation*************************************/
-    Real_t cost_value = computeCost(ErrorSino, Weight);
-    std::cout << cost_value << std::endl;
-    int increase = cost->addCostValue(cost_value);
-    if(increase == 1)
-    {
-      std::cout << "Cost just increased after ICD!" << std::endl;
-      break;
-    }
-    cost->writeCostValue(cost_value);
-    /**************************************************************************/
-#endif //Cost calculation endif
 #if ROI
     if(getVerbose())
     {

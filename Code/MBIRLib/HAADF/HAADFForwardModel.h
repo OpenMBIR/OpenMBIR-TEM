@@ -189,9 +189,12 @@ class HAADFForwardModel : public Observable
      * @param cost
      * @return
      */
-    int jointEstimation(SinogramPtr sinogram,
+    void jointEstimation(SinogramPtr sinogram,
                         RealVolumeType::Pointer errorSinogram,
                         RealVolumeType::Pointer yEstimate, CostData::Pointer cost);
+	void updateWeights(SinogramPtr sinogram,
+                       RealVolumeType::Pointer errorSinogram);
+
     /**
      *
      * @param cost
@@ -200,24 +203,24 @@ class HAADFForwardModel : public Observable
      * @param errorSinogram
      * @return
      */
-    int calculateCost(CostData::Pointer cost,
+   /* int calculateCost(CostData::Pointer cost,
                       SinogramPtr sinogram,
                       GeometryPtr geometry,
                       RealVolumeType::Pointer errorSinogram,
                       QGGMRF::QGGMRF_Values *qggmrf_Values);
-    /**
+*/
+	/**
      * @brief
      * @param errorSinogram
      * @param Weight
      * @return
      */
-    Real_t computeCost(SinogramPtr sinogram,
+  /*  Real_t computeCost(SinogramPtr sinogram,
                        GeometryPtr geometry,
                        RealVolumeType::Pointer errorSinogram,
-                       QGGMRF::QGGMRF_Values* qggmrf_Values);
+                       QGGMRF::QGGMRF_Values* qggmrf_Values); */
 
-    void updateWeights(SinogramPtr sinogram,
-                       RealVolumeType::Pointer errorSinogram);
+    
 
     /**
      * Code to take the magnitude map and filter it with a hamming window
@@ -238,7 +241,6 @@ class HAADFForwardModel : public Observable
 
   protected:
     HAADFForwardModel();
-
 
   private:
     RealImageType::Pointer m_QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function

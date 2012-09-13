@@ -94,12 +94,31 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
     void execute();
 
     Real_t absMaxArray(std::vector<Real_t> &Array);
-
+	
+	
   protected:
     // Protect this constructor because we want to force the use of the other
     ReconstructionEngine();
-
-    /**
+	
+	/**
+     * @brief
+     * @param errorSinogram
+     * @param Weight
+     * @return
+     */
+	int calculateCost(CostData::Pointer cost,
+					  SinogramPtr sinogram,
+					  GeometryPtr geometry,
+					  RealVolumeType::Pointer ErrorSino,
+					  QGGMRF::QGGMRF_Values* qggmrf_Values);
+	
+	
+    Real_t computeCost(SinogramPtr sinogram,
+                       GeometryPtr geometry,
+                       RealVolumeType::Pointer errorSinogram,
+                       QGGMRF::QGGMRF_Values* qggmrf_Values);
+	
+	    /**
      * @brief
      */
     void calculateArithmeticMean();
