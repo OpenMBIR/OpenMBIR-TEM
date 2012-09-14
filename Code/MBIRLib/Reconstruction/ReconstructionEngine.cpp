@@ -578,11 +578,17 @@ void ReconstructionEngine::execute()
 
       // This could contain multiple Subloops also
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
-      status = m_ForwardModel->updateVoxels(m_Sinogram, m_Geometry,
+     /* status = m_ForwardModel->updateVoxels(m_Sinogram, m_Geometry,
                                             reconOuterIter, reconInnerIter,
                                              visitCount, tempCol,
                                              errorSino, voxelLineResponse,
-                                             cost);
+                                             cost);*/
+		status = updateVoxels(m_Sinogram, m_Geometry,
+											  reconOuterIter, reconInnerIter,
+											  visitCount, tempCol,
+											  errorSino, voxelLineResponse,
+											  cost,
+							                  qggmrf_values);
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
       if(status == 0)

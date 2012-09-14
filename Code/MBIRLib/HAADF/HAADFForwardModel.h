@@ -166,13 +166,15 @@ class HAADFForwardModel : public Observable
     /**
      *
      */
-    uint8_t updateVoxels(SinogramPtr sinogram, GeometryPtr geometry,
+  
+ 	uint8_t updateVoxels(SinogramPtr sinogram, GeometryPtr geometry,
                          int16_t OuterIter, int16_t Iter,
                             UInt8Image_t::Pointer VisitCount,
                             std::vector<HAADFAMatrixCol::Pointer> &TempCol,
                             RealVolumeType::Pointer errorSinogram,
                             std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
                             CostData::Pointer cost );
+  
 
     /**
      *

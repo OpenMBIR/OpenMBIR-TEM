@@ -1128,235 +1128,236 @@ uint8_t HAADFForwardModel::updateVoxels(SinogramPtr sinogram,
                                         std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
                                         CostData::Pointer cost)
 {
-  size_t dims[3];
-  dims[0] = geometry->N_z; //height
-  dims[1] = geometry->N_x; //width
-  dims[2] = 0;
-
-  RealImageType::Pointer magUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
-  RealImageType::Pointer filtMagUpdateMap = RealImageType::New(dims, "Filter Update Map for voxel lines");
-  UInt8Image_t::Pointer magUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");
-
+	size_t dims[3];
+	dims[0] = geometry->N_z; //height
+	dims[1] = geometry->N_x; //width
+	dims[2] = 0;
+	
+	RealImageType::Pointer magUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
+	RealImageType::Pointer filtMagUpdateMap = RealImageType::New(dims, "Filter Update Map for voxel lines");
+	UInt8Image_t::Pointer magUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");
+	
 #if ROI
-  UInt8Image_t::Pointer mask;
-  dims[0] = geometry->N_z;
-  dims[1] = geometry->N_x;
-  mask = UInt8Image_t::New(dims, "Mask");
-  initializeROIMask(sinogram, geometry, mask);
+	UInt8Image_t::Pointer mask;
+	dims[0] = geometry->N_z;
+	dims[1] = geometry->N_x;
+	mask = UInt8Image_t::New(dims, "Mask");
+	initializeROIMask(sinogram, geometry, mask);
 #endif
-
-  unsigned int updateType = VoxelUpdateType::RegularRandomOrderUpdate;
+	
+	unsigned int updateType = VoxelUpdateType::RegularRandomOrderUpdate;
 #ifdef NHICD
-  if(0 == reconInnerIter % 2)
-  {
-    updateType = VoxelUpdateType::HomogeniousUpdate;
-  }
-  else
-  {
-    updateType = VoxelUpdateType::NonHomogeniousUpdate;
-  }
+	if(0 == reconInnerIter % 2)
+	{
+		updateType = VoxelUpdateType::HomogeniousUpdate;
+	}
+	else
+	{
+		updateType = VoxelUpdateType::NonHomogeniousUpdate;
+	}
 #else
-
+	
 #endif//NHICD end if
-
+	
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
-  tbb::task_scheduler_init init;
-  int m_NumThreads = init.default_num_threads();
+	tbb::task_scheduler_init init;
+	int m_NumThreads = init.default_num_threads();
 #else
-  int m_NumThreads = 1;
+	int m_NumThreads = 1;
 #endif
-
-  std::stringstream ss;
-  uint8_t exit_status = 1; //Indicates normal exit ; else indicates to stop inner iterations
-  uint16_t subIterations = 1;
-  std::string indent("    ");
-  uint8_t err = 0;
-
-  if(updateType == VoxelUpdateType::RegularRandomOrderUpdate)
-  {
-    ss << indent << "Regular Random Order update of Voxels" << std::endl;
-  }
-  else if(updateType == VoxelUpdateType::HomogeniousUpdate)
-  {
-    ss << indent << "Homogenous update of voxels" << std::endl;
-  }
-  else if(updateType == VoxelUpdateType::NonHomogeniousUpdate)
-  {
-    ss << indent << "Non Homogenous update of voxels" << std::endl;
-    subIterations = NUM_NON_HOMOGENOUS_ITER;
-  }
-  else
-  {
-    ss << indent << "Unknown Voxel Update Type. Returning Now" << std::endl;
-    notify(ss.str(), 0, Observable::UpdateErrorMessage);
-    return exit_status;
-  }
-
-  if(getVerbose())
-  {
-    std::cout << ss.str() << std::endl;
-  }
-
-  Real_t NH_Threshold = 0.0;
-  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
-
-  for (uint16_t NH_Iter = 0; NH_Iter < subIterations; ++NH_Iter)
-  {
-    ss.str("");
-    ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
-    ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
-    ss << "   SubLoop: " << NH_Iter << " of " << subIterations;
-    float currentLoop = static_cast<float>(OuterIter * m_TomoInputs->NumIter + Iter);
-    notify(ss.str(), currentLoop / totalLoops * 100.0f, Observable::UpdateProgressValueAndMessage);
-    if(updateType == VoxelUpdateType::NonHomogeniousUpdate)
-    {
-      //Compute VSC and create a map of pixels that are above the threshold value
-      ComputeVSC(magUpdateMap, filtMagUpdateMap, geometry);
-      START_TIMER;
-      NH_Threshold = SetNonHomThreshold(geometry, magUpdateMap);
-      STOP_TIMER;
-      PRINT_TIME("  SetNonHomThreshold");
-      std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
-      //Use  filtMagUpdateMap  to find MagnitudeUpdateMask
-      //std::cout << "Completed Calculation of filtered magnitude" << std::endl;
-      //Calculate the threshold for the top ? % of voxel updates
-    }
-
-    //printf("Iter %d\n",Iter);
+	
+	std::stringstream ss;
+	uint8_t exit_status = 1; //Indicates normal exit ; else indicates to stop inner iterations
+	uint16_t subIterations = 1;
+	std::string indent("    ");
+	uint8_t err = 0;
+	
+	if(updateType == VoxelUpdateType::RegularRandomOrderUpdate)
+	{
+		ss << indent << "Regular Random Order update of Voxels" << std::endl;
+	}
+	else if(updateType == VoxelUpdateType::HomogeniousUpdate)
+	{
+		ss << indent << "Homogenous update of voxels" << std::endl;
+	}
+	else if(updateType == VoxelUpdateType::NonHomogeniousUpdate)
+	{
+		ss << indent << "Non Homogenous update of voxels" << std::endl;
+		subIterations = NUM_NON_HOMOGENOUS_ITER;
+	}
+	else
+	{
+		ss << indent << "Unknown Voxel Update Type. Returning Now" << std::endl;
+		notify(ss.str(), 0, Observable::UpdateErrorMessage);
+		return exit_status;
+	}
+	
+	if(getVerbose())
+	{
+		std::cout << ss.str() << std::endl;
+	}
+	
+	Real_t NH_Threshold = 0.0;
+	int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
+	
+	for (uint16_t NH_Iter = 0; NH_Iter < subIterations; ++NH_Iter)
+	{
+		ss.str("");
+		ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
+		ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
+		ss << "   SubLoop: " << NH_Iter << " of " << subIterations;
+		float currentLoop = static_cast<float>(OuterIter * m_TomoInputs->NumIter + Iter);
+		notify(ss.str(), currentLoop / totalLoops * 100.0f, Observable::UpdateProgressValueAndMessage);
+		if(updateType == VoxelUpdateType::NonHomogeniousUpdate)
+		{
+			//Compute VSC and create a map of pixels that are above the threshold value
+			ComputeVSC(magUpdateMap, filtMagUpdateMap, geometry);
+			START_TIMER;
+			NH_Threshold = SetNonHomThreshold(geometry, magUpdateMap);
+			STOP_TIMER;
+			PRINT_TIME("  SetNonHomThreshold");
+			std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
+			//Use  filtMagUpdateMap  to find MagnitudeUpdateMask
+			//std::cout << "Completed Calculation of filtered magnitude" << std::endl;
+			//Calculate the threshold for the top ? % of voxel updates
+		}
+		
+		//printf("Iter %d\n",Iter);
 #if ROI
-    //variables used to stop the process
-    Real_t AverageUpdate = 0;
-    Real_t AverageMagnitudeOfRecon = 0;
+		//variables used to stop the process
+		Real_t AverageUpdate = 0;
+		Real_t AverageMagnitudeOfRecon = 0;
 #endif
-
-    START_TIMER;
+		
+		START_TIMER;
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
-    std::vector<int> yCount(m_NumThreads, 0);
-    int t = 0;
-    for (int y = 0; y < geometry->N_y; ++y)
-    {
-      yCount[t]++;
-      ++t;
-      if(t == m_NumThreads)
-      {
-        t = 0;
-      }
-    }
-
-    uint16_t yStart = 0;
-    uint16_t yStop = 0;
-
-    tbb::task_list taskList;
-    Real_t* averageUpdate = (Real_t*)(malloc(sizeof(Real_t) * m_NumThreads));
-    ::memset(averageUpdate, 0, sizeof(Real_t) * m_NumThreads);
-    Real_t* averageMagnitudeOfRecon = (Real_t*)(malloc(sizeof(Real_t) * m_NumThreads));
-    ::memset(averageMagnitudeOfRecon, 0, sizeof(Real_t) * m_NumThreads);
-    for (int t = 0; t < m_NumThreads; ++t)
-    {
-      yStart = yStop;
-      yStop = yStart + yCount[t];
-      if(yStart == yStop)
-      {
-        continue;
-      } // Processor has NO tasks to run because we have less Y's than cores
-
-      // std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
-      UpdateYSlice& a =
-          *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, geometry, OuterIter, Iter, sinogram, TempCol, ErrorSino, 
-														 //m_Weight, 
-														 VoxelLineResponse, this, mask, magUpdateMap, magUpdateMask, 
-														 updateType, NH_Threshold, averageUpdate
-														 + t, averageMagnitudeOfRecon + t, m_AdvParams->ZERO_SKIPPING, m_QGGMRF_Values);
-      taskList.push_back(a);
-    }
-
-    tbb::task::spawn_root_and_wait(taskList);
-    // Now sum up some values
-    for (int t = 0; t < m_NumThreads; ++t)
-    {
-      AverageUpdate += averageUpdate[t];
-      AverageMagnitudeOfRecon += averageMagnitudeOfRecon[t];
-    }
-    free(averageUpdate);
-    free(averageMagnitudeOfRecon);
-
+		std::vector<int> yCount(m_NumThreads, 0);
+		int t = 0;
+		for (int y = 0; y < geometry->N_y; ++y)
+		{
+			yCount[t]++;
+			++t;
+			if(t == m_NumThreads)
+			{
+				t = 0;
+			}
+		}
+		
+		uint16_t yStart = 0;
+		uint16_t yStop = 0;
+		
+		tbb::task_list taskList;
+		Real_t* averageUpdate = (Real_t*)(malloc(sizeof(Real_t) * m_NumThreads));
+		::memset(averageUpdate, 0, sizeof(Real_t) * m_NumThreads);
+		Real_t* averageMagnitudeOfRecon = (Real_t*)(malloc(sizeof(Real_t) * m_NumThreads));
+		::memset(averageMagnitudeOfRecon, 0, sizeof(Real_t) * m_NumThreads);
+		for (int t = 0; t < m_NumThreads; ++t)
+		{
+			yStart = yStop;
+			yStop = yStart + yCount[t];
+			if(yStart == yStop)
+			{
+				continue;
+			} // Processor has NO tasks to run because we have less Y's than cores
+			
+			// std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
+			UpdateYSlice& a =
+			*new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, geometry, OuterIter, Iter, sinogram, TempCol, ErrorSino, 
+														   VoxelLineResponse, this, mask, magUpdateMap, magUpdateMask, 
+														   updateType, NH_Threshold, averageUpdate
+														   + t, averageMagnitudeOfRecon + t, m_AdvParams->ZERO_SKIPPING, m_QGGMRF_Values);
+			taskList.push_back(a);
+		}
+		
+		tbb::task::spawn_root_and_wait(taskList);
+		// Now sum up some values
+		for (int t = 0; t < m_NumThreads; ++t)
+		{
+			AverageUpdate += averageUpdate[t];
+			AverageMagnitudeOfRecon += averageMagnitudeOfRecon[t];
+		}
+		free(averageUpdate);
+		free(averageMagnitudeOfRecon);
+		
 #else
-    uint16_t yStop = geometry->N_y;
-    uint16_t yStart = 0;
-    UpdateYSlice yVoxelUpdate(yStart, yStop,
-        geometry,
-        OuterIter, Iter, sinogram,
-        m_BFSinogram, TempCol,
-        ErrorSino, Weight, VoxelLineResponse,
-        NuisanceParams, Mask,
-        magUpdateMap, MagUpdateMask,
-        &m_QGGMRF_Values,
-        updateType,
-        NH_Threshold,
-        &AverageUpdate,
-        &AverageMagnitudeOfRecon,
-        m_AdvParams->ZERO_SKIPPING);
-
-    yVoxelUpdate.execute();
+		uint16_t yStop = geometry->N_y;
+		uint16_t yStart = 0;
+		UpdateYSlice yVoxelUpdate(yStart, yStop,
+								  geometry,
+								  OuterIter, Iter, sinogram,
+								  m_BFSinogram, TempCol,
+								  ErrorSino, Weight, VoxelLineResponse,
+								  NuisanceParams, Mask,
+								  magUpdateMap, MagUpdateMask,
+								  &m_QGGMRF_Values,
+								  updateType,
+								  NH_Threshold,
+								  &AverageUpdate,
+								  &AverageMagnitudeOfRecon,
+								  m_AdvParams->ZERO_SKIPPING);
+		
+		yVoxelUpdate.execute();
 #endif
-    /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */STOP_TIMER;
-    ss.str("");
-    ss << "Inner Iter: " << Iter << " Voxel Update";
-    PRINT_TIME(ss.str());
-
-
+		/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */STOP_TIMER;
+		ss.str("");
+		ss << "Inner Iter: " << Iter << " Voxel Update";
+		PRINT_TIME(ss.str());
+		
+		
 #if ROI
-    if(getVerbose())
-    {
-      std::cout << "Average Update " << AverageUpdate << std::endl;
-      std::cout << "Average Mag " << AverageMagnitudeOfRecon << std::endl;
-    }
-    if(AverageMagnitudeOfRecon > 0)
-    {
-      if(getVerbose())
-      {
-        std::cout << Iter + 1 << " " << AverageUpdate / AverageMagnitudeOfRecon << std::endl;
-      }
-      //Use the stopping criteria if we are performing a full update of all voxels
-      if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != VoxelUpdateType::NonHomogeniousUpdate)
-      {
-        std::cout << "This is the terminating point " << Iter << std::endl;
-        m_TomoInputs->StopThreshold *= m_AdvParams->THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
-        std::cout << "New threshold" << m_TomoInputs->StopThreshold << std::endl;
-        exit_status = 0;
-        break;
-      }
-    }
+		if(getVerbose())
+		{
+			std::cout << "Average Update " << AverageUpdate << std::endl;
+			std::cout << "Average Mag " << AverageMagnitudeOfRecon << std::endl;
+		}
+		if(AverageMagnitudeOfRecon > 0)
+		{
+			if(getVerbose())
+			{
+				std::cout << Iter + 1 << " " << AverageUpdate / AverageMagnitudeOfRecon << std::endl;
+			}
+			//Use the stopping criteria if we are performing a full update of all voxels
+			if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != VoxelUpdateType::NonHomogeniousUpdate)
+			{
+				std::cout << "This is the terminating point " << Iter << std::endl;
+				m_TomoInputs->StopThreshold *= m_AdvParams->THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
+				std::cout << "New threshold" << m_TomoInputs->StopThreshold << std::endl;
+				exit_status = 0;
+				break;
+			}
+		}
 #endif//ROI end
 #ifdef WRITE_INTERMEDIATE_RESULTS
-
-    if(Iter == NumOfWrites*WriteCount)
-    {
-      WriteCount++;
-      sprintf(buffer,"%d",Iter);
-      sprintf(Filename,"ReconstructedObjectAfterIter");
-      strcat(Filename,buffer);
-      strcat(Filename,".bin");
-      Fp3 = fopen(Filename, "w");
-      TempPointer = geometry->Object;
-      NumOfBytesWritten=fwrite(&(geometry->Object->d[0][0][0]), sizeof(Real_t),geometry->N_x*geometry->N_y*geometry->N_z, Fp3);
-      printf("%d\n",NumOfBytesWritten);
-
-      fclose(Fp3);
-    }
+		
+		if(Iter == NumOfWrites*WriteCount)
+		{
+			WriteCount++;
+			sprintf(buffer,"%d",Iter);
+			sprintf(Filename,"ReconstructedObjectAfterIter");
+			strcat(Filename,buffer);
+			strcat(Filename,".bin");
+			Fp3 = fopen(Filename, "w");
+			TempPointer = geometry->Object;
+			NumOfBytesWritten=fwrite(&(geometry->Object->d[0][0][0]), sizeof(Real_t),geometry->N_x*geometry->N_y*geometry->N_z, Fp3);
+			printf("%d\n",NumOfBytesWritten);
+			
+			fclose(Fp3);
+		}
 #endif
-
-    if(getCancel() == true)
-    {
-      setErrorCondition(err);
-      return exit_status;
-    }
-
-  }
-
-  return exit_status;
-
+		
+		if(getCancel() == true)
+		{
+			setErrorCondition(err);
+			return exit_status;
+		}
+		
+	}
+	
+	return exit_status;
+	
 }
+
+
 
 // -----------------------------------------------------------------------------
 //
