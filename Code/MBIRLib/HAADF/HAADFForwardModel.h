@@ -260,6 +260,9 @@ class HAADFForwardModel : public Observable
 							 RealVolumeType::Pointer errorSinogram,
 							 SinogramPtr sinogram);
 	
+#ifdef BF_RECON
+	void processRawCounts(SinogramPtr sinogram);
+#endif
 
   protected:
     HAADFForwardModel();

@@ -1607,3 +1607,34 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 		}
 	}
 }
+
+
+#ifdef BF_RECON
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void HAADFForwardModel::processRawCounts(SinogramPtr sinogram)
+{
+    Real_t mean=0;
+    for (int16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++) //slice index
+    {
+        for (int16_t i_r = 0; i_r < sinogram->N_r; i_r++)
+        {
+            for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
+            {
+                size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
+                sinogram->counts->d[counts_idx] += BF_OFFSET;
+                sinogram->counts->d[counts_idx] = -log(sinogram->counts->d[counts_idx]/BF_MAX);
+				
+                if(sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
+                    sinogram->counts->d[counts_idx] = 0;
+				
+                mean+=sinogram->counts->d[counts_idx];
+            }
+        }
+    }
+    mean/=(sinogram->N_theta*sinogram->N_r*sinogram->N_t);
+    std::cout<<"Mean log value ="<<mean<<std::endl;
+}
+
+#endif //BF Recon

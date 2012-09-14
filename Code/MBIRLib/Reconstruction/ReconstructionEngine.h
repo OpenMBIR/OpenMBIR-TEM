@@ -169,10 +169,6 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
      */
     void initializeVolume(RealVolumeType::Pointer Y_Est, double value);
 
-#ifdef BF_RECON
-    void processRawCounts();
-#endif
-
     /**
      * @brief
      * @param filepath
