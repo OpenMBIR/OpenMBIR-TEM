@@ -591,11 +591,12 @@ uint8_t ReconstructionEngine::updateVoxels(SinogramPtr sinogram,
 			// std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
 			UpdateYSlice& a =
 			*new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, geometry, OuterIter, Iter, 
-														   sinogram, TempCol, ErrorSino, 
-														   VoxelLineResponse, m_ForwardModel, mask, 
+														   sinogram, &TempCol, ErrorSino, 
+														   &VoxelLineResponse, m_ForwardModel, mask, 
 														   magUpdateMap, magUpdateMask, updateType, 
 														   NH_Threshold, averageUpdate+ t, 
-														   averageMagnitudeOfRecon + t, m_AdvParams->ZERO_SKIPPING, 
+														   averageMagnitudeOfRecon + t, 
+														   m_AdvParams->ZERO_SKIPPING, 
 														   qggmrf_values);
 			taskList.push_back(a);
 		}
