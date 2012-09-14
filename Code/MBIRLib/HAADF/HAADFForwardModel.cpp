@@ -1510,3 +1510,50 @@ void HAADFForwardModel::initializeROIMask(SinogramPtr sinogram, GeometryPtr geom
     }
   }
 }
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Pointer ErrorSino)
+{
+	Real_t cost = 0,temp=0;
+	Real_t errSinoValue = 0.0;
+	
+	
+	//Data Mismatch Error
+	
+	for (int16_t i = 0; i < sinogram->N_theta; i++)
+	{
+		for (int16_t j = 0; j < sinogram->N_r; j++)
+		{
+			for (int16_t k = 0; k < sinogram->N_t; k++)
+			{
+				errSinoValue = ErrorSino->getValue(i, j, k);
+				cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k));
+			}
+		}
+	}
+	
+	cost /= 2;
+	
+	//Noise Error
+	if(m_AdvParams->NOISE_ESTIMATION)
+	{
+		temp = 0;
+		for (int16_t i = 0; i < sinogram->N_theta; i++)
+		{
+			for (int16_t j = 0; j < sinogram->N_r; j++)
+			{
+				for (int16_t k = 0; k < sinogram->N_t; k++)
+				{
+					if(m_Weight->getValue(i, j, k) != 0) temp += log(2 * M_PI * (1.0 / m_Weight->getValue(i, j, k)));
+				}
+			}
+		}
+		temp /= 2;
+		cost += temp;
+	} //NOISE_MODEL
+	
+	return cost;
+}

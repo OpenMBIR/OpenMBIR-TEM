@@ -110,14 +110,12 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 					  SinogramPtr sinogram,
 					  GeometryPtr geometry,
 					  RealVolumeType::Pointer ErrorSino,
-					  RealVolumeType::Pointer Weight,
 					  QGGMRF::QGGMRF_Values* qggmrf_Values);
 	
 	
     Real_t computeCost(SinogramPtr sinogram,
                        GeometryPtr geometry,
                        RealVolumeType::Pointer errorSinogram,
-					   RealVolumeType::Pointer Weight,
                        QGGMRF::QGGMRF_Values* qggmrf_Values);
 	
 	    /**

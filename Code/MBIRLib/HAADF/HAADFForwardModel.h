@@ -238,6 +238,9 @@ class HAADFForwardModel : public Observable
 
     void writeSinogramFile(SinogramPtr sinogram,
                            RealVolumeType::Pointer finalSinogram);
+	
+	Real_t forwardCost(SinogramPtr sinogram,
+					   RealVolumeType::Pointer errorSinogram);
 
   protected:
     HAADFForwardModel();
