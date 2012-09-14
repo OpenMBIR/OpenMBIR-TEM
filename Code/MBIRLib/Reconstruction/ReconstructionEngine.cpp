@@ -588,7 +588,7 @@ void ReconstructionEngine::execute()
 											  visitCount, tempCol,
 											  errorSino, voxelLineResponse,
 											  cost,
-							                  qggmrf_values);
+							                  &qggmrf_values);
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
       if(status == 0)

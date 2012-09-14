@@ -39,6 +39,7 @@
 #include "MBIRLib/GenericFilters/MRCSinogramInitializer.h"
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/Common/EIMTime.h"
+#include "MBIRLib/HAADF/UpdateYSlice.h"
 
 
 #define START_TIMER uint64_t startm = EIMTOMO_getMilliSeconds();
@@ -589,8 +590,10 @@ uint8_t ReconstructionEngine::updateVoxels(SinogramPtr sinogram,
 			
 			// std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
 			UpdateYSlice& a =
-			*new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, geometry, OuterIter, Iter, sinogram, TempCol, ErrorSino, 
-														   VoxelLineResponse, m_ForwardModel, mask, magUpdateMap, magUpdateMask, updateType, 
+			*new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, geometry, OuterIter, Iter, 
+														   sinogram, TempCol, ErrorSino, 
+														   VoxelLineResponse, m_ForwardModel, mask, 
+														   magUpdateMap, magUpdateMask, updateType, 
 														   NH_Threshold, averageUpdate+ t, 
 														   averageMagnitudeOfRecon + t, m_AdvParams->ZERO_SKIPPING, 
 														   qggmrf_values);
