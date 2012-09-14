@@ -610,21 +610,20 @@ void ReconstructionEngine::execute()
         notify(ss.str(), 0, Observable::UpdateIntermediateImage);
         m_TomoInputs->tempFiles.push_back(ss.str());
       }
+#ifdef COST_CALCULATE
+		
+		/*********************Cost Calculation*************************************/
+		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
+		if(err < 0)
+		{
+			std::cout<<"Cost went up after gain+offset update"<<std::endl;
+			break;
+		}
+		/**************************************************************************/
+#endif //Cost calculation endif  
 
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
 	  
-
-#ifdef COST_CALCULATE
-	  
-	  /*********************Cost Calculation*************************************/
-	  int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
-	  if(err < 0)
-      {
-		  std::cout<<"Cost went up after gain+offset update"<<std::endl;
-		  break;
-      }
-	  /**************************************************************************/
-#endif //Cost calculation endif  
 	  
 	if(0 == status && reconOuterIter >= 1) //
 	{
@@ -915,7 +914,7 @@ int ReconstructionEngine::calculateCost(CostData::Pointer cost,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geometry, RealVolumeType::Pointer ErrorSino, QGGMRF::QGGMRF_Values* qggmrf_Values)
+Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geometry, RealVolumeType::Pointer ErrorSino, QGGMRF::QGGMRF_Values* qggmrf_values)
 {
 	Real_t cost = 0, temp = 0;
 	Real_t delta;
@@ -924,6 +923,7 @@ Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geome
 	//Data Mismatch Error
 	
 	cost = m_ForwardModel->forwardCost(sinogram,ErrorSino);
+	cost += QGGMRF::PriorModelCost(geometry, qggmrf_values);
 
 	/*for (int16_t i = 0; i < sinogram->N_theta; i++)
 	{

@@ -94,6 +94,37 @@ void initializePriorModel(TomoInputsPtr tomoInputs, QGGMRF::QGGMRF_Values* qggmr
   MRF_P = tomoInputs->p;
   SIGMA_X_P = pow(tomoInputs->SigmaX,MRF_P);
 #endif //QGGMRF
+
+	qggmrf_values->k_Filter[INDEX_3(0,0,0)] = 0.0302;
+	qggmrf_values->k_Filter[INDEX_3(0,0,1)] = 0.0370;
+	qggmrf_values->k_Filter[INDEX_3(0,0,2)] = 0.0302;
+	qggmrf_values->k_Filter[INDEX_3(0,1,0)] = 0.0370;
+	qggmrf_values->k_Filter[INDEX_3(0,1,1)] = 0.0523;
+	qggmrf_values->k_Filter[INDEX_3(0,1,2)] = 0.0370;
+	qggmrf_values->k_Filter[INDEX_3(0,2,0)] = 0.0302;
+	qggmrf_values->k_Filter[INDEX_3(0,2,1)] = 0.0370;
+	qggmrf_values->k_Filter[INDEX_3(0,2,2)] = 0.0302;
+	
+	qggmrf_values->k_Filter[INDEX_3(1,0,0)] = 0.0370;
+	qggmrf_values->k_Filter[INDEX_3(1,0,1)] = 0.0523;
+	qggmrf_values->k_Filter[INDEX_3(1,0,2)] = 0.0370;
+	qggmrf_values->k_Filter[INDEX_3(1,1,0)] = 0.0523;
+	qggmrf_values->k_Filter[INDEX_3(1,1,1)] = 0.0000;
+	qggmrf_values->k_Filter[INDEX_3(1,1,2)] = 0.0523;
+	qggmrf_values->k_Filter[INDEX_3(1,2,0)] = 0.0370;
+	qggmrf_values->k_Filter[INDEX_3(1,2,1)] = 0.0523;
+	qggmrf_values->k_Filter[INDEX_3(1,2,2)] = 0.0370;
+	
+	qggmrf_values->k_Filter[INDEX_3(2,0,0)] = 0.0302;
+	qggmrf_values->k_Filter[INDEX_3(2,0,1)] = 0.0370;
+	qggmrf_values->k_Filter[INDEX_3(2,0,2)] = 0.0302;
+	qggmrf_values->k_Filter[INDEX_3(2,1,0)] = 0.0370;
+	qggmrf_values->k_Filter[INDEX_3(2,1,1)] = 0.0523;
+	qggmrf_values->k_Filter[INDEX_3(2,1,2)] = 0.0370;
+	qggmrf_values->k_Filter[INDEX_3(2,2,0)] = 0.0302;
+	qggmrf_values->k_Filter[INDEX_3(2,2,1)] = 0.0370;
+	qggmrf_values->k_Filter[INDEX_3(2,2,2)] = 0.0302;
+	
 }
 
 
@@ -224,12 +255,12 @@ Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Real_t PriorModelCost(GeometryPtr* geometry, QGGMRF_Values* qggmrf_values)
+Real_t PriorModelCost(GeometryPtr geometry, QGGMRF_Values* qggmrf_values)
 {
 	Real_t cost = 0;
 	Real_t temp = 0;
 	Real_t delta=0;
-	/*
+	
 #ifndef EIMTOMO_USE_QGGMRF
 	for (int16_t i = 0; i < geometry->N_z; i++)
 		for (int16_t j = 0; j < geometry->N_x; j++)
@@ -290,7 +321,7 @@ Real_t PriorModelCost(GeometryPtr* geometry, QGGMRF_Values* qggmrf_values)
 				if(k + 1 < geometry->N_y)
 				{
 					delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i, j, k + 1);
-					temp += k_Filter[INDEX_3(2,1,1)] * QGGMRF::Value(delta, qggmrf_Values);
+					temp += qggmrf_values->k_Filter[INDEX_3(2,1,1)] * QGGMRF::Value(delta, qggmrf_values);
 					
 				}
 				
@@ -299,16 +330,16 @@ Real_t PriorModelCost(GeometryPtr* geometry, QGGMRF_Values* qggmrf_values)
 					if(k - 1 >= 0)
 					{
 						delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i, j + 1, k - 1);
-						temp += k_Filter[INDEX_3(0,1,2)] * QGGMRF::Value(delta, qggmrf_Values);
+						temp += qggmrf_values->k_Filter[INDEX_3(0,1,2)] * QGGMRF::Value(delta, qggmrf_values);
 					}
 					
 					delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i, j + 1, k);
-					temp += k_Filter[INDEX_3(1,1,2)] * QGGMRF::Value(delta, qggmrf_Values);
+					temp += qggmrf_values->k_Filter[INDEX_3(1,1,2)] * QGGMRF::Value(delta, qggmrf_values);
 					
 					if(k + 1 < geometry->N_y)
 					{
 						delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i, j + 1, k + 1);
-						temp += k_Filter[INDEX_3(2,1,2)] * QGGMRF::Value(delta, qggmrf_Values);
+						temp += qggmrf_values->k_Filter[INDEX_3(2,1,2)] * QGGMRF::Value(delta, qggmrf_values);
 					}
 					
 				}
@@ -319,16 +350,16 @@ Real_t PriorModelCost(GeometryPtr* geometry, QGGMRF_Values* qggmrf_values)
 					if(j - 1 >= 0)
 					{
 						delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j - 1, k);
-						temp += k_Filter[INDEX_3(1,2,0)] * QGGMRF::Value(delta, qggmrf_Values);
+						temp += qggmrf_values->k_Filter[INDEX_3(1,2,0)] * QGGMRF::Value(delta, qggmrf_values);
 					}
 					
 					delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j, k);
-					temp += k_Filter[INDEX_3(1,2,1)] * QGGMRF::Value(delta, qggmrf_Values);
+					temp += qggmrf_values->k_Filter[INDEX_3(1,2,1)] * QGGMRF::Value(delta, qggmrf_values);
 					
 					if(j + 1 < geometry->N_x)
 					{
 						delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j + 1, k);
-						temp += k_Filter[INDEX_3(1,2,2)] * QGGMRF::Value(delta, qggmrf_Values);
+						temp += qggmrf_values->k_Filter[INDEX_3(1,2,2)] * QGGMRF::Value(delta, qggmrf_values);
 					}
 					
 					if(j - 1 >= 0)
@@ -336,13 +367,13 @@ Real_t PriorModelCost(GeometryPtr* geometry, QGGMRF_Values* qggmrf_values)
 						if(k - 1 >= 0)
 						{
 							delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j - 1, k - 1);
-							temp += k_Filter[INDEX_3(0,2,0)] * QGGMRF::Value(delta, qggmrf_Values);
+							temp += qggmrf_values->k_Filter[INDEX_3(0,2,0)] * QGGMRF::Value(delta, qggmrf_values);
 						}
 						
 						if(k + 1 < geometry->N_y)
 						{
 							delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j - 1, k + 1);
-							temp += k_Filter[INDEX_3(2,2,0)] * QGGMRF::Value(delta, qggmrf_Values);
+							temp += qggmrf_values->k_Filter[INDEX_3(2,2,0)] * QGGMRF::Value(delta, qggmrf_values);
 						}
 						
 					}
@@ -350,7 +381,7 @@ Real_t PriorModelCost(GeometryPtr* geometry, QGGMRF_Values* qggmrf_values)
 					if(k - 1 >= 0)
 					{
 						delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j, k - 1);
-						temp += k_Filter[INDEX_3(0,2,1)] * QGGMRF::Value(delta, qggmrf_Values);
+						temp += qggmrf_values->k_Filter[INDEX_3(0,2,1)] * QGGMRF::Value(delta, qggmrf_values);
 					}
 					
 					if(j + 1 < geometry->N_x)
@@ -358,20 +389,20 @@ Real_t PriorModelCost(GeometryPtr* geometry, QGGMRF_Values* qggmrf_values)
 						if(k - 1 >= 0)
 						{
 							delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j + 1, k - 1);
-							temp += k_Filter[INDEX_3(0,2,2)] * QGGMRF::Value(delta, qggmrf_Values);
+							temp += qggmrf_values->k_Filter[INDEX_3(0,2,2)] * QGGMRF::Value(delta, qggmrf_values);
 						}
 						
 						if(k + 1 < geometry->N_y)
 						{
 							delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j + 1, k + 1);
-							temp += k_Filter[INDEX_3(2,2,2)] * QGGMRF::Value(delta, qggmrf_Values);
+							temp += qggmrf_values->k_Filter[INDEX_3(2,2,2)] * QGGMRF::Value(delta, qggmrf_values);
 						}
 					}
 					
 					if(k + 1 < geometry->N_y)
 					{
 						delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j, k + 1);
-						temp += k_Filter[INDEX_3(2,2,1)] * QGGMRF::Value(delta, qggmrf_Values);
+						temp += qggmrf_values->k_Filter[INDEX_3(2,2,1)] * QGGMRF::Value(delta, qggmrf_values);
 					}
 				}
 			}
@@ -379,7 +410,7 @@ Real_t PriorModelCost(GeometryPtr* geometry, QGGMRF_Values* qggmrf_values)
 	}
 	cost += (temp);
 #endif //QGGMRF
-	 */
+	 
 	return cost;
 }
 	

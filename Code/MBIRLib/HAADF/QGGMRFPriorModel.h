@@ -55,6 +55,7 @@ namespace QGGMRF {
       Real_t MRF_ALPHA;
       Real_t SIGMA_X_P_Q;
       Real_t SIGMA_X_Q;
+	  Real_t k_Filter[27];
   } QGGMRF_Values;
 
 
@@ -125,7 +126,7 @@ Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue
  *@param Geom
  *@param qggmrf_values
  */
-Real_t PriorModelCost(GeometryPtr* geometry, QGGMRF_Values* qggmrf_values);
+Real_t PriorModelCost(GeometryPtr geometry, QGGMRF_Values* qggmrf_values);
 
 
 
