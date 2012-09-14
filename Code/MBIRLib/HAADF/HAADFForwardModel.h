@@ -242,6 +242,7 @@ class HAADFForwardModel : public Observable
 	Real_t forwardCost(SinogramPtr sinogram,
 					   RealVolumeType::Pointer errorSinogram);
 	
+	//Computing the theta parameters of the cost function
 	void computeTheta(size_t Index,
 						 std::vector<HAADFAMatrixCol::Pointer> &TempCol,
 						 int32_t xzSliceIdx,

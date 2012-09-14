@@ -143,8 +143,6 @@ int UpdateYSlice::getZeroCount()
    UpdateYSlice::execute()
    {
 
-
-
      const uint32_t rangeMin = 0;
      const uint32_t rangeMax = std::numeric_limits<uint32_t>::max();
      typedef boost::uniform_int<uint32_t> NumberDistribution;
@@ -156,10 +154,7 @@ int UpdateYSlice::getZeroCount()
      Generator numberGenerator(generator, distribution);
      boost::uint32_t arg = static_cast<boost::uint32_t>(EIMTOMO_getMilliSeconds());
      generator.seed(arg); // seed with the current time
-
-     RealArrayType::Pointer I_0 = m_ForwardModel->getI_0();
-
-
+	   
      int32_t ArraySize = m_Geometry->N_x * m_Geometry->N_z;
      size_t dims[3] =
      { ArraySize, 0, 0};
@@ -282,8 +277,6 @@ int UpdateYSlice::getZeroCount()
                  }
                }
              }
-			   
-			   
              m_Neighborhood[INDEX_3(1, 1, 1)] = 0.0;
              //Compute theta1 and theta2
              m_CurrentVoxelValue = m_Geometry->Object->getValue(j_new, k_new, i); //Store the present value of the voxel
@@ -321,35 +314,7 @@ int UpdateYSlice::getZeroCount()
 
              if(ZSFlag == false)
              {
-			
-				 //Forward Model parameters \theta_{1} and \theta_{2} compute
-              /* for (uint32_t q = 0; q < m_TempCol[Index]->count; q++)
-               {
-                 uint16_t i_theta = floor(static_cast<float>(m_TempCol[Index]->index[q] / (m_Sinogram->N_r)));
-                 uint16_t i_r = (m_TempCol[Index]->index[q] % (m_Sinogram->N_r));
-                 Real_t kConst0 = I_0->d[i_theta] * (m_TempCol[Index]->values[q]);
-                 uint16_t VoxelLineAccessCounter = 0;
-                 uint32_t vlrCount = m_VoxelLineResponse[i]->index[0] + m_VoxelLineResponse[i]->count;
-                 for (uint32_t i_t = m_VoxelLineResponse[i]->index[0]; i_t < vlrCount; i_t++)
-                 {
-                   size_t error_idx = m_ErrorSino->calcIndex(i_theta, i_r, i_t);
-                   Real_t ProjectionEntry = kConst0 * m_VoxelLineResponse[i]->values[VoxelLineAccessCounter];
-                   if(m_ForwardModel->getBF_Flag() == false)
-                   {
-                     m_Theta2 += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
-                     m_Theta1 += (m_ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
-                   }
-                   else
-                   {
-                     ProjectionEntry *= m_ForwardModel->getBFSinogram()->counts->d[error_idx];
-                     m_Theta2 += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
-                     m_Theta1 += (m_ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
-                   }
-                   VoxelLineAccessCounter++;
-                 }
-               }
-               m_Theta1 *= -1;
-				*/ 
+			  //Forward Model parameters \theta_{1} and \theta_{2} compute
 			  m_ForwardModel->computeTheta(Index,m_TempCol,i,m_VoxelLineResponse,m_ErrorSino,m_Sinogram,Thetas);
 			  m_Theta1 = Thetas->d[0];
 			  m_Theta2 = Thetas->d[1];
@@ -393,31 +358,6 @@ int UpdateYSlice::getZeroCount()
 #endif //ROI
                
                //Update the ErrorSinogram
-              /*
-			   Real_t kConst2 = 0.0;
-			   for (uint32_t q = 0; q < m_TempCol[Index]->count; q++)
-               {
-                 uint16_t i_theta = floor(static_cast<float>(m_TempCol[Index]->index[q] / (m_Sinogram->N_r)));
-                 uint16_t i_r = (m_TempCol[Index]->index[q] % (m_Sinogram->N_r));
-                 uint16_t VoxelLineAccessCounter = 0;
-                 for (uint32_t i_t = m_VoxelLineResponse[i]->index[0]; i_t < m_VoxelLineResponse[i]->index[0] + m_VoxelLineResponse[i]->count; i_t++)
-                 {
-                   size_t error_idx = m_ErrorSino->calcIndex(i_theta, i_r, i_t);
-                   kConst2 = (I_0->d[i_theta]
-                       * (m_TempCol[Index]->values[q] * m_VoxelLineResponse[i]->values[VoxelLineAccessCounter] * (UpdatedVoxelValue - m_CurrentVoxelValue)));
-                   if(m_ForwardModel->getBF_Flag() == false)
-                   {
-                     m_ErrorSino->d[error_idx] -= kConst2;
-                   }
-                   else
-                   {
-
-                     m_ErrorSino->d[error_idx] -= (m_ForwardModel->getBFSinogram()->counts->d[error_idx] * kConst2);
-                   }
-                   VoxelLineAccessCounter++;
-                 }
-               } */
-				 
 			   m_ForwardModel->updateErrorSinogram(UpdatedVoxelValue - m_CurrentVoxelValue, Index, m_TempCol, i, m_VoxelLineResponse, m_ErrorSino, m_Sinogram);	 
 				 
              }
