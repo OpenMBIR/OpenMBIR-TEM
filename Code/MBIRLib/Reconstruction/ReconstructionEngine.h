@@ -56,6 +56,11 @@
 #include "MBIRLib/HAADF/HAADFForwardModel.h"
 #include "MBIRLib/HAADF/HAADFAMatrixCol.h"
 
+#include "MBIRLib/Common/EIMTime.h"
+#define START_TIMER uint64_t startm = EIMTOMO_getMilliSeconds();
+#define STOP_TIMER uint64_t stopm = EIMTOMO_getMilliSeconds();
+#define PRINT_TIME(msg)\
+std::cout << indent << msg << ": " << ((double)stopm-startm)/1000.0 << " seconds" << std::endl;
 
 /**
  * @class ReconstructionEngine ReconstructionEngine.h TomoEngine/SOC/ReconstructionEngine.h
@@ -117,6 +122,18 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
                        GeometryPtr geometry,
                        RealVolumeType::Pointer errorSinogram,
                        QGGMRF::QGGMRF_Values* qggmrf_Values);
+	
+	//Updating voxels
+	/*uint8_t updateVoxels(SinogramPtr sinogram,
+											   GeometryPtr geometry,
+											   int16_t OuterIter,
+											   int16_t Iter,
+											   UInt8Image_t::Pointer VisitCount,
+											   std::vector<HAADFAMatrixCol::Pointer> &TempCol,
+											   RealVolumeType::Pointer ErrorSino,
+											   std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
+											   CostData::Pointer cost);
+	 */
 	
 	    /**
      * @brief

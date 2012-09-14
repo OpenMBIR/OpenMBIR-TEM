@@ -1262,8 +1262,11 @@ uint8_t HAADFForwardModel::updateVoxels(SinogramPtr sinogram,
 
       // std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
       UpdateYSlice& a =
-          *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, geometry, OuterIter, Iter, sinogram, TempCol, ErrorSino, m_Weight, VoxelLineResponse, this, mask, magUpdateMap, magUpdateMask, updateType, NH_Threshold, averageUpdate
-                                                             + t, averageMagnitudeOfRecon + t, m_AdvParams->ZERO_SKIPPING, m_QGGMRF_Values);
+          *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, geometry, OuterIter, Iter, sinogram, TempCol, ErrorSino, 
+														 //m_Weight, 
+														 VoxelLineResponse, this, mask, magUpdateMap, magUpdateMask, 
+														 updateType, NH_Threshold, averageUpdate
+														 + t, averageMagnitudeOfRecon + t, m_AdvParams->ZERO_SKIPPING, m_QGGMRF_Values);
       taskList.push_back(a);
     }
 

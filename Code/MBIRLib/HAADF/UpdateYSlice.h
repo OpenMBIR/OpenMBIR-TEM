@@ -119,7 +119,7 @@ class UpdateYSlice
                  SinogramPtr  sinogram,
                  std::vector<HAADFAMatrixCol::Pointer> &tempCol,
                  RealVolumeType::Pointer errorSino,
-                 RealVolumeType::Pointer weight,
+                 //RealVolumeType::Pointer weight,
                  std::vector<HAADFAMatrixCol::Pointer> &voxelLineResponse,
                  HAADFForwardModel* forwardModel,
                  UInt8Image_t::Pointer mask,
@@ -167,7 +167,6 @@ class UpdateYSlice
   //  SinogramPtr  m_BFSinogram;
     std::vector<HAADFAMatrixCol::Pointer> &m_TempCol;
     RealVolumeType::Pointer m_ErrorSino;
-    RealVolumeType::Pointer m_Weight;
     std::vector<HAADFAMatrixCol::Pointer> m_VoxelLineResponse;
     HAADFForwardModel* m_ForwardModel;
     UInt8Image_t::Pointer m_Mask;

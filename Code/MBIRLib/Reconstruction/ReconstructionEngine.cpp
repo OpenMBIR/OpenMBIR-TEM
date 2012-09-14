@@ -57,6 +57,7 @@
 #include "MBIRLib/Common/EIMTime.h"
 #include "MBIRLib/Common/CE_ConstraintEquation.hpp"
 #include "MBIRLib/Common/DerivOfCostFunc.hpp"
+#include "MBIRLib/HAADF/UpdateYSlice.h"
 
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 
@@ -85,11 +86,6 @@
 #include <tbb/task_group.h>
 #include <tbb/task.h>
 #endif
-
-#define START_TIMER startm = EIMTOMO_getMilliSeconds();
-#define STOP_TIMER stopm = EIMTOMO_getMilliSeconds();
-#define PRINT_TIME(msg, startm, stopm)\
-    std::cout << indent << msg << ": " << ((double)stopm-startm)/1000.0 << " seconds" << std::endl;
 
 #define MAKE_OUTPUT_FILE(Fp, outdir, filename)\
     {\

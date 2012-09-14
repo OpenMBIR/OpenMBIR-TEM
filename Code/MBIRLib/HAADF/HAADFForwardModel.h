@@ -194,32 +194,6 @@ class HAADFForwardModel : public Observable
                         RealVolumeType::Pointer yEstimate, CostData::Pointer cost);
 	void updateWeights(SinogramPtr sinogram,
                        RealVolumeType::Pointer errorSinogram);
-
-    /**
-     *
-     * @param cost
-     * @param sinogram
-     * @param geometry
-     * @param errorSinogram
-     * @return
-     */
-   /* int calculateCost(CostData::Pointer cost,
-                      SinogramPtr sinogram,
-                      GeometryPtr geometry,
-                      RealVolumeType::Pointer errorSinogram,
-                      QGGMRF::QGGMRF_Values *qggmrf_Values);
-*/
-	/**
-     * @brief
-     * @param errorSinogram
-     * @param Weight
-     * @return
-     */
-  /*  Real_t computeCost(SinogramPtr sinogram,
-                       GeometryPtr geometry,
-                       RealVolumeType::Pointer errorSinogram,
-                       QGGMRF::QGGMRF_Values* qggmrf_Values); */
-
     
 
     /**

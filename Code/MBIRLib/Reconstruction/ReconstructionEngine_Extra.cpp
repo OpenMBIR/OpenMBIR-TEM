@@ -37,6 +37,14 @@
 #include "ReconstructionEngine.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/GenericFilters/MRCSinogramInitializer.h"
+#include "MBIRLib/Common/EIMMath.h"
+#include "MBIRLib/Common/EIMTime.h"
+
+
+#define START_TIMER uint64_t startm = EIMTOMO_getMilliSeconds();
+#define STOP_TIMER uint64_t stopm = EIMTOMO_getMilliSeconds();
+#define PRINT_TIME(msg)\
+std::cout << indent << msg << ": " << ((double)stopm-startm)/1000.0 << " seconds" << std::endl;
 
 // Read the Input data from the supplied data file
 // We are scoping here so the various readers are automatically cleaned up before
@@ -434,6 +442,9 @@ void ReconstructionEngine::writeAvizoFile(const std::string &file, uint16_t crop
   }
 
 }
+
+
+
 
 
 
