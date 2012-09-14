@@ -96,31 +96,31 @@ HAADFForwardModel::HAADFForwardModel() :
 
 
   //Hamming Window here
-  k_HamminWindow[0][0] = 0.0013;
-  k_HamminWindow[0][1] = 0.0086;
-  k_HamminWindow[0][2] = 0.0159;
-  k_HamminWindow[0][3] = 0.0086;
-  k_HamminWindow[0][4] = 0.0013;
-  k_HamminWindow[1][0] = 0.0086;
-  k_HamminWindow[1][1] = 0.0581;
-  k_HamminWindow[1][2] = 0.1076;
-  k_HamminWindow[1][3] = 0.0581;
-  k_HamminWindow[1][4] = 0.0086;
-  k_HamminWindow[2][0] = 0.0159;
-  k_HamminWindow[2][1] = 0.1076;
-  k_HamminWindow[2][2] = 0.1993;
-  k_HamminWindow[2][3] = 0.1076;
-  k_HamminWindow[2][4] = 0.0159;
-  k_HamminWindow[3][0] = 0.0013;
-  k_HamminWindow[3][1] = 0.0086;
-  k_HamminWindow[3][2] = 0.0159;
-  k_HamminWindow[3][3] = 0.0086;
-  k_HamminWindow[3][4] = 0.0013;
-  k_HamminWindow[4][0] = 0.0086;
-  k_HamminWindow[4][1] = 0.0581;
-  k_HamminWindow[4][2] = 0.1076;
-  k_HamminWindow[4][3] = 0.0581;
-  k_HamminWindow[4][4] = 0.0086;
+  k_HammingWindow[0][0] = 0.0013;
+  k_HammingWindow[0][1] = 0.0086;
+  k_HammingWindow[0][2] = 0.0159;
+  k_HammingWindow[0][3] = 0.0086;
+  k_HammingWindow[0][4] = 0.0013;
+  k_HammingWindow[1][0] = 0.0086;
+  k_HammingWindow[1][1] = 0.0581;
+  k_HammingWindow[1][2] = 0.1076;
+  k_HammingWindow[1][3] = 0.0581;
+  k_HammingWindow[1][4] = 0.0086;
+  k_HammingWindow[2][0] = 0.0159;
+  k_HammingWindow[2][1] = 0.1076;
+  k_HammingWindow[2][2] = 0.1993;
+  k_HammingWindow[2][3] = 0.1076;
+  k_HammingWindow[2][4] = 0.0159;
+  k_HammingWindow[3][0] = 0.0013;
+  k_HammingWindow[3][1] = 0.0086;
+  k_HammingWindow[3][2] = 0.0159;
+  k_HammingWindow[3][3] = 0.0086;
+  k_HammingWindow[3][4] = 0.0013;
+  k_HammingWindow[4][0] = 0.0086;
+  k_HammingWindow[4][1] = 0.0581;
+  k_HammingWindow[4][2] = 0.1076;
+  k_HammingWindow[4][3] = 0.0581;
+  k_HammingWindow[4][4] = 0.0086;
 
   m_TargetGain = 0.0;
   m_InitialGain = RealArrayType::NullPointer();
@@ -1384,7 +1384,7 @@ void HAADFForwardModel::ComputeVSC(RealImageType::Pointer magUpdateMap, RealImag
         {
           if(i + p >= 0 && i + p < geometry->N_z && j + q >= 0 && j + q < geometry->N_x)
           {
-            filter_op += k_HamminWindow[p + 2][q + 2] * magUpdateMap->getValue(i + p, j + q);
+            filter_op += k_HammingWindow[p + 2][q + 2] * magUpdateMap->getValue(i + p, j + q);
           }
         }
       }
@@ -1527,4 +1527,48 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 	} //NOISE_MODEL
 	
 	return cost;
+}
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+Real_t* computeTheta()
+{
+	
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
+						   size_t Index,
+						   std::vector<HAADFAMatrixCol::Pointer> &TempCol,
+						   int32_t xzSliceIdx,
+						   std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
+						   RealVolumeType::Pointer ErrorSino,
+						   SinogramPtr sinogram)
+{
+	Real_t kConst2 = 0.0;
+	//Update the ErrorSinogram
+	for (uint32_t q = 0; q < TempCol[Index]->count; q++)
+	{
+		uint16_t i_theta = floor(static_cast<float>(TempCol[Index]->index[q] / (sinogram->N_r)));
+		uint16_t i_r = (TempCol[Index]->index[q] % (sinogram->N_r));
+		uint16_t VoxelLineAccessCounter = 0;
+		for (uint32_t i_t = VoxelLineResponse[xzSliceIdx]->index[0]; i_t < VoxelLineResponse[xzSliceIdx]->index[0] + VoxelLineResponse[xzSliceIdx]->count; i_t++)
+		{
+			size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
+			kConst2 = (m_I_0->d[i_theta]
+                       * (TempCol[Index]->values[q] * VoxelLineResponse[xzSliceIdx]->values[VoxelLineAccessCounter] * (ChangeInVoxelValue)));
+			if(getBF_Flag() == false)
+			{
+				ErrorSino->d[error_idx] -= kConst2;
+			}
+			else
+			{
+				
+				ErrorSino->d[error_idx] -= (getBFSinogram()->counts->d[error_idx] * kConst2);
+			}
+			VoxelLineAccessCounter++;
+		}
+	}
 }

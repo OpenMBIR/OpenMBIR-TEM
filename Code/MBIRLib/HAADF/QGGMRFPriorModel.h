@@ -117,10 +117,14 @@ void ComputeParameters(Real_t umin, Real_t umax, Real_t RefValue,
  * @param qggmrf_values
  * @return
  */
-Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue,
-                                 uint8_t* boundaryFlag, Real_t* filter, Real_t* neighborhood,
-                                 Real_t theta1, Real_t theta2,
-                                 QGGMRF_Values* qggmrf_values);
+Real_t FunctionalSubstitution(Real_t umin, 
+							  Real_t umax, 
+							  Real_t currentVoxelValue,
+							  uint8_t* boundaryFlag, 
+							  //Real_t* filter, 
+							  Real_t* neighborhood,
+							  Real_t theta1, Real_t theta2,
+							  QGGMRF_Values* qggmrf_values);
 	
 /**
  *@param Geom

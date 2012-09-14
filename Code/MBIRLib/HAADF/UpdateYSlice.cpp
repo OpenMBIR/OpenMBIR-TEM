@@ -121,62 +121,7 @@ UpdateYSlice::~UpdateYSlice()
 // -----------------------------------------------------------------------------
 void UpdateYSlice::initVariables()
 {
-  m_Filter[INDEX_3(0, 0, 0)] = 0.0302;
-  m_Filter[INDEX_3(0, 0, 1)] = 0.0370;
-  m_Filter[INDEX_3(0, 0, 2)] = 0.0302;
-  m_Filter[INDEX_3(0, 1, 0)] = 0.0370;
-  m_Filter[INDEX_3(0, 1, 1)] = 0.0523;
-  m_Filter[INDEX_3(0, 1, 2)] = 0.0370;
-  m_Filter[INDEX_3(0, 2, 0)] = 0.0302;
-  m_Filter[INDEX_3(0, 2, 1)] = 0.0370;
-  m_Filter[INDEX_3(0, 2, 2)] = 0.0302;
 
-  m_Filter[INDEX_3(1, 0, 0)] = 0.0370;
-  m_Filter[INDEX_3(1, 0, 1)] = 0.0523;
-  m_Filter[INDEX_3(1, 0, 2)] = 0.0370;
-  m_Filter[INDEX_3(1, 1, 0)] = 0.0523;
-  m_Filter[INDEX_3(1, 1, 1)] = 0.0000;
-  m_Filter[INDEX_3(1, 1, 2)] = 0.0523;
-  m_Filter[INDEX_3(1, 2, 0)] = 0.0370;
-  m_Filter[INDEX_3(1, 2, 1)] = 0.0523;
-  m_Filter[INDEX_3(1, 2, 2)] = 0.0370;
-
-  m_Filter[INDEX_3(2, 0, 0)] = 0.0302;
-  m_Filter[INDEX_3(2, 0, 1)] = 0.0370;
-  m_Filter[INDEX_3(2, 0, 2)] = 0.0302;
-  m_Filter[INDEX_3(2, 1, 0)] = 0.0370;
-  m_Filter[INDEX_3(2, 1, 1)] = 0.0523;
-  m_Filter[INDEX_3(2, 1, 2)] = 0.0370;
-  m_Filter[INDEX_3(2, 2, 0)] = 0.0302;
-  m_Filter[INDEX_3(2, 2, 1)] = 0.0370;
-  m_Filter[INDEX_3(2, 2, 2)] = 0.0302;
-
-  //Hamming Window here
-  m_HammingWindow[0][0] = 0.0013;
-  m_HammingWindow[0][1] = 0.0086;
-  m_HammingWindow[0][2] = 0.0159;
-  m_HammingWindow[0][3] = 0.0086;
-  m_HammingWindow[0][4] = 0.0013;
-  m_HammingWindow[1][0] = 0.0086;
-  m_HammingWindow[1][1] = 0.0581;
-  m_HammingWindow[1][2] = 0.1076;
-  m_HammingWindow[1][3] = 0.0581;
-  m_HammingWindow[1][4] = 0.0086;
-  m_HammingWindow[2][0] = 0.0159;
-  m_HammingWindow[2][1] = 0.1076;
-  m_HammingWindow[2][2] = 0.1993;
-  m_HammingWindow[2][3] = 0.1076;
-  m_HammingWindow[2][4] = 0.0159;
-  m_HammingWindow[3][0] = 0.0013;
-  m_HammingWindow[3][1] = 0.0086;
-  m_HammingWindow[3][2] = 0.0159;
-  m_HammingWindow[3][3] = 0.0086;
-  m_HammingWindow[3][4] = 0.0013;
-  m_HammingWindow[4][0] = 0.0086;
-  m_HammingWindow[4][1] = 0.0581;
-  m_HammingWindow[4][2] = 0.1076;
-  m_HammingWindow[4][3] = 0.0581;
-  m_HammingWindow[4][4] = 0.0086;
 }
 
 // -----------------------------------------------------------------------------
@@ -199,7 +144,7 @@ int UpdateYSlice::getZeroCount()
    {
 
 
-#ifdef RANDOM_ORDER_UPDATES
+
      const uint32_t rangeMin = 0;
      const uint32_t rangeMax = std::numeric_limits<uint32_t>::max();
      typedef boost::uniform_int<uint32_t> NumberDistribution;
@@ -261,14 +206,10 @@ int UpdateYSlice::getZeroCount()
        }
      }
      //   std::cout << "    " << "Number of voxel lines to update: " << NumVoxelsToUpdate << std::endl;
-
-#endif
      for (int32_t j = 0; j < m_Geometry->N_z; j++) //Row index
      {
        for (int32_t k = 0; k < m_Geometry->N_x; k++) //Column index
        {
-
-#ifdef RANDOM_ORDER_UPDATES
 
          uint32_t Index = numberGenerator() % ArraySize;
          int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
@@ -278,7 +219,6 @@ int UpdateYSlice::getZeroCount()
          ArraySize--;
          Index = j_new * m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to
          //the voxel line (j_new,k_new)
-#endif //Random Order updates
          int shouldInitNeighborhood = 0;
 
          if(m_VoxelUpdateType == VoxelUpdateType::NonHomogeniousUpdate
@@ -313,17 +253,7 @@ int UpdateYSlice::getZeroCount()
              //Neighborhood of (i,j,k) should be initialized to zeros each time
              ::memset(m_Neighborhood, 0, 27*sizeof(Real_t));
              ::memset(m_BoundaryFlag, 0, 27*sizeof(uint8_t));
-//              for (int32_t p = 0; p <= 2; p++)
-//              {
-//                for (int32_t q = 0; q <= 2; q++)
-//                {
-//                  for (int32_t r = 0; r <= 2; r++)
-//                  {
-//                    NEIGHBORHOOD[INDEX_3(p, q, r)] = 0.0;
-//                    m_BoundaryFlag[INDEX_3(p, q, r)] = 0;
-//                  }
-//                }
-//              }
+
              //For a given (i,j,k) store its 26 point neighborhood
              for (int32_t p = -1; p <= 1; p++)
              {
@@ -386,6 +316,8 @@ int UpdateYSlice::getZeroCount()
 
              if(ZSFlag == false)
              {
+			
+				 //Forward Model parameters \theta_{1} and \theta_{2} compute
                for (uint32_t q = 0; q < m_TempCol[Index]->count; q++)
                {
                  uint16_t i_theta = floor(static_cast<float>(m_TempCol[Index]->index[q] / (m_Sinogram->N_r)));
@@ -415,30 +347,14 @@ int UpdateYSlice::getZeroCount()
                m_Theta1 *= -1;
                find_min_max(low, high, m_CurrentVoxelValue);
 
-               //Solve the 1-D optimization problem
-               //printf("V before updating %lf",V);
-#ifndef SURROGATE_FUNCTION
-               //TODO : What if theta1 = 0 ? Then this will give error
-
-               DerivOfCostFunc docf(m_BoundaryFlag, m_Neighborhood, m_Filter, V, m_Theta1, m_Theta2, SIGMA_X_P, MRF_P);
-               UpdatedVoxelValue = (Real_t)solve < DerivOfCostFunc > (&docf, (double)low, (double)high, (double)accuracy, &errorcode, binarysearch_count);
-
-               //std::cout<<low<<","<<high<<","<<UpdatedVoxelValue<<std::endl;
-#else
+               //Compute prior model parameters AND Solve the 1-D optimization problem
                errorcode = 0;
-   #ifdef EIMTOMO_USE_QGGMRF
-                   UpdatedVoxelValue = QGGMRF::FunctionalSubstitution(low, high, m_CurrentVoxelValue,
-                                                                      m_BoundaryFlag, m_Filter, m_Neighborhood,
-                                                                      m_Theta1, m_Theta2,
-                                                                      m_QggmrfValues);
-   #else
-                   SurrogateUpdate = surrogateFunctionBasedMin();
-                   UpdatedVoxelValue = SurrogateUpdate;
-   #endif //QGGMRF
-#endif//Surrogate function
+			   UpdatedVoxelValue = QGGMRF::FunctionalSubstitution(low, high, m_CurrentVoxelValue,
+                                                                      m_BoundaryFlag, m_Neighborhood,
+                                                                      m_Theta1, m_Theta2,m_QggmrfValues);
+               //Positivity constraints                                                        
                if(errorcode == 0)
                {
-
 #ifdef POSITIVITY_CONSTRAINT
                  if(UpdatedVoxelValue < 0.0)
                  { //Enforcing positivity constraints
@@ -466,11 +382,10 @@ int UpdateYSlice::getZeroCount()
                  *m_AverageUpdate += fabs(UpdatedVoxelValue - m_CurrentVoxelValue);
                  *m_AverageMagnitudeOfRecon += fabs(m_CurrentVoxelValue); //computing the percentage update =(Change in mag/Initial magnitude)
                }
-#endif
+#endif //ROI
                Real_t kConst2 = 0.0;
                //Update the ErrorSinogram
-
-               for (uint32_t q = 0; q < m_TempCol[Index]->count; q++)
+              /* for (uint32_t q = 0; q < m_TempCol[Index]->count; q++)
                {
                  uint16_t i_theta = floor(static_cast<float>(m_TempCol[Index]->index[q] / (m_Sinogram->N_r)));
                  uint16_t i_r = (m_TempCol[Index]->index[q] % (m_Sinogram->N_r));
@@ -491,7 +406,9 @@ int UpdateYSlice::getZeroCount()
                    }
                    VoxelLineAccessCounter++;
                  }
-               }
+               } */
+			   m_ForwardModel->updateErrorSinogram(UpdatedVoxelValue - m_CurrentVoxelValue, Index, m_TempCol, i, m_VoxelLineResponse, m_ErrorSino, m_Sinogram);	 
+				 
              }
              else
              {
@@ -508,7 +425,6 @@ int UpdateYSlice::getZeroCount()
        }
      }
 
-#ifdef RANDOM_ORDER_UPDATES
      for (int j = 0; j < m_Geometry->N_z; j++)
      { //Row index
        for (int k = 0; k < m_Geometry->N_x; k++)
@@ -519,8 +435,6 @@ int UpdateYSlice::getZeroCount()
          }
        }
      }
-#endif
-
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
      return NULL;
 #endif

@@ -204,7 +204,9 @@ void ComputeParameters(Real_t umin, Real_t umax, Real_t refValue,
 //
 // -----------------------------------------------------------------------------
 Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue,
-                              uint8_t* boundaryFlag, Real_t* filter, Real_t* neighborhood,
+                              uint8_t* boundaryFlag, 
+							  //Real_t* filter, 
+							  Real_t* neighborhood,
                               Real_t theta1, Real_t theta2,
                               QGGMRF::QGGMRF_Values* qggmrf_values)
 {
@@ -229,7 +231,7 @@ Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue
         {
           if((i != 1 || j != 1 || k != 1) && boundaryFlag[INDEX_3(i,j,k)] == 1)
           {
-            temp_const = filter[INDEX_3(i,j,k)] * QGGMRF_Params[count*3 + 0];
+            temp_const = qggmrf_values->k_Filter[INDEX_3(i,j,k)] * QGGMRF_Params[count*3 + 0];
             temp1 += temp_const * neighborhood[INDEX_3(i,j,k)];
             temp2 += temp_const;
             count++;

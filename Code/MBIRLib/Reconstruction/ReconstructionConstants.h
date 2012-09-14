@@ -65,7 +65,7 @@ namespace VoxelUpdateType
 #define EIMTOMO_USE_QGGMRF 1
 
 //#define WRITE_INTERMEDIATE_RESULTS
-//#define COST_CALCULATE
+#define COST_CALCULATE
 #define BraggThreshold 5 //Thresold in normalized uints
 #define BF_RECON //Bright Field Reconstruction
 #define BF_OFFSET 0//0 //23696 - Bio data set

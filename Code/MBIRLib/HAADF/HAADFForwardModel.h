@@ -241,6 +241,18 @@ class HAADFForwardModel : public Observable
 	
 	Real_t forwardCost(SinogramPtr sinogram,
 					   RealVolumeType::Pointer errorSinogram);
+	
+	Real_t* computeTheta();
+	
+	//After updating a voxel "Index",update sinogram
+	void updateErrorSinogram(Real_t ChangeInVoxelValue,
+							 size_t Index,
+							 std::vector<HAADFAMatrixCol::Pointer> &TempCol,
+							 int32_t xzSliceIdx,
+							 std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
+							 RealVolumeType::Pointer errorSinogram,
+							 SinogramPtr sinogram);
+	
 
   protected:
     HAADFForwardModel();
@@ -254,7 +266,8 @@ class HAADFForwardModel : public Observable
     RealArrayType::Pointer m_D2; //hold the intermediate values needed to compute optimal mu_k
 
 
-    Real_t k_HamminWindow[5][5];
+    Real_t k_HammingWindow[5][5];
+	Real_t Theta[2]; //Theta1 and Theta2 in the optimization
  
 
 

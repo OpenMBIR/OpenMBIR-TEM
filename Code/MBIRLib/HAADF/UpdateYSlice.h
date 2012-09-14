@@ -190,9 +190,8 @@ class UpdateYSlice
 
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
     uint8_t m_BoundaryFlag[27];
-    //Markov Random Field Prior parameters - Globals DATA_TYPE
-    Real_t m_Filter[27];
-    Real_t m_HammingWindow[5][5];
+    
+    //Real_t m_HammingWindow[5][5];
     Real_t m_Theta1;
     Real_t m_Theta2;
     Real_t m_Neighborhood[27];
