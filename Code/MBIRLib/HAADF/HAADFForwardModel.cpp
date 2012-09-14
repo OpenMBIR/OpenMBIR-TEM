@@ -94,35 +94,6 @@ HAADFForwardModel::HAADFForwardModel() :
     m_Verbose(false), m_VeryVerbose(false), m_ErrorCondition(0), m_Cancel(false), m_UseDefaultOffset(false)
 {
 
-  k_Filter[INDEX_3(0,0,0)] = 0.0302;
-  k_Filter[INDEX_3(0,0,1)] = 0.0370;
-  k_Filter[INDEX_3(0,0,2)] = 0.0302;
-  k_Filter[INDEX_3(0,1,0)] = 0.0370;
-  k_Filter[INDEX_3(0,1,1)] = 0.0523;
-  k_Filter[INDEX_3(0,1,2)] = 0.0370;
-  k_Filter[INDEX_3(0,2,0)] = 0.0302;
-  k_Filter[INDEX_3(0,2,1)] = 0.0370;
-  k_Filter[INDEX_3(0,2,2)] = 0.0302;
-
-  k_Filter[INDEX_3(1,0,0)] = 0.0370;
-  k_Filter[INDEX_3(1,0,1)] = 0.0523;
-  k_Filter[INDEX_3(1,0,2)] = 0.0370;
-  k_Filter[INDEX_3(1,1,0)] = 0.0523;
-  k_Filter[INDEX_3(1,1,1)] = 0.0000;
-  k_Filter[INDEX_3(1,1,2)] = 0.0523;
-  k_Filter[INDEX_3(1,2,0)] = 0.0370;
-  k_Filter[INDEX_3(1,2,1)] = 0.0523;
-  k_Filter[INDEX_3(1,2,2)] = 0.0370;
-
-  k_Filter[INDEX_3(2,0,0)] = 0.0302;
-  k_Filter[INDEX_3(2,0,1)] = 0.0370;
-  k_Filter[INDEX_3(2,0,2)] = 0.0302;
-  k_Filter[INDEX_3(2,1,0)] = 0.0370;
-  k_Filter[INDEX_3(2,1,1)] = 0.0523;
-  k_Filter[INDEX_3(2,1,2)] = 0.0370;
-  k_Filter[INDEX_3(2,2,0)] = 0.0302;
-  k_Filter[INDEX_3(2,2,1)] = 0.0370;
-  k_Filter[INDEX_3(2,2,2)] = 0.0302;
 
   //Hamming Window here
   k_HamminWindow[0][0] = 0.0013;

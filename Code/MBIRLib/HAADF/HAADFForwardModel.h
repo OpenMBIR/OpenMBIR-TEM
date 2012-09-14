@@ -255,8 +255,7 @@ class HAADFForwardModel : public Observable
 
 
     Real_t k_HamminWindow[5][5];
-    //Markov Random Field Prior parameters
-    Real_t k_Filter[27];
+ 
 
 
 #ifdef EIMTOMO_USE_QGGMRF
