@@ -1531,9 +1531,44 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Real_t* computeTheta()
+void HAADFForwardModel::computeTheta(size_t Index,
+					 std::vector<HAADFAMatrixCol::Pointer> &TempCol,
+					 int32_t xzSliceIdx,
+					 std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
+					 RealVolumeType::Pointer ErrorSino,
+					 SinogramPtr sinogram,
+					 Int32ArrayType::Pointer Thetas)
 {
 	
+	Thetas->d[0]=0;
+	Thetas->d[1]=0;
+	
+	for (uint32_t q = 0; q < TempCol[Index]->count; q++)
+	{
+		uint16_t i_theta = floor(static_cast<float>(TempCol[Index]->index[q] / (sinogram->N_r)));
+		uint16_t i_r = (TempCol[Index]->index[q] % (sinogram->N_r));
+		Real_t kConst0 = m_I_0->d[i_theta] * (TempCol[Index]->values[q]);
+		uint16_t VoxelLineAccessCounter = 0;
+		uint32_t vlrCount = VoxelLineResponse[xzSliceIdx]->index[0] + VoxelLineResponse[xzSliceIdx]->count;
+		for (uint32_t i_t = VoxelLineResponse[xzSliceIdx]->index[0]; i_t < vlrCount; i_t++)
+		{
+			size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
+			Real_t ProjectionEntry = kConst0 * VoxelLineResponse[xzSliceIdx]->values[VoxelLineAccessCounter];
+			if(getBF_Flag() == false)
+			{
+				Thetas->d[1] += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
+				Thetas->d[0] += (ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
+			}
+			else
+			{
+				ProjectionEntry *= getBFSinogram()->counts->d[error_idx];
+				Thetas->d[1] += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
+				Thetas->d[0] += (ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
+			}
+			VoxelLineAccessCounter++;
+		}
+	}	
+	Thetas->d[0]*=-1;
 }
 
 // -----------------------------------------------------------------------------

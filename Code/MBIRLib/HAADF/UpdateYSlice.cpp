@@ -165,6 +165,9 @@ int UpdateYSlice::getZeroCount()
      { ArraySize, 0, 0};
      Int32ArrayType::Pointer Counter = Int32ArrayType::New(dims, "Counter");
 
+	dims[0] = 2;
+	Int32ArrayType::Pointer Thetas = Int32ArrayType::New(dims, "Thetas");
+	   
      dims[0] = m_Geometry->N_z;
      dims[1] = m_Geometry->N_x;
      dims[2] = 0;
@@ -279,6 +282,8 @@ int UpdateYSlice::getZeroCount()
                  }
                }
              }
+			   
+			   
              m_Neighborhood[INDEX_3(1, 1, 1)] = 0.0;
              //Compute theta1 and theta2
              m_CurrentVoxelValue = m_Geometry->Object->getValue(j_new, k_new, i); //Store the present value of the voxel
@@ -318,7 +323,7 @@ int UpdateYSlice::getZeroCount()
              {
 			
 				 //Forward Model parameters \theta_{1} and \theta_{2} compute
-               for (uint32_t q = 0; q < m_TempCol[Index]->count; q++)
+              /* for (uint32_t q = 0; q < m_TempCol[Index]->count; q++)
                {
                  uint16_t i_theta = floor(static_cast<float>(m_TempCol[Index]->index[q] / (m_Sinogram->N_r)));
                  uint16_t i_r = (m_TempCol[Index]->index[q] % (m_Sinogram->N_r));
@@ -343,9 +348,12 @@ int UpdateYSlice::getZeroCount()
                    VoxelLineAccessCounter++;
                  }
                }
-
                m_Theta1 *= -1;
-               find_min_max(low, high, m_CurrentVoxelValue);
+				*/ 
+			  m_ForwardModel->computeTheta(Index,m_TempCol,i,m_VoxelLineResponse,m_ErrorSino,m_Sinogram,Thetas);
+			  m_Theta1 = Thetas->d[0];
+			  m_Theta2 = Thetas->d[1];
+			  find_min_max(low, high, m_CurrentVoxelValue);
 
                //Compute prior model parameters AND Solve the 1-D optimization problem
                errorcode = 0;
@@ -383,9 +391,11 @@ int UpdateYSlice::getZeroCount()
                  *m_AverageMagnitudeOfRecon += fabs(m_CurrentVoxelValue); //computing the percentage update =(Change in mag/Initial magnitude)
                }
 #endif //ROI
-               Real_t kConst2 = 0.0;
+               
                //Update the ErrorSinogram
-              /* for (uint32_t q = 0; q < m_TempCol[Index]->count; q++)
+              /*
+			   Real_t kConst2 = 0.0;
+			   for (uint32_t q = 0; q < m_TempCol[Index]->count; q++)
                {
                  uint16_t i_theta = floor(static_cast<float>(m_TempCol[Index]->index[q] / (m_Sinogram->N_r)));
                  uint16_t i_r = (m_TempCol[Index]->index[q] % (m_Sinogram->N_r));
@@ -407,6 +417,7 @@ int UpdateYSlice::getZeroCount()
                    VoxelLineAccessCounter++;
                  }
                } */
+				 
 			   m_ForwardModel->updateErrorSinogram(UpdatedVoxelValue - m_CurrentVoxelValue, Index, m_TempCol, i, m_VoxelLineResponse, m_ErrorSino, m_Sinogram);	 
 				 
              }
