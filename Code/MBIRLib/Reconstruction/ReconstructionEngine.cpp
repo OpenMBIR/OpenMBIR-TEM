@@ -555,8 +555,9 @@ void ReconstructionEngine::execute()
 #endif//Forward Project mode
 
 #ifdef COST_CALCULATE
-	err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
+	err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,m_ForwardModel->Weight,&qggmrf_values);
 #endif //Cost calculation endif
+	
 //  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
   //Loop through every voxel updating it by solving a cost function
   for (int16_t reconOuterIter = 0; reconOuterIter < m_TomoInputs->NumOuterIter; reconOuterIter++)
@@ -616,7 +617,7 @@ void ReconstructionEngine::execute()
 #ifdef COST_CALCULATE
 	  
 	  /*********************Cost Calculation*************************************/
-	  int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
+	  int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,m_ForwardModel->Weight,&qggmrf_values);
 	  if(err < 0)
       {
 		  std::cout<<"Cost went up after gain+offset update"<<std::endl;
@@ -636,7 +637,7 @@ void ReconstructionEngine::execute()
       m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);
-		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
+		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,m_ForwardModel->Weight,&qggmrf_values);
 		
 		if(err < 0)
 		{
@@ -652,7 +653,7 @@ void ReconstructionEngine::execute()
       m_ForwardModel->updateWeights(m_Sinogram, errorSino);
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);
-		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
+		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,m_ForwardModel->Weight,&qggmrf_values);
 		if (err < 0)
 		{
 			std::cout<<"Cost went up after variance update"<<std::endl;
@@ -898,9 +899,10 @@ int ReconstructionEngine::calculateCost(CostData::Pointer cost,
 										SinogramPtr sinogram,
 										GeometryPtr geometry,
 										RealVolumeType::Pointer ErrorSino,
+										RealVolumeType::Pointer Weight,
 										QGGMRF::QGGMRF_Values* qggmrf_Values)
 {
-	Real_t cost_value = computeCost(sinogram, geometry, ErrorSino, qggmrf_Values);
+	Real_t cost_value = computeCost(sinogram, geometry, ErrorSino, Weight, qggmrf_Values);
 	std::cout << "cost_value: " << cost_value << std::endl;
 	int increase = cost->addCostValue(cost_value);
 	if(increase == 1)
@@ -914,7 +916,7 @@ int ReconstructionEngine::calculateCost(CostData::Pointer cost,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geometry, RealVolumeType::Pointer ErrorSino, QGGMRF::QGGMRF_Values* qggmrf_Values)
+Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geometry, RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight, QGGMRF::QGGMRF_Values* qggmrf_Values)
 {
 	Real_t cost = 0, temp = 0;
 	Real_t delta;
@@ -930,7 +932,7 @@ Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geome
 			for (int16_t k = 0; k < sinogram->N_t; k++)
 			{
 				errSinoValue = ErrorSino->getValue(i, j, k);
-				cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k));
+				cost += (errSinoValue * errSinoValue * Weight->getValue(i, j, k));
 			}
 		}
 	}
@@ -942,6 +944,7 @@ Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geome
 	
 	//Prior Model Error
 	temp = 0;
+	/*
 #ifndef EIMTOMO_USE_QGGMRF
 	for (int16_t i = 0; i < geometry->N_z; i++)
 		for (int16_t j = 0; j < geometry->N_x; j++)
@@ -1110,7 +1113,7 @@ Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geome
 		temp /= 2;
 		cost += temp;
 	} //NOISE_MODEL
-	
+	*/
 	return cost;
 }
 

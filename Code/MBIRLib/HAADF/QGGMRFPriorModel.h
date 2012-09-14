@@ -47,7 +47,6 @@ namespace QGGMRF {
 
 
   static const unsigned int QGGMRF_ITER = 1;
-
   typedef struct {
       Real_t MRF_P;
       Real_t SIGMA_X_P;
@@ -121,6 +120,12 @@ Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue
                                  uint8_t* boundaryFlag, Real_t* filter, Real_t* neighborhood,
                                  Real_t theta1, Real_t theta2,
                                  QGGMRF_Values* qggmrf_values);
+	
+/**
+ *@param Geom
+ *@param qggmrf_values
+ */
+Real_t PriorModelCost(GeometryPtr* geometry, QGGMRF_Values* qggmrf_values);
 
 
 
