@@ -445,8 +445,8 @@ void ReconstructionEngine::writeAvizoFile(const std::string &file, uint16_t crop
 }
 
 
-uint8_t ReconstructionEngine::updateVoxels(SinogramPtr sinogram,
-										   GeometryPtr geometry,
+uint8_t ReconstructionEngine::updateVoxels( //SinogramPtr sinogram,
+										   //GeometryPtr geometry,
 										   int16_t OuterIter,
 										   int16_t Iter,
 										   UInt8Image_t::Pointer VisitCount,
@@ -457,8 +457,8 @@ uint8_t ReconstructionEngine::updateVoxels(SinogramPtr sinogram,
 										   QGGMRF::QGGMRF_Values* qggmrf_values)
 {
 	size_t dims[3];
-	dims[0] = geometry->N_z; //height
-	dims[1] = geometry->N_x; //width
+	dims[0] = m_Geometry->N_z; //height
+	dims[1] = m_Geometry->N_x; //width
 	dims[2] = 0;
 	
 	RealImageType::Pointer magUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
@@ -467,10 +467,10 @@ uint8_t ReconstructionEngine::updateVoxels(SinogramPtr sinogram,
 	
 #if ROI
 	UInt8Image_t::Pointer mask;
-	dims[0] = geometry->N_z;
-	dims[1] = geometry->N_x;
+	dims[0] = m_Geometry->N_z;
+	dims[1] = m_Geometry->N_x;
 	mask = UInt8Image_t::New(dims, "Mask");
-	initializeROIMask(sinogram, geometry, mask);
+	initializeROIMask(mask);
 #endif
 	
 	unsigned int updateType = VoxelUpdateType::RegularRandomOrderUpdate;
@@ -539,9 +539,9 @@ uint8_t ReconstructionEngine::updateVoxels(SinogramPtr sinogram,
 		if(updateType == VoxelUpdateType::NonHomogeniousUpdate)
 		{
 			//Compute VSC and create a map of pixels that are above the threshold value
-			ComputeVSC(magUpdateMap, filtMagUpdateMap, geometry);
+			ComputeVSC(magUpdateMap, filtMagUpdateMap);
 			START_TIMER;
-			NH_Threshold = SetNonHomThreshold(geometry, magUpdateMap);
+			NH_Threshold = SetNonHomThreshold(magUpdateMap);
 			STOP_TIMER;
 			PRINT_TIME("  SetNonHomThreshold");
 			std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
@@ -561,7 +561,7 @@ uint8_t ReconstructionEngine::updateVoxels(SinogramPtr sinogram,
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
 		std::vector<int> yCount(m_NumThreads, 0);
 		int t = 0;
-		for (int y = 0; y < geometry->N_y; ++y)
+		for (int y = 0; y < m_Geometry->N_y; ++y)
 		{
 			yCount[t]++;
 			++t;
@@ -590,11 +590,11 @@ uint8_t ReconstructionEngine::updateVoxels(SinogramPtr sinogram,
 			
 			// std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
 			UpdateYSlice& a =
-			*new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, geometry, OuterIter, Iter, 
-														   sinogram, &TempCol, ErrorSino, 
-														   &VoxelLineResponse, m_ForwardModel, mask, 
+			*new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter, 
+														   m_Sinogram, TempCol, ErrorSino, 
+														   VoxelLineResponse, m_ForwardModel, mask, 
 														   magUpdateMap, magUpdateMask, updateType, 
-														   NH_Threshold, averageUpdate+ t, 
+														   NH_Threshold, averageUpdate+t, 
 														   averageMagnitudeOfRecon + t, 
 														   m_AdvParams->ZERO_SKIPPING, 
 														   qggmrf_values);
@@ -694,17 +694,17 @@ uint8_t ReconstructionEngine::updateVoxels(SinogramPtr sinogram,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::initializeROIMask(SinogramPtr sinogram, GeometryPtr geometry, UInt8Image_t::Pointer Mask)
+void ReconstructionEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
 {
 	Real_t x = 0.0;
 	Real_t z = 0.0;
-	for (uint16_t i = 0; i < geometry->N_z; i++)
+	for (uint16_t i = 0; i < m_Geometry->N_z; i++)
 	{
-		for (uint16_t j = 0; j < geometry->N_x; j++)
+		for (uint16_t j = 0; j < m_Geometry->N_x; j++)
 		{
-			x = geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
-			z = geometry->z0 + ((Real_t)i + 0.5) * m_TomoInputs->delta_xz;
-			if(x >= -(sinogram->N_r * sinogram->delta_r) / 2 && x <= (sinogram->N_r * sinogram->delta_r) / 2 && z >= -m_TomoInputs->LengthZ / 2
+			x = m_Geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
+			z = m_Geometry->z0 + ((Real_t)i + 0.5) * m_TomoInputs->delta_xz;
+			if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && z >= -m_TomoInputs->LengthZ / 2
 			   && z <= m_TomoInputs->LengthZ / 2)
 			{
 				Mask->setValue(1, i, j);
@@ -720,7 +720,7 @@ void ReconstructionEngine::initializeROIMask(SinogramPtr sinogram, GeometryPtr g
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::ComputeVSC(RealImageType::Pointer magUpdateMap, RealImageType::Pointer filtMagUpdateMap, GeometryPtr geometry)
+void ReconstructionEngine::ComputeVSC(RealImageType::Pointer magUpdateMap, RealImageType::Pointer filtMagUpdateMap)
 {
 	Real_t filter_op = 0;
 	// int err = 0;
@@ -730,23 +730,23 @@ void HAADFForwardModel::ComputeVSC(RealImageType::Pointer magUpdateMap, RealImag
 	{
 		
 	}
-	fwrite(magUpdateMap->getPointer(0, 0), geometry->N_x * geometry->N_z, sizeof(Real_t), Fp);
+	fwrite(magUpdateMap->getPointer(0, 0), m_Geometry->N_x * m_Geometry->N_z, sizeof(Real_t), Fp);
 	fclose(Fp);
 	
 	// std::cout<<"Starting to filter the magnitude"<<std::endl;
 	// std::cout<<geometry->N_x<<" " <<geometry->N_z<<std::endl;
-	for (int16_t i = 0; i < geometry->N_z; i++)
+	for (int16_t i = 0; i < m_Geometry->N_z; i++)
 	{
-		for (int16_t j = 0; j < geometry->N_x; j++)
+		for (int16_t j = 0; j < m_Geometry->N_x; j++)
 		{
 			filter_op = 0;
 			for (int16_t p = -2; p <= 2; p++)
 			{
 				for (int16_t q = -2; q <= 2; q++)
 				{
-					if(i + p >= 0 && i + p < geometry->N_z && j + q >= 0 && j + q < geometry->N_x)
+					if(i + p >= 0 && i + p < m_Geometry->N_z && j + q >= 0 && j + q < m_Geometry->N_x)
 					{
-						filter_op += k_HammingWindow[p + 2][q + 2] * magUpdateMap->getValue(i + p, j + q);
+				//		filter_op += k_HammingWindow[p + 2][q + 2] * magUpdateMap->getValue(i + p, j + q);
 					}
 				}
 			}
@@ -754,9 +754,9 @@ void HAADFForwardModel::ComputeVSC(RealImageType::Pointer magUpdateMap, RealImag
 		}
 	}
 	
-	for (int16_t i = 0; i < geometry->N_z; i++)
+	for (int16_t i = 0; i < m_Geometry->N_z; i++)
 	{
-		for (int16_t j = 0; j < geometry->N_x; j++)
+		for (int16_t j = 0; j < m_Geometry->N_x; j++)
 		{
 			//magUpdateMap->d[i][j]=filtMagUpdateMap->d[i][j];
 			magUpdateMap->setValue(filtMagUpdateMap->getValue(i, j), i, j);
@@ -768,7 +768,7 @@ void HAADFForwardModel::ComputeVSC(RealImageType::Pointer magUpdateMap, RealImag
 	{
 		
 	}
-	fwrite(filtMagUpdateMap->getPointer(0, 0), geometry->N_x * geometry->N_z, sizeof(Real_t), Fp);
+	fwrite(filtMagUpdateMap->getPointer(0, 0), m_Geometry->N_x * m_Geometry->N_z, sizeof(Real_t), Fp);
 	fclose(Fp);
 }
 
@@ -776,21 +776,21 @@ void HAADFForwardModel::ComputeVSC(RealImageType::Pointer magUpdateMap, RealImag
 // -----------------------------------------------------------------------------
 // Sort the entries of filtMagUpdateMap and set the threshold to be ? percentile
 // -----------------------------------------------------------------------------
-Real_t HAADFForwardModel::SetNonHomThreshold(GeometryPtr geometry, RealImageType::Pointer magUpdateMap)
+Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdateMap)
 {
 	size_t dims[2] =
-	{ geometry->N_z * geometry->N_x, 0 };
+	{ m_Geometry->N_z * m_Geometry->N_x, 0 };
 	RealArrayType::Pointer TempMagMap = RealArrayType::New(dims, "TempMagMap");
 	
-	uint32_t ArrLength = geometry->N_z * geometry->N_x;
+	uint32_t ArrLength = m_Geometry->N_z * m_Geometry->N_x;
 	Real_t threshold;
 	
 	//Copy into a linear list for easier partial sorting
-	for (uint32_t i = 0; i < geometry->N_z; i++)
-		for (uint32_t j = 0; j < geometry->N_x; j++)
+	for (uint32_t i = 0; i < m_Geometry->N_z; i++)
+		for (uint32_t j = 0; j < m_Geometry->N_x; j++)
 		{
 			//TempMagMap->d[i*geometry->N_x+j]=i*geometry->N_x+j;
-			TempMagMap->d[i * (uint32_t)geometry->N_x + j] = magUpdateMap->getValue(i, j);
+			TempMagMap->d[i * (uint32_t)m_Geometry->N_x + j] = magUpdateMap->getValue(i, j);
 		}
 	
 	uint16_t percentile_index = ArrLength / NUM_NON_HOMOGENOUS_ITER;

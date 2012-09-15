@@ -124,8 +124,9 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
                        QGGMRF::QGGMRF_Values* qggmrf_Values);
 	
 	//Updating voxels
-	uint8_t updateVoxels(SinogramPtr sinogram,
-							GeometryPtr geometry,
+	uint8_t updateVoxels(
+						   //SinogramPtr sinogram,
+							//GeometryPtr geometry,
 							int16_t OuterIter,
 							int16_t Iter,
 							UInt8Image_t::Pointer VisitCount,
@@ -135,18 +136,17 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 							CostData::Pointer cost,
 							QGGMRF::QGGMRF_Values* qggmrf_Values);
 	 
-	void initializeROIMask(SinogramPtr sinogram, GeometryPtr geometry, UInt8Image_t::Pointer Mask);
+	void initializeROIMask(UInt8Image_t::Pointer Mask);
 	
     /**
      * Code to take the magnitude map and filter it with a hamming window
      * Returns the filtered magnitude map
      */
     void ComputeVSC(RealImageType::Pointer magUpdateMap,
-                    RealImageType::Pointer filtMagUpdateMap,
-                    GeometryPtr geometry);
+                    RealImageType::Pointer filtMagUpdateMap);
 	
 	//Sort the entries of filtMagUpdateMap and set the threshold to be ? percentile
-    Real_t SetNonHomThreshold(GeometryPtr geometry, RealImageType::Pointer magUpdateMap);
+    Real_t SetNonHomThreshold(RealImageType::Pointer magUpdateMap);
 
 	/**
      * @brief
@@ -247,7 +247,6 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 #ifndef EIMTOMO_USE_QGGMRF
     double surrogateFunctionBasedMin(Real_t currentVoxelValue);
 #endif
-
 
     /**
     * @brief Updates a single line of voxels along y-axis

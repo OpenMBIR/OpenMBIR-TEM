@@ -583,7 +583,7 @@ void ReconstructionEngine::execute()
                                              visitCount, tempCol,
                                              errorSino, voxelLineResponse,
                                              cost);*/
-		status = updateVoxels(m_Sinogram, m_Geometry,
+		status = updateVoxels( //m_Sinogram, m_Geometry,
 											  reconOuterIter, reconInnerIter,
 											  visitCount, tempCol,
 											  errorSino, voxelLineResponse,
