@@ -124,17 +124,14 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
                        QGGMRF::QGGMRF_Values* qggmrf_Values);
 	
 	//Updating voxels
-	uint8_t updateVoxels(
-						   //SinogramPtr sinogram,
-							//GeometryPtr geometry,
-							int16_t OuterIter,
-							int16_t Iter,
-							UInt8Image_t::Pointer VisitCount,
-							std::vector<HAADFAMatrixCol::Pointer> &TempCol,
-							RealVolumeType::Pointer ErrorSino,
-							std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
-							CostData::Pointer cost,
-							QGGMRF::QGGMRF_Values* qggmrf_Values);
+	uint8_t updateVoxels(int16_t OuterIter,
+						 int16_t Iter,
+						 UInt8Image_t::Pointer VisitCount,
+						 std::vector<HAADFAMatrixCol::Pointer> &TempCol,
+						 RealVolumeType::Pointer ErrorSino,
+						 std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
+						 CostData::Pointer cost,
+						 QGGMRF::QGGMRF_Values* qggmrf_Values);
 	 
 	void initializeROIMask(UInt8Image_t::Pointer Mask);
 	

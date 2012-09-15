@@ -101,7 +101,6 @@ class UpdateYSlice
    * @param sinogram
    * @param tempCol
    * @param errorSino
-   * @param weight
    * @param voxelLineResponse
    * @param forwardModel
    * @param mask
@@ -119,7 +118,6 @@ class UpdateYSlice
                  SinogramPtr  sinogram,
                  std::vector<HAADFAMatrixCol::Pointer> &tempCol,
                  RealVolumeType::Pointer errorSino,
-                 //RealVolumeType::Pointer weight,
                  std::vector<HAADFAMatrixCol::Pointer> &voxelLineResponse,
                  HAADFForwardModel* forwardModel,
                  UInt8Image_t::Pointer mask,
@@ -167,7 +165,7 @@ class UpdateYSlice
   //  SinogramPtr  m_BFSinogram;
     std::vector<HAADFAMatrixCol::Pointer> &m_TempCol;
     RealVolumeType::Pointer m_ErrorSino;
-    std::vector<HAADFAMatrixCol::Pointer> m_VoxelLineResponse;
+    std::vector<HAADFAMatrixCol::Pointer> &m_VoxelLineResponse;//CHANGED! Put a & here
     HAADFForwardModel* m_ForwardModel;
     UInt8Image_t::Pointer m_Mask;
     RealImageType::Pointer m_MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
