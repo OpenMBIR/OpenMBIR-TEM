@@ -124,7 +124,8 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
                        QGGMRF::QGGMRF_Values* qggmrf_Values);
 	
 	//Updating voxels
-	uint8_t updateVoxels(int16_t OuterIter,
+	uint8_t updateVoxels(
+						 int16_t OuterIter,
 						 int16_t Iter,
 						 UInt8Image_t::Pointer VisitCount,
 						 std::vector<HAADFAMatrixCol::Pointer> &TempCol,

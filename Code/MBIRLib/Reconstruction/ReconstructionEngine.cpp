@@ -575,16 +575,15 @@ void ReconstructionEngine::execute()
       indent = "    ";
       // This is all done PRIOR to calling what will become a method
 
-
       // This could contain multiple Subloops also
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
-      /*status = m_ForwardModel->updateVoxels(m_Sinogram, m_Geometry,
+      status = m_ForwardModel->updateVoxels(m_Sinogram, m_Geometry,
                                             reconOuterIter, reconInnerIter,
                                              visitCount, tempCol,
                                              errorSino, voxelLineResponse,
-                                             cost);*/
-		status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,
-							errorSino, voxelLineResponse,cost,&qggmrf_values);
+                                             cost);
+	  /*status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,
+							errorSino, voxelLineResponse,cost,&qggmrf_values);*/
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
       if(status == 0)
@@ -648,6 +647,9 @@ void ReconstructionEngine::execute()
     if(m_AdvParams->NOISE_ESTIMATION)
     {
       m_ForwardModel->updateWeights(m_Sinogram, errorSino);
+#ifdef BF_RECON
+	  m_ForwardModel->updateSelector(m_Sinogram, errorSino);
+#endif //BF_RECON
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);

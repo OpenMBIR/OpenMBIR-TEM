@@ -445,9 +445,7 @@ void ReconstructionEngine::writeAvizoFile(const std::string &file, uint16_t crop
 }
 
 
-uint8_t ReconstructionEngine::updateVoxels( //SinogramPtr sinogram,
-										   //GeometryPtr geometry,
-										   int16_t OuterIter,
+uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 										   int16_t Iter,
 										   UInt8Image_t::Pointer VisitCount,
 										   std::vector<HAADFAMatrixCol::Pointer> &TempCol,
@@ -587,19 +585,17 @@ uint8_t ReconstructionEngine::updateVoxels( //SinogramPtr sinogram,
 			{
 				continue;
 			} // Processor has NO tasks to run because we have less Y's than cores
-			
 			// std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
-			UpdateYSlice& a =
+	/*		UpdateYSlice& a =
 			*new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter, 
 														   m_Sinogram, TempCol, ErrorSino, 
-														   VoxelLineResponse, m_ForwardModel, mask, 
+														   VoxelLineResponse,m_ForwardModel, mask, 
 														   magUpdateMap, magUpdateMask, updateType, 
 														   NH_Threshold, 
 														   averageUpdate + t, 
 														   averageMagnitudeOfRecon + t, 
-														   m_AdvParams->ZERO_SKIPPING, 
-														   qggmrf_values);
-			taskList.push_back(a);
+														    m_AdvParams->ZERO_SKIPPING, qggmrf_values);
+			taskList.push_back(a);*/
 		}
 		
 		tbb::task::spawn_root_and_wait(taskList);

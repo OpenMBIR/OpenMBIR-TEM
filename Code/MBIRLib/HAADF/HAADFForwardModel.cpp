@@ -314,6 +314,10 @@ void HAADFForwardModel::gainAndOffsetInitialization(uint16_t nTheta)
 void HAADFForwardModel::weightInitialization(size_t dims[3])
 {
   m_Weight = RealVolumeType::New(dims, "Weight");
+#ifdef BF_RECON
+	//This variable selects which entries to retain in the sinogram
+  m_Selector = UInt8VolumeType::New(dims, "Selector"); 
+#endif //BF RECON
 }
 
 
@@ -455,10 +459,14 @@ void HAADFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVol
 		  m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
 #endif //BF_RECON
 		  
-		  
 #else
         m_Weight->d[weight_idx] = 1.0;
 #endif //IDENTITY_NOISE_MODEL endif
+		  
+#ifdef BF_RECON
+		m_Selector->d[weight_idx]=1;//By default all enties are chosen
+#endif //BF_RECON
+		  
 #ifdef FORWARD_PROJECT_MODE
         temp=yEstimate->d[i_theta][i_r][i_t]/m_I_0->d[i_theta];
         fwrite(&temp,sizeof(Real_t),1,Fp6);
@@ -783,6 +791,9 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
       {
         size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
         size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
+#ifdef BF_RECON
+		if(m_Selector->d[weight_idx] == 1)  
+#endif //BF_RECON
         sum += (ErrorSino->d[error_idx] * ErrorSino->d[error_idx] * m_Weight->d[weight_idx]); //Changed to only account for the counts
       }
     }
@@ -862,6 +873,27 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
   notify("Update Weights Complete", 0, Observable::UpdateProgressMessage);
 }
 
+#ifdef BF_RECON
+
+// -----------------------------------------------------------------------------
+// Updating the boolean selector based on the error and weights
+// -----------------------------------------------------------------------------
+void HAADFForwardModel::updateSelector(SinogramPtr sinogram,
+					RealVolumeType::Pointer ErrorSino)
+{
+for (uint16_t i_theta = 0; i_theta < sinogram->N_theta;i_theta++)
+	for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
+		for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
+		{
+			size_t idx = m_Weight->calcIndex(i_theta, i_r, i_t);
+			if(ErrorSino->d[idx] * ErrorSino->d[i_theta] * m_Weight->d[idx] < BraggThreshold*BraggThreshold)
+				m_Selector->d[idx] = 1;
+			else 
+				m_Selector->d[idx] = 0;
+		}
+
+}
+#endif
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -1264,8 +1296,8 @@ uint8_t HAADFForwardModel::updateVoxels(SinogramPtr sinogram,
 			UpdateYSlice& a =
 			*new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, geometry, OuterIter, Iter, sinogram, TempCol, ErrorSino, 
 														   VoxelLineResponse, this, mask, magUpdateMap, magUpdateMask, 
-														   updateType, NH_Threshold, averageUpdate
-														   + t, averageMagnitudeOfRecon + t, m_AdvParams->ZERO_SKIPPING, m_QGGMRF_Values);
+														   updateType, NH_Threshold, 
+														   averageUpdate+ t, averageMagnitudeOfRecon + t, m_AdvParams->ZERO_SKIPPING, m_QGGMRF_Values);
 			taskList.push_back(a);
 		}
 		
@@ -1505,7 +1537,10 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 			for (int16_t k = 0; k < sinogram->N_t; k++)
 			{
 				errSinoValue = ErrorSino->getValue(i, j, k);
-				cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k));
+				if(m_Selector->getValue(i,j,k) == 1)
+				    cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k));
+				else
+					cost += BraggThreshold*BraggThreshold;	
 			}
 		}
 	}
@@ -1556,7 +1591,10 @@ void HAADFForwardModel::computeTheta(size_t Index,
 		uint32_t vlrCount = VoxelLineResponse[xzSliceIdx]->index[0] + VoxelLineResponse[xzSliceIdx]->count;
 		for (uint32_t i_t = VoxelLineResponse[xzSliceIdx]->index[0]; i_t < vlrCount; i_t++)
 		{
+
 			size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
+			if(m_Selector->d[error_idx] == 1)
+			{
 			Real_t ProjectionEntry = kConst0 * VoxelLineResponse[xzSliceIdx]->values[VoxelLineAccessCounter];
 			if(getBF_Flag() == false)
 			{
@@ -1570,6 +1608,7 @@ void HAADFForwardModel::computeTheta(size_t Index,
 				Thetas->d[0] += (ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
 			}
 			VoxelLineAccessCounter++;
+			}
 		}
 	}	
 	Thetas->d[0]*=-1;
@@ -1608,6 +1647,14 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 				ErrorSino->d[error_idx] -= (getBFSinogram()->counts->d[error_idx] * kConst2);
 			}
 			VoxelLineAccessCounter++;
+#ifdef BF_RECON
+         if(ErrorSino->d[error_idx]*ErrorSino->d[error_idx]*m_Weight->d[error_idx] < BraggThreshold*BraggThreshold)
+			 m_Selector->d[error_idx] = 1;
+			else {
+			m_Selector->d[error_idx] = 0;	
+			}
+
+#endif
 		}
 	}
 }

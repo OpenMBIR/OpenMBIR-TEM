@@ -122,7 +122,8 @@ class HAADFForwardModel : public Observable
     MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Alpha) //Noise variance refinement factor
 
     MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Weight) //This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
-
+    MXA_INSTANCE_PROPERTY(UInt8VolumeType::Pointer, Selector); //This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
+	
     void setQGGMRFValues(QGGMRF::QGGMRF_Values* qggmrf_values);
 
     void printNuisanceParameters(SinogramPtr sinogram);
@@ -196,7 +197,10 @@ class HAADFForwardModel : public Observable
                         RealVolumeType::Pointer yEstimate, CostData::Pointer cost);
 	void updateWeights(SinogramPtr sinogram,
                        RealVolumeType::Pointer errorSinogram);
-    
+#ifdef BF_RECON
+	void updateSelector(SinogramPtr sinogram,
+                       RealVolumeType::Pointer errorSinogram);
+#endif
 
     /**
      * Code to take the magnitude map and filter it with a hamming window

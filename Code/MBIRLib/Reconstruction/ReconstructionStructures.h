@@ -45,6 +45,7 @@ typedef double Real_t;
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Common/TomoArray.hpp"
 
+typedef TomoArray<uint8_t, uint8_t*, 3> UInt8VolumeType;
 typedef TomoArray<uint8_t, uint8_t*, 2> UInt8Image_t;
 typedef TomoArray<uint8_t, uint8_t*, 1> UInt8ArrayType;
 

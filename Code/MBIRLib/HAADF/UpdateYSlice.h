@@ -192,8 +192,6 @@ class UpdateYSlice
     Real_t m_Theta1;
     Real_t m_Theta2;
     Real_t m_Neighborhood[27];
-	
-	
 
 };
 
