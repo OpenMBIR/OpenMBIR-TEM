@@ -569,6 +569,10 @@ void ReconstructionEngine::execute()
 
     for (int16_t reconInnerIter = 0; reconInnerIter < m_TomoInputs->NumIter; reconInnerIter++)
     {
+	
+	 //Prints the ratio of the sinogram entries selected
+	  m_ForwardModel->printRatioSelected(m_Sinogram);	
+		
       ss.str("");
       ss << "Outer Iterations: " << reconOuterIter << "/" << m_TomoInputs->NumOuterIter << " Inner Iterations: " << reconInnerIter << "/" << m_TomoInputs->NumIter << std::endl;
 
@@ -577,11 +581,6 @@ void ReconstructionEngine::execute()
 
       // This could contain multiple Subloops also
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
-     /* status = m_ForwardModel->updateVoxels(m_Sinogram, m_Geometry,
-                                            reconOuterIter, reconInnerIter,
-                                             visitCount, tempCol,
-                                             errorSino, voxelLineResponse,
-                                             cost);*/
 	  status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,
 							errorSino, voxelLineResponse,cost,&qggmrf_values);
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
@@ -733,6 +732,9 @@ void ReconstructionEngine::execute()
     writeMRCFile(m_TomoInputs->mrcOutputFile, cropStart, cropEnd);
   }
 
+//DEBUG
+	m_ForwardModel->writeSelectorMrc(m_Sinogram);
+	
  // std::cout << "Should be writing .am file....  '" << m_TomoInputs->avizoOutputFile << "'"  << std::endl;
   if (m_TomoInputs->avizoOutputFile.empty() == false)
   {

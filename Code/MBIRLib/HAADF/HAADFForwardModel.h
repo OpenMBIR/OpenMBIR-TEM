@@ -65,6 +65,10 @@
 #ifndef _HAADFFORWARDMODEL_H_
 #define _HAADFFORWARDMODEL_H_
 
+#include "MBIRLib/MBIRLib.h"
+#include "MBIRLib/Common/AbstractFilter.h"
+#include "MBIRLib/Common/Observer.h"
+
 #include "MXA/Common/MXASetGetMacros.h"
 #include "MBIRLib/Common/Observable.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
@@ -188,6 +192,10 @@ class HAADFForwardModel : public Observable
 #ifdef BF_RECON
 	void updateSelector(SinogramPtr sinogram,
                        RealVolumeType::Pointer errorSinogram);
+	
+	void printRatioSelected(SinogramPtr sinogram);
+	
+	void writeSelectorMrc(SinogramPtr sinogram);
 #endif
 
   
