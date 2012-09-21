@@ -590,7 +590,7 @@ uint8_t ReconstructionEngine::updateVoxels( //SinogramPtr sinogram,
 			
 			// std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
 			UpdateYSlice& a =
-			*new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter, 
+			*new (tbb::task::allocate_root()) UpdateYSlice(yStart,yStop,m_Geometry,OuterIter,                   Iter, 
 														   m_Sinogram, TempCol, ErrorSino, 
 														   VoxelLineResponse, m_ForwardModel, mask, 
 														   magUpdateMap, magUpdateMask, updateType, 
