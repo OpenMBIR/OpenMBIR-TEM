@@ -68,6 +68,7 @@
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Common/AbstractFilter.h"
 #include "MBIRLib/Common/Observer.h"
+#include "MBIRLib/IOFilters/MRCWriter.h"
 
 #include "MXA/Common/MXASetGetMacros.h"
 #include "MBIRLib/Common/Observable.h"
@@ -195,7 +196,7 @@ class HAADFForwardModel : public Observable
 	
 	void printRatioSelected(SinogramPtr sinogram);
 	
-	void writeSelectorMrc(SinogramPtr sinogram);
+	
 #endif
 
   

@@ -247,7 +247,7 @@ void ReconstructionEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
   v->BEAM_RESOLUTION = 512;
   v->AREA_WEIGHTED = 1;
   v->THRESHOLD_REDUCTION_FACTOR = 1;
-  v->JOINT_ESTIMATION = 0;
+  v->JOINT_ESTIMATION = 1;
   v->ZERO_SKIPPING = 1;
   v->NOISE_ESTIMATION = 1;
 
@@ -562,9 +562,9 @@ void ReconstructionEngine::execute()
     indent = "";
 
     //The first time we may need to update voxels multiple times and then on just optimize over I,d,sigma,f once each outer loop
-    if(reconOuterIter != 0)
+    if(reconOuterIter == 0)
     {
-      m_TomoInputs->NumIter = 1;
+      m_TomoInputs->NumIter = 30;
     }
 
     for (int16_t reconInnerIter = 0; reconInnerIter < m_TomoInputs->NumIter; reconInnerIter++)
@@ -627,6 +627,8 @@ void ReconstructionEngine::execute()
 		break;
 	}
 	  
+	if(m_TomoInputs->NumOuterIter > 1) //Dont update any parameters if we just have one inner iteration
+	{
     if(m_AdvParams->JOINT_ESTIMATION)
     {
       m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
@@ -659,6 +661,7 @@ void ReconstructionEngine::execute()
 		}
 #endif//cost
     }
+	}
     /*else
     {
       if(0 == status && reconOuterIter >= 1)
@@ -733,7 +736,7 @@ void ReconstructionEngine::execute()
   }
 
 //DEBUG
-	m_ForwardModel->writeSelectorMrc(m_Sinogram);
+	
 	
  // std::cout << "Should be writing .am file....  '" << m_TomoInputs->avizoOutputFile << "'"  << std::endl;
   if (m_TomoInputs->avizoOutputFile.empty() == false)

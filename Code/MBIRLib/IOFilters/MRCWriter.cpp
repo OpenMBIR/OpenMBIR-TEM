@@ -81,8 +81,6 @@ void MRCWriter::execute()
 int MRCWriter::writeHeader()
 {
   int err = -1;
-
-
   return err;
 }
 
@@ -169,6 +167,7 @@ void MRCWriter::initializeMRCHeader(MRCHeader* header)
   snprintf(header->labels[2], 80, "OpenMBIR code developed by Purdue University & BlueQuartz Software");
 
 }
+
 
 // -----------------------------------------------------------------------------
 //

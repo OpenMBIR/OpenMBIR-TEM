@@ -1338,35 +1338,4 @@ void HAADFForwardModel::printRatioSelected(SinogramPtr sinogram)
 	std::cout<<"Ratio of singoram entries used="<<sum/(sinogram->N_theta*sinogram->N_r*sinogram->N_t)<<std::endl;
 }
 
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void HAADFForwardModel::writeSelectorMrc(SinogramPtr sinogram)
-{
-	const std::string mrcFile ="Selector.mrc";
-	/* Write the output to the MRC File */
-	std::stringstream ss;
-	ss.str("");
-	ss << "Writing MRC file to '" << mrcFile << "'";
-	notify(ss.str(), 0, Observable::UpdateProgressMessage);
-	
-	MRCWriter::Pointer mrcWriter = MRCWriter::New();
-	mrcWriter->setOutputFile(mrcFile);
-	mrcWriter->setGeometry(m_Sinogram);
-	mrcWriter->setAdvParams(m_AdvParams);
-	mrcWriter->setXDims(0, m_Sinogram->N_r);
-	mrcWriter->setYDims(0, m_Sinogram->N_t);
-	mrcWriter->setZDims(0, m_Sinogram->N_theta);
-	mrcWriter->setObservers(getObservers());
-	mrcWriter->execute();
-	if(mrcWriter->getErrorCondition() < 0)
-	{
-		ss.str("");
-		ss << "Error writing MRC file\n    '" << mrcFile << "'" << std::endl;
-		setErrorCondition(mrcWriter->getErrorCondition());
-		notify(ss.str(), 0, Observable::UpdateErrorMessage);
-	}
-}
-
 #endif //BF Recon
