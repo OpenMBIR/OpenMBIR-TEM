@@ -196,6 +196,7 @@ class HAADFForwardModel : public Observable
 	
 	void printRatioSelected(SinogramPtr sinogram);
 	
+	void writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geometry);
 	
 #endif
 

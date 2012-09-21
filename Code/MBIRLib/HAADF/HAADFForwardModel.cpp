@@ -1338,4 +1338,45 @@ void HAADFForwardModel::printRatioSelected(SinogramPtr sinogram)
 	std::cout<<"Ratio of singoram entries used="<<sum/(sinogram->N_theta*sinogram->N_r*sinogram->N_t)<<std::endl;
 }
 
+void HAADFForwardModel::writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geometry)
+{
+	const std::string mrcFile="Selector.mrc";
+	geometry->N_x = sinogram->N_r;
+	geometry->N_y = sinogram->N_t;
+	geometry->N_z = sinogram->N_theta;
+	geometry->Object = sinogram->counts;
+	for(uint32_t i_theta = 0; i_theta < geometry->N_z; i_theta++)
+	   for(uint32_t i_r = 0; i_r < geometry->N_x; i_r++)
+		  for(uint32_t i_t = 0; i_t < geometry->N_y; i_t++)
+		  {
+			size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
+			  Real_t value = m_Selector->d[counts_idx];
+			  geometry->Object->d[counts_idx] = value;
+			  
+		  }
+	uint16_t cropStart=0;
+	uint16_t cropEnd = geometry->N_x;
+	/* Write the output to the MRC File */
+	std::stringstream ss;
+	ss.str("");
+	ss << "Writing selector MRC file to '" << mrcFile << "'";
+	notify(ss.str(), 0, Observable::UpdateProgressMessage);
+	
+	MRCWriter::Pointer mrcWriter = MRCWriter::New();
+	mrcWriter->setOutputFile(mrcFile);
+	mrcWriter->setGeometry(geometry);
+	mrcWriter->setAdvParams(m_AdvParams);
+	mrcWriter->setXDims(cropStart, cropEnd);
+	mrcWriter->setYDims(0, geometry->N_y);
+	mrcWriter->setZDims(0, geometry->N_z);
+	mrcWriter->setObservers(getObservers());
+	mrcWriter->execute();
+	if(mrcWriter->getErrorCondition() < 0)
+	{
+		ss.str("");
+		ss << "Error writing MRC file\n    '" << mrcFile << "'" << std::endl;
+		setErrorCondition(mrcWriter->getErrorCondition());
+		notify(ss.str(), 0, Observable::UpdateErrorMessage);
+	}
+}
 #endif //BF Recon

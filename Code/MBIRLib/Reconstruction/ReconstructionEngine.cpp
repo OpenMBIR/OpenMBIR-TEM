@@ -734,8 +734,6 @@ void ReconstructionEngine::execute()
   //  ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedMrcFile;
     writeMRCFile(m_TomoInputs->mrcOutputFile, cropStart, cropEnd);
   }
-
-//DEBUG
 	
 	
  // std::cout << "Should be writing .am file....  '" << m_TomoInputs->avizoOutputFile << "'"  << std::endl;
@@ -744,10 +742,14 @@ void ReconstructionEngine::execute()
     writeAvizoFile(m_TomoInputs->avizoOutputFile, cropStart, cropEnd);
   }
 
+	//Debug Writing out the selector array as an MRC file
+	m_ForwardModel->writeSelectorMrc(m_Sinogram,m_Geometry);
+	
   std::cout << "Final Dimensions of Object: " << std::endl;
   std::cout << "  Nx = " << m_Geometry->N_x << std::endl;
   std::cout << "  Ny = " << m_Geometry->N_y << std::endl;
   std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
+	
 
   notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
   setErrorCondition(0);
