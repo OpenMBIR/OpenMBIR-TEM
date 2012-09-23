@@ -584,7 +584,7 @@ void ReconstructionEngine::execute()
 	  status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,
 							errorSino, voxelLineResponse,cost,&qggmrf_values);
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
-
+		
       if(status == 0)
       {
         break; //stop inner loop if we have hit the threshold value for x
@@ -626,7 +626,9 @@ void ReconstructionEngine::execute()
     if(m_AdvParams->JOINT_ESTIMATION)
     {
       m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
+#ifdef BF_RECON
 	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
+#endif
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);

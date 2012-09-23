@@ -890,7 +890,7 @@ for (uint16_t i_theta = 0; i_theta < sinogram->N_theta;i_theta++)
 		for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
 		{
 			size_t idx = m_Weight->calcIndex(i_theta, i_r, i_t);
-			if(ErrorSino->d[idx] * ErrorSino->d[i_theta] * m_Weight->d[idx] < BraggThreshold*BraggThreshold)
+			if(ErrorSino->d[idx] * ErrorSino->d[idx] * m_Weight->d[idx] < BraggThreshold*BraggThreshold)
 				m_Selector->d[idx] = 1;
 			else 
 				m_Selector->d[idx] = 0;
@@ -1286,7 +1286,6 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 			else {
 			m_Selector->d[error_idx] = 0;	
 			}
-
 #endif
 		}
 	}
@@ -1355,8 +1354,7 @@ void HAADFForwardModel::writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geomet
 		  {
 			size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
 			  Real_t value = m_Selector->d[counts_idx];
-			  geometry->Object->d[counts_idx] = value;
-			  
+			  geometry->Object->d[counts_idx] = value;			  
 		  }
 	uint16_t cropStart=0;
 	uint16_t cropEnd = geometry->N_x;
