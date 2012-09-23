@@ -742,7 +742,6 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
 	  }
 	  }
      		  
-      updateSelector(sinogram,errorSinogram);
   } 
 #endif //BF_RECON
   //return 0;

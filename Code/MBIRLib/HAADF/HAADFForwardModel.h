@@ -242,12 +242,9 @@ class HAADFForwardModel : public Observable
     RealArrayType::Pointer m_D1;
     RealArrayType::Pointer m_D2; //hold the intermediate values needed to compute optimal mu_k
 
-
     Real_t k_HammingWindow[5][5];
 	Real_t Theta[2]; //Theta1 and Theta2 in the optimization
  
-
-
 #ifdef EIMTOMO_USE_QGGMRF
     QGGMRF::QGGMRF_Values* m_QGGMRF_Values;
 #else

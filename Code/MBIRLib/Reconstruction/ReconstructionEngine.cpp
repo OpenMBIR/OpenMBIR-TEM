@@ -626,6 +626,7 @@ void ReconstructionEngine::execute()
     if(m_AdvParams->JOINT_ESTIMATION)
     {
       m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
+	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
