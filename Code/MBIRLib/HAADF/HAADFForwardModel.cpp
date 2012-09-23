@@ -503,7 +503,7 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
 {
   std::stringstream ss;
   std::string indent("  ");
-  if(getBF_Flag() == false)
+#ifndef BF_RECON
   {
     Real_t AverageI_kUpdate = 0; //absolute sum of the gain updates
     Real_t AverageMagI_k = 0; //absolute sum of the initial gains
@@ -705,41 +705,46 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
       //std::cout << "Ratio of change in Delta_k " << AverageDelta_kUpdate / AverageMagDelta_k << std::endl;
     }
   }
-  else
+#else 
   {
-
-    for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
-    {
       Real_t num_sum = 0;
       Real_t den_sum = 0;
       Real_t alpha = 0;
+	  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	  {
       for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
       {
         for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
         {
+		  if(m_Selector->getValue(i_theta, i_r, i_t) == 1)
+		  {
           num_sum += (errorSinogram->getValue(i_theta, i_r, i_t) * m_Weight->getValue(i_theta, i_r, i_t));
           den_sum += m_Weight->getValue(i_theta, i_r, i_t);
+		  }
         }
       }
+	  }
       alpha = num_sum / den_sum;
 
-      for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
-        {
+	  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	  {	  
+	     for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
+         {
+           for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
+           {
           errorSinogram->deleteFromValue(alpha, i_theta, i_r, i_t);
-        }
-      }
-
+           }
+         }
       m_Mu->d[i_theta] += alpha;
-      if(getVeryVerbose())
-      {
-        std::cout << "Theta: " << i_theta << " Mu: " << m_Mu->d[i_theta] << std::endl;
-      }
-    }
-
-
-  } //BFflag = true
+	  if(getVeryVerbose())
+	  {
+	    std::cout << "Theta: " << i_theta << " Mu: " << m_Mu->d[i_theta] << std::endl;
+	  }
+	  }
+     		  
+      updateSelector(sinogram,errorSinogram);
+  } 
+#endif //BF_RECON
   //return 0;
 }
 
@@ -1306,8 +1311,8 @@ void HAADFForwardModel::processRawCounts(SinogramPtr sinogram)
                 sinogram->counts->d[counts_idx] += BF_OFFSET;
                 sinogram->counts->d[counts_idx] = -log(sinogram->counts->d[counts_idx]/BF_MAX);
 				
-                if(sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
-                    sinogram->counts->d[counts_idx] = 0;
+                //if(sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
+                  //  sinogram->counts->d[counts_idx] = 0;
 				
                 mean+=sinogram->counts->d[counts_idx];
             }

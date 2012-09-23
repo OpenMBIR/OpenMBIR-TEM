@@ -562,9 +562,9 @@ void ReconstructionEngine::execute()
     indent = "";
 
     //The first time we may need to update voxels multiple times and then on just optimize over I,d,sigma,f once each outer loop
-    if(reconOuterIter == 0)
+    if(reconOuterIter > 0)
     {
-      m_TomoInputs->NumIter = 30;
+      m_TomoInputs->NumIter = 1;
     }
 
     for (int16_t reconInnerIter = 0; reconInnerIter < m_TomoInputs->NumIter; reconInnerIter++)
@@ -592,12 +592,6 @@ void ReconstructionEngine::execute()
       // Check to see if we are canceled.
       if (getCancel() == true) { setErrorCondition(-999); return; }
 
-      // Write out the VTK file
-  //    {
-  //      ss.str("");
-  //      ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << ScaleOffsetCorrection::ReconstructedVtkFile;
-  //      writeVtkFile(ss.str());
-  //    }
       // Write out the MRC File
       {
         ss.str("");
@@ -612,7 +606,7 @@ void ReconstructionEngine::execute()
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
 		if(err < 0)
 		{
-			std::cout<<"Cost went up after gain+offset update"<<std::endl;
+			std::cout<<"Cost went up after voxel update"<<std::endl;
 			break;
 		}
 		/**************************************************************************/
@@ -645,6 +639,7 @@ void ReconstructionEngine::execute()
 	
     } //Joint estimation endif
 
+	/*
     if(m_AdvParams->NOISE_ESTIMATION)
     {
       m_ForwardModel->updateWeights(m_Sinogram, errorSino);
@@ -660,7 +655,8 @@ void ReconstructionEngine::execute()
 			break;
 		}
 #endif//cost
-    }
+    }*/
+		
 	}
     /*else
     {
