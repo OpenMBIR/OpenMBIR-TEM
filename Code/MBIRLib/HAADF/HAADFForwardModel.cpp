@@ -1348,13 +1348,14 @@ void HAADFForwardModel::writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geomet
 	geometry->N_y = sinogram->N_t;
 	geometry->N_z = sinogram->N_theta;
 	geometry->Object = sinogram->counts;
-	for(uint32_t i_theta = 0; i_theta < geometry->N_z; i_theta++)
+	for(uint32_t i_theta = 0; i_theta <  geometry->N_z; i_theta++)
 	   for(uint32_t i_r = 0; i_r < geometry->N_x; i_r++)
 		  for(uint32_t i_t = 0; i_t < geometry->N_y; i_t++)
 		  {
 			size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-			  Real_t value = m_Selector->d[counts_idx];
-			  geometry->Object->d[counts_idx] = value;			  
+			Real_t value = m_Selector->d[counts_idx];
+			counts_idx = sinogram->counts->calcIndex(geometry->N_z-1-i_theta, i_r, i_t);  
+			geometry->Object->d[counts_idx] = value;			  
 		  }
 	uint16_t cropStart=0;
 	uint16_t cropEnd = geometry->N_x;

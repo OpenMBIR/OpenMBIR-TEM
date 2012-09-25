@@ -549,11 +549,12 @@ void ReconstructionEngine::execute()
 #ifdef FORWARD_PROJECT_MODE
   return 0; //exit the program once we finish forward projecting the object
 #endif//Forward Project mode
+	
 
 #ifdef COST_CALCULATE
 	err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
 #endif //Cost calculation endif
-	
+		
 //  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
   //Loop through every voxel updating it by solving a cost function
   for (int16_t reconOuterIter = 0; reconOuterIter < m_TomoInputs->NumOuterIter; reconOuterIter++)
