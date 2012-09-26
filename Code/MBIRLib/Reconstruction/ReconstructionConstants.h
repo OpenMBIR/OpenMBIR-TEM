@@ -66,9 +66,10 @@ namespace VoxelUpdateType
 
 //#define WRITE_INTERMEDIATE_RESULTS
 //#define COST_CALCULATE
-#define BraggThreshold 3//Thresold in normalized uints
+#define DefBraggThreshold 100//Thresold in normalized uints. This value ensures 
+//at the start we do a "regular" BF recon
 #define BF_RECON //Bright Field Reconstruction
-#define BF_OFFSET 0//23696 //- Bio data set
+#define BF_OFFSET 32768//23696 //- Bio data set
 #define BF_MAX  1//1865//30369//5689//42122//1865//32768//
 
 #define IDENTITY_NOISE_MODEL

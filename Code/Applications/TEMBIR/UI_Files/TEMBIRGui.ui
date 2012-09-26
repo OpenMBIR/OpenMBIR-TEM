@@ -537,7 +537,7 @@ font-size: 10px;
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
+              <y>-144</y>
               <width>262</width>
               <height>898</height>
              </rect>
@@ -1383,7 +1383,7 @@ font-size: 10px;
 }</string>
                   </property>
                   <property name="text">
-                   <string>Target Gain:</string>
+                   <string>Bragg Threshold:</string>
                   </property>
                  </widget>
                 </item>

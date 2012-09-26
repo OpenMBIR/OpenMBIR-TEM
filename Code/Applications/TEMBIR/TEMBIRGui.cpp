@@ -913,7 +913,10 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
   }
   m_MultiResSOC->setFinalResolution(finalResolution->value());
   m_MultiResSOC->setSampleThickness(sampleThickness->text().toFloat(&ok));
-  m_MultiResSOC->setTargetGain(targetGain->text().toFloat(&ok));
+  m_MultiResSOC->setTargetGain(1);//TODO: This forces target gain = 1 in 
+	//BF with bragg code 
+  m_MultiResSOC->setBraggThreshold(targetGain->text().toFloat(&ok));
+  
   m_MultiResSOC->setStopThreshold(stopThreshold->text().toFloat(&ok));
   m_MultiResSOC->setOuterIterations(outerIterations->value());
   m_MultiResSOC->setInnerIterations(innerIterations->value());
@@ -1754,8 +1757,9 @@ void TEMBIRGui::on_estimateSigmaX_clicked()
         estimate->setInputFile(inputMRCFilePath->text().toStdString());
         estimate->setSampleThickness(sampleThickness->text().toDouble(&ok));
         estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
-        estimate->setTargetGain(targetGain->text().toDouble(&ok));
-        estimate->setTiltAngles(tiltSelection->currentIndex());
+        //estimate->setTargetGain(targetGain->text().toDouble(&ok));
+        estimate->setTargetGain(1);
+		estimate->setTiltAngles(tiltSelection->currentIndex());
         estimate->setXDims(xmin, xmax);
         estimate->setYDims(ymin, ymax);
         estimate->addObserver(this);

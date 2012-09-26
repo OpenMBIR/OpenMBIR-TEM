@@ -406,6 +406,7 @@ void ReconstructionEngine::execute()
   QGGMRF::initializePriorModel(m_TomoInputs, &qggmrf_values);
   // Set the prior model parameters into the Forward Model
   m_ForwardModel->setQGGMRFValues(&qggmrf_values);
+  //m_ForwardModel->setBraggThreshold(DefBraggThreshold);
 
   //globals assosiated with finding the optimal gain and offset parameters
 
@@ -554,19 +555,31 @@ void ReconstructionEngine::execute()
 #ifdef COST_CALCULATE
 	err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
 #endif //Cost calculation endif
-		
+
 //  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
   //Loop through every voxel updating it by solving a cost function
+  Real_t TempBraggValue = m_ForwardModel->getBraggThreshold();	
+	std::cout<<"Bragg threshold ="<<TempBraggValue<<std::endl;	
+ 	
   for (int16_t reconOuterIter = 0; reconOuterIter < m_TomoInputs->NumOuterIter; reconOuterIter++)
   {
     ss.str(""); // Clear the string stream
     indent = "";
 
+		  
     //The first time we may need to update voxels multiple times and then on just optimize over I,d,sigma,f once each outer loop
     if(reconOuterIter > 0)
     {
       m_TomoInputs->NumIter = 1;
+	 // m_ForwardModel->setBraggThreshold(3);	
     }
+	else 
+	{
+	  if(m_TomoInputs->NumOuterIter > 1)
+	  m_ForwardModel->setBraggThreshold(DefBraggThreshold);
+	  else
+	  m_ForwardModel->setBraggThreshold(TempBraggValue);	  
+	}
 
     for (int16_t reconInnerIter = 0; reconInnerIter < m_TomoInputs->NumIter; reconInnerIter++)
     {

@@ -890,7 +890,7 @@ for (uint16_t i_theta = 0; i_theta < sinogram->N_theta;i_theta++)
 		for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
 		{
 			size_t idx = m_Weight->calcIndex(i_theta, i_r, i_t);
-			if(ErrorSino->d[idx] * ErrorSino->d[idx] * m_Weight->d[idx] < BraggThreshold*BraggThreshold)
+			if(ErrorSino->d[idx] * ErrorSino->d[idx] * m_Weight->d[idx] < m_BraggThreshold*m_BraggThreshold)
 				m_Selector->d[idx] = 1;
 			else 
 				m_Selector->d[idx] = 0;
@@ -1173,7 +1173,7 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 				if(m_Selector->getValue(i,j,k) == 1)
 				    cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k));
 				else
-					cost += BraggThreshold*BraggThreshold;	
+					cost += m_BraggThreshold*m_BraggThreshold;	
 			}
 		}
 	}
@@ -1281,7 +1281,7 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 			}
 			VoxelLineAccessCounter++;
 #ifdef BF_RECON
-         if(ErrorSino->d[error_idx]*ErrorSino->d[error_idx]*m_Weight->d[error_idx] < BraggThreshold*BraggThreshold)
+         if(ErrorSino->d[error_idx]*ErrorSino->d[error_idx]*m_Weight->d[error_idx] < m_BraggThreshold*m_BraggThreshold)
 			 m_Selector->d[error_idx] = 1;
 			else {
 			m_Selector->d[error_idx] = 0;	
@@ -1293,6 +1293,14 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 
 
 #ifdef BF_RECON
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+/*void HAADFForwardModel::setUpBraggThreshold(Real_t Threshold)
+{
+	m_BraggThreshold = Threshold;
+}*/
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -1382,4 +1390,5 @@ void HAADFForwardModel::writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geomet
 		notify(ss.str(), 0, Observable::UpdateErrorMessage);
 	}
 }
+
 #endif //BF Recon

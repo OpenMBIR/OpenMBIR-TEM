@@ -347,7 +347,10 @@ void MultiResolutionReconstruction::execute()
     }
     inputs->LengthZ = m_SampleThickness;
     forwardModel->setTargetGain(getTargetGain());
-    inputs->tiltSelection = m_TiltSelection;
+	
+	forwardModel->setBraggThreshold(getBraggThreshold()); //Set the Bragg value 
+    
+	inputs->tiltSelection = m_TiltSelection;
     if(m_Subvolume.size() > 0)
     {
       inputs->useSubvolume = true;

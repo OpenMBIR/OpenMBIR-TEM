@@ -118,7 +118,8 @@ class HAADFForwardModel : public Observable
     MXA_INSTANCE_PROPERTY(Real_t, DefaultOffset)
     MXA_INSTANCE_PROPERTY(Real_t, DefaultVariance)
     MXA_INSTANCE_PROPERTY(bool, UseDefaultOffset)
-
+	MXA_INSTANCE_PROPERTY(Real_t, BraggThreshold)
+    
 
 
       // These are the Nuisance Parameters that we need to solve for
@@ -197,6 +198,8 @@ class HAADFForwardModel : public Observable
 	void printRatioSelected(SinogramPtr sinogram);
 	
 	void writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geometry);
+	
+	//void setUpBraggThreshold(Real_t Threshold);
 	
 #endif
 
