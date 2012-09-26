@@ -571,7 +571,7 @@ void ReconstructionEngine::execute()
     if(reconOuterIter > 0)
     {
       m_TomoInputs->NumIter = 1;
-	 // m_ForwardModel->setBraggThreshold(3);	
+	  m_ForwardModel->setBraggThreshold(TempBraggValue);	
     }
 	else 
 	{
