@@ -507,6 +507,10 @@ void TEMBIRGui::setupGui()
     outputTabWidget->removeTab(1);
     initialReconstructionPath->hide();
     initialReconstructionLabel->hide();
+	
+	inputBrightFieldFilePath->hide();
+	inputBrightFieldFilePathBtn->hide();
+	label_37->hide();
 
     m_MRCInputInfoWidget = new MRCInfoWidget(this);
     m_MRCInputInfoWidget->hide();

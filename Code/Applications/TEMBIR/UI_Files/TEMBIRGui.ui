@@ -79,7 +79,7 @@
         <item row="0" column="0">
          <widget class="QLabel" name="label_6">
           <property name="toolTip">
-           <string>The image to be segmented</string>
+           <string>Input aligned data </string>
           </property>
           <property name="styleSheet">
            <string notr="true">QLabel {
@@ -95,7 +95,7 @@ font-size: 10px;
         <item row="0" column="1">
          <widget class="QFSDropLineEdit" name="inputMRCFilePath">
           <property name="toolTip">
-           <string>The image to be segmented</string>
+           <string>Input aligned data </string>
           </property>
           <property name="text">
            <string/>
@@ -118,7 +118,7 @@ font-size: 10px;
         <item row="1" column="0">
          <widget class="QLabel" name="label_37">
           <property name="toolTip">
-           <string>The image to be segmented</string>
+           <string>Bright Field aligned data </string>
           </property>
           <property name="styleSheet">
            <string notr="true">QLabel {
@@ -135,7 +135,7 @@ File:</string>
         <item row="1" column="1">
          <widget class="QFSDropLineEdit" name="inputBrightFieldFilePath">
           <property name="toolTip">
-           <string>The image to be segmented</string>
+           <string>Bright Field aligned data </string>
           </property>
           <property name="text">
            <string/>
@@ -161,7 +161,7 @@ File:</string>
            <bool>true</bool>
           </property>
           <property name="toolTip">
-           <string>The output image to be written at the conclusion of the segmentation</string>
+           <string>The output image to be written at the conclusion of the reconstruction</string>
           </property>
           <property name="styleSheet">
            <string notr="true">QLabel {
@@ -180,7 +180,7 @@ font-size: 10px;
            <bool>true</bool>
           </property>
           <property name="toolTip">
-           <string>The output image to be written at the conclusion of the segmentation</string>
+           <string>The output image to be written at the conclusion of the reconstruction</string>
           </property>
           <property name="text">
            <string/>
@@ -538,7 +538,7 @@ font-size: 10px;
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>262</width>
+              <width>264</width>
               <height>898</height>
              </rect>
             </property>
@@ -618,6 +618,9 @@ image: url(:/bullet_triangle_grey_down.png);
                 </property>
                 <item row="0" column="1">
                  <widget class="QSpinBox" name="singleSliceXWidth">
+                  <property name="toolTip">
+                   <string>The width of the region along X to consider for single slice reconstruction. Choose Y by holding down the shift key and clicking the approximate location  </string>
+                  </property>
                   <property name="suffix">
                    <string> %</string>
                   </property>
@@ -634,6 +637,9 @@ image: url(:/bullet_triangle_grey_down.png);
                 </item>
                 <item row="0" column="0">
                  <widget class="QLabel" name="ySingleSliceValue_Label_2">
+                  <property name="toolTip">
+                   <string>The width of the region along X to consider for single slice reconstruction. Choose Y by holding down the shift key and clicking the approximate location  </string>
+                  </property>
                   <property name="styleSheet">
                    <string notr="true">QLabel {
 font-weight: bold;
@@ -866,6 +872,9 @@ font-size: 10px;
                 </item>
                 <item row="3" column="0">
                  <widget class="QLabel" name="label_36">
+                  <property name="toolTip">
+                   <string>The thickness of the sample to be reconstructed in nano meters.</string>
+                  </property>
                   <property name="styleSheet">
                    <string notr="true">QLabel {
 font-weight: bold;
@@ -1267,7 +1276,7 @@ font-size: 10px;
                <property name="minimumSize">
                 <size>
                  <width>0</width>
-                 <height>50</height>
+                 <height>0</height>
                 </size>
                </property>
                <property name="styleSheet">
