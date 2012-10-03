@@ -1414,7 +1414,7 @@ Real_t HAADFForwardModel::estimateBraggThresold(SinogramPtr sinogram, RealVolume
 			}
 	std::cout<<"Num Elts"<<counts<<std::endl;
 	
-	uint32_t max_index;
+	uint32_t max_index=0;
 	for(uint32_t j =0; j < NumEltsReject;j++)
 	{
 	Real_t max=-INFINITY;	
