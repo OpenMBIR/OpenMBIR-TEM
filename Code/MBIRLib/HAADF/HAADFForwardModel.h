@@ -197,8 +197,9 @@ class HAADFForwardModel : public Observable
 	
 	void printRatioSelected(SinogramPtr sinogram);
 	
-	void writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geometry);
+	void writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino);
 	
+	Real_t estimateBraggThresold(SinogramPtr sinogram,RealVolumeType::Pointer ErrorSino,Real_t percentage);
 	//void setUpBraggThreshold(Real_t Threshold);
 	
 #endif

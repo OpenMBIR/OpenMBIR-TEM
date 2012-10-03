@@ -1349,7 +1349,7 @@ void HAADFForwardModel::printRatioSelected(SinogramPtr sinogram)
 	std::cout<<"Ratio of singoram entries used="<<sum/(sinogram->N_theta*sinogram->N_r*sinogram->N_t)<<std::endl;
 }
 
-void HAADFForwardModel::writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geometry)
+void HAADFForwardModel::writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino)
 {
 	const std::string mrcFile="Selector.mrc";
 	geometry->N_x = sinogram->N_r;
@@ -1361,7 +1361,7 @@ void HAADFForwardModel::writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geomet
 		  for(uint32_t i_t = 0; i_t < geometry->N_y; i_t++)
 		  {
 			size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-			Real_t value = m_Selector->d[counts_idx];
+			Real_t value = m_Selector->d[counts_idx];//ErrorSino->d[counts_idx];
 			counts_idx = sinogram->counts->calcIndex(geometry->N_z-1-i_theta, i_r, i_t);  
 			geometry->Object->d[counts_idx] = value;			  
 		  }
@@ -1391,4 +1391,45 @@ void HAADFForwardModel::writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geomet
 	}
 }
 
+Real_t HAADFForwardModel::estimateBraggThresold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage)
+{
+	//m_Alpha->d[i_theta]
+	//m_Weight->d[error_idx]
+	Real_t EstBraggThresh;
+	uint32_t NumElts = sinogram->N_theta*sinogram->N_r*sinogram->N_t;
+	uint32_t NumEltsReject = percentage*NumElts;//Find the Error*Weight 
+	//corresponding to this order statistic
+	RealArrayType::Pointer Ratio;
+	size_t dims[1]={NumElts};
+	Ratio = RealArrayType::New(dims, "Ratio of error to noise variance");
+	uint32_t counts=0;
+	for(uint32_t i_theta = 0; i_theta <  sinogram->N_theta; i_theta++)
+		for(uint32_t i_r = 0; i_r < sinogram->N_r; i_r++)
+			for(uint32_t i_t = 0; i_t < sinogram->N_t; i_t++)
+			{
+				size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
+				Ratio->d[counts]=ErrorSino->d[counts_idx]*m_Weight->d[counts_idx];
+				Ratio->d[counts]*=ErrorSino->d[counts_idx];
+				counts++;
+			}
+	std::cout<<"Num Elts"<<counts<<std::endl;
+	
+	uint32_t max_index;
+	for(uint32_t j =0; j < NumEltsReject;j++)
+	{
+	Real_t max=-INFINITY;	
+	for(uint32_t i =j ;i < NumElts; i++)
+	{
+		if (Ratio->d[i] > max) {
+			max =Ratio->d[i];
+			max_index = i;
+		}
+	}
+	Real_t temp = Ratio->d[j];
+	Ratio->d[j] = max;
+	Ratio->d[max_index]=temp;	
+	}
+	EstBraggThresh = sqrt(Ratio->d[NumEltsReject-1]);
+	return EstBraggThresh;
+}
 #endif //BF Recon

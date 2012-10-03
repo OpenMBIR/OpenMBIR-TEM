@@ -724,6 +724,8 @@ void ReconstructionEngine::execute()
 
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
+ Real_t threshold = m_ForwardModel->estimateBraggThresold(m_Sinogram, errorSino, .1);
+	std::cout<<"Computed Bragg Threshold ="<<threshold<<std::endl;	
  // This is writing the "ReconstructedSinogram.bin" file
   m_ForwardModel->writeSinogramFile(m_Sinogram, finalSinogram); // Writes the sinogram to a file
 
@@ -756,7 +758,7 @@ void ReconstructionEngine::execute()
   }
 
 	//Debug Writing out the selector array as an MRC file
-	m_ForwardModel->writeSelectorMrc(m_Sinogram,m_Geometry);
+	m_ForwardModel->writeSelectorMrc(m_Sinogram,m_Geometry,errorSino);
 	
   std::cout << "Final Dimensions of Object: " << std::endl;
   std::cout << "  Nx = " << m_Geometry->N_x << std::endl;

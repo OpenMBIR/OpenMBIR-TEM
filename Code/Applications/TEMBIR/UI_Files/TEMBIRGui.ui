@@ -537,7 +537,7 @@ font-size: 10px;
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-144</y>
+              <y>-117</y>
               <width>262</width>
               <height>898</height>
              </rect>
@@ -1524,7 +1524,7 @@ font-size: 10px;
 }</string>
                   </property>
                   <property name="text">
-                   <string>Default Offset
+                   <string>Default log(Dosage)
 Value:</string>
                   </property>
                   <property name="wordWrap">
