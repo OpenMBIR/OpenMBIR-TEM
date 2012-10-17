@@ -580,6 +580,8 @@ void ReconstructionEngine::execute()
 	{
 		m_ForwardModel->setBraggThreshold(DefBraggThreshold);
 	}
+	
+		
 		
 	 //Prints the ratio of the sinogram entries selected
 	  m_ForwardModel->printRatioSelected(m_Sinogram);	
@@ -590,6 +592,7 @@ void ReconstructionEngine::execute()
       indent = "    ";
       // This is all done PRIOR to calling what will become a method
 
+		std::cout<<"Bragg Threshold ="<<m_ForwardModel->getBraggThreshold()<<std::endl;	
       // This could contain multiple Subloops also
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 	  status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,
