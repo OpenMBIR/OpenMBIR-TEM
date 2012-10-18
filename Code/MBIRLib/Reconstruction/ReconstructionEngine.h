@@ -272,6 +272,13 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
      */
     Real_t computeCost(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight);
 
+	/**
+     * @brief
+     * @param ErrorSino
+     * @param Weight
+     * @return
+     */
+    Real_t estimateSigmaX(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight);
     /**
      * @brief
      * @param row

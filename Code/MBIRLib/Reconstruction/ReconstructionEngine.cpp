@@ -273,6 +273,7 @@ void ReconstructionEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
   v->JOINT_ESTIMATION = 1;
   v->ZERO_SKIPPING = 1;
   v->NOISE_MODEL = 1;
+  v->ESTIMATE_PRIOR = 0;
 
 }
 
@@ -722,6 +723,7 @@ void ReconstructionEngine::execute()
 
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
 
+	  
     if(m_AdvParams->JOINT_ESTIMATION)
     {
       err = jointEstimation(Weight, NuisanceParams, ErrorSino, Y_Est, cost);
@@ -742,6 +744,14 @@ void ReconstructionEngine::execute()
         break;
       }
 #endif//cost
+		
+	if(m_AdvParams->ESTIMATE_PRIOR)
+	{
+	/* Estimation of Prior model parameters*/
+	Real_t NewSigmaX=estimateSigmaX(ErrorSino, Weight);
+	QGGMRF::updatePriorModel(NewSigmaX,&m_QGGMRF_Values);
+	}	
+		
       if(0 == status && reconOuterIter >= 1) //&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
       {
         std::cout << "Exiting the code because status =0" << std::endl;
@@ -1785,3 +1795,116 @@ void ReconstructionEngine::costInitialization(SinogramPtr sinogram)
     d1 = RealArrayType::New(dims, "d1");
     d2 = RealArrayType::New(dims, "d2");
 }
+
+
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+Real_t ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorSino,RealVolumeType::Pointer Weight)
+{
+	Real_t sigmaxEst=0,temp=0;
+	Real_t delta;
+	for (int16_t i = 0; i < m_Geometry->N_z; i++)
+	{
+		for (int16_t j = 0; j < m_Geometry->N_x; j++)
+		{
+			for (int16_t k = 0; k < m_Geometry->N_y; k++)
+			{
+				
+				if(k + 1 < m_Geometry->N_y)
+				{
+					delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j, k + 1);
+					temp += FILTER[INDEX_3(2,1,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+					
+				}
+				
+				if(j + 1 < m_Geometry->N_x)
+				{
+					if(k - 1 >= 0)
+					{
+						delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k - 1);
+						temp += FILTER[INDEX_3(0,1,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+					}
+					
+					delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k);
+					temp += FILTER[INDEX_3(1,1,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+					
+					if(k + 1 < m_Geometry->N_y)
+					{
+						delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k + 1);
+						temp += FILTER[INDEX_3(2,1,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+					}
+					
+				}
+				
+				if(i + 1 < m_Geometry->N_z)
+				{
+					
+					if(j - 1 >= 0)
+					{
+						delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k);
+						temp += FILTER[INDEX_3(1,2,0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+					}
+					
+					delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k);
+					temp += FILTER[INDEX_3(1,2,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+					
+					if(j + 1 < m_Geometry->N_x)
+					{
+						delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k);
+						temp += FILTER[INDEX_3(1,2,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+					}
+					
+					if(j - 1 >= 0)
+					{
+						if(k - 1 >= 0)
+						{
+							delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k - 1);
+							temp += FILTER[INDEX_3(0,2,0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+						}
+						
+						if(k + 1 < m_Geometry->N_y)
+						{
+							delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k + 1);
+							temp += FILTER[INDEX_3(2,2,0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+						}
+						
+					}
+					
+					if(k - 1 >= 0)
+					{
+						delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k - 1);
+						temp += FILTER[INDEX_3(0,2,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+					}
+					
+					if(j + 1 < m_Geometry->N_x)
+					{
+						if(k - 1 >= 0)
+						{
+							delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k - 1);
+							temp += FILTER[INDEX_3(0,2,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+						}
+						
+						if(k + 1 < m_Geometry->N_y)
+						{
+							delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k + 1);
+							temp += FILTER[INDEX_3(2,2,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+						}
+					}
+					
+					if(k + 1 < m_Geometry->N_y)
+					{
+						delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k + 1);
+						temp += FILTER[INDEX_3(2,2,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+					}
+				}
+			}
+		}
+	}
+	Real_t NumEntries = m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z;
+    sigmaxEst = temp/(NumEntries);
+	std::cout<<"Value of sigmax="<<sigmaxEst<<std::endl;
+	return sigmaxEst;
+}
+

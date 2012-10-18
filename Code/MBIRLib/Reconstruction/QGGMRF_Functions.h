@@ -56,6 +56,7 @@ namespace QGGMRF {
       Real_t MRF_ALPHA;
       Real_t SIGMA_X_P_Q;
       Real_t SIGMA_X_Q;
+	  Real_t gamma;
   } QGGMRF_Values;
 
   /**
@@ -123,7 +124,7 @@ Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue
 
 
 
-
+void updatePriorModel(Real_t NewSigmaX,QGGMRF_Values* qggmrf_values);
 } /* end namespace QGGMRF */
 
 #endif /* QGGMRF_FUNCTIONS_H_ */

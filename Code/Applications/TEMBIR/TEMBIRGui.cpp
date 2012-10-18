@@ -507,6 +507,8 @@ void TEMBIRGui::setupGui()
     initialReconstructionPath->hide();
     initialReconstructionLabel->hide();
 	
+	//Uncomment next 3 lines to disable BF normalized recon
+	
 	//inputBrightFieldFilePath->hide();
 	//inputBrightFieldFilePathBtn->hide();
 	//label_37->hide();
