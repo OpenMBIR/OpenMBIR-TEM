@@ -538,7 +538,7 @@ font-size: 10px;
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>262</width>
+              <width>264</width>
               <height>898</height>
              </rect>
             </property>
@@ -1276,7 +1276,7 @@ font-size: 10px;
                <property name="minimumSize">
                 <size>
                  <width>0</width>
-                 <height>50</height>
+                 <height>0</height>
                 </size>
                </property>
                <property name="styleSheet">
