@@ -723,7 +723,8 @@ void ReconstructionEngine::execute()
 
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
 
-	  
+	
+	  	  
     if(m_AdvParams->JOINT_ESTIMATION)
     {
       err = jointEstimation(Weight, NuisanceParams, ErrorSino, Y_Est, cost);
@@ -745,13 +746,6 @@ void ReconstructionEngine::execute()
       }
 #endif//cost
 		
-	if(m_AdvParams->ESTIMATE_PRIOR)
-	{
-	/* Estimation of Prior model parameters*/
-	Real_t NewSigmaX=estimateSigmaX(ErrorSino, Weight);
-	QGGMRF::updatePriorModel(NewSigmaX,&m_QGGMRF_Values);
-	}	
-		
       if(0 == status && reconOuterIter >= 1) //&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
       {
         std::cout << "Exiting the code because status =0" << std::endl;
@@ -767,9 +761,18 @@ void ReconstructionEngine::execute()
       }
     } //Noise Model
 
+	  if(m_AdvParams->ESTIMATE_PRIOR)
+	  {
+		  /* Estimation of Prior model parameters*/
+		  Real_t NewSigmaX=estimateSigmaX(ErrorSino, Weight);
+		  m_TomoInputs->SigmaX = QGGMRF::updatePriorModel(NewSigmaX,&m_QGGMRF_Values);
+		  std::cout<<"New value of SigmaX = "<<m_TomoInputs->SigmaX<<std::endl;
+	  }  
 
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
 
+	
+	
   indent = "";
 #if DEBUG_COSTS
   cost->printCosts(std::cout);
@@ -1805,7 +1808,9 @@ Real_t ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorSino,Re
 {
 	Real_t sigmaxEst=0,temp=0;
 	Real_t delta;
-	for (int16_t i = 0; i < m_Geometry->N_z; i++)
+	int16_t zStart = 0.25*m_Geometry->N_z;
+	int16_t zEnd = 0.75*m_Geometry->N_z;
+	for (int16_t i = zStart; i < zEnd; i++)
 	{
 		for (int16_t j = 0; j < m_Geometry->N_x; j++)
 		{
@@ -1815,6 +1820,7 @@ Real_t ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorSino,Re
 				if(k + 1 < m_Geometry->N_y)
 				{
 					delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j, k + 1);
+				    delta*= m_TomoInputs->SigmaX;
 					temp += FILTER[INDEX_3(2,1,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 					
 				}
@@ -1824,15 +1830,18 @@ Real_t ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorSino,Re
 					if(k - 1 >= 0)
 					{
 						delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k - 1);
+						delta*= m_TomoInputs->SigmaX;
 						temp += FILTER[INDEX_3(0,1,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 					}
 					
 					delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k);
+					delta*= m_TomoInputs->SigmaX;
 					temp += FILTER[INDEX_3(1,1,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 					
 					if(k + 1 < m_Geometry->N_y)
 					{
 						delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k + 1);
+						delta*= m_TomoInputs->SigmaX;
 						temp += FILTER[INDEX_3(2,1,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 					}
 					
@@ -1844,15 +1853,18 @@ Real_t ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorSino,Re
 					if(j - 1 >= 0)
 					{
 						delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k);
+						delta*= m_TomoInputs->SigmaX;
 						temp += FILTER[INDEX_3(1,2,0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 					}
 					
 					delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k);
+					delta*= m_TomoInputs->SigmaX;
 					temp += FILTER[INDEX_3(1,2,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 					
 					if(j + 1 < m_Geometry->N_x)
 					{
 						delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k);
+						delta*= m_TomoInputs->SigmaX;
 						temp += FILTER[INDEX_3(1,2,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 					}
 					
@@ -1861,12 +1873,14 @@ Real_t ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorSino,Re
 						if(k - 1 >= 0)
 						{
 							delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k - 1);
+							delta*= m_TomoInputs->SigmaX;
 							temp += FILTER[INDEX_3(0,2,0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 						}
 						
 						if(k + 1 < m_Geometry->N_y)
 						{
 							delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k + 1);
+							delta*= m_TomoInputs->SigmaX;
 							temp += FILTER[INDEX_3(2,2,0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 						}
 						
@@ -1875,6 +1889,7 @@ Real_t ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorSino,Re
 					if(k - 1 >= 0)
 					{
 						delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k - 1);
+						delta*= m_TomoInputs->SigmaX;
 						temp += FILTER[INDEX_3(0,2,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 					}
 					
@@ -1883,12 +1898,14 @@ Real_t ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorSino,Re
 						if(k - 1 >= 0)
 						{
 							delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k - 1);
+							delta*= m_TomoInputs->SigmaX;
 							temp += FILTER[INDEX_3(0,2,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 						}
 						
 						if(k + 1 < m_Geometry->N_y)
 						{
 							delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k + 1);
+							delta*= m_TomoInputs->SigmaX;
 							temp += FILTER[INDEX_3(2,2,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 						}
 					}
@@ -1896,15 +1913,18 @@ Real_t ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorSino,Re
 					if(k + 1 < m_Geometry->N_y)
 					{
 						delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k + 1);
+						delta*= m_TomoInputs->SigmaX;
 						temp += FILTER[INDEX_3(2,2,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 					}
 				}
 			}
 		}
 	}
-	Real_t NumEntries = m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z;
+	Real_t NumEntries = m_Geometry->N_x*m_Geometry->N_y*(zEnd-zStart+1);
     sigmaxEst = temp/(NumEntries);
-	std::cout<<"Value of sigmax="<<sigmaxEst<<std::endl;
+	std::cout<<"Value of sigmaX = "<<pow(sigmaxEst,1.0/m_TomoInputs->p)<<std::endl;
+	std::cout<<"Current value of sigmaX = "<<m_TomoInputs->SigmaX<<std::endl;
+	std::cout<<"Ratio = "<<m_TomoInputs->SigmaX/pow(sigmaxEst,1.0/m_TomoInputs->p)<<std::endl;
 	return sigmaxEst;
 }
 
