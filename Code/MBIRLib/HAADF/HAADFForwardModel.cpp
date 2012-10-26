@@ -1413,8 +1413,12 @@ Real_t HAADFForwardModel::estimateBraggThresold(SinogramPtr sinogram, RealVolume
 				counts++;
 			}
 	std::cout<<"Num Elts"<<counts<<std::endl;
+	std::cout<<"Num Elts to reject ="<<NumEltsReject<<std::endl;
 	
-	uint32_t max_index=0;
+	EstBraggThresh =sqrt(RandomizedSelect(Ratio,0, counts-1, NumElts - NumEltsReject));
+	std::cout<<"Bragg Thresh estimated using Randomized select"<<EstBraggThresh<<std::endl;	
+	
+	/*uint32_t max_index=0;
 	for(uint32_t j =0; j < NumEltsReject;j++)
 	{
 	Real_t max=-INFINITY;	
@@ -1430,6 +1434,57 @@ Real_t HAADFForwardModel::estimateBraggThresold(SinogramPtr sinogram, RealVolume
 	Ratio->d[max_index]=temp;	
 	}
 	EstBraggThresh = sqrt(Ratio->d[NumEltsReject-1]);
+	std::cout<<"Bragg Thresh estimated using Insertion sort = "<<EstBraggThresh<<std::endl;	
+	*/
 	return EstBraggThresh;
 }
+
+Real_t HAADFForwardModel::RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i)
+{
+	if (p == r)
+    {
+		return A->d[p];
+    }
+	uint32_t q = RandomizedPartition(A, p, r);
+	uint32_t k = q - p + 1;
+	if (i == k)
+    {
+		return A->d[q];
+    }
+	else if  (i < k)
+    {
+		return RandomizedSelect(A, p, q-1, i) ;
+    }
+	else return RandomizedSelect(A, q+1, r, i - k);
+}
+uint32_t HAADFForwardModel::Partition(RealArrayType::Pointer A,uint32_t p,uint32_t r)
+{
+	Real_t x=A->d[r],temp;
+	uint32_t i=p-1,j;
+	for(j=p;j<r;j++)
+    {
+		if(A->d[j]<=x)
+        {
+			i++;
+			temp=A->d[i];
+			A->d[i]=A->d[j];
+			A->d[j]=temp;
+        }
+    }
+	temp=A->d[i+1];
+	A->d[i+1]=A->d[r];
+	A->d[r]=temp;
+	return i+1;
+	
+}
+uint32_t HAADFForwardModel::RandomizedPartition(RealArrayType::Pointer A,uint32_t p,uint32_t r)
+{
+	Real_t temp;
+	uint32_t j = p + rand()%(r-p+1);
+	temp = A->d[r];
+	A->d[r] = A->d[j];
+	A->d[j] = temp;	
+	return Partition(A, p, r);
+}
+
 #endif //BF Recon

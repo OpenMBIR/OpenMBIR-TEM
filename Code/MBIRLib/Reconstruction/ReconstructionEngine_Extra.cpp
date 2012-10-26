@@ -156,6 +156,7 @@ void ReconstructionEngine::computeOriginalXDims(uint16_t &cropStart, uint16_t &c
       break;
     }
   }
+	cropEnd+=1;	
 }
 
 // -----------------------------------------------------------------------------
