@@ -197,10 +197,15 @@ class HAADFForwardModel : public Observable
 	
 	void printRatioSelected(SinogramPtr sinogram);
 	
-	void writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geometry);
+	void writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino);
 	
+	Real_t estimateBraggThresold(SinogramPtr sinogram,RealVolumeType::Pointer ErrorSino,Real_t percentage);
 	//void setUpBraggThreshold(Real_t Threshold);
 	
+	//Real_t estimateBraggThresold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage);
+	uint32_t Partition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
+	Real_t RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i);
+	uint32_t RandomizedPartition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
 #endif
 
   
@@ -254,7 +259,6 @@ class HAADFForwardModel : public Observable
     Real_t MRF_P;
     Real_t SIGMA_X_P;
 #endif
-
 
     HAADFForwardModel(const HAADFForwardModel&); // Copy Constructor Not Implemented
     void operator=(const HAADFForwardModel&); // Operator '=' Not Implemented
