@@ -314,6 +314,10 @@ void HAADFForwardModel::gainAndOffsetInitialization(uint16_t nTheta)
 void HAADFForwardModel::weightInitialization(size_t dims[3])
 {
   m_Weight = RealVolumeType::New(dims, "Weight");
+#ifdef BF_RECON
+	//This variable selects which entries to retain in the sinogram
+  m_Selector = UInt8VolumeType::New(dims, "Selector"); 
+#endif //BF RECON
 }
 
 
@@ -455,10 +459,14 @@ void HAADFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVol
 		  m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
 #endif //BF_RECON
 		  
-		  
 #else
         m_Weight->d[weight_idx] = 1.0;
 #endif //IDENTITY_NOISE_MODEL endif
+		  
+#ifdef BF_RECON
+		m_Selector->d[weight_idx]=1;//By default all enties are chosen
+#endif //BF_RECON
+		  
 #ifdef FORWARD_PROJECT_MODE
         temp=yEstimate->d[i_theta][i_r][i_t]/m_I_0->d[i_theta];
         fwrite(&temp,sizeof(Real_t),1,Fp6);
@@ -495,7 +503,7 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
 {
   std::stringstream ss;
   std::string indent("  ");
-  if(getBF_Flag() == false)
+#ifndef BF_RECON
   {
     Real_t AverageI_kUpdate = 0; //absolute sum of the gain updates
     Real_t AverageMagI_k = 0; //absolute sum of the initial gains
@@ -697,41 +705,45 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
       //std::cout << "Ratio of change in Delta_k " << AverageDelta_kUpdate / AverageMagDelta_k << std::endl;
     }
   }
-  else
+#else 
   {
-
-    for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
-    {
       Real_t num_sum = 0;
       Real_t den_sum = 0;
       Real_t alpha = 0;
+	  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	  {
       for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
       {
         for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
         {
+		  if(m_Selector->getValue(i_theta, i_r, i_t) == 1)
+		  {
           num_sum += (errorSinogram->getValue(i_theta, i_r, i_t) * m_Weight->getValue(i_theta, i_r, i_t));
           den_sum += m_Weight->getValue(i_theta, i_r, i_t);
+		  }
         }
       }
+	  }
       alpha = num_sum / den_sum;
 
-      for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
-        {
+	  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	  {	  
+	     for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
+         {
+           for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
+           {
           errorSinogram->deleteFromValue(alpha, i_theta, i_r, i_t);
-        }
-      }
-
+           }
+         }
       m_Mu->d[i_theta] += alpha;
-      if(getVeryVerbose())
-      {
-        std::cout << "Theta: " << i_theta << " Mu: " << m_Mu->d[i_theta] << std::endl;
-      }
-    }
-
-
-  } //BFflag = true
+	  if(getVeryVerbose())
+	  {
+	    std::cout << "Theta: " << i_theta << " Mu: " << m_Mu->d[i_theta] << std::endl;
+	  }
+	  }
+     		  
+  } 
+#endif //BF_RECON
   //return 0;
 }
 
@@ -783,6 +795,9 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
       {
         size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
         size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
+#ifdef BF_RECON
+		if(m_Selector->d[weight_idx] == 1)  
+#endif //BF_RECON
         sum += (ErrorSino->d[error_idx] * ErrorSino->d[error_idx] * m_Weight->d[weight_idx]); //Changed to only account for the counts
       }
     }
@@ -862,6 +877,27 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
   notify("Update Weights Complete", 0, Observable::UpdateProgressMessage);
 }
 
+#ifdef BF_RECON
+
+// -----------------------------------------------------------------------------
+// Updating the boolean selector based on the error and weights
+// -----------------------------------------------------------------------------
+void HAADFForwardModel::updateSelector(SinogramPtr sinogram,
+					RealVolumeType::Pointer ErrorSino)
+{
+for (uint16_t i_theta = 0; i_theta < sinogram->N_theta;i_theta++)
+	for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
+		for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
+		{
+			size_t idx = m_Weight->calcIndex(i_theta, i_r, i_t);
+			if(ErrorSino->d[idx] * ErrorSino->d[idx] * m_Weight->d[idx] < m_BraggThreshold*m_BraggThreshold)
+				m_Selector->d[idx] = 1;
+			else 
+				m_Selector->d[idx] = 0;
+		}
+
+}
+#endif
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -1115,377 +1151,6 @@ int HAADFForwardModel::createInitialVariancesData(SinogramPtr sinogram)
   return 0;
 }
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-uint8_t HAADFForwardModel::updateVoxels(SinogramPtr sinogram,
-                                        GeometryPtr geometry,
-                                        int16_t OuterIter,
-                                        int16_t Iter,
-                                        UInt8Image_t::Pointer VisitCount,
-                                        std::vector<HAADFAMatrixCol::Pointer> &TempCol,
-                                        RealVolumeType::Pointer ErrorSino,
-                                        std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
-                                        CostData::Pointer cost)
-{
-	size_t dims[3];
-	dims[0] = geometry->N_z; //height
-	dims[1] = geometry->N_x; //width
-	dims[2] = 0;
-	
-	RealImageType::Pointer magUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
-	RealImageType::Pointer filtMagUpdateMap = RealImageType::New(dims, "Filter Update Map for voxel lines");
-	UInt8Image_t::Pointer magUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");
-	
-#if ROI
-	UInt8Image_t::Pointer mask;
-	dims[0] = geometry->N_z;
-	dims[1] = geometry->N_x;
-	mask = UInt8Image_t::New(dims, "Mask");
-	initializeROIMask(sinogram, geometry, mask);
-#endif
-	
-	unsigned int updateType = VoxelUpdateType::RegularRandomOrderUpdate;
-#ifdef NHICD
-	if(0 == reconInnerIter % 2)
-	{
-		updateType = VoxelUpdateType::HomogeniousUpdate;
-	}
-	else
-	{
-		updateType = VoxelUpdateType::NonHomogeniousUpdate;
-	}
-#else
-	
-#endif//NHICD end if
-	
-#if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
-	tbb::task_scheduler_init init;
-	int m_NumThreads = init.default_num_threads();
-#else
-	int m_NumThreads = 1;
-#endif
-	
-	std::stringstream ss;
-	uint8_t exit_status = 1; //Indicates normal exit ; else indicates to stop inner iterations
-	uint16_t subIterations = 1;
-	std::string indent("    ");
-	uint8_t err = 0;
-	
-	if(updateType == VoxelUpdateType::RegularRandomOrderUpdate)
-	{
-		ss << indent << "Regular Random Order update of Voxels" << std::endl;
-	}
-	else if(updateType == VoxelUpdateType::HomogeniousUpdate)
-	{
-		ss << indent << "Homogenous update of voxels" << std::endl;
-	}
-	else if(updateType == VoxelUpdateType::NonHomogeniousUpdate)
-	{
-		ss << indent << "Non Homogenous update of voxels" << std::endl;
-		subIterations = NUM_NON_HOMOGENOUS_ITER;
-	}
-	else
-	{
-		ss << indent << "Unknown Voxel Update Type. Returning Now" << std::endl;
-		notify(ss.str(), 0, Observable::UpdateErrorMessage);
-		return exit_status;
-	}
-	
-	if(getVerbose())
-	{
-		std::cout << ss.str() << std::endl;
-	}
-	
-	Real_t NH_Threshold = 0.0;
-	int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
-	
-	for (uint16_t NH_Iter = 0; NH_Iter < subIterations; ++NH_Iter)
-	{
-		ss.str("");
-		ss << "Outer Iteration: " << OuterIter << " of " << m_TomoInputs->NumOuterIter;
-		ss << "   Inner Iteration: " << Iter << " of " << m_TomoInputs->NumIter;
-		ss << "   SubLoop: " << NH_Iter << " of " << subIterations;
-		float currentLoop = static_cast<float>(OuterIter * m_TomoInputs->NumIter + Iter);
-		notify(ss.str(), currentLoop / totalLoops * 100.0f, Observable::UpdateProgressValueAndMessage);
-		if(updateType == VoxelUpdateType::NonHomogeniousUpdate)
-		{
-			//Compute VSC and create a map of pixels that are above the threshold value
-			ComputeVSC(magUpdateMap, filtMagUpdateMap, geometry);
-			START_TIMER;
-			NH_Threshold = SetNonHomThreshold(geometry, magUpdateMap);
-			STOP_TIMER;
-			PRINT_TIME("  SetNonHomThreshold");
-			std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
-			//Use  filtMagUpdateMap  to find MagnitudeUpdateMask
-			//std::cout << "Completed Calculation of filtered magnitude" << std::endl;
-			//Calculate the threshold for the top ? % of voxel updates
-		}
-		
-		//printf("Iter %d\n",Iter);
-#if ROI
-		//variables used to stop the process
-		Real_t AverageUpdate = 0;
-		Real_t AverageMagnitudeOfRecon = 0;
-#endif
-		
-		START_TIMER;
-#if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
-		std::vector<int> yCount(m_NumThreads, 0);
-		int t = 0;
-		for (int y = 0; y < geometry->N_y; ++y)
-		{
-			yCount[t]++;
-			++t;
-			if(t == m_NumThreads)
-			{
-				t = 0;
-			}
-		}
-		
-		uint16_t yStart = 0;
-		uint16_t yStop = 0;
-		
-		tbb::task_list taskList;
-		Real_t* averageUpdate = (Real_t*)(malloc(sizeof(Real_t) * m_NumThreads));
-		::memset(averageUpdate, 0, sizeof(Real_t) * m_NumThreads);
-		Real_t* averageMagnitudeOfRecon = (Real_t*)(malloc(sizeof(Real_t) * m_NumThreads));
-		::memset(averageMagnitudeOfRecon, 0, sizeof(Real_t) * m_NumThreads);
-		for (int t = 0; t < m_NumThreads; ++t)
-		{
-			yStart = yStop;
-			yStop = yStart + yCount[t];
-			if(yStart == yStop)
-			{
-				continue;
-			} // Processor has NO tasks to run because we have less Y's than cores
-			
-			// std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
-			UpdateYSlice& a =
-			*new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, geometry, OuterIter, Iter, sinogram, TempCol, ErrorSino, 
-														   VoxelLineResponse, this, mask, magUpdateMap, magUpdateMask, 
-														   updateType, NH_Threshold, averageUpdate
-														   + t, averageMagnitudeOfRecon + t, m_AdvParams->ZERO_SKIPPING, m_QGGMRF_Values);
-			taskList.push_back(a);
-		}
-		
-		tbb::task::spawn_root_and_wait(taskList);
-		// Now sum up some values
-		for (int t = 0; t < m_NumThreads; ++t)
-		{
-			AverageUpdate += averageUpdate[t];
-			AverageMagnitudeOfRecon += averageMagnitudeOfRecon[t];
-		}
-		free(averageUpdate);
-		free(averageMagnitudeOfRecon);
-		
-#else
-		uint16_t yStop = geometry->N_y;
-		uint16_t yStart = 0;
-		UpdateYSlice yVoxelUpdate(yStart, yStop,
-								  geometry,
-								  OuterIter, Iter, sinogram,
-								  m_BFSinogram, TempCol,
-								  ErrorSino, Weight, VoxelLineResponse,
-								  NuisanceParams, Mask,
-								  magUpdateMap, MagUpdateMask,
-								  &m_QGGMRF_Values,
-								  updateType,
-								  NH_Threshold,
-								  &AverageUpdate,
-								  &AverageMagnitudeOfRecon,
-								  m_AdvParams->ZERO_SKIPPING);
-		
-		yVoxelUpdate.execute();
-#endif
-		/* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */STOP_TIMER;
-		ss.str("");
-		ss << "Inner Iter: " << Iter << " Voxel Update";
-		PRINT_TIME(ss.str());
-		
-		
-#if ROI
-		if(getVerbose())
-		{
-			std::cout << "Average Update " << AverageUpdate << std::endl;
-			std::cout << "Average Mag " << AverageMagnitudeOfRecon << std::endl;
-		}
-		if(AverageMagnitudeOfRecon > 0)
-		{
-			if(getVerbose())
-			{
-				std::cout << Iter + 1 << " " << AverageUpdate / AverageMagnitudeOfRecon << std::endl;
-			}
-			//Use the stopping criteria if we are performing a full update of all voxels
-			if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != VoxelUpdateType::NonHomogeniousUpdate)
-			{
-				std::cout << "This is the terminating point " << Iter << std::endl;
-				m_TomoInputs->StopThreshold *= m_AdvParams->THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
-				std::cout << "New threshold" << m_TomoInputs->StopThreshold << std::endl;
-				exit_status = 0;
-				break;
-			}
-		}
-#endif//ROI end
-#ifdef WRITE_INTERMEDIATE_RESULTS
-		
-		if(Iter == NumOfWrites*WriteCount)
-		{
-			WriteCount++;
-			sprintf(buffer,"%d",Iter);
-			sprintf(Filename,"ReconstructedObjectAfterIter");
-			strcat(Filename,buffer);
-			strcat(Filename,".bin");
-			Fp3 = fopen(Filename, "w");
-			TempPointer = geometry->Object;
-			NumOfBytesWritten=fwrite(&(geometry->Object->d[0][0][0]), sizeof(Real_t),geometry->N_x*geometry->N_y*geometry->N_z, Fp3);
-			printf("%d\n",NumOfBytesWritten);
-			
-			fclose(Fp3);
-		}
-#endif
-		
-		if(getCancel() == true)
-		{
-			setErrorCondition(err);
-			return exit_status;
-		}
-		
-	}
-	
-	return exit_status;
-	
-}
-
-
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void HAADFForwardModel::ComputeVSC(RealImageType::Pointer magUpdateMap, RealImageType::Pointer filtMagUpdateMap, GeometryPtr geometry)
-{
-  Real_t filter_op = 0;
-  // int err = 0;
-  FILE *Fp = NULL;
-  MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::MagnitudeMapFile);
-  if(errno < 0)
-  {
-
-  }
-  fwrite(magUpdateMap->getPointer(0, 0), geometry->N_x * geometry->N_z, sizeof(Real_t), Fp);
-  fclose(Fp);
-
-  // std::cout<<"Starting to filter the magnitude"<<std::endl;
-  // std::cout<<geometry->N_x<<" " <<geometry->N_z<<std::endl;
-  for (int16_t i = 0; i < geometry->N_z; i++)
-  {
-    for (int16_t j = 0; j < geometry->N_x; j++)
-    {
-      filter_op = 0;
-      for (int16_t p = -2; p <= 2; p++)
-      {
-        for (int16_t q = -2; q <= 2; q++)
-        {
-          if(i + p >= 0 && i + p < geometry->N_z && j + q >= 0 && j + q < geometry->N_x)
-          {
-            filter_op += k_HammingWindow[p + 2][q + 2] * magUpdateMap->getValue(i + p, j + q);
-          }
-        }
-      }
-      filtMagUpdateMap->setValue(filter_op, i, j);
-    }
-  }
-
-  for (int16_t i = 0; i < geometry->N_z; i++)
-  {
-    for (int16_t j = 0; j < geometry->N_x; j++)
-    {
-      //magUpdateMap->d[i][j]=filtMagUpdateMap->d[i][j];
-      magUpdateMap->setValue(filtMagUpdateMap->getValue(i, j), i, j);
-    }
-  }
-
-  MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::FilteredMagMapFile);
-  if(errno < 0)
-  {
-
-  }
-  fwrite(filtMagUpdateMap->getPointer(0, 0), geometry->N_x * geometry->N_z, sizeof(Real_t), Fp);
-  fclose(Fp);
-}
-
-// -----------------------------------------------------------------------------
-// Sort the entries of filtMagUpdateMap and set the threshold to be ? percentile
-// -----------------------------------------------------------------------------
-Real_t HAADFForwardModel::SetNonHomThreshold(GeometryPtr geometry, RealImageType::Pointer magUpdateMap)
-{
-  size_t dims[2] =
-  { geometry->N_z * geometry->N_x, 0 };
-  RealArrayType::Pointer TempMagMap = RealArrayType::New(dims, "TempMagMap");
-
-  uint32_t ArrLength = geometry->N_z * geometry->N_x;
-  Real_t threshold;
-
-  //Copy into a linear list for easier partial sorting
-  for (uint32_t i = 0; i < geometry->N_z; i++)
-    for (uint32_t j = 0; j < geometry->N_x; j++)
-    {
-      //TempMagMap->d[i*geometry->N_x+j]=i*geometry->N_x+j;
-      TempMagMap->d[i * (uint32_t)geometry->N_x + j] = magUpdateMap->getValue(i, j);
-    }
-
-  uint16_t percentile_index = ArrLength / NUM_NON_HOMOGENOUS_ITER;
-  //Partial selection sort
-
-  Real_t max;
-  uint32_t max_index;
-  for (uint32_t i = 0; i <= percentile_index; i++)
-  {
-    max = TempMagMap->d[i];
-    max_index = i;
-    for (uint32_t j = i + 1; j < ArrLength; j++)
-    {
-      if(TempMagMap->d[j] > max)
-      {
-        max = TempMagMap->d[j];
-        max_index = j;
-      }
-    }
-    Real_t temp = TempMagMap->d[i];
-    TempMagMap->d[i] = TempMagMap->d[max_index];
-    TempMagMap->d[max_index] = temp;
-  }
-
-  threshold = TempMagMap->d[percentile_index];
-  return threshold;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void HAADFForwardModel::initializeROIMask(SinogramPtr sinogram, GeometryPtr geometry, UInt8Image_t::Pointer Mask)
-{
-  Real_t x = 0.0;
-  Real_t z = 0.0;
-  for (uint16_t i = 0; i < geometry->N_z; i++)
-  {
-    for (uint16_t j = 0; j < geometry->N_x; j++)
-    {
-      x = geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
-      z = geometry->z0 + ((Real_t)i + 0.5) * m_TomoInputs->delta_xz;
-      if(x >= -(sinogram->N_r * sinogram->delta_r) / 2 && x <= (sinogram->N_r * sinogram->delta_r) / 2 && z >= -m_TomoInputs->LengthZ / 2
-          && z <= m_TomoInputs->LengthZ / 2)
-      {
-        Mask->setValue(1, i, j);
-      }
-      else
-      {
-        Mask->setValue(0, i, j);
-      }
-    }
-  }
-}
-
 
 // -----------------------------------------------------------------------------
 //
@@ -1505,7 +1170,10 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 			for (int16_t k = 0; k < sinogram->N_t; k++)
 			{
 				errSinoValue = ErrorSino->getValue(i, j, k);
-				cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k));
+				if(m_Selector->getValue(i,j,k) == 1)
+				    cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k));
+				else
+					cost += m_BraggThreshold*m_BraggThreshold;	
 			}
 		}
 	}
@@ -1556,7 +1224,10 @@ void HAADFForwardModel::computeTheta(size_t Index,
 		uint32_t vlrCount = VoxelLineResponse[xzSliceIdx]->index[0] + VoxelLineResponse[xzSliceIdx]->count;
 		for (uint32_t i_t = VoxelLineResponse[xzSliceIdx]->index[0]; i_t < vlrCount; i_t++)
 		{
+
 			size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
+			if(m_Selector->d[error_idx] == 1)
+			{
 			Real_t ProjectionEntry = kConst0 * VoxelLineResponse[xzSliceIdx]->values[VoxelLineAccessCounter];
 			if(getBF_Flag() == false)
 			{
@@ -1570,6 +1241,7 @@ void HAADFForwardModel::computeTheta(size_t Index,
 				Thetas->d[0] += (ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
 			}
 			VoxelLineAccessCounter++;
+			}
 		}
 	}	
 	Thetas->d[0]*=-1;
@@ -1608,12 +1280,27 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 				ErrorSino->d[error_idx] -= (getBFSinogram()->counts->d[error_idx] * kConst2);
 			}
 			VoxelLineAccessCounter++;
+#ifdef BF_RECON
+         if(ErrorSino->d[error_idx]*ErrorSino->d[error_idx]*m_Weight->d[error_idx] < m_BraggThreshold*m_BraggThreshold)
+			 m_Selector->d[error_idx] = 1;
+			else {
+			m_Selector->d[error_idx] = 0;	
+			}
+#endif
 		}
 	}
 }
 
 
 #ifdef BF_RECON
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+/*void HAADFForwardModel::setUpBraggThreshold(Real_t Threshold)
+{
+	m_BraggThreshold = Threshold;
+}*/
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -1630,8 +1317,8 @@ void HAADFForwardModel::processRawCounts(SinogramPtr sinogram)
                 sinogram->counts->d[counts_idx] += BF_OFFSET;
                 sinogram->counts->d[counts_idx] = -log(sinogram->counts->d[counts_idx]/BF_MAX);
 				
-                if(sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
-                    sinogram->counts->d[counts_idx] = 0;
+                //if(sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
+                  //  sinogram->counts->d[counts_idx] = 0;
 				
                 mean+=sinogram->counts->d[counts_idx];
             }
@@ -1639,6 +1326,69 @@ void HAADFForwardModel::processRawCounts(SinogramPtr sinogram)
     }
     mean/=(sinogram->N_theta*sinogram->N_r*sinogram->N_t);
     std::cout<<"Mean log value ="<<mean<<std::endl;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void HAADFForwardModel::printRatioSelected(SinogramPtr sinogram)
+{
+	Real_t sum=0;
+    for (int16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++) //slice index
+    {
+        for (int16_t i_r = 0; i_r < sinogram->N_r; i_r++)
+        {
+            for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
+            {
+			    size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
+				sum+=m_Selector->d[counts_idx];
+			}
+		}
+	}
+	
+	std::cout<<"Ratio of singoram entries used="<<sum/(sinogram->N_theta*sinogram->N_r*sinogram->N_t)<<std::endl;
+}
+
+void HAADFForwardModel::writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geometry)
+{
+	const std::string mrcFile="Selector.mrc";
+	geometry->N_x = sinogram->N_r;
+	geometry->N_y = sinogram->N_t;
+	geometry->N_z = sinogram->N_theta;
+	geometry->Object = sinogram->counts;
+	for(uint32_t i_theta = 0; i_theta <  geometry->N_z; i_theta++)
+	   for(uint32_t i_r = 0; i_r < geometry->N_x; i_r++)
+		  for(uint32_t i_t = 0; i_t < geometry->N_y; i_t++)
+		  {
+			size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
+			Real_t value = m_Selector->d[counts_idx];
+			counts_idx = sinogram->counts->calcIndex(geometry->N_z-1-i_theta, i_r, i_t);  
+			geometry->Object->d[counts_idx] = value;			  
+		  }
+	uint16_t cropStart=0;
+	uint16_t cropEnd = geometry->N_x;
+	/* Write the output to the MRC File */
+	std::stringstream ss;
+	ss.str("");
+	ss << "Writing selector MRC file to '" << mrcFile << "'";
+	notify(ss.str(), 0, Observable::UpdateProgressMessage);
+	
+	MRCWriter::Pointer mrcWriter = MRCWriter::New();
+	mrcWriter->setOutputFile(mrcFile);
+	mrcWriter->setGeometry(geometry);
+	mrcWriter->setAdvParams(m_AdvParams);
+	mrcWriter->setXDims(cropStart, cropEnd);
+	mrcWriter->setYDims(0, geometry->N_y);
+	mrcWriter->setZDims(0, geometry->N_z);
+	mrcWriter->setObservers(getObservers());
+	mrcWriter->execute();
+	if(mrcWriter->getErrorCondition() < 0)
+	{
+		ss.str("");
+		ss << "Error writing MRC file\n    '" << mrcFile << "'" << std::endl;
+		setErrorCondition(mrcWriter->getErrorCondition());
+		notify(ss.str(), 0, Observable::UpdateErrorMessage);
+	}
 }
 
 #endif //BF Recon

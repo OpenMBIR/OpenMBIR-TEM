@@ -65,6 +65,11 @@
 #ifndef _HAADFFORWARDMODEL_H_
 #define _HAADFFORWARDMODEL_H_
 
+#include "MBIRLib/MBIRLib.h"
+#include "MBIRLib/Common/AbstractFilter.h"
+#include "MBIRLib/Common/Observer.h"
+#include "MBIRLib/IOFilters/MRCWriter.h"
+
 #include "MXA/Common/MXASetGetMacros.h"
 #include "MBIRLib/Common/Observable.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
@@ -113,7 +118,8 @@ class HAADFForwardModel : public Observable
     MXA_INSTANCE_PROPERTY(Real_t, DefaultOffset)
     MXA_INSTANCE_PROPERTY(Real_t, DefaultVariance)
     MXA_INSTANCE_PROPERTY(bool, UseDefaultOffset)
-
+	MXA_INSTANCE_PROPERTY(Real_t, BraggThreshold)
+    
 
 
       // These are the Nuisance Parameters that we need to solve for
@@ -122,7 +128,8 @@ class HAADFForwardModel : public Observable
     MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Alpha) //Noise variance refinement factor
 
     MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Weight) //This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
-
+    MXA_INSTANCE_PROPERTY(UInt8VolumeType::Pointer, Selector); //This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
+	
     void setQGGMRFValues(QGGMRF::QGGMRF_Values* qggmrf_values);
 
     void printNuisanceParameters(SinogramPtr sinogram);
@@ -140,11 +147,7 @@ class HAADFForwardModel : public Observable
 
     void costInitialization(SinogramPtr sinogram);
 
-  //  void initializePriorModel(TomoInputsPtr m_TomoInputs);
-
     int initializeBrightFieldData(SinogramPtr sinogram);
-
-    void initializeROIMask(SinogramPtr sinogram, GeometryPtr geometry, UInt8Image_t::Pointer Mask);
 
     int createNuisanceParameters(SinogramPtr sinogram);
 
@@ -167,14 +170,6 @@ class HAADFForwardModel : public Observable
      *
      */
   
- 	uint8_t updateVoxels(SinogramPtr sinogram, GeometryPtr geometry,
-                         int16_t OuterIter, int16_t Iter,
-                            UInt8Image_t::Pointer VisitCount,
-                            std::vector<HAADFAMatrixCol::Pointer> &TempCol,
-                            RealVolumeType::Pointer errorSinogram,
-                            std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
-                            CostData::Pointer cost );
-  
 
     /**
      *
@@ -196,20 +191,19 @@ class HAADFForwardModel : public Observable
                         RealVolumeType::Pointer yEstimate, CostData::Pointer cost);
 	void updateWeights(SinogramPtr sinogram,
                        RealVolumeType::Pointer errorSinogram);
-    
+#ifdef BF_RECON
+	void updateSelector(SinogramPtr sinogram,
+                       RealVolumeType::Pointer errorSinogram);
+	
+	void printRatioSelected(SinogramPtr sinogram);
+	
+	void writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geometry);
+	
+	//void setUpBraggThreshold(Real_t Threshold);
+	
+#endif
 
-    /**
-     * Code to take the magnitude map and filter it with a hamming window
-     * Returns the filtered magnitude map
-     */
-    void ComputeVSC(RealImageType::Pointer magUpdateMap,
-                    RealImageType::Pointer filtMagUpdateMap,
-                    GeometryPtr geometry);
-
-    //Sort the entries of filtMagUpdateMap and set the threshold to be ? percentile
-    Real_t SetNonHomThreshold(GeometryPtr geometry, RealImageType::Pointer magUpdateMap);
-
-
+  
     void writeNuisanceParameters(SinogramPtr sinogram);
 
     void writeSinogramFile(SinogramPtr sinogram,
@@ -251,12 +245,9 @@ class HAADFForwardModel : public Observable
     RealArrayType::Pointer m_D1;
     RealArrayType::Pointer m_D2; //hold the intermediate values needed to compute optimal mu_k
 
-
     Real_t k_HammingWindow[5][5];
 	Real_t Theta[2]; //Theta1 and Theta2 in the optimization
  
-
-
 #ifdef EIMTOMO_USE_QGGMRF
     QGGMRF::QGGMRF_Values* m_QGGMRF_Values;
 #else

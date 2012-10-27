@@ -247,7 +247,7 @@ void ReconstructionEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
   v->BEAM_RESOLUTION = 512;
   v->AREA_WEIGHTED = 1;
   v->THRESHOLD_REDUCTION_FACTOR = 1;
-  v->JOINT_ESTIMATION = 0;
+  v->JOINT_ESTIMATION = 1;
   v->ZERO_SKIPPING = 1;
   v->NOISE_ESTIMATION = 1;
 
@@ -406,6 +406,7 @@ void ReconstructionEngine::execute()
   QGGMRF::initializePriorModel(m_TomoInputs, &qggmrf_values);
   // Set the prior model parameters into the Forward Model
   m_ForwardModel->setQGGMRFValues(&qggmrf_values);
+  //m_ForwardModel->setBraggThreshold(DefBraggThreshold);
 
   //globals assosiated with finding the optimal gain and offset parameters
 
@@ -549,44 +550,55 @@ void ReconstructionEngine::execute()
 #ifdef FORWARD_PROJECT_MODE
   return 0; //exit the program once we finish forward projecting the object
 #endif//Forward Project mode
+	
 
 #ifdef COST_CALCULATE
 	err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
 #endif //Cost calculation endif
-	
+
 //  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
   //Loop through every voxel updating it by solving a cost function
+  Real_t TempBraggValue = m_ForwardModel->getBraggThreshold();	
+	std::cout<<"Bragg threshold ="<<TempBraggValue<<std::endl;	
+ 	
   for (int16_t reconOuterIter = 0; reconOuterIter < m_TomoInputs->NumOuterIter; reconOuterIter++)
   {
     ss.str(""); // Clear the string stream
     indent = "";
 
+		  
     //The first time we may need to update voxels multiple times and then on just optimize over I,d,sigma,f once each outer loop
-    if(reconOuterIter != 0)
+    if(reconOuterIter > 0)
     {
       m_TomoInputs->NumIter = 1;
+	  m_ForwardModel->setBraggThreshold(TempBraggValue);	
     }
+	else 
+	{
+	  if(m_TomoInputs->NumOuterIter > 1)
+	  m_ForwardModel->setBraggThreshold(DefBraggThreshold);
+	  else
+	  m_ForwardModel->setBraggThreshold(TempBraggValue);	  
+	}
 
     for (int16_t reconInnerIter = 0; reconInnerIter < m_TomoInputs->NumIter; reconInnerIter++)
     {
+	
+	 //Prints the ratio of the sinogram entries selected
+	  m_ForwardModel->printRatioSelected(m_Sinogram);	
+		
       ss.str("");
       ss << "Outer Iterations: " << reconOuterIter << "/" << m_TomoInputs->NumOuterIter << " Inner Iterations: " << reconInnerIter << "/" << m_TomoInputs->NumIter << std::endl;
 
       indent = "    ";
       // This is all done PRIOR to calling what will become a method
 
-
       // This could contain multiple Subloops also
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
-      /*status = m_ForwardModel->updateVoxels(m_Sinogram, m_Geometry,
-                                            reconOuterIter, reconInnerIter,
-                                             visitCount, tempCol,
-                                             errorSino, voxelLineResponse,
-                                             cost);*/
-		status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,
+	  status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,
 							errorSino, voxelLineResponse,cost,&qggmrf_values);
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
-
+		
       if(status == 0)
       {
         break; //stop inner loop if we have hit the threshold value for x
@@ -594,12 +606,6 @@ void ReconstructionEngine::execute()
       // Check to see if we are canceled.
       if (getCancel() == true) { setErrorCondition(-999); return; }
 
-      // Write out the VTK file
-  //    {
-  //      ss.str("");
-  //      ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << ScaleOffsetCorrection::ReconstructedVtkFile;
-  //      writeVtkFile(ss.str());
-  //    }
       // Write out the MRC File
       {
         ss.str("");
@@ -614,7 +620,7 @@ void ReconstructionEngine::execute()
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
 		if(err < 0)
 		{
-			std::cout<<"Cost went up after gain+offset update"<<std::endl;
+			std::cout<<"Cost went up after voxel update"<<std::endl;
 			break;
 		}
 		/**************************************************************************/
@@ -629,9 +635,14 @@ void ReconstructionEngine::execute()
 		break;
 	}
 	  
+	if(m_TomoInputs->NumOuterIter > 1) //Dont update any parameters if we just have one inner iteration
+	{
     if(m_AdvParams->JOINT_ESTIMATION)
     {
       m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
+#ifdef BF_RECON
+	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
+#endif
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
@@ -645,9 +656,13 @@ void ReconstructionEngine::execute()
 	
     } //Joint estimation endif
 
+	/*
     if(m_AdvParams->NOISE_ESTIMATION)
     {
       m_ForwardModel->updateWeights(m_Sinogram, errorSino);
+#ifdef BF_RECON
+	  m_ForwardModel->updateSelector(m_Sinogram, errorSino);
+#endif //BF_RECON
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
@@ -657,7 +672,9 @@ void ReconstructionEngine::execute()
 			break;
 		}
 #endif//cost
-    }
+    }*/
+		
+	}
     /*else
     {
       if(0 == status && reconOuterIter >= 1)
@@ -730,17 +747,22 @@ void ReconstructionEngine::execute()
   //  ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedMrcFile;
     writeMRCFile(m_TomoInputs->mrcOutputFile, cropStart, cropEnd);
   }
-
+	
+	
  // std::cout << "Should be writing .am file....  '" << m_TomoInputs->avizoOutputFile << "'"  << std::endl;
   if (m_TomoInputs->avizoOutputFile.empty() == false)
   {
     writeAvizoFile(m_TomoInputs->avizoOutputFile, cropStart, cropEnd);
   }
 
+	//Debug Writing out the selector array as an MRC file
+	m_ForwardModel->writeSelectorMrc(m_Sinogram,m_Geometry);
+	
   std::cout << "Final Dimensions of Object: " << std::endl;
   std::cout << "  Nx = " << m_Geometry->N_x << std::endl;
   std::cout << "  Ny = " << m_Geometry->N_y << std::endl;
   std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
+	
 
   notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
   setErrorCondition(0);

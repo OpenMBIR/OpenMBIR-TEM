@@ -67,6 +67,7 @@ class MBIRLib_EXPORT MRCWriter : public TomoFilter
     MXA_INSTANCE_PROPERTY(bool, DeleteMemory)
     MXA_INSTANCE_STRING_PROPERTY(OutputFile)
     MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
+	MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)
     MXA_INSTANCE_PROPERTY(MRCHeader*, MRCHeader)
     MXA_INSTANCE_VEC2_PROPERTY(uint16_t, XDims)
     MXA_INSTANCE_VEC2_PROPERTY(uint16_t, YDims)
@@ -86,7 +87,7 @@ class MBIRLib_EXPORT MRCWriter : public TomoFilter
     int writeHeader();
 
     int write();
-
+	
   protected:
 
     /**
