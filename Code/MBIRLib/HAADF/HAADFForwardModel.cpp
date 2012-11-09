@@ -1439,6 +1439,9 @@ Real_t HAADFForwardModel::estimateBraggThresold(SinogramPtr sinogram, RealVolume
 	return EstBraggThresh;
 }
 
+//Radomized select based on code from : http://stackoverflow.com/questions/5847273/order-statistic-implmentation
+
+
 Real_t HAADFForwardModel::RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i)
 {
 	if (p == r)
