@@ -1361,7 +1361,7 @@ void HAADFForwardModel::writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geomet
 		  for(uint32_t i_t = 0; i_t < geometry->N_y; i_t++)
 		  {
 			size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-			Real_t value = m_Selector->d[counts_idx];//ErrorSino->d[counts_idx];
+			  Real_t value = m_Selector->d[counts_idx];
 			counts_idx = sinogram->counts->calcIndex(geometry->N_z-1-i_theta, i_r, i_t);  
 			geometry->Object->d[counts_idx] = value;			  
 		  }
