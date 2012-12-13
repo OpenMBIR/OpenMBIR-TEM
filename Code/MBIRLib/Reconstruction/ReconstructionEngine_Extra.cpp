@@ -120,7 +120,7 @@ int ReconstructionEngine::initializeBrightFieldData()
         //  Real_t ttmp = (m_BFSinogram->counts->getValue(i_theta, i_r, i_t) * 1000);
         //  m_Sinogram->counts->divideByValue(ttmp, i_theta, i_r, i_t);
           //100 is for Marc De Graef data which needed to multiplied
-          m_BFSinogram->counts->multiplyByValue(1, i_theta, i_r, i_t);
+        //  m_BFSinogram->counts->multiplyByValue(100, i_theta, i_r, i_t);
 		  m_BFSinogram->counts->setValue(m_BFSinogram->counts->getValue(i_theta, i_r, i_t)+BF_OFFSET,i_theta, i_r, i_t);
         }
       }
