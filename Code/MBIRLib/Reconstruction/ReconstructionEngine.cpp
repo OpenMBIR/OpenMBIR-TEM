@@ -250,7 +250,6 @@ void ReconstructionEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
   v->JOINT_ESTIMATION = 1;
   v->ZERO_SKIPPING = 1;
   v->NOISE_ESTIMATION = 1;
-
 }
 
 
@@ -556,12 +555,16 @@ void ReconstructionEngine::execute()
 	err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
 #endif //Cost calculation endif
 
-	Real_t BraggStep = REJECTION_PERCENTAGE/10;
-	Real_t TempBraggValue=DefBraggThreshold;
+	//Read the percentage of sinogram to reject and convert it to 
+	//a fraction
+	Real_t RejFraction = m_ForwardModel->getBraggThreshold()/100;	
+	std::cout<<"Target rejection fraction ="<<RejFraction<<std::endl;
+	Real_t BraggStep = RejFraction/10;//Step through the rejection in steps of 1/10th of target
+	Real_t TempBraggValue;//=DefBraggThreshold;
 #ifdef BRAGG_CORRECTION
 	if(m_TomoInputs->NumIter > 1)
 	{//Get the value of the Bragg threshold from the User Interface the first time
-	    TempBraggValue = m_ForwardModel->getBraggThreshold();
+	    TempBraggValue = DefBraggThreshold;//m_ForwardModel->getBraggThreshold();
 	}
 	else 
 	{
@@ -571,8 +574,6 @@ void ReconstructionEngine::execute()
 #endif //Bragg correction
 	std::cout<<"Bragg threshold ="<<TempBraggValue<<std::endl;
 	
-	
-
   //int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
   //Loop through every voxel updating it by solving a cost function
  	
@@ -675,7 +676,7 @@ void ReconstructionEngine::execute()
 		
 		if(err < 0)
 		{
-			std::cout<<"Cost went up after gain+offset update"<<std::endl;
+			std::cout<<"Cost went up after offset update"<<std::endl;
 			break;
 		}
 #endif//cost
@@ -713,9 +714,9 @@ void ReconstructionEngine::execute()
 	  
 #ifdef BRAGG_CORRECTION
 	//Adapt the Bragg Threshold
-	if(BraggStep < REJECTION_PERCENTAGE)
+	if(BraggStep <RejFraction)
 	{
-		BraggStep+=REJECTION_PERCENTAGE/10;
+		BraggStep+=RejFraction/10;//REJECTION_PERCENTAGE/10;
 		std::cout<<"Current Bragg Step"<<BraggStep<<std::endl;
 		Real_t threshold = m_ForwardModel->estimateBraggThresold(m_Sinogram, errorSino, BraggStep);
 		std::cout<<"Computed Bragg Threshold ="<<threshold<<std::endl;

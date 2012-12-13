@@ -67,10 +67,10 @@ namespace VoxelUpdateType
 //#define WRITE_INTERMEDIATE_RESULTS
 //#define COST_CALCULATE
 #define BRAGG_CORRECTION
-#define DefBraggThreshold 500000//Thresold in normalized uints. This value ensures at the start we do a "regular" BF recon
-#define REJECTION_PERCENTAGE 0.1 //fraction of singoram affected by Bragg
+#define DefBraggThreshold 5e10//Thresold in normalized uints. This value ensures at the start we do a "regular" BF recon
+//#define REJECTION_PERCENTAGE 0.1 //fraction of singoram affected by Bragg
 #define BF_RECON //Bright Field Reconstruction
-#define BF_OFFSET 0//32768//23696 //- Bio data set
+#define BF_OFFSET 32768//23696 //- Bio data set
 #define BF_MAX  1//1865//30369//5689//42122//1865//32768//
 //#define IDENTITY_NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
