@@ -168,6 +168,10 @@ int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiRes
     cmd.add(numResolutions);
     TCLAP::ValueArg<double> targetGain("", "target_gain", "Target Gain for unscattered electrons", true, 1, "");
     cmd.add(targetGain);
+	
+	TCLAP::ValueArg<double> rejThreshold("", "rej_threshold", "Rejection threhold for Bragg scatter", false, 0, "");
+    cmd.add(rejThreshold);
+	
     TCLAP::SwitchArg interpolateInitialRecontruction ("", "interpolate_initial_recon", "Interpolate Initial Reconstruction Value", false);
     cmd.add(interpolateInitialRecontruction);
     TCLAP::ValueArg<int> outerIterations("", "outer_iterations", "Outer Iterations to use", true, 30, "30");
@@ -249,6 +253,7 @@ int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiRes
         m_MultiResSOC->setFinalResolution(finalResolution.getValue());
         m_MultiResSOC->setSampleThickness(sampleThickness.getValue());
         m_MultiResSOC->setTargetGain(targetGain.getValue());
+		m_MultiResSOC->setBraggThreshold(rejThreshold.getValue());
         m_MultiResSOC->setStopThreshold(stopThreshold.getValue());
         m_MultiResSOC->setOuterIterations(outerIterations.getValue());
         m_MultiResSOC->setInnerIterations(innerIterations.getValue());
