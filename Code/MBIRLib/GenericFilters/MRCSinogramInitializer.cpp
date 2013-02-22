@@ -345,7 +345,7 @@ void MRCSinogramInitializer::execute()
                     sum += sinogram->counts->getValue(i, j, k);
                 }
             }
-            ss << "Sinogram Checksum " << i << ":" << sum << std::endl;
+			ss << "Sinogram Checksum " << i << ":" << sum << std::endl;
         }
         std::cout << ss.str() << std::endl;
     }

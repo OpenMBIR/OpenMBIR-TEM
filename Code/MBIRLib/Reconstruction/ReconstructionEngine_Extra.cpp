@@ -80,9 +80,11 @@ int ReconstructionEngine::readInputData()
 int ReconstructionEngine::initializeBrightFieldData()
 {
   std::stringstream ss;
+  uint8_t Flag1 = 1;
+  uint8_t Flag2 = 1;	
   if(m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->sinoFile.empty() == false)
   {
-    ss << "Initializing BF data";
+	ss<< "Initializing BF data";	  
     notify(ss.str(), 0, Observable::UpdateProgressMessage);
 
     TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
@@ -104,10 +106,42 @@ int ReconstructionEngine::initializeBrightFieldData()
     dataReader->execute();
     if(dataReader->getErrorCondition() < 0)
     {
-      notify("Error reading Input Sinogram Data file", 100, Observable::UpdateProgressValueAndMessage);
-      setErrorCondition(dataReader->getErrorCondition());
-      return -1;
+		Flag1 = 0;
+	//Try one more time - if the sizes are not matches just read in the 
+	//full BF sinogram 
+	    m_BFTomoInputs->xStart = 0;
+		m_BFTomoInputs->xEnd = m_Sinogram->N_r-1;
+		m_BFTomoInputs->yStart = 0;
+		m_BFTomoInputs->yEnd = m_Sinogram->N_t-1;
+		m_BFTomoInputs->zStart = 0;
+		m_BFTomoInputs->zEnd = m_Sinogram->N_theta-1;
+		
+		dataReader->setTomoInputs(m_BFTomoInputs);
+		dataReader->setSinogram(m_BFSinogram);
+		dataReader->setAdvParams(m_AdvParams);
+		dataReader->setObservers(getObservers());
+		dataReader->execute();
+		if(dataReader->getErrorCondition() < 0)
+		{
+			Flag2 = 0;
+		//	notify("Error reading Input Sinogram Data file", 100, Observable::UpdateProgressValueAndMessage);
+		//	setErrorCondition(dataReader->getErrorCondition());
+		//	return -1;
+		}
+	  if(Flag1 == 0 && Flag2 == 0)
+	  {
+	   notify("Error reading Input Sinogram Data file", 100, Observable::UpdateProgressValueAndMessage);
+	   setErrorCondition(dataReader->getErrorCondition());
+       return -1;
+	  }
     }
+	  
+	if(m_BFSinogram->N_r != m_Sinogram->N_r || m_BFSinogram->N_t != m_Sinogram->N_t || m_BFSinogram->N_theta != m_Sinogram->N_theta)
+	{
+		notify("The two file sizes are not matched", 100,Observable::UpdateProgressValueAndMessage); 
+		setErrorCondition(dataReader->getErrorCondition());
+		return -1;
+	}
 
     //Normalize the HAADF image
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
@@ -125,7 +159,6 @@ int ReconstructionEngine::initializeBrightFieldData()
         }
       }
     }
-
     m_Sinogram->BF_Flag = true;
     notify("BF initialization complete", 0, Observable::UpdateProgressMessage);
   }
