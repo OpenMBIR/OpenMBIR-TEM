@@ -568,7 +568,7 @@ void ReconstructionEngine::execute()
 	}
 	else 
 	{
-		TempBraggValue  = m_ForwardModel->estimateBraggThresold(m_Sinogram, errorSino, BraggStep);
+		TempBraggValue  = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
 		m_ForwardModel->setBraggThreshold(TempBraggValue);
 	}
 #endif //Bragg correction
@@ -598,7 +598,7 @@ void ReconstructionEngine::execute()
 		m_ForwardModel->setBraggThreshold(DefBraggThreshold);
 	}
 				
-	 //Prints the ratio of the sinogram entries selected
+	  //Prints the ratio of the sinogram entries selected
 	  m_ForwardModel->printRatioSelected(m_Sinogram);	
 		
       ss.str("");
@@ -642,15 +642,18 @@ void ReconstructionEngine::execute()
 #endif //Cost calculation endif  
 		
 #ifdef BRAGG_CORRECTION
+		//Debug info
+		m_ForwardModel->printRatioSelected(m_Sinogram);
 		//If at the last iteration of the inner loops at coarsest res
 		if(reconInnerIter == m_TomoInputs->NumIter-1 && reconInnerIter != 0)
 		{ //The first time at the coarsest resolution at the end of 
 		 // inner iterations set the Bragg Threshold
-			Real_t threshold = m_ForwardModel->estimateBraggThresold(m_Sinogram, errorSino, BraggStep);
+			Real_t threshold = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
 			std::cout<<"Computed Bragg Threshold ="<<threshold<<std::endl;
 			m_ForwardModel->setBraggThreshold(threshold);
 			TempBraggValue = threshold;
 		}
+
 #endif //Bragg correction 
 
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
@@ -720,7 +723,7 @@ void ReconstructionEngine::execute()
 	{
 		BraggStep+=RejFraction/10;//REJECTION_PERCENTAGE/10;
 		std::cout<<"Current Bragg Step"<<BraggStep<<std::endl;
-		Real_t threshold = m_ForwardModel->estimateBraggThresold(m_Sinogram, errorSino, BraggStep);
+		Real_t threshold = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
 		std::cout<<"Computed Bragg Threshold ="<<threshold<<std::endl;
 		m_ForwardModel->setBraggThreshold(threshold);
 		TempBraggValue = threshold;	

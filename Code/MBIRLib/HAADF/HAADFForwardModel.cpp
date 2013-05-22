@@ -1394,7 +1394,7 @@ void HAADFForwardModel::writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geomet
 	}
 }
 
-Real_t HAADFForwardModel::estimateBraggThresold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage)
+Real_t HAADFForwardModel::estimateBraggThreshold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage)
 {
 	//m_Alpha->d[i_theta]
 	//m_Weight->d[error_idx]

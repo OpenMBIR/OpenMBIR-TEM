@@ -208,8 +208,8 @@ int UpdateYSlice::getZeroCount()
        {
 
          uint32_t Index = numberGenerator() % ArraySize;
-         int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
-         int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
+		 int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
+		 int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
          Counter->d[Index] = Counter->d[ArraySize - 1];
          m_VisitCount->setValue(1, j_new, k_new);
          ArraySize--;
