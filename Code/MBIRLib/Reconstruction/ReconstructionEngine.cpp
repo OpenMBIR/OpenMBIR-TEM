@@ -556,7 +556,7 @@ void ReconstructionEngine::execute()
 #endif //Cost calculation endif
 
 	//Read the percentage of sinogram to reject and convert it to 
-	//a fraction
+	//a percentage
 	Real_t RejFraction = m_ForwardModel->getBraggThreshold()/100;	
 	std::cout<<"Target rejection fraction ="<<RejFraction<<std::endl;
 	Real_t BraggStep = RejFraction/10;//Step through the rejection in steps of 1/10th of target
@@ -606,8 +606,7 @@ void ReconstructionEngine::execute()
 
       indent = "    ";
       // This is all done PRIOR to calling what will become a method
-
-		std::cout<<"Bragg Threshold ="<<m_ForwardModel->getBraggThreshold()<<std::endl;	
+	  std::cout<<"Bragg Threshold ="<<m_ForwardModel->getBraggThreshold()<<std::endl;	
       // This could contain multiple Subloops also
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 	  status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,
@@ -636,7 +635,8 @@ void ReconstructionEngine::execute()
 		if(err < 0)
 		{
 			std::cout<<"Cost went up after voxel update"<<std::endl;
-			break;
+			return;
+//			break;
 		}
 		/**************************************************************************/
 #endif //Cost calculation endif  
@@ -661,6 +661,8 @@ void ReconstructionEngine::execute()
 		std::cout << "Exiting the code because status =0" << std::endl;
 		break;
 	}
+	  
+	
 	  
 	if(m_TomoInputs->NumOuterIter > 1) //Dont update any parameters if we just have one inner iteration
 	{
