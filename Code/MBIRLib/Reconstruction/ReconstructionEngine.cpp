@@ -847,7 +847,9 @@ void ReconstructionEngine::execute()
   {
   //  std::stringstream ss;
   //  ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedMrcFile;
-    writeMRCFile(m_TomoInputs->mrcOutputFile, cropStart, cropEnd);
+    //HACK
+	  cropEnd+=1;
+	  writeMRCFile(m_TomoInputs->mrcOutputFile, cropStart, cropEnd);
   }
 
  // std::cout << "Should be writing .am file....  '" << m_TomoInputs->avizoOutputFile << "'"  << std::endl;

@@ -194,6 +194,7 @@ Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue
   {
     QGGMRF::ComputeParameters(umin, umax, RefValue, BOUNDARYFLAG, NEIGHBORHOOD,
                               qggmrf_values, QGGMRF_Params);
+	  count = 0;// cycles through the list of parameters of the quadratic surrogate
     for (i = 0; i < 3; i++)
     {
       for (j = 0; j < 3; j++)

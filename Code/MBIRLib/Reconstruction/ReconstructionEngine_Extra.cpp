@@ -622,7 +622,7 @@ int ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
   std::stringstream ss;
   std::string indent("  ");
 
-  if(m_Sinogram->BF_Flag == false)
+  if(m_Sinogram->BF_Flag == false) //If no BF data do gain and offset est. 
   {
     Real_t AverageI_kUpdate = 0; //absolute sum of the gain updates
     Real_t AverageMagI_k = 0; //absolute sum of the initial gains
@@ -630,12 +630,9 @@ int ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
     Real_t AverageDelta_kUpdate = 0; //absolute sum of the offsets
     Real_t AverageMagDelta_k = 0; //abs sum of the initial offset
 
-    //Real_t sum = 0;
-    //int err = 0;
     uint64_t startm, stopm;
 
-    //DATA_TYPE high = std::numeric_limits<DATA_TYPE>::max();
-    //DATA_TYPE low = std::numeric_limits<DATA_TYPE>::min();
+    
     //Joint Scale And Offset Estimation
 
     //forward project
@@ -777,12 +774,7 @@ int ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
       Real_t NewDelta_k = d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
       AverageDelta_kUpdate += fabs(NewDelta_k - NuisanceParams->mu->d[i_theta]);
       NuisanceParams->mu->d[i_theta] = NewDelta_k;
-      //Postivity Constraing on the offsets
-
-      if(NuisanceParams->mu->d[i_theta] < 0)
-      {
-        NuisanceParams->mu->d[i_theta] *= 1;
-      }
+      
     }
 
 #ifdef COST_CALCULATE
@@ -839,7 +831,7 @@ int ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
       //std::cout << "Ratio of change in Delta_k " << AverageDelta_kUpdate / AverageMagDelta_k << std::endl;
     }
   }
-  else
+  else //Only estimate the offsets
   {
 
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
