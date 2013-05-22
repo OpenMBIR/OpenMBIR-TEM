@@ -1281,7 +1281,8 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 			}
 			VoxelLineAccessCounter++;
 #ifdef BF_RECON
-         if(ErrorSino->d[error_idx]*ErrorSino->d[error_idx]*m_Weight->d[error_idx] < m_BraggThreshold*m_BraggThreshold)
+        // if(ErrorSino->d[error_idx]*ErrorSino->d[error_idx]*m_Weight->d[error_idx] < m_BraggThreshold*m_BraggThreshold)
+			if(fabs(ErrorSino->d[error_idx]*sqrt(m_Weight->d[error_idx])) < m_BraggThreshold)
 			 m_Selector->d[error_idx] = 1;
 			else {
 			m_Selector->d[error_idx] = 0;	

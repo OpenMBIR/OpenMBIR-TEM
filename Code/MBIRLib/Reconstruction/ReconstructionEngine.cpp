@@ -642,8 +642,7 @@ void ReconstructionEngine::execute()
 #endif //Cost calculation endif  
 		
 #ifdef BRAGG_CORRECTION
-		//Debug info
-		m_ForwardModel->printRatioSelected(m_Sinogram);
+
 		//If at the last iteration of the inner loops at coarsest res
 		if(reconInnerIter == m_TomoInputs->NumIter-1 && reconInnerIter != 0)
 		{ //The first time at the coarsest resolution at the end of 
