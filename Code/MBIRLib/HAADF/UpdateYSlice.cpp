@@ -206,7 +206,6 @@ int UpdateYSlice::getZeroCount()
      {
        for (int32_t k = 0; k < m_Geometry->N_x; k++) //Column index
        {
-
          uint32_t Index = numberGenerator() % ArraySize;
 		 int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
 		 int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
@@ -333,7 +332,7 @@ int UpdateYSlice::getZeroCount()
                  }
 #endif
                }
-               else
+               else //TODO Remove this condition.
                {
                  if(m_Theta1 == 0 && low == 0 && high == 0)
                  {

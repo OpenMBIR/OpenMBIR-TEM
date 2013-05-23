@@ -937,8 +937,9 @@ Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geome
 	Real_t errSinoValue = 0.0;
 	
 	cost = m_ForwardModel->forwardCost(sinogram,ErrorSino);//Data term error
+	std::cout<<"Forward cost"<<cost<<std::endl;
 	cost += QGGMRF::PriorModelCost(geometry, qggmrf_values);//Prior model error
-
+	std::cout<<"Total cost"<<cost<<std::endl;
 	return cost;
 }
 

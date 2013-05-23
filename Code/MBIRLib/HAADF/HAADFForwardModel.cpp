@@ -180,8 +180,9 @@ int HAADFForwardModel::forwardProject(SinogramPtr sinogram,
 #if OpenMBIR_USE_PARALLEL_ALGORITHMS
     g->run(ForwardProject(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate, this, t, this));
 #else
-    ForwardProject fp(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate, NuisanceParams.get(), t, this);
-    //fp.setObservers(getObservers());
+   // ForwardProject fp(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate, NuisanceParams.get(), t, this);
+   ForwardProject fp(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate,this, t, this);
+	  //fp.setObservers(getObservers());
     fp();
 #endif
   }
@@ -1282,9 +1283,9 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 			VoxelLineAccessCounter++;
 #ifdef BF_RECON
         // if(ErrorSino->d[error_idx]*ErrorSino->d[error_idx]*m_Weight->d[error_idx] < m_BraggThreshold*m_BraggThreshold)
-			if(fabs(ErrorSino->d[error_idx]*sqrt(m_Weight->d[error_idx])) < m_BraggThreshold)
+		   if(fabs(ErrorSino->d[error_idx]*sqrt(m_Weight->d[error_idx])) < m_BraggThreshold)
 			 m_Selector->d[error_idx] = 1;
-			else {
+		   else {
 			m_Selector->d[error_idx] = 0;	
 			}
 #endif
