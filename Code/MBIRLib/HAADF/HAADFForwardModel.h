@@ -224,7 +224,7 @@ class HAADFForwardModel : public Observable
 						 std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
 						 RealVolumeType::Pointer ErrorSino,
 						 SinogramPtr sinogram,
-					     Int32ArrayType::Pointer Thetas);
+					     RealArrayType::Pointer Thetas);
 	
 	//After updating a voxel "Index",update sinogram
 	void updateErrorSinogram(Real_t ChangeInVoxelValue,

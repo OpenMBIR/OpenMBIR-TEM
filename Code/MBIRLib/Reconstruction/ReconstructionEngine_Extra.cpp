@@ -562,8 +562,8 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
         std::vector<int> yCount(m_NumThreads, 0);
         int t = 0;
 		
-	//	if( m_Geometry->N_y >= m_NumThreads) //If number of slices is greater than number of threads divide the updates
-	//	{
+		if( m_Geometry->N_y >= m_NumThreads) //If number of slices is greater than number of threads divide the updates
+		{
         for (int y = 0; y < m_Geometry->N_y; ++y)
         {
             yCount[t]++;
@@ -573,10 +573,10 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
                 t = 0;
             }
         }
-	//	}
-//		else { //Use a single core implementation
-//			yCount[t]=m_Geometry->N_y;
-//		}
+		}
+		else { //Use a single core implementation
+			yCount[t]=m_Geometry->N_y;
+		}
 
 
         uint16_t yStart = 0;

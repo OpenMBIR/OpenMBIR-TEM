@@ -1210,7 +1210,7 @@ void HAADFForwardModel::computeTheta(size_t Index,
 					 std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
 					 RealVolumeType::Pointer ErrorSino,
 					 SinogramPtr sinogram,
-					 Int32ArrayType::Pointer Thetas)
+					 RealArrayType::Pointer Thetas)
 {
 	
 	Thetas->d[0]=0;
@@ -1308,7 +1308,7 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 // -----------------------------------------------------------------------------
 void HAADFForwardModel::processRawCounts(SinogramPtr sinogram)
 {
-    Real_t mean=0;
+    Real_t mean=0,maxval=-INFINITY;
     for (int16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++) //slice index
     {
         for (int16_t i_r = 0; i_r < sinogram->N_r; i_r++)
@@ -1322,12 +1322,16 @@ void HAADFForwardModel::processRawCounts(SinogramPtr sinogram)
                // if(sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
                //     sinogram->counts->d[counts_idx] = 0;
 				
+				//Debug/Sanity checks 
                 mean+=sinogram->counts->d[counts_idx];
+				if(fabs(sinogram->counts->d[counts_idx]) > maxval)
+					maxval = sinogram->counts->d[counts_idx];
             }
         }
     }
     mean/=(sinogram->N_theta*sinogram->N_r*sinogram->N_t);
     std::cout<<"Mean log value ="<<mean<<std::endl;
+	std::cout<<"Max -log value ="<<maxval<<std::endl;
 }
 
 // -----------------------------------------------------------------------------
