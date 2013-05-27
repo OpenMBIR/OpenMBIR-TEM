@@ -1282,7 +1282,7 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 			}
 			VoxelLineAccessCounter++;
 #ifdef BF_RECON
-        // if(ErrorSino->d[error_idx]*ErrorSino->d[error_idx]*m_Weight->d[error_idx] < m_BraggThreshold*m_BraggThreshold)
+			// Update the selector variable
 		   if(fabs(ErrorSino->d[error_idx]*sqrt(m_Weight->d[error_idx])) < m_BraggThreshold)
 			 m_Selector->d[error_idx] = 1;
 		   else {
@@ -1368,8 +1368,8 @@ void HAADFForwardModel::writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geomet
 		  for(uint32_t i_t = 0; i_t < geometry->N_y; i_t++)
 		  {
 			size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-			Real_t value = exp(-sinogram->counts->d[counts_idx]+ErrorSino->d[counts_idx]);//m_Selector->d[counts_idx];
-			value -= BF_OFFSET;
+			Real_t value = m_Selector->d[counts_idx];//exp(-sinogram->counts->d[counts_idx]+ErrorSino->d[counts_idx]);
+			//value -= BF_OFFSET;
 			counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);  
 			geometry->Object->d[counts_idx] = value;			  
 		  }
