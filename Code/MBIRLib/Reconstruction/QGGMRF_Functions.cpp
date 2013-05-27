@@ -130,7 +130,8 @@ Real_t Derivative(Real_t delta, QGGMRF::QGGMRF_Values* qggmrf_values)
 }
 
 // -----------------------------------------------------------------------------
-//
+// Second derivative at zero //TODO: This is only needed at zero. So the function
+// needs to be renamed
 // -----------------------------------------------------------------------------
 Real_t SecondDerivative(Real_t delta, QGGMRF::QGGMRF_Values* qggmrf_values)
 {

@@ -34,6 +34,9 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+// q-GGMRF is of the form 
+// \rho(\delta)= (|\deta/sigma|^p)/(c + |\deta/sigma|^(p-q))
+// p=2; 1<=q<=2
 
 #ifndef EIMTOMO_USE_QGGMRF_FUNCTIONS_H_
 #define QGGMRF_FUNCTIONS_H_

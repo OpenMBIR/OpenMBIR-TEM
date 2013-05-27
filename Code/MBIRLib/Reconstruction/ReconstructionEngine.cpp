@@ -847,7 +847,7 @@ void ReconstructionEngine::execute()
   {
   //  std::stringstream ss;
   //  ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedMrcFile;
-    //HACK
+    //TODO: Remove this HACK (+1)
 	  cropEnd+=1;
 	  writeMRCFile(m_TomoInputs->mrcOutputFile, cropStart, cropEnd);
   }
