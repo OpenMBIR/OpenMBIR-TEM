@@ -707,7 +707,7 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
     }
   }
 #else 
-  {
+  {  //Estimate unknown offset (log{dosage}) parameter
       Real_t num_sum = 0;
       Real_t den_sum = 0;
       Real_t alpha = 0;
@@ -727,6 +727,7 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
 	  }
       alpha = num_sum / den_sum;
 
+	  //Update error sinogram
 	  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	  {	  
 	     for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
@@ -737,15 +738,14 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
            }
          }
       m_Mu->d[i_theta] += alpha;
-	  if(getVeryVerbose())
-	  {
-	    std::cout << "Theta: " << i_theta << " Mu: " << m_Mu->d[i_theta] << std::endl;
 	  }
+	  if(getVeryVerbose()) //Display the estimated offset
+	  {
+		  std::cout << " Mu: " << m_Mu->d[0] << std::endl;
 	  }
      		  
   } 
 #endif //BF_RECON
-  //return 0;
 }
 
 
@@ -767,19 +767,10 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
       for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
       {
         size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
-        //     size_t yest_idx = yEstimate->calcIndex(i_theta, i_r, i_t);
-        //    size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
         size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-  /*      if(sinogram->counts->d[counts_idx] != 0)
-        {
-          m_Weight->d[weight_idx] = 1.0 / sinogram->counts->d[counts_idx];
-        }
-        else
-        {
-          m_Weight->d[weight_idx] = 1.0;
-        }*/
-#ifdef BF_RECON //Override old weights
+#ifdef BF_RECON //Override old weights 
+		  //TODO Just assign this once 
 		  m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
 #endif //BF_RECON
 		  
@@ -816,14 +807,6 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
         size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
         size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-  /*      if(m_Alpha->d[i_theta] != 0 && sinogram->counts->d[counts_idx] != 0)
-        {
-          m_Weight->d[weight_idx] = 1.0 / (sinogram->counts->d[counts_idx] * m_Alpha->d[i_theta]);
-        }
-        else
-        {
-          m_Weight->d[weight_idx] = 1.0;
-        }*/
 		
 #ifdef BF_RECON
 		  m_Weight->d[weight_idx] = (BF_MAX/exp(sinogram->counts->d[counts_idx]))/m_Alpha->d[i_theta];  
