@@ -675,7 +675,6 @@ void ReconstructionEngine::execute()
 	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
 #endif
 #ifdef COST_CALCULATE
-		//err = calculateCost(cost, Weight, errorSino);
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
 		
 		if(err < 0)
@@ -799,8 +798,8 @@ void ReconstructionEngine::execute()
     writeAvizoFile(m_TomoInputs->avizoOutputFile, cropStart, cropEnd);
   }
 
-	//Debug Writing out the selector array as an MRC file
-	m_ForwardModel->writeSelectorMrc(m_Sinogram,m_Geometry,errorSino);
+  //Debug Writing out the selector array as an MRC file
+  m_ForwardModel->writeSelectorMrc(m_TomoInputs->braggSelectorFile,m_Sinogram,m_Geometry,errorSino);
 	
   std::cout << "Final Dimensions of Object: " << std::endl;
   std::cout << "  Nx = " << m_Geometry->N_x << std::endl;
