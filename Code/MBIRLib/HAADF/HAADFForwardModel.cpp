@@ -724,12 +724,12 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
 		  }
         }
       }
-	  }
+	 // }
       alpha = num_sum / den_sum;
 
 	  //Update error sinogram
-	  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
-	  {	  
+	 // for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	 // {	  
 	     for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
          {
            for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
@@ -738,11 +738,13 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
            }
          }
       m_Mu->d[i_theta] += alpha;
+		  
+		  if(getVeryVerbose()) //Display the estimated offset
+		  {
+			  std::cout << " Mu: " << m_Mu->d[i_theta] << std::endl;
+		  }
 	  }
-	  if(getVeryVerbose()) //Display the estimated offset
-	  {
-		  std::cout << " Mu: " << m_Mu->d[0] << std::endl;
-	  }
+	  
      		  
   } 
 #endif //BF_RECON
