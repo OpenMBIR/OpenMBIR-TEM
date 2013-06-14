@@ -724,12 +724,12 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
 		  }
         }
       }
-	 // }
+	  //}
       alpha = num_sum / den_sum;
 
 	  //Update error sinogram
-	 // for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
-	 // {	  
+	  //for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	  //{	  
 	     for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
          {
            for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
@@ -737,13 +737,13 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
           errorSinogram->deleteFromValue(alpha, i_theta, i_r, i_t);
            }
          }
-      m_Mu->d[i_theta] += alpha;
+         m_Mu->d[i_theta] += alpha;
 		  
 		  if(getVeryVerbose()) //Display the estimated offset
 		  {
 			  std::cout << " Mu: " << m_Mu->d[i_theta] << std::endl;
 		  }
-	  }
+	    }
 	  
      		  
   } 
@@ -1085,7 +1085,27 @@ int HAADFForwardModel::createInitialOffsetsData(SinogramPtr sinogram)
       setErrorCondition(initializer->getErrorCondition());
       return -1;
     }
+	
+	  //TODO : HACK to just read offsets from a initial file
+	  FILE* fp;
+	  fp = fopen("/Users/svenkata/Desktop/Work/Tomography/TomoSoftware/HAADFSTEM/Data/AlSphereBFTEM/AlTEMOffsets.bin", "rb");
+	  if(fp == NULL)
+		  std::cout<<"File not found"<<std::endl;
+	  
+	  Real_t* temp;
+	  temp = (double*)malloc(1*sizeof(double));
+	  for(uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	  {
+		  std::cout<<i_theta<<std::endl;
+		  fread(temp, sizeof(double),1, fp);
+		  m_InitialOffset->d[i_theta] = -(*temp);
+	  }
+	  fclose(fp);  
+	  
   }
+
+
+	
   return 0;
 }
 
@@ -1327,14 +1347,17 @@ void HAADFForwardModel::printRatioSelected(SinogramPtr sinogram)
 	Real_t sum=0;
     for (int16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++) //slice index
     {
+		Real_t sum_k=0;//Sum for each tilt
         for (int16_t i_r = 0; i_r < sinogram->N_r; i_r++)
         {
             for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
             {
 			    size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-				sum+=m_Selector->d[counts_idx];
+				sum_k+=m_Selector->d[counts_idx];				
 			}
 		}
+		std::cout<<"Ratio of sinogram at tilt :"<<i_theta<<" "<<sum_k/(sinogram->N_r*sinogram->N_t)<<std::endl;
+		sum+=sum_k;
 	}
 	
 	std::cout<<"Ratio of singoram entries used="<<sum/(sinogram->N_theta*sinogram->N_r*sinogram->N_t)<<std::endl;

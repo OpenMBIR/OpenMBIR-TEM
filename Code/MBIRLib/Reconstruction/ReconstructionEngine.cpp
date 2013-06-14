@@ -559,7 +559,7 @@ void ReconstructionEngine::execute()
 	//a percentage
 	Real_t RejFraction = m_ForwardModel->getBraggThreshold()/100;	
 	std::cout<<"Target rejection fraction ="<<RejFraction<<std::endl;
-	Real_t BraggStep = RejFraction/10;//Step through the rejection in steps of 1/10th of target
+	Real_t BraggStep = RejFraction/REJECTION_RATE;//Step through the rejection in steps of 1/10th of target
 	Real_t TempBraggValue;//=DefBraggThreshold;
 #ifdef BRAGG_CORRECTION
 	if(m_TomoInputs->NumIter > 1)
@@ -717,9 +717,9 @@ void ReconstructionEngine::execute()
 	  
 #ifdef BRAGG_CORRECTION
 	//Adapt the Bragg Threshold
-	if(BraggStep <RejFraction)
+	if(BraggStep < RejFraction)
 	{
-		BraggStep+=RejFraction/10;//REJECTION_PERCENTAGE/10;
+		BraggStep+=RejFraction/REJECTION_RATE;//REJECTION_PERCENTAGE/10;
 		std::cout<<"Current Bragg Step"<<BraggStep<<std::endl;
 		Real_t threshold = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
 		std::cout<<"Computed Bragg Threshold ="<<threshold<<std::endl;
