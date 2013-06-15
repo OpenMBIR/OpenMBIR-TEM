@@ -197,12 +197,12 @@ class HAADFForwardModel : public Observable
 	
 	void printRatioSelected(SinogramPtr sinogram);
 	
-	void writeSelectorMrc(SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino);
+	void writeSelectorMrc(const std::string &file, SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino);
 	
-	Real_t estimateBraggThresold(SinogramPtr sinogram,RealVolumeType::Pointer ErrorSino,Real_t percentage);
+	Real_t estimateBraggThreshold(SinogramPtr sinogram,RealVolumeType::Pointer ErrorSino,Real_t percentage);
 	//void setUpBraggThreshold(Real_t Threshold);
 	
-	//Real_t estimateBraggThresold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage);
+	//Real_t estimateBraggThreshold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage);
 	uint32_t Partition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
 	Real_t RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i);
 	uint32_t RandomizedPartition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
@@ -224,7 +224,7 @@ class HAADFForwardModel : public Observable
 						 std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
 						 RealVolumeType::Pointer ErrorSino,
 						 SinogramPtr sinogram,
-					     Int32ArrayType::Pointer Thetas);
+					     RealArrayType::Pointer Thetas);
 	
 	//After updating a voxel "Index",update sinogram
 	void updateErrorSinogram(Real_t ChangeInVoxelValue,

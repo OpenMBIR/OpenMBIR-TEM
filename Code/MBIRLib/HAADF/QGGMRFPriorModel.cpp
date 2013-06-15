@@ -157,7 +157,8 @@ Real_t Derivative(Real_t delta, QGGMRF::QGGMRF_Values* qggmrf_values)
 }
 
 // -----------------------------------------------------------------------------
-//
+	// Second derivative at zero //TODO: This is only needed at zero. So the function
+	// needs to be renamed
 // -----------------------------------------------------------------------------
 Real_t SecondDerivative(Real_t delta, QGGMRF::QGGMRF_Values* qggmrf_values)
 {
@@ -223,6 +224,7 @@ Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue
   {
     QGGMRF::ComputeParameters(umin, umax, refValue, boundaryFlag, neighborhood,
                               qggmrf_values, QGGMRF_Params);
+	count = 0; //Each time this is use to cycle through the a values
     for (i = 0; i < 3; i++)
     {
       for (j = 0; j < 3; j++)
@@ -231,7 +233,7 @@ Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue
         {
           if((i != 1 || j != 1 || k != 1) && boundaryFlag[INDEX_3(i,j,k)] == 1)
           {
-            temp_const = qggmrf_values->k_Filter[INDEX_3(i,j,k)] * QGGMRF_Params[count*3 + 0];
+            temp_const = qggmrf_values->k_Filter[INDEX_3(i,j,k)] * QGGMRF_Params[count*3 + 0];//access the a_{ji} value of the quadratic
             temp1 += temp_const * neighborhood[INDEX_3(i,j,k)];
             temp2 += temp_const;
             count++;

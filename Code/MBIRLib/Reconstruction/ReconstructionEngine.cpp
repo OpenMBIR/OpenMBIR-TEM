@@ -151,7 +151,7 @@ namespace Detail {
     m_NumThreads = 1;
 #endif
     setVerbose(true); //set this to enable cout::'s
-    setVeryVerbose(true); //set this to ennable even more cout:: s
+    setVeryVerbose(false); //set this to ennable even more cout:: s
  }
 
 // -----------------------------------------------------------------------------
@@ -556,10 +556,10 @@ void ReconstructionEngine::execute()
 #endif //Cost calculation endif
 
 	//Read the percentage of sinogram to reject and convert it to 
-	//a fraction
+	//a percentage
 	Real_t RejFraction = m_ForwardModel->getBraggThreshold()/100;	
 	std::cout<<"Target rejection fraction ="<<RejFraction<<std::endl;
-	Real_t BraggStep = RejFraction/10;//Step through the rejection in steps of 1/10th of target
+	Real_t BraggStep = RejFraction/REJECTION_RATE;//Step through the rejection in steps of 1/10th of target
 	Real_t TempBraggValue;//=DefBraggThreshold;
 #ifdef BRAGG_CORRECTION
 	if(m_TomoInputs->NumIter > 1)
@@ -568,7 +568,7 @@ void ReconstructionEngine::execute()
 	}
 	else 
 	{
-		TempBraggValue  = m_ForwardModel->estimateBraggThresold(m_Sinogram, errorSino, BraggStep);
+		TempBraggValue  = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
 		m_ForwardModel->setBraggThreshold(TempBraggValue);
 	}
 #endif //Bragg correction
@@ -598,7 +598,7 @@ void ReconstructionEngine::execute()
 		m_ForwardModel->setBraggThreshold(DefBraggThreshold);
 	}
 				
-	 //Prints the ratio of the sinogram entries selected
+	  //Prints the ratio of the sinogram entries selected
 	  m_ForwardModel->printRatioSelected(m_Sinogram);	
 		
       ss.str("");
@@ -606,8 +606,7 @@ void ReconstructionEngine::execute()
 
       indent = "    ";
       // This is all done PRIOR to calling what will become a method
-
-		std::cout<<"Bragg Threshold ="<<m_ForwardModel->getBraggThreshold()<<std::endl;	
+	  std::cout<<"Bragg Threshold ="<<m_ForwardModel->getBraggThreshold()<<std::endl;	
       // This could contain multiple Subloops also
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 	  status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,
@@ -636,21 +635,24 @@ void ReconstructionEngine::execute()
 		if(err < 0)
 		{
 			std::cout<<"Cost went up after voxel update"<<std::endl;
-			break;
+			return;
+//			break;
 		}
 		/**************************************************************************/
 #endif //Cost calculation endif  
 		
 #ifdef BRAGG_CORRECTION
+
 		//If at the last iteration of the inner loops at coarsest res
 		if(reconInnerIter == m_TomoInputs->NumIter-1 && reconInnerIter != 0)
 		{ //The first time at the coarsest resolution at the end of 
 		 // inner iterations set the Bragg Threshold
-			Real_t threshold = m_ForwardModel->estimateBraggThresold(m_Sinogram, errorSino, BraggStep);
+			Real_t threshold = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
 			std::cout<<"Computed Bragg Threshold ="<<threshold<<std::endl;
 			m_ForwardModel->setBraggThreshold(threshold);
 			TempBraggValue = threshold;
 		}
+
 #endif //Bragg correction 
 
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
@@ -662,6 +664,8 @@ void ReconstructionEngine::execute()
 		break;
 	}
 	  
+	
+	  
 	if(m_TomoInputs->NumOuterIter > 1) //Dont update any parameters if we just have one inner iteration
 	{
     if(m_AdvParams->JOINT_ESTIMATION)
@@ -671,7 +675,6 @@ void ReconstructionEngine::execute()
 	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
 #endif
 #ifdef COST_CALCULATE
-		//err = calculateCost(cost, Weight, errorSino);
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
 		
 		if(err < 0)
@@ -714,11 +717,11 @@ void ReconstructionEngine::execute()
 	  
 #ifdef BRAGG_CORRECTION
 	//Adapt the Bragg Threshold
-	if(BraggStep <RejFraction)
+	if(BraggStep < RejFraction)
 	{
-		BraggStep+=RejFraction/10;//REJECTION_PERCENTAGE/10;
+		BraggStep+=RejFraction/REJECTION_RATE;//REJECTION_PERCENTAGE/10;
 		std::cout<<"Current Bragg Step"<<BraggStep<<std::endl;
-		Real_t threshold = m_ForwardModel->estimateBraggThresold(m_Sinogram, errorSino, BraggStep);
+		Real_t threshold = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
 		std::cout<<"Computed Bragg Threshold ="<<threshold<<std::endl;
 		m_ForwardModel->setBraggThreshold(threshold);
 		TempBraggValue = threshold;	
@@ -795,8 +798,8 @@ void ReconstructionEngine::execute()
     writeAvizoFile(m_TomoInputs->avizoOutputFile, cropStart, cropEnd);
   }
 
-	//Debug Writing out the selector array as an MRC file
-	m_ForwardModel->writeSelectorMrc(m_Sinogram,m_Geometry,errorSino);
+  //Debug Writing out the selector array as an MRC file
+  m_ForwardModel->writeSelectorMrc(m_TomoInputs->braggSelectorFile,m_Sinogram,m_Geometry,errorSino);
 	
   std::cout << "Final Dimensions of Object: " << std::endl;
   std::cout << "  Nx = " << m_Geometry->N_x << std::endl;
@@ -933,8 +936,9 @@ Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geome
 	Real_t errSinoValue = 0.0;
 	
 	cost = m_ForwardModel->forwardCost(sinogram,ErrorSino);//Data term error
+	std::cout<<"Forward cost"<<cost<<std::endl;
 	cost += QGGMRF::PriorModelCost(geometry, qggmrf_values);//Prior model error
-
+	std::cout<<"Total cost"<<cost<<std::endl;
 	return cost;
 }
 
