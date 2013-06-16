@@ -156,6 +156,7 @@ void ReconstructionEngine::computeOriginalXDims(uint16_t &cropStart, uint16_t &c
       break;
     }
   }
+	cropEnd+=1;	
 }
 
 // -----------------------------------------------------------------------------
@@ -279,9 +280,7 @@ void ReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
         w3 = delta_t - (Real_t)(index_delta_t) * offsetT;
         w4 = ((Real_t)index_delta_t + 1) * offsetT - delta_t;
         uint16_t ttmp = index_delta_t + 1 < m_AdvParams->DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : m_AdvParams->DETECTOR_RESPONSE_BINS - 1;
-        ProfileThickness = (w4 / offsetT) * H_t->getValue(0, 0, index_delta_t) + (w3 / offsetT) * H_t->getValue(0, 0, ttmp);
-        //  ProfileThickness = (w4 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t]
-        //  + (w3 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t + 1 <m_AdvParams->DETECTOR_RESPONSE_BINS ? index_delta_t + 1 :m_AdvParams->DETECTOR_RESPONSE_BINS - 1];
+		  ProfileThickness = (w4 / offsetT) * H_t->getValue(0, 0, index_delta_t) + (w3 / offsetT) * H_t->getValue(0, 0, ttmp);
       }
       else
       {
@@ -562,6 +561,9 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 
         std::vector<int> yCount(m_NumThreads, 0);
         int t = 0;
+		
+//		if( m_Geometry->N_y >= m_NumThreads) //If number of slices is greater than number of threads divide the updates
+//		{
         for (int y = 0; y < m_Geometry->N_y; ++y)
         {
             yCount[t]++;
@@ -571,6 +573,11 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
                 t = 0;
             }
         }
+//		}
+//		else { //Use a single core implementation
+//			yCount[t]=m_Geometry->N_y;
+//		}
+
 
         uint16_t yStart = 0;
         uint16_t yStop = 0;
@@ -607,6 +614,11 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
         // Now sum up some values
         for (int t = 0; t < m_NumThreads; ++t)
         {
+			if(getVeryVerbose())
+			{
+				std::cout << "Average Update for thread "<<t<<":"<< averageUpdate[t]<< std::endl;
+				std::cout << "Average Magnitude for thread "<<t<<":"<< averageMagnitudeOfRecon[t]<< std::endl;
+			}
             AverageUpdate += averageUpdate[t];
             AverageMagnitudeOfRecon += averageMagnitudeOfRecon[t];
         }
@@ -614,11 +626,11 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
         free(averageMagnitudeOfRecon);
 
 #else
-        uint16_t yStop = geometry->N_y;
+        uint16_t yStop = m_Geometry->N_y;
         uint16_t yStart = 0;
-        UpdateYSlice yVoxelUpdate(yStart, yStop,
-                                  geometry,
-                                  OuterIter, Iter, sinogram,
+      /*  UpdateYSlice yVoxelUpdate(yStart, yStop,
+                                  m_Geometry,
+                                  OuterIter, Iter, m_Sinogram,
                                   m_BFSinogram, TempCol,
                                   ErrorSino, Weight, VoxelLineResponse,
                                   NuisanceParams, Mask,
@@ -630,7 +642,29 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
                                   &AverageMagnitudeOfRecon,
                                   m_AdvParams->ZERO_SKIPPING);
 
-        yVoxelUpdate.execute();
+        yVoxelUpdate.execute();*/
+		Real_t* averageUpdate = (Real_t*)(malloc(sizeof(Real_t)));
+        ::memset(averageUpdate, 0, sizeof(Real_t));
+        Real_t* averageMagnitudeOfRecon = (Real_t*)(malloc(sizeof(Real_t) ));
+        ::memset(averageMagnitudeOfRecon, 0, sizeof(Real_t) );
+		UpdateYSlice yVoxelUpdate(yStart, yStop, m_Geometry, OuterIter, Iter,
+					 m_Sinogram, TempCol, ErrorSino,
+					 VoxelLineResponse, m_ForwardModel.get(), mask,
+					 magUpdateMap, magUpdateMask, updateType,
+					 NH_Threshold,
+					 averageUpdate,
+					 averageMagnitudeOfRecon,
+					 m_AdvParams->ZERO_SKIPPING,
+					 qggmrf_values);
+		
+		yVoxelUpdate.execute();	
+		
+		AverageUpdate += averageUpdate[0];
+		AverageMagnitudeOfRecon += averageMagnitudeOfRecon[0];
+		free(averageUpdate);
+		free(averageMagnitudeOfRecon);
+	
+		
 #endif
         /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */STOP_TIMER;
         ss.str("");

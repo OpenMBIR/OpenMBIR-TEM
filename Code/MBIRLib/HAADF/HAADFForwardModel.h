@@ -65,6 +65,11 @@
 #ifndef _HAADFFORWARDMODEL_H_
 #define _HAADFFORWARDMODEL_H_
 
+#include "MBIRLib/MBIRLib.h"
+#include "MBIRLib/Common/AbstractFilter.h"
+#include "MBIRLib/Common/Observer.h"
+#include "MBIRLib/IOFilters/MRCWriter.h"
+
 #include "MXA/Common/MXASetGetMacros.h"
 #include "MBIRLib/Common/Observable.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
@@ -113,7 +118,8 @@ class HAADFForwardModel : public Observable
     MXA_INSTANCE_PROPERTY(Real_t, DefaultOffset)
     MXA_INSTANCE_PROPERTY(Real_t, DefaultVariance)
     MXA_INSTANCE_PROPERTY(bool, UseDefaultOffset)
-
+	MXA_INSTANCE_PROPERTY(Real_t, BraggThreshold)
+    
 
 
       // These are the Nuisance Parameters that we need to solve for
@@ -188,6 +194,18 @@ class HAADFForwardModel : public Observable
 #ifdef BF_RECON
 	void updateSelector(SinogramPtr sinogram,
                        RealVolumeType::Pointer errorSinogram);
+	
+	void printRatioSelected(SinogramPtr sinogram);
+	
+	void writeSelectorMrc(const std::string &file, SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino);
+	
+	Real_t estimateBraggThreshold(SinogramPtr sinogram,RealVolumeType::Pointer ErrorSino,Real_t percentage);
+	//void setUpBraggThreshold(Real_t Threshold);
+	
+	//Real_t estimateBraggThreshold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage);
+	uint32_t Partition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
+	Real_t RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i);
+	uint32_t RandomizedPartition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
 #endif
 
   
@@ -206,7 +224,7 @@ class HAADFForwardModel : public Observable
 						 std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
 						 RealVolumeType::Pointer ErrorSino,
 						 SinogramPtr sinogram,
-					     Int32ArrayType::Pointer Thetas);
+					     RealArrayType::Pointer Thetas);
 	
 	//After updating a voxel "Index",update sinogram
 	void updateErrorSinogram(Real_t ChangeInVoxelValue,
@@ -232,19 +250,15 @@ class HAADFForwardModel : public Observable
     RealArrayType::Pointer m_D1;
     RealArrayType::Pointer m_D2; //hold the intermediate values needed to compute optimal mu_k
 
-
     Real_t k_HammingWindow[5][5];
 	Real_t Theta[2]; //Theta1 and Theta2 in the optimization
  
-
-
 #ifdef EIMTOMO_USE_QGGMRF
     QGGMRF::QGGMRF_Values* m_QGGMRF_Values;
 #else
     Real_t MRF_P;
     Real_t SIGMA_X_P;
 #endif
-
 
     HAADFForwardModel(const HAADFForwardModel&); // Copy Constructor Not Implemented
     void operator=(const HAADFForwardModel&); // Operator '=' Not Implemented

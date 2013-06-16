@@ -81,15 +81,15 @@ void calcAvgDeviation(T* data, int total, Real_t &dev)
 	for (int i = 0; i < total; i++)
     {
 		Real_t temp = data[i] + BF_OFFSET;
-		if(temp < BF_MAX && temp > 0)
-			mean+=log(BF_MAX/(data[i]+BF_OFFSET));
+		if(temp > 0)
+			mean+=log(data[i]+BF_OFFSET);
     }
     mean/=total;
     for (int i = 0; i < total; i++)
     {
 		Real_t temp = data[i] + BF_OFFSET;
-		if(temp < BF_MAX && temp > 0)
-			dev+=fabs(log(BF_MAX/(data[i]+BF_OFFSET))-mean);
+		if(temp > 0)
+			dev+=fabs(log(data[i]+BF_OFFSET)-mean);
     }
     dev/=total;
 #endif//BF RECON

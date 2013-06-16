@@ -159,7 +159,7 @@ int UpdateYSlice::getZeroCount()
      Int32ArrayType::Pointer Counter = Int32ArrayType::New(dims, "Counter");
 
 	dims[0] = 2;
-	Int32ArrayType::Pointer Thetas = Int32ArrayType::New(dims, "Thetas");
+	RealArrayType::Pointer Thetas = RealArrayType::New(dims, "Thetas");
 	   
      dims[0] = m_Geometry->N_z;
      dims[1] = m_Geometry->N_x;
@@ -206,10 +206,9 @@ int UpdateYSlice::getZeroCount()
      {
        for (int32_t k = 0; k < m_Geometry->N_x; k++) //Column index
        {
-
          uint32_t Index = numberGenerator() % ArraySize;
-         int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
-         int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
+		 int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
+		 int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
          Counter->d[Index] = Counter->d[ArraySize - 1];
          m_VisitCount->setValue(1, j_new, k_new);
          ArraySize--;
@@ -317,7 +316,11 @@ int UpdateYSlice::getZeroCount()
 			  m_Theta1 = Thetas->d[0];
 			  m_Theta2 = Thetas->d[1];
 			  find_min_max(low, high, m_CurrentVoxelValue);
-
+			
+				 if(m_Theta2 < 0){
+				std::cout<<"The value of theta2 is negative"<<std::endl;
+				 }
+			  	 
                //Compute prior model parameters AND Solve the 1-D optimization problem
                errorcode = 0;
 			   UpdatedVoxelValue = QGGMRF::FunctionalSubstitution(low, high, m_CurrentVoxelValue,
@@ -333,7 +336,7 @@ int UpdateYSlice::getZeroCount()
                  }
 #endif
                }
-               else
+               else //TODO Remove this condition.
                {
                  if(m_Theta1 == 0 && low == 0 && high == 0)
                  {

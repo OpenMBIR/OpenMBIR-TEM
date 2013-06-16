@@ -180,8 +180,9 @@ int HAADFForwardModel::forwardProject(SinogramPtr sinogram,
 #if OpenMBIR_USE_PARALLEL_ALGORITHMS
     g->run(ForwardProject(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate, this, t, this));
 #else
-    ForwardProject fp(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate, NuisanceParams.get(), t, this);
-    //fp.setObservers(getObservers());
+   // ForwardProject fp(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate, NuisanceParams.get(), t, this);
+   ForwardProject fp(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate,this, t, this);
+	  //fp.setObservers(getObservers());
     fp();
 #endif
   }
@@ -503,7 +504,7 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
 {
   std::stringstream ss;
   std::string indent("  ");
-  if(getBF_Flag() == false)
+#ifndef BF_RECON
   {
     Real_t AverageI_kUpdate = 0; //absolute sum of the gain updates
     Real_t AverageMagI_k = 0; //absolute sum of the initial gains
@@ -705,42 +706,48 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
       //std::cout << "Ratio of change in Delta_k " << AverageDelta_kUpdate / AverageMagDelta_k << std::endl;
     }
   }
-  else
-  {
-
-    for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
-    {
+#else 
+  {  //Estimate unknown offset (log{dosage}) parameter
       Real_t num_sum = 0;
       Real_t den_sum = 0;
       Real_t alpha = 0;
+	  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	  {
       for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
       {
         for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
         {
+		  if(m_Selector->getValue(i_theta, i_r, i_t) == 1)
+		  {
           num_sum += (errorSinogram->getValue(i_theta, i_r, i_t) * m_Weight->getValue(i_theta, i_r, i_t));
           den_sum += m_Weight->getValue(i_theta, i_r, i_t);
+		  }
         }
       }
+	  //}
       alpha = num_sum / den_sum;
 
-      for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
-      {
-        for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
-        {
+	  //Update error sinogram
+	  //for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	  //{	  
+	     for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
+         {
+           for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
+           {
           errorSinogram->deleteFromValue(alpha, i_theta, i_r, i_t);
-        }
-      }
-
-      m_Mu->d[i_theta] += alpha;
-      if(getVeryVerbose())
-      {
-        std::cout << "Theta: " << i_theta << " Mu: " << m_Mu->d[i_theta] << std::endl;
-      }
-    }
-
-
-  } //BFflag = true
-  //return 0;
+           }
+         }
+         m_Mu->d[i_theta] += alpha;
+		  
+		  if(getVeryVerbose()) //Display the estimated offset
+		  {
+			  std::cout << " Mu: " << m_Mu->d[i_theta] << std::endl;
+		  }
+	    }
+	  
+     		  
+  } 
+#endif //BF_RECON
 }
 
 
@@ -762,19 +769,10 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
       for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
       {
         size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
-        //     size_t yest_idx = yEstimate->calcIndex(i_theta, i_r, i_t);
-        //    size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
         size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-  /*      if(sinogram->counts->d[counts_idx] != 0)
-        {
-          m_Weight->d[weight_idx] = 1.0 / sinogram->counts->d[counts_idx];
-        }
-        else
-        {
-          m_Weight->d[weight_idx] = 1.0;
-        }*/
-#ifdef BF_RECON //Override old weights
+#ifdef BF_RECON //Override old weights 
+		  //TODO Just assign this once 
 		  m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
 #endif //BF_RECON
 		  
@@ -811,14 +809,6 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
         size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
         size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-  /*      if(m_Alpha->d[i_theta] != 0 && sinogram->counts->d[counts_idx] != 0)
-        {
-          m_Weight->d[weight_idx] = 1.0 / (sinogram->counts->d[counts_idx] * m_Alpha->d[i_theta]);
-        }
-        else
-        {
-          m_Weight->d[weight_idx] = 1.0;
-        }*/
 		
 #ifdef BF_RECON
 		  m_Weight->d[weight_idx] = (BF_MAX/exp(sinogram->counts->d[counts_idx]))/m_Alpha->d[i_theta];  
@@ -886,7 +876,7 @@ for (uint16_t i_theta = 0; i_theta < sinogram->N_theta;i_theta++)
 		for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
 		{
 			size_t idx = m_Weight->calcIndex(i_theta, i_r, i_t);
-			if(ErrorSino->d[idx] * ErrorSino->d[i_theta] * m_Weight->d[idx] < BraggThreshold*BraggThreshold)
+			if(ErrorSino->d[idx] * ErrorSino->d[idx] * m_Weight->d[idx] < m_BraggThreshold*m_BraggThreshold)
 				m_Selector->d[idx] = 1;
 			else 
 				m_Selector->d[idx] = 0;
@@ -1095,7 +1085,27 @@ int HAADFForwardModel::createInitialOffsetsData(SinogramPtr sinogram)
       setErrorCondition(initializer->getErrorCondition());
       return -1;
     }
+	
+	  //TODO : HACK to just read offsets from a initial file
+	  FILE* fp;
+	  fp = fopen("/Users/svenkata/Desktop/Work/Tomography/TomoSoftware/HAADFSTEM/Data/AlSphereBFTEM/AlTEMOffsets.bin", "rb");
+	  if(fp == NULL)
+		  std::cout<<"File not found"<<std::endl;
+	  
+	  Real_t* temp;
+	  temp = (double*)malloc(1*sizeof(double));
+	  for(uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	  {
+		  std::cout<<i_theta<<std::endl;
+		  fread(temp, sizeof(double),1, fp);
+		  m_InitialOffset->d[i_theta] = -(*temp);
+	  }
+	  fclose(fp);  
+	  
   }
+
+
+	
   return 0;
 }
 
@@ -1169,7 +1179,7 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 				if(m_Selector->getValue(i,j,k) == 1)
 				    cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k));
 				else
-					cost += BraggThreshold*BraggThreshold;	
+					cost += m_BraggThreshold*m_BraggThreshold;	
 			}
 		}
 	}
@@ -1205,7 +1215,7 @@ void HAADFForwardModel::computeTheta(size_t Index,
 					 std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
 					 RealVolumeType::Pointer ErrorSino,
 					 SinogramPtr sinogram,
-					 Int32ArrayType::Pointer Thetas)
+					 RealArrayType::Pointer Thetas)
 {
 	
 	Thetas->d[0]=0;
@@ -1277,12 +1287,12 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 			}
 			VoxelLineAccessCounter++;
 #ifdef BF_RECON
-         if(ErrorSino->d[error_idx]*ErrorSino->d[error_idx]*m_Weight->d[error_idx] < BraggThreshold*BraggThreshold)
+			// Update the selector variable
+		   if(fabs(ErrorSino->d[error_idx]*sqrt(m_Weight->d[error_idx])) < m_BraggThreshold)
 			 m_Selector->d[error_idx] = 1;
-			else {
+		   else {
 			m_Selector->d[error_idx] = 0;	
 			}
-
 #endif
 		}
 	}
@@ -1293,9 +1303,17 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+/*void HAADFForwardModel::setUpBraggThreshold(Real_t Threshold)
+{
+	m_BraggThreshold = Threshold;
+}*/
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void HAADFForwardModel::processRawCounts(SinogramPtr sinogram)
 {
-    Real_t mean=0;
+    Real_t mean=0,maxval=-INFINITY;
     for (int16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++) //slice index
     {
         for (int16_t i_r = 0; i_r < sinogram->N_r; i_r++)
@@ -1306,15 +1324,188 @@ void HAADFForwardModel::processRawCounts(SinogramPtr sinogram)
                 sinogram->counts->d[counts_idx] += BF_OFFSET;
                 sinogram->counts->d[counts_idx] = -log(sinogram->counts->d[counts_idx]/BF_MAX);
 				
-                if(sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
-                    sinogram->counts->d[counts_idx] = 0;
+               // if(sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
+               //     sinogram->counts->d[counts_idx] = 0;
 				
+				//Debug/Sanity checks 
                 mean+=sinogram->counts->d[counts_idx];
+				if(fabs(sinogram->counts->d[counts_idx]) > maxval)
+					maxval = sinogram->counts->d[counts_idx];
             }
         }
     }
     mean/=(sinogram->N_theta*sinogram->N_r*sinogram->N_t);
     std::cout<<"Mean log value ="<<mean<<std::endl;
+	std::cout<<"Max -log value ="<<maxval<<std::endl;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void HAADFForwardModel::printRatioSelected(SinogramPtr sinogram)
+{
+	Real_t sum=0;
+    for (int16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++) //slice index
+    {
+		Real_t sum_k=0;//Sum for each tilt
+        for (int16_t i_r = 0; i_r < sinogram->N_r; i_r++)
+        {
+            for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
+            {
+			    size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
+				sum_k+=m_Selector->d[counts_idx];				
+			}
+		}
+		std::cout<<"Ratio of sinogram at tilt :"<<i_theta<<" "<<sum_k/(sinogram->N_r*sinogram->N_t)<<std::endl;
+		sum+=sum_k;
+	}
+	
+	std::cout<<"Ratio of singoram entries used="<<sum/(sinogram->N_theta*sinogram->N_r*sinogram->N_t)<<std::endl;
+}
+
+void HAADFForwardModel::writeSelectorMrc(const std::string &file, SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino)
+{
+	//const std::string mrcFile="Selector.mrc";
+	geometry->N_x = sinogram->N_r;
+	geometry->N_y = sinogram->N_t;
+	geometry->N_z = sinogram->N_theta;
+	geometry->Object = sinogram->counts;
+	for(uint32_t i_theta = 0; i_theta <  geometry->N_z; i_theta++)
+	{
+	   for(uint32_t i_r = 0; i_r < geometry->N_x; i_r++)
+		  for(uint32_t i_t = 0; i_t < geometry->N_y; i_t++)
+		  {
+			size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
+			Real_t value = m_Selector->d[counts_idx];//exp(-sinogram->counts->d[counts_idx]+ErrorSino->d[counts_idx]);
+			//value -= BF_OFFSET;
+			counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);  
+			geometry->Object->d[counts_idx] = value;			  
+		  }
+	}
+	uint16_t cropStart=0;
+	uint16_t cropEnd = geometry->N_x;
+	/* Write the output to the MRC File */
+	std::stringstream ss;
+	ss.str("");
+	ss << "Writing selector MRC file to '" << file << "'";
+	notify(ss.str(), 0, Observable::UpdateProgressMessage);
+	
+	MRCWriter::Pointer mrcWriter = MRCWriter::New();
+//	mrcWriter->setOutputFile(mrcFile);
+	mrcWriter->setOutputFile(file);
+	mrcWriter->setGeometry(geometry);
+	mrcWriter->setAdvParams(m_AdvParams);
+	mrcWriter->setXDims(cropStart, cropEnd);
+	mrcWriter->setYDims(0, geometry->N_y);
+	mrcWriter->setZDims(0, geometry->N_z);
+	mrcWriter->setObservers(getObservers());
+	mrcWriter->execute();
+	if(mrcWriter->getErrorCondition() < 0)
+	{
+		ss.str("");
+		ss << "Error writing Selector MRC file\n    '" << file << "'" << std::endl;
+		setErrorCondition(mrcWriter->getErrorCondition());
+		notify(ss.str(), 0, Observable::UpdateErrorMessage);
+	}
+}
+
+Real_t HAADFForwardModel::estimateBraggThreshold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage)
+{
+	//m_Alpha->d[i_theta]
+	//m_Weight->d[error_idx]
+	Real_t EstBraggThresh;
+	uint32_t NumElts = sinogram->N_theta*sinogram->N_r*sinogram->N_t;
+	uint32_t NumEltsReject = percentage*NumElts;//Find the Error*Weight 
+	//corresponding to this order statistic
+	RealArrayType::Pointer Ratio;
+	size_t dims[1]={NumElts};
+	Ratio = RealArrayType::New(dims, "Ratio of error to noise variance");
+	uint32_t counts=0;
+	for(uint32_t i_theta = 0; i_theta <  sinogram->N_theta; i_theta++)
+		for(uint32_t i_r = 0; i_r < sinogram->N_r; i_r++)
+			for(uint32_t i_t = 0; i_t < sinogram->N_t; i_t++)
+			{
+				size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
+				Ratio->d[counts]=ErrorSino->d[counts_idx]*m_Weight->d[counts_idx];
+				Ratio->d[counts]*=ErrorSino->d[counts_idx];
+				counts++;
+			}
+	std::cout<<"Num Elts"<<counts<<std::endl;
+	std::cout<<"Num Elts to reject ="<<NumEltsReject<<std::endl;
+	
+	EstBraggThresh =sqrt(RandomizedSelect(Ratio,0, counts-1, NumElts - NumEltsReject));
+	std::cout<<"Bragg Thresh estimated using Randomized select"<<EstBraggThresh<<std::endl;	
+	
+	/*uint32_t max_index=0;
+	for(uint32_t j =0; j < NumEltsReject;j++)
+	{
+	Real_t max=-INFINITY;	
+	for(uint32_t i =j ;i < NumElts; i++)
+	{
+		if (Ratio->d[i] > max) {
+			max =Ratio->d[i];
+			max_index = i;
+		}
+	}
+	Real_t temp = Ratio->d[j];
+	Ratio->d[j] = max;
+	Ratio->d[max_index]=temp;	
+	}
+	EstBraggThresh = sqrt(Ratio->d[NumEltsReject-1]);
+	std::cout<<"Bragg Thresh estimated using Insertion sort = "<<EstBraggThresh<<std::endl;	
+	*/
+	return EstBraggThresh;
+}
+
+//Radomized select based on code from : http://stackoverflow.com/questions/5847273/order-statistic-implmentation
+
+
+Real_t HAADFForwardModel::RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i)
+{
+	if (p == r)
+    {
+		return A->d[p];
+    }
+	uint32_t q = RandomizedPartition(A, p, r);
+	uint32_t k = q - p + 1;
+	if (i == k)
+    {
+		return A->d[q];
+    }
+	else if  (i < k)
+    {
+		return RandomizedSelect(A, p, q-1, i) ;
+    }
+	else return RandomizedSelect(A, q+1, r, i - k);
+}
+uint32_t HAADFForwardModel::Partition(RealArrayType::Pointer A,uint32_t p,uint32_t r)
+{
+	Real_t x=A->d[r],temp;
+	uint32_t i=p-1,j;
+	for(j=p;j<r;j++)
+    {
+		if(A->d[j]<=x)
+        {
+			i++;
+			temp=A->d[i];
+			A->d[i]=A->d[j];
+			A->d[j]=temp;
+        }
+    }
+	temp=A->d[i+1];
+	A->d[i+1]=A->d[r];
+	A->d[r]=temp;
+	return i+1;
+	
+}
+uint32_t HAADFForwardModel::RandomizedPartition(RealArrayType::Pointer A,uint32_t p,uint32_t r)
+{
+	Real_t temp;
+	uint32_t j = p + rand()%(r-p+1);
+	temp = A->d[r];
+	A->d[r] = A->d[j];
+	A->d[j] = temp;	
+	return Partition(A, p, r);
 }
 
 #endif //BF Recon

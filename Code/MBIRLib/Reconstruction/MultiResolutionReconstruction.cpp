@@ -250,12 +250,16 @@ void MultiResolutionReconstruction::execute()
       return;
     }
 
+	 //initialize the Bragg selector file
+	  inputs->braggSelectorFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + "Selector.mrc";
+	  
     // Only write the mrc and vtk files on the last iteration
     if(m_NumberResolutions - 1 == i) // Last Iteration
     {
         inputs->vtkOutputFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + ".vtk";
         inputs->avizoOutputFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + ".am";
         inputs->mrcOutputFile = m_OutputFile;
+	
     }
     else
     {
@@ -347,7 +351,10 @@ void MultiResolutionReconstruction::execute()
     }
     inputs->LengthZ = m_SampleThickness;
     forwardModel->setTargetGain(getTargetGain());
-    inputs->tiltSelection = m_TiltSelection;
+	
+	forwardModel->setBraggThreshold(getBraggThreshold()); //Set the Bragg value 
+    
+	inputs->tiltSelection = m_TiltSelection;
     if(m_Subvolume.size() > 0)
     {
       inputs->useSubvolume = true;
