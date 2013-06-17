@@ -1,0 +1,154 @@
+/**
+
+@page ack Acknowledgements / Funding
+  Parts of OpenMBIR were written under US Air Force Contract FA8650-07-D-5800. The following
+is a list of contributors:
+
+@image html Purdue_Logo.png ""
+@image latex Purdue_Logo.png "" width=3.5in
+@li Dr. Charles Bouman (Purdue University)
+@li Singanallur Venkatakrishnan (Purdue University)
+
+@image html BlueQuartzSoftware_Logo.png ""
+@image latex BlueQuartzSoftware_Logo.png "" width=3.5in
+@li Mike Jackson
+
+@image html CMU_MRSEC_Logo.png ""
+@image latex CMU_MRSEC_Logo.png "" width=2.5in
+@li Marc De Graef
+
+@li Dr. Larry Drummy (UES)
+
+@image html AFRL_Logo.png ""
+@image latex AFRL_Logo.png "" width=2.5in
+@li Jeff Simmons
+
+
+@page intro Introduction
+  The current implementation of OpenMBIR focuses on the reconstruction of HAADF STEM tomography data.
+@li HAADF (High Angle Annular Dark Field)
+@li STEM  (Scanning Transmission Electron Microscopy)
+
+The input data must be encoded as a <b> aligned </b>tilt series of images 
+stored in the IMOD .mrc file format. The valid file extensions are 
+.mrc and .ali. The present version expects the tilts and the pixel
+sizes the be stored in the file header. 
+
+@page ui TEMBIR Application
+  The main graphical user interface based application is called TEMBIR (Tomographic Environment 
+for Model Based Iterative Reconstruction). The user launches it by double clicking the 
+TEMBIR.app or TEMBIR.exe icon on their system. After the program launches the user is presented
+with a window similar to the following:
+@image html TEMBIR_UI.png "TEMBIR Main User Interface Window"
+@image latex TEMBIR_UI.png "TEMBIR Main User Interface Window" width=6.0in
+
+@section mainui Main User Interface
+    There are several areas of the main user interface. The first is the <b>Inputs</b> tab where the user
+can select the input .mrc or .ali file from the filesystem of the local computer and set the
+output file that the reconstruction will be written to.
+
+<b>Features</b>@n
+@li Reads IMOD .mrc or .ali formatted files as input
+@li Writes IMOD formatted .rec files as output
+@li Writes ParaView compatible .vtk files
+@li Writes Avizo compatible .am files
+@li allows user to perform a quick single slice reconstruction to quickly refine
+input parameters
+@li Allows user to select a subarea of the input data to reconstruct
+@li Allows user to Zoom out/in and fit to window the current input data
+@li Allows user to display any slice from the data set.
+@li Allows user to export the display area to an image
+@li Export the configuration for a reconstruction to a text file
+@li Import the configuration for a reconstruction from a text file
+  
+When the image is loaded the y=0 is at the bottom of the image as 
+marked by the "(0,0)"
+indicator marker on the image.
+
+@page inputparameters TEMBIR Input Parameters
+
+@section ss1 Single Slice Reconstruction Geometry
+
+A single slice reconstruction can be used to quickly determine 
+what are the optimal parameter values to be used for reconstruction by 
+reconstructing a few x-z slices of the object. To select the 
+location of the x-z slices which we need to reconstruct, 
+hold down the shift key and click 
+on the data display window at the appropriate location. A yellow 
+line appears to indicate the location of the x-z slice 
+which we are going to reconstruct.
+
+@image html SingleSliceSelect.png "TEMBIR GUI showing a single x-z slice being selected for reconstruction. The yellow line shows the slice chosen and its width indicates the length along x chosen."
+
+@image latex SingleSliceSelect.png "TEMBIR GUI showing a single x-z slice being selected for reconstruction.The yellow line shows the slice chosen and its width indicates the length along x chosen." width=6in
+
+@li X Width (percentage): Used for choosing what 
+percentage of the total pixels along the x direction is going to be 
+used for reconstruction. 
+@li Use Multi-Resolution Reconstruction: Checking this implements 
+the multiresolution algorithm which can speed up the reconstruction.
+
+Before hitting the Single Slice Reconstruction ensure that the 
+Sample Thickness and Final Resolution Multiple (see \ref ss2) 
+are entered.
+
+@section ss2 Full Reconstruction Geometry
+@li X Width: Used for choosing what 
+percentage of the total pixels along the x direction is going to be 
+used for reconstruction.
+@li Y Start Slice: The first slice along the y direction to reconstruct.  
+@li Y End Slice: The last slice along the y direction to reconstruct.  
+@li Sample Thickness: Thickness of the sample (in nano meters) which 
+is being imaged.
+@li Final Resolution Multiple: The desired size of voxels in the 
+reconstructed volume in terms of an integer multiple of the pixel size
+of the acquired data. (Example: Data has pixels of size =1 nm X 1nm and if 
+we set Final Resolution Multiple to 5, then the reconstruction will be 
+done with voxels of size 5 nm X 5 nm X 5 nm). 
+@li Tilt Axis: The axis along which the sample was tilted to acquire the 
+data.
+
+@section ss3 Parameters
+@li Diffuseness: A value in the interval \f$ [0 \, 1] \f$ which can be used to 
+incorporate knowledge of the the nature of interfaces between the 
+particles of interest and its support. A value of 0 corresponds to 
+sharp interfaces (Total Variation, Compressed sensing etc) while 
+a value of 1 corresponds to smooth interfaces.  
+@li Smoothness/Sigma X: Controls the levels of noise in the reconstruction. 
+The Smoothness (dimensionless) typically takes values in the 
+range of .1 - 10 and is used to compute the parameter SigmaX (uints of 
+nm \f$ ^{-1} \f$) which controls the level of noise in the reconstruction. 
+A large value of smoothness makes the image less noisy but decreases 
+resolution while a small value can yield noisy reconstructions but 
+preserve detail. The optimal value can be learnt from doing 
+the single slice reconstruction. This parameter can be thought of 
+having some similarities to the filter parameters used in back projection 
+algorithms.  
+
+@section ss4 Advanced Parameters
+
+@li Stop Threshold: Stopping threshold used for terminating the optimization
+routine. A value of \f$ .005 \,\left(.5\,\% \right) \f$ has been found to work in several data sets. 
+@li Num. Resolutions: The number of resolutions to be used for the multi-resolution method. A default value of 3 has been found to work well. Using too many 
+resolutions can slow down the overall speed of the reconstruction.
+@li Target Gain: Average value of the transmission normalization data (same 
+units as the HAADF data). This can be set if the user has some knowledge 
+of the average value of the transmission data so that the reconstructions
+are scaled in units of nm \f$^{-1}\f$.
+@li Interpolate Initial Reconstruction: 
+@li Outer Iterations: Maximum number of iterations before the algorithm 
+terminates. 
+@li Inner Iterations: Number of iterations over the voxels at the coarsest 
+resolution. The default value is set to \f$ 10 \f$.  
+@li Default Offset Value: If there is a known offset in the acquired data 
+it can be entered here. If it is unknown the value is estimted as 
+a part of the reconstruction. 
+@li Default Variance: Scaling factor for variance in measurements. 
+@li Default Initial Reconstruction Value: Initial value of the voxels 
+to be used while minimizing the cost. 
+@li Extend Object: Indicates that the extent of the actual volume 
+being imaged extends beyond the region indicated for reconstruction. 
+@li Delete Temp Files: Remove all temporary files generated during the 
+multiresolution reconstruction.
+
+*/

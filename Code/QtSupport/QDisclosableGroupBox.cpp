@@ -148,24 +148,26 @@ void QDisclosableGroupBox::setupGui()
 void QDisclosableGroupBox::disclose(bool on)
 {
 
-  // Remove the current Layout
-//    QLayout* l = layout();
-//    if(NULL != l)
-//    {
-//      qDeleteAll(l->children());
-//      delete l;
-//    }
-//    QGridLayout* gridLayout = new QGridLayout(this);
-  QObjectList objs = children();
-  foreach(QObject* obj, objs)
-  {
-    QWidget* w = qobject_cast<QWidget*>(obj);
-    if(NULL != w)
+    if (on)
     {
-      if(on) w->show();
-      else w->hide();
+        this->setMaximumHeight(260000);
     }
-  }
+    else
+    {
+       this->setMaximumHeight(26);
+    }
+
+    QObjectList objs = children();
+    foreach(QObject* obj, objs)
+    {
+      QWidget* w = qobject_cast<QWidget*>(obj);
+      if(NULL != w)
+      {
+        if(on) w->show();
+        else w->hide();
+      }
+    }
+
 
 }
 

@@ -239,6 +239,9 @@ if (OpenMBIR_BUILD_GUI)
 endif()
 
 
+# Should we build the documentation using DOxygen
+include (${PROJECT_SOURCE_DIR}/Documentation/CMakeLists.txt)
+
 
 # This should be the last line in this file:
 include(${PROJECT_RESOURCES_DIR}/CPack/PackageProject.cmake)
