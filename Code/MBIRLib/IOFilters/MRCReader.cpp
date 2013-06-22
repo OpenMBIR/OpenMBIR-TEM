@@ -145,6 +145,18 @@ int MRCReader::readHeader(const std::string &filepath, MRCHeader* header)
      header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * header->nz));
      ::memcpy(header->feiHeaders, &(m_ExtendedHeader.front()), sizeof(FEIHeader) * header->nz);
    }
+   pos = feiLabel.find("MCAP project, MDG, Copyright 2013");
+   if (pos != std::string::npos)
+   {
+     if (NULL != header->feiHeaders)
+     {
+       free(header->feiHeaders);
+       header->feiHeaders = NULL;
+     }
+     // Allocate and copy in the data
+     header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * header->nz));
+     ::memcpy(header->feiHeaders, &(m_ExtendedHeader.front()), sizeof(FEIHeader) * header->nz);
+   }
 
    return 1;
 }
