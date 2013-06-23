@@ -689,8 +689,8 @@ void ReconstructionEngine::execute()
 	
     } */ //Joint estimation endif
 
-	/*
-    if(m_AdvParams->NOISE_ESTIMATION)
+	
+	 if(m_AdvParams->NOISE_ESTIMATION)
     {
       m_ForwardModel->updateWeights(m_Sinogram, errorSino);
 #ifdef BF_RECON
@@ -705,7 +705,7 @@ void ReconstructionEngine::execute()
 			break;
 		}
 #endif//cost
-    }*/
+    }
 		
 	}
     /*else
