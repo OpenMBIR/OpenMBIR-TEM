@@ -565,10 +565,12 @@ void ReconstructionEngine::execute()
 	if(m_TomoInputs->NumIter > 1)
 	{//Get the value of the Bragg threshold from the User Interface the first time
 	    TempBraggValue = DefBraggThreshold;//m_ForwardModel->getBraggThreshold();
+		m_ForwardModel->setBraggThreshold(TempBraggValue);
 	}
 	else 
 	{
-		TempBraggValue  = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
+		TempBraggValue = BF_T;
+		//TempBraggValue  = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
 		m_ForwardModel->setBraggThreshold(TempBraggValue);
 	}
 #endif //Bragg correction
@@ -596,6 +598,7 @@ void ReconstructionEngine::execute()
 	if(m_TomoInputs->NumIter > 1 && reconInnerIter == 0)
 	{
 		m_ForwardModel->setBraggThreshold(DefBraggThreshold);
+		//m_ForwardModel->setBraggThreshold(BF_T);
 	}
 				
 	  //Prints the ratio of the sinogram entries selected
@@ -647,10 +650,10 @@ void ReconstructionEngine::execute()
 		if(reconInnerIter == m_TomoInputs->NumIter-1 && reconInnerIter != 0)
 		{ //The first time at the coarsest resolution at the end of 
 		 // inner iterations set the Bragg Threshold
-			Real_t threshold = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
+		/*	Real_t threshold = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
 			std::cout<<"Computed Bragg Threshold ="<<threshold<<std::endl;
-			m_ForwardModel->setBraggThreshold(threshold);
-			TempBraggValue = threshold;
+			m_ForwardModel->setBraggThreshold(threshold);*/
+			TempBraggValue = BF_T;//threshold;
 		}
 
 #endif //Bragg correction 
@@ -668,7 +671,7 @@ void ReconstructionEngine::execute()
 	  
 	if(m_TomoInputs->NumOuterIter > 1) //Dont update any parameters if we just have one inner iteration
 	{
-    if(m_AdvParams->JOINT_ESTIMATION)
+/*    if(m_AdvParams->JOINT_ESTIMATION)
     {
       m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
 #ifdef BF_RECON
@@ -684,7 +687,7 @@ void ReconstructionEngine::execute()
 		}
 #endif//cost
 	
-    } //Joint estimation endif
+    } */ //Joint estimation endif
 
 	/*
     if(m_AdvParams->NOISE_ESTIMATION)
@@ -719,12 +722,13 @@ void ReconstructionEngine::execute()
 	//Adapt the Bragg Threshold
 	if(BraggStep < RejFraction)
 	{
-		BraggStep+=RejFraction/REJECTION_RATE;//REJECTION_PERCENTAGE/10;
+		/*BraggStep+=RejFraction/REJECTION_RATE;//REJECTION_PERCENTAGE/10;
 		std::cout<<"Current Bragg Step"<<BraggStep<<std::endl;
 		Real_t threshold = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
 		std::cout<<"Computed Bragg Threshold ="<<threshold<<std::endl;
 		m_ForwardModel->setBraggThreshold(threshold);
-		TempBraggValue = threshold;	
+		TempBraggValue = threshold;	*/
+		TempBraggValue = BF_T;
 	}  
 #endif //Bragg correction 
 

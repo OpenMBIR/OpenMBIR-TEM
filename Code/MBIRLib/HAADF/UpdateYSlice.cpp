@@ -318,7 +318,7 @@ int UpdateYSlice::getZeroCount()
 			  find_min_max(low, high, m_CurrentVoxelValue);
 			
 				 if(m_Theta2 < 0){
-				std::cout<<"The value of theta2 is negative"<<std::endl;
+				//std::cout<<"The value of theta2 is negative"<<std::endl;
 				 }
 			  	 
                //Compute prior model parameters AND Solve the 1-D optimization problem

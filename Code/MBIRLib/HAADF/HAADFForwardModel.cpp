@@ -1179,7 +1179,8 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 				if(m_Selector->getValue(i,j,k) == 1)
 				    cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k));
 				else
-					cost += m_BraggThreshold*m_BraggThreshold;	
+					//cost += m_BraggThreshold*m_BraggThreshold;	
+					cost += (BF_DELTA*fabs(errSinoValue) * sqrt(m_Weight->getValue(i, j, k)) + BF_T*(BF_T - BF_DELTA));
 			}
 		}
 	}
@@ -1187,7 +1188,7 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 	cost /= 2;
 	
 	//Noise Error
-	if(m_AdvParams->NOISE_ESTIMATION)
+/*	if(m_AdvParams->NOISE_ESTIMATION)
 	{
 		temp = 0;
 		for (int16_t i = 0; i < sinogram->N_theta; i++)
@@ -1202,7 +1203,8 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 		}
 		temp /= 2;
 		cost += temp;
-	} //NOISE_MODEL
+	} */
+	//NOISE_MODEL
 	
 	return cost;
 }
@@ -1234,19 +1236,18 @@ void HAADFForwardModel::computeTheta(size_t Index,
 			size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
 			if(m_Selector->d[error_idx] == 1)
 			{
-			Real_t ProjectionEntry = kConst0 * VoxelLineResponse[xzSliceIdx]->values[VoxelLineAccessCounter];
-			if(getBF_Flag() == false)
-			{
+				Real_t ProjectionEntry = kConst0 * VoxelLineResponse[xzSliceIdx]->values[VoxelLineAccessCounter];
 				Thetas->d[1] += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
-				Thetas->d[0] += (ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
+				Thetas->d[0] += (ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);			
+				VoxelLineAccessCounter++;
 			}
 			else
 			{
-				ProjectionEntry *= getBFSinogram()->counts->d[error_idx];
-				Thetas->d[1] += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
-				Thetas->d[0] += (ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
-			}
-			VoxelLineAccessCounter++;
+				Real_t QuadCoeff = BF_DELTA/(2*ErrorSino->d[error_idx]* m_Weight->d[error_idx]);
+				Real_t ProjectionEntry = kConst0 * VoxelLineResponse[xzSliceIdx]->values[VoxelLineAccessCounter];
+				Thetas->d[1] += QuadCoeff*(ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
+				Thetas->d[0] += QuadCoeff*(ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
+				VoxelLineAccessCounter++;
 			}
 		}
 	}	
