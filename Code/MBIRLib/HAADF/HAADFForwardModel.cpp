@@ -756,10 +756,7 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
 // -----------------------------------------------------------------------------
 void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino)
 {
-  Real_t AverageVarUpdate = 0; //absolute sum of the gain updates
-  Real_t AverageMagVar = 0; //absolute sum of the initial gains
   Real_t sum = 0;
-
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
   {
     sum = 0;
@@ -780,62 +777,29 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
         m_Weight->d[weight_idx] = 1.0;
 #endif//Identity noise Model
       }
-
     }
-
-    for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
-    {
-      for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
-      {
-        size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
-        size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
-#ifdef BF_RECON
-		if(m_Selector->d[weight_idx] == 1)  
-#endif //BF_RECON
-        sum += (ErrorSino->d[error_idx] * ErrorSino->d[error_idx] * m_Weight->d[weight_idx]); //Changed to only account for the counts
-      }
-    }
-    sum /= (sinogram->N_r * sinogram->N_t);
-
-    AverageMagVar += fabs(m_Alpha->d[i_theta]);
-    AverageVarUpdate += fabs(sum - m_Alpha->d[i_theta]);
-    m_Alpha->d[i_theta] = sum;
-    //Update the weight for ICD updates
-    for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
-    {
-      for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
-      {
-
-        size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
-#ifndef IDENTITY_NOISE_MODEL
-        size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-		
-#ifdef BF_RECON
-		  m_Weight->d[weight_idx] = (BF_MAX/exp(sinogram->counts->d[counts_idx]))/m_Alpha->d[i_theta];  
-#endif //BF_RECON
-		  
-#else
-        m_Weight->d[weight_idx] = 1.0 / m_Alpha->d[i_theta];
-#endif //IDENTITY_NOISE_MODEL endif
-	
-      
-	  }
-    }
-
   }
-
+	
+  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+	  for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
+		  for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
+		  {
+			size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
+			if(m_Selector->d[weight_idx] == 1) 
+				sum+=(ErrorSino->d[weight_idx]*ErrorSino->d[weight_idx]*m_Weight->d[weight_idx]);
+			  else 
+				  sum+= BF_DELTA*fabs(ErrorSino->d[weight_idx])*sqrt(m_Alpha->d[i_theta]*m_Weight->d[weight_idx])/2;
+		  }
+	
 	// This block averages the alphas so we have a single constant of proportionality for BF case 
-	sum=0;		  
-	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
-	{
-		sum+=m_Alpha->d[i_theta];
-	}
-	sum/=sinogram->N_theta;
+	sum/=(sinogram->N_theta*sinogram->N_r*sinogram->N_r);
 	
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	{
 		m_Alpha->d[i_theta]=sum;
 	}
+	
+	//Update the weights back for future iterations
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	    for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
 			for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
@@ -857,7 +821,6 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
     {
       std::cout << i_theta << "\t" << m_Alpha->d[i_theta] << std::endl;
     }
-    std::cout << "Ratio of change in Variance " << AverageVarUpdate / AverageMagVar << std::endl;
   }
 
   notify("Update Weights Complete", 0, Observable::UpdateProgressMessage);
@@ -1179,7 +1142,8 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 				if(m_Selector->getValue(i,j,k) == 1)
 				    cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k));
 				else
-					cost += m_BraggThreshold*m_BraggThreshold;	
+					//cost += m_BraggThreshold*m_BraggThreshold;	
+					cost += (BF_DELTA*fabs(errSinoValue) * sqrt(m_Weight->getValue(i, j, k)) + BF_T*(BF_T - BF_DELTA));
 			}
 		}
 	}
@@ -1196,13 +1160,15 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 			{
 				for (int16_t k = 0; k < sinogram->N_t; k++)
 				{
-					if(m_Weight->getValue(i, j, k) != 0) temp += log(2 * M_PI * (1.0 / m_Weight->getValue(i, j, k)));
+					if(m_Weight->getValue(i, j, k) != 0) 
+						temp += log(2 * M_PI * (1.0 / m_Weight->getValue(i, j, k)));
 				}
 			}
 		}
 		temp /= 2;
 		cost += temp;
-	} //NOISE_MODEL
+	} 
+	//NOISE_MODEL
 	
 	return cost;
 }
@@ -1234,19 +1200,18 @@ void HAADFForwardModel::computeTheta(size_t Index,
 			size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
 			if(m_Selector->d[error_idx] == 1)
 			{
-			Real_t ProjectionEntry = kConst0 * VoxelLineResponse[xzSliceIdx]->values[VoxelLineAccessCounter];
-			if(getBF_Flag() == false)
-			{
+				Real_t ProjectionEntry = kConst0 * VoxelLineResponse[xzSliceIdx]->values[VoxelLineAccessCounter];
 				Thetas->d[1] += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
-				Thetas->d[0] += (ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
+				Thetas->d[0] += (ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);			
+				VoxelLineAccessCounter++;
 			}
 			else
 			{
-				ProjectionEntry *= getBFSinogram()->counts->d[error_idx];
-				Thetas->d[1] += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
-				Thetas->d[0] += (ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
-			}
-			VoxelLineAccessCounter++;
+				Real_t QuadCoeff = BF_DELTA/(2*fabs(ErrorSino->d[error_idx])* sqrt(m_Weight->d[error_idx]));
+				Real_t ProjectionEntry = kConst0 * VoxelLineResponse[xzSliceIdx]->values[VoxelLineAccessCounter];
+				Thetas->d[1] += QuadCoeff*(ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
+				Thetas->d[0] += QuadCoeff*(ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
+				VoxelLineAccessCounter++;
 			}
 		}
 	}	
