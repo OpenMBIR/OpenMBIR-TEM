@@ -654,6 +654,7 @@ void ReconstructionEngine::execute()
 			std::cout<<"Computed Bragg Threshold ="<<threshold<<std::endl;
 			m_ForwardModel->setBraggThreshold(threshold);*/
 			TempBraggValue = BF_T;//threshold;
+			m_ForwardModel->setBraggThreshold(TempBraggValue);
 		}
 
 #endif //Bragg correction 
@@ -702,7 +703,8 @@ void ReconstructionEngine::execute()
 		if (err < 0)
 		{
 			std::cout<<"Cost went up after variance update"<<std::endl;
-			break;
+			return;
+			//break;
 		}
 #endif//cost
     }
@@ -729,6 +731,7 @@ void ReconstructionEngine::execute()
 		m_ForwardModel->setBraggThreshold(threshold);
 		TempBraggValue = threshold;	*/
 		TempBraggValue = BF_T;
+		m_ForwardModel->setBraggThreshold(TempBraggValue);
 	}  
 #endif //Bragg correction 
 

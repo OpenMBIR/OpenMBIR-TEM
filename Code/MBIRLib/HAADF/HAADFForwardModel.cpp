@@ -445,16 +445,6 @@ void HAADFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVol
         }
 
 #ifndef IDENTITY_NOISE_MODEL
-        if(sinogram->counts->d[counts_idx] != 0)
-        {
-          m_Weight->d[weight_idx] = 1.0 / sinogram->counts->d[counts_idx];
-        }
-        else
-        {
-          m_Weight->d[weight_idx] = 1.0; //Set the weight to some small number
-          //TODO: Make this something resonable
-        }
-		
 		  //If its a bright field recon just over ride the weights
 #ifdef BF_RECON
 		  m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
@@ -756,10 +746,9 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
 // -----------------------------------------------------------------------------
 void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino)
 {
-  Real_t sum = 0;
+  
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
   {
-    sum = 0;
     //Factoring out the variance parameter from the Weight matrix
     for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
     {
@@ -779,7 +768,8 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
       }
     }
   }
-	
+
+  Real_t sum = 0;
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	  for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
 		  for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
@@ -799,19 +789,20 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
 		m_Alpha->d[i_theta]=sum;
 	}
 	
-	//Update the weights back for future iterations
+	//Update the weights back for future iterations by appropriately scaling it
+	//by m_Alpha's 
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	    for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
 			for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
 			{
 				size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
-				m_Weight->d[weight_idx] = (BF_MAX/exp(sinogram->counts->d[weight_idx]))/m_Alpha->d[i_theta];
+				m_Weight->d[weight_idx] = (BF_MAX/exp(sinogram->counts->d[weight_idx])); //Sets the weight = measured count
+				m_Weight->d[weight_idx]/=m_Alpha->d[i_theta]; //Scales the weight appropriately
 #else
 				m_Weight->d[weight_idx] = 1.0/m_Alpha->d[i_theta];
 #endif //IDENTITY_NOISE_MODEL
-			}
-		
+			}		
 	
   if(getVeryVerbose())
   {
