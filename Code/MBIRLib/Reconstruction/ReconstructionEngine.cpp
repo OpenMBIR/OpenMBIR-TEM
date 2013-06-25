@@ -670,7 +670,7 @@ void ReconstructionEngine::execute()
 	  
 	
 	  
-	if(m_TomoInputs->NumOuterIter > 1) //Dont update any parameters if we just have one inner iteration
+	if(m_TomoInputs->NumOuterIter > 1) //Dont update any parameters if we just have one outer iteration
 	{
 /*    if(m_AdvParams->JOINT_ESTIMATION)
     {
@@ -691,7 +691,7 @@ void ReconstructionEngine::execute()
     } */ //Joint estimation endif
 
 	
-	 if(m_AdvParams->NOISE_ESTIMATION)
+	if(m_AdvParams->NOISE_ESTIMATION)
     {
       m_ForwardModel->updateWeights(m_Sinogram, errorSino);
 #ifdef BF_RECON
@@ -699,8 +699,8 @@ void ReconstructionEngine::execute()
 #endif //BF_RECON
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);
-		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
-		if (err < 0)
+		err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
+		if (err < 0 && reconOuterIter > 1)
 		{
 			std::cout<<"Cost went up after variance update"<<std::endl;
 			return;
@@ -708,7 +708,6 @@ void ReconstructionEngine::execute()
 		}
 #endif//cost
     }
-		
 	}
     /*else
     {
@@ -943,8 +942,10 @@ Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geome
 	Real_t errSinoValue = 0.0;
 	
 	cost = m_ForwardModel->forwardCost(sinogram,ErrorSino);//Data term error
+	if(getVeryVerbose())
 	std::cout<<"Forward cost"<<cost<<std::endl;
 	cost += QGGMRF::PriorModelCost(geometry, qggmrf_values);//Prior model error
+	if(getVeryVerbose())
 	std::cout<<"Total cost"<<cost<<std::endl;
 	return cost;
 }

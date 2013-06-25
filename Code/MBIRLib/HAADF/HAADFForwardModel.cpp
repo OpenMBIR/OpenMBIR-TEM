@@ -745,8 +745,7 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
 // Updating the Weights for Noise Model
 // -----------------------------------------------------------------------------
 void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino)
-{
-  
+{  
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
   {
     //Factoring out the variance parameter from the Weight matrix
@@ -756,12 +755,11 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
       {
         size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
-        size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-#ifdef BF_RECON //Override old weights 
+#ifdef BF_RECON //Override old weights and unnormalize it
 		  //TODO Just assign this once 
-		  m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
-#endif //BF_RECON
-		  
+		  m_Weight->d[weight_idx]*=m_Alpha->d[i_theta];
+		  //m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
+#endif //BF_RECON		  
 #else
         m_Weight->d[weight_idx] = 1.0;
 #endif//Identity noise Model
@@ -776,12 +774,10 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
 		  {
 			size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
 			if(m_Selector->d[weight_idx] == 1) 
-				sum+=(ErrorSino->d[weight_idx]*ErrorSino->d[weight_idx]*m_Weight->d[weight_idx]);
+				sum += (ErrorSino->d[weight_idx]*ErrorSino->d[weight_idx]*m_Weight->d[weight_idx]);
 			  else 
-				  sum+= BF_DELTA*fabs(ErrorSino->d[weight_idx])*sqrt(m_Alpha->d[i_theta]*m_Weight->d[weight_idx])/2;
+				  sum += BF_DELTA*fabs(ErrorSino->d[weight_idx])*sqrt(m_Alpha->d[i_theta]*m_Weight->d[weight_idx])/2;
 		  }
-	
-	// This block averages the alphas so we have a single constant of proportionality for BF case 
 	sum/=(sinogram->N_theta*sinogram->N_r*sinogram->N_r);
 	
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
@@ -797,7 +793,7 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
 			{
 				size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
-				m_Weight->d[weight_idx] = (BF_MAX/exp(sinogram->counts->d[weight_idx])); //Sets the weight = measured count
+				//m_Weight->d[weight_idx] = (BF_MAX/exp(sinogram->counts->d[weight_idx])); //Sets the weight = measured count
 				m_Weight->d[weight_idx]/=m_Alpha->d[i_theta]; //Scales the weight appropriately
 #else
 				m_Weight->d[weight_idx] = 1.0/m_Alpha->d[i_theta];
@@ -1132,9 +1128,9 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 				errSinoValue = ErrorSino->getValue(i, j, k);
 				if(m_Selector->getValue(i,j,k) == 1)
 				    cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k));
-				else
-					//cost += m_BraggThreshold*m_BraggThreshold;	
+				else					
 					cost += (BF_DELTA*fabs(errSinoValue) * sqrt(m_Weight->getValue(i, j, k)) + BF_T*(BF_T - BF_DELTA));
+				   //cost += m_BraggThreshold*m_BraggThreshold;	
 			}
 		}
 	}
@@ -1144,7 +1140,7 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 	//Noise Error
 	if(m_AdvParams->NOISE_ESTIMATION)
 	{
-		temp = 0;
+	/*	temp = 0;
 		for (int16_t i = 0; i < sinogram->N_theta; i++)
 		{
 			for (int16_t j = 0; j < sinogram->N_r; j++)
@@ -1152,11 +1148,13 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 				for (int16_t k = 0; k < sinogram->N_t; k++)
 				{
 					if(m_Weight->getValue(i, j, k) != 0) 
-						temp += log(2 * M_PI * (1.0 / m_Weight->getValue(i, j, k)));
+						temp += log(m_Alpha->d[i]);
 				}
 			}
 		}
-		temp /= 2;
+		temp /= 2;*/
+		temp = (sinogram->N_theta*sinogram->N_r*sinogram->N_r/2)*log(m_Alpha->d[0]);
+		//TODO : This assume a single parameter for the variance. Hence the use of m_Alpha->d[0]. Fix 
 		cost += temp;
 	} 
 	//NOISE_MODEL
