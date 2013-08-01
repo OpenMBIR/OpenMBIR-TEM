@@ -557,9 +557,9 @@ void ReconstructionEngine::execute()
 
 	//Read the percentage of sinogram to reject and convert it to 
 	//a percentage
-	Real_t RejFraction = m_ForwardModel->getBraggThreshold()/100;	
-	std::cout<<"Target rejection fraction ="<<RejFraction<<std::endl;
-	Real_t BraggStep = RejFraction/REJECTION_RATE;//Step through the rejection in steps of 1/10th of target
+	Real_t BF_delta = m_ForwardModel->getBraggThreshold();	
+	std::cout<<"Target rejection fraction ="<<BF_delta<<std::endl;
+	Real_t BraggStep = BF_delta/REJECTION_RATE;//Step through the rejection in steps of 1/10th of target
 	Real_t TempBraggValue;//=DefBraggThreshold;
 #ifdef BRAGG_CORRECTION
 	if(m_TomoInputs->NumIter > 1)
@@ -672,7 +672,7 @@ void ReconstructionEngine::execute()
 	  
 	if(m_TomoInputs->NumOuterIter > 1) //Dont update any parameters if we just have one outer iteration
 	{
-/*    if(m_AdvParams->JOINT_ESTIMATION)
+  /*  if(m_AdvParams->JOINT_ESTIMATION)
     {
       m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
 #ifdef BF_RECON
@@ -688,8 +688,8 @@ void ReconstructionEngine::execute()
 		}
 #endif//cost
 	
-    } */ //Joint estimation endif
-
+    }  //Joint estimation endif
+	
 	
 	if(m_AdvParams->NOISE_ESTIMATION)
     {
@@ -708,8 +708,7 @@ void ReconstructionEngine::execute()
 		}
 #endif//cost
     }
-	}
-    /*else
+    else
     {
       if(0 == status && reconOuterIter >= 1)
       { 
@@ -717,13 +716,12 @@ void ReconstructionEngine::execute()
         break;
       }
     } //Noise Model
-    */
-	  
+	  */
 #ifdef BRAGG_CORRECTION
 	//Adapt the Bragg Threshold
-	if(BraggStep < RejFraction)
+	if(BraggStep < BF_delta)
 	{
-		/*BraggStep+=RejFraction/REJECTION_RATE;//REJECTION_PERCENTAGE/10;
+		/*BraggStep+=BF_delta/REJECTION_RATE;//REJECTION_PERCENTAGE/10;
 		std::cout<<"Current Bragg Step"<<BraggStep<<std::endl;
 		Real_t threshold = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
 		std::cout<<"Computed Bragg Threshold ="<<threshold<<std::endl;
@@ -733,6 +731,7 @@ void ReconstructionEngine::execute()
 		m_ForwardModel->setBraggThreshold(TempBraggValue);
 	}  
 #endif //Bragg correction 
+	}
 
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
 

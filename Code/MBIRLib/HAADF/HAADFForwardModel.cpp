@@ -776,7 +776,8 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
 			if(m_Selector->d[weight_idx] == 1) 
 				sum += (ErrorSino->d[weight_idx]*ErrorSino->d[weight_idx]*m_Weight->d[weight_idx]);
 			  else 
-				  sum += BF_DELTA*fabs(ErrorSino->d[weight_idx])*sqrt(m_Alpha->d[i_theta]*m_Weight->d[weight_idx])/2;
+				//  sum += BF_DELTA*fabs(ErrorSino->d[weight_idx])*sqrt(m_Alpha->d[i_theta]*m_Weight->d[weight_idx])/2;
+				    sum += (BF_DELTA*BF_T)*fabs(ErrorSino->d[weight_idx])*sqrt(m_Alpha->d[i_theta]*m_Weight->d[weight_idx]);
 		  }
 	sum/=(sinogram->N_theta*sinogram->N_r*sinogram->N_r);
 	
@@ -1115,8 +1116,7 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 {
 	Real_t cost = 0,temp=0;
 	Real_t errSinoValue = 0.0;
-	
-	
+		
 	//Data Mismatch Error
 	
 	for (int16_t i = 0; i < sinogram->N_theta; i++)
@@ -1129,7 +1129,8 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 				if(m_Selector->getValue(i,j,k) == 1)
 				    cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k));
 				else					
-					cost += (BF_DELTA*fabs(errSinoValue) * sqrt(m_Weight->getValue(i, j, k)) + BF_T*(BF_T - BF_DELTA));
+					cost += (2*BF_T*BF_DELTA*fabs(errSinoValue)*sqrt(m_Weight->getValue(i, j, k)) + BF_T*BF_T*(1 - 2*BF_DELTA));
+					//cost += (BF_DELTA*fabs(errSinoValue)*sqrt(m_Weight->getValue(i, j, k)) + BF_T*(BF_T - BF_DELTA));
 				   //cost += m_BraggThreshold*m_BraggThreshold;	
 			}
 		}
@@ -1140,19 +1141,6 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 	//Noise Error
 	if(m_AdvParams->NOISE_ESTIMATION)
 	{
-	/*	temp = 0;
-		for (int16_t i = 0; i < sinogram->N_theta; i++)
-		{
-			for (int16_t j = 0; j < sinogram->N_r; j++)
-			{
-				for (int16_t k = 0; k < sinogram->N_t; k++)
-				{
-					if(m_Weight->getValue(i, j, k) != 0) 
-						temp += log(m_Alpha->d[i]);
-				}
-			}
-		}
-		temp /= 2;*/
 		temp = (sinogram->N_theta*sinogram->N_r*sinogram->N_r/2)*log(m_Alpha->d[0]);
 		//TODO : This assume a single parameter for the variance. Hence the use of m_Alpha->d[0]. Fix 
 		cost += temp;
@@ -1196,7 +1184,8 @@ void HAADFForwardModel::computeTheta(size_t Index,
 			}
 			else
 			{
-				Real_t QuadCoeff = BF_DELTA/(2*fabs(ErrorSino->d[error_idx])* sqrt(m_Weight->d[error_idx]));
+				//Real_t QuadCoeff = BF_DELTA/(2*fabs(ErrorSino->d[error_idx])* sqrt(m_Weight->d[error_idx]));
+				Real_t QuadCoeff = (BF_DELTA*BF_T)/(fabs(ErrorSino->d[error_idx])* sqrt(m_Weight->d[error_idx]));
 				Real_t ProjectionEntry = kConst0 * VoxelLineResponse[xzSliceIdx]->values[VoxelLineAccessCounter];
 				Thetas->d[1] += QuadCoeff*(ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
 				Thetas->d[0] += QuadCoeff*(ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);

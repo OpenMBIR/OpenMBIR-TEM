@@ -65,7 +65,7 @@ namespace VoxelUpdateType
 #define EIMTOMO_USE_QGGMRF 1
 
 //#define WRITE_INTERMEDIATE_RESULTS
-#define COST_CALCULATE
+//#define COST_CALCULATE
 #define BRAGG_CORRECTION
 #define DefBraggThreshold 5e10//Thresold in normalized uints. This value ensures at the start we do a "regular" BF recon
 //#define REJECTION_PERCENTAGE 0.1 //fraction of singoram affected by Bragg
@@ -73,7 +73,7 @@ namespace VoxelUpdateType
 #define BF_RECON //Bright Field Reconstruction
 #define BF_OFFSET 0//32768//23696 //- Bio data set
 #define BF_MAX  1//1865//30369//5689//42122//1865//32768//
-#define BF_DELTA  2 //tan(5*pi/180)
+#define BF_DELTA  0.5 //tan(5*pi/180)
 #define BF_T 3 //Ratio of model mismatch to noise variance
 //#define IDENTITY_NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
