@@ -537,8 +537,8 @@ font-size: 10px;
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
-              <width>264</width>
+              <y>-159</y>
+              <width>262</width>
               <height>898</height>
              </rect>
             </property>
@@ -1395,7 +1395,7 @@ font-size: 10px;
 }</string>
                   </property>
                   <property name="text">
-                   <string>Rejection Percentage:</string>
+                   <string>BF_Delta</string>
                   </property>
                  </widget>
                 </item>

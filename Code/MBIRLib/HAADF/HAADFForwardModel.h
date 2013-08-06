@@ -118,7 +118,9 @@ class HAADFForwardModel : public Observable
     MXA_INSTANCE_PROPERTY(Real_t, DefaultOffset)
     MXA_INSTANCE_PROPERTY(Real_t, DefaultVariance)
     MXA_INSTANCE_PROPERTY(bool, UseDefaultOffset)
+	MXA_INSTANCE_PROPERTY(Real_t, BraggDelta)
 	MXA_INSTANCE_PROPERTY(Real_t, BraggThreshold)
+
     
 
 

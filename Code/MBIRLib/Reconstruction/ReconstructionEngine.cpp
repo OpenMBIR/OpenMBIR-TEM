@@ -557,9 +557,9 @@ void ReconstructionEngine::execute()
 
 	//Read the percentage of sinogram to reject and convert it to 
 	//a percentage
-	Real_t BF_delta = m_ForwardModel->getBraggThreshold();	
-	std::cout<<"Target rejection fraction ="<<BF_delta<<std::endl;
-	Real_t BraggStep = BF_delta/REJECTION_RATE;//Step through the rejection in steps of 1/10th of target
+	//Real_t BF_delta = m_ForwardModel->getBraggDelta();	
+	//std::cout<<"Target rejection fraction ="<<BF_delta<<std::endl;
+	//Real_t BraggStep = BF_delta/REJECTION_RATE;//Step through the rejection in steps of 1/10th of target
 	Real_t TempBraggValue;//=DefBraggThreshold;
 #ifdef BRAGG_CORRECTION
 	if(m_TomoInputs->NumIter > 1)
@@ -672,7 +672,7 @@ void ReconstructionEngine::execute()
 	  
 	if(m_TomoInputs->NumOuterIter > 1) //Dont update any parameters if we just have one outer iteration
 	{
-  /*  if(m_AdvParams->JOINT_ESTIMATION)
+    if(m_AdvParams->JOINT_ESTIMATION)
     {
       m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
 #ifdef BF_RECON
@@ -707,6 +707,7 @@ void ReconstructionEngine::execute()
 			//break;
 		}
 #endif//cost
+	
     }
     else
     {
@@ -716,11 +717,12 @@ void ReconstructionEngine::execute()
         break;
       }
     } //Noise Model
-	  */
+	  
 #ifdef BRAGG_CORRECTION
 	//Adapt the Bragg Threshold
-	if(BraggStep < BF_delta)
-	{
+//	if(BraggStep < BF_delta)
+		if(1)
+		{
 		/*BraggStep+=BF_delta/REJECTION_RATE;//REJECTION_PERCENTAGE/10;
 		std::cout<<"Current Bragg Step"<<BraggStep<<std::endl;
 		Real_t threshold = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
@@ -729,7 +731,7 @@ void ReconstructionEngine::execute()
 		TempBraggValue = threshold;	*/
 		TempBraggValue = BF_T;
 		m_ForwardModel->setBraggThreshold(TempBraggValue);
-	}  
+	    }  
 #endif //Bragg correction 
 	}
 
