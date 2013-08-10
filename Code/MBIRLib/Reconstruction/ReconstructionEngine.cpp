@@ -674,9 +674,9 @@ void ReconstructionEngine::execute()
 	{
     if(m_AdvParams->JOINT_ESTIMATION)
     {
-      m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
+  //    m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
 #ifdef BF_RECON
-	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
+  //	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
 #endif
 #ifdef COST_CALCULATE
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
@@ -693,9 +693,9 @@ void ReconstructionEngine::execute()
 	
 	if(m_AdvParams->NOISE_ESTIMATION)
     {
-      m_ForwardModel->updateWeights(m_Sinogram, errorSino);
+  //    m_ForwardModel->updateWeights(m_Sinogram, errorSino);
 #ifdef BF_RECON
-	  m_ForwardModel->updateSelector(m_Sinogram, errorSino);
+  // 	  m_ForwardModel->updateSelector(m_Sinogram, errorSino);
 #endif //BF_RECON
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);

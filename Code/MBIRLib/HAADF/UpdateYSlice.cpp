@@ -153,7 +153,7 @@ int UpdateYSlice::getZeroCount()
      boost::uint32_t arg = static_cast<boost::uint32_t>(EIMTOMO_getMilliSeconds());
      generator.seed(arg); // seed with the current time
 	   
-     int32_t ArraySize = m_Geometry->N_x * m_Geometry->N_z;
+     int32_t ArraySize = m_Geometry->N_x * m_Geometry->N_z; //Change to List size
      size_t dims[3] =
      { ArraySize, 0, 0};
      Int32ArrayType::Pointer Counter = Int32ArrayType::New(dims, "Counter");
