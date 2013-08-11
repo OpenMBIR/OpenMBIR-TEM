@@ -576,6 +576,14 @@ void ReconstructionEngine::execute()
 #endif //Bragg correction
 	std::cout<<"Bragg threshold ="<<TempBraggValue<<std::endl;
 	
+	
+	//Generate a List	
+	std::cout<<"Generating a list of voxels to update"<<std::endl;
+	
+	m_VoxelIdxList.NumElts = m_Geometry->N_z*m_Geometry->N_x;
+	m_VoxelIdxList.Array = (struct ImgIdx*)(malloc(m_VoxelIdxList.NumElts*sizeof(struct ImgIdx)));	
+	GenRandList();
+	
   //int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
   //Loop through every voxel updating it by solving a cost function
  	
@@ -609,7 +617,10 @@ void ReconstructionEngine::execute()
 
       indent = "    ";
       // This is all done PRIOR to calling what will become a method
-	  std::cout<<"Bragg Threshold ="<<m_ForwardModel->getBraggThreshold()<<std::endl;	
+	  std::cout<<"Bragg Threshold ="<<m_ForwardModel->getBraggThreshold()<<std::endl;
+		
+
+		
       // This could contain multiple Subloops also
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 	  status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,

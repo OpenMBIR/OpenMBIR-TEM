@@ -62,6 +62,18 @@
 #define PRINT_TIME(msg)\
 std::cout << indent << msg << ": " << ((double)stopm-startm)/1000.0 << " seconds" << std::endl;
 
+
+struct ImgIdx {
+	int32_t xidx;
+	int32_t zidx;
+};
+
+struct List
+{
+	int32_t NumElts;
+	struct ImgIdx* Array;
+};
+
 /**
  * @class ReconstructionEngine ReconstructionEngine.h TomoEngine/SOC/ReconstructionEngine.h
  * @brief
@@ -145,6 +157,10 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 	
 	//Sort the entries of filtMagUpdateMap and set the threshold to be ? percentile
     Real_t SetNonHomThreshold(RealImageType::Pointer magUpdateMap);
+	
+	//Generating a list of indices for ICD updates. Output stored in the 
+	//private member m_VoxelIdxList
+	void GenRandList();
 
 	/**
      * @brief
@@ -232,6 +248,7 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 
     int m_NumThreads;
 
+	struct List m_VoxelIdxList;
 
     /**
      * @brief

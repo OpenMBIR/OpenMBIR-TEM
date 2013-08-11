@@ -558,7 +558,8 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
         START_TIMER;
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
 		
-
+			
+		
         std::vector<int> yCount(m_NumThreads, 0);
         int t = 0;
 		
@@ -606,7 +607,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
                                                            averageUpdate + t,
                                                            averageMagnitudeOfRecon + t,
                                                            m_AdvParams->ZERO_SKIPPING,
-                                                           qggmrf_values);
+                                                           qggmrf_values, m_VoxelIdxList);
             taskList.push_back(a);
         }
 
@@ -854,5 +855,49 @@ Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdate
     threshold = TempMagMap->d[percentile_index];
     return threshold;
 }
+
+//Function to generate a randomized list of indices
+void ReconstructionEngine::GenRandList()
+{
+	const uint32_t rangeMin = 0;
+	const uint32_t rangeMax = std::numeric_limits<uint32_t>::max();
+	typedef boost::uniform_int<uint32_t> NumberDistribution;
+	typedef boost::mt19937 RandomNumberGenerator;
+	typedef boost::variate_generator<RandomNumberGenerator&,
+	NumberDistribution> Generator;
+	NumberDistribution distribution(rangeMin, rangeMax);
+	RandomNumberGenerator generator;
+	Generator numberGenerator(generator, distribution);
+	boost::uint32_t arg = static_cast<boost::uint32_t>(EIMTOMO_getMilliSeconds());
+	generator.seed(arg); // seed with the current time
+	
+	int32_t ArraySize = m_VoxelIdxList.NumElts;
+	size_t dims[3] =
+	{ ArraySize, 0, 0};
+	Int32ArrayType::Pointer Counter = Int32ArrayType::New(dims, "Counter");
+	
+	for (int32_t j_new = 0; j_new < ArraySize; j_new++)
+	{
+		Counter->d[j_new] = j_new;
+	}
+	
+	for(int32_t test_iter=0;test_iter<m_VoxelIdxList.NumElts;test_iter++)
+	{
+		int32_t Index = numberGenerator() % ArraySize;
+		int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
+		int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
+		Counter->d[Index] = Counter->d[ArraySize - 1];
+		ArraySize--;
+		
+		m_VoxelIdxList.Array[test_iter].xidx = k_new;
+		m_VoxelIdxList.Array[test_iter].zidx = j_new;
+		
+		
+		//std::cout<<m_VoxelIdxList.Array[test_iter].zidx<<" " <<m_VoxelIdxList.Array[test_iter].xidx<<std::endl;
+		
+	}
+	
+}
+
 
 
