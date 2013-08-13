@@ -171,7 +171,7 @@ static std::string joinList(std::string sep, std::list<std::string> strs)
   if (iter != strs.end()) {
     iter++;
     for (; iter!=strs.end(); iter++) {
-        #if DEBUG
+        #ifdef DEBUG
         std::cout << "JOINING Current: " << result << " To: / + " << *iter << std::endl;
         #endif
       result += sep + *iter;

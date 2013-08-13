@@ -1382,7 +1382,7 @@ Real_t HAADFForwardModel::estimateBraggThreshold(SinogramPtr sinogram, RealVolum
 	std::cout<<"Num Elts"<<counts<<std::endl;
 	std::cout<<"Num Elts to reject ="<<NumEltsReject<<std::endl;
 	
-	EstBraggThresh =sqrt(RandomizedSelect(Ratio,0, counts-1, NumElts - NumEltsReject));
+	//EstBraggThresh =sqrt(RandomizedSelect(Ratio,0, counts-1, NumElts - NumEltsReject));
 	std::cout<<"Bragg Thresh estimated using Randomized select"<<EstBraggThresh<<std::endl;	
 	
 	/*uint32_t max_index=0;
@@ -1408,7 +1408,7 @@ Real_t HAADFForwardModel::estimateBraggThreshold(SinogramPtr sinogram, RealVolum
 
 //Radomized select based on code from : http://stackoverflow.com/questions/5847273/order-statistic-implmentation
 
-
+/*
 Real_t HAADFForwardModel::RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i)
 {
 	if (p == r)
@@ -1456,5 +1456,5 @@ uint32_t HAADFForwardModel::RandomizedPartition(RealArrayType::Pointer A,uint32_
 	A->d[j] = temp;	
 	return Partition(A, p, r);
 }
-
+*/
 #endif //BF Recon

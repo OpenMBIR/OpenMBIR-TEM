@@ -537,7 +537,7 @@ font-size: 10px;
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-159</y>
+              <y>-166</y>
               <width>262</width>
               <height>898</height>
              </rect>
@@ -1476,6 +1476,9 @@ Iterations:</string>
                   </property>
                   <property name="minimum">
                    <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>1000</number>
                   </property>
                   <property name="value">
                    <number>30</number>

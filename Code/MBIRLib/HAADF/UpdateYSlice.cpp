@@ -164,15 +164,8 @@ int UpdateYSlice::getZeroCount()
 	dims[0] = 2;
 	RealArrayType::Pointer Thetas = RealArrayType::New(dims, "Thetas");
 	   
-     dims[0] = m_Geometry->N_z;
-     dims[1] = m_Geometry->N_x;
-     dims[2] = 0;
-     UInt8Image_t::Pointer m_VisitCount = UInt8Image_t::New(dims, "VisitCount");
 
-     for (int32_t j_new = 0; j_new < ArraySize; j_new++)
-     {
-       Counter->d[j_new] = j_new;
-     }
+   /*
      uint32_t NumVoxelsToUpdate = 0;
      for (int32_t j = 0; j < m_Geometry->N_z; j++)
      {
@@ -203,9 +196,15 @@ int UpdateYSlice::getZeroCount()
          }
          m_VisitCount->setValue(0, j, k);
        }
-     }
+     } 
+	   
+	   for (int32_t j_new = 0; j_new < ArraySize; j_new++)
+	   {
+		   Counter->d[j_new] = j_new;
+	   }
+	   
      //   std::cout << "    " << "Number of voxel lines to update: " << NumVoxelsToUpdate << std::endl;
-   /*  for (int32_t j = 0; j < m_Geometry->N_z; j++) //Row index
+     for (int32_t j = 0; j < m_Geometry->N_z; j++) //Row index
      {
        for (int32_t k = 0; k < m_Geometry->N_x; k++) //Column index
        {
@@ -378,31 +377,24 @@ int UpdateYSlice::getZeroCount()
          }
 
        }
-     }*/
+     } */
 
-	   for(int32_t j = 0; j < m_VoxelUpdateList.NumElts; j++) 
+	  for(int32_t j = 0; j < m_VoxelUpdateList.NumElts; j++) 
 	   {
 		   
 		   int32_t k_new = m_VoxelUpdateList.Array[j].xidx;
 		   int32_t j_new = m_VoxelUpdateList.Array[j].zidx;
-		   m_VisitCount->setValue(1, j_new, k_new);
+		   //m_VisitCount->setValue(1, j_new, k_new);
 		   uint32_t Index = j_new * m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to
 		   //the voxel line (j_new,k_new)
-		   int shouldInitNeighborhood = 0;
 		   
-		   if(m_VoxelUpdateType == VoxelUpdateType::NonHomogeniousUpdate
-			  && m_MagUpdateMask->getValue(j_new, k_new) == 1
-			  && m_TempCol[Index]->count > 0)
-		   {
-			   ++shouldInitNeighborhood;
-		   }
-		   if(m_VoxelUpdateType == VoxelUpdateType::HomogeniousUpdate
-			  && m_TempCol[Index]->count > 0)
-		   {
-			   ++shouldInitNeighborhood;
-		   }
-		   if(m_VoxelUpdateType == VoxelUpdateType::RegularRandomOrderUpdate
-			  && m_TempCol[Index]->count > 0)
+		
+		   //Initialize the magnitude value to zero for appropriate pixel
+		   m_MagUpdateMap->setValue(0, j_new, k_new);
+		   
+		   int shouldInitNeighborhood = 0;
+		   		 
+		   if(m_TempCol[Index]->count > 0)
 		   {
 			   ++shouldInitNeighborhood;
 		   }
@@ -530,8 +522,7 @@ int UpdateYSlice::getZeroCount()
 						   *m_AverageUpdate += fabs(UpdatedVoxelValue - m_CurrentVoxelValue);
 						   *m_AverageMagnitudeOfRecon += fabs(m_CurrentVoxelValue); //computing the percentage update =(Change in mag/Initial magnitude)
 					   }
-#endif //ROI
-					   
+#endif //ROI					   
 					   //Update the ErrorSinogram
 					   m_ForwardModel->updateErrorSinogram(UpdatedVoxelValue - m_CurrentVoxelValue, Index, m_TempCol, i, m_VoxelLineResponse, m_ErrorSino, m_Sinogram);	 
 					   
@@ -549,9 +540,9 @@ int UpdateYSlice::getZeroCount()
 		   }
 		   
 		   
-	   }
+	   } 
 	   
-     for (int j = 0; j < m_Geometry->N_z; j++)
+  /*   for (int j = 0; j < m_Geometry->N_z; j++)
      { //Row index
        for (int k = 0; k < m_Geometry->N_x; k++)
        { //Column index
@@ -560,7 +551,7 @@ int UpdateYSlice::getZeroCount()
            printf("Pixel (%d %d) not visited\n", j, k);
          }
        }
-     }
+     } */
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
      return NULL;
 #endif

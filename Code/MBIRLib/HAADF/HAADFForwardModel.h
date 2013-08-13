@@ -205,9 +205,9 @@ class HAADFForwardModel : public Observable
 	//void setUpBraggThreshold(Real_t Threshold);
 	
 	//Real_t estimateBraggThreshold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage);
-	uint32_t Partition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
-	Real_t RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i);
-	uint32_t RandomizedPartition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
+	//uint32_t Partition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
+	//Real_t RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i);
+	//uint32_t RandomizedPartition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
 #endif
 
   

@@ -74,6 +74,7 @@ struct List
 	struct ImgIdx* Array;
 };
 
+
 /**
  * @class ReconstructionEngine ReconstructionEngine.h TomoEngine/SOC/ReconstructionEngine.h
  * @brief
@@ -144,7 +145,12 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 						 RealVolumeType::Pointer ErrorSino,
 						 std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
 						 CostData::Pointer cost,
-						 QGGMRF::QGGMRF_Values* qggmrf_Values);
+						 QGGMRF::QGGMRF_Values* qggmrf_Values,
+						 RealImageType::Pointer magUpdateMap,
+						 RealImageType::Pointer filtMagUpdateMap,
+						 UInt8Image_t::Pointer magUpdateMask,
+						 UInt8Image_t::Pointer m_VisitCount,
+						 uint32_t EffIterCount);
 	 
 	void initializeROIMask(UInt8Image_t::Pointer Mask);
 	
@@ -160,7 +166,10 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 	
 	//Generating a list of indices for ICD updates. Output stored in the 
 	//private member m_VoxelIdxList
-	void GenRandList();
+	struct List GenRandList(struct List InpList);
+	
+	//Generating a list for NHICD based on the magnitude update map
+	struct List GenNonHomList(Real_t NHThresh, RealImageType::Pointer magUpdateMap);
 
 	/**
      * @brief
@@ -244,11 +253,17 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
     void writeAvizoFile(const std::string &file, uint16_t cropStart, uint16_t cropEnd);
 
 
+	uint32_t Partition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
+	Real_t RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i);
+	uint32_t RandomizedPartition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
+	
   private:
 
     int m_NumThreads;
 
 	struct List m_VoxelIdxList;
+	
+	Real_t m_HammingWindow[3][3];
 
     /**
      * @brief

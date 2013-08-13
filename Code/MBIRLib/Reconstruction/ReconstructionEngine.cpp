@@ -150,6 +150,19 @@ namespace Detail {
 #else
     m_NumThreads = 1;
 #endif
+	 
+	 m_HammingWindow[0][0] = 0.0048;
+	 m_HammingWindow[0][1] = 0.0595;
+	 m_HammingWindow[0][2] = 0.0048;
+	 
+	 m_HammingWindow[1][0] = 0.0595;
+     m_HammingWindow[1][1] = 0.7432;	 
+	 m_HammingWindow[1][2] = 0.0595;
+	 
+	 m_HammingWindow[2][0] = 0.0048;
+	 m_HammingWindow[2][1] = 0.0595;
+	 m_HammingWindow[2][2] = 0.0048;
+	 
     setVerbose(true); //set this to enable cout::'s
     setVeryVerbose(false); //set this to ennable even more cout:: s
  }
@@ -582,9 +595,47 @@ void ReconstructionEngine::execute()
 	
 	m_VoxelIdxList.NumElts = m_Geometry->N_z*m_Geometry->N_x;
 	m_VoxelIdxList.Array = (struct ImgIdx*)(malloc(m_VoxelIdxList.NumElts*sizeof(struct ImgIdx)));	
-	GenRandList();
+	m_VoxelIdxList = GenRandList(m_VoxelIdxList);
 	
-  //int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
+	struct List TempList;
+	TempList.NumElts = m_VoxelIdxList.NumElts;
+	TempList.Array = m_VoxelIdxList.Array;
+	uint32_t listselector=0; //For the homogenous updates this cycles 
+	//through the random list one sublist at a time 
+	
+	//End of list gen
+	
+	
+	//Initialize the update magnitude arrays (for NHICD mainly)
+    dims[0] = m_Geometry->N_z; //height
+    dims[1] = m_Geometry->N_x; //width
+    dims[2] = 0;	
+    RealImageType::Pointer magUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
+    RealImageType::Pointer filtMagUpdateMap = RealImageType::New(dims, "Filter Update Map for voxel lines");
+    UInt8Image_t::Pointer magUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");//TODO: Remove this variable. Under the new formulation not needed		
+
+	
+	::memset(magUpdateMap->getPointer(), 0, sizeof(Real_t) * dims[0] *dims[1]);
+	::memset(filtMagUpdateMap->getPointer(), 0, sizeof(Real_t) * dims[0] *dims[1]);
+	
+#ifdef DEBUG
+	Real_t TempSum = 0;
+	for (int32_t j = 0; j < m_Geometry->N_z; j++)
+		for (int32_t k = 0; k < m_Geometry->N_x; k++)
+		{
+			magUpdateMap->setValue(0,j,k);
+		}
+#endif //debug
+	
+	//Debugging variable to check if all voxels are visited
+	dims[0] = m_Geometry->N_z;
+	dims[1] = m_Geometry->N_x;
+	dims[2] = 0;
+	UInt8Image_t::Pointer m_VisitCount = UInt8Image_t::New(dims, "VisitCount");
+	
+	uint32_t EffIterCount=0;//Maintains number of calls to updatevoxelroutine
+	
+  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
   //Loop through every voxel updating it by solving a cost function
  	
   for (int16_t reconOuterIter = 0; reconOuterIter < m_TomoInputs->NumOuterIter; reconOuterIter++)
@@ -621,10 +672,57 @@ void ReconstructionEngine::execute()
 		
 
 		
-      // This could contain multiple Subloops also
+      // This could contain multiple Subloops also - voxel update
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
-	  status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,
-							errorSino, voxelLineResponse,cost,&qggmrf_values);
+
+#ifdef NHICD
+		// Creating a sublist of voxels for the Homogenous 
+		// iterations - cycle through the partial sub lists
+		if(EffIterCount%2 == 0)
+		{
+			listselector%=NUM_NON_HOMOGENOUS_ITER;
+			m_VoxelIdxList.NumElts = TempList.NumElts/NUM_NON_HOMOGENOUS_ITER;
+			m_VoxelIdxList.Array = &(TempList.Array[(TempList.NumElts/NUM_NON_HOMOGENOUS_ITER)*listselector]);
+			listselector++;
+		}
+#endif //NHICD 
+		
+#ifdef DEBUG
+		Real_t TempSum = 0;
+		for (int32_t j = 0; j < m_Geometry->N_z; j++)
+			for (int32_t k = 0; k < m_Geometry->N_x; k++)
+			{
+				TempSum += magUpdateMap->getValue(j,k);
+			}
+		std::cout<<"**********************************************"<<std::endl;
+		std::cout<<"Average mag"<<TempSum/(m_Geometry->N_z*m_Geometry->N_x)<<std::endl;
+		std::cout<<"**********************************************"<<std::endl;
+#endif //debug
+		
+		status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,
+							errorSino, voxelLineResponse,cost,&qggmrf_values,
+							magUpdateMap,filtMagUpdateMap, magUpdateMask,m_VisitCount,EffIterCount);
+		
+		//Debug 
+		if(EffIterCount%(2*NUM_NON_HOMOGENOUS_ITER) == 0 && EffIterCount > 0)
+		{
+		 for (int16_t j = 0; j < m_Geometry->N_z; j++)
+		   for (int16_t k = 0; k < m_Geometry->N_x; k++)
+             if(m_VisitCount->getValue(j, k) == 0)
+             {
+		       printf("Pixel (%d %d) not visited\n", j, k);
+             }
+		//Reset the visit counter once we have cycled through
+		//all voxels once via the homogenous updates
+		for (int16_t j = 0; j < m_Geometry->N_z; j++)
+		  for (int16_t k = 0; k < m_Geometry->N_x; k++)
+			  m_VisitCount->setValue(0,j,k);
+			
+		}
+		//end of debug 
+		
+		EffIterCount++; //cycles between ICD and NHICD
+		
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 		
       if(status == 0)
@@ -685,7 +783,7 @@ void ReconstructionEngine::execute()
 	{
     if(m_AdvParams->JOINT_ESTIMATION)
     {
-  //    m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
+   //   m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
 #ifdef BF_RECON
   //	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
 #endif
@@ -704,9 +802,9 @@ void ReconstructionEngine::execute()
 	
 	if(m_AdvParams->NOISE_ESTIMATION)
     {
-  //    m_ForwardModel->updateWeights(m_Sinogram, errorSino);
+   //   m_ForwardModel->updateWeights(m_Sinogram, errorSino);
 #ifdef BF_RECON
-  // 	  m_ForwardModel->updateSelector(m_Sinogram, errorSino);
+   	//  m_ForwardModel->updateSelector(m_Sinogram, errorSino);
 #endif //BF_RECON
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);
