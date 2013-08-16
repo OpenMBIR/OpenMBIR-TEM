@@ -79,7 +79,7 @@ namespace VoxelUpdateType
 #define POSITIVITY_CONSTRAINT
 #define RANDOM_ORDER_UPDATES
 #define NHICD
-#define NUM_NON_HOMOGENOUS_ITER 2
+#define NUM_NON_HOMOGENOUS_ITER 32
 #define DEBUG
 
 namespace ScaleOffsetCorrection

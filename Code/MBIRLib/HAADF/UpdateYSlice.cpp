@@ -82,7 +82,7 @@ UpdateYSlice::UpdateYSlice(uint16_t yStart, uint16_t yEnd,
                            Real_t* averageMagnitudeOfRecon,
                            unsigned int zeroSkipping,
                            QGGMRF::QGGMRF_Values *qggmrf_values,
-						   List voxelUpdateList) :
+						   struct List voxelUpdateList) :
 m_YStart(yStart),
 m_YEnd(yEnd),
 m_Geometry(geometry),
@@ -142,7 +142,7 @@ int UpdateYSlice::getZeroCount()
 #endif
    UpdateYSlice::execute()
    {
-
+     /*
      const uint32_t rangeMin = 0;
      const uint32_t rangeMax = std::numeric_limits<uint32_t>::max();
      typedef boost::uniform_int<uint32_t> NumberDistribution;
@@ -155,17 +155,20 @@ int UpdateYSlice::getZeroCount()
      boost::uint32_t arg = static_cast<boost::uint32_t>(EIMTOMO_getMilliSeconds());
      generator.seed(arg); // seed with the current time
 	   
-//     int32_t ArraySize = m_Geometry->N_x * m_Geometry->N_z; //Change to List size 
-	 int32_t ArraySize = m_VoxelUpdateList.NumElts;
-     size_t dims[3] =
+     int32_t ArraySize = m_Geometry->N_x * m_Geometry->N_z; //Change to List size 
+	 */
+
+     int32_t ArraySize = m_VoxelUpdateList.NumElts;
+	   
+	 size_t dims[3] =
      { ArraySize, 0, 0};
      Int32ArrayType::Pointer Counter = Int32ArrayType::New(dims, "Counter");
 
-	dims[0] = 2;
-	RealArrayType::Pointer Thetas = RealArrayType::New(dims, "Thetas");
+	 dims[0] = 2;
+	 RealArrayType::Pointer Thetas = RealArrayType::New(dims, "Thetas");
 	   
-
-   /*
+  
+	   /*
      uint32_t NumVoxelsToUpdate = 0;
      for (int32_t j = 0; j < m_Geometry->N_z; j++)
      {
@@ -194,7 +197,7 @@ int UpdateYSlice::getZeroCount()
            m_MagUpdateMap->setValue(0, j, k);
            NumVoxelsToUpdate++;
          }
-         m_VisitCount->setValue(0, j, k);
+         //m_VisitCount->setValue(0, j, k);
        }
      } 
 	   
@@ -212,7 +215,7 @@ int UpdateYSlice::getZeroCount()
 		 int32_t k_new = Counter->d[Index] % m_Geometry->N_x;
 		 int32_t j_new = Counter->d[Index] / m_Geometry->N_x;
          Counter->d[Index] = Counter->d[ArraySize - 1];
-         m_VisitCount->setValue(1, j_new, k_new);
+       //  m_VisitCount->setValue(1, j_new, k_new);
          ArraySize--;
          Index = j_new * m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to
          //the voxel line (j_new,k_new)
@@ -377,23 +380,29 @@ int UpdateYSlice::getZeroCount()
          }
 
        }
-     } */
-
+     } 
+     */
 	  for(int32_t j = 0; j < m_VoxelUpdateList.NumElts; j++) 
 	   {
 		   
 		   int32_t k_new = m_VoxelUpdateList.Array[j].xidx;
 		   int32_t j_new = m_VoxelUpdateList.Array[j].zidx;
-		   //m_VisitCount->setValue(1, j_new, k_new);
-		   uint32_t Index = j_new * m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to
+		   int32_t Index = j_new * m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to
 		   //the voxel line (j_new,k_new)
 		   
 		
+		  // if(Index > m_Geometry->N_x*m_Geometry->N_z || j_new > m_Geometry->N_z || k_new > m_Geometry->N_x)
+		  // {
+		//	   std::cout<<" Illegal mem access!"<<std::endl;
+		//	   std::cout<<"j :"<<j_new<<"k :"<<k_new<<"Index :"<<Index<<std::endl;
+		//   }
+			   
 		   //Initialize the magnitude value to zero for appropriate pixel
 		   m_MagUpdateMap->setValue(0, j_new, k_new);
 		   
 		   int shouldInitNeighborhood = 0;
-		   		 
+		   	
+		   //If the Amatrix has some empty columns skip the update
 		   if(m_TempCol[Index]->count > 0)
 		   {
 			   ++shouldInitNeighborhood;

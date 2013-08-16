@@ -151,18 +151,36 @@ namespace Detail {
     m_NumThreads = 1;
 #endif
 	 
-	 m_HammingWindow[0][0] = 0.0048;
-	 m_HammingWindow[0][1] = 0.0595;
-	 m_HammingWindow[0][2] = 0.0048;
+	 m_HammingWindow[0][0] = 0.0013;
+	 m_HammingWindow[0][1] = 0.0086;
+	 m_HammingWindow[0][2] = 0.0159;
+	 m_HammingWindow[0][3] = 0.0086;
+	 m_HammingWindow[0][4] = 0.0013;
 	 
-	 m_HammingWindow[1][0] = 0.0595;
-     m_HammingWindow[1][1] = 0.7432;	 
-	 m_HammingWindow[1][2] = 0.0595;
+	 m_HammingWindow[1][0] = 0.0086;
+     m_HammingWindow[1][1] = 0.0581;	 
+	 m_HammingWindow[1][2] = 0.1076;
+	 m_HammingWindow[1][3] = 0.0581;
+	 m_HammingWindow[1][4] = 0.0086;
+	 	 
+	 m_HammingWindow[2][0] = 0.0159;
+	 m_HammingWindow[2][1] = 0.1076;
+	 m_HammingWindow[2][2] = 0.1993;
+	 m_HammingWindow[2][3] = 0.1076;
+	 m_HammingWindow[2][4] = 0.0159;
 	 
-	 m_HammingWindow[2][0] = 0.0048;
-	 m_HammingWindow[2][1] = 0.0595;
-	 m_HammingWindow[2][2] = 0.0048;
+	 m_HammingWindow[3][0] = 0.0086;
+     m_HammingWindow[3][1] = 0.0581;	 
+	 m_HammingWindow[3][2] = 0.1076;
+	 m_HammingWindow[3][3] = 0.0581;
+	 m_HammingWindow[3][4] = 0.0086;
 	 
+	 m_HammingWindow[4][0] = 0.0013;
+	 m_HammingWindow[4][1] = 0.0086;
+	 m_HammingWindow[4][2] = 0.0159;
+	 m_HammingWindow[4][3] = 0.0086;
+	 m_HammingWindow[4][4] = 0.0013;
+	 		
     setVerbose(true); //set this to enable cout::'s
     setVeryVerbose(false); //set this to ennable even more cout:: s
  }
@@ -594,8 +612,12 @@ void ReconstructionEngine::execute()
 	std::cout<<"Generating a list of voxels to update"<<std::endl;
 	
 	m_VoxelIdxList.NumElts = m_Geometry->N_z*m_Geometry->N_x;
-	m_VoxelIdxList.Array = (struct ImgIdx*)(malloc(m_VoxelIdxList.NumElts*sizeof(struct ImgIdx)));	
+	m_VoxelIdxList.Array = (struct ImgIdx*)(malloc(m_VoxelIdxList.NumElts*sizeof(struct ImgIdx)));		
+	GenRegularList(&m_VoxelIdxList);
 	m_VoxelIdxList = GenRandList(m_VoxelIdxList);
+	
+	std::cout<<"Initial random order list .."<<std::endl;
+	maxList(m_VoxelIdxList);
 	
 	struct List TempList;
 	TempList.NumElts = m_VoxelIdxList.NumElts;
@@ -613,11 +635,11 @@ void ReconstructionEngine::execute()
     RealImageType::Pointer magUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
     RealImageType::Pointer filtMagUpdateMap = RealImageType::New(dims, "Filter Update Map for voxel lines");
     UInt8Image_t::Pointer magUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");//TODO: Remove this variable. Under the new formulation not needed		
-
+    Real_t PrevMagSum=0;
+	magUpdateMap->initializeWithZeros();
+	filtMagUpdateMap->initializeWithZeros();
 	
-	::memset(magUpdateMap->getPointer(), 0, sizeof(Real_t) * dims[0] *dims[1]);
-	::memset(filtMagUpdateMap->getPointer(), 0, sizeof(Real_t) * dims[0] *dims[1]);
-	
+		
 #ifdef DEBUG
 	Real_t TempSum = 0;
 	for (int32_t j = 0; j < m_Geometry->N_z; j++)
@@ -659,18 +681,18 @@ void ReconstructionEngine::execute()
 		m_ForwardModel->setBraggThreshold(DefBraggThreshold);
 		//m_ForwardModel->setBraggThreshold(BF_T);
 	}
-				
+#ifdef DEBUG			
 	  //Prints the ratio of the sinogram entries selected
 	  m_ForwardModel->printRatioSelected(m_Sinogram);	
-		
+#endif //DEBUG
       ss.str("");
       ss << "Outer Iterations: " << reconOuterIter << "/" << m_TomoInputs->NumOuterIter << " Inner Iterations: " << reconInnerIter << "/" << m_TomoInputs->NumIter << std::endl;
 
       indent = "    ";
+#ifdef DEBUG
       // This is all done PRIOR to calling what will become a method
 	  std::cout<<"Bragg Threshold ="<<m_ForwardModel->getBraggThreshold()<<std::endl;
-		
-
+#endif //DEBUG
 		
       // This could contain multiple Subloops also - voxel update
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
@@ -683,7 +705,12 @@ void ReconstructionEngine::execute()
 			listselector%=NUM_NON_HOMOGENOUS_ITER;
 			m_VoxelIdxList.NumElts = TempList.NumElts/NUM_NON_HOMOGENOUS_ITER;
 			m_VoxelIdxList.Array = &(TempList.Array[(TempList.NumElts/NUM_NON_HOMOGENOUS_ITER)*listselector]);
+			
+			std::cout<<"Partial random order list for homogenous ICD .."<<std::endl;
+			maxList(m_VoxelIdxList);
+			
 			listselector++;
+			//printList(m_VoxelIdxList);
 		}
 #endif //NHICD 
 		
@@ -695,13 +722,24 @@ void ReconstructionEngine::execute()
 				TempSum += magUpdateMap->getValue(j,k);
 			}
 		std::cout<<"**********************************************"<<std::endl;
-		std::cout<<"Average mag"<<TempSum/(m_Geometry->N_z*m_Geometry->N_x)<<std::endl;
+		std::cout<<"Average mag prior to calling update voxel = "<<TempSum/(m_Geometry->N_z*m_Geometry->N_x)<<std::endl;
 		std::cout<<"**********************************************"<<std::endl;
 #endif //debug
 		
 		status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,
 							errorSino, voxelLineResponse,cost,&qggmrf_values,
-							magUpdateMap,filtMagUpdateMap, magUpdateMask,m_VisitCount,EffIterCount);
+							magUpdateMap,filtMagUpdateMap, magUpdateMask,m_VisitCount,
+							  PrevMagSum,
+							  EffIterCount);
+#ifdef NHICD
+		
+		if(EffIterCount%NUM_NON_HOMOGENOUS_ITER == 0) // At the end of an equit compute Magnitude of recon
+		{
+			PrevMagSum = roiVolumeSum(magUpdateMask);
+			std::cout<<" Previous Magnitude of the Recon = "<<PrevMagSum<<std::endl;
+		}
+		
+#endif //NHICD
 		
 		//Debug 
 		if(EffIterCount%(2*NUM_NON_HOMOGENOUS_ITER) == 0 && EffIterCount > 0)
