@@ -636,11 +636,15 @@ void ReconstructionEngine::execute()
     RealImageType::Pointer filtMagUpdateMap = RealImageType::New(dims, "Filter Update Map for voxel lines");
     UInt8Image_t::Pointer magUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");//TODO: Remove this variable. Under the new formulation not needed		
     Real_t PrevMagSum=0;
+	
 	magUpdateMap->initializeWithZeros();
 	filtMagUpdateMap->initializeWithZeros();
-	
-		
-#ifdef DEBUG
+#if ROI
+	//A mask to check the stopping criteria for the algorithm
+    initializeROIMask(magUpdateMask);
+#endif
+			
+#ifdef DEBUG //TODO: REMOVE THIS LATER - redundant
 	Real_t TempSum = 0;
 	for (int32_t j = 0; j < m_Geometry->N_z; j++)
 		for (int32_t k = 0; k < m_Geometry->N_x; k++)
@@ -703,8 +707,16 @@ void ReconstructionEngine::execute()
 		if(EffIterCount%2 == 0)
 		{
 			listselector%=NUM_NON_HOMOGENOUS_ITER;
-			m_VoxelIdxList.NumElts = TempList.NumElts/NUM_NON_HOMOGENOUS_ITER;
-			m_VoxelIdxList.Array = &(TempList.Array[(TempList.NumElts/NUM_NON_HOMOGENOUS_ITER)*listselector]);
+			
+			m_VoxelIdxList.NumElts = floor((Real_t)TempList.NumElts/NUM_NON_HOMOGENOUS_ITER);
+			
+			//If the number of voxels is NOT exactly divisible by NUM_NON .. then compensate and make the last of the lists longer
+			if(listselector == NUM_NON_HOMOGENOUS_ITER-1)
+				m_VoxelIdxList.NumElts += (TempList.NumElts - m_VoxelIdxList.NumElts*NUM_NON_HOMOGENOUS_ITER);
+			
+			
+			m_VoxelIdxList.Array = &(TempList.Array[(uint32_t)(floor(((Real_t)TempList.NumElts/NUM_NON_HOMOGENOUS_ITER))*listselector)]);
+			
 			
 			std::cout<<"Partial random order list for homogenous ICD .."<<std::endl;
 			maxList(m_VoxelIdxList);

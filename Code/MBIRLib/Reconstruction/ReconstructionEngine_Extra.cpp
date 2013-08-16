@@ -505,12 +505,12 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 {
 #if ROI
 	size_t dims[3];
-    UInt8Image_t::Pointer mask;
-    dims[0] = m_Geometry->N_z;
-    dims[1] = m_Geometry->N_x;
-    mask = UInt8Image_t::New(dims, "Mask");
-    initializeROIMask(mask);
-	magUpdateMask = mask;
+    //UInt8Image_t::Pointer mask;
+    //dims[0] = m_Geometry->N_z;
+    //dims[1] = m_Geometry->N_x;
+    //mask = UInt8Image_t::New(dims, "Mask");
+    //initializeROIMask(mask);
+	//magUpdateMask = mask;
 #endif
 
     unsigned int updateType = VoxelUpdateType::RegularRandomOrderUpdate;
@@ -663,13 +663,13 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 //		}
 		
 		//Pass a randomized version of the list (hom or NH) to each thread
-		struct List NewList[t];				
+		//struct List NewList[t];				
 		for(t = 0; t < m_NumThreads; ++t)
 		{
-			NewList[t]=GenRandList(m_VoxelIdxList);		
+		//	NewList[t]=GenRandList(m_VoxelIdxList);		
 			
-			std::cout<<"Max of list "<<t<<std::endl;
-			maxList(NewList[t]);
+		//	std::cout<<"Max of list "<<t<<std::endl;
+		//	maxList(NewList[t]);
 			
 		}		
 
@@ -712,13 +712,17 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 		
 		std::cout<<" Starting multicore allocation .."<<std::endl;
 		
+		
+		
         for (int t = 0; t < m_NumThreads; ++t)
         {
 			
             yStart = yStop;
             yStop = yStart + yCount[t];
 			
+#ifdef DEBUG
 			std::cout<<"Thread :"<<t<<"("<<yStart<<","<<yStop<<")"<<std::endl;
+#endif //debug
 			
             if(yStart == yStop)
             {
@@ -730,18 +734,22 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 			//::memset(_magUpdateMap->getPointer(),0,sizeof(Real_t)*m_Geometry->N_z*m_Geometry->N_x);
 			magUpdateMaps.push_back(_magUpdateMap);
 			
+			struct List NewList = m_VoxelIdxList;
+			NewList = GenRandList(NewList);
+			
             // std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
             UpdateYSlice& a =
             *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
                                                            m_Sinogram, TempCol, ErrorSino,
-                                                           VoxelLineResponse, m_ForwardModel.get(), mask,
+                                                           VoxelLineResponse, m_ForwardModel.get(), 
+														   magUpdateMask,
 														   _magUpdateMap, 
 														   magUpdateMask, updateType,
                                                            NH_Threshold,
                                                            averageUpdate + t,
                                                            averageMagnitudeOfRecon + t,
                                                            m_AdvParams->ZERO_SKIPPING,
-                                                           qggmrf_values, NewList[t]);
+                                                           qggmrf_values, NewList);
             taskList.push_back(a);
         }
 
@@ -752,14 +760,15 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 		// Now sum up magnitude update map values
         for (int t = 0; t < m_NumThreads; ++t)
         {
-			if(NewList[t].Array != NULL)
-			free(NewList[t].Array); //Free the space allocated to each randomized list
-			
+			//if(NewList[t].Array != NULL)
+			//free(NewList[t].Array); //Free the space allocated to each randomized list
+#ifdef DEBUG
 			if(getVeryVerbose()) //TODO: Change variable name averageUpdate to totalUpdate
 			{
 				std::cout << "Total Update for thread "<<t<<":"<< averageUpdate[t]<< std::endl;
 				std::cout << "Total Magnitude for thread "<<t<<":"<< averageMagnitudeOfRecon[t]<< std::endl;
 			}
+#endif //Debug
             AverageUpdate += averageUpdate[t];
             AverageMagnitudeOfRecon += averageMagnitudeOfRecon[t];
 			
@@ -870,12 +879,16 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
         {
 			
 			Real_t TempSum = 0;
+			uint32_t counter = 0;
 			for (int32_t j = 0; j < m_Geometry->N_z; j++)
 				for (int32_t k = 0; k < m_Geometry->N_x; k++)
-				{
+					if(magUpdateMask->getValue(j,k) == 1)
+					{
 					TempSum += magUpdateMap->getValue(j,k);
-				}
+					counter++;
+					}
 			
+			std::cout<<"Number of elements in the ROI after an equit= "<<counter<<std::endl;
 			
 			if(getVerbose())
 			{
@@ -943,6 +956,8 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 	free(NHList.Array);
 	
 #endif //NHICD
+	
+	std::cout<<"exiting voxel update routine"<<std::endl;
 	
     return exit_status;
 
@@ -1274,11 +1289,16 @@ Real_t ReconstructionEngine::roiVolumeSum(UInt8Image_t::Pointer Mask)
 {
 		
 	Real_t sum = 0;
+	uint32_t counter = 0;
 	for(uint16_t j = 0; j < m_Geometry->N_z; j++)
 		for(int16_t k = 0; k < m_Geometry->N_x; k++)
-			//if(Mask->getValue(j,k) == 1)
+			if(Mask->getValue(j,k) == 1)
+			{
+				counter++;
 				for (uint16_t i = 0; i < m_Geometry->N_y; i++)
 					sum+=m_Geometry->Object->getValue(j,k,i);
+			}
+	std::cout<<"Number of elements in the roiVolumeSum = "<<counter<<std::endl;
 	return sum;
 }
 

@@ -398,6 +398,7 @@ int UpdateYSlice::getZeroCount()
 		//   }
 			   
 		   //Initialize the magnitude value to zero for appropriate pixel
+		   
 		   m_MagUpdateMap->setValue(0, j_new, k_new);
 		   
 		   int shouldInitNeighborhood = 0;
