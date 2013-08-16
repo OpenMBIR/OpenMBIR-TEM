@@ -557,7 +557,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
     else if(updateType == VoxelUpdateType::NonHomogeniousUpdate)
     {
         ss << indent << "Non Homogenous update of voxels" << std::endl;
-        subIterations = 1;//NUM_NON_HOMOGENOUS_ITER;		
+        subIterations = NUM_NON_HOMOGENOUS_ITER;		
     }
     else
     {

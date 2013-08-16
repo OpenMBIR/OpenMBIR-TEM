@@ -706,16 +706,20 @@ void ReconstructionEngine::execute()
 		// iterations - cycle through the partial sub lists
 		if(EffIterCount%2 == 0)
 		{
-			listselector%=NUM_NON_HOMOGENOUS_ITER;
+			listselector%=NUM_HOM_ITER;
 			
-			m_VoxelIdxList.NumElts = floor((Real_t)TempList.NumElts/NUM_NON_HOMOGENOUS_ITER);
+			m_VoxelIdxList.NumElts = floor((Real_t)TempList.NumElts/NUM_HOM_ITER);
 			
 			//If the number of voxels is NOT exactly divisible by NUM_NON .. then compensate and make the last of the lists longer
-			if(listselector == NUM_NON_HOMOGENOUS_ITER-1)
-				m_VoxelIdxList.NumElts += (TempList.NumElts - m_VoxelIdxList.NumElts*NUM_NON_HOMOGENOUS_ITER);
+			if(listselector == NUM_HOM_ITER-1)
+			{
+				m_VoxelIdxList.NumElts += (TempList.NumElts - m_VoxelIdxList.NumElts*NUM_HOM_ITER);
+				std::cout<<"**********Adjusted number of voxel lines for last iter**************"<<std::endl;
+				std::cout<<m_VoxelIdxList.NumElts<<std::endl;
+				std::cout<<"**********************************"<<std::endl;
+			}
 			
-			
-			m_VoxelIdxList.Array = &(TempList.Array[(uint32_t)(floor(((Real_t)TempList.NumElts/NUM_NON_HOMOGENOUS_ITER))*listselector)]);
+			m_VoxelIdxList.Array = &(TempList.Array[(uint32_t)(floor(((Real_t)TempList.NumElts/NUM_HOM_ITER))*listselector)]);
 			
 			
 			std::cout<<"Partial random order list for homogenous ICD .."<<std::endl;
@@ -783,6 +787,7 @@ void ReconstructionEngine::execute()
       if (getCancel() == true) { setErrorCondition(-999); return; }
 
       // Write out the MRC File
+	 if(EffIterCount%NUM_NON_HOMOGENOUS_ITER == 0)
       {
         ss.str("");
         ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << reconInnerIter << "_" << ScaleOffsetCorrection::ReconstructedMrcFile;
@@ -828,14 +833,16 @@ void ReconstructionEngine::execute()
 	}
 	  
 	
+	 if(getVeryVerbose())
+		 std::cout<<" Starting nuisance parameter estimation"<<std::endl;
 	  
 	if(m_TomoInputs->NumOuterIter > 1) //Dont update any parameters if we just have one outer iteration
 	{
     if(m_AdvParams->JOINT_ESTIMATION)
     {
-   //   m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
+ //     m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
 #ifdef BF_RECON
-  //	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
+//  	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
 #endif
 #ifdef COST_CALCULATE
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
@@ -852,9 +859,9 @@ void ReconstructionEngine::execute()
 	
 	if(m_AdvParams->NOISE_ESTIMATION)
     {
-   //   m_ForwardModel->updateWeights(m_Sinogram, errorSino);
+ //     m_ForwardModel->updateWeights(m_Sinogram, errorSino);
 #ifdef BF_RECON
-   	//  m_ForwardModel->updateSelector(m_Sinogram, errorSino);
+//	 m_ForwardModel->updateSelector(m_Sinogram, errorSino);
 #endif //BF_RECON
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);
@@ -876,11 +883,14 @@ void ReconstructionEngine::execute()
         break;
       }
     } //Noise Model
+		
+	if(getVeryVerbose())
+		std::cout<<" Ending nuisance parameter estimation"<<std::endl;
 	  
-#ifdef BRAGG_CORRECTION
+#ifdef BRAGG_CORRECTION //TODO: Remove this code 
 	//Adapt the Bragg Threshold
 //	if(BraggStep < BF_delta)
-		if(1)
+		if(0)
 		{
 		/*BraggStep+=BF_delta/REJECTION_RATE;//REJECTION_PERCENTAGE/10;
 		std::cout<<"Current Bragg Step"<<BraggStep<<std::endl;
@@ -973,6 +983,8 @@ void ReconstructionEngine::execute()
   std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
 	
 
+  std::cout<<"Number of equivalet iterations taken ="<<EffIterCount/NUM_NON_HOMOGENOUS_ITER<<std::endl;	
+	
   notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
   setErrorCondition(0);
   std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds() - totalTime) / 1000 << std::endl;
