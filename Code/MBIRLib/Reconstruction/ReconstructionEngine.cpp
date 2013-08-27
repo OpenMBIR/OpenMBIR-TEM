@@ -151,18 +151,36 @@ namespace Detail {
     m_NumThreads = 1;
 #endif
 	 
-	 m_HammingWindow[0][0] = 0.0048;
-	 m_HammingWindow[0][1] = 0.0595;
-	 m_HammingWindow[0][2] = 0.0048;
+	 m_HammingWindow[0][0] = 0.0013;
+	 m_HammingWindow[0][1] = 0.0086;
+	 m_HammingWindow[0][2] = 0.0159;
+	 m_HammingWindow[0][3] = 0.0086;
+	 m_HammingWindow[0][4] = 0.0013;
 	 
-	 m_HammingWindow[1][0] = 0.0595;
-     m_HammingWindow[1][1] = 0.7432;	 
-	 m_HammingWindow[1][2] = 0.0595;
+	 m_HammingWindow[1][0] = 0.0086;
+     m_HammingWindow[1][1] = 0.0581;	 
+	 m_HammingWindow[1][2] = 0.1076;
+	 m_HammingWindow[1][3] = 0.0581;
+	 m_HammingWindow[1][4] = 0.0086;
+	 	 
+	 m_HammingWindow[2][0] = 0.0159;
+	 m_HammingWindow[2][1] = 0.1076;
+	 m_HammingWindow[2][2] = 0.1993;
+	 m_HammingWindow[2][3] = 0.1076;
+	 m_HammingWindow[2][4] = 0.0159;
 	 
-	 m_HammingWindow[2][0] = 0.0048;
-	 m_HammingWindow[2][1] = 0.0595;
-	 m_HammingWindow[2][2] = 0.0048;
+	 m_HammingWindow[3][0] = 0.0086;
+     m_HammingWindow[3][1] = 0.0581;	 
+	 m_HammingWindow[3][2] = 0.1076;
+	 m_HammingWindow[3][3] = 0.0581;
+	 m_HammingWindow[3][4] = 0.0086;
 	 
+	 m_HammingWindow[4][0] = 0.0013;
+	 m_HammingWindow[4][1] = 0.0086;
+	 m_HammingWindow[4][2] = 0.0159;
+	 m_HammingWindow[4][3] = 0.0086;
+	 m_HammingWindow[4][4] = 0.0013;
+	 		
     setVerbose(true); //set this to enable cout::'s
     setVeryVerbose(false); //set this to ennable even more cout:: s
  }
@@ -594,8 +612,12 @@ void ReconstructionEngine::execute()
 	std::cout<<"Generating a list of voxels to update"<<std::endl;
 	
 	m_VoxelIdxList.NumElts = m_Geometry->N_z*m_Geometry->N_x;
-	m_VoxelIdxList.Array = (struct ImgIdx*)(malloc(m_VoxelIdxList.NumElts*sizeof(struct ImgIdx)));	
+	m_VoxelIdxList.Array = (struct ImgIdx*)(malloc(m_VoxelIdxList.NumElts*sizeof(struct ImgIdx)));		
+	GenRegularList(&m_VoxelIdxList);
 	m_VoxelIdxList = GenRandList(m_VoxelIdxList);
+	
+	std::cout<<"Initial random order list .."<<std::endl;
+	maxList(m_VoxelIdxList);
 	
 	struct List TempList;
 	TempList.NumElts = m_VoxelIdxList.NumElts;
@@ -613,12 +635,16 @@ void ReconstructionEngine::execute()
     RealImageType::Pointer magUpdateMap = RealImageType::New(dims, "Update Map for voxel lines");
     RealImageType::Pointer filtMagUpdateMap = RealImageType::New(dims, "Filter Update Map for voxel lines");
     UInt8Image_t::Pointer magUpdateMask = UInt8Image_t::New(dims, "Update Mask for selecting voxel lines NHICD");//TODO: Remove this variable. Under the new formulation not needed		
-
+    Real_t PrevMagSum=0;
 	
-	::memset(magUpdateMap->getPointer(), 0, sizeof(Real_t) * dims[0] *dims[1]);
-	::memset(filtMagUpdateMap->getPointer(), 0, sizeof(Real_t) * dims[0] *dims[1]);
-	
-#ifdef DEBUG
+	magUpdateMap->initializeWithZeros();
+	filtMagUpdateMap->initializeWithZeros();
+#if ROI
+	//A mask to check the stopping criteria for the algorithm
+    initializeROIMask(magUpdateMask);
+#endif
+			
+#ifdef DEBUG //TODO: REMOVE THIS LATER - redundant
 	Real_t TempSum = 0;
 	for (int32_t j = 0; j < m_Geometry->N_z; j++)
 		for (int32_t k = 0; k < m_Geometry->N_x; k++)
@@ -659,18 +685,18 @@ void ReconstructionEngine::execute()
 		m_ForwardModel->setBraggThreshold(DefBraggThreshold);
 		//m_ForwardModel->setBraggThreshold(BF_T);
 	}
-				
+#ifdef DEBUG			
 	  //Prints the ratio of the sinogram entries selected
 	  m_ForwardModel->printRatioSelected(m_Sinogram);	
-		
+#endif //DEBUG
       ss.str("");
       ss << "Outer Iterations: " << reconOuterIter << "/" << m_TomoInputs->NumOuterIter << " Inner Iterations: " << reconInnerIter << "/" << m_TomoInputs->NumIter << std::endl;
 
       indent = "    ";
+#ifdef DEBUG
       // This is all done PRIOR to calling what will become a method
 	  std::cout<<"Bragg Threshold ="<<m_ForwardModel->getBraggThreshold()<<std::endl;
-		
-
+#endif //DEBUG
 		
       // This could contain multiple Subloops also - voxel update
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
@@ -680,10 +706,27 @@ void ReconstructionEngine::execute()
 		// iterations - cycle through the partial sub lists
 		if(EffIterCount%2 == 0)
 		{
-			listselector%=NUM_NON_HOMOGENOUS_ITER;
-			m_VoxelIdxList.NumElts = TempList.NumElts/NUM_NON_HOMOGENOUS_ITER;
-			m_VoxelIdxList.Array = &(TempList.Array[(TempList.NumElts/NUM_NON_HOMOGENOUS_ITER)*listselector]);
+			listselector%=NUM_HOM_ITER;
+			
+			m_VoxelIdxList.NumElts = floor((Real_t)TempList.NumElts/NUM_HOM_ITER);
+			
+			//If the number of voxels is NOT exactly divisible by NUM_NON .. then compensate and make the last of the lists longer
+			if(listselector == NUM_HOM_ITER-1)
+			{
+				m_VoxelIdxList.NumElts += (TempList.NumElts - m_VoxelIdxList.NumElts*NUM_HOM_ITER);
+				std::cout<<"**********Adjusted number of voxel lines for last iter**************"<<std::endl;
+				std::cout<<m_VoxelIdxList.NumElts<<std::endl;
+				std::cout<<"**********************************"<<std::endl;
+			}
+			
+			m_VoxelIdxList.Array = &(TempList.Array[(uint32_t)(floor(((Real_t)TempList.NumElts/NUM_HOM_ITER))*listselector)]);
+			
+			
+			std::cout<<"Partial random order list for homogenous ICD .."<<std::endl;
+			maxList(m_VoxelIdxList);
+			
 			listselector++;
+			//printList(m_VoxelIdxList);
 		}
 #endif //NHICD 
 		
@@ -695,13 +738,24 @@ void ReconstructionEngine::execute()
 				TempSum += magUpdateMap->getValue(j,k);
 			}
 		std::cout<<"**********************************************"<<std::endl;
-		std::cout<<"Average mag"<<TempSum/(m_Geometry->N_z*m_Geometry->N_x)<<std::endl;
+		std::cout<<"Average mag prior to calling update voxel = "<<TempSum/(m_Geometry->N_z*m_Geometry->N_x)<<std::endl;
 		std::cout<<"**********************************************"<<std::endl;
 #endif //debug
 		
 		status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,
 							errorSino, voxelLineResponse,cost,&qggmrf_values,
-							magUpdateMap,filtMagUpdateMap, magUpdateMask,m_VisitCount,EffIterCount);
+							magUpdateMap,filtMagUpdateMap, magUpdateMask,m_VisitCount,
+							  PrevMagSum,
+							  EffIterCount);
+#ifdef NHICD
+		
+		if(EffIterCount%NUM_NON_HOMOGENOUS_ITER == 0) // At the end of an equit compute Magnitude of recon
+		{
+			PrevMagSum = roiVolumeSum(magUpdateMask);
+			std::cout<<" Previous Magnitude of the Recon = "<<PrevMagSum<<std::endl;
+		}
+		
+#endif //NHICD
 		
 		//Debug 
 		if(EffIterCount%(2*NUM_NON_HOMOGENOUS_ITER) == 0 && EffIterCount > 0)
@@ -733,6 +787,7 @@ void ReconstructionEngine::execute()
       if (getCancel() == true) { setErrorCondition(-999); return; }
 
       // Write out the MRC File
+	 if(EffIterCount%NUM_NON_HOMOGENOUS_ITER == 0)
       {
         ss.str("");
         ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << reconInnerIter << "_" << ScaleOffsetCorrection::ReconstructedMrcFile;
@@ -778,14 +833,16 @@ void ReconstructionEngine::execute()
 	}
 	  
 	
+	 if(getVeryVerbose())
+		 std::cout<<" Starting nuisance parameter estimation"<<std::endl;
 	  
 	if(m_TomoInputs->NumOuterIter > 1) //Dont update any parameters if we just have one outer iteration
 	{
     if(m_AdvParams->JOINT_ESTIMATION)
     {
-   //   m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
+ //     m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
 #ifdef BF_RECON
-  //	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
+//  	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
 #endif
 #ifdef COST_CALCULATE
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
@@ -802,9 +859,9 @@ void ReconstructionEngine::execute()
 	
 	if(m_AdvParams->NOISE_ESTIMATION)
     {
-   //   m_ForwardModel->updateWeights(m_Sinogram, errorSino);
+ //     m_ForwardModel->updateWeights(m_Sinogram, errorSino);
 #ifdef BF_RECON
-   	//  m_ForwardModel->updateSelector(m_Sinogram, errorSino);
+//	 m_ForwardModel->updateSelector(m_Sinogram, errorSino);
 #endif //BF_RECON
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);
@@ -826,11 +883,14 @@ void ReconstructionEngine::execute()
         break;
       }
     } //Noise Model
+		
+	if(getVeryVerbose())
+		std::cout<<" Ending nuisance parameter estimation"<<std::endl;
 	  
-#ifdef BRAGG_CORRECTION
+#ifdef BRAGG_CORRECTION //TODO: Remove this code 
 	//Adapt the Bragg Threshold
 //	if(BraggStep < BF_delta)
-		if(1)
+		if(0)
 		{
 		/*BraggStep+=BF_delta/REJECTION_RATE;//REJECTION_PERCENTAGE/10;
 		std::cout<<"Current Bragg Step"<<BraggStep<<std::endl;
@@ -923,6 +983,8 @@ void ReconstructionEngine::execute()
   std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
 	
 
+  std::cout<<"Number of equivalet iterations taken ="<<EffIterCount/NUM_NON_HOMOGENOUS_ITER<<std::endl;	
+	
   notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
   setErrorCondition(0);
   std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds() - totalTime) / 1000 << std::endl;

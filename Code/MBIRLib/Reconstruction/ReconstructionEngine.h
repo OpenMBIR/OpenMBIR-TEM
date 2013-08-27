@@ -74,6 +74,9 @@ struct List
 	struct ImgIdx* Array;
 };
 
+void printList(struct List InList);
+void maxList(struct List InList);
+void minList(struct List InList);
 
 /**
  * @class ReconstructionEngine ReconstructionEngine.h TomoEngine/SOC/ReconstructionEngine.h
@@ -150,9 +153,13 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 						 RealImageType::Pointer filtMagUpdateMap,
 						 UInt8Image_t::Pointer magUpdateMask,
 						 UInt8Image_t::Pointer m_VisitCount,
+						 Real_t PrevMagSum,
 						 uint32_t EffIterCount);
 	 
 	void initializeROIMask(UInt8Image_t::Pointer Mask);
+	
+	
+	Real_t roiVolumeSum(UInt8Image_t::Pointer Mask);
 	
     /**
      * Code to take the magnitude map and filter it with a hamming window
@@ -163,6 +170,9 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 	
 	//Sort the entries of filtMagUpdateMap and set the threshold to be ? percentile
     Real_t SetNonHomThreshold(RealImageType::Pointer magUpdateMap);
+	
+	//Generate a regular sequential order list
+	void GenRegularList(struct List* InpList);
 	
 	//Generating a list of indices for ICD updates. Output stored in the 
 	//private member m_VoxelIdxList
@@ -263,7 +273,7 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 
 	struct List m_VoxelIdxList;
 	
-	Real_t m_HammingWindow[3][3];
+	Real_t m_HammingWindow[5][5];
 
     /**
      * @brief
