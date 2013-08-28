@@ -445,16 +445,6 @@ void HAADFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVol
         }
 
 #ifndef IDENTITY_NOISE_MODEL
-        if(sinogram->counts->d[counts_idx] != 0)
-        {
-          m_Weight->d[weight_idx] = 1.0 / sinogram->counts->d[counts_idx];
-        }
-        else
-        {
-          m_Weight->d[weight_idx] = 1.0; //Set the weight to some small number
-          //TODO: Make this something resonable
-        }
-		
 		  //If its a bright field recon just over ride the weights
 #ifdef BF_RECON
 		  m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
@@ -719,9 +709,15 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
         {
 		  if(m_Selector->getValue(i_theta, i_r, i_t) == 1)
 		  {
-          num_sum += (errorSinogram->getValue(i_theta, i_r, i_t) * m_Weight->getValue(i_theta, i_r, i_t));
-          den_sum += m_Weight->getValue(i_theta, i_r, i_t);
+             num_sum += (errorSinogram->getValue(i_theta, i_r, i_t) * m_Weight->getValue(i_theta, i_r, i_t));
+             den_sum += m_Weight->getValue(i_theta, i_r, i_t);
 		  }
+		  else 
+		  {
+			  num_sum += (BF_T*m_BraggDelta*errorSinogram->getValue(i_theta, i_r, i_t)/fabs(errorSinogram->getValue(i_theta, i_r, i_t)))*sqrt(m_Weight->getValue(i_theta,i_r,i_t));	
+			  den_sum += ((BF_T*m_BraggDelta*sqrt(m_Weight->getValue(i_theta, i_r, i_t)))/fabs(errorSinogram->getValue(i_theta, i_r, i_t)));
+		  }
+
         }
       }
 	  //}
@@ -755,11 +751,9 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
 // Updating the Weights for Noise Model
 // -----------------------------------------------------------------------------
 void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino)
-{
-  Real_t sum = 0;
+{  
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
   {
-    sum = 0;
     //Factoring out the variance parameter from the Weight matrix
     for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
     {
@@ -767,31 +761,30 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
       {
         size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
-        size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-#ifdef BF_RECON //Override old weights 
+#ifdef BF_RECON //Override old weights and unnormalize it
 		  //TODO Just assign this once 
-		  m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
-#endif //BF_RECON
-		  
+		  m_Weight->d[weight_idx]*=m_Alpha->d[i_theta];
+		  //m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);  
+#endif //BF_RECON		  
 #else
         m_Weight->d[weight_idx] = 1.0;
 #endif//Identity noise Model
       }
     }
   }
-	
+
+  Real_t sum = 0;
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	  for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
 		  for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
 		  {
 			size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
 			if(m_Selector->d[weight_idx] == 1) 
-				sum+=(ErrorSino->d[weight_idx]*ErrorSino->d[weight_idx]*m_Weight->d[weight_idx]);
+				sum += (ErrorSino->d[weight_idx]*ErrorSino->d[weight_idx]*m_Weight->d[weight_idx]);
 			  else 
-				  sum+= BF_DELTA*fabs(ErrorSino->d[weight_idx])*sqrt(m_Alpha->d[i_theta]*m_Weight->d[weight_idx])/2;
+				//  sum += m_BraggDelta*fabs(ErrorSino->d[weight_idx])*sqrt(m_Alpha->d[i_theta]*m_Weight->d[weight_idx])/2;
+				    sum += (m_BraggDelta*BF_T)*fabs(ErrorSino->d[weight_idx])*sqrt(m_Alpha->d[i_theta]*m_Weight->d[weight_idx]);
 		  }
-	
-	// This block averages the alphas so we have a single constant of proportionality for BF case 
 	sum/=(sinogram->N_theta*sinogram->N_r*sinogram->N_r);
 	
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
@@ -799,19 +792,20 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
 		m_Alpha->d[i_theta]=sum;
 	}
 	
-	//Update the weights back for future iterations
+	//Update the weights back for future iterations by appropriately scaling it
+	//by m_Alpha's 
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	    for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
 			for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
 			{
 				size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
-				m_Weight->d[weight_idx] = (BF_MAX/exp(sinogram->counts->d[weight_idx]))/m_Alpha->d[i_theta];
+				//m_Weight->d[weight_idx] = (BF_MAX/exp(sinogram->counts->d[weight_idx])); //Sets the weight = measured count
+				m_Weight->d[weight_idx]/=m_Alpha->d[i_theta]; //Scales the weight appropriately
 #else
 				m_Weight->d[weight_idx] = 1.0/m_Alpha->d[i_theta];
 #endif //IDENTITY_NOISE_MODEL
-			}
-		
+			}		
 	
   if(getVeryVerbose())
   {
@@ -1128,8 +1122,7 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 {
 	Real_t cost = 0,temp=0;
 	Real_t errSinoValue = 0.0;
-	
-	
+		
 	//Data Mismatch Error
 	
 	for (int16_t i = 0; i < sinogram->N_theta; i++)
@@ -1141,9 +1134,10 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 				errSinoValue = ErrorSino->getValue(i, j, k);
 				if(m_Selector->getValue(i,j,k) == 1)
 				    cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k));
-				else
-					//cost += m_BraggThreshold*m_BraggThreshold;	
-					cost += (BF_DELTA*fabs(errSinoValue) * sqrt(m_Weight->getValue(i, j, k)) + BF_T*(BF_T - BF_DELTA));
+				else					
+					cost += (2*BF_T*m_BraggDelta*fabs(errSinoValue)*sqrt(m_Weight->getValue(i, j, k)) + BF_T*BF_T*(1 - 2*m_BraggDelta));
+					//cost += (m_BraggDelta*fabs(errSinoValue)*sqrt(m_Weight->getValue(i, j, k)) + BF_T*(BF_T - m_BraggDelta));
+				   //cost += m_BraggThreshold*m_BraggThreshold;	
 			}
 		}
 	}
@@ -1153,19 +1147,8 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 	//Noise Error
 	if(m_AdvParams->NOISE_ESTIMATION)
 	{
-		temp = 0;
-		for (int16_t i = 0; i < sinogram->N_theta; i++)
-		{
-			for (int16_t j = 0; j < sinogram->N_r; j++)
-			{
-				for (int16_t k = 0; k < sinogram->N_t; k++)
-				{
-					if(m_Weight->getValue(i, j, k) != 0) 
-						temp += log(2 * M_PI * (1.0 / m_Weight->getValue(i, j, k)));
-				}
-			}
-		}
-		temp /= 2;
+		temp = (sinogram->N_theta*sinogram->N_r*sinogram->N_r/2)*log(m_Alpha->d[0]);
+		//TODO : This assume a single parameter for the variance. Hence the use of m_Alpha->d[0]. Fix 
 		cost += temp;
 	} 
 	//NOISE_MODEL
@@ -1207,7 +1190,8 @@ void HAADFForwardModel::computeTheta(size_t Index,
 			}
 			else
 			{
-				Real_t QuadCoeff = BF_DELTA/(2*fabs(ErrorSino->d[error_idx])* sqrt(m_Weight->d[error_idx]));
+				//Real_t QuadCoeff = m_BraggDelta/(2*fabs(ErrorSino->d[error_idx])* sqrt(m_Weight->d[error_idx]));
+				Real_t QuadCoeff = (m_BraggDelta*BF_T)/(fabs(ErrorSino->d[error_idx])* sqrt(m_Weight->d[error_idx]));
 				Real_t ProjectionEntry = kConst0 * VoxelLineResponse[xzSliceIdx]->values[VoxelLineAccessCounter];
 				Thetas->d[1] += QuadCoeff*(ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
 				Thetas->d[0] += QuadCoeff*(ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
@@ -1398,7 +1382,7 @@ Real_t HAADFForwardModel::estimateBraggThreshold(SinogramPtr sinogram, RealVolum
 	std::cout<<"Num Elts"<<counts<<std::endl;
 	std::cout<<"Num Elts to reject ="<<NumEltsReject<<std::endl;
 	
-	EstBraggThresh =sqrt(RandomizedSelect(Ratio,0, counts-1, NumElts - NumEltsReject));
+	//EstBraggThresh =sqrt(RandomizedSelect(Ratio,0, counts-1, NumElts - NumEltsReject));
 	std::cout<<"Bragg Thresh estimated using Randomized select"<<EstBraggThresh<<std::endl;	
 	
 	/*uint32_t max_index=0;
@@ -1424,7 +1408,7 @@ Real_t HAADFForwardModel::estimateBraggThreshold(SinogramPtr sinogram, RealVolum
 
 //Radomized select based on code from : http://stackoverflow.com/questions/5847273/order-statistic-implmentation
 
-
+/*
 Real_t HAADFForwardModel::RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i)
 {
 	if (p == r)
@@ -1472,5 +1456,5 @@ uint32_t HAADFForwardModel::RandomizedPartition(RealArrayType::Pointer A,uint32_
 	A->d[j] = temp;	
 	return Partition(A, p, r);
 }
-
+*/
 #endif //BF Recon

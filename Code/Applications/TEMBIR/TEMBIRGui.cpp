@@ -919,8 +919,9 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
   m_MultiResSOC->setSampleThickness(sampleThickness->text().toFloat(&ok));
   m_MultiResSOC->setTargetGain(1);//TODO: This forces target gain = 1 in 
 	//BF with bragg code 
-  m_MultiResSOC->setBraggThreshold(targetGain->text().toFloat(&ok));
-  
+  	
+  //m_MultiResSOC->setBraggThreshold(targetGain->text().toFloat(&ok));
+  m_MultiResSOC->setBraggDelta(targetGain->text().toFloat(&ok));
   m_MultiResSOC->setStopThreshold(stopThreshold->text().toFloat(&ok));
   m_MultiResSOC->setOuterIterations(outerIterations->value());
   m_MultiResSOC->setInnerIterations(innerIterations->value());
