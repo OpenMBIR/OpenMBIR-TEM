@@ -640,6 +640,60 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 
         START_TIMER;
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
+<<<<<<< HEAD
+<<<<<<< HEAD
+		std::vector<int> yCount(m_NumThreads, 0);
+		int t = 0;
+		for (int y = 0; y < m_Geometry->N_y; ++y)
+		{
+			yCount[t]++;
+			++t;
+			if(t == m_NumThreads)
+			{
+				t = 0;
+			}
+		}
+		
+		uint16_t yStart = 0;
+		uint16_t yStop = 0;
+		
+		tbb::task_list taskList;
+		Real_t* averageUpdate = (Real_t*)(malloc(sizeof(Real_t) * m_NumThreads));
+		::memset(averageUpdate, 0, sizeof(Real_t) * m_NumThreads);
+		Real_t* averageMagnitudeOfRecon = (Real_t*)(malloc(sizeof(Real_t) * m_NumThreads));
+		::memset(averageMagnitudeOfRecon, 0, sizeof(Real_t) * m_NumThreads);
+		for (int t = 0; t < m_NumThreads; ++t)
+		{
+			yStart = yStop;
+			yStop = yStart + yCount[t];
+			if(yStart == yStop)
+			{
+				continue;
+			} // Processor has NO tasks to run because we have less Y's than cores
+			
+			// std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
+			UpdateYSlice& a =
+			*new (tbb::task::allocate_root()) UpdateYSlice(yStart,yStop,m_Geometry,OuterIter,                   Iter, 
+														   m_Sinogram, TempCol, ErrorSino, 
+														   VoxelLineResponse, m_ForwardModel, mask, 
+														   magUpdateMap, magUpdateMask, updateType, 
+														   NH_Threshold, 
+														   averageUpdate + t, 
+														   averageMagnitudeOfRecon + t, 
+														   m_AdvParams->ZERO_SKIPPING, 
+														   qggmrf_values);
+			taskList.push_back(a);
+		}
+		
+		tbb::task::spawn_root_and_wait(taskList);
+		// Now sum up some values
+		for (int t = 0; t < m_NumThreads; ++t)
+		{
+			AverageUpdate += averageUpdate[t];
+			AverageMagnitudeOfRecon += averageMagnitudeOfRecon[t];
+		}
+		free(averageUpdate);
+		free(averageMagnitudeOfRecon);
 				
         std::vector<int> yCount(m_NumThreads, 0);
         int t = 0;
