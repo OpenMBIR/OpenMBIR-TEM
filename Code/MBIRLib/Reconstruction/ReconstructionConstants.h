@@ -80,7 +80,8 @@ namespace VoxelUpdateType
 #define RANDOM_ORDER_UPDATES
 #define NHICD
 #define NUM_NON_HOMOGENOUS_ITER 20
-#define NUM_HOM_ITER 1
+#define SUB_ITER 1
+#define NUM_HOM_ITER 20
 //#define DEBUG
 
 namespace ScaleOffsetCorrection

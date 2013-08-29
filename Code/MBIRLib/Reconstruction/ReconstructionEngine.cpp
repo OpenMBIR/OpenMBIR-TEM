@@ -748,17 +748,19 @@ void ReconstructionEngine::execute()
 							  PrevMagSum,
 							  EffIterCount);
 #ifdef NHICD
-		
-		if(EffIterCount%NUM_NON_HOMOGENOUS_ITER == 0) // At the end of an equit compute Magnitude of recon
+		if(EffIterCount%NUM_NON_HOMOGENOUS_ITER == 0) // At the end of half an equit compute Magnitude of recon
 		{
 			PrevMagSum = roiVolumeSum(magUpdateMask);
 			std::cout<<" Previous Magnitude of the Recon = "<<PrevMagSum<<std::endl;
 		}
-		
+#else
+		PrevMagSum = roiVolumeSum(magUpdateMask);
+		std::cout<<" Previous Magnitude of the Recon = "<<PrevMagSum<<std::endl;
 #endif //NHICD
-		
+#ifdef NHICD
 		//Debug 
 		if(EffIterCount%(2*NUM_NON_HOMOGENOUS_ITER) == 0 && EffIterCount > 0)
+#endif //NHICD
 		{
 		 for (int16_t j = 0; j < m_Geometry->N_z; j++)
 		   for (int16_t k = 0; k < m_Geometry->N_x; k++)
@@ -786,8 +788,10 @@ void ReconstructionEngine::execute()
       // Check to see if we are canceled.
       if (getCancel() == true) { setErrorCondition(-999); return; }
 
-      // Write out the MRC File
+		// Write out the MRC File ; If NHICD only after an equit do a write
+#ifdef NHICD
 	 if(EffIterCount%NUM_NON_HOMOGENOUS_ITER == 0)
+#endif //NHICD 
       {
         ss.str("");
         ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << reconInnerIter << "_" << ScaleOffsetCorrection::ReconstructedMrcFile;
@@ -795,6 +799,7 @@ void ReconstructionEngine::execute()
         notify(ss.str(), 0, Observable::UpdateIntermediateImage);
         m_TomoInputs->tempFiles.push_back(ss.str());
       }
+		
 #ifdef COST_CALCULATE
 		
 		/*********************Cost Calculation*************************************/
@@ -842,7 +847,7 @@ void ReconstructionEngine::execute()
     {
  //     m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
 #ifdef BF_RECON
-//  	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
+ // 	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
 #endif
 #ifdef COST_CALCULATE
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
@@ -982,9 +987,11 @@ void ReconstructionEngine::execute()
   std::cout << "  Ny = " << m_Geometry->N_y << std::endl;
   std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
 	
-
+#ifdef NHICD
   std::cout<<"Number of equivalet iterations taken ="<<EffIterCount/NUM_NON_HOMOGENOUS_ITER<<std::endl;	
-	
+#else
+ std::cout<<"Number of equivalet iterations taken ="<<EffIterCount/NUM_HOM_ITER<<std::endl;		
+#endif //NHICD
   notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
   setErrorCondition(0);
   std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds() - totalTime) / 1000 << std::endl;
