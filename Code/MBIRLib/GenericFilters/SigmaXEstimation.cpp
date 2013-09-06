@@ -66,18 +66,6 @@ void calcAvgDeviation(T* data, int total, Real_t &dev)
 {
 	dev=0;
     Real_t mean=0;
-#ifndef BF_RECON
-    for (int i = 0; i < total; i++)
-    {
-        mean+=data[i];
-    }
-    mean/=total;
-    for (int i = 0; i < total; i++)
-    {
-        dev+=fabs(data[i]-mean);
-    }
-    dev/=total;
-#else
 	for (int i = 0; i < total; i++)
     {
 		Real_t temp = data[i] + BF_OFFSET;
@@ -92,7 +80,6 @@ void calcAvgDeviation(T* data, int total, Real_t &dev)
 			dev+=fabs(log(data[i]+BF_OFFSET)-mean);
     }
     dev/=total;
-#endif//BF RECON
 }
 
 }

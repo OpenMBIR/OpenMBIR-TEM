@@ -147,10 +147,6 @@ class HAADFForwardModel : public Observable
 
     void weightInitialization(size_t dims[3]);
 
-    void costInitialization(SinogramPtr sinogram);
-
-    int initializeBrightFieldData(SinogramPtr sinogram);
-
     int createNuisanceParameters(SinogramPtr sinogram);
 
     int createInitialGainsData(SinogramPtr sinogram);
@@ -193,7 +189,7 @@ class HAADFForwardModel : public Observable
                         RealVolumeType::Pointer yEstimate, CostData::Pointer cost);
 	void updateWeights(SinogramPtr sinogram,
                        RealVolumeType::Pointer errorSinogram);
-#ifdef BF_RECON
+	
 	void updateSelector(SinogramPtr sinogram,
                        RealVolumeType::Pointer errorSinogram);
 	
@@ -202,14 +198,7 @@ class HAADFForwardModel : public Observable
 	void writeSelectorMrc(const std::string &file, SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino);
 	
 	Real_t estimateBraggThreshold(SinogramPtr sinogram,RealVolumeType::Pointer ErrorSino,Real_t percentage);
-	//void setUpBraggThreshold(Real_t Threshold);
 	
-	//Real_t estimateBraggThreshold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage);
-	//uint32_t Partition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
-	//Real_t RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i);
-	//uint32_t RandomizedPartition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
-#endif
-
   
     void writeNuisanceParameters(SinogramPtr sinogram);
 
@@ -237,9 +226,8 @@ class HAADFForwardModel : public Observable
 							 RealVolumeType::Pointer errorSinogram,
 							 SinogramPtr sinogram);
 	
-#ifdef BF_RECON
 	void processRawCounts(SinogramPtr sinogram);
-#endif
+
 
   protected:
     HAADFForwardModel();

@@ -486,10 +486,12 @@ void ReconstructionEngine::writeAvizoFile(const std::string &file, uint16_t crop
 
 }
 
-
+// -----------------------------------------------------------------------------
+// Updates the voxels specified in the list for homogenous update. For non homgenous
+// update computes the list. Calls the parallel update of voxels routine
+// -----------------------------------------------------------------------------
 uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 										   int16_t Iter,
-										   UInt8Image_t::Pointer VisitCount,
 										   std::vector<HAADFAMatrixCol::Pointer> &TempCol,
 										   RealVolumeType::Pointer ErrorSino,
 										   std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
@@ -503,16 +505,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 										   uint32_t EffIterCount)
 
 {
-#if ROI
-	size_t dims[3];
-    //UInt8Image_t::Pointer mask;
-    //dims[0] = m_Geometry->N_z;
-    //dims[1] = m_Geometry->N_x;
-    //mask = UInt8Image_t::New(dims, "Mask");
-    //initializeROIMask(mask);
-	//magUpdateMask = mask;
-#endif
-	//printf("Iter %d\n",Iter);
+
 #if ROI
 	//variables used to stop the process
 	Real_t AverageUpdate = 0;
@@ -520,8 +513,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 #endif
 	
     unsigned int updateType = VoxelUpdateType::RegularRandomOrderUpdate;
-
-	struct List NHList;//non homogenous list of voxels to update
+    struct List NHList;//non homogenous list of voxels to update
 	
 	
 #ifdef NHICD
@@ -549,7 +541,6 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
     uint8_t err = 0;
 
 
-	
     if(updateType == VoxelUpdateType::RegularRandomOrderUpdate)
     {
         ss << indent << "Regular Random Order update of Voxels" << std::endl;						
@@ -583,7 +574,9 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 	maxList(m_VoxelIdxList);
 #endif //DEBUG
 	
-    for (uint16_t NH_Iter = 0; NH_Iter < subIterations; ++NH_Iter)
+    for (uint16_t NH_Iter = 0; NH_Iter < subIterations; ++NH_Iter) //This can be varied 
+		//so each iterations of the voxels has multiple passes over the voxels 
+		//but generally its set to 1
     {
 				
         ss.str(" ");

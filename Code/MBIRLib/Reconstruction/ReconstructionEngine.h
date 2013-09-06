@@ -143,7 +143,6 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 	uint8_t updateVoxels(
 						 int16_t OuterIter,
 						 int16_t Iter,
-						 UInt8Image_t::Pointer VisitCount,
 						 std::vector<HAADFAMatrixCol::Pointer> &TempCol,
 						 RealVolumeType::Pointer ErrorSino,
 						 std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
