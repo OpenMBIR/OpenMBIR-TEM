@@ -619,17 +619,11 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
             STOP_TIMER;
             PRINT_TIME("  SetNonHomThreshold");
             std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
-            //Use  filtMagUpdateMap  to find MagnitudeUpdateMask
-            //std::cout << "Completed Calculation of filtered magnitude" << std::endl;
-            //Calculate the threshold for the top ? % of voxel updates
-			
-			//Generate a new List 
+			//Generate a new List based on the NH_threshold
 			NHList = GenNonHomList(NH_Threshold, filtMagUpdateMap);
 			m_VoxelIdxList = NHList;			
-
         }
 		
-
 
         START_TIMER;
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
@@ -637,8 +631,6 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
         std::vector<int> yCount(m_NumThreads, 0);
         int t = 0;
 		
-//		if( m_Geometry->N_y >= m_NumThreads) //If number of slices is greater than number of threads divide the updates
-//		{
         for (int y = 0; y < m_Geometry->N_y; ++y)
         {
             yCount[t]++;
@@ -648,23 +640,9 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
                 t = 0;
             }
         }
-//		}
-//		else { //Use a single core implementation
-//			yCount[t]=m_Geometry->N_y;
-//		}
-		
-		//Pass a randomized version of the list (hom or NH) to each thread
-		//struct List NewList[t];				
-		/*for(t = 0; t < m_NumThreads; ++t)
-		{
-			NewList[t]=GenRandList(m_VoxelIdxList);		
-			
-			std::cout<<"Max of list "<<t<<std::endl;
-			maxList(NewList[t]);
-			
-		}*/		
 
-		//Checking which voxels are going to be visited 
+
+		//Checking which voxels are going to be visited and setting their magnitude value to zero
         for(int16_t tmpiter = 0; tmpiter < m_VoxelIdxList.NumElts; tmpiter++)
 		{
 			m_VisitCount->setValue(1,m_VoxelIdxList.Array[tmpiter].zidx,m_VoxelIdxList.Array[tmpiter].xidx);
@@ -675,6 +653,8 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
         uint16_t yStop = 0;
 
         tbb::task_list taskList;
+		
+		//Variables to maintain stopping criteria for regular type ICD
         Real_t* averageUpdate = (Real_t*)(malloc(sizeof(Real_t) * m_NumThreads));
         ::memset(averageUpdate, 0, sizeof(Real_t) * m_NumThreads);
         Real_t* averageMagnitudeOfRecon = (Real_t*)(malloc(sizeof(Real_t) * m_NumThreads));
@@ -685,21 +665,6 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 		dims[0] = m_Geometry->N_z; //height
 		dims[1] = m_Geometry->N_x; //width			
 		std::vector <RealImageType::Pointer> magUpdateMaps;
-	/*	for (int t = 0; t < m_NumThreads; ++t)
-        {
-            yStart = yStop;
-            yStop = yStart + yCount[t];
-            if(yStart == yStop)
-            {
-                continue;
-            } 
-			RealImageType::Pointer _magUpdateMap = RealImageType::New(dims, "Mag Update Map");
-			_magUpdateMap->initializeWithZeros();
-			magUpdateMaps.push_back(_magUpdateMap);
-		}
-		
-		yStart=0;
-		yStop=0;*/
 		
 		std::cout<<" Starting multicore allocation .."<<std::endl;
 		
@@ -720,13 +685,11 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 			
 			RealImageType::Pointer _magUpdateMap = RealImageType::New(dims, "Mag Update Map");
 			_magUpdateMap->initializeWithZeros();
-			//::memset(_magUpdateMap->getPointer(),0,sizeof(Real_t)*m_Geometry->N_z*m_Geometry->N_x);
 			magUpdateMaps.push_back(_magUpdateMap);
 			
 			struct List NewList = m_VoxelIdxList;
 			NewList = GenRandList(NewList);
 			
-            // std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
             UpdateYSlice& a =
             *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
                                                            m_Sinogram, TempCol, ErrorSino,
@@ -749,8 +712,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 		// Now sum up magnitude update map values
         for (int t = 0; t < m_NumThreads; ++t)
         {
-			//if(NewList[t].Array != NULL)
-			//free(NewList[t].Array); //Free the space allocated to each randomized list
+			
 #ifdef DEBUG
 			if(getVeryVerbose()) //TODO: Change variable name averageUpdate to totalUpdate
 			{
@@ -777,7 +739,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 				TempPointer = magUpdateMaps[t];
 				TempSum += TempPointer->getValue(m_VoxelIdxList.Array[tmpiter].zidx,m_VoxelIdxList.Array[tmpiter].xidx);			    
 			}
-			//std::cout<<"thread ="<<t<<std::endl;
+			
 			//Set the overall magnitude update map
 			magUpdateMap->setValue(TempSum,m_VoxelIdxList.Array[tmpiter].zidx,m_VoxelIdxList.Array[tmpiter].xidx);
 		}
@@ -785,34 +747,10 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 #else //TODO modify the single thread code to handle the list based iterations
         uint16_t yStop = m_Geometry->N_y;
         uint16_t yStart = 0;
-      /*  UpdateYSlice yVoxelUpdate(yStart, yStop,
-                                  m_Geometry,
-                                  OuterIter, Iter, m_Sinogram,
-                                  m_BFSinogram, TempCol,
-                                  ErrorSino, Weight, VoxelLineResponse,
-                                  NuisanceParams, Mask,
-                                  magUpdateMap, MagUpdateMask,
-                                  &m_QGGMRF_Values,
-                                  updateType,
-                                  NH_Threshold,
-                                  &AverageUpdate,
-                                  &AverageMagnitudeOfRecon,
-                                  m_AdvParams->ZERO_SKIPPING);
-
-        yVoxelUpdate.execute();*/
 		Real_t* averageUpdate = (Real_t*)(malloc(sizeof(Real_t)));
         ::memset(averageUpdate, 0, sizeof(Real_t));
         Real_t* averageMagnitudeOfRecon = (Real_t*)(malloc(sizeof(Real_t) ));
         ::memset(averageMagnitudeOfRecon, 0, sizeof(Real_t) );
-		/*UpdateYSlice yVoxelUpdate(yStart, yStop, m_Geometry, OuterIter, Iter,
-					 m_Sinogram, TempCol, ErrorSino,
-					 VoxelLineResponse, m_ForwardModel.get(), mask,
-					 magUpdateMap, magUpdateMask, updateType,
-					 NH_Threshold,
-					 averageUpdate,
-					 averageMagnitudeOfRecon,
-					 m_AdvParams->ZERO_SKIPPING,
-					 qggmrf_values);*/
 		
 		UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
 					 m_Sinogram, TempCol, ErrorSino,
