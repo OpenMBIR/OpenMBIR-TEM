@@ -55,31 +55,31 @@ namespace VoxelUpdateType
 
 
 //#define FORWARD_PROJECT_MODE
-//#define DEBUG 0
 
 
 //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
 #define ROI 1
-
-#define EIMTOMO_USE_QGGMRF 1
+#define EIMTOMO_USE_QGGMRF 1 //Was used earlier to switch priors
+#define BRAGG_CORRECTION //TODO : Get rid and make this the default case 
 
 //#define WRITE_INTERMEDIATE_RESULTS
 //#define COST_CALCULATE
 //#define DEBUG_COSTS
-#define BRAGG_CORRECTION
+//#define DEBUG
+//#define RANDOM_ORDER_UPDATES
+
+
 #define DefBraggThreshold 5e10//Thresold in normalized uints. This value ensures at the start we do a "regular" BF recon
-#define REJECTION_RATE 10 //Number of steps over which to increase the Bragg threshold to its desired value
 #define BF_OFFSET 32768//0//23696 //- Bio data set
 #define BF_MAX  1//1865//30369//5689//42122//1865//32768//
 #define BF_T 3 //Ratio of model mismatch to noise variance
 //#define IDENTITY_NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
-#define RANDOM_ORDER_UPDATES
 #define NHICD
 #define NUM_NON_HOMOGENOUS_ITER 20
 #define SUB_ITER 1
 #define NUM_HOM_ITER 20
-//#define DEBUG
+
 
 namespace ScaleOffsetCorrection
 {
