@@ -661,6 +661,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
         ::memset(averageMagnitudeOfRecon, 0, sizeof(Real_t) * m_NumThreads);
 		
 		
+        size_t dims[3];
 		//Initialize individual magnitude maps for the separate threads
 		dims[0] = m_Geometry->N_z; //height
 		dims[1] = m_Geometry->N_x; //width			
