@@ -61,7 +61,6 @@ namespace VoxelUpdateType
 //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
 #define ROI 1
 
-#define SURROGATE_FUNCTION
 #define EIMTOMO_USE_QGGMRF 1
 
 //#define WRITE_INTERMEDIATE_RESULTS
