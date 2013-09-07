@@ -157,10 +157,9 @@ Real_t Derivative(Real_t delta, QGGMRF::QGGMRF_Values* qggmrf_values)
 }
 
 // -----------------------------------------------------------------------------
-	// Second derivative at zero //TODO: This is only needed at zero. So the function
-	// needs to be renamed
+// Second derivative at zero 
 // -----------------------------------------------------------------------------
-Real_t SecondDerivative(Real_t delta, QGGMRF::QGGMRF_Values* qggmrf_values)
+Real_t SecondDerivativeAtZero(QGGMRF::QGGMRF_Values* qggmrf_values)
 {
   return qggmrf_values->MRF_P / (qggmrf_values->SIGMA_X_P * qggmrf_values->MRF_C);
 }
@@ -191,7 +190,7 @@ void ComputeParameters(Real_t umin, Real_t umax, Real_t refValue,
           }
           else
           {
-            qggmrf_params[count*3 + 0] = QGGMRF::SecondDerivative(0, qggmrf_values);
+            qggmrf_params[count*3 + 0] = QGGMRF::SecondDerivativeAtZero(qggmrf_values);
           }
           count++;
         }
@@ -205,8 +204,7 @@ void ComputeParameters(Real_t umin, Real_t umax, Real_t refValue,
 //
 // -----------------------------------------------------------------------------
 Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue,
-                              uint8_t* boundaryFlag, 
-							  //Real_t* filter, 
+                              uint8_t* boundaryFlag,  
 							  Real_t* neighborhood,
                               Real_t theta1, Real_t theta2,
                               QGGMRF::QGGMRF_Values* qggmrf_values)

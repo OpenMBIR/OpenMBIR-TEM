@@ -91,7 +91,7 @@ Real_t Derivative(Real_t delta, QGGMRF_Values* qggmrf_values);
  * @param qggmrf_values
  * @return
  */
-Real_t SecondDerivative(Real_t delta, QGGMRF_Values* qggmrf_values);
+Real_t SecondDerivativeAtZero(QGGMRF_Values* qggmrf_values);
 
 /**
  *
