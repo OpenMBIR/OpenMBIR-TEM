@@ -107,7 +107,6 @@ class UpdateYSlice
    * @param magUpdateMap
    * @param magUpdateMask
    * @param voxelUpdateType
-   * @param nh_Threshold
    * @param averageUpdate
    * @param averageMagnitudeOfRecon
    * @param zeroSkipping
@@ -124,7 +123,6 @@ class UpdateYSlice
                  RealImageType::Pointer magUpdateMap,//Hold the magnitude of the reconstuction along each voxel line
                  UInt8Image_t::Pointer magUpdateMask,
                  unsigned int voxelUpdateType,
-                 Real_t nh_Threshold,
                  Real_t* averageUpdate,
                  Real_t* averageMagnitudeOfRecon,
                  unsigned int zeroSkipping,
@@ -172,8 +170,6 @@ class UpdateYSlice
     RealImageType::Pointer m_MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
     UInt8Image_t::Pointer m_MagUpdateMask;
     unsigned int m_VoxelUpdateType;
-
-    Real_t m_NH_Threshold;
 
     int m_ZeroCount;
     Real_t m_CurrentVoxelValue;
