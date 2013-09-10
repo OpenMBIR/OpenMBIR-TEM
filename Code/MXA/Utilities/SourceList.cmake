@@ -2,7 +2,7 @@
 set(MXA_Utilities_SRCS
   ${MXA_SOURCE_DIR}/Utilities/MXADir.cpp
   ${MXA_SOURCE_DIR}/Utilities/MXAFileInfo.cpp
-  ${MXA_SOURCE_DIR}/Utilities/MXALogger.cpp
+#  ${MXA_SOURCE_DIR}/Utilities/MXALogger.cpp
   ${MXA_SOURCE_DIR}/Utilities/MD5.cpp
 )
 
@@ -10,7 +10,7 @@ set(MXA_Utilities_HDRS
   ${MXA_SOURCE_DIR}/Utilities/StringUtils.h
   ${MXA_SOURCE_DIR}/Utilities/MXADir.h
   ${MXA_SOURCE_DIR}/Utilities/MXAFileInfo.h
-  ${MXA_SOURCE_DIR}/Utilities/MXALogger.h
+#  ${MXA_SOURCE_DIR}/Utilities/MXALogger.h
   ${MXA_SOURCE_DIR}/Utilities/MD5.h
 )
 

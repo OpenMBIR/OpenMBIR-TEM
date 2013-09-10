@@ -41,7 +41,6 @@
 //-- MXA Includes
 #include "MXA/MXA.h"
 #include "MXA/Common/MXAEndian.h"
-#include "MXA/Common/LogTime.h"
 #include "MXA/Common/IO/MXAFileWriter64.h"
 #include "MXA/Utilities/MXAFileInfo.h"
 #include "MXA/Utilities/MXADir.h"
@@ -149,7 +148,7 @@ std::string AvizoUniformCoordinateWriter::generateHeader()
   ss << "Parameters {\n";
   ss << "     OpenMBIRParams {\n";
   ss << "         Author \"OpenMBIR\",\n";
-  ss << "         DateTime \"" << tifDateTime() << "\"\n";
+  ss << "         DateTime \"\"\n";
   ss << "     }\n";
 
   ss << "     Units {\n";
