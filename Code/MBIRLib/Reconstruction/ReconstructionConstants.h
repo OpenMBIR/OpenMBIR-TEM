@@ -68,7 +68,6 @@ namespace VoxelUpdateType
 //#define DEBUG
 //#define RANDOM_ORDER_UPDATES
 
-
 #define DefBraggThreshold 5e10//Thresold in normalized uints. This value ensures at the start we do a "regular" BF recon
 #define BF_OFFSET 0//32768//23696 //- Bio data set
 #define BF_MAX  1//1865//30369//5689//42122//1865//32768//
@@ -79,7 +78,6 @@ namespace VoxelUpdateType
 #define NUM_NON_HOMOGENOUS_ITER 20
 #define SUB_ITER 1
 #define NUM_HOM_ITER 20
-
 
 namespace ScaleOffsetCorrection
 {
