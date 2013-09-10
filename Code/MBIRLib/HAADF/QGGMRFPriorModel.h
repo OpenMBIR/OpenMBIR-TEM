@@ -49,7 +49,7 @@
 namespace QGGMRF {
 
   static const unsigned int QGGMRF_ITER = 1;
-  typedef struct {
+  typedef struct { 
       Real_t MRF_P;
       Real_t SIGMA_X_P;
       Real_t MRF_Q;

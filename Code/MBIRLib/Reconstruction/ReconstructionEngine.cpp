@@ -182,7 +182,7 @@ namespace Detail {
 	 m_HammingWindow[4][4] = 0.0013;
 	 		
     setVerbose(true); //set this to enable cout::'s
-    setVeryVerbose(false); //set this to ennable even more cout:: s
+    setVeryVerbose(true); //set this to ennable even more cout:: s
  }
 
 // -----------------------------------------------------------------------------

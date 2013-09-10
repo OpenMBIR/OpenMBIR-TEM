@@ -394,7 +394,6 @@ void MultiResolutionReconstruction::execute()
     engine->setVerbose(true);
     engine->setVeryVerbose(true);
 
-
     // We need to get messages to the gui or command line
     engine->addObserver(this);
     engine->setMessagePrefix(StringUtils::numToString(inputs->interpolateFactor / static_cast<int>(powf(2.0f, i))) + std::string("x: "));
