@@ -752,7 +752,29 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
         Real_t* averageMagnitudeOfRecon = (Real_t*)(malloc(sizeof(Real_t) ));
         ::memset(averageMagnitudeOfRecon, 0, sizeof(Real_t) );
 		
-		UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
+		size_t dims[3];
+		//Initialize individual magnitude maps for the separate threads
+		dims[0] = m_Geometry->N_z; //height
+		dims[1] = m_Geometry->N_x; //width	
+		RealImageType::Pointer _magUpdateMap = RealImageType::New(dims, "Mag Update Map");
+		_magUpdateMap->initializeWithZeros();
+		
+		struct List NewList = m_VoxelIdxList;
+		NewList = GenRandList(NewList);
+		
+		
+		UpdateYSlice yVoxelUpdate = UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
+					 m_Sinogram, TempCol, ErrorSino,
+					 VoxelLineResponse, m_ForwardModel.get(), 
+					 magUpdateMask,
+					 _magUpdateMap, 
+					 magUpdateMask, updateType,
+					 averageUpdate,
+					 averageMagnitudeOfRecon,
+					 m_AdvParams->ZERO_SKIPPING,
+					 qggmrf_values, NewList);
+		
+		/*UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
 					 m_Sinogram, TempCol, ErrorSino,
 					 VoxelLineResponse, m_ForwardModel.get(), mask,
 					 magUpdateMap, 
@@ -761,7 +783,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 					 averageUpdate,
 					 averageMagnitudeOfRecon ,
 					 m_AdvParams->ZERO_SKIPPING,
-					 qggmrf_values, m_VoxelIdxList);
+					 qggmrf_values, m_VoxelIdxList);*/
 		
 		yVoxelUpdate.execute();	
 		
