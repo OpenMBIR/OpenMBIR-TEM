@@ -52,7 +52,7 @@ bool MXAFILEREADER_CLASS_NAME::initReader()
                    NULL);                 // no attr. template
   if (_instream == INVALID_HANDLE_VALUE)
   {
-    std::cout << logTime() << "Error: Failed to open file: " + std::string(this->_filename) << " Error code:(" << GetLastError() << ")" << std::endl;
+    std::cout << "Error: Failed to open file: " + std::string(this->_filename) << " Error code:(" << GetLastError() << ")" << std::endl;
     return false;
   }
 #else
@@ -62,7 +62,7 @@ bool MXAFILEREADER_CLASS_NAME::initReader()
   _instream.rdbuf()->pubsetbuf ( &(_buffer.front()), BUFF_SIZE );
   _instream.open ( _filename.c_str(), std::ifstream::in | std::ifstream::binary );
   if ( !_instream.is_open() ) {
-    std::cout << logTime() <<  "Error: Failed to open file: " + _filename << std::endl;
+    std::cout <<  "Error: Failed to open file: " + _filename << std::endl;
     return false;
   }
 #endif

@@ -13,10 +13,6 @@
  *
  */
 
-
-// #include "MXA_FILESYSTEM_BASE_CLASS.h"
-#include <MXA/Common/LogTime.h>
-
 #include <iostream>
 #include <vector>
 
@@ -196,7 +192,7 @@ std::string MXA_FILESYSTEM_BASE_CLASS::currentPath()
     result = MXA_GET_CWD(currentName, MXA_PATH_MAX);
     if (NULL == result)
     {
-      std::cout << logTime() << "Error: MXA_FILESYSTEM_BASE_CLASS::currentPath result was NULL." << std::endl;
+      std::cout << "Error: MXA_FILESYSTEM_BASE_CLASS::currentPath result was NULL." << std::endl;
     }
     else
     {
@@ -206,7 +202,7 @@ std::string MXA_FILESYSTEM_BASE_CLASS::currentPath()
   }
   else
   {
-    std::cout << logTime() << "Error: MXA_FILESYSTEM_BASE_CLASS::currentPath stat function failed." << std::endl;
+    std::cout << "Error: MXA_FILESYSTEM_BASE_CLASS::currentPath stat function failed." << std::endl;
   }
 #if defined(WIN32)
   currentPath = MXA_FILESYSTEM_BASE_CLASS::cleanPath(currentPath);

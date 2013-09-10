@@ -123,7 +123,7 @@ herr_t H5Utilities::closeFile(hid_t &fileId)
 
   err = H5Fclose(fileId);
   if (err < 0) {
-    std::cout << logTime() << "Error Closing HDF5 File." << err << std::endl;
+    std::cout << "Error Closing HDF5 File." << err << std::endl;
   }
   fileId= -1;
   return err;
@@ -400,7 +400,7 @@ int32_t H5Utilities::createGroupsFromPath(const std::string &pathToCheck, hid_t 
       return gid;
     }
     err = H5Gclose(gid);
-    if (err < 0) { std::cout << logTime() << "Error closing group during group creation." << std::endl; return err; }
+    if (err < 0) { std::cout << "Error closing group during group creation." << std::endl; return err; }
     return err; //Now return here as this was a special case.
   }
 
