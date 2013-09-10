@@ -1,10 +1,10 @@
-
+///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2010, Michael A. Jackson. BlueQuartz Software
 //  All rights reserved.
 //  BSD License: http://www.opensource.org/licenses/bsd-license.html
 //
-
+///////////////////////////////////////////////////////////////////////////////
 
 #include "MXADir.h"
 
@@ -179,4 +179,43 @@ bool MXA_FILESYSTEM_BASE_CLASS::rmdir(const std::string &name, bool recurseParen
 bool MXA_FILESYSTEM_BASE_CLASS::remove(const std::string &fsPath)
 {
   return UNLINK(MXA_FILESYSTEM_BASE_CLASS::toNativeSeparators(fsPath).c_str()) == 0;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+std::string MXA_FILESYSTEM_BASE_CLASS::tempPath()
+{
+  std::string ret;
+#if (WIN32)
+  TCHAR path[MAX_PATH];
+
+  DWORD retLength = GetTempPath(MAX_PATH, path);
+
+  if (retLength) 
+  {
+    ret = std::string(path);
+  }
+
+  if (!ret.empty()) 
+  {
+    ret = MXADir::fromNativeSeparators(ret);
+  }
+  else
+  {
+    ret = std::string("/Temp");
+  }
+#else
+
+    char* pPath;
+     pPath = getenv ("TMPDIR");
+     if (pPath!=NULL) {
+       ret = std::string(pPath);
+     }
+     else
+     {
+       ret = "/tmp/";
+     }
+#endif
+    return ret;
 }

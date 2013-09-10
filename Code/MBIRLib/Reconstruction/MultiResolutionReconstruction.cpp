@@ -444,7 +444,7 @@ void MultiResolutionReconstruction::execute()
         }
         else
         {
-            MXAFileInfo::remove(tempFiles[i]);
+            MXADir::remove(tempFiles[i]);
         }
     }
   }
