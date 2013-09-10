@@ -24,6 +24,10 @@
 #include <ctype.h>
 #include <string.h> // Needed for memset
 
+#if defined (CMP_HAVE_UNISTD_H)
+#include <unistd.h>
+#endif
+
 #if defined (_MSC_VER)
 #include <direct.h>
 #include "MXADirent.h"
@@ -33,10 +37,12 @@
 #else
 #define UNLINK ::unlink
 #include <dirent.h>
-#include <limits.h>
 #define MXA_PATH_MAX PATH_MAX
 #define MXA_GET_CWD ::getcwd
 #endif
+
+#include "MXA/MXA.h"
+
 
 #if defined (CMP_HAVE_SYS_STAT_H)
 #include <sys/stat.h>
@@ -214,8 +220,8 @@ std::string MXA_FILESYSTEM_BASE_CLASS::currentPath()
 // -----------------------------------------------------------------------------
 std::string MXA_FILESYSTEM_BASE_CLASS::absolutePath(const std::string &path)
 {
-  std::string abspath;
-  if ( true == MXA_FILESYSTEM_BASE_CLASS::isAbsolutePath(path))
+  std::string abspath = MXA_FILESYSTEM_BASE_CLASS::toNativeSeparators(path);
+  if ( true == MXA_FILESYSTEM_BASE_CLASS::isAbsolutePath(abspath))
   { return path; }
 
   abspath = MXA_FILESYSTEM_BASE_CLASS::currentPath();
@@ -272,12 +278,30 @@ std::string MXA_FILESYSTEM_BASE_CLASS::parentPath(const std::string &path)
 bool MXA_FILESYSTEM_BASE_CLASS::exists(const std::string &fsPath)
 {
   int error;
-  std::string dirName(fsPath);
+  if (fsPath.empty() == true) { return false; }
+  std::string dirName(MXA_FILESYSTEM_BASE_CLASS::toNativeSeparators(fsPath));
   // Both windows and OS X both don't like trailing slashes so just get rid of them
   // for all Operating Systems.
+
   if (dirName[dirName.length() - 1] == MXA_FILESYSTEM_BASE_CLASS::Separator) {
-        dirName = dirName.substr(0, dirName.length() - 1);
+    dirName = dirName.substr(0, dirName.length() - 1);
   }
+
+  #if defined (_MSC_VER)
+  // We have a plain drive such as C:/
+   if (dirName.length() == 2 && isalpha(dirName[0]) != 0 && dirName[1] == ':') {
+      int curdrive;
+      curdrive = _getdrive();
+      if ( 0 == _chdrive(toupper(dirName[0]) - 'A' + 1 ) ) {
+        _chdrive( curdrive ); // Change back to the original drive
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+   }
+#endif
   MXA_STATBUF st;
   error = MXA_STAT(dirName.c_str(), &st);
   return (error == 0);
@@ -356,6 +380,13 @@ std::string MXA_FILESYSTEM_BASE_CLASS::cleanPath(const std::string &fsPath)
        path = fromNativeSeparators(path);
      }
 
+#if defined (_MSC_VER)
+     if (path.length() == 3 && isalpha(path[0]) != 0 && path[1] == ':' && path[2] == '/' )
+     {
+       return MXA_FILESYSTEM_BASE_CLASS::toNativeSeparators(path);
+     }
+#endif
+
      // Peel off any trailing slash
      if (path[path.length() -1 ] == slash)
      {
@@ -366,19 +397,24 @@ std::string MXA_FILESYSTEM_BASE_CLASS::cleanPath(const std::string &fsPath)
      std::string::size_type pos = 0;
      std::string::size_type pos1 = 0;
 
-     // Check for UNC style paths first
-
      pos = path.find_first_of(slash, pos);
      pos1 = path.find_first_of(slash, pos + 1);
-   #if defined (WIN32)
+#if defined (WIN32)
+     // Check for UNC style paths first
      if (pos == 0 && pos1 == 1)
      {
        pos1 = path.find_first_of(slash, pos1 + 1);
      } else
-   #endif
+#endif
      if (pos != 0)
      {
        stk.push_back(path.substr(0, pos));
+     }
+
+     // check for a top level Unix Path:
+     if (pos == 0 && pos1 == std::string::npos)
+     {
+         stk.push_back(path);
      }
 
 
@@ -413,7 +449,7 @@ std::string MXA_FILESYSTEM_BASE_CLASS::cleanPath(const std::string &fsPath)
        ret.append(*iter);
      }
      ret = toNativeSeparators(ret);
-     #if defined (WIN32)
+#if defined (WIN32)
      if (ret.length() > 2
        && isalpha(ret[0]) != 0
        && islower(ret[0]) != 0
