@@ -40,7 +40,7 @@ option(DREAM3D_GENERATE_LATEX "Generate HTML Documentation" ON)
 if (DREAM3D_GENERATE_LATEX STREQUAL "ON")
     SET (DOX_GENERATE_LATEX "YES")
     # Check for existence of LaTex executable files
-    INCLUDE( ${DOCUMENTATION_RESOURCES_DIR}/CMake/UseLATEX.cmake)
+    INCLUDE( ${DOCUMENTATION_RESOURCES_DIR}/CMake/UseLatex.cmake)
 endif()
 
 if (APPLE)

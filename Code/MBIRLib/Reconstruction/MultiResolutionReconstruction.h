@@ -122,7 +122,7 @@ class MultiResolutionReconstruction : public FilterPipeline
      * @param inputs
      * @param bf_inputs
      */
-    void memCalculate(TomoInputsPtr inputs,TomoInputsPtr bf_inputs);
+    void memCalculate(TomoInputsPtr inputs);//,TomoInputsPtr bf_inputs
 
   protected:
     MultiResolutionReconstruction();

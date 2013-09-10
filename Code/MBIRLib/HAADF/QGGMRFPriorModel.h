@@ -48,7 +48,6 @@
 
 namespace QGGMRF {
 
-
   static const unsigned int QGGMRF_ITER = 1;
   typedef struct {
       Real_t MRF_P;
@@ -91,7 +90,7 @@ Real_t Derivative(Real_t delta, QGGMRF_Values* qggmrf_values);
  * @param qggmrf_values
  * @return
  */
-Real_t SecondDerivative(Real_t delta, QGGMRF_Values* qggmrf_values);
+Real_t SecondDerivativeAtZero(QGGMRF_Values* qggmrf_values);
 
 /**
  *

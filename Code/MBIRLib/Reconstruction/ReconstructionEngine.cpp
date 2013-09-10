@@ -297,8 +297,7 @@ void ReconstructionEngine::execute()
   // int16_t i,j,k,Idx;
   size_t dims[3];
 
- // Int32ArrayType::Pointer Counter;
-  UInt8Image_t::Pointer visitCount;
+
 
   uint16_t maxNumberOfDetectorElts;
   uint8_t status; //set to 1 if ICD has converged
@@ -354,7 +353,7 @@ void ReconstructionEngine::execute()
     return;
   }
 
-  // Read the Input data from the supplied data file
+  // Read the Input data from the supplied data file - reconstruction from previous resolution ? 
   err = readInputData();
   if(err < 0)
   {
@@ -362,28 +361,24 @@ void ReconstructionEngine::execute()
   }
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
-  err = m_ForwardModel->initializeBrightFieldData(m_Sinogram);
-  if(err < 0)
-  {
-    return;
-  }
+	
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
 
+	//Additional parameters associated with the system 
   err = m_ForwardModel->createNuisanceParameters(m_Sinogram);
   if(err < 0)
   {
     return;
   }
 
+  //Periodically checking if user has sent a cancel signal from the GUI
   if (getCancel() == true) { setErrorCondition(-999); return; }
-
 
   m_ForwardModel->printNuisanceParameters(m_Sinogram);
 
-#ifdef BF_RECON //Take log of the input data after subtracting offset
+ //Take log of the input data after subtracting offset 
     m_ForwardModel->processRawCounts(m_Sinogram);
-#endif
 
 
   // Initialize the Geometry data from a rough reconstruction
@@ -412,14 +407,17 @@ void ReconstructionEngine::execute()
   dims[1] = m_Sinogram->N_r;
   dims[2] = m_Sinogram->N_t;
 
-  y_Est = RealVolumeType::New(dims, "y_Est");
-  errorSino = RealVolumeType::New(dims, "ErrorSino");
-  m_ForwardModel->weightInitialization(dims);
-  finalSinogram = RealVolumeType::New(dims, "Final Sinogram");
+  y_Est = RealVolumeType::New(dims, "y_Est");//y_Est = A*x_{initial} 
+  errorSino = RealVolumeType::New(dims, "ErrorSino");// y - y_est
+  m_ForwardModel->weightInitialization(dims); //Initialize the \lambda matrix
+	
+  finalSinogram = RealVolumeType::New(dims, "Final Sinogram"); //Debug variable to store the final A*x_{Final}
 
+/*************** Computation of partial Amatrix *************/
+	
   //calculate the trapezoidal voxel profile for each angle.Also the angles in the Sinogram
   // Structure are converted to radians
-  voxelProfile = calculateVoxelProfile(); //Verified with ML
+  voxelProfile = calculateVoxelProfile(); //This is used for computation of the partial A matrix
 
   //Pre compute sine and cos theta to speed up computations
   HAADFDetectorParameters::Pointer haadfParameters = HAADFDetectorParameters::New();
@@ -428,24 +426,8 @@ void ReconstructionEngine::execute()
   haadfParameters->setBeamWidth(m_Sinogram->delta_r);
   haadfParameters->calculateSinCos(m_Sinogram);
   //Initialize the e-beam
-  haadfParameters->initializeBeamProfile(m_Sinogram, m_AdvParams); //verified with ML
+  haadfParameters->initializeBeamProfile(m_Sinogram, m_AdvParams); //The shape of the averaging kernel for the detector
 
-
-  // Initialize the Prior Model parameters - here we are using a QGGMRF Prior Model
-  QGGMRF::QGGMRF_Values qggmrf_values;
-  QGGMRF::initializePriorModel(m_TomoInputs, &qggmrf_values);
-  // Set the prior model parameters into the Forward Model
-  m_ForwardModel->setQGGMRFValues(&qggmrf_values);
-  //m_ForwardModel->setBraggThreshold(DefBraggThreshold);
-
-  //globals assosiated with finding the optimal gain and offset parameters
-
-  dims[0] = m_Sinogram->N_theta;
-  dims[1] = 3;
-  dims[2] = 0;
-  //Hold the coefficients of a quadratic equation
-
-  m_ForwardModel->costInitialization(m_Sinogram);
 
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
@@ -484,20 +466,7 @@ void ReconstructionEngine::execute()
     notify("Error Encountered During Reconstruction", 100, Observable::UpdateProgressValueAndMessage);
     return;
   }
-
-#ifdef RANDOM_ORDER_UPDATES
-  dims[0] = m_Geometry->N_z;
-  dims[1] = m_Geometry->N_x;
-  dims[2] = 0;
-  visitCount = UInt8Image_t::New(dims, "visitCount");
-// Initialize the Array to zero
-  ::memset(visitCount->d, 0, dims[0] * dims[1] * sizeof(uint8_t));
-#endif//Random update
-
-
-  //Gain and Offset Parameters Initialization
-  m_ForwardModel->gainAndOffsetInitialization(m_Sinogram->N_theta);
-
+	
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
   // Initialize H_t volume
@@ -512,7 +481,6 @@ void ReconstructionEngine::execute()
   ss.str("");
   ss << "Calculating A Matrix....";
   notify(ss.str(), 0, Observable::UpdateProgressMessage);
-
 
 
   std::vector<HAADFAMatrixCol::Pointer> voxelLineResponse(m_Geometry->N_y);
@@ -562,8 +530,13 @@ void ReconstructionEngine::execute()
     printf("Number of non zero entries of the forward projector is %lf\n", temp);
     printf("Geometry-Z %d\n", m_Geometry->N_z);
   }
-
+/************ End of A matrix partial computations **********************/
+	
+  //Gain and Offset Parameters Initialization of the forward model
+  m_ForwardModel->gainAndOffsetInitialization(m_Sinogram->N_theta);
+	
   initializeVolume(y_Est, 0.0);
+
 
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
@@ -580,28 +553,26 @@ void ReconstructionEngine::execute()
 #ifdef FORWARD_PROJECT_MODE
   return 0; //exit the program once we finish forward projecting the object
 #endif//Forward Project mode
-	
-
+		
+	// Initialize the Prior Model parameters - here we are using a QGGMRF Prior Model
+	QGGMRF::QGGMRF_Values qggmrf_values;
+	QGGMRF::initializePriorModel(m_TomoInputs, &qggmrf_values);
+		
 #ifdef COST_CALCULATE
 	err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
 #endif //Cost calculation endif
 
-	//Read the percentage of sinogram to reject and convert it to 
-	//a percentage
-	//Real_t BF_delta = m_ForwardModel->getBraggDelta();	
-	//std::cout<<"Target rejection fraction ="<<BF_delta<<std::endl;
-	//Real_t BraggStep = BF_delta/REJECTION_RATE;//Step through the rejection in steps of 1/10th of target
-	Real_t TempBraggValue;//=DefBraggThreshold;
+	Real_t TempBraggValue;
 #ifdef BRAGG_CORRECTION
 	if(m_TomoInputs->NumIter > 1)
 	{//Get the value of the Bragg threshold from the User Interface the first time
 	    TempBraggValue = DefBraggThreshold;//m_ForwardModel->getBraggThreshold();
-		m_ForwardModel->setBraggThreshold(TempBraggValue);
+		m_ForwardModel->setBraggThreshold(TempBraggValue); //setting the Threshold T of \beta_{T,\delta}
+		//the \delta value is set in MultiResolutionReconstruction.cpp
 	}
 	else 
 	{
 		TempBraggValue = BF_T;
-		//TempBraggValue  = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
 		m_ForwardModel->setBraggThreshold(TempBraggValue);
 	}
 #endif //Bragg correction
@@ -611,24 +582,28 @@ void ReconstructionEngine::execute()
 	//Generate a List	
 	std::cout<<"Generating a list of voxels to update"<<std::endl;
 	
+	//Takes all the voxels along x-z slice and forms a list
 	m_VoxelIdxList.NumElts = m_Geometry->N_z*m_Geometry->N_x;
 	m_VoxelIdxList.Array = (struct ImgIdx*)(malloc(m_VoxelIdxList.NumElts*sizeof(struct ImgIdx)));		
 	GenRegularList(&m_VoxelIdxList);
+	//Randomize the list of voxels
 	m_VoxelIdxList = GenRandList(m_VoxelIdxList);
-	
+
+	if(getVerbose())
+	{
 	std::cout<<"Initial random order list .."<<std::endl;
 	maxList(m_VoxelIdxList);
+	}
 	
+	//Create temporary sublists for each iteration
 	struct List TempList;
 	TempList.NumElts = m_VoxelIdxList.NumElts;
 	TempList.Array = m_VoxelIdxList.Array;
 	uint32_t listselector=0; //For the homogenous updates this cycles 
 	//through the random list one sublist at a time 
 	
-	//End of list gen
 	
-	
-	//Initialize the update magnitude arrays (for NHICD mainly)
+	//Initialize the update magnitude arrays (for NHICD mainly) & stopping criteria
     dims[0] = m_Geometry->N_z; //height
     dims[1] = m_Geometry->N_x; //width
     dims[2] = 0;	
@@ -644,14 +619,6 @@ void ReconstructionEngine::execute()
     initializeROIMask(magUpdateMask);
 #endif
 			
-#ifdef DEBUG //TODO: REMOVE THIS LATER - redundant
-	Real_t TempSum = 0;
-	for (int32_t j = 0; j < m_Geometry->N_z; j++)
-		for (int32_t k = 0; k < m_Geometry->N_x; k++)
-		{
-			magUpdateMap->setValue(0,j,k);
-		}
-#endif //debug
 	
 	//Debugging variable to check if all voxels are visited
 	dims[0] = m_Geometry->N_z;
@@ -661,29 +628,29 @@ void ReconstructionEngine::execute()
 	
 	uint32_t EffIterCount=0;//Maintains number of calls to updatevoxelroutine
 	
-  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
-  //Loop through every voxel updating it by solving a cost function
+  
+	//Loop through every voxel updating it by solving a cost function
  	
   for (int16_t reconOuterIter = 0; reconOuterIter < m_TomoInputs->NumOuterIter; reconOuterIter++)
   {
     ss.str(""); // Clear the string stream
     indent = "";
     //The first time we may need to update voxels multiple times and then on 
-	//just optimize over I,d,sigma,f once each outer loop
+	//just optimize over I,d,sigma,f once each outer loop; 
+	//Each outer loop after the first outer iter updates a subset of the voxels 
+	//followed by other parameters if needed
     if(reconOuterIter > 0)
     {
-      m_TomoInputs->NumIter = 1;
+      m_TomoInputs->NumIter = 1;//Inner iterations
 	  m_ForwardModel->setBraggThreshold(TempBraggValue);	
     }
 
     for (int16_t reconInnerIter = 0; reconInnerIter < m_TomoInputs->NumIter; reconInnerIter++)
-    {
-	
+    {	
 	// If at the inner most loops at the coarsest resolution donot apply Bragg
 	if(m_TomoInputs->NumIter > 1 && reconInnerIter == 0)
 	{
 		m_ForwardModel->setBraggThreshold(DefBraggThreshold);
-		//m_ForwardModel->setBraggThreshold(BF_T);
 	}
 #ifdef DEBUG			
 	  //Prints the ratio of the sinogram entries selected
@@ -701,27 +668,30 @@ void ReconstructionEngine::execute()
       // This could contain multiple Subloops also - voxel update
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
-#ifdef NHICD
+#ifdef NHICD //NHICD alternates between updating a fixed subset of voxels and a 
+		//list created on the fly based on the previous iterations
 		// Creating a sublist of voxels for the Homogenous 
 		// iterations - cycle through the partial sub lists
-		if(EffIterCount%2 == 0)
+		if(EffIterCount%2 == 0) //Even iterations == Homogenous update
 		{
-			listselector%=NUM_HOM_ITER;
+			listselector%=NUM_HOM_ITER;// A variable to cycle through the randmoized list of voxels
 			
-			m_VoxelIdxList.NumElts = floor((Real_t)TempList.NumElts/NUM_HOM_ITER);
-			
+			m_VoxelIdxList.NumElts = floor((Real_t)TempList.NumElts/NUM_HOM_ITER);			
 			//If the number of voxels is NOT exactly divisible by NUM_NON .. then compensate and make the last of the lists longer
 			if(listselector == NUM_HOM_ITER-1)
 			{
 				m_VoxelIdxList.NumElts += (TempList.NumElts - m_VoxelIdxList.NumElts*NUM_HOM_ITER);
+				if(getVeryVerbose())
+				{
 				std::cout<<"**********Adjusted number of voxel lines for last iter**************"<<std::endl;
 				std::cout<<m_VoxelIdxList.NumElts<<std::endl;
 				std::cout<<"**********************************"<<std::endl;
+				}
 			}
 			
+			//Set the list array for updating voxels
 			m_VoxelIdxList.Array = &(TempList.Array[(uint32_t)(floor(((Real_t)TempList.NumElts/NUM_HOM_ITER))*listselector)]);
-			
-			
+						
 			std::cout<<"Partial random order list for homogenous ICD .."<<std::endl;
 			maxList(m_VoxelIdxList);
 			
@@ -742,23 +712,29 @@ void ReconstructionEngine::execute()
 		std::cout<<"**********************************************"<<std::endl;
 #endif //debug
 		
-		status = updateVoxels(reconOuterIter, reconInnerIter,visitCount, tempCol,
+		status = updateVoxels(reconOuterIter, reconInnerIter, tempCol,
 							errorSino, voxelLineResponse,cost,&qggmrf_values,
 							magUpdateMap,filtMagUpdateMap, magUpdateMask,m_VisitCount,
 							  PrevMagSum,
 							  EffIterCount);
 #ifdef NHICD
-		
-		if(EffIterCount%NUM_NON_HOMOGENOUS_ITER == 0) // At the end of an equit compute Magnitude of recon
+		if(EffIterCount%NUM_NON_HOMOGENOUS_ITER == 0) // At the end of half an 
+			//equivalent iteration compute average Magnitude of recon to test 
+			//stopping criteria
 		{
 			PrevMagSum = roiVolumeSum(magUpdateMask);
 			std::cout<<" Previous Magnitude of the Recon = "<<PrevMagSum<<std::endl;
 		}
-		
+#else
+		PrevMagSum = roiVolumeSum(magUpdateMask);
+		std::cout<<" Previous Magnitude of the Recon = "<<PrevMagSum<<std::endl;
 #endif //NHICD
-		
+
+		//Debugging information to test if every voxel is getting touched
+#ifdef NHICD
 		//Debug 
 		if(EffIterCount%(2*NUM_NON_HOMOGENOUS_ITER) == 0 && EffIterCount > 0)
+#endif //NHICD
 		{
 		 for (int16_t j = 0; j < m_Geometry->N_z; j++)
 		   for (int16_t k = 0; k < m_Geometry->N_x; k++)
@@ -775,7 +751,7 @@ void ReconstructionEngine::execute()
 		}
 		//end of debug 
 		
-		EffIterCount++; //cycles between ICD and NHICD
+		EffIterCount++; //cycles between the two types of voxel updates
 		
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 		
@@ -786,8 +762,10 @@ void ReconstructionEngine::execute()
       // Check to see if we are canceled.
       if (getCancel() == true) { setErrorCondition(-999); return; }
 
-      // Write out the MRC File
+		// Write out the MRC File ; If NHICD only after half an equit do a write
+#ifdef NHICD
 	 if(EffIterCount%NUM_NON_HOMOGENOUS_ITER == 0)
+#endif //NHICD 
       {
         ss.str("");
         ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << reconInnerIter << "_" << ScaleOffsetCorrection::ReconstructedMrcFile;
@@ -795,8 +773,8 @@ void ReconstructionEngine::execute()
         notify(ss.str(), 0, Observable::UpdateIntermediateImage);
         m_TomoInputs->tempFiles.push_back(ss.str());
       }
-#ifdef COST_CALCULATE
 		
+#ifdef COST_CALCULATE //typically run only for debugging
 		/*********************Cost Calculation*************************************/
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
 		if(err < 0)
@@ -809,14 +787,10 @@ void ReconstructionEngine::execute()
 #endif //Cost calculation endif  
 		
 #ifdef BRAGG_CORRECTION
-
-		//If at the last iteration of the inner loops at coarsest res
+		//If at the last iteration of the inner loops at coarsest resolution adjust parameters
 		if(reconInnerIter == m_TomoInputs->NumIter-1 && reconInnerIter != 0)
 		{ //The first time at the coarsest resolution at the end of 
 		 // inner iterations set the Bragg Threshold
-		/*	Real_t threshold = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
-			std::cout<<"Computed Bragg Threshold ="<<threshold<<std::endl;
-			m_ForwardModel->setBraggThreshold(threshold);*/
 			TempBraggValue = BF_T;//threshold;
 			m_ForwardModel->setBraggThreshold(TempBraggValue);
 		}
@@ -826,7 +800,8 @@ void ReconstructionEngine::execute()
     } /* ++++++++++ END Inner Iteration Loop +++++++++++++++ */
 	
 	  
-	if(0 == status && reconOuterIter >= 1) //
+	if(0 == status && reconOuterIter >= 1) //if stopping criteria is met and
+		//number of iterations is greater than 1
 	{
 		std::cout << "Exiting the code because status =0" << std::endl;
 		break;
@@ -840,13 +815,11 @@ void ReconstructionEngine::execute()
 	{
     if(m_AdvParams->JOINT_ESTIMATION)
     {
- //     m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
-#ifdef BF_RECON
-//  	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
-#endif
-#ifdef COST_CALCULATE
-		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
-		
+      m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
+  	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
+
+#ifdef COST_CALCULATE //Debug info
+		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);		
 		if(err < 0)
 		{
 			std::cout<<"Cost went up after offset update"<<std::endl;
@@ -859,10 +832,9 @@ void ReconstructionEngine::execute()
 	
 	if(m_AdvParams->NOISE_ESTIMATION)
     {
- //     m_ForwardModel->updateWeights(m_Sinogram, errorSino);
-#ifdef BF_RECON
-//	 m_ForwardModel->updateSelector(m_Sinogram, errorSino);
-#endif //BF_RECON
+	 m_ForwardModel->updateWeights(m_Sinogram, errorSino);
+	 m_ForwardModel->updateSelector(m_Sinogram, errorSino);
+
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);
 		err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
@@ -874,34 +846,10 @@ void ReconstructionEngine::execute()
 		}
 #endif//cost
 	
-    }
-    else
-    {
-      if(0 == status && reconOuterIter >= 1)
-      { 
-        std::cout << "Exiting the code because status =0" << std::endl;
-        break;
-      }
-    } //Noise Model
-		
+    }		
 	if(getVeryVerbose())
 		std::cout<<" Ending nuisance parameter estimation"<<std::endl;
 	  
-#ifdef BRAGG_CORRECTION //TODO: Remove this code 
-	//Adapt the Bragg Threshold
-//	if(BraggStep < BF_delta)
-		if(0)
-		{
-		/*BraggStep+=BF_delta/REJECTION_RATE;//REJECTION_PERCENTAGE/10;
-		std::cout<<"Current Bragg Step"<<BraggStep<<std::endl;
-		Real_t threshold = m_ForwardModel->estimateBraggThreshold(m_Sinogram, errorSino, BraggStep);
-		std::cout<<"Computed Bragg Threshold ="<<threshold<<std::endl;
-		m_ForwardModel->setBraggThreshold(threshold);
-		TempBraggValue = threshold;	*/
-		TempBraggValue = BF_T;
-		m_ForwardModel->setBraggThreshold(TempBraggValue);
-	    }  
-#endif //Bragg correction 
 	}
 
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
@@ -923,11 +871,11 @@ void ReconstructionEngine::execute()
 
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
-  /* Write the Gains and Offsets to an output file */
+  /* Write the Gains,Offsets and variance to an output file */
   m_ForwardModel->writeNuisanceParameters(m_Sinogram);
 
 
-
+	//Compute final value of Ax_{final}
   Real_t temp_final = 0.0;
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
@@ -940,13 +888,13 @@ void ReconstructionEngine::execute()
       }
     }
   }
+	
+	// This is writing the "ReconstructedSinogram.bin" file
+	m_ForwardModel->writeSinogramFile(m_Sinogram, finalSinogram); // Writes the sinogram to a file
 
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
-  // This is writing the "ReconstructedSinogram.bin" file
-  m_ForwardModel->writeSinogramFile(m_Sinogram, finalSinogram); // Writes the sinogram to a file
-
-  // Writes ReconstructedObject.bin file
+  // Writes ReconstructedObject.bin file for next resolution
   {
       std::stringstream ss;
       ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedObjectFile;
@@ -955,26 +903,21 @@ void ReconstructionEngine::execute()
   // Write out the VTK file
   if (m_TomoInputs->vtkOutputFile.empty() == false)
   {
-  //  std::stringstream ss;
-  //  ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedVtkFile;
-    writeVtkFile(m_TomoInputs->vtkOutputFile, cropStart, cropEnd);
+      writeVtkFile(m_TomoInputs->vtkOutputFile, cropStart, cropEnd);
   }
   // Write out the MRC File
   if (m_TomoInputs->mrcOutputFile.empty() == false)
   {
-  //  std::stringstream ss;
-  //  ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedMrcFile;
     writeMRCFile(m_TomoInputs->mrcOutputFile, cropStart, cropEnd);
   }
-	
-	
- // std::cout << "Should be writing .am file....  '" << m_TomoInputs->avizoOutputFile << "'"  << std::endl;
+
+	//Write out avizo fire file
   if (m_TomoInputs->avizoOutputFile.empty() == false)
   {
     writeAvizoFile(m_TomoInputs->avizoOutputFile, cropStart, cropEnd);
   }
 
-  //Debug Writing out the selector array as an MRC file
+  //Debug : Writing out the selector array as an MRC file
   m_ForwardModel->writeSelectorMrc(m_TomoInputs->braggSelectorFile,m_Sinogram,m_Geometry,errorSino);
 	
   std::cout << "Final Dimensions of Object: " << std::endl;
@@ -982,9 +925,11 @@ void ReconstructionEngine::execute()
   std::cout << "  Ny = " << m_Geometry->N_y << std::endl;
   std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
 	
-
+#ifdef NHICD
   std::cout<<"Number of equivalet iterations taken ="<<EffIterCount/NUM_NON_HOMOGENOUS_ITER<<std::endl;	
-	
+#else
+ std::cout<<"Number of equivalet iterations taken ="<<EffIterCount/NUM_HOM_ITER<<std::endl;		
+#endif //NHICD
   notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
   setErrorCondition(0);
   std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds() - totalTime) / 1000 << std::endl;

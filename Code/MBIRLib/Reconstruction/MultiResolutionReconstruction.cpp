@@ -186,14 +186,10 @@ void MultiResolutionReconstruction::execute()
   TomoInputsPtr prevInputs = TomoInputsPtr(new TomoInputs);
   ReconstructionEngine::InitializeTomoInputs(prevInputs);
 
-  TomoInputsPtr bf_inputs = TomoInputsPtr(new TomoInputs);
-  ReconstructionEngine::InitializeTomoInputs(bf_inputs);
 
   for (int i = 0; i < m_NumberResolutions; ++i)
-  {
+  {	  
     HAADFForwardModel::Pointer forwardModel = HAADFForwardModel::New();
-
-
     if(getCancel() == true)
     {
       setErrorCondition(-999);
@@ -202,8 +198,6 @@ void MultiResolutionReconstruction::execute()
 
     TomoInputsPtr inputs = TomoInputsPtr(new TomoInputs);
     ReconstructionEngine::InitializeTomoInputs(inputs);
-
-    bf_inputs->sinoFile = getBrightFieldFile();
 
     /* ******* this is bad. Remove this for production work ****** */
     inputs->extendObject = getExtendObject();
@@ -317,7 +311,7 @@ void MultiResolutionReconstruction::execute()
     inputs->NumOuterIter = getOuterIterations();
     if(i == 0)
     {
-//      inputs->NumIter = 20;
+
       inputs->NumIter = getInnerIterations();
     }
     else
@@ -338,7 +332,6 @@ void MultiResolutionReconstruction::execute()
     if(i == 0)
     {
       inputs->defaultInitialRecon = getInitialReconstructionValue();
-//      inputs->defaultVariance = getDefaultVariance();
       forwardModel->setDefaultVariance(getDefaultVariance());
     }
     inputs->delta_xy = powf(2.0f, getNumberResolutions() - i - 1) * static_cast<Real_t>(m_FinalResolution);
@@ -350,7 +343,7 @@ void MultiResolutionReconstruction::execute()
       forwardModel->setUseDefaultOffset(getUseDefaultOffset());
     }
     inputs->LengthZ = m_SampleThickness;
-    forwardModel->setTargetGain(getTargetGain());
+    forwardModel->setTargetGain(getTargetGain());//In the BF code this is always set to 1
 	
 	forwardModel->setBraggDelta(getBraggDelta()); //Set the Bragg function Delta value 
     
@@ -365,37 +358,24 @@ void MultiResolutionReconstruction::execute()
       inputs->zStart = m_Subvolume[2];
       inputs->zEnd = m_Subvolume[5];
 
-      bf_inputs->useSubvolume = true;
-      bf_inputs->xStart = m_Subvolume[0];
-      bf_inputs->xEnd = m_Subvolume[3];
-      bf_inputs->yStart = m_Subvolume[1];
-      bf_inputs->yEnd = m_Subvolume[4];
-      bf_inputs->zStart = m_Subvolume[2];
-      bf_inputs->zEnd = m_Subvolume[5];
-
     }
-    bf_inputs->interpolateFactor = inputs->interpolateFactor;
+	  
+
     inputs->excludedViews = m_ViewMasks;
-    bf_inputs->excludedViews = m_ViewMasks;
 
     SinogramPtr sinogram = SinogramPtr(new Sinogram);
-    SinogramPtr bf_sinogram = SinogramPtr(new Sinogram);
     GeometryPtr geometry = GeometryPtr(new Geometry);
-    //ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
+  
 
     ReconstructionEngine::InitializeSinogram(sinogram);
     ReconstructionEngine::InitializeGeometry(geometry);
-    //ReconstructionEngine::InitializeScaleOffsetParams(nuisanceParams);
-    ReconstructionEngine::InitializeSinogram(bf_sinogram);
 
     //Calculate approximate memory required
-    memCalculate(inputs, bf_inputs);
+	  memCalculate(inputs);
 
     forwardModel->setAdvParams(m_AdvParams);
     forwardModel->setTomoInputs(inputs);
 
-    forwardModel->setBFTomoInputs(bf_inputs);
-    forwardModel->setBFSinogram(bf_sinogram);
     forwardModel->addObserver(this);
     forwardModel->setMessagePrefix(StringUtils::numToString(inputs->interpolateFactor / static_cast<int>(powf(2.0f, i))) + std::string("x: "));
 
@@ -422,11 +402,7 @@ void MultiResolutionReconstruction::execute()
     ss << "Sinogram Inputs -----------------------------------------" << std::endl;
     printInputs(inputs, ss);
     pipelineProgressMessage(ss.str());
-    ss.str("");
-    ss << "Bright Field Inputs -----------------------------------------" << std::endl;
-    printInputs(bf_inputs, ss);
-    pipelineProgressMessage(ss.str());
-
+    
     engine->execute();
     engine = ReconstructionEngine::NullPointer();
 
@@ -478,7 +454,7 @@ void MultiResolutionReconstruction::execute()
   setErrorCondition(err);
 }
 
-void MultiResolutionReconstruction::memCalculate(TomoInputsPtr inputs, TomoInputsPtr bf_inputs)
+void MultiResolutionReconstruction::memCalculate(TomoInputsPtr inputs)
 {
     float GeomNx,GeomNy,GeomNz;
     float SinoNr,SinoNt,SinoNtheta;
@@ -488,9 +464,6 @@ void MultiResolutionReconstruction::memCalculate(TomoInputsPtr inputs, TomoInput
 
     AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
     ReconstructionEngine::InitializeAdvancedParams(advancedParams);
-
-    //std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
-
 
     if(inputs->extendObject == 1)
     {
@@ -527,6 +500,5 @@ void MultiResolutionReconstruction::memCalculate(TomoInputsPtr inputs, TomoInput
     TotalMem/=(1e9);//To get answer in Gb
 
     std::cout<<"Total Max Mem needed = "<<TotalMem<<" Gb"<<std::endl;
-
 
 }

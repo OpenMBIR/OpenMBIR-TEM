@@ -143,7 +143,6 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 	uint8_t updateVoxels(
 						 int16_t OuterIter,
 						 int16_t Iter,
-						 UInt8Image_t::Pointer VisitCount,
 						 std::vector<HAADFAMatrixCol::Pointer> &TempCol,
 						 RealVolumeType::Pointer ErrorSino,
 						 std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
@@ -160,6 +159,8 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 	
 	
 	Real_t roiVolumeSum(UInt8Image_t::Pointer Mask);
+	
+	uint8_t stopCriteria(RealImageType::Pointer magUpdateMap,UInt8Image_t::Pointer magUpdateMask, Real_t PrevMagSum, uint32_t EffIterCount);
 	
     /**
      * Code to take the magnitude map and filter it with a hamming window
