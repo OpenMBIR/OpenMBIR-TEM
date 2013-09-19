@@ -643,7 +643,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 
 
 		//Checking which voxels are going to be visited and setting their magnitude value to zero
-        for(int16_t tmpiter = 0; tmpiter < m_VoxelIdxList.NumElts; tmpiter++)
+        for(int32_t tmpiter = 0; tmpiter < m_VoxelIdxList.NumElts; tmpiter++)
 		{
 			m_VisitCount->setValue(1,m_VoxelIdxList.Array[tmpiter].zidx,m_VoxelIdxList.Array[tmpiter].xidx);
 			magUpdateMap->setValue(0,m_VoxelIdxList.Array[tmpiter].zidx,m_VoxelIdxList.Array[tmpiter].xidx);
@@ -659,15 +659,14 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
         ::memset(averageUpdate, 0, sizeof(Real_t) * m_NumThreads);
         Real_t* averageMagnitudeOfRecon = (Real_t*)(malloc(sizeof(Real_t) * m_NumThreads));
         ::memset(averageMagnitudeOfRecon, 0, sizeof(Real_t) * m_NumThreads);
-		
-		
+				
         size_t dims[3];
 		//Initialize individual magnitude maps for the separate threads
 		dims[0] = m_Geometry->N_z; //height
 		dims[1] = m_Geometry->N_x; //width			
 		std::vector <RealImageType::Pointer> magUpdateMaps;
 		
-		std::cout<<" Starting multicore allocation .."<<std::endl;
+		std::cout<<" Starting multicore allocation with "<<m_NumThreads<<" threads.."<<std::endl;
 		
         for (int t = 0; t < m_NumThreads; ++t)
         {
