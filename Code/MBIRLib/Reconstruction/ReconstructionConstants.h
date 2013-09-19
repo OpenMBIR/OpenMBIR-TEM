@@ -74,10 +74,10 @@ namespace VoxelUpdateType
 #define BF_T 3e10 //Ratio of model mismatch to noise variance
 //#define IDENTITY_NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
-//#define NHICD
-//#define NUM_NON_HOMOGENOUS_ITER 20
+#define NHICD
+#define NUM_NON_HOMOGENOUS_ITER 20
 #define SUB_ITER 1
-#define NUM_HOM_ITER 1
+#define NUM_HOM_ITER 20
 
 namespace ScaleOffsetCorrection
 {
