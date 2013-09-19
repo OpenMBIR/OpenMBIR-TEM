@@ -735,7 +735,7 @@ int HAADFForwardModel::createInitialOffsetsData(SinogramPtr sinogram)
 	
 	  //TODO : HACK to just read offsets from a initial file
 	  FILE* fp;
-	  char PathStr[]="/Users/svenkata/Desktop/Work/Tomography/TomoSoftware/HAADFSTEM/Data/AlSphereBFTEM/AlTEMOffsets.bin";
+	  char PathStr[]="AlTEMOffsets.bin";
 	  fp = fopen(PathStr, "rb");
 	  if(fp == NULL)
 		  std::cout<<"File not found"<<std::endl;
