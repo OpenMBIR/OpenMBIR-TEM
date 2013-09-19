@@ -65,7 +65,7 @@ namespace VoxelUpdateType
 //#define WRITE_INTERMEDIATE_RESULTS
 //#define COST_CALCULATE
 //#define DEBUG_COSTS
-#define DEBUG
+//#define DEBUG
 //#define RANDOM_ORDER_UPDATES
 
 #define DefBraggThreshold 5e10//Thresold in normalized uints. This value ensures at the start we do a "regular" BF recon
