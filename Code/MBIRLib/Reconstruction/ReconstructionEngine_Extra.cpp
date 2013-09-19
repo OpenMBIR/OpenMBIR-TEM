@@ -730,7 +730,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 		//From individual threads update the magnitude map
 		std::cout<<" Magnitude Map Update.."<<std::endl;
 		RealImageType::Pointer TempPointer;
-		for(int16_t tmpiter = 0; tmpiter < m_VoxelIdxList.NumElts; tmpiter++)
+		for(int32_t tmpiter = 0; tmpiter < m_VoxelIdxList.NumElts; tmpiter++)
 		{
 			Real_t TempSum =0;
 			for (uint16_t t = 0; t < magUpdateMaps.size(); ++t)
