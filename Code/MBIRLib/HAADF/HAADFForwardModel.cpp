@@ -392,12 +392,13 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
 {
   std::stringstream ss;
   std::string indent("  ");
-  //Estimate unknown offset (log{dosage}) parameter
-      Real_t num_sum = 0;
-      Real_t den_sum = 0;
-      Real_t alpha = 0;
+  
 	  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	  {
+	 //Estimate unknown offset (log{dosage}) parameter
+	  Real_t num_sum = 0;
+	  Real_t den_sum = 0;
+	  Real_t alpha = 0;
       for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
       {
         for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
