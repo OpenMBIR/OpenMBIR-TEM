@@ -466,22 +466,22 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
     }
   }
 
-  Real_t sum = 0;
+  Real_t sum1 = 0,sum2 = 0,update;
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	  for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
 		  for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
 		  {
 			size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
 			if(m_Selector->d[weight_idx] == 1) 
-				sum += (ErrorSino->d[weight_idx]*ErrorSino->d[weight_idx]*m_Weight->d[weight_idx]);
+				sum1 += (ErrorSino->d[weight_idx]*ErrorSino->d[weight_idx]*m_Weight->d[weight_idx]);
 			  else 
-				    sum += (m_BraggDelta*BF_T)*fabs(ErrorSino->d[weight_idx])*sqrt(m_Alpha->d[i_theta]*m_Weight->d[weight_idx]);
+				    sum2 += fabs(ErrorSino->d[weight_idx])*sqrt(m_Alpha->d[i_theta]*m_Weight->d[weight_idx]);
 		  }
-	sum/=(sinogram->N_theta*sinogram->N_r*sinogram->N_r);
+	update = (sum1 + (m_BraggDelta*BF_T)*sum2)/(sinogram->N_theta*sinogram->N_r*sinogram->N_r);
 	
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	{
-		m_Alpha->d[i_theta]=sum;
+		m_Alpha->d[i_theta]=update;
 	}
 	
 	//Update the weights back for future iterations by appropriately scaling it
@@ -492,7 +492,6 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
 			{
 				size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
-				//m_Weight->d[weight_idx] = (BF_MAX/exp(sinogram->counts->d[weight_idx])); //Sets the weight = measured count
 				m_Weight->d[weight_idx]/=m_Alpha->d[i_theta]; //Scales the weight appropriately
 #else
 				m_Weight->d[weight_idx] = 1.0/m_Alpha->d[i_theta];
@@ -893,7 +892,8 @@ void HAADFForwardModel::computeTheta(size_t Index,
 }
 
 // -----------------------------------------------------------------------------
-//
+// Updates the error sinogram after a single voxel update; Also updates 
+// the selector variable simultaneously 
 // -----------------------------------------------------------------------------
 void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 						   size_t Index,

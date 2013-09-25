@@ -399,9 +399,9 @@ void ReconstructionEngine::execute()
 
   m_ForwardModel->allocateNuisanceParameters(m_Sinogram);
 
-#ifdef COST_CALCULATE
-  dims[0] = (m_TomoInputs->NumIter+1)*m_TomoInputs->NumOuterIter*3;
-#endif
+//#ifdef COST_CALCULATE
+//  dims[0] = (m_TomoInputs->NumIter+1)*m_TomoInputs->NumOuterIter*3;
+//#endif
 
   dims[0] = m_Sinogram->N_theta;
   dims[1] = m_Sinogram->N_r;
@@ -841,6 +841,7 @@ void ReconstructionEngine::execute()
 		if (err < 0 && reconOuterIter > 1)
 		{
 			std::cout<<"Cost went up after variance update"<<std::endl;
+			std::cout<<"Effective iterations ="<<EffIterCount<<std::endl;
 			return;
 			//break;
 		}
@@ -1039,7 +1040,7 @@ int ReconstructionEngine::calculateCost(CostData::Pointer cost,
 										QGGMRF::QGGMRF_Values* qggmrf_Values)
 {
 	Real_t cost_value = computeCost(sinogram, geometry, ErrorSino, qggmrf_Values);
-	std::cout << "cost_value: " << cost_value << std::endl;
+	//std::cout << "cost_value: " << cost_value << std::endl;
 	int increase = cost->addCostValue(cost_value);
 	if(increase == 1)
 	{

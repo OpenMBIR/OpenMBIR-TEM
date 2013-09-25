@@ -91,8 +91,13 @@ int CostData::addCostValue(Real_t value)
   m_Cost.push_back(value);
   if(m_Cost[m_Cost.size() - 1] - m_Cost[m_Cost.size() - 2] > 0)
   {
-    return 1;
+	  std::cout<<"Increase of cost ="<<m_Cost[m_Cost.size() - 1] - m_Cost[m_Cost.size() - 2]<<std::endl;  
+      return 1;
   }
+	else {
+    std::cout<<"Change of cost ="<<m_Cost[m_Cost.size() - 1] - m_Cost[m_Cost.size() - 2]<<std::endl;  
+	}
+
   return 0;
 }
 
