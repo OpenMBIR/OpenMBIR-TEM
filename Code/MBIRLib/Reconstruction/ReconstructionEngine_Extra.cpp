@@ -926,7 +926,7 @@ void ReconstructionEngine::calculateMeasurementWeight(RealVolumeType::Pointer We
         }
         else
         {
-          Weight->d[weight_idx] = 1.0; //Set the weight to some small number
+          Weight->d[weight_idx] = 1e-10; //Set the weight to some small number
           //TODO: Make this something resonable
         }
 #else

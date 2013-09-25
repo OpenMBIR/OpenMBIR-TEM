@@ -56,14 +56,15 @@
 
 #define SURROGATE_FUNCTION
 #define EIMTOMO_USE_QGGMRF 1
+#define MAX_ANGLE_STRETCH 75
 
 //#define WRITE_INTERMEDIATE_RESULTS
 //#define COST_CALCULATE
 //#define BF_RECON //Bright Field Reconstruction
-#define BF_OFFSET 32768//0 //23696 - Bio data set 
+#define BF_OFFSET 0 //23696 - Bio data set 
 #define BF_MAX  1865//5689//42122 
 
-#define IDENTITY_NOISE_MODEL
+//#define IDENTITY_NOISE_MODEL
 
 #define POSITIVITY_CONSTRAINT
 #define RANDOM_ORDER_UPDATES
