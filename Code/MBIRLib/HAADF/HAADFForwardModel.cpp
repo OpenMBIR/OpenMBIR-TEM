@@ -477,7 +477,7 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
 			  else 
 				    sum2 += fabs(ErrorSino->d[weight_idx])*sqrt(m_Alpha->d[i_theta]*m_Weight->d[weight_idx]);
 		  }
-	update = (sum1 + (m_BraggDelta*BF_T)*sum2)/(sinogram->N_theta*sinogram->N_r*sinogram->N_r);
+	update = (sum1 + (m_BraggDelta*BF_T)*sum2)/(sinogram->N_theta*sinogram->N_r*sinogram->N_t);
 	
 	for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	{
