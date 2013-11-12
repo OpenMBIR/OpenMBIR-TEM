@@ -562,17 +562,19 @@ void ReconstructionEngine::execute()
 	err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);
 #endif //Cost calculation endif
 
-	Real_t TempBraggValue;
+	Real_t TempBraggValue, DesBraggValue;
 #ifdef BRAGG_CORRECTION
 	if(m_TomoInputs->NumIter > 1)
 	{//Get the value of the Bragg threshold from the User Interface the first time
-	    TempBraggValue = DefBraggThreshold;//m_ForwardModel->getBraggThreshold();
-		m_ForwardModel->setBraggThreshold(TempBraggValue); //setting the Threshold T of \beta_{T,\delta}
+	  DesBraggValue = m_ForwardModel->getBraggThreshold();
+	  std::cout<<"Desired Bragg threshold ="<<DesBraggValue<<std::endl;
+	   TempBraggValue = DefBraggThreshold;//m_ForwardModel->getBraggThreshold();
+	   m_ForwardModel->setBraggThreshold(TempBraggValue); //setting the Threshold T of \beta_{T,\delta}
 		//the \delta value is set in MultiResolutionReconstruction.cpp
 	}
 	else 
 	{
-		TempBraggValue = BF_T;
+		TempBraggValue = m_ForwardModel->getBraggThreshold();
 		m_ForwardModel->setBraggThreshold(TempBraggValue);
 	}
 #endif //Bragg correction
@@ -791,7 +793,7 @@ void ReconstructionEngine::execute()
 		if(reconInnerIter == m_TomoInputs->NumIter-1 && reconInnerIter != 0)
 		{ //The first time at the coarsest resolution at the end of 
 		 // inner iterations set the Bragg Threshold
-			TempBraggValue = BF_T;//threshold;
+			TempBraggValue = DesBraggValue;//threshold;
 			m_ForwardModel->setBraggThreshold(TempBraggValue);
 		}
 
@@ -806,16 +808,15 @@ void ReconstructionEngine::execute()
 		std::cout << "Exiting the code because status =0" << std::endl;
 		break;
 	}
-	  
-	
+	  	
 	 if(getVeryVerbose())
 		 std::cout<<" Starting nuisance parameter estimation"<<std::endl;
 	  
 	if(m_TomoInputs->NumOuterIter > 1) //Dont update any parameters if we just have one outer iteration
 	{
-    if(m_AdvParams->JOINT_ESTIMATION)
-    {
-      m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
+        if(m_AdvParams->JOINT_ESTIMATION)
+        {
+	  m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
 	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
 
 #ifdef COST_CALCULATE //Debug info
@@ -827,13 +828,13 @@ void ReconstructionEngine::execute()
 		}
 #endif//cost
 	
-    }  //Joint estimation endif
+       }  //Joint estimation endif
 	
 	
 	if(m_AdvParams->NOISE_ESTIMATION)
-    {
-	 m_ForwardModel->updateWeights(m_Sinogram, errorSino);
-	 m_ForwardModel->updateSelector(m_Sinogram, errorSino);
+        {
+	   m_ForwardModel->updateWeights(m_Sinogram, errorSino);
+	  m_ForwardModel->updateSelector(m_Sinogram, errorSino);
 
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);
@@ -847,7 +848,7 @@ void ReconstructionEngine::execute()
 		}
 #endif//cost
 	
-    }		
+         }		
 	if(getVeryVerbose())
 		std::cout<<" Ending nuisance parameter estimation"<<std::endl;
 	  

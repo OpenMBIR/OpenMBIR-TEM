@@ -169,10 +169,10 @@ int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiRes
     TCLAP::ValueArg<double> targetGain("", "target_gain", "Target Gain for unscattered electrons", true, 1, "");
     cmd.add(targetGain);
 	
-//	TCLAP::ValueArg<double> rejThreshold("", "rej_threshold", "% of values to reject for Bragg function", false, 0, "");
-//    cmd.add(rejThreshold);
+    TCLAP::ValueArg<double> braggThreshold("", "bragg_T", "Value of Bragg threshold T", false, 3, "");
+    cmd.add(braggThreshold);
 	
-	TCLAP::ValueArg<double> braggDelta("", "bragg_delta", "value of delta in the bragg rejector", false, 0, "");
+	TCLAP::ValueArg<double> braggDelta("", "bragg_delta", "value of delta in the bragg rejector", false, 0.5, "");
     cmd.add(braggDelta);
 	
     TCLAP::SwitchArg interpolateInitialRecontruction ("", "interpolate_initial_recon", "Interpolate Initial Reconstruction Value", false);
@@ -256,8 +256,8 @@ int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiRes
         m_MultiResSOC->setFinalResolution(finalResolution.getValue());
         m_MultiResSOC->setSampleThickness(sampleThickness.getValue());
         m_MultiResSOC->setTargetGain(targetGain.getValue());
-		//m_MultiResSOC->setBraggThreshold(rejThreshold.getValue());
-		m_MultiResSOC->setBraggDelta(braggDelta.getValue());
+	m_MultiResSOC->setBraggThreshold(braggThreshold.getValue());
+	m_MultiResSOC->setBraggDelta(braggDelta.getValue());
         m_MultiResSOC->setStopThreshold(stopThreshold.getValue());
         m_MultiResSOC->setOuterIterations(outerIterations.getValue());
         m_MultiResSOC->setInnerIterations(innerIterations.getValue());
