@@ -120,9 +120,7 @@ class HAADFForwardModel : public Observable
     MXA_INSTANCE_PROPERTY(bool, UseDefaultOffset)
 	MXA_INSTANCE_PROPERTY(Real_t, BraggDelta)
 	MXA_INSTANCE_PROPERTY(Real_t, BraggThreshold)
-
-    
-
+    MXA_INSTANCE_PROPERTY(Real_t, BfOffset);
 
       // These are the Nuisance Parameters that we need to solve for
     MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, I_0) //Gains

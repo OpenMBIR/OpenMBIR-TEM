@@ -77,6 +77,7 @@ class MultiResolutionReconstruction : public FilterPipeline
     MXA_INSTANCE_PROPERTY(float, TargetGain)
 	MXA_INSTANCE_PROPERTY(float, BraggThreshold)
 	MXA_INSTANCE_PROPERTY(float, BraggDelta)
+	MXA_INSTANCE_PROPERTY(float, BfOffset);
     MXA_INSTANCE_PROPERTY(float, StopThreshold)
     MXA_INSTANCE_PROPERTY(int, OuterIterations)
     MXA_INSTANCE_PROPERTY(int, InnerIterations)

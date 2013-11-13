@@ -945,7 +945,7 @@ void HAADFForwardModel::processRawCounts(SinogramPtr sinogram)
             for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
             {
                 size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-                sinogram->counts->d[counts_idx] += BF_OFFSET;
+                sinogram->counts->d[counts_idx] += m_BfOffset;//;BF_OFFSET;
                 sinogram->counts->d[counts_idx] = -log(sinogram->counts->d[counts_idx]/BF_MAX);
 				
                // if(sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive

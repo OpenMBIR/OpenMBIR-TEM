@@ -347,6 +347,7 @@ void MultiResolutionReconstruction::execute()
 	
 	forwardModel->setBraggDelta(getBraggDelta()); //Set the Bragg function Delta value 
 	forwardModel->setBraggThreshold(getBraggThreshold());  
+	forwardModel->setBfOffset(getBfOffset());  
     
 	inputs->tiltSelection = m_TiltSelection;
     if(m_Subvolume.size() > 0)

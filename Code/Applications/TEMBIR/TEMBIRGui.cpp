@@ -920,9 +920,12 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
   m_MultiResSOC->setTargetGain(1);//TODO: This forces target gain = 1 in 
 	//BF with bragg code 
   	
-  //TODO: Add a new input in the GUI and read thate value of Bragg T from there 	
+  //TODO: Add a new input in the GUI and read thate value of Bragg T from there 
+	
   //m_MultiResSOC->setBraggThreshold(targetGain->text().toFloat(&ok)); 
   m_MultiResSOC->setBraggDelta(targetGain->text().toFloat(&ok));
+  //m_MultiResSOC->setBfOffset(targetGain->text().toFloat(&ok)); 	
+  
   m_MultiResSOC->setStopThreshold(stopThreshold->text().toFloat(&ok));
   m_MultiResSOC->setOuterIterations(outerIterations->value());
   m_MultiResSOC->setInnerIterations(innerIterations->value());
@@ -1764,6 +1767,7 @@ void TEMBIRGui::on_estimateSigmaX_clicked()
         estimate->setSampleThickness(sampleThickness->text().toDouble(&ok));
         estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
         //estimate->setTargetGain(targetGain->text().toDouble(&ok));
+		//TODO : Set the Offset from the UI 
         estimate->setTargetGain(1);
 		estimate->setTiltAngles(tiltSelection->currentIndex());
         estimate->setXDims(xmin, xmax);
