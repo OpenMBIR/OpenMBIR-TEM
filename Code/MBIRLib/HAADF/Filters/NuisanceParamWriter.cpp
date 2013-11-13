@@ -76,7 +76,7 @@ NuisanceParamWriter::~NuisanceParamWriter()
 }
 
 // -----------------------------------------------------------------------------
-//
+// Writes out the nuisance parameters for multi-resolution reconstruction
 // -----------------------------------------------------------------------------
 void NuisanceParamWriter::execute()
 {

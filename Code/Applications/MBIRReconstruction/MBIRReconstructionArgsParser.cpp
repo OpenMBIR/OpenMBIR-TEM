@@ -128,7 +128,7 @@ MBIRReconstructionArgsParser::~MBIRReconstructionArgsParser()
 
 
 // -----------------------------------------------------------------------------
-//
+// Parse the input arguments in the command line tool
 // -----------------------------------------------------------------------------
 int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiResolutionReconstruction::Pointer m_MultiResSOC)
 {

@@ -64,7 +64,7 @@
 
 
 // -----------------------------------------------------------------------------
-//
+// Updates a line of voxels along y-axis 
 // -----------------------------------------------------------------------------
 UpdateYSlice::UpdateYSlice(uint16_t yStart, uint16_t yEnd,
                            GeometryPtr geometry, int16_t outerIter, int16_t innerIter,

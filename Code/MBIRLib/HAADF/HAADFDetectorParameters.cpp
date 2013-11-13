@@ -73,7 +73,7 @@ void HAADFDetectorParameters::calculateSinCos(SinogramPtr m_Sinogram)
 }
 
 // -----------------------------------------------------------------------------
-//
+// Beam profile used for A-matrix
 // -----------------------------------------------------------------------------
 void HAADFDetectorParameters::initializeBeamProfile(SinogramPtr m_Sinogram, AdvancedParametersPtr m_AdvParams)
 {

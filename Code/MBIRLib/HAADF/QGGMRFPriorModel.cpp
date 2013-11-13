@@ -78,7 +78,7 @@ namespace Detail {
 namespace QGGMRF {
 
 // -----------------------------------------------------------------------------
-//
+//Contains all the prior model related functions
 // -----------------------------------------------------------------------------
 void initializePriorModel(TomoInputsPtr tomoInputs, QGGMRF::QGGMRF_Values* qggmrf_values)
 {

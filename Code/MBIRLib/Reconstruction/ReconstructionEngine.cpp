@@ -285,7 +285,7 @@ void ReconstructionEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
 
 
 // -----------------------------------------------------------------------------
-//
+// Main ICD reconstruction
 // -----------------------------------------------------------------------------
 void ReconstructionEngine::execute()
 {

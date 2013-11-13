@@ -54,7 +54,7 @@ CalculateAMatrixColumn::~CalculateAMatrixColumn()
 }
 
 // -----------------------------------------------------------------------------
-//
+// Compute a column of the 2-D A matrix
 // -----------------------------------------------------------------------------
 void CalculateAMatrixColumn::execute()
 {

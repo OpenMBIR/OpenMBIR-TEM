@@ -64,7 +64,7 @@ NuisanceParamReader::~NuisanceParamReader()
 }
 
 // -----------------------------------------------------------------------------
-//
+// Read the bin files for initialize nuisance parameters from previous scale
 // -----------------------------------------------------------------------------
 void NuisanceParamReader::execute()
 {

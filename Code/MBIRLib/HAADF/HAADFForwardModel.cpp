@@ -88,7 +88,7 @@
     std::cout << indent << msg << ": " << ((double)stopm-startm)/1000.0 << " seconds" << std::endl;
 
 // -----------------------------------------------------------------------------
-//
+// Contains all the computations and initializations related to forward model
 // -----------------------------------------------------------------------------
 HAADFForwardModel::HAADFForwardModel() :
     m_Verbose(false), m_VeryVerbose(false), m_ErrorCondition(0), m_Cancel(false), m_UseDefaultOffset(false)
