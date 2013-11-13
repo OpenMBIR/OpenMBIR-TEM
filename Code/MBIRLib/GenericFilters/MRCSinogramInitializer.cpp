@@ -259,16 +259,6 @@ void MRCSinogramInitializer::execute()
                       inputs->yEnd - inputs->yStart+1};
     sinogram->counts = RealVolumeType::New(dims, "Sinogram.counts");
 
-    //If the bright field image is included initialize space for it
-    /*if(inputs->BrightFieldFile != NULL)
-    {
-        size_t dims[3] = {sinogram->N_theta,
-        inputs->xEnd - inputs->xStart+1,
-        inputs->yEnd - inputs->yStart+1};
-        sinogram->counts_BF = RealVolumeType::New(dims);
-        sinogram->counts_BF->setName("Sinogram.counts_BrightField");
-    }*/
-
     sinogram->angles.resize(sinogram->N_theta);
     FEIHeader* fei = NULL;
 
