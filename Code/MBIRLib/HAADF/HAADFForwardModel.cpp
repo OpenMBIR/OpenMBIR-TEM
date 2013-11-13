@@ -136,7 +136,7 @@ HAADFForwardModel::~HAADFForwardModel()
 }
 
 // -----------------------------------------------------------------------------
-//
+// Project the object in 3-D
 // -----------------------------------------------------------------------------
 int HAADFForwardModel::forwardProject(SinogramPtr sinogram,
                                       GeometryPtr geometry,
@@ -203,7 +203,7 @@ int HAADFForwardModel::forwardProject(SinogramPtr sinogram,
 }
 
 // -----------------------------------------------------------------------------
-//
+// Set the prior model parameters
 // -----------------------------------------------------------------------------
 void HAADFForwardModel::setQGGMRFValues(QGGMRF::QGGMRF_Values* qggmrf_values)
 {
@@ -386,7 +386,7 @@ void HAADFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVol
 }
 
 // -----------------------------------------------------------------------------
-//
+// Estimation of the unknown dosage parameter
 // -----------------------------------------------------------------------------
 void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Pointer errorSinogram, RealVolumeType::Pointer yEstimate, CostData::Pointer cost)
 {
@@ -758,7 +758,7 @@ int HAADFForwardModel::createInitialOffsetsData(SinogramPtr sinogram)
 }
 
 // -----------------------------------------------------------------------------
-//
+// Initialize the variance parameter
 // -----------------------------------------------------------------------------
 int HAADFForwardModel::createInitialVariancesData(SinogramPtr sinogram)
 {
@@ -807,7 +807,7 @@ int HAADFForwardModel::createInitialVariancesData(SinogramPtr sinogram)
 
 
 // -----------------------------------------------------------------------------
-//
+// Compute forward model cost
 // -----------------------------------------------------------------------------
 Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Pointer ErrorSino)
 {
@@ -845,7 +845,8 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 	return cost;
 }
 // -----------------------------------------------------------------------------
-//
+// Compute the theta1 and theta2 for a single voxel update - Computataionally 
+// intensive
 // -----------------------------------------------------------------------------
 void HAADFForwardModel::computeTheta(size_t Index,
 					 std::vector<HAADFAMatrixCol::Pointer> &TempCol,
@@ -879,7 +880,6 @@ void HAADFForwardModel::computeTheta(size_t Index,
 			}
 			else
 			{
-				//Real_t QuadCoeff = m_BraggDelta/(2*fabs(ErrorSino->d[error_idx])* sqrt(m_Weight->d[error_idx]));
 				Real_t QuadCoeff = (m_BraggDelta*m_BraggThreshold)/(fabs(ErrorSino->d[error_idx])* sqrt(m_Weight->d[error_idx]));
 				Real_t ProjectionEntry = kConst0 * VoxelLineResponse[xzSliceIdx]->values[VoxelLineAccessCounter];
 				Thetas->d[1] += QuadCoeff*(ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
@@ -933,7 +933,7 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 
 
 // -----------------------------------------------------------------------------
-//
+// Process the input counts and compute the sinogram
 // -----------------------------------------------------------------------------
 void HAADFForwardModel::processRawCounts(SinogramPtr sinogram)
 {
@@ -1039,6 +1039,7 @@ void HAADFForwardModel::writeSelectorMrc(const std::string &file, SinogramPtr si
 	}
 }
 
+//This function is REDUNDANT - Not used in current version 
 Real_t HAADFForwardModel::estimateBraggThreshold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage)
 {
 

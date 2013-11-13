@@ -42,7 +42,7 @@
 
 
 // -----------------------------------------------------------------------------
-//
+// Constructor
 // -----------------------------------------------------------------------------
 HAADFAMatrixCol::HAADFAMatrixCol(size_t* dims, int32_t c)
 {
@@ -77,7 +77,7 @@ void HAADFAMatrixCol::setCount(uint32_t c)
 
 
 // -----------------------------------------------------------------------------
-//
+// Function to calculate the 2-D A matrix column
 // -----------------------------------------------------------------------------
 HAADFAMatrixCol::Pointer HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(SinogramPtr sinogram,
                                                                              GeometryPtr geometry,
@@ -140,7 +140,7 @@ HAADFAMatrixCol::Pointer HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(Sin
   const Real_t OffsetR = haadfParameters->getOffsetR();
   const Real_t OffsetT = haadfParameters->getOffsetT();
 
-  if(advParams->AREA_WEIGHTED)
+  if(advParams->AREA_WEIGHTED) //Area weighted projector
   {
     for (uint32_t i = 0; i < sinogram->N_theta; i++)
     {
