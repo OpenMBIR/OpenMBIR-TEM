@@ -946,6 +946,12 @@ void HAADFForwardModel::processRawCounts(SinogramPtr sinogram)
             {
                 size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
                 sinogram->counts->d[counts_idx] += m_BfOffset;//;BF_OFFSET;
+				
+				if(sinogram->counts->d[counts_idx] < 0){
+					std::cout<<"Error: Negative counts! The offset value is not correctly set"<<std::endl;
+				    break;
+				}
+				
                 sinogram->counts->d[counts_idx] = -log(sinogram->counts->d[counts_idx]/BF_MAX);
 				
                // if(sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
