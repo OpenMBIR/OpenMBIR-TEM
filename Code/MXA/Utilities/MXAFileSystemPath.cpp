@@ -19,7 +19,7 @@
 
 #include <iostream>
 #include <vector>
-
+#include <unistd.h> 
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h> // Needed for memset
