@@ -152,27 +152,25 @@ int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiRes
     cmd.add(subvolume);
     TCLAP::ValueArg<Real_t> sampleThickness("", "thickness", "Thickness of sample in nm", true, 0, "");
     cmd.add(sampleThickness);
-    TCLAP::ValueArg<unsigned int> tiltSelection("", "tilt_selection", "Which Tilt Values to use from file. Default is 'A'", true, SOC::A_Tilt, "0");
+    TCLAP::ValueArg<unsigned int> tiltSelection("", "tilt_selection", "Which Tilt Values to use from file. Default is 'A'", false, SOC::A_Tilt, "0");
     cmd.add(tiltSelection);
-    TCLAP::ValueArg<double> mrf("", "diffuseness", "Diffuseness Parameter (Markov Random Field Parameter)", true, 0.200, "0.2");
+    TCLAP::ValueArg<double> mrf("", "diffuseness", "Diffuseness Parameter (Markov Random Field Parameter)", false, 0.200, "0.2");
     cmd.add(mrf);
-    TCLAP::ValueArg<int> finalResolution("", "final_resolution", "The final resolution multiple for the reconstruction" , true, 4, "4");
+    TCLAP::ValueArg<int> finalResolution("", "final_resolution", "The final resolution multiple for the reconstruction" , false, 1, "1");
     cmd.add(finalResolution);
     TCLAP::ValueArg<double> sigma_x("", "sigma_x", "Sigma X Value", true, 1.0, "1.0");
     cmd.add(sigma_x);
-
-
-    TCLAP::ValueArg<double> stopThreshold("", "stop_threshold", "Stopping Threshold for inner loop", false, .009, "");
+    TCLAP::ValueArg<double> stopThreshold("", "stop_threshold", "Stopping Threshold for inner loop", false, .005, "0.005");
     cmd.add(stopThreshold);
-    TCLAP::ValueArg<int> numResolutions("", "num_resolutions", "The number of resolutions to use" , true, 3, "3");
+    TCLAP::ValueArg<int> numResolutions("", "num_resolutions", "The number of resolutions to use" , false, 3, "3");
     cmd.add(numResolutions);
-    TCLAP::ValueArg<double> targetGain("", "target_gain", "Target Gain for unscattered electrons", true, 1, "");
+    TCLAP::ValueArg<double> targetGain("", "target_gain", "Normalizing value for unscattered electrons", true, 1, "");
     cmd.add(targetGain);
     TCLAP::SwitchArg interpolateInitialRecontruction ("", "interpolate_initial_recon", "Interpolate Initial Reconstruction Value", false);
     cmd.add(interpolateInitialRecontruction);
-    TCLAP::ValueArg<int> outerIterations("", "outer_iterations", "Outer Iterations to use", true, 30, "30");
+    TCLAP::ValueArg<int> outerIterations("", "outer_iterations", "Outer Iterations to use", false, 30, "30");
     cmd.add(outerIterations);
-    TCLAP::ValueArg<int> innerIterations("", "inner_iterations", "Number of Inner Iterations", true, 10, "10");
+    TCLAP::ValueArg<int> innerIterations("", "inner_iterations", "Number of Inner Iterations", false, 10, "10");
     cmd.add(innerIterations);
     TCLAP::ValueArg<double> defaultOffset("", "default_offset", "Default offset for all Tilts", false, 0.0, "");
     cmd.add(defaultOffset);
