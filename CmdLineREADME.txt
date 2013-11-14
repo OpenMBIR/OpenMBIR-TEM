@@ -45,9 +45,13 @@ Running the command line code :
                       --outputfile : Full path of the output .rec/mrc file
                       --thickness : Sample thickness in nano-meters 
                       --sigma_x  : The scaling parameter in the q-GGMRF prior in units of nm^{-1}
-                      --default_offset :  The value in counts when the material is not present (dark counts)
-                      --use_default_offset    :  A flag to tell the code to use the default input offset value
-                      --target_gain <> : Average value of the direct beam (normalizing) measurement in counts 
+                      --target_gain <> : Average value of the direct beam (normalizing) measurement in counts; This effects 
+                                         the choice of sigma_x. The GUI version can automatically estimate the sigma_x given 
+                                         this value
+                      [--default_offset] :  The value in counts when the material is not present (dark counts). If not present 
+                                            the program automatically initializes it  
+                      [--use_default_offset]    :  A flag to tell the code to use the default input offset value. MUST BE 
+                                                  used if default_offset is used
                       [--diffuseness <0.2>]  : The value used to compute the prior model parameter "p" (p = diffuseness + 1)
                       [--default_variance]    : The scaling value for the variance (\sigma^{2} in the paper)                      
                       [--tilt_selection <0>] : Which was the tilt axis : 0 is default (y-axis)                                          
@@ -72,7 +76,7 @@ Running the command line code :
 * Running the GUI 
 
    Requires Qt and cmake to correctly point to the GUI software. 
-   Go throug same steps as before. 
+   Go through same steps as before. 
    After "make"
    cd Bin/
    open TEMBIR.app
