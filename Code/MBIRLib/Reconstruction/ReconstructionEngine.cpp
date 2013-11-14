@@ -726,16 +726,16 @@ void ReconstructionEngine::execute()
 	  	  
    if(m_AdvParams->JOINT_ESTIMATION)
     {
-  /*    err = jointEstimation(Weight, NuisanceParams, ErrorSino, Y_Est, cost);
+      err = jointEstimation(Weight, NuisanceParams, ErrorSino, Y_Est, cost);
       if(err < 0)
       {
         break;
-      }*/
+      }
     } //Joint estimation endif
 
    if(m_AdvParams->NOISE_MODEL)
     {
-   /*   updateWeights(Weight, NuisanceParams, ErrorSino);
+      updateWeights(Weight, NuisanceParams, ErrorSino);
 #ifdef COST_CALCULATE
       err = calculateCost(cost, Weight, ErrorSino);
       if (err < 0)
@@ -744,7 +744,7 @@ void ReconstructionEngine::execute()
         break;
       }
 #endif//cost
-		*/
+		
       if(0 == status && reconOuterIter >= 1) //&& VarRatio < STOPPING_THRESHOLD_Var_k && I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
       {
         std::cout << "Exiting the code because status =0" << std::endl;
