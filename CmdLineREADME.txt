@@ -1,4 +1,4 @@
-Code for Bright Field electron tomographic reconstruction for crystalline
+*Code for Bright Field electron tomographic reconstruction for crystalline
 or amorphous samples 
 
 This package contains source codes to reconstruct STEM HAADF tomographic data using the 
