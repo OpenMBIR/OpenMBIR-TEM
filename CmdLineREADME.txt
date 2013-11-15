@@ -35,7 +35,6 @@ To compile code on Unix based OS:
 
 Note : All arguments within a [] are optional parameters.The <> indicate the default values of the parameters.
 
-
 Running the command line code : 
 
 ./MbirReconstruction  -s <> : Full path of the input MRC file. Expects the header to be in the FEI format to read tilt 
@@ -73,7 +72,9 @@ Running the command line code :
                       [--exclude_views]      : Used to exclude certain views. Indicate the views to exclude 
                                                separated by "," (Ex: --exclude_views 5,10,30)
 
-* Running the GUI 
+***********************
+Running the GUI 
+***********************
 
    Requires Qt and cmake to correctly point to the GUI software. 
    Go through same steps as before. 
