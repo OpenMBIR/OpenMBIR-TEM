@@ -537,9 +537,9 @@ font-size: 10px;
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-166</y>
+              <y>-202</y>
               <width>262</width>
-              <height>898</height>
+              <height>931</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -1051,23 +1051,14 @@ image: url(:/bullet_triangle_grey_down.png);
                 <bool>true</bool>
                </property>
                <layout class="QGridLayout" name="gridLayout_3">
-                <property name="leftMargin">
-                 <number>3</number>
+                <property name="verticalSpacing">
+                 <number>5</number>
                 </property>
-                <property name="topMargin">
+                <property name="margin">
                  <number>0</number>
                 </property>
-                <property name="rightMargin">
-                 <number>3</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-                <property name="spacing">
-                 <number>6</number>
-                </property>
-                <item row="2" column="0">
-                 <widget class="QLabel" name="label_33">
+                <item row="1" column="0">
+                 <widget class="QLabel" name="label_40">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                     <horstretch>0</horstretch>
@@ -1081,45 +1072,14 @@ font-size: 10px;
 }</string>
                   </property>
                   <property name="text">
-                   <string>Diffuseness</string>
+                   <string>Data Offset</string>
                   </property>
                   <property name="wordWrap">
                    <bool>true</bool>
                   </property>
                  </widget>
                 </item>
-                <item row="2" column="1">
-                 <widget class="QDoubleSpinBox" name="mrf">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>125</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="decimals">
-                   <number>6</number>
-                  </property>
-                  <property name="minimum">
-                   <double>0.000000000000000</double>
-                  </property>
-                  <property name="maximum">
-                   <double>1.000000000000000</double>
-                  </property>
-                  <property name="singleStep">
-                   <double>0.050000000000000</double>
-                  </property>
-                  <property name="value">
-                   <double>0.200000000000000</double>
-                  </property>
-                 </widget>
-                </item>
-                <item row="9" column="0" colspan="2">
+                <item row="5" column="0" colspan="2">
                  <layout class="QGridLayout" name="gridLayout_8">
                   <property name="bottomMargin">
                    <number>0</number>
@@ -1264,12 +1224,139 @@ font-size: 10px;
                   </item>
                  </layout>
                 </item>
-                <item row="8" column="0" colspan="2">
+                <item row="0" column="0">
+                 <widget class="QLabel" name="label_33">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>Diffuseness</string>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="1">
+                 <widget class="QDoubleSpinBox" name="mrf">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>125</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="decimals">
+                   <number>6</number>
+                  </property>
+                  <property name="minimum">
+                   <double>0.000000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>1.000000000000000</double>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.050000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>0.200000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="4" column="0" colspan="2">
                  <widget class="Line" name="line">
                   <property name="orientation">
                    <enum>Qt::Horizontal</enum>
                   </property>
                  </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QLineEdit" name="bf_offset">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>125</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>32768</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="0" colspan="2">
+                 <layout class="QHBoxLayout" name="horizontalLayout_3">
+                  <property name="spacing">
+                   <number>6</number>
+                  </property>
+                  <item>
+                   <widget class="QLabel" name="label_42">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                    </property>
+                    <property name="text">
+                     <string>Default log(Dosage)
+Value:</string>
+                    </property>
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="defaultOffset">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                    <property name="maximumSize">
+                     <size>
+                      <width>125</width>
+                      <height>21</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>0</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
                 </item>
                </layout>
               </widget>
@@ -1338,6 +1425,19 @@ image: url(:/bullet_triangle_grey_down.png);
                 <property name="margin">
                  <number>0</number>
                 </property>
+                <item row="7" column="0">
+                 <widget class="QLabel" name="label_48">
+                  <property name="styleSheet">
+                   <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                  </property>
+                  <property name="text">
+                   <string>BF_Threshold:</string>
+                  </property>
+                 </widget>
+                </item>
                 <item row="3" column="1">
                  <widget class="QSpinBox" name="numResolutions">
                   <property name="sizePolicy">
@@ -1363,6 +1463,41 @@ image: url(:/bullet_triangle_grey_down.png);
                   </property>
                  </widget>
                 </item>
+                <item row="11" column="1">
+                 <widget class="QSpinBox" name="innerIterations">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="value">
+                   <number>10</number>
+                  </property>
+                 </widget>
+                </item>
+                <item row="10" column="1">
+                 <widget class="QSpinBox" name="outerIterations">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                  <property name="maximum">
+                   <number>1000</number>
+                  </property>
+                  <property name="value">
+                   <number>30</number>
+                  </property>
+                 </widget>
+                </item>
                 <item row="3" column="0">
                  <widget class="QLabel" name="label_3">
                   <property name="sizePolicy">
@@ -1379,7 +1514,7 @@ font-size: 10px;
                   </property>
                   <property name="text">
                    <string>Num. 
-Resolutions</string>
+Resolutions:</string>
                   </property>
                   <property name="wordWrap">
                    <bool>true</bool>
@@ -1395,7 +1530,7 @@ font-size: 10px;
 }</string>
                   </property>
                   <property name="text">
-                   <string>BF_Delta</string>
+                   <string>BF_Delta:</string>
                   </property>
                  </widget>
                 </item>
@@ -1418,7 +1553,7 @@ font-size: 10px;
                   </property>
                  </widget>
                 </item>
-                <item row="7" column="0" colspan="2">
+                <item row="8" column="0" colspan="2">
                  <widget class="QCheckBox" name="interpolateInitialRecontruction">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -1443,7 +1578,7 @@ font-size: 10px;
                   </property>
                  </widget>
                 </item>
-                <item row="9" column="0">
+                <item row="10" column="0">
                  <widget class="QLabel" name="label_4">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -1466,26 +1601,7 @@ Iterations:</string>
                   </property>
                  </widget>
                 </item>
-                <item row="9" column="1">
-                 <widget class="QSpinBox" name="outerIterations">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="maximum">
-                   <number>1000</number>
-                  </property>
-                  <property name="value">
-                   <number>30</number>
-                  </property>
-                 </widget>
-                </item>
-                <item row="10" column="0">
+                <item row="11" column="0">
                  <widget class="QLabel" name="label_8">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -1508,93 +1624,6 @@ Iterations:</string>
                   </property>
                  </widget>
                 </item>
-                <item row="10" column="1">
-                 <widget class="QSpinBox" name="innerIterations">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="minimum">
-                   <number>1</number>
-                  </property>
-                  <property name="value">
-                   <number>10</number>
-                  </property>
-                 </widget>
-                </item>
-                <item row="11" column="0">
-                 <widget class="QLabel" name="label_35">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="styleSheet">
-                   <string notr="true">QLabel {
-font-weight: bold;
-font-size: 10px;
-}</string>
-                  </property>
-                  <property name="text">
-                   <string>Default log(Dosage)
-Value:</string>
-                  </property>
-                  <property name="wordWrap">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="11" column="1">
-                 <layout class="QHBoxLayout" name="horizontalLayout">
-                  <property name="spacing">
-                   <number>6</number>
-                  </property>
-                  <item>
-                   <widget class="QCheckBox" name="useDefaultOffset">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string/>
-                    </property>
-                    <property name="checked">
-                     <bool>false</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLineEdit" name="defaultOffset">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>0</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                    <property name="maximumSize">
-                     <size>
-                      <width>100</width>
-                      <height>16777215</height>
-                     </size>
-                    </property>
-                    <property name="text">
-                     <string>0</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
                 <item row="12" column="0">
                  <widget class="QLabel" name="label_38">
                   <property name="sizePolicy">
@@ -1614,6 +1643,25 @@ font-size: 10px;
                   </property>
                   <property name="wordWrap">
                    <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item row="13" column="1">
+                 <widget class="QLineEdit" name="defaultInitialRecon">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>125</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>0</string>
                   </property>
                  </widget>
                 </item>
@@ -1659,10 +1707,10 @@ Reconstruction Value:</string>
                   </property>
                  </widget>
                 </item>
-                <item row="13" column="1">
-                 <widget class="QLineEdit" name="defaultInitialRecon">
+                <item row="2" column="1">
+                 <widget class="QLineEdit" name="stopThreshold">
                   <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
                     <horstretch>0</horstretch>
                     <verstretch>0</verstretch>
                    </sizepolicy>
@@ -1674,7 +1722,7 @@ Reconstruction Value:</string>
                    </size>
                   </property>
                   <property name="text">
-                   <string>0</string>
+                   <string>0.004</string>
                   </property>
                  </widget>
                 </item>
@@ -1698,25 +1746,6 @@ Threshold:</string>
                   </property>
                   <property name="wordWrap">
                    <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item row="2" column="1">
-                 <widget class="QLineEdit" name="stopThreshold">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>125</width>
-                    <height>16777215</height>
-                   </size>
-                  </property>
-                  <property name="text">
-                   <string>0.004</string>
                   </property>
                  </widget>
                 </item>
@@ -1832,6 +1861,25 @@ font-size: 10px;
                    </spacer>
                   </item>
                  </layout>
+                </item>
+                <item row="7" column="1">
+                 <widget class="QLineEdit" name="bragg_threshold">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>125</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>3</string>
+                  </property>
+                 </widget>
                 </item>
                </layout>
               </widget>
