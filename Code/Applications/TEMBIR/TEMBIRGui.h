@@ -344,6 +344,8 @@ protected:
      * @param b
      */
     void enableWidgets(bool b);
+    
+    void createNewUserInitArea(const QSize imageSize);
 
 signals:
 

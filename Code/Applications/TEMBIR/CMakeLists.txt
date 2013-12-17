@@ -58,6 +58,7 @@ SET( TEMBIR_SRCS
   ${TEMBIR_SOURCE_DIR}/GainsOffsetsTableModel.cpp
   ${TEMBIR_SOURCE_DIR}/CheckBoxDelegate.cpp
   ${TEMBIR_SOURCE_DIR}/ReconstructionArea.cpp
+  ${TEMBIR_SOURCE_DIR}/RectangleCreator.cpp
 )
 
 # another list, this time it includes all header files that should 
@@ -73,6 +74,7 @@ SET( TEMBIR_MOC_HDRS
   ${TEMBIR_SOURCE_DIR}/GainsOffsetsTableModel.h
   ${TEMBIR_SOURCE_DIR}/CheckBoxDelegate.h
   ${TEMBIR_SOURCE_DIR}/ReconstructionArea.h
+  ${TEMBIR_SOURCE_DIR}/RectangleCreator.h
 )
 cmp_IDE_SOURCE_PROPERTIES(TEMBIR "${TEMBIR_MOC_HDRS}" "${TEMBIR_SRCS}" "0")
 
