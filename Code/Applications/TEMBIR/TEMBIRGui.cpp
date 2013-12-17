@@ -218,7 +218,6 @@ void TEMBIRGui::readSettings(QSettings &prefs)
   READ_SETTING(prefs, outerIterations, ok, i, 1, Int);
   READ_SETTING(prefs, innerIterations, ok, i, 1, Int);
 
-  READ_BOOL_SETTING(prefs, useDefaultOffset, false);
   READ_STRING_SETTING(prefs, defaultOffset, "0");
   READ_STRING_SETTING(prefs, stopThreshold, "0.001");
   READ_SETTING(prefs, mrf, ok, d, 1.2, Double);
@@ -256,7 +255,6 @@ void TEMBIRGui::writeSettings(QSettings &prefs)
   WRITE_SETTING(prefs, outerIterations);
   WRITE_SETTING(prefs, innerIterations);
 
-  WRITE_CHECKBOX_SETTING(prefs, useDefaultOffset);
   WRITE_STRING_SETTING(prefs, defaultOffset);
   WRITE_STRING_SETTING(prefs, stopThreshold);
 
@@ -389,7 +387,6 @@ void TEMBIRGui::loadConfigurationFile(QString file)
   READ_SETTING(prefs, outerIterations, ok, i, 1, Int);
   READ_SETTING(prefs, innerIterations, ok, i, 1, Int);
 
-  READ_BOOL_SETTING(prefs, useDefaultOffset, false);
   READ_STRING_SETTING(prefs, defaultOffset, "0");
   READ_STRING_SETTING(prefs, stopThreshold, "0.001");
   READ_SETTING(prefs, mrf, ok, d, 1.2, Double);
@@ -494,8 +491,6 @@ void TEMBIRGui::setupGui()
     QDoubleValidator* dVal2 = new QDoubleValidator(this);
     dVal2->setDecimals(6);
     sigma_x->setValidator(dVal2);
-
-    advancedParametersGroupBox->setChecked(false);
 
     // ySingleSliceValue_Label->hide();
     // ySingleSliceValue->hide();
@@ -917,14 +912,11 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
   }
   m_MultiResSOC->setFinalResolution(finalResolution->value());
   m_MultiResSOC->setSampleThickness(sampleThickness->text().toFloat(&ok));
-  m_MultiResSOC->setTargetGain(1);//TODO: This forces target gain = 1 in 
-	//BF with bragg code 
-  	
-  //TODO: Add a new input in the GUI and read thate value of Bragg T from there 
+  m_MultiResSOC->setTargetGain(1);
 	
-  //m_MultiResSOC->setBraggThreshold(targetGain->text().toFloat(&ok)); 
+  m_MultiResSOC->setBraggThreshold(bragg_threshold->text().toFloat(&ok));
   m_MultiResSOC->setBraggDelta(targetGain->text().toFloat(&ok));
-  //m_MultiResSOC->setBfOffset(targetGain->text().toFloat(&ok)); 	
+  m_MultiResSOC->setBfOffset(bf_offset->text().toFloat(&ok));
   
   m_MultiResSOC->setStopThreshold(stopThreshold->text().toFloat(&ok));
   m_MultiResSOC->setOuterIterations(outerIterations->value());
@@ -933,7 +925,6 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
 
   m_MultiResSOC->setMRFShapeParameter(mrf->value());
   m_MultiResSOC->setDefaultOffsetValue(defaultOffset->text().toFloat(&ok));
-  m_MultiResSOC->setUseDefaultOffset(useDefaultOffset->isChecked());
   m_MultiResSOC->setTiltSelection(static_cast<SOC::TiltSelection>(tiltSelection->currentIndex()));
   m_MultiResSOC->setExtendObject(extendObject->isChecked());
   m_MultiResSOC->setDefaultVariance(defaultVariance->text().toFloat(&ok));
