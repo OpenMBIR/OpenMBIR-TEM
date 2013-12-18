@@ -55,6 +55,7 @@ class MRCInfoWidget;
 
 #include "MBIRLib/IOFilters/MRCHeader.h"
 #include "MBIRLib/Common/Observer.h"
+#include "RectangleCreator.h"
 
 
 /**
@@ -259,6 +260,11 @@ protected slots:
      * @brief The geometry widgets signal for 'textFinished' connects to this
      */
     void geometryChanged();
+    
+    /**
+     * @brief The rectangleChanged signal in the RectangleCreator class signals this slot
+     */
+    void backgroundSelectorChanged(const QRect &);
 
 protected:
 
@@ -344,8 +350,6 @@ protected:
      * @param b
      */
     void enableWidgets(bool b);
-    
-    void createNewUserInitArea(const QSize imageSize);
 
 signals:
 
@@ -384,6 +388,8 @@ signals:
      * @param ymax Max y value
      */
     void reconstructionVOIGeometryChanged(int xmin, int ymin, int xmax, int ymax);
+    
+    void fireRectangleCreatorAdded(RectangleCreator* rectangle);
 
 private slots:
     // slots for our worker thread to communicate

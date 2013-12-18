@@ -44,12 +44,6 @@
 #include "TEMBIRGui.h"
 #include "ReconstructionArea.h"
 
-namespace UIA
-{
-  const static int Alpha = 155;
-}
-
-
 
 // -----------------------------------------------------------------------------
 //
@@ -639,3 +633,56 @@ void MRCGraphicsView::setCompositeMode(TomoGui_Constants::CompositeType mode)
 
   this->setImageDisplayType(m_ImageDisplayType);
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void MRCGraphicsView::createBackgroundSelector(QObject* obs)
+{
+    QSize imageSize = m_BaseImage.size();
+    QRect rect = QRect(0, 0, imageSize.width()*0.1, imageSize.height()*0.1);
+    QPolygonF box = mapToScene(rect);
+    
+    RectangleCreator* rectangle = new RectangleCreator(box);
+    
+    // Line Color
+    rectangle->setPen(QPen(QColor(225, 225, 225, UIA::Alpha)));
+    // Fill Color
+    rectangle->setBrush(QBrush(QColor(255, 0, 0, UIA::Alpha)));
+    rectangle->setZValue(1);
+    rectangle->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+    
+    // Add the rectangle to the graphics scene
+    scene()->addItem(rectangle);
+    
+    // Make it visible
+    rectangle->setVisible(true);
+    
+    connect (rectangle, SIGNAL(fireRectangleChanged(const QRect &)), obs, SLOT(backgroundSelectorChanged(const QRect &)));
+    
+#if 0
+    // Hook up the signals and slots
+    connect (rectangle, SIGNAL(fireRectangleCreatorAboutToDelete(RectangleCreator*)),
+             m_MainGui, SLOT(deleteRectangleCreator(RectangleCreator*)), Qt::DirectConnection);
+    
+    connect (rectangle, SIGNAL (fireRectangleCreatorUpdated(RectangleCreator*)),
+             m_MainGui, SLOT(RectangleCreatorUpdated(RectangleCreator*)), Qt::QueuedConnection);
+    
+    connect (rectangle, SIGNAL(fireRectangleCreatorSelected(RectangleCreator*)),
+             m_MainGui, SLOT(RectangleCreatorSelected(RectangleCreator*)), Qt::QueuedConnection);
+    
+    connect (rectangle, SIGNAL (fireRectangleCreatorUpdated(RectangleCreator*)),
+             this, SLOT(RectangleCreatorUpdated(RectangleCreator*)), Qt::QueuedConnection);
+    
+    emit fireRectangleCreatorAdded(rectangle);
+#endif
+}
+
+
+
+
+
+
+
+
+

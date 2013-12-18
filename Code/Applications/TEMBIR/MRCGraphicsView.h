@@ -110,6 +110,8 @@ class MRCGraphicsView : public QGraphicsView
 
     void addNewReconstructionArea(ReconstructionArea* userInitArea);
     void createNewReconstructionArea(const QRectF brect);
+    
+    void createBackgroundSelector(QObject* obs);
 
     ReconstructionArea* reconstructionArea();
 

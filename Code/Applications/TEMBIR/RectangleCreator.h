@@ -91,13 +91,12 @@ signals:
     void fireRectangleCreatorAboutToDelete(RectangleCreator*);
     void fireRectangleCreatorDeleted(RectangleCreator*);
     void fireRectangleCreatorSelected(RectangleCreator*);
+    void fireRectangleChanged(const QRect &);
     
 protected:
-    virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
     virtual void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseDoubleClickEvent (QGraphicsSceneMouseEvent *event);
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
     virtual void keyPressEvent(QKeyEvent *event);
     
@@ -106,7 +105,6 @@ protected:
     
     
     static void deleteSelectedItems(QGraphicsScene *scene);
-    static void propertiesSelectedItems(QGraphicsScene *scene);
     
     static void duplicateSelectedItems(QGraphicsScene *scene);
     static void growSelectedItems(QGraphicsScene *scene);

@@ -47,6 +47,7 @@
 #include <QtCore/QThreadPool>
 #include <QtCore/QFileInfoList>
 #include <QtCore/QTimer>
+#include <QtCore/QRect>
 
 #include <QtGui/QApplication>
 #include <QtGui/QFileDialog>
@@ -83,7 +84,6 @@
 #include "ReconstructionArea.h"
 #include "MRCInfoWidget.h"
 #include "ImageOpenDialog.h"
-#include "RectangleCreator.h"
 
 
 #define READ_STRING_SETTING(prefs, var, emptyValue)\
@@ -1321,7 +1321,8 @@ void TEMBIRGui::on_inputMRCFilePath_textChanged(const QString & filepath)
         
         updateBaseRecentFileList(filepath);
         
-        
+        // Create rectangle on GUI
+        m_MRCDisplayWidget->graphicsView()->createBackgroundSelector(this);
     }
     else
     {
@@ -2196,95 +2197,16 @@ void TEMBIRGui::deleteTempFiles()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::createNewUserInitArea(const QSize imageSize)
+void TEMBIRGui::backgroundSelectorChanged(const QRect &rectangle)
 {
-    QPolygonF brect;
-    
-    RectangleCreator* userInitArea = new RectangleCreator(brect);
-    
-    // Line Color
-    userInitArea->setPen(QPen(QColor(225, 225, 225)));
-    // Fill Color
-    userInitArea->setBrush(QBrush(QColor(28, 28, 200)));
-    userInitArea->setZValue(1);
-    userInitArea->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
-    
-    // Show a dialog to let the user set the values
-    UserInitAreaDialog initDialog;
-    initDialog.getUserInitAreaWidget()->setUserInitArea(userInitArea);
-    int ret =initDialog.exec();
-    if (ret == QDialog::Accepted)
-    {
-        
-        addNewInitArea(userInitArea);
-    }
-    else
-    {
-        delete userInitArea;
-    }
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TEMBIRGui::addNewInitArea(RectangleCreator* rectangle)
-{
-    // Set the Parent Item
-    userInitArea->setParentItem(m_ImageGraphicsItem);
-    // Add it to the vector of UserInitAreas
-    m_UserInitAreaVector->push_back(userInitArea);
-    // Make it visible
-    userInitArea->setVisible(true);
-    
-    // Hook up the signals and slots
-    connect (userInitArea, SIGNAL(fireUserInitAreaAboutToDelete(UserInitArea*)),
-             m_MainGui, SLOT(deleteUserInitArea(UserInitArea*)), Qt::DirectConnection);
-    
-    connect (userInitArea, SIGNAL (fireUserInitAreaUpdated(UserInitArea*)),
-             m_MainGui, SLOT(userInitAreaUpdated(UserInitArea*)), Qt::QueuedConnection);
-    
-    connect (userInitArea, SIGNAL(fireUserInitAreaSelected(UserInitArea*)),
-             m_MainGui, SLOT(userInitAreaSelected(UserInitArea*)), Qt::QueuedConnection);
-    
-    connect (userInitArea, SIGNAL (fireUserInitAreaUpdated(UserInitArea*)),
-             this, SLOT(userInitAreaUpdated(UserInitArea*)), Qt::QueuedConnection);
-    
-    qint32 size = m_UserInitAreaVector->size();
-    QVector<QRgb> colorTable(size);
-    UserInitArea* u = NULL;
-    for(qint32 i = 0; i < size; ++i)
-    {
-        u = m_UserInitAreaVector->at(i);
-        if (NULL != u)
-        {
-            int index = u->getEmMpmClass(); // Get the class value which will be the index values that are written to the indexed image
-            colorTable[index] = u->getColor().rgb();
-        }
-    }
-    
-    updateColorTables(colorTable);
-    
-    emit fireUserInitAreaAdded(userInitArea);
+    std::cout << "(X,Y): {" << rectangle.x() << ", " << rectangle.y() << "}\n";
+    std::cout << "(W,H): {" << rectangle.width() << ", " << rectangle.height() << "}\n\n";
 }
 
 
-#if 0
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TEMBIRGui::sigmaX_ShouldUpdate(bool b)
-{
-    estimateSigmaX->setEnabled(b);
-    estimateSigmaX->setDefault(b);
-    
-    m_UpdateCachedSigmaX = b;
-    
-    targetGain->setEnabled(!b);
-    sampleThickness->setEnabled(!b);
-    sigma_x->setEnabled(!b);
-    smoothness->setEnabled(!b);
-    tiltSelection->setEnabled(!b);
-}
-#endif
+
+
+
+
 
 

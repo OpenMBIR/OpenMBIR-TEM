@@ -72,7 +72,7 @@ m_LineWidth(1)
     m_LowerRight[1] = b.y() + p.y() + b.height();
     
     QStringList colorNames = QColor::colorNames();
-    setBrush(QBrush(QColor(colorNames[21])));
+    setBrush(QBrush(QColor(255, 0, 0, 155)));
 }
 
 // -----------------------------------------------------------------------------
@@ -238,80 +238,6 @@ void RectangleCreator::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void RectangleCreator::mouseDoubleClickEvent (QGraphicsSceneMouseEvent *event)
-{
-    if (!isSelected() && scene()) {
-        scene()->clearSelection();
-        setSelected(true);
-    }
-    
-    propertiesSelectedItems(scene());
-    //    else if (selectedAction == growAction)
-    //        growSelectedItems(scene());
-    //    else if (selectedAction == shrinkAction)
-    //        shrinkSelectedItems(scene());
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void RectangleCreator::contextMenuEvent(QGraphicsSceneContextMenuEvent *event)
-{
-    if (!isSelected() && scene()) {
-        scene()->clearSelection();
-        setSelected(true);
-    }
-    
-    QMenu menu;
-    
-    QAction *propertiesAction = menu.addAction("Properties");
-    menu.addSeparator();
-    QAction *delAction = menu.addAction("Delete");
-    
-    //    QAction *growAction = menu.addAction("Grow");
-    //    QAction *shrinkAction = menu.addAction("Shrink");
-    
-    QAction *selectedAction = menu.exec(event->screenPos());
-    
-    
-    if (selectedAction == delAction)
-        deleteSelectedItems(scene());
-    else if (selectedAction == propertiesAction)
-        propertiesSelectedItems(scene());
-    //    else if (selectedAction == growAction)
-    //        growSelectedItems(scene());
-    //    else if (selectedAction == shrinkAction)
-    //        shrinkSelectedItems(scene());
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void RectangleCreator::propertiesSelectedItems(QGraphicsScene *scene)
-{
-    if (!scene)
-        return;
-    
-    QList<QGraphicsItem *> selected;
-    selected = scene->selectedItems();
-    
-    foreach (QGraphicsItem *item, selected)
-    {
-        RectangleCreator *itemBase = qgraphicsitem_cast<RectangleCreator *>(item);
-        if (itemBase) {
-            RectangleCreatorDialog about(NULL);
-            about.getRectangleCreatorWidget()->setRectangleCreator(itemBase);
-            about.exec();
-            emit itemBase->fireRectangleCreatorUpdated(itemBase);
-        }
-    }
-    
-    
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 void RectangleCreator::duplicateSelectedItems(QGraphicsScene *scene)
 {
     if (!scene)
@@ -462,7 +388,8 @@ void RectangleCreator::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     } else {
         QGraphicsItem::mouseReleaseEvent(event);
     }
-    emit fireRectangleCreatorUpdated(this);
+    QRect rect = QRect(boundingRect().x(), boundingRect().y(), boundingRect().width(), boundingRect().height());
+    emit fireRectangleChanged(rect);
 }
 
 // -----------------------------------------------------------------------------
