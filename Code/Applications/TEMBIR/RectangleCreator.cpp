@@ -37,7 +37,7 @@
 #include <QtGui/QMenu>
 #include <QtGui/QKeyEvent>
 #include <QtCore/QRect>
-
+#include <QtCore/QDebug>
 
 #include "RectangleCreator.h"
 
@@ -47,7 +47,8 @@
 // -----------------------------------------------------------------------------
 RectangleCreator::RectangleCreator(const QPolygonF &polygon,  QGraphicsItem *parent) :
 QGraphicsPolygonItem(polygon, parent),
-m_LineWidth(1)
+m_LineWidth(1),
+m_rectangleLeftCorner(0,0)
 {
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -383,12 +384,21 @@ void RectangleCreator::mousePressEvent(QGraphicsSceneMouseEvent *event)
 // -----------------------------------------------------------------------------
 void RectangleCreator::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
+
+    
     if (event->button() == Qt::LeftButton && m_isResizing) {
         m_isResizing = false;
     } else {
         QGraphicsItem::mouseReleaseEvent(event);
     }
-    QRect rect = QRect(boundingRect().x(), boundingRect().y(), boundingRect().width(), boundingRect().height());
+    
+    std::cout << "RectangleCreator::mouseReleaseEvent(X,Y): {" << boundingRect().x() << ", " << boundingRect().y() << "}\n";
+    std::cout << "RectangleCreator::mouseReleaseEvent(W,H): {" << boundingRect().width() << ", " << boundingRect().height() << "}\n\n";
+    
+    
+    QPointF p = mapToScene(boundingRect().x(), boundingRect().y());
+    
+    QRect rect = QRect(p.x(), p.y(), boundingRect().width(), boundingRect().height());
     emit fireRectangleChanged(rect);
 }
 
@@ -397,19 +407,25 @@ void RectangleCreator::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 // -----------------------------------------------------------------------------
 void RectangleCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
+    QPointF lastPos = event->lastScenePos();
+    QPointF pos = event->scenePos();
+    float deltaX = pos.x() - lastPos.x();
+    float deltaY = pos.y() - lastPos.y();
+    float x = boundingRect().x();
+    float y = boundingRect().y();
+    float w = boundingRect().width();
+    float h = boundingRect().height();
+    
+   //  std::cout << "newRect: " << x << ", " << y << " (" << w << " x " << h << ")" << std::endl;
+    
+    m_rectangleLeftCorner.setX(x + deltaX);
+    m_rectangleLeftCorner.setY(y + deltaY);
+
     if (m_isResizing)
     {
-        //      std::cout << "mouseMoveEvent m_isResizing = true" << std::endl;
-        QPointF lastPos = event->lastScenePos();
-        QPointF pos = event->scenePos();
-        float deltaX = pos.x() - lastPos.x();
-        float deltaY = pos.y() - lastPos.y();
-        float x = boundingRect().x();
-        float y = boundingRect().y();
-        float w = boundingRect().width();
-        float h = boundingRect().height();
+
         //        std::cout << "Delta(): " << deltaX << ", " << deltaY << std::endl;
-        //  std::cout << "newRect: " << x << ", " << y << " (" << w << " x " << h << ")" << std::endl;
+         
         QRectF newRect = boundingRect();
         // Move the upper left corner as it is grown
         if (m_CurrentResizeHandle == RectangleCreator::UPPER_LEFT_CTRL_POINT)
@@ -441,7 +457,6 @@ void RectangleCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     {
         QGraphicsItem::mouseMoveEvent(event);
     }
-    emit fireRectangleCreatorUpdated(this);
 }
 
 // -----------------------------------------------------------------------------

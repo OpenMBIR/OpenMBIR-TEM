@@ -98,7 +98,7 @@ font-size: 10px;
            <string>Input aligned data </string>
           </property>
           <property name="text">
-           <string/>
+           <string>/Users/joey/Downloads/BfMbir_v1/Data/AlPhantomProjection_BF_I0_18720_47Tilts_Bragg_40PercentOfTilts_Reduce50_percent.mrc</string>
           </property>
          </widget>
         </item>
@@ -537,7 +537,7 @@ font-size: 10px;
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
+              <y>-232</y>
               <width>264</width>
               <height>961</height>
              </rect>

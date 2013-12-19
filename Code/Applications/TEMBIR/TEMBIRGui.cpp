@@ -514,11 +514,14 @@ void TEMBIRGui::setupGui()
     m_MRCOutputInfoWidget = new MRCInfoWidget(this);
     m_MRCOutputInfoWidget->hide();
     
+#if 0
     // Disable all group boxes except for the Background Selection group box
     singleSliceGroupBox->setEnabled(false);
     fullReconstructionGroupBox->setEnabled(false);
     parametersGroupBox->setEnabled(false);
     advancedParametersGroupBox->setEnabled(false);
+#endif
+    
 }
 
 // -----------------------------------------------------------------------------
