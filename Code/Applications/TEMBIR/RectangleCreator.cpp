@@ -384,22 +384,11 @@ void RectangleCreator::mousePressEvent(QGraphicsSceneMouseEvent *event)
 // -----------------------------------------------------------------------------
 void RectangleCreator::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
-
-    
     if (event->button() == Qt::LeftButton && m_isResizing) {
         m_isResizing = false;
     } else {
         QGraphicsItem::mouseReleaseEvent(event);
     }
-    
-    std::cout << "RectangleCreator::mouseReleaseEvent(X,Y): {" << boundingRect().x() << ", " << boundingRect().y() << "}\n";
-    std::cout << "RectangleCreator::mouseReleaseEvent(W,H): {" << boundingRect().width() << ", " << boundingRect().height() << "}\n\n";
-    
-    
-    QPointF p = mapToScene(boundingRect().x(), boundingRect().y());
-    
-    QRect rect = QRect(p.x(), p.y(), boundingRect().width(), boundingRect().height());
-    emit fireRectangleChanged(rect);
 }
 
 // -----------------------------------------------------------------------------
@@ -506,6 +495,17 @@ void RectangleCreator::keyPressEvent(QKeyEvent *event)
             QGraphicsItem::keyPressEvent(event);
             break;
     }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void RectangleCreator::updateDefaultOffsetValue()
+{
+    QPointF p = mapToScene(boundingRect().x(), boundingRect().y());
+    
+    QRect rect = QRect(p.x(), p.y(), boundingRect().width(), boundingRect().height());
+    emit fireRectangleChanged(rect);
 }
 
 // -----------------------------------------------------------------------------

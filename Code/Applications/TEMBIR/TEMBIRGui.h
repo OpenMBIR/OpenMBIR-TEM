@@ -55,6 +55,7 @@ class MRCInfoWidget;
 
 #include "MBIRLib/IOFilters/MRCHeader.h"
 #include "MBIRLib/Common/Observer.h"
+#include "MBIRLib/GenericFilters/BackgroundCalculation.h"
 #include "RectangleCreator.h"
 
 
@@ -253,6 +254,10 @@ protected slots:
     void on_smoothness_textChanged(const QString & text);
 
     void on_sigma_x_textChanged(const QString & text);
+    
+    void on_defaultOffsetUpdateBtn_clicked();
+    
+    void on_defaultOffset_textChanged(const QString & text);
 
     void singleSlicePlaneSet(int y);
 
@@ -390,6 +395,8 @@ signals:
     void reconstructionVOIGeometryChanged(int xmin, int ymin, int xmax, int ymax);
     
     void fireRectangleCreatorAdded(RectangleCreator* rectangle);
+    
+    void fireUpdateBtnPressed();
 
 private slots:
     // slots for our worker thread to communicate

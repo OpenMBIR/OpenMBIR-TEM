@@ -514,14 +514,11 @@ void TEMBIRGui::setupGui()
     m_MRCOutputInfoWidget = new MRCInfoWidget(this);
     m_MRCOutputInfoWidget->hide();
     
-#if 0
     // Disable all group boxes except for the Background Selection group box
     singleSliceGroupBox->setEnabled(false);
     fullReconstructionGroupBox->setEnabled(false);
     parametersGroupBox->setEnabled(false);
     advancedParametersGroupBox->setEnabled(false);
-#endif
-    
 }
 
 // -----------------------------------------------------------------------------
@@ -2078,6 +2075,37 @@ void TEMBIRGui::on_removeResolution_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+void TEMBIRGui::on_defaultOffsetUpdateBtn_clicked()
+{
+    emit fireUpdateBtnPressed();
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TEMBIRGui::on_defaultOffset_textChanged(const QString & text)
+{
+    if (text == "")
+    {
+        // Disable all group boxes
+        singleSliceGroupBox->setEnabled(false);
+        fullReconstructionGroupBox->setEnabled(false);
+        parametersGroupBox->setEnabled(false);
+        advancedParametersGroupBox->setEnabled(false);
+    }
+    else
+    {
+        // Enable all group boxes
+        singleSliceGroupBox->setEnabled(true);
+        fullReconstructionGroupBox->setEnabled(true);
+        parametersGroupBox->setEnabled(true);
+        advancedParametersGroupBox->setEnabled(true);
+    }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void TEMBIRGui::memCalculate()
 {
     bool ok = false;
@@ -2202,8 +2230,20 @@ void TEMBIRGui::deleteTempFiles()
 // -----------------------------------------------------------------------------
 void TEMBIRGui::backgroundSelectorChanged(const QRect &rectangle)
 {
-    std::cout << "(X,Y): {" << rectangle.x() << ", " << rectangle.y() << "}\n";
-    std::cout << "(W,H): {" << rectangle.width() << ", " << rectangle.height() << "}\n\n";
+    BackgroundCalculation meanCalculator = BackgroundCalculation(inputMRCFilePath->text().toStdString(), rectangle.x(), rectangle.y(), rectangle.width(), rectangle.height());
+    
+    double mean = meanCalculator.getMeanValue();
+    
+    std::stringstream ss;
+    ss << mean;
+    
+    defaultOffset->setText(QString::fromStdString(ss.str()));
+    
+    // Enable all group boxes
+    singleSliceGroupBox->setEnabled(true);
+    fullReconstructionGroupBox->setEnabled(true);
+    parametersGroupBox->setEnabled(true);
+    advancedParametersGroupBox->setEnabled(true);
 }
 
 

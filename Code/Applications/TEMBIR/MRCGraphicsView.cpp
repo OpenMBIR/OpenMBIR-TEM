@@ -54,7 +54,9 @@ MRCGraphicsView::MRCGraphicsView(QWidget *parent)
   m_DisableVOISelection(true),
   m_AddReconstructionArea(false),
   m_XZWidth(.90),
-  m_ReconstructionArea(NULL)
+  m_ReconstructionArea(NULL),
+  m_XZLine(0)
+  
 {
   setAcceptDrops(true);
  // setDragMode(RubberBandDrag);
@@ -299,7 +301,10 @@ void MRCGraphicsView::loadBaseImageFile(QImage image)
   }
   else
   {
-    gScene->removeItem(m_ImageGraphicsItem);
+      if (NULL != m_ImageGraphicsItem)
+      {
+          gScene->removeItem(m_ImageGraphicsItem);
+      }
     if(NULL != m_ReconstructionArea)
     {
       m_ReconstructionArea->setParentItem(NULL);
@@ -533,6 +538,12 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 // -----------------------------------------------------------------------------
 QLineF MRCGraphicsView::getXZPlane()
 {
+    if ( m_XZLine.polygon().isEmpty() )
+    {
+        std::cout << "FIX - MRCGraphicsView::getXZPlane()\n";
+        return QLineF(0,0,0,0);
+    }
+    
  QPointF p0 = m_XZLine.polygon().at(0);
  QPointF p1 = m_XZLine.polygon().at(1);
 
@@ -652,12 +663,13 @@ void MRCGraphicsView::createBackgroundSelector(QObject* obs)
     rectangle->setZValue(1);
     rectangle->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
     
-    // Add the rectangle to the graphics scene
-    scene()->addItem(rectangle);
+    // Set parent item
+    rectangle->setParentItem(m_ImageGraphicsItem);
     
     // Make it visible
     rectangle->setVisible(true);
     
+    connect (obs, SIGNAL(fireUpdateBtnPressed()), rectangle, SLOT(updateDefaultOffsetValue()));
     connect (rectangle, SIGNAL(fireRectangleChanged(const QRect &)), obs, SLOT(backgroundSelectorChanged(const QRect &)));
 }
 

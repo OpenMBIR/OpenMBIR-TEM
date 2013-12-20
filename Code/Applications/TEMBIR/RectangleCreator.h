@@ -81,7 +81,7 @@ public:
     void setLineWidth(qreal w);
     qreal getLineWidth();
     
-    // void setVisible(bool visible);
+    void updateDefaultOffsetValue();
     
     
     

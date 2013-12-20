@@ -537,8 +537,8 @@ font-size: 10px;
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-232</y>
-              <width>264</width>
+              <y>0</y>
+              <width>278</width>
               <height>961</height>
              </rect>
             </property>
@@ -634,7 +634,7 @@ font-size: 10px;
 }</string>
                     </property>
                     <property name="text">
-                     <string>Value</string>
+                     <string>Default Dosage:</string>
                     </property>
                     <property name="wordWrap">
                      <bool>true</bool>
@@ -662,14 +662,14 @@ font-size: 10px;
                      </size>
                     </property>
                     <property name="text">
-                     <string>0</string>
+                     <string/>
                     </property>
                    </widget>
                   </item>
                   <item>
-                   <widget class="QToolButton" name="backgroundSelectBtn">
+                   <widget class="QToolButton" name="defaultOffsetUpdateBtn">
                     <property name="text">
-                     <string>Select</string>
+                     <string>Update</string>
                     </property>
                    </widget>
                   </item>
