@@ -33,86 +33,17 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-BackgroundCalculation::BackgroundCalculation(std::string filePath, int x, int y, int width, int height) :
-m_Path(filePath)
-{
-    m_Reader = MRCReader::New();
-    MRCHeader* header = new MRCHeader();
-    
-    
-    if ( !m_Reader->readHeader(m_Path, header) )
-    {
-        std::cout << "m_Reader did not read header from filepath correctly!\n";
-        return;
-    }
-    
-    int z = header->nz;
-    int mode = header->mode;
-    
-    int min[3] = {x, y, 0};
-    int max[3] = {x+width, y+height, z-1};
-    int nVoxels = width*height*z;
-    
-    if ( !m_Reader->read(m_Path, min, max) )
-    {
-        std::cout << "m_Reader did not read filepath correctly!\n";
-        return;
-    }
-    
-    switch (mode)
-    {
-        case TYPE_BYTES:
-        {
-            if (header->imodFlags == 1)
-            {
-                // Signed bytes
-                computeMean<signed char>(m_Reader->getDataPointer(), nVoxels, TYPE_SIGNED_BYTES);
-            }
-            else
-            {
-                // Unsigned bytes
-                computeMean<unsigned char>(m_Reader->getDataPointer(), nVoxels, TYPE_UNSIGNED_BYTES);
-            }
-            break;
-        }
-        case TYPE_SIGNED_SHORT_INT:
-        {
-            computeMean<signed short int>(m_Reader->getDataPointer(), nVoxels, TYPE_SIGNED_SHORT_INT);
-            break;
-        }
-        case TYPE_FLOAT:
-        {
-            computeMean<float>(m_Reader->getDataPointer(), nVoxels, TYPE_FLOAT);
-            break;
-        }
-    }
-
-    delete header;
-    header = NULL;
-    
-    /* Types of pixel in image.  Values used by IMOD:
-        0 = unsigned or signed bytes depending on flag in imodStamp
-            only unsigned bytes before IMOD 4.2.23 (iModFlags == 1, signed)
-        1 = signed short integers (16 bits)
-        2 = float
-        3 = short * 2, (used for complex data)
-        4 = float * 2, (used for complex data)
-        6 = unsigned 16-bit integers (non-standard)
-        16 = unsigned char * 3 (for rgb data, non-standard) */
-}
+BackgroundCalculation::BackgroundCalculation() {}
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-BackgroundCalculation::~BackgroundCalculation()
-{
-    
-}
+BackgroundCalculation::~BackgroundCalculation() {}
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-template<class T> void BackgroundCalculation::computeMean(void *ptr, int numVoxels, Type type)
+template<class T> double BackgroundCalculation::computeMean(void *ptr, int numVoxels, Type type)
 {
     double mean = 0.0;
     double sum = 0.0;
@@ -152,21 +83,75 @@ template<class T> void BackgroundCalculation::computeMean(void *ptr, int numVoxe
     else
     {
         std::cout << "BackgroundCalculation::computeMean(...) - No type recognized\n";
-        m_Mean = 0.0;
-        return;
+        return 0.0;
     }
     
     mean = sum/numVoxels;
-    
-    m_Mean = mean;
+    return mean;
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-double BackgroundCalculation::getMeanValue()
+double BackgroundCalculation::getMeanValue(std::string filePath, int x, int y, int width, int height)
 {
-    return m_Mean;
+    MRCReader::Pointer m_Reader = MRCReader::New();
+    MRCHeader* header = new MRCHeader();
+    
+    
+    if ( !m_Reader->readHeader(filePath, header) )
+    {
+        std::cout << "m_Reader did not read header from filepath correctly!\n";
+        return 0.0;
+    }
+    
+    int z = header->nz;
+    int mode = header->mode;
+    
+    int min[3] = {x, y, 0};
+    int max[3] = {x+width, y+height, z-1};
+    int nVoxels = width*height*z;
+    
+    if ( !m_Reader->read(filePath, min, max) )
+    {
+        std::cout << "m_Reader did not read filepath correctly!\n";
+        return 0.0;
+    }
+    
+    double mean = 0.0;
+    
+    switch (mode)
+    {
+        case TYPE_BYTES:
+        {
+            if (header->imodFlags == 1)
+            {
+                // Signed bytes
+                mean = computeMean<signed char>(m_Reader->getDataPointer(), nVoxels, TYPE_SIGNED_BYTES);
+            }
+            else
+            {
+                // Unsigned bytes
+                mean = computeMean<unsigned char>(m_Reader->getDataPointer(), nVoxels, TYPE_UNSIGNED_BYTES);
+            }
+            break;
+        }
+        case TYPE_SIGNED_SHORT_INT:
+        {
+            mean = computeMean<signed short int>(m_Reader->getDataPointer(), nVoxels, TYPE_SIGNED_SHORT_INT);
+            break;
+        }
+        case TYPE_FLOAT:
+        {
+            mean = computeMean<float>(m_Reader->getDataPointer(), nVoxels, TYPE_FLOAT);
+            break;
+        }
+    }
+    
+    delete header;
+    header = NULL;
+
+    return mean;
 }
 
 

@@ -49,19 +49,13 @@ class BackgroundCalculation
 {
     
 public:
-    BackgroundCalculation(std::string filePath, int x, int y, int width, int height);
-    
     virtual ~BackgroundCalculation();
     
-    double getMeanValue();
+    static double getMeanValue(std::string filePath, int x, int y, int width, int height);
     
 protected:
-    template<class T> void computeMean(void* ptr, int numVoxels, Type type);
-    
-private:
-    MRCReader::Pointer      m_Reader;
-    std::string             m_Path;
-    double                  m_Mean;
+    BackgroundCalculation();
+    template<class T> static double computeMean(void* ptr, int numVoxels, Type type);
 };
 
 

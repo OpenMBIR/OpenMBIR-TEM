@@ -81,9 +81,8 @@ public:
     void setLineWidth(qreal w);
     qreal getLineWidth();
     
-    void updateDefaultOffsetValue();
-    
-    
+    QRect getMappedRectangleCoordinates();
+
     
 signals:
     
@@ -91,7 +90,6 @@ signals:
     void fireRectangleCreatorAboutToDelete(RectangleCreator*);
     void fireRectangleCreatorDeleted(RectangleCreator*);
     void fireRectangleCreatorSelected(RectangleCreator*);
-    void fireRectangleChanged(const QRect &);
     
 protected:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);

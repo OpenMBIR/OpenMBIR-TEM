@@ -38,6 +38,8 @@
 #include <QtGui/QGraphicsItem>
 #include <QtGui/QRubberBand>
 
+#include "RectangleCreator.h"
+
 class TEMBIRGui;
 class ReconstructionArea;
 
@@ -118,6 +120,8 @@ class MRCGraphicsView : public QGraphicsView
     QLineF getXZPlane();
 
     QGraphicsItem* getImageGraphicsItem();
+    
+    RectangleCreator* getBackgroundRectangle();
 
     void clearContent();
 
@@ -157,17 +161,18 @@ class MRCGraphicsView : public QGraphicsView
 
 
   private:
-   QGraphicsItem* m_ImageGraphicsItem;
-   QImage         m_BaseImage;
-   bool           m_DisableVOISelection;
-   bool           m_AddReconstructionArea;
-   QRubberBand*   m_RubberBand;
-   QPoint         m_MouseClickOrigin;
-   float          m_ZoomFactors[10];
-   QGraphicsPolygonItem m_XZLine;
-   float          m_XZWidth;
+   QGraphicsItem*                       m_ImageGraphicsItem;
+   QImage                               m_BaseImage;
+   bool                                 m_DisableVOISelection;
+   bool                                 m_AddReconstructionArea;
+   QRubberBand*                         m_RubberBand;
+   QPoint                               m_MouseClickOrigin;
+   float                                m_ZoomFactors[10];
+   QGraphicsPolygonItem                 m_XZLine;
+   float                                m_XZWidth;
 
-   QWidget*       m_MainGui;
+   QWidget*                             m_MainGui;
+   RectangleCreator*                    m_BackgroundRectangle;
    TomoGui_Constants::ImageDisplayType  m_ImageDisplayType;
    bool                                 m_ShowOverlayImage;
    QPainter::CompositionMode            m_composition_mode;

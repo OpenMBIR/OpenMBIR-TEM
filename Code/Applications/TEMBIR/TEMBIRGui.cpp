@@ -2077,7 +2077,20 @@ void TEMBIRGui::on_removeResolution_clicked()
 // -----------------------------------------------------------------------------
 void TEMBIRGui::on_defaultOffsetUpdateBtn_clicked()
 {
-    emit fireUpdateBtnPressed();
+    QRect rect = m_MRCDisplayWidget->graphicsView()->getBackgroundRectangle()->getMappedRectangleCoordinates();
+    
+    double mean = BackgroundCalculation::getMeanValue(inputMRCFilePath->text().toStdString(), rect.x(), rect.y(), rect.width(), rect.height());
+    
+    std::stringstream ss;
+    ss << mean;
+    
+    defaultOffset->setText(QString::fromStdString(ss.str()));
+    
+    // Enable all group boxes
+    singleSliceGroupBox->setEnabled(true);
+    fullReconstructionGroupBox->setEnabled(true);
+    parametersGroupBox->setEnabled(true);
+    advancedParametersGroupBox->setEnabled(true);
 }
 
 // -----------------------------------------------------------------------------
@@ -2223,27 +2236,6 @@ void TEMBIRGui::deleteTempFiles()
         f.remove();
     }
     m_TempFilesToDelete.clear();
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TEMBIRGui::backgroundSelectorChanged(const QRect &rectangle)
-{
-    BackgroundCalculation meanCalculator = BackgroundCalculation(inputMRCFilePath->text().toStdString(), rectangle.x(), rectangle.y(), rectangle.width(), rectangle.height());
-    
-    double mean = meanCalculator.getMeanValue();
-    
-    std::stringstream ss;
-    ss << mean;
-    
-    defaultOffset->setText(QString::fromStdString(ss.str()));
-    
-    // Enable all group boxes
-    singleSliceGroupBox->setEnabled(true);
-    fullReconstructionGroupBox->setEnabled(true);
-    parametersGroupBox->setEnabled(true);
-    advancedParametersGroupBox->setEnabled(true);
 }
 
 

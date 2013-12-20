@@ -491,17 +491,6 @@ void RectangleCreator::keyPressEvent(QKeyEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void RectangleCreator::updateDefaultOffsetValue()
-{
-    QPointF p = mapToScene(boundingRect().x(), boundingRect().y());
-    
-    QRect rect = QRect(p.x(), p.y(), boundingRect().width(), boundingRect().height());
-    emit fireRectangleChanged(rect);
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 RectangleCreator::CTRL_POINTS RectangleCreator::isInResizeArea(const QPointF &pos)
 {
     float x = boundingRect().x();
@@ -551,3 +540,24 @@ void RectangleCreator::setColor(QColor color)
     setBrush(QBrush(color));
     emit fireRectangleCreatorUpdated(this);
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QRect RectangleCreator::getMappedRectangleCoordinates()
+{
+    QPointF p = mapToScene(boundingRect().x(), boundingRect().y());
+    
+    QRect rect = QRect(p.x(), p.y(), boundingRect().width(), boundingRect().height());
+    
+    return rect;
+}
+
+
+
+
+
+
+
+
+

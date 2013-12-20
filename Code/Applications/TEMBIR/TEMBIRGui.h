@@ -266,10 +266,6 @@ protected slots:
      */
     void geometryChanged();
     
-    /**
-     * @brief The rectangleChanged signal in the RectangleCreator class signals this slot
-     */
-    void backgroundSelectorChanged(const QRect &);
 
 protected:
 
@@ -395,8 +391,6 @@ signals:
     void reconstructionVOIGeometryChanged(int xmin, int ymin, int xmax, int ymax);
     
     void fireRectangleCreatorAdded(RectangleCreator* rectangle);
-    
-    void fireUpdateBtnPressed();
 
 private slots:
     // slots for our worker thread to communicate

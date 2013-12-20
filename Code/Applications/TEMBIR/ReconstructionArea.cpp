@@ -45,11 +45,6 @@
 #include "ReconstructionArea.h"
 #include "MRCGraphicsView.h"
 
-namespace UIA
-{
-  const static int Alpha = 155;
-}
-
 #define CTRL_POINT_SIZE 10.0f
 
 // -----------------------------------------------------------------------------

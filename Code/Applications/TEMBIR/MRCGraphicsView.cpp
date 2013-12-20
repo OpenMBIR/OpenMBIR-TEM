@@ -654,27 +654,29 @@ void MRCGraphicsView::createBackgroundSelector(QObject* obs)
     QRect rect = QRect(scene()->width()/2, scene()->height()/2, imageSize.width()*0.1, imageSize.height()*0.1);
     QPolygonF box = mapToScene(rect);
     
-    RectangleCreator* rectangle = new RectangleCreator(box);
+    m_BackgroundRectangle = new RectangleCreator(box);
     
     // Line Color
-    rectangle->setPen(QPen(QColor(225, 225, 225, UIA::Alpha)));
+    m_BackgroundRectangle->setPen(QPen(QColor(225, 225, 225, UIA::Alpha)));
     // Fill Color
-    rectangle->setBrush(QBrush(QColor(255, 0, 0, UIA::Alpha)));
-    rectangle->setZValue(1);
-    rectangle->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+    m_BackgroundRectangle->setBrush(QBrush(QColor(255, 0, 0, UIA::Alpha)));
+    m_BackgroundRectangle->setZValue(1);
+    m_BackgroundRectangle->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
     
     // Set parent item
-    rectangle->setParentItem(m_ImageGraphicsItem);
+    m_BackgroundRectangle->setParentItem(m_ImageGraphicsItem);
     
     // Make it visible
-    rectangle->setVisible(true);
-    
-    connect (obs, SIGNAL(fireUpdateBtnPressed()), rectangle, SLOT(updateDefaultOffsetValue()));
-    connect (rectangle, SIGNAL(fireRectangleChanged(const QRect &)), obs, SLOT(backgroundSelectorChanged(const QRect &)));
+    m_BackgroundRectangle->setVisible(true);
 }
 
-
-
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+RectangleCreator* MRCGraphicsView::getBackgroundRectangle()
+{
+    return m_BackgroundRectangle;
+}
 
 
 
