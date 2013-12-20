@@ -47,8 +47,7 @@
 // -----------------------------------------------------------------------------
 RectangleCreator::RectangleCreator(const QPolygonF &polygon,  QGraphicsItem *parent) :
 QGraphicsPolygonItem(polygon, parent),
-m_LineWidth(1),
-m_rectangleLeftCorner(0,0)
+m_LineWidth(1)
 {
     setFlag(QGraphicsItem::ItemIsMovable, true);
     setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -404,17 +403,9 @@ void RectangleCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     float y = boundingRect().y();
     float w = boundingRect().width();
     float h = boundingRect().height();
-    
-   //  std::cout << "newRect: " << x << ", " << y << " (" << w << " x " << h << ")" << std::endl;
-    
-    m_rectangleLeftCorner.setX(x + deltaX);
-    m_rectangleLeftCorner.setY(y + deltaY);
 
     if (m_isResizing)
     {
-
-        //        std::cout << "Delta(): " << deltaX << ", " << deltaY << std::endl;
-         
         QRectF newRect = boundingRect();
         // Move the upper left corner as it is grown
         if (m_CurrentResizeHandle == RectangleCreator::UPPER_LEFT_CTRL_POINT)

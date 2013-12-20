@@ -112,7 +112,6 @@ protected:
     
     
 private:
-    QPoint m_rectangleLeftCorner;
     bool m_isResizing;
     CTRL_POINTS m_CurrentResizeHandle;
     float ctrlPointSize;
