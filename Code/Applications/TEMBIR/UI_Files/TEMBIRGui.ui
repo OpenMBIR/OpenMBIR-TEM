@@ -537,9 +537,9 @@ font-size: 10px;
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>-12</y>
-              <width>278</width>
-              <height>961</height>
+              <y>0</y>
+              <width>266</width>
+              <height>967</height>
              </rect>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout_6">
@@ -638,6 +638,31 @@ font-size: 10px;
                     </property>
                     <property name="wordWrap">
                      <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="useDefaultDosage">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>0</width>
+                      <height>25</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">QCheckbox {
+font-weight: bold;
+font-size: 10px;
+}</string>
+                    </property>
+                    <property name="text">
+                     <string/>
                     </property>
                    </widget>
                   </item>
