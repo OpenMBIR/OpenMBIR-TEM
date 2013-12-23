@@ -98,7 +98,7 @@ font-size: 10px;
            <string>Input aligned data </string>
           </property>
           <property name="text">
-           <string/>
+           <string>/Users/joey/Downloads/BfMbir_v1/Data/AlPhantomProjection_BF_I0_18720_47Tilts_Bragg_40PercentOfTilts_Reduce50_percent.mrc</string>
           </property>
          </widget>
         </item>
@@ -663,6 +663,9 @@ font-size: 10px;
                     </property>
                     <property name="text">
                      <string/>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>
@@ -1573,8 +1576,11 @@ font-size: 10px;
                   <property name="minimum">
                    <number>1</number>
                   </property>
+                  <property name="maximum">
+                   <number>100</number>
+                  </property>
                   <property name="value">
-                   <number>10</number>
+                   <number>100</number>
                   </property>
                  </widget>
                 </item>
@@ -1593,7 +1599,7 @@ font-size: 10px;
                    <number>1000</number>
                   </property>
                   <property name="value">
-                   <number>30</number>
+                   <number>600</number>
                   </property>
                  </widget>
                 </item>

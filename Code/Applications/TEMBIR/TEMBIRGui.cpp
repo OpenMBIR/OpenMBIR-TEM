@@ -928,13 +928,14 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
     Real_t true_offset = -log(defaultOffset->text().toDouble()+bf_offset->text().toDouble());
     m_MultiResSOC->setDefaultOffsetValue(true_offset);
     
+    m_MultiResSOC->setUseDefaultOffset(useDefaultOffset->isChecked());
+    
     m_MultiResSOC->setStopThreshold(stopThreshold->text().toFloat(&ok));
     m_MultiResSOC->setOuterIterations(outerIterations->value());
     m_MultiResSOC->setInnerIterations(innerIterations->value());
     m_MultiResSOC->setSigmaX(sigma_x->text().toFloat(&ok));
     
     m_MultiResSOC->setMRFShapeParameter(mrf->value());
-    m_MultiResSOC->setDefaultOffsetValue(defaultOffset->text().toFloat(&ok));
     m_MultiResSOC->setTiltSelection(static_cast<SOC::TiltSelection>(tiltSelection->currentIndex()));
     m_MultiResSOC->setExtendObject(extendObject->isChecked());
     m_MultiResSOC->setDefaultVariance(defaultVariance->text().toFloat(&ok));
