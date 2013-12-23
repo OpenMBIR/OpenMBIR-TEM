@@ -538,7 +538,7 @@ font-size: 10px;
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>266</width>
+              <width>280</width>
               <height>967</height>
              </rect>
             </property>
@@ -642,7 +642,7 @@ font-size: 10px;
                    </widget>
                   </item>
                   <item>
-                   <widget class="QCheckBox" name="useDefaultDosage">
+                   <widget class="QCheckBox" name="useDefaultOffset">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                       <horstretch>0</horstretch>
