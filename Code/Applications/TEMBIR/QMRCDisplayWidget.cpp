@@ -299,11 +299,11 @@ void QMRCDisplayWidget::stepForwardFromTimer()
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::on_currentTiltIndex_valueChanged(int i)
 {
-  loadMRCTiltImage(m_CurrentMRCFilePath, i);
-    graphicsView()->createBackgroundSelector();
-  // Be sure to properly orient the image which will in turn load the image into
-  // the graphics scene
-//  on_originCB_currentIndexChanged(originCB->currentIndex());
+    loadMRCTiltImage(m_CurrentMRCFilePath, i);
+    
+    // Be sure to properly orient the image which will in turn load the image into
+    // the graphics scene
+    //  on_originCB_currentIndexChanged(originCB->currentIndex());
 }
 
 

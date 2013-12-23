@@ -283,61 +283,71 @@ void MRCGraphicsView::clearContent()
 // -----------------------------------------------------------------------------
 void MRCGraphicsView::loadBaseImageFile(QImage image)
 {
-  m_BaseImage = image;
-  if(m_BaseImage.isNull() == true)
-  {
- //   std::cout << "MRCGraphicsView::loadBaseImageFile() - Input Image was NULL" << std::endl;
-    return;
-  }
-  QSize pSize(0, 0);
-
-  m_BaseImage = m_BaseImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-
-  QGraphicsScene* gScene = scene();
-  if(gScene == NULL)
-  {
-    gScene = new QGraphicsScene(this);
-    setScene(gScene);
-  }
-  else
-  {
-      if (NULL != m_ImageGraphicsItem)
-      {
-          gScene->removeItem(m_ImageGraphicsItem);
-      }
+    m_BaseImage = image;
+    if(m_BaseImage.isNull() == true)
+    {
+        //   std::cout << "MRCGraphicsView::loadBaseImageFile() - Input Image was NULL" << std::endl;
+        return;
+    }
+    QSize pSize(0, 0);
+    
+    m_BaseImage = m_BaseImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+    
+    QGraphicsScene* gScene = scene();
+    if(gScene == NULL)
+    {
+        gScene = new QGraphicsScene(this);
+        setScene(gScene);
+    }
+    else
+    {
+        if (NULL != m_ImageGraphicsItem)
+        {
+            gScene->removeItem(m_ImageGraphicsItem);
+        }
+        if(NULL != m_ReconstructionArea)
+        {
+            m_ReconstructionArea->setParentItem(NULL);
+            if(NULL != m_BackgroundRectangle)
+            {
+                m_BackgroundRectangle->setParentItem(NULL);
+            }
+        }
+        
+        delete m_ImageGraphicsItem; // Will delete its children
+        m_ImageGraphicsItem = NULL;
+    }
+    
+    m_ImageGraphicsItem = gScene->addPixmap(QPixmap::fromImage(m_BaseImage));
     if(NULL != m_ReconstructionArea)
     {
-      m_ReconstructionArea->setParentItem(NULL);
+        m_ReconstructionArea->setParentItem(m_ImageGraphicsItem);
+        
+        if(NULL != m_BackgroundRectangle)
+        {
+            m_BackgroundRectangle->setParentItem(m_ImageGraphicsItem);
+        }
     }
-    delete m_ImageGraphicsItem; // Will delete its children
-    m_ImageGraphicsItem = NULL;
-  }
-
-  m_ImageGraphicsItem = gScene->addPixmap(QPixmap::fromImage(m_BaseImage));
-  if(NULL != m_ReconstructionArea)
-  {
-    m_ReconstructionArea->setParentItem(m_ImageGraphicsItem);
-  }
-
-  m_ImageGraphicsItem->setAcceptDrops(true);
-  m_ImageGraphicsItem->setZValue(-1);
-  QRectF rect = m_ImageGraphicsItem->boundingRect();
-  gScene->setSceneRect(rect);
-
-  // Line Color
-  m_XZLine.setPen(QPen(QColor(255, 255, 0, UIA::Alpha)));
-  // Fill Color
-  m_XZLine.setBrush(QBrush(QColor(255, 255, 0, UIA::Alpha)));
-  m_XZLine.setZValue(1);
-  m_XZLine.setCacheMode(QGraphicsItem::DeviceCoordinateCache);
-  m_XZLine.setVisible(m_XZLine.isVisible());
-  if(scene()->items().contains(&m_XZLine) == false)
-  {
-    scene()->addItem(&m_XZLine);
-  }
-
-  this->updateDisplay();
-  emit fireBaseMRCFileLoaded();
+    
+    m_ImageGraphicsItem->setAcceptDrops(true);
+    m_ImageGraphicsItem->setZValue(-1);
+    QRectF rect = m_ImageGraphicsItem->boundingRect();
+    gScene->setSceneRect(rect);
+    
+    // Line Color
+    m_XZLine.setPen(QPen(QColor(255, 255, 0, UIA::Alpha)));
+    // Fill Color
+    m_XZLine.setBrush(QBrush(QColor(255, 255, 0, UIA::Alpha)));
+    m_XZLine.setZValue(1);
+    m_XZLine.setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+    m_XZLine.setVisible(m_XZLine.isVisible());
+    if(scene()->items().contains(&m_XZLine) == false)
+    {
+        scene()->addItem(&m_XZLine);
+    }
+    
+    this->updateDisplay();
+    emit fireBaseMRCFileLoaded();
 }
 
 // -----------------------------------------------------------------------------

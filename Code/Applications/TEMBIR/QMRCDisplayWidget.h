@@ -143,6 +143,7 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     bool                  m_ImageWidgetsEnabled;
     bool                  m_MovieWidgetsEnabled;
     bool                  m_DrawOrigin;
+    RectangleCreator*     m_BackgroundRectangle;
 
 
     QMRCDisplayWidget(const QMRCDisplayWidget&); // Copy Constructor Not Implemented
