@@ -81,6 +81,8 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     void loadMRCTiltImage(QString filepath, int tiltIndex);
 
     QString getMRCFilePath();
+    
+    QSpinBox* getCurrentTiltIndexBox();
 
     void fireOriginCB_Changed();
     void saveCanvas();

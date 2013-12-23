@@ -925,6 +925,9 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
     m_MultiResSOC->setBraggDelta(targetGain->text().toFloat(&ok));
     m_MultiResSOC->setBfOffset(bf_offset->text().toFloat(&ok));
     
+    Real_t true_offset = -log(defaultOffset->text().toDouble()+bf_offset->text().toDouble());
+    m_MultiResSOC->setDefaultOffsetValue(true_offset);
+    
     m_MultiResSOC->setStopThreshold(stopThreshold->text().toFloat(&ok));
     m_MultiResSOC->setOuterIterations(outerIterations->value());
     m_MultiResSOC->setInnerIterations(innerIterations->value());
@@ -1043,6 +1046,8 @@ void TEMBIRGui::singleSlicePlaneSet(int y)
 {
     m_SingleSliceReconstructionBtn->setEnabled(true);
     ySingleSliceValue->setText(QString::number(y));
+    
+    singleSliceXWidth->setValue(100);
 }
 
 // -----------------------------------------------------------------------------
@@ -1322,7 +1327,7 @@ void TEMBIRGui::on_inputMRCFilePath_textChanged(const QString & filepath)
         updateBaseRecentFileList(filepath);
         
         // Create rectangle on GUI
-        m_MRCDisplayWidget->graphicsView()->createBackgroundSelector(this);
+        m_MRCDisplayWidget->graphicsView()->createBackgroundSelector();
     }
     else
     {
@@ -2079,7 +2084,9 @@ void TEMBIRGui::on_defaultOffsetUpdateBtn_clicked()
 {
     QRect rect = m_MRCDisplayWidget->graphicsView()->getBackgroundRectangle()->getMappedRectangleCoordinates();
     
-    double mean = BackgroundCalculation::getMeanValue(inputMRCFilePath->text().toStdString(), rect.x(), rect.y(), rect.width(), rect.height());
+    int tilt = m_MRCDisplayWidget->getCurrentTiltIndexBox()->value();
+    
+    double mean = BackgroundCalculation::getMeanValue(inputMRCFilePath->text().toStdString(), rect.x(), rect.y(), rect.width(), rect.height(), tilt);
     
     std::stringstream ss;
     ss << mean;

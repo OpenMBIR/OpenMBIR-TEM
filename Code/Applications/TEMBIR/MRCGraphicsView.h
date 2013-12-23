@@ -113,7 +113,7 @@ class MRCGraphicsView : public QGraphicsView
     void addNewReconstructionArea(ReconstructionArea* userInitArea);
     void createNewReconstructionArea(const QRectF brect);
     
-    void createBackgroundSelector(QObject* obs);
+    void createBackgroundSelector();
 
     ReconstructionArea* reconstructionArea();
 
@@ -151,7 +151,7 @@ class MRCGraphicsView : public QGraphicsView
 
     void fireImageFileLoaded(const QString &filename);
 
-    void fireSingleSliceSelected(int y);
+    void fireSingleSliceSelected(int y);        // SlOT: TEMBIRGui::SingleSlicePlaneSet(int y)
 
     void fireReconstructionVOIAdded(ReconstructionArea* reconVOI);
 

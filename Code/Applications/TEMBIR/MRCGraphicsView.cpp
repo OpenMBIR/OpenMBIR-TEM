@@ -487,9 +487,8 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
     m_XZLine.setVisible(true);
 
     int y = m_BaseImage.size().height() - getXZPlane().y1();
-
-
-    emit fireSingleSliceSelected(y);
+      
+    emit fireSingleSliceSelected(y);    // SlOT: TEMBIRGui::SingleSlicePlaneSet(int y)
   }
   else if (m_AddReconstructionArea == true && NULL != m_RubberBand)
   {
@@ -648,7 +647,7 @@ void MRCGraphicsView::setCompositeMode(TomoGui_Constants::CompositeType mode)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MRCGraphicsView::createBackgroundSelector(QObject* obs)
+void MRCGraphicsView::createBackgroundSelector()
 {
     QSize imageSize = m_BaseImage.size();
     QRect rect = QRect(scene()->width()/2, scene()->height()/2, imageSize.width()*0.1, imageSize.height()*0.1);

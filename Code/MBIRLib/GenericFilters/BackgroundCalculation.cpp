@@ -93,7 +93,7 @@ template<class T> double BackgroundCalculation::computeMean(void *ptr, int numVo
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-double BackgroundCalculation::getMeanValue(std::string filePath, int x, int y, int width, int height)
+double BackgroundCalculation::getMeanValue(std::string filePath, int x, int y, int width, int height, int tiltNum)
 {
     MRCReader::Pointer m_Reader = MRCReader::New();
     MRCHeader* header = new MRCHeader();
@@ -105,12 +105,11 @@ double BackgroundCalculation::getMeanValue(std::string filePath, int x, int y, i
         return 0.0;
     }
     
-    int z = header->nz;
     int mode = header->mode;
     
-    int min[3] = {x, y, 0};
-    int max[3] = {x+width, y+height, z-1};
-    int nVoxels = width*height*z;
+    int min[3] = {x, y, tiltNum};
+    int max[3] = {x+width, y+height, tiltNum};
+    int nVoxels = width*height;
     
     if ( !m_Reader->read(filePath, min, max) )
     {

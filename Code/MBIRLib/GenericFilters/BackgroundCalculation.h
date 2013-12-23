@@ -51,7 +51,7 @@ class BackgroundCalculation
 public:
     virtual ~BackgroundCalculation();
     
-    static double getMeanValue(std::string filePath, int x, int y, int width, int height);
+    static double getMeanValue(std::string filePath, int x, int y, int width, int height, int tiltNum);
     
 protected:
     BackgroundCalculation();
