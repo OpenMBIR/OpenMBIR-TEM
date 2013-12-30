@@ -288,6 +288,7 @@ void MRCGraphicsView::clearContent()
 // -----------------------------------------------------------------------------
 void MRCGraphicsView::loadBaseImageFile(QImage image)
 {
+    QRect rectCoords(0,0,0,0);
     m_BaseImage = image;
     if(m_BaseImage.isNull() == true)
     {
@@ -314,9 +315,10 @@ void MRCGraphicsView::loadBaseImageFile(QImage image)
         {
             m_ReconstructionArea->setParentItem(NULL);
         }
-        if(NULL != m_BackgroundRectangle)
+        if (NULL != m_BackgroundRectangle)
         {
-            m_BackgroundRectangle->setParentItem(NULL);
+            rectCoords = m_BackgroundRectangle->getMappedRectangleCoordinates();
+            removeBackgroundSelector();
         }
         
         delete m_ImageGraphicsItem; // Will delete its children
@@ -328,18 +330,13 @@ void MRCGraphicsView::loadBaseImageFile(QImage image)
     if(NULL != m_ReconstructionArea)
     {
         m_ReconstructionArea->setParentItem(m_ImageGraphicsItem);
+        createBackgroundSelector(rectCoords);
     }
-
     
     m_ImageGraphicsItem->setAcceptDrops(true);
     m_ImageGraphicsItem->setZValue(-1);
     QRectF rect = m_ImageGraphicsItem->boundingRect();
     gScene->setSceneRect(rect);
-    
-    if(NULL != m_BackgroundRectangle)
-    {
-        m_BackgroundRectangle->setParentItem(m_ImageGraphicsItem);
-    }
     
     // Line Color
     m_XZLine.setPen(QPen(QColor(255, 255, 0, UIA::Alpha)));
@@ -389,6 +386,11 @@ void MRCGraphicsView::mousePressEvent(QMouseEvent *event)
 {
   // std::cout << "TomoGuiGraphicsView::mousePressEvent accepted:" << (int)(event->isAccepted()) << std::endl;
   m_AddReconstructionArea = true;
+    
+    if ( NULL == getBackgroundRectangle()->parentItem() )
+    {
+        std::cout << "HEY BACKGROUND RECTANGLE PARENT IS NULL!" << std::endl;
+    }
 
   QGraphicsView::mousePressEvent(event);
   m_MouseClickOrigin = event->pos();
@@ -693,7 +695,7 @@ void MRCGraphicsView::createBackgroundSelector(QRect rectObj)
     if(NULL != m_ImageGraphicsItem)
     {
         m_BackgroundRectangle->setParentItem(m_ImageGraphicsItem);
-    
+
     }
     
     // Line Color
@@ -704,7 +706,7 @@ void MRCGraphicsView::createBackgroundSelector(QRect rectObj)
     m_BackgroundRectangle->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
     
     // Set parent item
-  //  m_BackgroundRectangle->setParentItem(m_ImageGraphicsItem);
+    //m_BackgroundRectangle->setParentItem(m_ImageGraphicsItem);
     
     // Make it visible
     m_BackgroundRectangle->setVisible(true);

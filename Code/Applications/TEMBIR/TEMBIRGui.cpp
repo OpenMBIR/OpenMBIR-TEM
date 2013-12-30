@@ -1325,11 +1325,9 @@ void TEMBIRGui::on_inputMRCFilePath_textChanged(const QString & filepath)
         
         updateBaseRecentFileList(filepath);
         
-        if (m_MRCDisplayWidget->graphicsView()->getBackgroundRectangle() == NULL)
-        {
-            // Create rectangle on GUI
-            m_MRCDisplayWidget->graphicsView()->createBackgroundSelector();
-        }
+        m_MRCDisplayWidget->graphicsView()->removeBackgroundSelector();
+        m_MRCDisplayWidget->graphicsView()->createBackgroundSelector();
+        
     }
     else
     {
