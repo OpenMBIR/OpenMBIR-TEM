@@ -113,7 +113,8 @@ class MRCGraphicsView : public QGraphicsView
     void addNewReconstructionArea(ReconstructionArea* userInitArea);
     void createNewReconstructionArea(const QRectF brect);
     
-    void createBackgroundSelector();
+    void createBackgroundSelector(QRect rect = QRect());
+    void removeBackgroundSelector();
 
     ReconstructionArea* reconstructionArea();
 
@@ -122,6 +123,10 @@ class MRCGraphicsView : public QGraphicsView
     QGraphicsItem* getImageGraphicsItem();
     
     RectangleCreator* getBackgroundRectangle();
+    
+    void resizeBackgroundRectangle(int width, int height);
+    void moveBackgroundRectangle(int x, int y);
+    void updateBackgroundRectangle(QRect rect);
 
     void clearContent();
 

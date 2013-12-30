@@ -80,7 +80,7 @@ m_LineWidth(1)
 // -----------------------------------------------------------------------------
 RectangleCreator::~RectangleCreator()
 {
-    std::cout << "~RectangleCreator" << std::endl;
+    
 }
 
 #define READ_VALUE(prefs, var, ok, temp, default, type)\
@@ -213,6 +213,7 @@ void RectangleCreator::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     }
     
     painter->drawRect(boundingRect());
+    
     if (option->state & QStyle::State_Selected)
     {
         float x = boundingRect().x();
@@ -403,33 +404,36 @@ void RectangleCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     float y = boundingRect().y();
     float w = boundingRect().width();
     float h = boundingRect().height();
-
-    if (m_isResizing)
+    
+    QRectF newRect = boundingRect();
+    // Move the upper left corner as it is grown
+    if (m_CurrentResizeHandle == RectangleCreator::UPPER_LEFT_CTRL_POINT)
     {
-        QRectF newRect = boundingRect();
-        // Move the upper left corner as it is grown
-        if (m_CurrentResizeHandle == RectangleCreator::UPPER_LEFT_CTRL_POINT)
-        {
-            newRect.setX(x + deltaX);
-            newRect.setY(y + deltaY);
-            newRect.setWidth(w - deltaX);
-            newRect.setHeight(h - deltaY);
-        }
-        else if (m_CurrentResizeHandle == RectangleCreator::UPPER_RIGHT_CTRL_POINT)
-        {
-            newRect.setY(y + deltaY);
-            newRect.setWidth(w + deltaX);
-        }
-        else if (m_CurrentResizeHandle == RectangleCreator::LOWER_LEFT_CTRL_POINT)
-        {
-            newRect.setX(x + deltaX);
-            newRect.setHeight(h + deltaY);
-        }
-        else if (m_CurrentResizeHandle == RectangleCreator::LOWER_RIGHT_CTRL_POINT)
-        {
-            newRect.setWidth(w + deltaX);
-            newRect.setHeight(h + deltaY);
-        }
+        newRect.setX(x + deltaX);
+        newRect.setY(y + deltaY);
+        newRect.setWidth(w - deltaX);
+        newRect.setHeight(h - deltaY);
+        prepareGeometryChange();
+        setPolygon(QPolygonF(newRect));
+    }
+    else if (m_CurrentResizeHandle == RectangleCreator::UPPER_RIGHT_CTRL_POINT)
+    {
+        newRect.setY(y + deltaY);
+        newRect.setWidth(w + deltaX);
+        prepareGeometryChange();
+        setPolygon(QPolygonF(newRect));
+    }
+    else if (m_CurrentResizeHandle == RectangleCreator::LOWER_LEFT_CTRL_POINT)
+    {
+        newRect.setX(x + deltaX);
+        newRect.setHeight(h + deltaY);
+        prepareGeometryChange();
+        setPolygon(QPolygonF(newRect));
+    }
+    else if (m_CurrentResizeHandle == RectangleCreator::LOWER_RIGHT_CTRL_POINT)
+    {
+        newRect.setWidth(w + deltaX);
+        newRect.setHeight(h + deltaY);
         prepareGeometryChange();
         setPolygon(QPolygonF(newRect));
     }
@@ -553,7 +557,33 @@ QRect RectangleCreator::getMappedRectangleCoordinates()
     return rect;
 }
 
-
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void RectangleCreator::updateRectanglePolygon(QPolygonF polygon)
+{
+    int x = polygon.boundingRect().x();
+    int y = polygon.boundingRect().y();
+    int w = polygon.boundingRect().width();
+    int h = polygon.boundingRect().height();
+    
+    QPointF p1(x, y);
+    QPointF p2(x+w, y);
+    QPointF p3(x, y+h);
+    QPointF p4(x+w, y+h);
+    
+    QVector<QPointF> pts;
+    pts.append(mapToParent(p1));
+    qDebug() << "RectangleCreator::updateRectanglePolygon: " << p1;
+    pts.append(mapToParent(p2));
+    pts.append(mapToParent(p3));
+    pts.append(mapToParent(p4));
+    
+    QPolygonF newPolygon(pts);
+    
+    prepareGeometryChange();
+    setPolygon(newPolygon);
+}
 
 
 

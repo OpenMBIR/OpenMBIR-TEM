@@ -82,6 +82,8 @@ public:
     qreal getLineWidth();
     
     QRect getMappedRectangleCoordinates();
+    
+    void updateRectanglePolygon(QPolygonF polygon);
 
     
 signals:

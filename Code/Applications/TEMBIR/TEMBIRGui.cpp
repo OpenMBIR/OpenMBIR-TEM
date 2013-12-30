@@ -85,6 +85,27 @@
 #include "MRCInfoWidget.h"
 #include "ImageOpenDialog.h"
 
+/*
+ * Concatenate preprocessor tokens A and B without expanding macro definitions
+ * (however, if invoked from a macro, macro arguments are expanded).
+ */
+#define PPCAT_NX(A, B) A ## B
+
+/*
+ * Concatenate preprocessor tokens A and B after macro-expanding them.
+ */
+#define PPCAT(A, B) PPCAT_NX(A, B)
+
+/*
+ * Turn A into a string literal without expanding macro definitions
+ * (however, if invoked from a macro, macro arguments are expanded).
+ */
+#define STRINGIZE_NX(A) #A
+
+/*
+ * Turn A into a string literal after macro-expanding it.
+ */
+#define STRINGIZE(A) STRINGIZE_NX(A)
 
 #define READ_STRING_SETTING(prefs, var, emptyValue)\
   var->setText( prefs.value(#var).toString() );\
@@ -109,11 +130,27 @@
 #define WRITE_SETTING(prefs, var)\
   prefs.setValue(#var, this->var->value());
 
+#define WRITE_QRECT_SETTING(prefs, var)\
+prefs.setValue(STRINGIZE(PPCAT(var, _X)), var.x());\
+prefs.setValue(STRINGIZE(PPCAT(var, _Y)), var.y());\
+prefs.setValue(STRINGIZE(PPCAT(var, _W)), var.width());\
+prefs.setValue(STRINGIZE(PPCAT(var, _H)), var.height());
+
+#define READ_QRECT_SETTING(prefs, var)\
+var.setX(prefs.value(STRINGIZE(PPCAT(var, _X))).toInt());\
+var.setY(prefs.value(STRINGIZE(PPCAT(var, _Y))).toInt());\
+var.setWidth(prefs.value(STRINGIZE(PPCAT(var, _W))).toInt());\
+var.setHeight(prefs.value(STRINGIZE(PPCAT(var, _H))).toInt());
+
 #define READ_BOOL_SETTING(prefs, var, emptyValue)\
   { QString s = prefs.value(#var).toString();\
   if (s.isEmpty() == false) {\
     bool bb = prefs.value(#var).toBool();\
   var->setChecked(bb); } else { var->setChecked(emptyValue); } }
+
+#define READ_CHECKBOX_SETTING(prefs, var)\
+bool temp = prefs.value(#var).toBool();\
+var->setChecked(temp);\
 
 #define WRITE_BOOL_SETTING(prefs, var, b)\
     prefs.setValue(#var, (b) );
@@ -197,7 +234,6 @@ void TEMBIRGui::readSettings(QSettings &prefs)
     READ_STRING_SETTING(prefs, yMin, "0");
     READ_STRING_SETTING(prefs, yMax, "0");
     
-    
     // This will auto load the MRC File
     READ_STRING_SETTING(prefs, inputMRCFilePath, "");
     
@@ -212,6 +248,8 @@ void TEMBIRGui::readSettings(QSettings &prefs)
     READ_STRING_SETTING(prefs, targetGain, "1")
     READ_STRING_SETTING(prefs, smoothness, "1.0");
     READ_STRING_SETTING(prefs, sigma_x, "1.0");
+    READ_STRING_SETTING(prefs, bf_offset, "0");
+    READ_STRING_SETTING(prefs, bragg_threshold, "3");
     
     
     READ_SETTING(prefs, numResolutions, ok, i, 1, Int);
@@ -224,6 +262,12 @@ void TEMBIRGui::readSettings(QSettings &prefs)
     READ_SETTING(prefs, mrf, ok, d, 1.2, Double);
     READ_BOOL_SETTING(prefs, extendObject, false);
     READ_BOOL_SETTING(prefs, m_DeleteTempFiles, false);
+    READ_BOOL_SETTING(prefs, useDefaultOffset, true);
+    
+    QRect rect = QRect(0,0,0,0);
+    READ_QRECT_SETTING(prefs, rect);
+    m_MRCDisplayWidget->graphicsView()->removeBackgroundSelector();
+    m_MRCDisplayWidget->graphicsView()->createBackgroundSelector(rect);
     
     ok = false;
     i = prefs.value("tiltSelection").toInt(&ok);
@@ -231,7 +275,6 @@ void TEMBIRGui::readSettings(QSettings &prefs)
     tiltSelection->setCurrentIndex(i);
     
     prefs.endGroup();
-    
 }
 
 // -----------------------------------------------------------------------------
@@ -256,12 +299,15 @@ void TEMBIRGui::writeSettings(QSettings &prefs)
     WRITE_SETTING(prefs, outerIterations);
     WRITE_SETTING(prefs, innerIterations);
     
+    WRITE_STRING_SETTING(prefs, bragg_threshold);
     WRITE_STRING_SETTING(prefs, defaultOffset);
     WRITE_STRING_SETTING(prefs, stopThreshold);
+    WRITE_STRING_SETTING(prefs, bf_offset);
     
     WRITE_SETTING(prefs, mrf);
     WRITE_CHECKBOX_SETTING(prefs, extendObject);
     WRITE_CHECKBOX_SETTING(prefs, m_DeleteTempFiles)
+    WRITE_CHECKBOX_SETTING(prefs, useDefaultOffset);
     
     //  WRITE_BOOL_SETTING(prefs, useSubVolume, useSubVolume->isChecked());
     WRITE_SETTING(prefs, xWidthFullRecon);
@@ -270,11 +316,13 @@ void TEMBIRGui::writeSettings(QSettings &prefs)
     //  WRITE_STRING_SETTING(prefs, zMin);
     //  WRITE_STRING_SETTING(prefs, zMax);
     
+    QRect rect = m_MRCDisplayWidget->graphicsView()->getBackgroundRectangle()->getMappedRectangleCoordinates();
+    WRITE_QRECT_SETTING(prefs, rect);
+    
     
     prefs.setValue("tiltSelection", tiltSelection->currentIndex());
     
     prefs.endGroup();
-    
 }
 
 // -----------------------------------------------------------------------------
@@ -355,57 +403,7 @@ void TEMBIRGui::loadConfigurationFile(QString file)
     QFileInfo fi(file);
     m_OpenDialogLastDirectory = fi.absolutePath();
     QSettings prefs(file, QSettings::IniFormat, this);
-    
-    QString val;
-    bool ok;
-    qint32 i;
-    double d;
-    prefs.beginGroup("Parameters");
-    
-    
-    QString filePath =  prefs.value("inputMRCFilePath").toString();
-    if (filePath.isEmpty() == false) {
-        inputMRCFilePath->setText(filePath);
-    }
-    
-    READ_STRING_SETTING(prefs, inputBrightFieldFilePath, "");
-    // This will auto load the MRC File
-    //  on_inputBrightFieldFilePath_textChanged(inputBrightFieldFilePath->text());
-    
-    
-    READ_STRING_SETTING(prefs, initialReconstructionPath, "");
-    //READ_STRING_SETTING(prefs, outputDirectoryPath, "");
-    READ_STRING_SETTING(prefs, reconstructedVolumeFileName, "");
-    
-    READ_STRING_SETTING(prefs, sampleThickness, "150");
-    READ_STRING_SETTING(prefs, targetGain, "0");
-    READ_STRING_SETTING(prefs, smoothness, "1.0");
-    READ_STRING_SETTING(prefs, sigma_x, "1.0");
-    
-    
-    READ_SETTING(prefs, numResolutions, ok, i, 1, Int);
-    READ_SETTING(prefs, finalResolution, ok, i, 1, Int);
-    READ_SETTING(prefs, outerIterations, ok, i, 1, Int);
-    READ_SETTING(prefs, innerIterations, ok, i, 1, Int);
-    
-    READ_STRING_SETTING(prefs, defaultOffset, "0");
-    READ_STRING_SETTING(prefs, stopThreshold, "0.001");
-    READ_SETTING(prefs, mrf, ok, d, 1.2, Double);
-    READ_BOOL_SETTING(prefs, extendObject, false);
-    READ_BOOL_SETTING(prefs, m_DeleteTempFiles, false);
-    
-    //  READ_STRING_SETTING(prefs, xMin, "0");
-    //  READ_STRING_SETTING(prefs, xMax, "0");
-    READ_STRING_SETTING(prefs, yMin, "0");
-    READ_STRING_SETTING(prefs, yMax, "0");
-    
-    ok = false;
-    i = prefs.value("tiltSelection").toInt(&ok);
-    if (false == ok) {i = 0;}
-    tiltSelection->setCurrentIndex(i);
-    
-    prefs.endGroup();
-    
+    readSettings(prefs);
 }
 
 // -----------------------------------------------------------------------------
@@ -1327,8 +1325,11 @@ void TEMBIRGui::on_inputMRCFilePath_textChanged(const QString & filepath)
         
         updateBaseRecentFileList(filepath);
         
-        // Create rectangle on GUI
-        m_MRCDisplayWidget->graphicsView()->createBackgroundSelector();
+        if (m_MRCDisplayWidget->graphicsView()->getBackgroundRectangle() == NULL)
+        {
+            // Create rectangle on GUI
+            m_MRCDisplayWidget->graphicsView()->createBackgroundSelector();
+        }
     }
     else
     {
