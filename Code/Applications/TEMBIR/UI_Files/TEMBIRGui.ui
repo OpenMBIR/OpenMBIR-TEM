@@ -537,7 +537,7 @@ font-size: 10px;
             <property name="geometry">
              <rect>
               <x>0</x>
-              <y>0</y>
+              <y>-113</y>
               <width>280</width>
               <height>967</height>
              </rect>
@@ -1229,7 +1229,7 @@ image: url(:/bullet_triangle_grey_down.png);
                    </size>
                   </property>
                   <property name="text">
-                   <string>0</string>
+                   <string>32768</string>
                   </property>
                  </widget>
                 </item>
@@ -1654,7 +1654,7 @@ font-size: 10px;
                    </size>
                   </property>
                   <property name="text">
-                   <string>1</string>
+                   <string>0.5</string>
                   </property>
                  </widget>
                 </item>

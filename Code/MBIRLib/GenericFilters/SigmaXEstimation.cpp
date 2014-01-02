@@ -62,7 +62,7 @@ void calcMinMax(T* data, int total, Real_t &min, Real_t &max, Real_t &sum2)
 }
 
 template<typename T>
-void calcAvgDeviation(T* data, int total, Real_t &dev, int bf_offset)
+void calcAvgDeviation(T* data, int total, Real_t &dev, double bf_offset)
 {
 	dev=0;
     Real_t mean=0;
