@@ -1775,6 +1775,7 @@ void TEMBIRGui::on_estimateSigmaX_clicked()
         estimate->setSampleThickness(sampleThickness->text().toDouble(&ok));
         estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
         //estimate->setTargetGain(targetGain->text().toDouble(&ok));
+        estimate->setBfOffset(bf_offset->text().toDouble());
 		//TODO : Set the Offset from the UI
         estimate->setTargetGain(1);
 		estimate->setTiltAngles(tiltSelection->currentIndex());

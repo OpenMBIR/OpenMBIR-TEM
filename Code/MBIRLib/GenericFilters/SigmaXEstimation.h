@@ -72,14 +72,13 @@ class MBIRLib_EXPORT SigmaXEstimation : public TomoFilter
     MXA_INSTANCE_PROPERTY(unsigned int, TiltAngles);
     MXA_INSTANCE_PROPERTY(Real_t, DefaultOffset);
     MXA_INSTANCE_PROPERTY(Real_t, TargetGain);
+    MXA_INSTANCE_PROPERTY(double, BfOffset);
 
     MXA_INSTANCE_VEC2_PROPERTY(int, XDims)
     MXA_INSTANCE_VEC2_PROPERTY(int, YDims)
 
     // Outputs
     MXA_INSTANCE_PROPERTY(Real_t, SigmaXEstimate);
-
-
 
     virtual void execute();
 

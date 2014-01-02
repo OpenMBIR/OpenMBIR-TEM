@@ -681,9 +681,13 @@ void MRCGraphicsView::createBackgroundSelector(QRect rectObj)
     
     if (rectObj == QRect())
     {
-        QPoint scenePt(imageSize.width()/2, imageSize.height()/2);
+        int boxWidth = imageSize.width()*0.1;
+        int boxHeight = imageSize.height()*0.1;
+        int boxX = (imageSize.width()/2) - (boxWidth/2);
+        int boxY = (imageSize.height()/2) - (boxHeight/2);
+        QPoint scenePt(boxX, boxY);
         QPoint imagePt = mapFromScene(scenePt);
-        QRect rect = QRect(imagePt.x(), imagePt.y(), imageSize.width()*0.1, imageSize.height()*0.1);
+        QRect rect = QRect(imagePt.x(), imagePt.y(), boxWidth, boxHeight);
         QPolygonF box = mapToScene(rect);
         m_BackgroundRectangle = new RectangleCreator(box);
     }
