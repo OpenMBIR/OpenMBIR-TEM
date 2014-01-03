@@ -69,6 +69,9 @@ int main(int argc, char **argv)
   viewer->deleteTempFiles();
 
   QRecentFileList::instance()->writeList(prefs);
+    
+    delete viewer;
+    viewer = NULL;
 
   return app_return;
 }

@@ -77,6 +77,9 @@ AIMImage::Pointer ProcessQueueTask::convertQImageToGrayScaleAIMImage(QImage imag
   {
     return AIMImage::NullPointer();
   }
+    
+    delete oImage;
+    oImage = NULL;
 
   // Copy the QImage into the AIMImage object, converting to gray scale as we go.
   qint32 height = image.height();

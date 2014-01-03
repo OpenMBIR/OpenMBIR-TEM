@@ -684,6 +684,21 @@ void TEMBIRGui::on_m_GoBtn_clicked()
         return;
     }
     
+    if(reconstructedVolumeFileName->text().isEmpty())
+    {
+        QString str = QString("The field \"Output Reconstruction File\" is empty.\n\nAborting Reconstruction.");
+        QMessageBox::critical(this, tr("Reconstruction Error"), str , QMessageBox::Ok);
+        return;
+    }
+    
+//#error Ask Mike how to make this work for across OSes
+    if(reconstructedVolumeFileName->text().toStdString()[0] != '/')
+    {
+        QString str = QString("The field \"Output Reconstruction File\" does not contain a full path name.\n\nAborting Reconstruction.");
+        QMessageBox::critical(this, tr("Reconstruction Error"), str , QMessageBox::Ok);
+        return;
+    }
+    
     m_SingleSliceReconstructionBtn->setEnabled(false);
     
     
@@ -1758,6 +1773,7 @@ void TEMBIRGui::on_estimateSigmaX_clicked()
     
     int xmin = 0;
     int xmax = 0;
+    smoothness->setText(QString::number(1.0));
     ReconstructionArea* reconArea = m_MRCDisplayWidget->graphicsView()->reconstructionArea();
     if (NULL == reconArea)
     {
@@ -1774,10 +1790,9 @@ void TEMBIRGui::on_estimateSigmaX_clicked()
         estimate->setInputFile(inputMRCFilePath->text().toStdString());
         estimate->setSampleThickness(sampleThickness->text().toDouble(&ok));
         estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
-        //estimate->setTargetGain(targetGain->text().toDouble(&ok));
+        estimate->setTargetGain(targetGain->text().toDouble(&ok));
         estimate->setBfOffset(bf_offset->text().toDouble());
 		//TODO : Set the Offset from the UI
-        estimate->setTargetGain(1);
 		estimate->setTiltAngles(tiltSelection->currentIndex());
         estimate->setXDims(xmin, xmax);
         estimate->setYDims(ymin, ymax);

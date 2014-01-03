@@ -93,8 +93,8 @@ m_SampleThickness(100.0),
 m_TiltAngles(0),
 m_DefaultOffset(0.0),
 m_TargetGain(1.0),
-m_SigmaXEstimate(0.0),
-m_BfOffset(0.0)
+m_BfOffset(0.0),
+m_SigmaXEstimate(0.0)
 {
     m_XDims[0] = -1;
     m_XDims[1] = -1;

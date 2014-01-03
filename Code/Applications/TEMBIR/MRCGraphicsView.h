@@ -76,6 +76,8 @@ class MRCGraphicsView : public QGraphicsView
   public:
 
     MRCGraphicsView( QWidget *parent = NULL);
+    
+    ~MRCGraphicsView();
 
     void setWidget(QWidget* gui);
 

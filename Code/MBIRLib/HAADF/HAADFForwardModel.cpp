@@ -748,8 +748,8 @@ int HAADFForwardModel::createInitialOffsetsData(SinogramPtr sinogram)
 		  fread(temp, sizeof(double),1, fp);
 		  m_InitialOffset->d[i_theta] = -(*temp);
 	  }
-	  fclose(fp);  
-	  
+      free(temp);
+	  fclose(fp);
   }
 
 

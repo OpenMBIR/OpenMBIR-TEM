@@ -190,6 +190,7 @@ class VTKRectilinearGridFileWriter
         }
         size_t totalWritten = fwrite(static_cast<void*>(data), sizeof(T), static_cast<size_t>(npoints), f);
         delete[] data;
+          data = NULL;
         if (totalWritten != static_cast<size_t>(npoints) )
         {
           std::cout << "Error Writing Binary VTK Data into file " << std::endl;
