@@ -57,7 +57,7 @@ MRCGraphicsView::MRCGraphicsView(QWidget *parent)
   m_XZWidth(.90),
   m_BackgroundRectangle(NULL),
   m_ReconstructionArea(NULL)
-  
+
 {
   setAcceptDrops(true);
  // setDragMode(RubberBandDrag);
@@ -296,9 +296,9 @@ void MRCGraphicsView::loadBaseImageFile(QImage image)
         return;
     }
     QSize pSize(0, 0);
-    
+
     m_BaseImage = m_BaseImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-    
+
     QGraphicsScene* gScene = scene();
     if(gScene == NULL)
     {
@@ -320,11 +320,11 @@ void MRCGraphicsView::loadBaseImageFile(QImage image)
             rectCoords = m_BackgroundRectangle->getMappedRectangleCoordinates();
             removeBackgroundSelector();
         }
-        
+
         delete m_ImageGraphicsItem; // Will delete its children
         m_ImageGraphicsItem = NULL;
     }
-    
+
     gScene->invalidate();
     m_ImageGraphicsItem = gScene->addPixmap(QPixmap::fromImage(m_BaseImage));
     if(NULL != m_ReconstructionArea)
@@ -332,12 +332,12 @@ void MRCGraphicsView::loadBaseImageFile(QImage image)
         m_ReconstructionArea->setParentItem(m_ImageGraphicsItem);
         createBackgroundSelector(rectCoords);
     }
-    
+
     m_ImageGraphicsItem->setAcceptDrops(true);
     m_ImageGraphicsItem->setZValue(-1);
     QRectF rect = m_ImageGraphicsItem->boundingRect();
     gScene->setSceneRect(rect);
-    
+
     // Line Color
     m_XZLine.setPen(QPen(QColor(255, 255, 0, UIA::Alpha)));
     // Fill Color
@@ -349,7 +349,7 @@ void MRCGraphicsView::loadBaseImageFile(QImage image)
     {
         scene()->addItem(&m_XZLine);
     }
-    
+
     this->updateDisplay();
     emit fireBaseMRCFileLoaded();
 }
@@ -386,11 +386,6 @@ void MRCGraphicsView::mousePressEvent(QMouseEvent *event)
 {
   // std::cout << "TomoGuiGraphicsView::mousePressEvent accepted:" << (int)(event->isAccepted()) << std::endl;
   m_AddReconstructionArea = true;
-    
-    if ( NULL == getBackgroundRectangle()->parentItem() )
-    {
-        std::cout << "HEY BACKGROUND RECTANGLE PARENT IS NULL!" << std::endl;
-    }
 
   QGraphicsView::mousePressEvent(event);
   m_MouseClickOrigin = event->pos();
@@ -506,7 +501,7 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
     m_XZLine.setVisible(true);
 
     int y = m_BaseImage.size().height() - getXZPlane().y1();
-      
+
     emit fireSingleSliceSelected(y);    // SlOT: TEMBIRGui::SingleSlicePlaneSet(int y)
   }
   else if (m_AddReconstructionArea == true && NULL != m_RubberBand)
@@ -561,7 +556,7 @@ QLineF MRCGraphicsView::getXZPlane()
         std::cout << "FIX - MRCGraphicsView::getXZPlane()\n";
         return QLineF(0,0,0,0);
     }
-    
+
  QPointF p0 = m_XZLine.polygon().at(0);
  QPointF p1 = m_XZLine.polygon().at(1);
 
@@ -678,7 +673,7 @@ void MRCGraphicsView::removeBackgroundSelector()
 void MRCGraphicsView::createBackgroundSelector(QRect rectObj)
 {
     QSize imageSize = m_BaseImage.size();
-    
+
     if (rectObj == QRect())
     {
         int boxWidth = imageSize.width()*0.1;
@@ -703,17 +698,17 @@ void MRCGraphicsView::createBackgroundSelector(QRect rectObj)
         m_BackgroundRectangle->setParentItem(m_ImageGraphicsItem);
 
     }
-    
+
     // Line Color
     m_BackgroundRectangle->setPen(QPen(QColor(225, 225, 225, UIA::Alpha)));
     // Fill Color
     m_BackgroundRectangle->setBrush(QBrush(QColor(255, 0, 0, UIA::Alpha)));
     m_BackgroundRectangle->setZValue(1);
     m_BackgroundRectangle->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
-    
+
     // Set parent item
     //m_BackgroundRectangle->setParentItem(m_ImageGraphicsItem);
-    
+
     // Make it visible
     m_BackgroundRectangle->setVisible(true);
 }
