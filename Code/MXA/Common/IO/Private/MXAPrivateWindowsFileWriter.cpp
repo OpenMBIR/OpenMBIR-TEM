@@ -7,9 +7,6 @@
 //
 
 #include "MXAPrivateWindowsFileWriter.h"
-#include <MXA/Common/LogTime.h>
-
-
 
 
 // -----------------------------------------------------------------------------

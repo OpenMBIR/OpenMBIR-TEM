@@ -937,7 +937,7 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 // -----------------------------------------------------------------------------
 void HAADFForwardModel::processRawCounts(SinogramPtr sinogram)
 {
-    Real_t mean=0,maxval=-INFINITY;
+	Real_t mean=0,maxval= -std::numeric_limits<Real_t>::infinity();// -INFINITY;
     for (int16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++) //slice index
     {
         for (int16_t i_r = 0; i_r < sinogram->N_r; i_r++)
@@ -1043,7 +1043,7 @@ void HAADFForwardModel::writeSelectorMrc(const std::string &file, SinogramPtr si
 Real_t HAADFForwardModel::estimateBraggThreshold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage)
 {
 
-	Real_t EstBraggThresh;
+	Real_t EstBraggThresh = 0.0;
 	uint32_t NumElts = sinogram->N_theta*sinogram->N_r*sinogram->N_t;
 	uint32_t NumEltsReject = percentage*NumElts;//Find the Error*Weight 
 	//corresponding to this order statistic
