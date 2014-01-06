@@ -691,8 +691,8 @@ void TEMBIRGui::on_m_GoBtn_clicked()
         return;
     }
     
-//#error Ask Mike how to make this work for across OSes
-    if(reconstructedVolumeFileName->text().toStdString()[0] != '/')
+    QFileInfo fileInfo(reconstructedVolumeFileName->text());
+    if(fileInfo.isRelative())
     {
         QString str = QString("The field \"Output Reconstruction File\" does not contain a full path name.\n\nAborting Reconstruction.");
         QMessageBox::critical(this, tr("Reconstruction Error"), str , QMessageBox::Ok);
