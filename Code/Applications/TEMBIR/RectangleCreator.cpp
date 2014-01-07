@@ -56,7 +56,7 @@ m_LineWidth(1)
     setAcceptHoverEvents(true);
     m_isResizing = false;
     m_CurrentResizeHandle = RectangleCreator::NO_CTRL_POINT;
-    ctrlPointSize = 7.0f;
+    ctrlPointSize = 20.0f;
     
     //  m_Class = userIndex;
     //  m_Mu = 1.0;

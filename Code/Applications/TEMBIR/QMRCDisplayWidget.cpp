@@ -67,7 +67,9 @@ QWidget(parent),
 m_StopAnimation(true),
 m_ImageWidgetsEnabled(false),
 m_MovieWidgetsEnabled(false),
-m_DrawOrigin(true)
+m_DrawOrigin(true),
+m_HeaderMinimum(0.0f),
+m_HeaderMaximum(0.0f)
 {
   m_OpenDialogLastDirectory = QDir::homePath();
   setupUi(this);
@@ -407,13 +409,33 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
   int err = reader->readHeader(mrcFilePath.toStdString(), &header);
   if(err < 0)
   {
-    QString str = QString("The MRC file could not be loaded. ") + QString(mrcFilePath) + QString("The file path may not have been written correctly, or the file path does not exist. ");
+    QString str = QString("The MRC file could not be loaded. ") + QString(mrcFilePath) + QString("\nThe file path may not have been written correctly, or the file path does not exist. ");
     QMessageBox::critical(this, tr("MRC File Load Error"), str , QMessageBox::Ok);
     FREE_FEI_HEADERS( header.feiHeaders)
     return;
   }
   currentTiltIndex->setRange(0, header.nz - 1);
   currentTiltIndex->setValue(tiltIndex);
+    m_HeaderMinimum = header.amin;
+    m_HeaderMaximum = header.amax;
+    
+    if (minimumField->text() == "")
+    {
+        minimumField->setText(QString::number(header.amin));
+    }
+    if (maximumField->text() == "")
+    {
+        maximumField->setText(QString::number(header.amax));
+    }
+
+    if (minimumField->text().toFloat() > maximumField->text().toFloat())
+    {
+        QString str = QString("The image could not be updated.\nThe minimum and maximum bounds have exceeded each other. ");
+        QMessageBox::critical(this, tr("MRC Image Update Error"), str , QMessageBox::Ok);
+        minimumField->setText(QString::number(header.amin));
+        maximumField->setText(QString::number(header.amax));
+        return;
+    }
 
   // If we have the FEI headers get that information
   if(header.feiHeaders != NULL)
@@ -478,6 +500,15 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+void QMRCDisplayWidget::setHeaderValues()
+{
+    minimumField->setText(QString::number(m_HeaderMinimum));
+    maximumField->setText(QString::number(m_HeaderMaximum));
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void QMRCDisplayWidget::setImageWidgetsEnabled(bool b)
 {
   m_ImageWidgetsEnabled = b;
@@ -524,8 +555,8 @@ QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header, bool fl
   float min = static_cast<float>(dmin);
   int numColors = static_cast<int>((max - min) + 1);
 #else
-  float max = static_cast<float>(header.amax);
-  float min = static_cast<float>(header.amin);
+    float max = maximumField->text().toFloat();
+    float min = minimumField->text().toFloat();
   int numColors = static_cast<int>((max - min) + 1);
 #endif
   QVector<QRgb>         colorTable;
@@ -581,8 +612,8 @@ QImage QMRCDisplayWidget::floatImage(float* data, MRCHeader &header, bool flipYA
     if(data[i] < dmin) dmin = data[i];
   }
 #else
-  float dmax = header.amax;
-  float dmin = header.amin;
+    float dmax = maximumField->text().toFloat();
+    float dmin = minimumField->text().toFloat();
 #endif
   //Scale all the values to 0 and 255 in place over writing the float values with 32 bit ints
   int* iData = reinterpret_cast<int*>(data);
@@ -964,4 +995,47 @@ void QMRCDisplayWidget::loadXZSliceReconstruction(QString reconMRCFilePath)
  // std::cout << "QMRCDisplayWidget::loadXZSliceReconstruction( COMPLETE )" << std::endl;
 
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QTabWidget* QMRCDisplayWidget::getControlsTab()
+{
+    return controlsTab;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void QMRCDisplayWidget::on_updateImageBtn_clicked()
+{
+    emit fireImageUpdate();      // SLOT: TEMBIRGui::updateImage()
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void QMRCDisplayWidget::on_resetImageBtn_clicked()
+{
+    emit fireImageReset();      // SLOT: TEMBIRGui::resetImage()
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void QMRCDisplayWidget::on_minimumField_returnPressed()
+{
+    emit fireImageUpdate();      // SLOT: TEMBIRGui::resetImage()
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void QMRCDisplayWidget::on_maximumField_returnPressed()
+{
+    emit fireImageUpdate();      // SLOT: TEMBIRGui::resetImage()
+}
+
+
+
 

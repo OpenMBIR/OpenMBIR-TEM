@@ -447,6 +447,12 @@ void TEMBIRGui::setupGui()
     connect(m_MRCDisplayWidget->graphicsView(), SIGNAL(fireSingleSliceSelected(int)),
             this, SLOT(singleSlicePlaneSet(int)));
     
+    connect(m_MRCDisplayWidget, SIGNAL(fireImageUpdate()),
+            this, SLOT(updateImage()));
+    
+    connect(m_MRCDisplayWidget, SIGNAL(fireImageReset()),
+            this, SLOT(resetImage()));
+    
     QFileCompleter* com = new QFileCompleter(this, false);
     inputMRCFilePath->setCompleter(com);
     QObject::connect(com, SIGNAL(activated(const QString &)), this, SLOT(on_inputMRCFilePath_textChanged(const QString &)));
@@ -520,6 +526,10 @@ void TEMBIRGui::setupGui()
     fullReconstructionGroupBox->setEnabled(false);
     parametersGroupBox->setEnabled(false);
     advancedParametersGroupBox->setEnabled(false);
+    
+    // Hide reconstructed display tab
+    m_ReconstructedDisplayWidget->getControlsTab()->hide();
+    m_MRCDisplayWidget->getControlsTab()->hide();
 }
 
 // -----------------------------------------------------------------------------
@@ -1346,6 +1356,9 @@ void TEMBIRGui::on_inputMRCFilePath_textChanged(const QString & filepath)
         m_MRCDisplayWidget->graphicsView()->removeBackgroundSelector();
         m_MRCDisplayWidget->graphicsView()->createBackgroundSelector();
         
+        m_MRCDisplayWidget->getControlsTab()->show();
+        m_MRCDisplayWidget->getControlsTab()->setCurrentIndex(0);
+        
     }
     else
     {
@@ -1354,6 +1367,7 @@ void TEMBIRGui::on_inputMRCFilePath_textChanged(const QString & filepath)
         m_CachedSigmaX = 0.0;
         m_MRCDisplayWidget->loadMRCFile(QString(""));
         setWidgetListEnabled(false);
+        m_MRCDisplayWidget->getControlsTab()->hide();
     }
 }
 
@@ -2264,8 +2278,24 @@ void TEMBIRGui::deleteTempFiles()
     m_TempFilesToDelete.clear();
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TEMBIRGui::updateImage()
+{
+    on_inputMRCFilePath_textChanged(inputMRCFilePath->text());
+    m_MRCDisplayWidget->getControlsTab()->setCurrentIndex(1);
+}
 
-
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TEMBIRGui::resetImage()
+{
+    m_MRCDisplayWidget->setHeaderValues();
+    on_inputMRCFilePath_textChanged(inputMRCFilePath->text());
+    m_MRCDisplayWidget->getControlsTab()->setCurrentIndex(1);
+}
 
 
 
