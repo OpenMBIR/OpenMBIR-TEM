@@ -316,9 +316,12 @@ void TEMBIRGui::writeSettings(QSettings &prefs)
     //  WRITE_STRING_SETTING(prefs, zMin);
     //  WRITE_STRING_SETTING(prefs, zMax);
     
-    QRect rect = m_MRCDisplayWidget->graphicsView()->getBackgroundRectangle()->getMappedRectangleCoordinates();
-    WRITE_QRECT_SETTING(prefs, rect);
-    
+    RectangleCreator* rectangle = m_MRCDisplayWidget->graphicsView()->getBackgroundRectangle();
+    if (NULL != rectangle)
+    {
+        QRect rect = m_MRCDisplayWidget->graphicsView()->getBackgroundRectangle()->getMappedRectangleCoordinates();
+        WRITE_QRECT_SETTING(prefs, rect);
+    }
     
     prefs.setValue("tiltSelection", tiltSelection->currentIndex());
     
