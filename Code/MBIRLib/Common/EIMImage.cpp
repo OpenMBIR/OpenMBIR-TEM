@@ -49,6 +49,9 @@ EIMImage::Pointer EIMImage::NewFromSourceMosaic(EIMImage::Pointer image, bool al
     {
       p = EIMImage::NullPointer();
     }
+      
+      delete u8;
+      u8 = NULL;
   }
   return p;
 }

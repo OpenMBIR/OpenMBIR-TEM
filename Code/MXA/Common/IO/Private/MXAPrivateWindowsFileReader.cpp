@@ -8,7 +8,6 @@
 
 #include "MXAPrivateWindowsFileReader.h"
 #include <MXA/Common/MXAEndian.h>
-#include <MXA/Common/LogTime.h>
 #include <iostream>
 
 

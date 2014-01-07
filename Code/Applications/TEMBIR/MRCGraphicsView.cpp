@@ -83,6 +83,18 @@ MRCGraphicsView::MRCGraphicsView(QWidget *parent)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+MRCGraphicsView::~MRCGraphicsView()
+{
+    if (m_BackgroundRectangle != NULL)
+    {
+        delete m_BackgroundRectangle;
+        m_BackgroundRectangle = NULL;
+    }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void MRCGraphicsView::setOverlayTransparency(float f)
 {
   m_OverlayTransparency = f;

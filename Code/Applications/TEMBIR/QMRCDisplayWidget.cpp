@@ -407,7 +407,7 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
   int err = reader->readHeader(mrcFilePath.toStdString(), &header);
   if(err < 0)
   {
-    QString str = QString("The MRC file could not be loaded. ") + QString(mrcFilePath);
+    QString str = QString("The MRC file could not be loaded. ") + QString(mrcFilePath) + QString("The file path may not have been written correctly, or the file path does not exist. ");
     QMessageBox::critical(this, tr("MRC File Load Error"), str , QMessageBox::Ok);
     FREE_FEI_HEADERS( header.feiHeaders)
     return;

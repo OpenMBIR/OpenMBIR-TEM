@@ -842,7 +842,6 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 #endif //NHICD
 	
 	std::cout<<"exiting voxel update routine"<<std::endl;
-	
     return exit_status;
 
 }

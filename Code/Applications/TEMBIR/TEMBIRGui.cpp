@@ -316,9 +316,12 @@ void TEMBIRGui::writeSettings(QSettings &prefs)
     //  WRITE_STRING_SETTING(prefs, zMin);
     //  WRITE_STRING_SETTING(prefs, zMax);
     
-    QRect rect = m_MRCDisplayWidget->graphicsView()->getBackgroundRectangle()->getMappedRectangleCoordinates();
-    WRITE_QRECT_SETTING(prefs, rect);
-    
+    RectangleCreator* rectangle = m_MRCDisplayWidget->graphicsView()->getBackgroundRectangle();
+    if (NULL != rectangle)
+    {
+        QRect rect = m_MRCDisplayWidget->graphicsView()->getBackgroundRectangle()->getMappedRectangleCoordinates();
+        WRITE_QRECT_SETTING(prefs, rect);
+    }
     
     prefs.setValue("tiltSelection", tiltSelection->currentIndex());
     
@@ -681,6 +684,21 @@ void TEMBIRGui::on_m_GoBtn_clicked()
             std::cout << "canceling from GUI...." << std::endl;
             emit cancelPipeline();
         }
+        return;
+    }
+    
+    if(reconstructedVolumeFileName->text().isEmpty())
+    {
+        QString str = QString("The field \"Output Reconstruction File\" is empty.\n\nAborting Reconstruction.");
+        QMessageBox::critical(this, tr("Reconstruction Error"), str , QMessageBox::Ok);
+        return;
+    }
+    
+    QFileInfo fileInfo(reconstructedVolumeFileName->text());
+    if(fileInfo.isRelative())
+    {
+        QString str = QString("The field \"Output Reconstruction File\" does not contain a full path name.\n\nAborting Reconstruction.");
+        QMessageBox::critical(this, tr("Reconstruction Error"), str , QMessageBox::Ok);
         return;
     }
     
@@ -1758,6 +1776,7 @@ void TEMBIRGui::on_estimateSigmaX_clicked()
     
     int xmin = 0;
     int xmax = 0;
+    smoothness->setText(QString::number(1.0));
     ReconstructionArea* reconArea = m_MRCDisplayWidget->graphicsView()->reconstructionArea();
     if (NULL == reconArea)
     {
@@ -1774,10 +1793,9 @@ void TEMBIRGui::on_estimateSigmaX_clicked()
         estimate->setInputFile(inputMRCFilePath->text().toStdString());
         estimate->setSampleThickness(sampleThickness->text().toDouble(&ok));
         estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
-        //estimate->setTargetGain(targetGain->text().toDouble(&ok));
+        estimate->setTargetGain(targetGain->text().toDouble(&ok));
         estimate->setBfOffset(bf_offset->text().toDouble());
 		//TODO : Set the Offset from the UI
-        estimate->setTargetGain(1);
 		estimate->setTiltAngles(tiltSelection->currentIndex());
         estimate->setXDims(xmin, xmax);
         estimate->setYDims(ymin, ymax);
