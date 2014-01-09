@@ -82,9 +82,9 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     void loadMRCTiltImage(QString filepath, int tiltIndex);
 
     QString getMRCFilePath();
-    
+
     QSpinBox* getCurrentTiltIndexBox();
-    
+
     QTabWidget* getControlsTab();
 
     void fireOriginCB_Changed();
@@ -96,8 +96,10 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
 
     void setImageWidgetsEnabled(bool b);
     void setMovieWidgetsEnabled(bool b);
-    
+
     void setHeaderValues();
+
+    void resetImageScaling();
 
   protected:
     void setupGui();
