@@ -140,8 +140,6 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
 
   signals:
     void memoryCalculationNeedsUpdated();
-    void fireImageUpdate();                     // SLOT: TEMBIRGui::reloadImage()
-    void fireImageReset();                      // SLOT: TEMBIRGui::reloadImage()
 
 
   private:

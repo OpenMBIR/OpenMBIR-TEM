@@ -266,10 +266,6 @@ protected slots:
      */
     void geometryChanged();
     
-    void updateImage();
-    
-    void resetImage();
-    
 
 protected:
 

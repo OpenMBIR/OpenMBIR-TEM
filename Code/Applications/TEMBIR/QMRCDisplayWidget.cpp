@@ -1018,7 +1018,6 @@ QTabWidget* QMRCDisplayWidget::getControlsTab()
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::on_updateImageBtn_clicked()
 {
-  //  emit fireImageUpdate();      // SLOT: TEMBIRGui::updateImage()
   int index = currentTiltIndex->value();
   loadMRCTiltImage(m_CurrentMRCFilePath, index);
 }
@@ -1028,7 +1027,6 @@ void QMRCDisplayWidget::on_updateImageBtn_clicked()
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::on_resetImageBtn_clicked()
 {
-  //  emit fireImageReset();      // SLOT: TEMBIRGui::resetImage()
   resetImageScaling();
   int index = currentTiltIndex->value();
   loadMRCTiltImage(m_CurrentMRCFilePath, index);
@@ -1039,9 +1037,7 @@ void QMRCDisplayWidget::on_resetImageBtn_clicked()
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::on_minimumField_returnPressed()
 {
-  //  emit fireImageUpdate();      // SLOT: TEMBIRGui::resetImage()
-  int index = currentTiltIndex->value();
-  loadMRCTiltImage(m_CurrentMRCFilePath, index);
+    on_updateImageBtn_clicked();
 }
 
 // -----------------------------------------------------------------------------
@@ -1049,9 +1045,7 @@ void QMRCDisplayWidget::on_minimumField_returnPressed()
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::on_maximumField_returnPressed()
 {
-  //  emit fireImageUpdate();      // SLOT: TEMBIRGui::resetImage()
-  int index = currentTiltIndex->value();
-  loadMRCTiltImage(m_CurrentMRCFilePath, index);
+    on_updateImageBtn_clicked();
 }
 
 
