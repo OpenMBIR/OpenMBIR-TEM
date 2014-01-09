@@ -1138,6 +1138,9 @@ void TEMBIRGui::singleSliceComplete()
   // Delete the top level directory
   QDir dir(path);
   dir.rmdir(path);
+    
+    m_ReconstructedDisplayWidget->getControlsTab()->show();
+    m_ReconstructedDisplayWidget->getAdvancedControls()->hide();
 
   m_FullReconstrucionActive = false;
   m_SingleSliceReconstructionActive = false;
@@ -1188,7 +1191,7 @@ void TEMBIRGui::pipelineComplete()
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(true);
   m_ReconstructedDisplayWidget->setDrawOrigin(false);
   m_ReconstructedDisplayWidget->loadMRCFile(reconstructedVolumeFileName->text());
-  m_ReconstructedDisplayWidget->getControlsTab()->setVisible(true);
+    m_ReconstructedDisplayWidget->getControlsTab()->show();
 
   setWindowTitle(m_CurrentImageFile);
   setWidgetListEnabled(true);

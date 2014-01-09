@@ -86,6 +86,9 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     QSpinBox* getCurrentTiltIndexBox();
 
     QTabWidget* getControlsTab();
+    
+    QWidget* getAdvancedControls();
+    QWidget* getBasicControls();
 
     void fireOriginCB_Changed();
     void saveCanvas();

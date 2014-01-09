@@ -1016,6 +1016,22 @@ QTabWidget* QMRCDisplayWidget::getControlsTab()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
+QWidget* QMRCDisplayWidget::getAdvancedControls()
+{
+    return advancedControlsTab;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QWidget* QMRCDisplayWidget::getBasicControls()
+{
+    return basicControlsTab;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void QMRCDisplayWidget::on_updateImageBtn_clicked()
 {
   int index = currentTiltIndex->value();
