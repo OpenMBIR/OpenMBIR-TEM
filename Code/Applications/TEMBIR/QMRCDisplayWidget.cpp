@@ -423,6 +423,30 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
     FREE_FEI_HEADERS( header.feiHeaders)
         return;
   }
+    
+    QIntValidator* validator;
+    switch(header.mode)
+    {
+        case 0:
+            validator = NULL;
+            break;
+        case 1:
+            validator = new QIntValidator(std::numeric_limits<qint16>::min(), std::numeric_limits<qint16>::max(), minimumField);
+            break;
+        case 2:
+            validator = new QIntValidator(std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), minimumField);
+            break;
+        default:
+            validator = NULL;
+            break;
+    }
+    
+    if (NULL != validator)
+    {
+        minimumField->setValidator(validator);
+        maximumField->setValidator(validator);
+    }
+
   currentTiltIndex->setRange(0, header.nz - 1);
   currentTiltIndex->setValue(tiltIndex);
   m_HeaderMinimum = header.amin;
