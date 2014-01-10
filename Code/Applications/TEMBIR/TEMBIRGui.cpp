@@ -979,7 +979,7 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
   {
     // Sanity Check the Input dimensions
     QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
-    QSize size = image.size();
+    //QSize size = image.size();
 
     int x_min = 0;
     int x_max = 0;
