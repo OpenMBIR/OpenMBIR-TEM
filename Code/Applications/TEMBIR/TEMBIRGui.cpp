@@ -1056,57 +1056,8 @@ void TEMBIRGui::singleSliceComplete()
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(reconVolumeFile);
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(false);
 
-
-  // Remove all the files that just got created:
-  // Remove the Reconstruction.bin file
-  QString path = QString::fromStdString(m_MultiResSOC->getTempDir()) + QDir::separator() + finalResolution->text() + QString("x")+ QDir::separator();
-  {
-    QString filePath = path + QString::fromStdString(m_MultiResSOC->getOutputFile());
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::CostFunctionFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::DetectorResponseFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::FinalGainParametersFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::FinalOffsetParametersFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::FinalVariancesFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::ReconstructedObjectFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::ReconstructedSinogramFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::ReconstructedMrcFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::ReconstructedVtkFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::VoxelProfileFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
   // Delete the top level directory
-  QDir dir(path);
-  dir.rmdir(path);
+  removeDir(QString::fromStdString(m_MultiResSOC->getTempDir()));
 
   m_FullReconstrucionActive = false;
   m_SingleSliceReconstructionActive = false;
@@ -1135,6 +1086,33 @@ void TEMBIRGui::loadProgressMRCFile(QString mrcfilePath)
   tiffCount++;
   #endif
 }
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+bool TEMBIRGui::removeDir(const QString &dirName)
+{
+    bool result = true;
+    QDir dir(dirName);
+
+    if (dir.exists(dirName)) {
+        Q_FOREACH(QFileInfo info, dir.entryInfoList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files, QDir::DirsFirst)) {
+            if (info.isDir()) {
+                result = removeDir(info.absoluteFilePath());
+            }
+            else {
+                result = QFile::remove(info.absoluteFilePath());
+            }
+
+            if (!result) {
+                return result;
+            }
+        }
+        result = dir.rmdir(dirName);
+    }
+
+    return result;
+}
+
 
 // -----------------------------------------------------------------------------
 //

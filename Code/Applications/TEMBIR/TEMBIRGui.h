@@ -144,6 +144,14 @@ public:
       */
     void deleteTempFiles();
 
+/*!
+   Delete a directory along with all of its contents.
+
+   \param dirName Path of directory to remove.
+   \return true on success; false on error.
+*/
+    bool removeDir(const QString &dirName);
+
 public slots:
 
     // Manual hookup slots to get signals from the graphics view
@@ -252,6 +260,7 @@ protected slots:
     void on_smoothness_textChanged(const QString & text);
 
     void on_sigma_x_textChanged(const QString & text);
+
 
     void singleSlicePlaneSet(int y);
 
@@ -382,6 +391,7 @@ signals:
      * @param ymax Max y value
      */
     void reconstructionVOIGeometryChanged(int xmin, int ymin, int xmax, int ymax);
+
 
 private slots:
     // slots for our worker thread to communicate
