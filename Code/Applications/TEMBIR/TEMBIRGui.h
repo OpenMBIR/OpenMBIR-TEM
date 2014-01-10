@@ -452,7 +452,7 @@ private:
     GainsOffsetsTableModel*  m_GainsOffsetsTableModel;
 
     bool                  m_SingleSliceReconstructionActive;
-    bool                  m_FullReconstrucionActive;
+    bool                  m_FullReconstructionActive;
     MRCInfoWidget*        m_MRCInputInfoWidget;
     MRCInfoWidget*        m_MRCOutputInfoWidget;
     quint16               m_XDim;
