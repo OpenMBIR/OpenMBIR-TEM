@@ -17,23 +17,14 @@
    <string notr="true"/>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <property name="leftMargin">
-    <number>12</number>
-   </property>
-   <property name="topMargin">
-    <number>12</number>
-   </property>
-   <property name="rightMargin">
-    <number>12</number>
-   </property>
-   <property name="bottomMargin">
-    <number>12</number>
-   </property>
    <property name="horizontalSpacing">
     <number>6</number>
    </property>
    <property name="verticalSpacing">
     <number>2</number>
+   </property>
+   <property name="margin">
+    <number>12</number>
    </property>
    <item row="2" column="1">
     <widget class="QTabWidget" name="controlsTab">
@@ -42,6 +33,9 @@
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
      </property>
      <property name="tabPosition">
       <enum>QTabWidget::South</enum>
@@ -63,16 +57,7 @@
        <property name="spacing">
         <number>0</number>
        </property>
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
+       <property name="margin">
         <number>0</number>
        </property>
        <item>
@@ -566,6 +551,9 @@ font-size: 10px;
       </layout>
      </widget>
      <widget class="QWidget" name="advancedControlsTab">
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
       <attribute name="title">
        <string>Advanced Controls</string>
       </attribute>
@@ -682,16 +670,7 @@ font-size: 10px;
       <property name="spacing">
        <number>0</number>
       </property>
-      <property name="leftMargin">
-       <number>0</number>
-      </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="rightMargin">
-       <number>0</number>
-      </property>
-      <property name="bottomMargin">
+      <property name="margin">
        <number>0</number>
       </property>
       <item>

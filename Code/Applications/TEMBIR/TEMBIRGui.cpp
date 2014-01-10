@@ -521,8 +521,8 @@ void TEMBIRGui::setupGui()
   parametersGroupBox->setEnabled(false);
   advancedParametersGroupBox->setEnabled(false);
 
-  // Hide reconstructed display tab
-  m_ReconstructedDisplayWidget->getControlsTab()->hide();
+  // Hide tabs
+    m_ReconstructedDisplayWidget->getControlsTab()->hide();
   m_MRCDisplayWidget->getControlsTab()->hide();
 }
 
@@ -1140,7 +1140,9 @@ void TEMBIRGui::singleSliceComplete()
   dir.rmdir(path);
     
     m_ReconstructedDisplayWidget->getControlsTab()->show();
-    m_ReconstructedDisplayWidget->getAdvancedControls()->hide();
+    
+    // There is no way to hide sub-tabs, so we have to remove it instead
+    m_ReconstructedDisplayWidget->getControlsTab()->removeTab(1);   // Removes Advanced Controls tab
 
   m_FullReconstrucionActive = false;
   m_SingleSliceReconstructionActive = false;
