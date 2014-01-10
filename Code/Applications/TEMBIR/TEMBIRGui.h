@@ -373,13 +373,13 @@ signals:
     * @brief Signal emitted when a message is available for display to the user
     * @param s The warning message
     */
-    void pipelineWarningMessage(const QString &s);
+    void pipelineWarningMessage(const char* message);
 
     /**
      * @brief If the pipeline throws an error this signal will emit it.
      * @param s The message to display
      */
-    void pipelineErrorMessage(const QString &s);
+    void pipelineErrorMessage(const char* message);
 
     /**
      * @brief The Reconstruction Area has changed.

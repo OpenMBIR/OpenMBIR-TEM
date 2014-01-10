@@ -201,7 +201,7 @@ void ReconstructionArea::paint(QPainter *painter, const QStyleOptionGraphicsItem
   float w = boundingRect().width();
   float h = boundingRect().height();
 
-  float ctrlPointSize = m_CtrlPointSize; // m_CtrlPointSize * m_ControlPointMultiplier;
+  //float ctrlPointSize = m_CtrlPointSize; // m_CtrlPointSize * m_ControlPointMultiplier;
 
 
 //  painter->setPen(QPen(QColor(0, 255, 0, UIA::Alpha), 1.0));
@@ -344,11 +344,11 @@ void ReconstructionArea::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     //      std::cout << "mouseMoveEvent m_isResizing = true" << std::endl;
     QPointF lastPos = event->lastScenePos();
     QPointF pos = event->scenePos();
-    float deltaX = pos.x() - lastPos.x();
+    //float deltaX = pos.x() - lastPos.x();
     float deltaY = pos.y() - lastPos.y();
-    float x = boundingRect().x();
+    //float x = boundingRect().x();
     float y = boundingRect().y();
-    float w = boundingRect().width();
+    //float w = boundingRect().width();
     float h = boundingRect().height();
     //        std::cout << "Delta(): " << deltaX << ", " << deltaY << std::endl;
   //  std::cout << "newRect: " << x << ", " << y << " (" << w << " x " << h << ")" << std::endl;

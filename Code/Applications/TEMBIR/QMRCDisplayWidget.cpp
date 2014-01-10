@@ -65,11 +65,11 @@
 QMRCDisplayWidget::QMRCDisplayWidget(QWidget *parent) :
   QWidget(parent),
   m_StopAnimation(true),
+  m_HeaderMinimum(0.0f),
+  m_HeaderMaximum(0.0f),
   m_ImageWidgetsEnabled(false),
   m_MovieWidgetsEnabled(false),
-  m_DrawOrigin(true),
-  m_HeaderMinimum(0.0f),
-  m_HeaderMaximum(0.0f)
+  m_DrawOrigin(true)
 {
   m_OpenDialogLastDirectory = QDir::homePath();
   setupUi(this);
@@ -470,11 +470,11 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
     return;
   }
 
+  /*
   // If we have the FEI headers get that information
   if(header.feiHeaders != NULL)
   {
-    FEIHeader fei = header.feiHeaders[tiltIndex];
-    /*
+     FEIHeader fei = header.feiHeaders[tiltIndex];
      a_tilt->setText(QString::number(fei.a_tilt));
      b_tilt->setText(QString::number(fei.b_tilt));
      x_stage->setText(QString::number(fei.x_stage));
@@ -489,8 +489,9 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
      pixelsize->setText(QString::number(fei.pixelsize));
      magnification->setText(QString::number(fei.magnification));
      voltage->setText(QString::number(fei.voltage));
-     */
   }
+  */
+    
   // Read the first image from the file
   int voxelMin[3] =
   { 0, 0, tiltIndex };

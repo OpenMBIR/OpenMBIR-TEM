@@ -486,7 +486,7 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
   if (event->modifiers() == Qt::ShiftModifier)
   {
     if(m_RubberBand) m_RubberBand->hide();
-    QRectF sr = sceneRect();
+    //QRectF sr = sceneRect();
 
     QPointF mappedPoint = mapToScene(QPoint(0, m_MouseClickOrigin.y()));
 
@@ -519,7 +519,6 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
   else if (m_AddReconstructionArea == true && NULL != m_RubberBand)
   {
     m_RubberBand->hide();
-    QPoint endPoint = event->pos();
 
     QRect box = QRect(m_MouseClickOrigin, event->pos()).normalized();
 
