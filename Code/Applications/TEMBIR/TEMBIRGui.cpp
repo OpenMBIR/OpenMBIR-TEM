@@ -920,6 +920,10 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
         finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(ScaleOffsetCorrection::ReconstructedMrcFile);
 
     m_MultiResSOC->setOutputFile(reconVolumeFile.toStdString());
+
+    QFileInfo fi(reconVolumeFile);
+    QDir dir(fi.absolutePath());
+    dir.mkpath(".");
   }
 
   path = QDir::toNativeSeparators(inputBrightFieldFilePath->text());
@@ -1135,12 +1139,20 @@ void TEMBIRGui::singleSliceComplete()
     QString filePath = path + ScaleOffsetCorrection::VoxelProfileFile.c_str();
     m_TempFilesToDelete.push_back(filePath);
   }
+  {
+    QString filePath = path + ScaleOffsetCorrection::FilteredMagMapFile.c_str();
+    m_TempFilesToDelete.push_back(filePath);
+  }
+  {
+    QString filePath = path + ScaleOffsetCorrection::MagnitudeMapFile.c_str();
+    m_TempFilesToDelete.push_back(filePath);
+  }
   // Delete the top level directory
   QDir dir(path);
   dir.rmdir(path);
-    
+
     m_ReconstructedDisplayWidget->getControlsTab()->show();
-    
+
     // There is no way to hide sub-tabs, so we have to remove it instead
     m_ReconstructedDisplayWidget->getControlsTab()->removeTab(1);   // Removes Advanced Controls tab
 
