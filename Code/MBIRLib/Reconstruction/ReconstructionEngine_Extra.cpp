@@ -76,7 +76,7 @@ void maxList(struct List InList)
 
 void minList(struct List InList)
 {
-	int32_t min_z = pow(2, 31);
+	int32_t min_z = 2147483648; //pow(2, 31);
 	int32_t min_x = min_z;
 	for(int32_t i = 0; i < InList.NumElts; i++)
 	{
@@ -1166,7 +1166,7 @@ uint32_t ReconstructionEngine::RandomizedPartition(RealArrayType::Pointer A,uint
 	generator.seed(arg); // seed with the current time
 	
 	Real_t temp;	
-	uint32_t j = p + numberGenerator()%(r-p+1);//rand()%(r-p+1);
+ 	uint32_t j = p + numberGenerator()%(r-p+1);//rand()%(r-p+1);
 	temp = A->d[r];
 	A->d[r] = A->d[j];
 	A->d[j] = temp;	
