@@ -74,6 +74,10 @@ AvizoUniformCoordinateWriter::~AvizoUniformCoordinateWriter()
 void AvizoUniformCoordinateWriter::execute()
 {
    int err = write();
+    if (err < 0)
+    {
+        std::cout << "AvizoUniformCoordinateWriter::execute() - There was an error while trying to write." << std::endl;
+    }
 }
 
 

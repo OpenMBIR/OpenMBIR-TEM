@@ -1061,9 +1061,7 @@ int ReconstructionEngine::calculateCost(CostData::Pointer cost,
 // -----------------------------------------------------------------------------
 Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geometry, RealVolumeType::Pointer ErrorSino, QGGMRF::QGGMRF_Values* qggmrf_values)
 {
-	Real_t cost = 0, temp = 0;
-	Real_t delta;
-	Real_t errSinoValue = 0.0;
+	Real_t cost = 0;
 	
 	cost = m_ForwardModel->forwardCost(sinogram,ErrorSino);//Data term error
 	if(getVeryVerbose())

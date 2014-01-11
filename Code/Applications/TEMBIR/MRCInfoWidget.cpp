@@ -84,7 +84,8 @@ void MRCInfoWidget::setInfo(QString mrcFilePath)
       std::cout << "Failed to open MRC File: " << mrcFilePath.toStdString() << std::endl;
     return;
   }
-  int tiltIndex = 0;
+  //int tiltIndex = 0;
+    
   // Transfer the meta data from the MRC Header to the GUI
   SET_MRC_INFO(nx)
   SET_MRC_INFO(ny)
@@ -121,21 +122,23 @@ void MRCInfoWidget::setInfo(QString mrcFilePath)
   // If we have the FEI headers get that information
   if(header.feiHeaders != NULL)
   {
+# if 0
     FEIHeader fei = header.feiHeaders[tiltIndex];
-//    a_tilt->setText(QString::number(fei.a_tilt));
-//    b_tilt->setText(QString::number(fei.b_tilt));
-//    x_stage->setText(QString::number(fei.x_stage));
-//    y_stage->setText(QString::number(fei.y_stage));
-//    z_stage->setText(QString::number(fei.z_stage));
-//    x_shift->setText(QString::number(fei.x_shift));
-//    y_shift->setText(QString::number(fei.y_shift));
-//    defocus->setText(QString::number(fei.defocus));
-//    exp_time->setText(QString::number(fei.exp_time));
-//    mean_int->setText(QString::number(fei.mean_int));
-//    tiltaxis->setText(QString::number(fei.tiltaxis));
-//    pixelsize->setText(QString::number(fei.pixelsize));
-//    magnification->setText(QString::number(fei.magnification));
-//    voltage->setText(QString::number(fei.voltage));
+    a_tilt->setText(QString::number(fei.a_tilt));
+    b_tilt->setText(QString::number(fei.b_tilt));
+    x_stage->setText(QString::number(fei.x_stage));
+    y_stage->setText(QString::number(fei.y_stage));
+    z_stage->setText(QString::number(fei.z_stage));
+    x_shift->setText(QString::number(fei.x_shift));
+    y_shift->setText(QString::number(fei.y_shift));
+    defocus->setText(QString::number(fei.defocus));
+    exp_time->setText(QString::number(fei.exp_time));
+    mean_int->setText(QString::number(fei.mean_int));
+    tiltaxis->setText(QString::number(fei.tiltaxis));
+    pixelsize->setText(QString::number(fei.pixelsize));
+    magnification->setText(QString::number(fei.magnification));
+    voltage->setText(QString::number(fei.voltage));
+#endif
   }
   else
   {
