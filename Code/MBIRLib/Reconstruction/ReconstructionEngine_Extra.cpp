@@ -977,7 +977,7 @@ Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdate
 	
     //Partial selection sort
 
-  /*  Real_t max;
+    /*Real_t max;
     uint32_t max_index;
     for (uint32_t i = 0; i <= percentile_index; i++)
     {
@@ -1138,7 +1138,7 @@ Real_t ReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A,uint32_t 
 	uint32_t q;
     do
 	{
-	    int q = RandomizedPartition(A, start, end);
+	    q = RandomizedPartition(A, start, end);
 		if (i == q)
 			return A->d[i];
 	    else if  (i < q)
