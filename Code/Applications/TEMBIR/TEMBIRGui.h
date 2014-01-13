@@ -146,6 +146,14 @@ public:
       */
     void deleteTempFiles();
 
+/*!
+   Delete a directory along with all of its contents.
+
+   \param dirName Path of directory to remove.
+   \return true on success; false on error.
+*/
+    bool removeDir(const QString &dirName);
+
 public slots:
 
     // Manual hookup slots to get signals from the graphics view
@@ -254,9 +262,9 @@ protected slots:
     void on_smoothness_textChanged(const QString & text);
 
     void on_sigma_x_textChanged(const QString & text);
-    
+
     void on_defaultOffsetUpdateBtn_clicked();
-    
+
     void on_defaultOffset_textChanged(const QString & text);
 
     void singleSlicePlaneSet(int y);
@@ -265,7 +273,7 @@ protected slots:
      * @brief The geometry widgets signal for 'textFinished' connects to this
      */
     void geometryChanged();
-    
+
 
 protected:
 
@@ -373,13 +381,13 @@ signals:
     * @brief Signal emitted when a message is available for display to the user
     * @param s The warning message
     */
-    void pipelineWarningMessage(const QString &s);
+    void pipelineWarningMessage(const char* message);
 
     /**
      * @brief If the pipeline throws an error this signal will emit it.
      * @param s The message to display
      */
-    void pipelineErrorMessage(const QString &s);
+    void pipelineErrorMessage(const char* message);
 
     /**
      * @brief The Reconstruction Area has changed.
@@ -389,7 +397,7 @@ signals:
      * @param ymax Max y value
      */
     void reconstructionVOIGeometryChanged(int xmin, int ymin, int xmax, int ymax);
-    
+
     void fireRectangleCreatorAdded(RectangleCreator* rectangle);
 
 private slots:
@@ -452,7 +460,7 @@ private:
     GainsOffsetsTableModel*  m_GainsOffsetsTableModel;
 
     bool                  m_SingleSliceReconstructionActive;
-    bool                  m_FullReconstrucionActive;
+    bool                  m_FullReconstructionActive;
     MRCInfoWidget*        m_MRCInputInfoWidget;
     MRCInfoWidget*        m_MRCOutputInfoWidget;
     quint16               m_XDim;
