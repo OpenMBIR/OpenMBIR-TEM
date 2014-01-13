@@ -1114,7 +1114,8 @@ Real_t ReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A,uint32_t 
 	
 	//std::cout<<"***********Select****************"<<std::endl;
 	//std::cout<<p<<"  "<<r<<"  "<<i<<std::endl;
-    /*
+   
+	/*
 	if (p == r)
     {
 		return A->d[p];
@@ -1130,7 +1131,8 @@ Real_t ReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A,uint32_t 
 		return RandomizedSelect(A, p, q-1, i) ;
     }
 	else return RandomizedSelect(A, q+1, r, i - k);*/
-    
+   
+
     uint32_t start = p;
 	uint32_t end = r;
 	uint32_t q;
@@ -1141,18 +1143,17 @@ Real_t ReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A,uint32_t 
 			return A->d[i];
 	    else if  (i < q)
         {
-            start = p;
+            //start = p;
             end = q-1;
         }
         else
         {
             start = q+1;
-            end = r;
+            //end = r;
         }
 	}while(i != q);
     
 	return A->d[i];
-    
 }
 uint32_t ReconstructionEngine::Partition(RealArrayType::Pointer A,uint32_t p,uint32_t r)
 {
