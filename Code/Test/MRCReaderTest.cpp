@@ -41,7 +41,7 @@
 #include "MXA/Utilities/MXAFileInfo.h"
 #include "MXA/Utilities/MXADir.h"
 #include "MXA/Utilities/StringUtils.h"
-#include "MXA/Common/LogTime.h"
+//#include "MXA/Common/LogTime.h"
 
 
 #if EIMTomo_TIFF_SUPPORT
