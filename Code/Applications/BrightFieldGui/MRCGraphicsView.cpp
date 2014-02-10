@@ -41,7 +41,7 @@
 #include <QtGui/QPixmap>
 #include <QtGui/QGraphicsPolygonItem>
 
-#include "TEMBIRGui.h"
+#include "BrightFieldGui.h"
 #include "ReconstructionArea.h"
 
 
@@ -514,7 +514,7 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 
     int y = m_BaseImage.size().height() - getXZPlane().y1();
 
-    emit fireSingleSliceSelected(y);    // SlOT: TEMBIRGui::SingleSlicePlaneSet(int y)
+    emit fireSingleSliceSelected(y);    // SlOT: BrightFieldGui::SingleSlicePlaneSet(int y)
   }
   else if (m_AddReconstructionArea == true && NULL != m_RubberBand)
   {

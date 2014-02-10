@@ -28,7 +28,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "TEMBIRGui.h"
+#include "BrightFieldGui.h"
 #include <QtSupport/QRecentFileList.h>
 #include <QApplication>
 
@@ -38,7 +38,7 @@ int main(int argc, char **argv)
   QApplication app(argc, argv);
   QCoreApplication::setOrganizationName("BlueQuartz Software");
   QCoreApplication::setOrganizationDomain("openmbir.org");
-  QCoreApplication::setApplicationName("TEMBIRGui");
+  QCoreApplication::setApplicationName("BrightFieldGui");
 
 #if defined( Q_WS_MAC )
   //Needed for typical Mac program behavior.
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
   QRecentFileList::instance()->readList(prefs);
 
-  TEMBIRGui *viewer = new TEMBIRGui;
+  BrightFieldGui *viewer = new BrightFieldGui;
   viewer->readWindowSettings(prefs);
   viewer->show();
   viewer->raise();

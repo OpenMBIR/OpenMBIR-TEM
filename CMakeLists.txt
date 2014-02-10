@@ -9,7 +9,7 @@
 #--
 #--////////////////////////////////////////////////////////////////////////////
 project (OpenMBIR)
-cmake_minimum_required(VERSION 2.8.6)
+cmake_minimum_required(VERSION 2.8.9)
 
 # We setup all the libraries and exectuables to all be placed into a single directory
 # ---------- Setup Library output Directories -------------------------
@@ -38,6 +38,9 @@ if (NOT DEFINED CMP_SOURCE_DIR)
 set(CMP_SOURCE_DIR ${OpenMBIR_SOURCE_DIR}/Support/cmp)
 endif()
 
+if(UNIX AND NOT APPLE)
+    set(OpenMBIR_LINUX_SYSTEM ${CMAKE_SYSTEM_NAME} CACHE STRING "The Name of the linux distrubution for packaging")
+endif()
 
 
 SET (PROJECT_CODE_DIR ${PROJECT_SOURCE_DIR}/Code)
@@ -234,7 +237,7 @@ if (OpenMBIR_BUILD_GUI)
     # will not work due to signals/slots mechanism.
     add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/QtSupport ${PROJECT_BINARY_DIR}/QtSupport)
    
-    add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/Applications/TEMBIR ${PROJECT_BINARY_DIR}/Applications/TEMBIR)
+    add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/Applications/BrightFieldGui ${PROJECT_BINARY_DIR}/Applications/BrightFieldGui)
 
 endif()
 

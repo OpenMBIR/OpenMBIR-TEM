@@ -28,8 +28,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#ifndef EMMPMGUI_H_
-#define EMMPMGUI_H_
+#ifndef _BRIGHTFIELD_GUI_H
+#define _BRIGHTFIELD_GUI_H
 
 //-- Qt Includes
 #include <QtCore/QObject>
@@ -50,7 +50,7 @@ class ReconstructionArea;
 class MRCInfoWidget;
 
 //-- UIC generated Header
-#include "ui_TEMBIRGui.h"
+#include "ui_BrightFieldGui.h"
 #include "QMultiResolutionReconstruction.h"
 
 #include "MBIRLib/IOFilters/MRCHeader.h"
@@ -67,13 +67,13 @@ class MRCInfoWidget;
  * @date Dec 26, 2011
  * @version 1.0
  */
-class TEMBIRGui :  public QMainWindow, private Ui::TEMBIRGui, public Observer
+class BrightFieldGui :  public QMainWindow, private Ui::BrightFieldGui, public Observer
 {
     Q_OBJECT;
 
 public:
-    TEMBIRGui(QWidget *parent = 0);
-    virtual ~TEMBIRGui();
+    BrightFieldGui(QWidget *parent = 0);
+    virtual ~BrightFieldGui();
 
     MXA_INSTANCE_PROPERTY(QString, CurrentImageFile)
     MXA_INSTANCE_PROPERTY(QString, CurrentProcessedFile)
@@ -470,8 +470,8 @@ private:
     bool                  m_UpdateCachedSigmaX;
     QVector<QString>      m_TempFilesToDelete;
 
-    TEMBIRGui(const TEMBIRGui&); // Copy Constructor Not Implemented
-    void operator=(const TEMBIRGui&); // Operator '=' Not Implemented
+    BrightFieldGui(const BrightFieldGui&); // Copy Constructor Not Implemented
+    void operator=(const BrightFieldGui&); // Operator '=' Not Implemented
 };
 
-#endif /* EMMPMGUI_H_ */
+#endif /* _BRIGHTFIELD_GUI_H */
