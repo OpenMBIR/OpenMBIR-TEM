@@ -103,8 +103,8 @@ endif()
 
 
 
-set (OpenMBIR_WEBSITE_SERVER "www.bluequartz.net")
-set (OpenMBIR_WEBSITE_SERVER_PATH "/var/www/www.bluequartz.net/binaries/to81/.")
+set (OpenMBIR_WEBSITE_SERVER "www.openmbir.org")
+set (OpenMBIR_WEBSITE_SERVER_PATH "/var/www/www.openmbir.org/binaries/.")
 set (OpenMBIR_WEBSITE_SCP_USERNAME "mjackson")
 #-- Create a bash script file that will upload the latest version to the web server
 configure_file(${PROJECT_RESOURCES_DIR}/upload.sh.in
@@ -119,8 +119,8 @@ IF(WIN32 AND NOT UNIX)
   # There is a bug in NSIS that does not handle full unix paths properly. Make
   # sure there is at least one set of four (4) backlasshes.
   SET(CPACK_NSIS_DISPLAY_NAME "OpenMBIR Software Tools")
-  SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\www.bluequartz.net")
-  SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\www.bluequartz.net")
+  SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\www.openmbir.org")
+  SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\www.openmbir.org")
   SET(CPACK_NSIS_CONTACT "mike.jackson@bluequartz.net")
   SET(CPACK_NSIS_MODIFY_PATH ON)
   SET(CPACK_GENERATOR "ZIP")
