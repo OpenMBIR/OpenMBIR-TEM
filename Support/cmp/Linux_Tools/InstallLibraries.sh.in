@@ -8,20 +8,20 @@ fi
 
 if [ "x@HDF5_IS_SHARED@" = "x1" ]; then 
 
-cd "@HDF5_INSTALL@"/lib
-libs=`ls libhdf5@lib_suffix@.s*`
-for l in ${libs}
-do
-    echo "Copy ${l} into Deployment Lib Directory"  
-     cp -d ${l} ${InstallPrefix}/lib/.
-done
+    cd "@HDF5_INSTALL@"/lib
+    libs=`ls libhdf5@lib_suffix@.s*`
+    for l in ${libs}
+    do
+        echo "Copy ${l} into Deployment Lib Directory"  
+         cp -d ${l} ${InstallPrefix}/lib/.
+    done
 fi
 # We are done with the HDF5 portion.
 
 # Now we need to get the TBB if needed.
 
 #Only copy TBB Libraries if needed
-if [ "@DREAM3D_USE_MULTITHREADED_ALGOS@" = "ON" ]; then
+if [ "@OpenMBIR_USE_MultiThreading@" = "ON" ]; then
 
 cd "@TBB_LIBRARY_DIR@"
 # Copy the libtbb libraries
