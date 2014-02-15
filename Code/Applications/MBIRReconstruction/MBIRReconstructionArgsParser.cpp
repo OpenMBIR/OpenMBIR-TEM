@@ -138,7 +138,7 @@ int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiRes
         return -1;
     }
 
-    TCLAP::CmdLine cmd("", ' ', MBIRLib::Version::Complete);
+    TCLAP::CmdLine cmd("", ' ', MBIRLib::Version::Complete());
 
     TCLAP::ValueArg<std::string> in_MRCFile("s", "sinofile", "The Sinogram File", true, "", "");
     cmd.add(in_MRCFile);

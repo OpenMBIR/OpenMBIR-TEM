@@ -1556,7 +1556,7 @@ void TEMBIRGui::on_actionAbout_triggered()
   ApplicationAboutBoxDialog about(OpenMBIR::LicenseList, this);
   QString an = QCoreApplication::applicationName();
   QString version("");
-  version.append(MBIRLib::Version::PackageComplete.c_str());
+  version.append(MBIRLib::Version::PackageComplete().c_str());
   about.setApplicationInfo(an, version);
   about.exec();
 }

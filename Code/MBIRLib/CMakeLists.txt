@@ -39,6 +39,7 @@ set (CMP_HEADER_DIR ${MBIRLib_BINARY_DIR})
 set (CMP_CONFIGURATION_FILE_NAME "MBIRLibConfiguration.h")
 set (CMP_TYPES_FILE_NAME "MBIRLibTypes.h")
 set (CMP_VERSION_HEADER_FILE_NAME "MBIRLibVersion.h")
+set (CMP_VERSION_SOURCE_FILE_NAME "MBIRLibVersion.cpp")
 set (CMP_TOP_HEADER_FILE "MBIRLib.h")
 set (CMP_PROJECT_NAMESPACE "MBIRLib")
 set (CMP_PROJECT_NAME "MBIRLib")
@@ -48,6 +49,14 @@ set (CMP_GENERATE_VERSION_STRING 1)
 set (CMP_INSTALL_FILES 0)
 INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
 
+
+# --------------------------------------------------------------------
+# Generate a Header file with Compile Version variables
+# --------------------------------------------------------------------
+cmpVersionStringsFromGit(GENERATED_HEADER_FILE_PATH ${CMP_HEADER_DIR}/MBIRLibVersion.h
+                         GENERATED_SOURCE_FILE_PATH ${CMP_HEADER_DIR}/MBIRLibVersion.cpp
+                         NAMESPACE "${CMP_PROJECT_NAMESPACE}"
+                         cmpProjectName "${CMP_PROJECT_NAME}" )
 
 # --------------------------------------------------------------------
 # Generate a Header file with Compile Version variables

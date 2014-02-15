@@ -57,6 +57,23 @@ set (CMP_CONFIGURED_FILES_SOURCE_DIR ${CMP_SOURCE_DIR}/ConfiguredFiles)
 set (CMP_MODULES_SOURCE_DIR ${CMP_SOURCE_DIR}/Modules CACHE INTERNAL "")
 include( ${CMP_SOURCE_DIR}/cmpCMakeMacros.cmake)
 
+
+if(UNIX AND NOT APPLE)
+    set(OpenMBIR_LINUX_SYSTEM ${CMAKE_SYSTEM_NAME} CACHE STRING "The Name of the linux distrubution for packaging")
+endif()
+
+
+# --------------------------------------------------------------------
+# In order to increment the version of DREAM3D simply adjust these variables.
+# we are using a 3 part Version scheme commonly found in software development. The
+# example would be Version 2.1.6543 which translates to Version [major].[minor].[patch].
+# The Major version is set here in the CMake file. We will use Git
+# to figure out the "patch" leve of the version by using "git describe" which will
+# calculate how many commits since the last "tag" was applied to the repository.
+# this basically gives us an always incrementing number for the patch level
+# and we can set the Major and Minor versions as we see fit.
+set(CMP_VERSION_MAJOR "v1")
+
 # --------------------------------------------------------------------
 # Over ride CMake's built in module directory by prepending cmp's module
 # directory first

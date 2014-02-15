@@ -31,11 +31,14 @@ set (CMP_HEADER_DIR ${MXA_BINARY_DIR})
 set (CMP_CONFIGURATION_FILE_NAME "MXAConfiguration.h")
 set (CMP_TYPES_FILE_NAME "MXATypes.h")
 set (CMP_VERSION_HEADER_FILE_NAME "MXAVersion.h")
+set (CMP_VERSION_SOURCE_FILE_NAME "MXAVersion.cpp")
 set (CMP_TOP_HEADER_FILE "MXA.h")
 set (CMP_PROJECT_NAMESPACE "MXA")
 set (CMP_PROJECT_NAME "MXA")
 set (CMP_ENABLE_PLUGINS "0")
 set (CMP_LIB_SEARCH_DIRS "")
+set (CMP_GENERATE_VERSION_STRING 1)
+set (CMP_INSTALL_FILES 0)
 INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
 
 
@@ -65,10 +68,10 @@ set (HDF5_VTK_BRIDGE "0")
 # --------------------------------------------------------------------
 # Generate a Header file with Compile Version variables
 # --------------------------------------------------------------------
-cmpVersionStringsFromGit(GENERATED_FILE_PATH ${CMP_HEADER_DIR}/MXAVersion.h 
-                         NAMESPACE "MXA"
-                         cmpProjectName "MXA" )
-                         
+cmpVersionStringsFromGit(GENERATED_HEADER_FILE_PATH ${CMP_HEADER_DIR}/MXAVersion.h
+                         GENERATED_SOURCE_FILE_PATH ${CMP_HEADER_DIR}/MXAVersion.cpp
+                         NAMESPACE "${CMP_PROJECT_NAMESPACE}"
+                         cmpProjectName "${CMP_PROJECT_NAME}" )
 
 configure_file(${MXA_SOURCE_DIR}/MXAConfiguration.h.in
                ${CMP_HEADER_DIR}/${CMP_TOP_HEADER_FILE})
