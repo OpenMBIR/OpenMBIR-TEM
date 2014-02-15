@@ -130,6 +130,11 @@ IF(Q_WS_WIN)
     set(APPLICATION_ICON ${PROJECT_RESOURCES_DIR}/icons/ico/${PROJECT_NAME}.ico)
 ENDIF(Q_WS_WIN)
 
+set(DEST_DIR ".")
+if(UNIX AND NOT APPLE)
+    set(DEST_DIR "bin")
+endif()
+
 # Clear the file first otherwise we get duplicates
 file(WRITE ${PROJECT_BINARY_DIR}/Qt_Plugins.txt "")
 FindQt4Plugins("qgif;qjpeg;qtiff" "${PROJECT_BINARY_DIR}/Qt_Plugins.txt" 
@@ -151,7 +156,7 @@ BuildQtAppBundle(
     QT_PLUGINS    ${QT_PLUGINS}
 #        OTHER_PLUGINS ${OTHER_PLUGINS}
     COMPONENT     Applications
-    INSTALL_DEST  "."
+    INSTALL_DEST  ${DEST_DIR}
 )   
 
 

@@ -49,7 +49,7 @@
 
 int main(int argc, char **argv)
 {
-    std::cout << "Starting MBIR Reconstruction Version " << MBIRLib::Version::Complete << std::endl;
+    std::cout << "Starting MBIR Reconstruction Version " << MBIRLib::Version::Complete() << std::endl;
 
 
 
