@@ -86,7 +86,7 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     QSpinBox* getCurrentTiltIndexBox();
 
     QTabWidget* getControlsTab();
-    
+
     QWidget* getAdvancedControls();
     QWidget* getBasicControls();
 
@@ -112,6 +112,7 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
 
     QImage signed16Image(qint16* data, MRCHeader &header, bool flipYAxis);
     QImage floatImage(float* data, MRCHeader &header, bool flipYAxis);
+    QImage unsigned16Image(quint16* data, MRCHeader &header, bool flipYAxis);
     void drawOrigin(QImage image);
 
 

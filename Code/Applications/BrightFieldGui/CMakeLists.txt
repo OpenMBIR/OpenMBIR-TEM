@@ -44,7 +44,7 @@ set(CLASS_NAME "MultiResolutionReconstruction")
 SET(ENGINE_INCLUDE_PATH "MBIRLib/Reconstruction")
 configure_file( ${PROJECT_CODE_DIR}/QtSupport/QObserverWrapper.h.in
                 ${BrightFieldGui_BINARY_DIR}/Q${CLASS_NAME}.h @ONLY IMMEDIATE)
-                
+
 # --------------------------------------------------------------------
 # Set up all the source codes
 SET( BrightFieldGui_SRCS
@@ -59,9 +59,11 @@ SET( BrightFieldGui_SRCS
   ${BrightFieldGui_SOURCE_DIR}/CheckBoxDelegate.cpp
   ${BrightFieldGui_SOURCE_DIR}/ReconstructionArea.cpp
   ${BrightFieldGui_SOURCE_DIR}/RectangleCreator.cpp
+  ${BrightFieldGui_SOURCE_DIR}/TomogramTiltLoader.cpp
+  ${BrightFieldGui_SOURCE_DIR}/TiltAngleGroupBox.cpp
 )
 
-# another list, this time it includes all header files that should 
+# another list, this time it includes all header files that should
 #  be treated with moc
 SET( BrightFieldGui_MOC_HDRS
   ${BrightFieldGui_SOURCE_DIR}/BrightFieldGui.h
@@ -75,6 +77,8 @@ SET( BrightFieldGui_MOC_HDRS
   ${BrightFieldGui_SOURCE_DIR}/CheckBoxDelegate.h
   ${BrightFieldGui_SOURCE_DIR}/ReconstructionArea.h
   ${BrightFieldGui_SOURCE_DIR}/RectangleCreator.h
+  ${BrightFieldGui_SOURCE_DIR}/TomogramTiltLoader.h
+  ${BrightFieldGui_SOURCE_DIR}/TiltAngleGroupBox.h
 )
 cmp_IDE_SOURCE_PROPERTIES(BrightFieldGui "${BrightFieldGui_MOC_HDRS}" "${BrightFieldGui_SRCS}" "0")
 
@@ -87,6 +91,8 @@ SET( BrightFieldGui_UIS
  ${BrightFieldGui_SOURCE_DIR}/UI_Files/QMRCDisplayWidget.ui
  ${BrightFieldGui_SOURCE_DIR}/UI_Files/MRCInfoWidget.ui
  ${BrightFieldGui_SOURCE_DIR}/UI_Files/ImageOpenDialog.ui
+ ${BrightFieldGui_SOURCE_DIR}/UI_Files/TomogramTiltLoader.ui
+ ${BrightFieldGui_SOURCE_DIR}/UI_Files/TiltAngleGroupBox.ui
 )
 cmp_IDE_SOURCE_PROPERTIES(BrightFieldGui/UI_Files "${BrightFieldGui_UIS}" "" "0")
 
@@ -99,7 +105,7 @@ SET( BrightFieldGui_RCS
 )
 cmp_IDE_SOURCE_PROPERTIES(BrightFieldGui/QrcFiles "${BrightFieldGui_RCS}" "" "0")
 
-# -- Run MOC and UIC on the necessary files   
+# -- Run MOC and UIC on the necessary files
 QT4_ADD_RESOURCES( Generated_RC_SRCS ${BrightFieldGui_RCS}  ${QRC_LICENSE_FILES})
 
 # this will run uic on .ui files:
@@ -113,12 +119,12 @@ cmp_IDE_GENERATED_PROPERTIES(BrightFieldGui/Generated "${Generated_UI_HDRS};${Br
 
 
 # -- Finally set the Project Sources to include all the sources
-SET (${PROJECT_NAME}_PROJECT_SRCS 
-  ${BrightFieldGui_SRCS} 
+SET (${PROJECT_NAME}_PROJECT_SRCS
+  ${BrightFieldGui_SRCS}
   ${BrightFieldGui_MOC_HDRS}
   ${BrightFieldGui_HDRS}
-  ${Generated_RC_SRCS} 
-  ${Generated_UI_HDRS} 
+  ${Generated_RC_SRCS}
+  ${Generated_UI_HDRS}
   ${Generated_MOC_SRCS}
 )
 
@@ -137,10 +143,10 @@ endif()
 
 # Clear the file first otherwise we get duplicates
 file(WRITE ${PROJECT_BINARY_DIR}/Qt_Plugins.txt "")
-FindQt4Plugins("qgif;qjpeg;qtiff" "${PROJECT_BINARY_DIR}/Qt_Plugins.txt" 
-                "${PROJECT_BINARY_DIR}/LibSearchDirs.txt" 
+FindQt4Plugins("qgif;qjpeg;qtiff" "${PROJECT_BINARY_DIR}/Qt_Plugins.txt"
+                "${PROJECT_BINARY_DIR}/LibSearchDirs.txt"
                 "imageformats" )
-                
+
 file(READ ${PROJECT_BINARY_DIR}/Qt_Plugins.txt QT_PLUGINS)
 BuildQtAppBundle(
     TARGET ${PROJECT_NAME}
@@ -151,12 +157,12 @@ BuildQtAppBundle(
     VERSION_MINOR ${QBrightFieldGui_VER_MINOR}
     VERSION_PATCH ${QBrightFieldGui_VER_PATCH}
     BINARY_DIR    ${${PROJECT_NAME}_BINARY_DIR}
-    LINK_LIBRARIES ${QT_LIBRARIES} QtSupport MBIRLib 
+    LINK_LIBRARIES ${QT_LIBRARIES} QtSupport MBIRLib
     LIB_SEARCH_DIRS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     QT_PLUGINS    ${QT_PLUGINS}
 #        OTHER_PLUGINS ${OTHER_PLUGINS}
     COMPONENT     Applications
     INSTALL_DEST  ${DEST_DIR}
-)   
+)
 
 

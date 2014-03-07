@@ -423,32 +423,38 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
     FREE_FEI_HEADERS( header.feiHeaders)
         return;
   }
-    
-    QIntValidator* validator;
+
+    QIntValidator* validator = NULL;
     switch(header.mode)
     {
-        case 0:
+        case 0: /* unsigned or signed bytes depending on flag in imodStamp */
             validator = NULL;
             break;
-        case 1:
+        case 1: /* signed short integers (16 bits) */
             validator = new QIntValidator(std::numeric_limits<qint16>::min(), std::numeric_limits<qint16>::max(), minimumField);
             break;
-        case 2:
+        case 2: /* float */
             validator = new QIntValidator(std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), minimumField);
+            break;
+        case 6: /* unsigned 16-bit integers (non-standard) */
+            validator = new QIntValidator(std::numeric_limits<quint16>::min(), std::numeric_limits<quint16>::max(), minimumField);
             break;
         default:
             validator = NULL;
             break;
     }
-    
+
     if (NULL != validator)
     {
         minimumField->setValidator(validator);
         maximumField->setValidator(validator);
     }
 
+  currentTiltIndex->blockSignals(true);
   currentTiltIndex->setRange(0, header.nz - 1);
   currentTiltIndex->setValue(tiltIndex);
+  currentTiltIndex->blockSignals(false);
+
   m_HeaderMinimum = header.amin;
   m_HeaderMaximum = header.amax;
 
@@ -491,7 +497,7 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
      voltage->setText(QString::number(fei.voltage));
   }
   */
-    
+
   // Read the first image from the file
   int voxelMin[3] =
   { 0, 0, tiltIndex };
@@ -512,6 +518,9 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
       case 2:
         image = floatImage(reinterpret_cast<float*>(reader->getDataPointer()), header, true);
         break;
+      case 6:
+        image = unsigned16Image(reinterpret_cast<quint16*>(reader->getDataPointer()), header, true);
+        break;
       default:
         break;
     }
@@ -519,7 +528,7 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
 
   FREE_FEI_HEADERS( header.feiHeaders)
 
-      drawOrigin(image);
+  drawOrigin(image);
 
   // This will display the image in the graphics scene
   m_GraphicsView->loadBaseImageFile(m_CurrentImage);
@@ -701,6 +710,68 @@ QImage QMRCDisplayWidget::floatImage(float* data, MRCHeader &header, bool flipYA
   return image;
 
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+QImage QMRCDisplayWidget::unsigned16Image(quint16* data, MRCHeader &header, bool flipYAxis)
+{
+#if 0
+  qint16 dmax = std::numeric_limits<qint16>::min();
+  qint16 dmin = std::numeric_limits<qint16>::max();
+  size_t nVoxels = header.nx * header.ny;
+  for (size_t i = 0; i < nVoxels; ++i)
+  {
+    if(data[i] > dmax) dmax = data[i];
+    if(data[i] < dmin) dmin = data[i];
+  }
+
+  // Generate a Color Table
+  float max = static_cast<float>(dmax);
+  float min = static_cast<float>(dmin);
+  int numColors = static_cast<int>((max - min) + 1);
+#else
+  float max = maximumField->text().toFloat();
+  float min = minimumField->text().toFloat();
+  int numColors = static_cast<int>((max - min) + 1);
+#endif
+  QVector<QRgb>         colorTable;
+
+  // Only generate the color table if the number of colors does not match
+  if(colorTable.size() != numColors)
+  {
+    colorTable.resize(numColors);
+    float range = max - min;
+
+    float r, g, b;
+    for (int i = 0; i < numColors; i++)
+    {
+      quint16 val = static_cast<quint16>(min + ((float)i / numColors) * range);
+      QMRCDisplayWidget::getColorCorrespondingTovalue(val, r, g, b, max, min);
+      colorTable[i] = qRgba(r * 255, g * 255, b * 255, 255);
+    }
+  }
+  QRgb* colorTablePtr = colorTable.data();
+  QImage image(header.nx, header.ny, QImage::Format_ARGB32);
+  int idx = 0;
+  QRgb* scanLine = NULL;
+  int scanIndex = 0;
+  for (int y = 0; y < header.ny; ++y)
+  {
+    if (flipYAxis == true) { scanIndex = header.ny - 1 - y; }
+    else { scanIndex = y; }
+    scanLine = reinterpret_cast<QRgb*>(image.scanLine(scanIndex));
+    for (int x = 0; x < header.nx; ++x)
+    {
+      idx = (header.nx * y) + x;
+      int colorIndex = data[idx] - static_cast<int>(min);
+      scanLine[x] = colorTablePtr[colorIndex]; // Access the value directly through a memory reference
+      //image.setPixel(x, y, colorTable[colorIndex]);
+    }
+  }
+  return image;
+}
+
 
 // -----------------------------------------------------------------------------
 //

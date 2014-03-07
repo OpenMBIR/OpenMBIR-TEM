@@ -178,6 +178,7 @@ protected slots:
     void on_actionSaveCanvas_triggered();
     void on_action_InputMRCInfo_triggered();
     void on_action_OutputMRCInfo_triggered();
+    void on_actionLoad_Tilt_Information_triggered();
 
     //Window Menu
     void on_actionParameters_triggered();
