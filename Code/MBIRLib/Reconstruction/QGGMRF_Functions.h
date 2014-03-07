@@ -34,11 +34,11 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-// q-GGMRF is of the form 
+// q-GGMRF is of the form
 // \rho(\delta)= (|\deta/sigma|^p)/(c + |\deta/sigma|^(p-q))
 // p=2; 1<=q<=2
 
-#ifndef EIMTOMO_USE_QGGMRF_FUNCTIONS_H_
+#ifndef QGGMRF_FUNCTIONS_H_
 #define QGGMRF_FUNCTIONS_H_
 
 #include "MBIRLib/MBIRLib.h"
@@ -59,7 +59,7 @@ namespace QGGMRF {
       Real_t MRF_ALPHA;
       Real_t SIGMA_X_P_Q;
       Real_t SIGMA_X_Q;
-	  Real_t gamma;
+    Real_t gamma;
   } QGGMRF_Values;
 
   /**

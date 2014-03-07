@@ -24,9 +24,9 @@ endif()
 SET (PROJECT_PREFIX "MXA" CACHE STRING "The Prefix to be used for Preprocessor definitions")
 set (MXA_INSTALL_FILES 0)
 #-------------------------------------------------------------------------------
-# Include the cmp project to perform all the basic configuration tests for the 
+# Include the cmp project to perform all the basic configuration tests for the
 # project.
-#------------------------------------------------------------------------------- 
+#-------------------------------------------------------------------------------
 set (CMP_HEADER_DIR ${MXA_BINARY_DIR})
 set (CMP_CONFIGURATION_FILE_NAME "MXAConfiguration.h")
 set (CMP_TYPES_FILE_NAME "MXATypes.h")
@@ -52,8 +52,8 @@ MXACompileDir(Utilities)
 set (MXA_HDF5_SUPPORT "1")
 #MXACompileDir(HDF5)
 
-set (Project_SRCS 
-    ${Project_SRCS} 
+set (Project_SRCS
+    ${Project_SRCS}
     )
 
 include_directories(${MXA_SOURCE_DIR}/..)
@@ -75,7 +75,7 @@ cmpVersionStringsFromGit(GENERATED_HEADER_FILE_PATH ${CMP_HEADER_DIR}/MXAVersion
 
 configure_file(${MXA_SOURCE_DIR}/MXAConfiguration.h.in
                ${CMP_HEADER_DIR}/${CMP_TOP_HEADER_FILE})
-               
+
 # add_definitions(-DQT_CORE_LIB)
 
 add_library(${PROJECT_NAME} ${LIB_TYPE}  ${Project_SRCS})
@@ -91,11 +91,11 @@ if (WIN32)
 endif()
 
 if (BUILD_SHARED_LIBS AND NOT APPLE)
-    INSTALL(TARGETS ${PROJECT_NAME} 
+    INSTALL(TARGETS ${PROJECT_NAME}
         COMPONENT Applications
         RUNTIME DESTINATION ${install_dir}
         LIBRARY DESTINATION ${lib_install_dir}
-        ARCHIVE DESTINATION ${lib_install_dir}       
+        ARCHIVE DESTINATION ${lib_install_dir}
         BUNDLE DESTINATION "."
-    ) 
-endif() 
+    )
+endif()

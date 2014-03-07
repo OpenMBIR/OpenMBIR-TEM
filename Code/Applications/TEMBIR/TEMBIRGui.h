@@ -176,6 +176,7 @@ protected slots:
     void on_actionSaveCanvas_triggered();
     void on_action_InputMRCInfo_triggered();
     void on_action_OutputMRCInfo_triggered();
+    void on_actionLoad_Tilt_Information_triggered();
 
     //Window Menu
     void on_actionParameters_triggered();
@@ -371,17 +372,21 @@ signals:
     */
     void cancelPipeline();
 
-    /**
-    * @brief Signal emitted when a message is available for display to the user
-    * @param s The warning message
-    */
-    void pipelineWarningMessage(const QString &s);
+     /**
+      * @brief This message reports some human readable message suitable for display
+      * on a GUI or printed to a console or possibly saved to a log file
+      * @param message
+      */
+     virtual void pipelineWarningMessage(const char* message);
+     virtual void pipelineWarningMessage(const std::string &msg);
 
-    /**
-     * @brief If the pipeline throws an error this signal will emit it.
-     * @param s The message to display
-     */
-    void pipelineErrorMessage(const QString &s);
+     /**
+      * @brief This message reports some human readable message suitable for display
+      * on a GUI or printed to a console or possibly saved to a log file
+      * @param message
+      */
+     virtual void pipelineErrorMessage(const char* message);
+     virtual void pipelineErrorMessage(const std::string &msg);
 
     /**
      * @brief The Reconstruction Area has changed.

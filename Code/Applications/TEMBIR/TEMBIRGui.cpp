@@ -82,6 +82,7 @@
 #include "ReconstructionArea.h"
 #include "MRCInfoWidget.h"
 #include "ImageOpenDialog.h"
+#include "TomogramTiltLoader.h"
 
 
 #define READ_STRING_SETTING(prefs, var, emptyValue)\
@@ -1051,10 +1052,10 @@ void TEMBIRGui::singleSliceComplete()
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
   QString reconVolumeFile = QString::fromStdString(m_MultiResSOC->getTempDir()) + QDir::separator() +
-          finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(ScaleOffsetCorrection::ReconstructedMrcFile);
-
+  finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(ScaleOffsetCorrection::ReconstructedMrcFile);
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(reconVolumeFile);
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(false);
+
 
   // Delete the top level directory
   removeDir(QString::fromStdString(m_MultiResSOC->getTempDir()));
@@ -1091,26 +1092,26 @@ void TEMBIRGui::loadProgressMRCFile(QString mrcfilePath)
 // -----------------------------------------------------------------------------
 bool TEMBIRGui::removeDir(const QString &dirName)
 {
-    bool result = true;
-    QDir dir(dirName);
+  bool result = true;
+  QDir dir(dirName);
 
-    if (dir.exists(dirName)) {
-        Q_FOREACH(QFileInfo info, dir.entryInfoList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files, QDir::DirsFirst)) {
-            if (info.isDir()) {
-                result = removeDir(info.absoluteFilePath());
-            }
-            else {
-                result = QFile::remove(info.absoluteFilePath());
-            }
+  if (dir.exists(dirName)) {
+    Q_FOREACH(QFileInfo info, dir.entryInfoList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files, QDir::DirsFirst)) {
+      if (info.isDir()) {
+        result = removeDir(info.absoluteFilePath());
+      }
+      else {
+        result = QFile::remove(info.absoluteFilePath());
+      }
 
-            if (!result) {
-                return result;
-            }
-        }
-        result = dir.rmdir(dirName);
+      if (!result) {
+        return result;
+      }
     }
+    result = dir.rmdir(dirName);
+  }
 
-    return result;
+  return result;
 }
 
 
@@ -1135,7 +1136,6 @@ void TEMBIRGui::pipelineComplete()
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(true);
   m_ReconstructedDisplayWidget->setDrawOrigin(false);
   m_ReconstructedDisplayWidget->loadMRCFile(reconstructedVolumeFileName->text());
-
 
   setWindowTitle(m_CurrentImageFile);
   setWidgetListEnabled(true);
@@ -2159,24 +2159,4 @@ void TEMBIRGui::deleteTempFiles()
   }
   m_TempFilesToDelete.clear();
 }
-
-#if 0
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TEMBIRGui::sigmaX_ShouldUpdate(bool b)
-{
-  estimateSigmaX->setEnabled(b);
-  estimateSigmaX->setDefault(b);
-
-  m_UpdateCachedSigmaX = b;
-
-  targetGain->setEnabled(!b);
-  sampleThickness->setEnabled(!b);
-  sigma_x->setEnabled(!b);
-  smoothness->setEnabled(!b);
-  tiltSelection->setEnabled(!b);
-}
-#endif
-
 
