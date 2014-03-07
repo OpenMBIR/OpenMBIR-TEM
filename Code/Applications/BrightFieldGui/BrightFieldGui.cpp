@@ -2331,6 +2331,7 @@ void BrightFieldGui::deleteTempFiles()
 void BrightFieldGui::on_actionLoad_Tilt_Information_triggered()
 {
   TomogramTiltLoader loader(this);
+  loader.setNumTilts(m_nTilts);
   int ret = loader.exec();
   if(ret == QDialog::Accepted) // the user clicked the OK button, now check what they typed
   {

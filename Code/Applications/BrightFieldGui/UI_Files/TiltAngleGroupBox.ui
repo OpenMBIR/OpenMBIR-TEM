@@ -34,6 +34,9 @@
      </property>
      <item>
       <widget class="QLabel" name="startLabel">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>Starting Angle:</string>
        </property>
@@ -41,6 +44,9 @@
      </item>
      <item>
       <widget class="QLineEdit" name="startingAngle">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>-60</string>
        </property>
@@ -48,6 +54,9 @@
      </item>
      <item>
       <widget class="QLabel" name="incrementLabel">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>Increment</string>
        </property>
@@ -55,6 +64,9 @@
      </item>
      <item>
       <widget class="QLineEdit" name="increment">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="text">
         <string>10</string>
        </property>

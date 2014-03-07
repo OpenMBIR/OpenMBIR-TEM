@@ -23,9 +23,10 @@ TomogramTiltLoader::~TomogramTiltLoader()
 // -----------------------------------------------------------------------------
 void TomogramTiltLoader::setupGui()
 {
-    QDoubleValidator* dVal = new QDoubleValidator(this);
+  QDoubleValidator* dVal = new QDoubleValidator(this);
   dVal->setDecimals(6);
   pixelSize->setValidator(dVal);
+
 }
 
 // -----------------------------------------------------------------------------
@@ -51,4 +52,14 @@ float TomogramTiltLoader::getPixelSize()
 {
   bool ok = false;
   return pixelSize->text().toFloat(&ok);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TomogramTiltLoader::setNumTilts(int nTilts)
+{
+  m_NumTilts = nTilts;
+  aTilts->setNumTilts(m_NumTilts);
+  bTilts->setNumTilts(m_NumTilts);
 }
