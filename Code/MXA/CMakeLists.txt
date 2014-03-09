@@ -24,18 +24,21 @@ endif()
 SET (PROJECT_PREFIX "MXA" CACHE STRING "The Prefix to be used for Preprocessor definitions")
 set (MXA_INSTALL_FILES 0)
 #-------------------------------------------------------------------------------
-# Include the cmp project to perform all the basic configuration tests for the 
+# Include the cmp project to perform all the basic configuration tests for the
 # project.
-#------------------------------------------------------------------------------- 
+#-------------------------------------------------------------------------------
 set (CMP_HEADER_DIR ${MXA_BINARY_DIR})
 set (CMP_CONFIGURATION_FILE_NAME "MXAConfiguration.h")
 set (CMP_TYPES_FILE_NAME "MXATypes.h")
 set (CMP_VERSION_HEADER_FILE_NAME "MXAVersion.h")
+set (CMP_VERSION_SOURCE_FILE_NAME "MXAVersion.cpp")
 set (CMP_TOP_HEADER_FILE "MXA.h")
 set (CMP_PROJECT_NAMESPACE "MXA")
 set (CMP_PROJECT_NAME "MXA")
 set (CMP_ENABLE_PLUGINS "0")
 set (CMP_LIB_SEARCH_DIRS "")
+set (CMP_GENERATE_VERSION_STRING 1)
+set (CMP_INSTALL_FILES 0)
 INCLUDE (${CMP_SOURCE_DIR}/cmpProject.cmake)
 
 
@@ -49,8 +52,8 @@ MXACompileDir(Utilities)
 set (MXA_HDF5_SUPPORT "1")
 #MXACompileDir(HDF5)
 
-set (Project_SRCS 
-    ${Project_SRCS} 
+set (Project_SRCS
+    ${Project_SRCS}
     )
 
 include_directories(${MXA_SOURCE_DIR}/..)
@@ -65,18 +68,18 @@ set (HDF5_VTK_BRIDGE "0")
 # --------------------------------------------------------------------
 # Generate a Header file with Compile Version variables
 # --------------------------------------------------------------------
-cmpVersionStringsFromGit(GENERATED_FILE_PATH ${CMP_HEADER_DIR}/MXAVersion.h 
-                         NAMESPACE "MXA"
-                         cmpProjectName "MXA" )
-                         
+cmpVersionStringsFromGit(GENERATED_HEADER_FILE_PATH ${CMP_HEADER_DIR}/MXAVersion.h
+                         GENERATED_SOURCE_FILE_PATH ${CMP_HEADER_DIR}/MXAVersion.cpp
+                         NAMESPACE "${CMP_PROJECT_NAMESPACE}"
+                         cmpProjectName "${CMP_PROJECT_NAME}" )
 
 configure_file(${MXA_SOURCE_DIR}/MXAConfiguration.h.in
                ${CMP_HEADER_DIR}/${CMP_TOP_HEADER_FILE})
-               
+
 # add_definitions(-DQT_CORE_LIB)
 
 add_library(${PROJECT_NAME} ${LIB_TYPE}  ${Project_SRCS})
-target_link_libraries(${PROJECT_NAME} ${HDF5_LIBRARIES} MXA)
+target_link_libraries(${PROJECT_NAME} ${HDF5_LIBRARIES})
 LibraryProperties( ${PROJECT_NAME} ${EXE_DEBUG_EXTENSION})
 
 
@@ -88,11 +91,11 @@ if (WIN32)
 endif()
 
 if (BUILD_SHARED_LIBS AND NOT APPLE)
-    INSTALL(TARGETS ${PROJECT_NAME} 
+    INSTALL(TARGETS ${PROJECT_NAME}
         COMPONENT Applications
         RUNTIME DESTINATION ${install_dir}
         LIBRARY DESTINATION ${lib_install_dir}
-        ARCHIVE DESTINATION ${lib_install_dir}       
+        ARCHIVE DESTINATION ${lib_install_dir}
         BUNDLE DESTINATION "."
-    ) 
-endif() 
+    )
+endif()

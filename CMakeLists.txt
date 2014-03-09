@@ -9,7 +9,7 @@
 #--
 #--////////////////////////////////////////////////////////////////////////////
 project (OpenMBIR)
-cmake_minimum_required(VERSION 2.8.6)
+cmake_minimum_required(VERSION 2.8.9)
 
 # We setup all the libraries and exectuables to all be placed into a single directory
 # ---------- Setup Library output Directories -------------------------
@@ -38,6 +38,9 @@ if (NOT DEFINED CMP_SOURCE_DIR)
 set(CMP_SOURCE_DIR ${OpenMBIR_SOURCE_DIR}/Support/cmp)
 endif()
 
+if(UNIX AND NOT APPLE)
+    set(OpenMBIR_LINUX_SYSTEM ${CMAKE_SYSTEM_NAME} CACHE STRING "The Name of the linux distrubution for packaging")
+endif()
 
 
 SET (PROJECT_CODE_DIR ${PROJECT_SOURCE_DIR}/Code)
@@ -56,6 +59,23 @@ set (CMP_INSTALL_FILES 1)
 set (CMP_CONFIGURED_FILES_SOURCE_DIR ${CMP_SOURCE_DIR}/ConfiguredFiles)
 set (CMP_MODULES_SOURCE_DIR ${CMP_SOURCE_DIR}/Modules CACHE INTERNAL "")
 include( ${CMP_SOURCE_DIR}/cmpCMakeMacros.cmake)
+
+
+if(UNIX AND NOT APPLE)
+    set(OpenMBIR_LINUX_SYSTEM ${CMAKE_SYSTEM_NAME} CACHE STRING "The Name of the linux distrubution for packaging")
+endif()
+
+
+# --------------------------------------------------------------------
+# In order to increment the version of DREAM3D simply adjust these variables.
+# we are using a 3 part Version scheme commonly found in software development. The
+# example would be Version 2.1.6543 which translates to Version [major].[minor].[patch].
+# The Major version is set here in the CMake file. We will use Git
+# to figure out the "patch" leve of the version by using "git describe" which will
+# calculate how many commits since the last "tag" was applied to the repository.
+# this basically gives us an always incrementing number for the patch level
+# and we can set the Major and Minor versions as we see fit.
+set(CMP_VERSION_MAJOR "v1")
 
 # --------------------------------------------------------------------
 # Over ride CMake's built in module directory by prepending cmp's module
@@ -95,7 +115,7 @@ set (OpenMBIR_HDF5_SUPPORT 0)
 SET (Boost_DEBUG FALSE)
 set (Boost_USE_MULTITHREADED TRUE)
 set (Boost_USE_STATIC_LIBS TRUE)
-SET (Boost_ADDITIONAL_VERSIONS "1.47.0" "1.46.0" "1.44.0" "1.44" "1.41" "1.41.0" "1.39" "1.39.0")
+SET (Boost_ADDITIONAL_VERSIONS "1.55.0" "1.47.0" "1.46.0" "1.44.0" "1.44" "1.41" "1.41.0" )
 set (Boost_FIND_COMPONENTS "")
 set (Boost_NO_BOOST_CMAKE 1)
 FIND_PACKAGE(Boost)
@@ -234,7 +254,7 @@ if (OpenMBIR_BUILD_GUI)
     # will not work due to signals/slots mechanism.
     add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/QtSupport ${PROJECT_BINARY_DIR}/QtSupport)
    
-    add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/Applications/TEMBIR ${PROJECT_BINARY_DIR}/Applications/TEMBIR)
+    add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/Applications/BrightFieldGui ${PROJECT_BINARY_DIR}/Applications/BrightFieldGui)
 
 endif()
 

@@ -38,6 +38,8 @@
 #include <QtGui/QGraphicsItem>
 #include <QtGui/QRubberBand>
 
+#include "RectangleCreator.h"
+
 class TEMBIRGui;
 class ReconstructionArea;
 
@@ -74,6 +76,8 @@ class MRCGraphicsView : public QGraphicsView
   public:
 
     MRCGraphicsView( QWidget *parent = NULL);
+    
+    ~MRCGraphicsView();
 
     void setWidget(QWidget* gui);
 
@@ -110,12 +114,21 @@ class MRCGraphicsView : public QGraphicsView
 
     void addNewReconstructionArea(ReconstructionArea* userInitArea);
     void createNewReconstructionArea(const QRectF brect);
+    
+    void createBackgroundSelector(QRect rect = QRect());
+    void removeBackgroundSelector();
 
     ReconstructionArea* reconstructionArea();
 
     QLineF getXZPlane();
 
     QGraphicsItem* getImageGraphicsItem();
+    
+    RectangleCreator* getBackgroundRectangle();
+    
+    void resizeBackgroundRectangle(int width, int height);
+    void moveBackgroundRectangle(int x, int y);
+    void updateBackgroundRectangle(QRect rect);
 
     void clearContent();
 
@@ -145,7 +158,7 @@ class MRCGraphicsView : public QGraphicsView
 
     void fireImageFileLoaded(const QString &filename);
 
-    void fireSingleSliceSelected(int y);
+    void fireSingleSliceSelected(int y);        // SlOT: TEMBIRGui::SingleSlicePlaneSet(int y)
 
     void fireReconstructionVOIAdded(ReconstructionArea* reconVOI);
 
@@ -155,17 +168,18 @@ class MRCGraphicsView : public QGraphicsView
 
 
   private:
-   QGraphicsItem* m_ImageGraphicsItem;
-   QImage         m_BaseImage;
-   bool           m_DisableVOISelection;
-   bool           m_AddReconstructionArea;
-   QRubberBand*   m_RubberBand;
-   QPoint         m_MouseClickOrigin;
-   float          m_ZoomFactors[10];
-   QGraphicsPolygonItem m_XZLine;
-   float          m_XZWidth;
+   QGraphicsItem*                       m_ImageGraphicsItem;
+   QImage                               m_BaseImage;
+   bool                                 m_DisableVOISelection;
+   bool                                 m_AddReconstructionArea;
+   QRubberBand*                         m_RubberBand;
+   QPoint                               m_MouseClickOrigin;
+   float                                m_ZoomFactors[10];
+   QGraphicsPolygonItem                 m_XZLine;
+   float                                m_XZWidth;
 
-   QWidget*       m_MainGui;
+   QWidget*                             m_MainGui;
+   RectangleCreator*                    m_BackgroundRectangle;
    TomoGui_Constants::ImageDisplayType  m_ImageDisplayType;
    bool                                 m_ShowOverlayImage;
    QPainter::CompositionMode            m_composition_mode;

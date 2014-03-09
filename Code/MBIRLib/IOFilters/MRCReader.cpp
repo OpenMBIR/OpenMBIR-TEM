@@ -157,7 +157,18 @@ int MRCReader::readHeader(const std::string &filepath, MRCHeader* header)
      header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * header->nz));
      ::memcpy(header->feiHeaders, &(m_ExtendedHeader.front()), sizeof(FEIHeader) * header->nz);
    }
-
+   pos = feiLabel.find("tif2mrc: Converted to MRC format");
+   if (pos != std::string::npos)
+   {
+     if (NULL != header->feiHeaders)
+     {
+       free(header->feiHeaders);
+       header->feiHeaders = NULL;
+     }
+//     // Allocate and copy in the data
+//     header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * header->nz));
+//     ::memcpy(header->feiHeaders, &(m_ExtendedHeader.front()), sizeof(FEIHeader) * header->nz);
+   }
    return 1;
 }
 
@@ -219,19 +230,45 @@ int MRCReader::read(const std::string &filepath, int* voxelMin, int* voxelMax)
 //  size_t fp = reader.getFilePointer64();
 
   // If we have an FEI header then parse the extended header information
-  std::string feiLabel(m_Header->labels[0], 80);
   m_Header->feiHeaders = NULL;
-  if (feiLabel.find_first_of("Fei Company") != std::string::npos)
-  {
-    if (NULL != m_Header->feiHeaders)
-    {
-      free(m_Header->feiHeaders);
-      m_Header->feiHeaders = NULL;
-    }
-    // Allocate and copy in the data
-    m_Header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * m_Header->nz));
-    ::memcpy(m_Header->feiHeaders, &(m_ExtendedHeader.front()), sizeof(FEIHeader) * m_Header->nz);
-  }
+ // If we have an FEI header then parse the extended header information
+   std::string feiLabel(m_Header->labels[0], 80);
+   std::string::size_type pos = feiLabel.find("Fei Company");
+   if (pos != std::string::npos)
+   {
+     if (NULL != m_Header->feiHeaders)
+     {
+       free(m_Header->feiHeaders);
+       m_Header->feiHeaders = NULL;
+     }
+     // Allocate and copy in the data
+     m_Header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * m_Header->nz));
+     ::memcpy(m_Header->feiHeaders, &(m_ExtendedHeader.front()), sizeof(FEIHeader) * m_Header->nz);
+   }
+   pos = feiLabel.find("EIC project");
+   if (pos != std::string::npos)
+   {
+     if (NULL != m_Header->feiHeaders)
+     {
+       free(m_Header->feiHeaders);
+       m_Header->feiHeaders = NULL;
+     }
+     // Allocate and copy in the data
+     m_Header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * m_Header->nz));
+     ::memcpy(m_Header->feiHeaders, &(m_ExtendedHeader.front()), sizeof(FEIHeader) * m_Header->nz);
+   }
+   pos = feiLabel.find("MCAP project, MDG, Copyright 2013");
+   if (pos != std::string::npos)
+   {
+     if (NULL != m_Header->feiHeaders)
+     {
+       free(m_Header->feiHeaders);
+       m_Header->feiHeaders = NULL;
+     }
+     // Allocate and copy in the data
+     m_Header->feiHeaders = reinterpret_cast<FEIHeader*>(malloc(sizeof(FEIHeader) * m_Header->nz));
+     ::memcpy(m_Header->feiHeaders, &(m_ExtendedHeader.front()), sizeof(FEIHeader) * m_Header->nz);
+   }
 
   size_t nVoxels = m_Header->nx * m_Header->ny * m_Header->nz;
   if ( NULL != voxelMin && NULL != voxelMax)

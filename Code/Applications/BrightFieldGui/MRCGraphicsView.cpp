@@ -41,14 +41,8 @@
 #include <QtGui/QPixmap>
 #include <QtGui/QGraphicsPolygonItem>
 
-#include "TEMBIRGui.h"
+#include "BrightFieldGui.h"
 #include "ReconstructionArea.h"
-
-namespace UIA
-{
-  const static int Alpha = 155;
-}
-
 
 
 // -----------------------------------------------------------------------------
@@ -59,8 +53,11 @@ MRCGraphicsView::MRCGraphicsView(QWidget *parent)
   m_ImageGraphicsItem(NULL),
   m_DisableVOISelection(true),
   m_AddReconstructionArea(false),
+  m_XZLine(0),
   m_XZWidth(.90),
+  m_BackgroundRectangle(NULL),
   m_ReconstructionArea(NULL)
+
 {
   setAcceptDrops(true);
  // setDragMode(RubberBandDrag);
@@ -81,6 +78,18 @@ MRCGraphicsView::MRCGraphicsView(QWidget *parent)
   m_composition_mode = QPainter::CompositionMode_SourceOver;
   m_OverlayTransparency = 1.0f; // Fully opaque
 //  setBackgroundBrush(QPixmap(":/background4.png"));
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+MRCGraphicsView::~MRCGraphicsView()
+{
+    if (m_BackgroundRectangle != NULL)
+    {
+        delete m_BackgroundRectangle;
+        m_BackgroundRectangle = NULL;
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -275,6 +284,10 @@ void MRCGraphicsView::clearContent()
     {
       m_ReconstructionArea->setParentItem(NULL);
     }
+    if (NULL != m_BackgroundRectangle)
+    {
+        m_BackgroundRectangle->setParentItem(NULL);
+    }
     delete m_ImageGraphicsItem; // Will delete its children
     m_ImageGraphicsItem = NULL;
   }
@@ -287,58 +300,70 @@ void MRCGraphicsView::clearContent()
 // -----------------------------------------------------------------------------
 void MRCGraphicsView::loadBaseImageFile(QImage image)
 {
-  m_BaseImage = image;
-  if(m_BaseImage.isNull() == true)
-  {
- //   std::cout << "MRCGraphicsView::loadBaseImageFile() - Input Image was NULL" << std::endl;
-    return;
-  }
-  QSize pSize(0, 0);
+    QRect rectCoords(0,0,0,0);
+    m_BaseImage = image;
+    if(m_BaseImage.isNull() == true)
+    {
+        //   std::cout << "MRCGraphicsView::loadBaseImageFile() - Input Image was NULL" << std::endl;
+        return;
+    }
+    QSize pSize(0, 0);
 
-  m_BaseImage = m_BaseImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+    m_BaseImage = m_BaseImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
 
-  QGraphicsScene* gScene = scene();
-  if(gScene == NULL)
-  {
-    gScene = new QGraphicsScene(this);
-    setScene(gScene);
-  }
-  else
-  {
-    gScene->removeItem(m_ImageGraphicsItem);
+    QGraphicsScene* gScene = scene();
+    if(gScene == NULL)
+    {
+        gScene = new QGraphicsScene(this);
+        setScene(gScene);
+    }
+    else
+    {
+        if (NULL != m_ImageGraphicsItem)
+        {
+            gScene->removeItem(m_ImageGraphicsItem);
+        }
+        if(NULL != m_ReconstructionArea)
+        {
+            m_ReconstructionArea->setParentItem(NULL);
+        }
+        if (NULL != m_BackgroundRectangle)
+        {
+            rectCoords = m_BackgroundRectangle->getMappedRectangleCoordinates();
+            removeBackgroundSelector();
+        }
+
+        delete m_ImageGraphicsItem; // Will delete its children
+        m_ImageGraphicsItem = NULL;
+    }
+
+    gScene->invalidate();
+    m_ImageGraphicsItem = gScene->addPixmap(QPixmap::fromImage(m_BaseImage));
     if(NULL != m_ReconstructionArea)
     {
-      m_ReconstructionArea->setParentItem(NULL);
+        m_ReconstructionArea->setParentItem(m_ImageGraphicsItem);
+        createBackgroundSelector(rectCoords);
     }
-    delete m_ImageGraphicsItem; // Will delete its children
-    m_ImageGraphicsItem = NULL;
-  }
 
-  m_ImageGraphicsItem = gScene->addPixmap(QPixmap::fromImage(m_BaseImage));
-  if(NULL != m_ReconstructionArea)
-  {
-    m_ReconstructionArea->setParentItem(m_ImageGraphicsItem);
-  }
+    m_ImageGraphicsItem->setAcceptDrops(true);
+    m_ImageGraphicsItem->setZValue(-1);
+    QRectF rect = m_ImageGraphicsItem->boundingRect();
+    gScene->setSceneRect(rect);
 
-  m_ImageGraphicsItem->setAcceptDrops(true);
-  m_ImageGraphicsItem->setZValue(-1);
-  QRectF rect = m_ImageGraphicsItem->boundingRect();
-  gScene->setSceneRect(rect);
+    // Line Color
+    m_XZLine.setPen(QPen(QColor(255, 255, 0, UIA::Alpha)));
+    // Fill Color
+    m_XZLine.setBrush(QBrush(QColor(255, 255, 0, UIA::Alpha)));
+    m_XZLine.setZValue(1);
+    m_XZLine.setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+    m_XZLine.setVisible(m_XZLine.isVisible());
+    if(scene()->items().contains(&m_XZLine) == false)
+    {
+        scene()->addItem(&m_XZLine);
+    }
 
-  // Line Color
-  m_XZLine.setPen(QPen(QColor(255, 255, 0, UIA::Alpha)));
-  // Fill Color
-  m_XZLine.setBrush(QBrush(QColor(255, 255, 0, UIA::Alpha)));
-  m_XZLine.setZValue(1);
-  m_XZLine.setCacheMode(QGraphicsItem::DeviceCoordinateCache);
-  m_XZLine.setVisible(m_XZLine.isVisible());
-  if(scene()->items().contains(&m_XZLine) == false)
-  {
-    scene()->addItem(&m_XZLine);
-  }
-
-  this->updateDisplay();
-  emit fireBaseMRCFileLoaded();
+    this->updateDisplay();
+    emit fireBaseMRCFileLoaded();
 }
 
 // -----------------------------------------------------------------------------
@@ -461,7 +486,7 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
   if (event->modifiers() == Qt::ShiftModifier)
   {
     if(m_RubberBand) m_RubberBand->hide();
-    QRectF sr = sceneRect();
+    //QRectF sr = sceneRect();
 
     QPointF mappedPoint = mapToScene(QPoint(0, m_MouseClickOrigin.y()));
 
@@ -489,13 +514,11 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 
     int y = m_BaseImage.size().height() - getXZPlane().y1();
 
-
-    emit fireSingleSliceSelected(y);
+    emit fireSingleSliceSelected(y);    // SlOT: BrightFieldGui::SingleSlicePlaneSet(int y)
   }
   else if (m_AddReconstructionArea == true && NULL != m_RubberBand)
   {
     m_RubberBand->hide();
-    QPoint endPoint = event->pos();
 
     QRect box = QRect(m_MouseClickOrigin, event->pos()).normalized();
 
@@ -539,6 +562,12 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 // -----------------------------------------------------------------------------
 QLineF MRCGraphicsView::getXZPlane()
 {
+    if ( m_XZLine.polygon().isEmpty() )
+    {
+        std::cout << "FIX - MRCGraphicsView::getXZPlane()\n";
+        return QLineF(0,0,0,0);
+    }
+
  QPointF p0 = m_XZLine.polygon().at(0);
  QPointF p1 = m_XZLine.polygon().at(1);
 
@@ -639,3 +668,104 @@ void MRCGraphicsView::setCompositeMode(TomoGui_Constants::CompositeType mode)
 
   this->setImageDisplayType(m_ImageDisplayType);
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void MRCGraphicsView::removeBackgroundSelector()
+{
+    delete m_BackgroundRectangle;
+    m_BackgroundRectangle = NULL;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void MRCGraphicsView::createBackgroundSelector(QRect rectObj)
+{
+    QSize imageSize = m_BaseImage.size();
+
+    if (rectObj == QRect())
+    {
+        int boxWidth = imageSize.width()*0.1;
+        int boxHeight = imageSize.height()*0.1;
+        int boxX = (imageSize.width()/2) - (boxWidth/2);
+        int boxY = (imageSize.height()/2) - (boxHeight/2);
+        QPoint scenePt(boxX, boxY);
+        QPoint imagePt = mapFromScene(scenePt);
+        QRect rect = QRect(imagePt.x(), imagePt.y(), boxWidth, boxHeight);
+        QPolygonF box = mapToScene(rect);
+        m_BackgroundRectangle = new RectangleCreator(box);
+    }
+    else
+    {
+        QRect rect = rectObj;
+        QRectF rectf = QRectF(rect);
+        QPolygonF box = QPolygonF(rectf);
+        m_BackgroundRectangle = new RectangleCreator(box);
+    }
+    if(NULL != m_ImageGraphicsItem)
+    {
+        m_BackgroundRectangle->setParentItem(m_ImageGraphicsItem);
+
+    }
+
+    // Line Color
+    m_BackgroundRectangle->setPen(QPen(QColor(225, 225, 225, UIA::Alpha)));
+    // Fill Color
+    m_BackgroundRectangle->setBrush(QBrush(QColor(255, 0, 0, UIA::Alpha)));
+    m_BackgroundRectangle->setZValue(1);
+    m_BackgroundRectangle->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+
+    // Set parent item
+    //m_BackgroundRectangle->setParentItem(m_ImageGraphicsItem);
+
+    // Make it visible
+    m_BackgroundRectangle->setVisible(true);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+RectangleCreator* MRCGraphicsView::getBackgroundRectangle()
+{
+    return m_BackgroundRectangle;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void MRCGraphicsView::resizeBackgroundRectangle(int width, int height)
+{
+    QRect origRect = m_BackgroundRectangle->getMappedRectangleCoordinates();
+    QRect newRect = QRect(origRect.x(), origRect.y(), width, height);
+    QRectF rectf = QRectF(newRect);
+    QPolygonF polygonf = QPolygonF(rectf);
+    m_BackgroundRectangle->updateRectanglePolygon(polygonf);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void MRCGraphicsView::moveBackgroundRectangle(int x, int y)
+{
+    QRect origRect = m_BackgroundRectangle->getMappedRectangleCoordinates();
+    QRect newRect = QRect(x, y, origRect.width(), origRect.height());
+    QRectF rectf = QRectF(newRect);
+    QPolygonF polygonf = QPolygonF(rectf);
+    m_BackgroundRectangle->updateRectanglePolygon(polygonf);
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void MRCGraphicsView::updateBackgroundRectangle(QRect rect)
+{
+    std::cout << "(X,Y): " << rect.x() << ", " << rect.y() << std::endl;
+    QRectF rectf = QRectF(rect);
+    QPolygonF polygonf = QPolygonF(rectf);
+    m_BackgroundRectangle->updateRectanglePolygon(polygonf);
+}
+
+
+

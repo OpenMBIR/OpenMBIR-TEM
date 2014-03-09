@@ -28,7 +28,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "TEMBIRGui.h"
+#include "BrightFieldGui.h"
 
 #include <errno.h>
 
@@ -47,6 +47,7 @@
 #include <QtCore/QThreadPool>
 #include <QtCore/QFileInfoList>
 #include <QtCore/QTimer>
+#include <QtCore/QRect>
 
 #include <QtGui/QApplication>
 #include <QtGui/QFileDialog>
@@ -83,7 +84,29 @@
 #include "ReconstructionArea.h"
 #include "MRCInfoWidget.h"
 #include "ImageOpenDialog.h"
+#include "TomogramTiltLoader.h"
 
+/*
+ * Concatenate preprocessor tokens A and B without expanding macro definitions
+ * (however, if invoked from a macro, macro arguments are expanded).
+ */
+#define PPCAT_NX(A, B) A ## B
+
+/*
+ * Concatenate preprocessor tokens A and B after macro-expanding them.
+ */
+#define PPCAT(A, B) PPCAT_NX(A, B)
+
+/*
+ * Turn A into a string literal without expanding macro definitions
+ * (however, if invoked from a macro, macro arguments are expanded).
+ */
+#define STRINGIZE_NX(A) #A
+
+/*
+ * Turn A into a string literal after macro-expanding it.
+ */
+#define STRINGIZE(A) STRINGIZE_NX(A)
 
 #define READ_STRING_SETTING(prefs, var, emptyValue)\
   var->setText( prefs.value(#var).toString() );\
@@ -108,20 +131,36 @@
 #define WRITE_SETTING(prefs, var)\
   prefs.setValue(#var, this->var->value());
 
+#define WRITE_QRECT_SETTING(prefs, var)\
+  prefs.setValue(STRINGIZE(PPCAT(var, _X)), var.x());\
+  prefs.setValue(STRINGIZE(PPCAT(var, _Y)), var.y());\
+  prefs.setValue(STRINGIZE(PPCAT(var, _W)), var.width());\
+  prefs.setValue(STRINGIZE(PPCAT(var, _H)), var.height());
+
+#define READ_QRECT_SETTING(prefs, var)\
+  var.setX(prefs.value(STRINGIZE(PPCAT(var, _X))).toInt());\
+  var.setY(prefs.value(STRINGIZE(PPCAT(var, _Y))).toInt());\
+  var.setWidth(prefs.value(STRINGIZE(PPCAT(var, _W))).toInt());\
+  var.setHeight(prefs.value(STRINGIZE(PPCAT(var, _H))).toInt());
+
 #define READ_BOOL_SETTING(prefs, var, emptyValue)\
-  { QString s = prefs.value(#var).toString();\
+{ QString s = prefs.value(#var).toString();\
   if (s.isEmpty() == false) {\
-    bool bb = prefs.value(#var).toBool();\
+  bool bb = prefs.value(#var).toBool();\
   var->setChecked(bb); } else { var->setChecked(emptyValue); } }
 
+#define READ_CHECKBOX_SETTING(prefs, var)\
+  bool temp = prefs.value(#var).toBool();\
+  var->setChecked(temp);\
+
 #define WRITE_BOOL_SETTING(prefs, var, b)\
-    prefs.setValue(#var, (b) );
+  prefs.setValue(#var, (b) );
 
 #define WRITE_CHECKBOX_SETTING(prefs, var)\
-    prefs.setValue(#var, var->isChecked() );
+  prefs.setValue(#var, var->isChecked() );
 
 #define WRITE_VALUE(prefs, var)\
-    prefs.setValue(#var, var);
+  prefs.setValue(#var, var);
 
 static int tiffCount;
 
@@ -129,15 +168,15 @@ static int tiffCount;
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-TEMBIRGui::TEMBIRGui(QWidget *parent) :
-QMainWindow(parent),
-m_OutputExistsCheck(false),
-m_LayersPalette(NULL),
-m_WorkerThread(NULL),
-m_MultiResSOC(NULL),
-m_SingleSliceReconstructionActive(false),
-m_FullReconstrucionActive(false),
-m_UpdateCachedSigmaX(true)
+BrightFieldGui::BrightFieldGui(QWidget *parent) :
+  QMainWindow(parent),
+  m_OutputExistsCheck(false),
+  m_LayersPalette(NULL),
+  m_WorkerThread(NULL),
+  m_MultiResSOC(NULL),
+  m_SingleSliceReconstructionActive(false),
+  m_FullReconstructionActive(false),
+  m_UpdateCachedSigmaX(true)
 {
   m_OpenDialogLastDirectory = QDir::homePath();
   setupUi(this);
@@ -153,7 +192,7 @@ m_UpdateCachedSigmaX(true)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-TEMBIRGui::~TEMBIRGui()
+BrightFieldGui::~BrightFieldGui()
 {
 
 }
@@ -161,7 +200,7 @@ TEMBIRGui::~TEMBIRGui()
 // -----------------------------------------------------------------------------
 //  Called when the main window is closed.
 // -----------------------------------------------------------------------------
-void TEMBIRGui::closeEvent(QCloseEvent *event)
+void BrightFieldGui::closeEvent(QCloseEvent *event)
 {
   qint32 err = checkDirtyDocument();
   if (err < 0)
@@ -171,9 +210,9 @@ void TEMBIRGui::closeEvent(QCloseEvent *event)
   else
   {
 #if defined (Q_OS_MAC)
-  QSettings prefs(QSettings::NativeFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
+    QSettings prefs(QSettings::NativeFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
 #else
-  QSettings prefs(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
+    QSettings prefs(QSettings::IniFormat, QSettings::UserScope, QCoreApplication::organizationDomain(), QCoreApplication::applicationName());
 #endif
     writeSettings(prefs);
     writeWindowSettings(prefs);
@@ -184,7 +223,7 @@ void TEMBIRGui::closeEvent(QCloseEvent *event)
 // -----------------------------------------------------------------------------
 //  Read the prefs from the local storage file
 // -----------------------------------------------------------------------------
-void TEMBIRGui::readSettings(QSettings &prefs)
+void BrightFieldGui::readSettings(QSettings &prefs)
 {
   QString val;
   bool ok;
@@ -195,7 +234,6 @@ void TEMBIRGui::readSettings(QSettings &prefs)
   READ_SETTING(prefs, xWidthFullRecon, ok, i, 100, Int);
   READ_STRING_SETTING(prefs, yMin, "0");
   READ_STRING_SETTING(prefs, yMax, "0");
-
 
   // This will auto load the MRC File
   READ_STRING_SETTING(prefs, inputMRCFilePath, "");
@@ -209,8 +247,10 @@ void TEMBIRGui::readSettings(QSettings &prefs)
 
   READ_STRING_SETTING(prefs, sampleThickness, "150");
   READ_STRING_SETTING(prefs, targetGain, "1")
-  READ_STRING_SETTING(prefs, smoothness, "1.0");
+      READ_STRING_SETTING(prefs, smoothness, "1.0");
   READ_STRING_SETTING(prefs, sigma_x, "1.0");
+  READ_STRING_SETTING(prefs, bf_offset, "0");
+  READ_STRING_SETTING(prefs, bragg_threshold, "3");
 
 
   READ_SETTING(prefs, numResolutions, ok, i, 1, Int);
@@ -218,12 +258,17 @@ void TEMBIRGui::readSettings(QSettings &prefs)
   READ_SETTING(prefs, outerIterations, ok, i, 1, Int);
   READ_SETTING(prefs, innerIterations, ok, i, 1, Int);
 
-  READ_BOOL_SETTING(prefs, useDefaultOffset, false);
   READ_STRING_SETTING(prefs, defaultOffset, "0");
   READ_STRING_SETTING(prefs, stopThreshold, "0.001");
   READ_SETTING(prefs, mrf, ok, d, 1.2, Double);
   READ_BOOL_SETTING(prefs, extendObject, false);
   READ_BOOL_SETTING(prefs, m_DeleteTempFiles, false);
+  READ_BOOL_SETTING(prefs, useDefaultOffset, true);
+
+  QRect rect = QRect(0,0,0,0);
+  READ_QRECT_SETTING(prefs, rect);
+  m_MRCDisplayWidget->graphicsView()->removeBackgroundSelector();
+  m_MRCDisplayWidget->graphicsView()->createBackgroundSelector(rect);
 
   ok = false;
   i = prefs.value("tiltSelection").toInt(&ok);
@@ -231,13 +276,12 @@ void TEMBIRGui::readSettings(QSettings &prefs)
   tiltSelection->setCurrentIndex(i);
 
   prefs.endGroup();
-
 }
 
 // -----------------------------------------------------------------------------
 //  Write our prefs to file
 // -----------------------------------------------------------------------------
-void TEMBIRGui::writeSettings(QSettings &prefs)
+void BrightFieldGui::writeSettings(QSettings &prefs)
 {
   prefs.beginGroup("Parameters");
   WRITE_STRING_SETTING(prefs, inputMRCFilePath);
@@ -249,39 +293,46 @@ void TEMBIRGui::writeSettings(QSettings &prefs)
 
   WRITE_STRING_SETTING(prefs, sampleThickness);
   WRITE_STRING_SETTING(prefs, targetGain)
-  WRITE_STRING_SETTING(prefs, sigma_x);
+      WRITE_STRING_SETTING(prefs, sigma_x);
   WRITE_STRING_SETTING(prefs, smoothness);
   WRITE_SETTING(prefs, numResolutions);
   WRITE_SETTING(prefs, finalResolution);
   WRITE_SETTING(prefs, outerIterations);
   WRITE_SETTING(prefs, innerIterations);
 
-  WRITE_CHECKBOX_SETTING(prefs, useDefaultOffset);
+  WRITE_STRING_SETTING(prefs, bragg_threshold);
   WRITE_STRING_SETTING(prefs, defaultOffset);
   WRITE_STRING_SETTING(prefs, stopThreshold);
+  WRITE_STRING_SETTING(prefs, bf_offset);
 
   WRITE_SETTING(prefs, mrf);
   WRITE_CHECKBOX_SETTING(prefs, extendObject);
   WRITE_CHECKBOX_SETTING(prefs, m_DeleteTempFiles)
+      WRITE_CHECKBOX_SETTING(prefs, useDefaultOffset);
 
-//  WRITE_BOOL_SETTING(prefs, useSubVolume, useSubVolume->isChecked());
+  //  WRITE_BOOL_SETTING(prefs, useSubVolume, useSubVolume->isChecked());
   WRITE_SETTING(prefs, xWidthFullRecon);
   WRITE_STRING_SETTING(prefs, yMin);
   WRITE_STRING_SETTING(prefs, yMax);
-//  WRITE_STRING_SETTING(prefs, zMin);
-//  WRITE_STRING_SETTING(prefs, zMax);
+  //  WRITE_STRING_SETTING(prefs, zMin);
+  //  WRITE_STRING_SETTING(prefs, zMax);
 
+  RectangleCreator* rectangle = m_MRCDisplayWidget->graphicsView()->getBackgroundRectangle();
+  if (NULL != rectangle)
+  {
+    QRect rect = m_MRCDisplayWidget->graphicsView()->getBackgroundRectangle()->getMappedRectangleCoordinates();
+    WRITE_QRECT_SETTING(prefs, rect);
+  }
 
   prefs.setValue("tiltSelection", tiltSelection->currentIndex());
 
   prefs.endGroup();
-
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::readWindowSettings(QSettings &prefs)
+void BrightFieldGui::readWindowSettings(QSettings &prefs)
 {
   bool ok = false;
   prefs.beginGroup("WindodwSettings");
@@ -302,7 +353,7 @@ void TEMBIRGui::readWindowSettings(QSettings &prefs)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::writeWindowSettings(QSettings &prefs)
+void BrightFieldGui::writeWindowSettings(QSettings &prefs)
 {
   prefs.beginGroup("WindodwSettings");
   QByteArray geo_data = saveGeometry();
@@ -315,105 +366,54 @@ void TEMBIRGui::writeWindowSettings(QSettings &prefs)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionSave_Config_File_triggered()
+void BrightFieldGui::on_actionSave_Config_File_triggered()
 {
-    QString proposedFile = m_OpenDialogLastDirectory + QDir::separator() + "Tomo-Config.config";
-    QString file = QFileDialog::getSaveFileName(this, tr("Save Tomo Configuration"),
-                                                proposedFile,
-                                                tr("*.config") );
-    if ( true == file.isEmpty() ){ return;  }
-    QFileInfo fi(file);
-    m_OpenDialogLastDirectory = fi.absolutePath();
-    QSettings prefs(file, QSettings::IniFormat, this);
-    writeSettings(prefs);
+  QString proposedFile = m_OpenDialogLastDirectory + QDir::separator() + "Tomo-Config.config";
+  QString file = QFileDialog::getSaveFileName(this, tr("Save Tomo Configuration"),
+                                              proposedFile,
+                                              tr("*.config") );
+  if ( true == file.isEmpty() ){ return;  }
+  QFileInfo fi(file);
+  m_OpenDialogLastDirectory = fi.absolutePath();
+  QSettings prefs(file, QSettings::IniFormat, this);
+  writeSettings(prefs);
 
-    // Tell the RecentFileList to update itself then broadcast those changes.
-    QRecentFileList::instance()->addFile(file);
+  // Tell the RecentFileList to update itself then broadFt those changes.
+  QRecentFileList::instance()->addFile(file);
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionLoad_Config_File_triggered()
+void BrightFieldGui::on_actionLoad_Config_File_triggered()
 {
-    QString file = QFileDialog::getOpenFileName(this, tr("Select Configuration File"),
-                                                m_OpenDialogLastDirectory,
-                                                tr("Configuration Files (*.config *.txt)") );
-    if ( true == file.isEmpty() )
-    {
-        return;
-    }
-    loadConfigurationFile(file);
-    QRecentFileList::instance()->addFile(file);
-    updateBaseRecentFileList(file);
+  QString file = QFileDialog::getOpenFileName(this, tr("Select Configuration File"),
+                                              m_OpenDialogLastDirectory,
+                                              tr("Configuration Files (*.config *.txt)") );
+  if ( true == file.isEmpty() )
+  {
+    return;
+  }
+  loadConfigurationFile(file);
+  QRecentFileList::instance()->addFile(file);
+  updateBaseRecentFileList(file);
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::loadConfigurationFile(QString file)
+void BrightFieldGui::loadConfigurationFile(QString file)
 {
   QFileInfo fi(file);
   m_OpenDialogLastDirectory = fi.absolutePath();
   QSettings prefs(file, QSettings::IniFormat, this);
-
-  QString val;
-  bool ok;
-  qint32 i;
-  double d;
-  prefs.beginGroup("Parameters");
-
-
-  QString filePath =  prefs.value("inputMRCFilePath").toString();
-  if (filePath.isEmpty() == false) {
-    inputMRCFilePath->setText(filePath);
-  }
-
-  READ_STRING_SETTING(prefs, inputBrightFieldFilePath, "");
-  // This will auto load the MRC File
-//  on_inputBrightFieldFilePath_textChanged(inputBrightFieldFilePath->text());
-
-
-  READ_STRING_SETTING(prefs, initialReconstructionPath, "");
-  //READ_STRING_SETTING(prefs, outputDirectoryPath, "");
-  READ_STRING_SETTING(prefs, reconstructedVolumeFileName, "");
-
-  READ_STRING_SETTING(prefs, sampleThickness, "150");
-  READ_STRING_SETTING(prefs, targetGain, "0");
-  READ_STRING_SETTING(prefs, smoothness, "1.0");
-  READ_STRING_SETTING(prefs, sigma_x, "1.0");
-
-
-  READ_SETTING(prefs, numResolutions, ok, i, 1, Int);
-  READ_SETTING(prefs, finalResolution, ok, i, 1, Int);
-  READ_SETTING(prefs, outerIterations, ok, i, 1, Int);
-  READ_SETTING(prefs, innerIterations, ok, i, 1, Int);
-
-  READ_BOOL_SETTING(prefs, useDefaultOffset, false);
-  READ_STRING_SETTING(prefs, defaultOffset, "0");
-  READ_STRING_SETTING(prefs, stopThreshold, "0.001");
-  READ_SETTING(prefs, mrf, ok, d, 1.2, Double);
-  READ_BOOL_SETTING(prefs, extendObject, false);
-  READ_BOOL_SETTING(prefs, m_DeleteTempFiles, false);
-
-//  READ_STRING_SETTING(prefs, xMin, "0");
-//  READ_STRING_SETTING(prefs, xMax, "0");
-  READ_STRING_SETTING(prefs, yMin, "0");
-  READ_STRING_SETTING(prefs, yMax, "0");
-
-  ok = false;
-  i = prefs.value("tiltSelection").toInt(&ok);
-  if (false == ok) {i = 0;}
-  tiltSelection->setCurrentIndex(i);
-
-  prefs.endGroup();
-
+  readSettings(prefs);
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionParameters_triggered()
+void BrightFieldGui::on_actionParameters_triggered()
 {
   parametersDockWidget->show();
 }
@@ -421,108 +421,116 @@ void TEMBIRGui::on_actionParameters_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::setupGui()
+void BrightFieldGui::setupGui()
 {
 #ifdef Q_WS_MAC
-    // Adjust for the size of the menu bar which is at the top of the screen not in the window
-    QSize mySize = size();
-    mySize.setHeight(mySize.height() - 30);
-    resize(mySize);
+  // Adjust for the size of the menu bar which is at the top of the screen not in the window
+  QSize mySize = size();
+  mySize.setHeight(mySize.height() - 30);
+  resize(mySize);
 #endif
 
-    //  xMin = new QLineEdit(QString("0"),this);
-    //  xMin->hide();
-    //  xMax = new QLineEdit(QString("0"),this);
-    //  xMax->hide();
+  //  xMin = new QLineEdit(QString("0"),this);
+  //  xMin->hide();
+  //  xMax = new QLineEdit(QString("0"),this);
+  //  xMax->hide();
 
-    reconstructedVolumeFileName->setText("");
-    m_ReconstructedDisplayWidget->disableVOISelection();
+  reconstructedVolumeFileName->setText("");
+  m_ReconstructedDisplayWidget->disableVOISelection();
 
 
-    connect(m_MRCDisplayWidget->graphicsView(), SIGNAL(fireImageFileLoaded(const QString &)),
-            this, SLOT(mrcInputFileLoaded(const QString &)), Qt::QueuedConnection);
+  connect(m_MRCDisplayWidget->graphicsView(), SIGNAL(fireImageFileLoaded(const QString &)),
+          this, SLOT(mrcInputFileLoaded(const QString &)), Qt::QueuedConnection);
 
-    connect(m_MRCDisplayWidget->graphicsView(), SIGNAL(fireReconstructionVOIAdded(ReconstructionArea*)),
-            this, SLOT(reconstructionVOIAdded(ReconstructionArea*)), Qt::QueuedConnection);
+  connect(m_MRCDisplayWidget->graphicsView(), SIGNAL(fireReconstructionVOIAdded(ReconstructionArea*)),
+          this, SLOT(reconstructionVOIAdded(ReconstructionArea*)), Qt::QueuedConnection);
 
-    connect(m_MRCDisplayWidget->graphicsView(), SIGNAL(fireSingleSliceSelected(int)),
-            this, SLOT(singleSlicePlaneSet(int)));
+  connect(m_MRCDisplayWidget->graphicsView(), SIGNAL(fireSingleSliceSelected(int)),
+          this, SLOT(singleSlicePlaneSet(int)));
 
-    QFileCompleter* com = new QFileCompleter(this, false);
-    inputMRCFilePath->setCompleter(com);
-    QObject::connect(com, SIGNAL(activated(const QString &)), this, SLOT(on_inputMRCFilePath_textChanged(const QString &)));
+  QFileCompleter* com = new QFileCompleter(this, false);
+  inputMRCFilePath->setCompleter(com);
+  QObject::connect(com, SIGNAL(activated(const QString &)), this, SLOT(on_inputMRCFilePath_textChanged(const QString &)));
 
-    QFileCompleter* com4 = new QFileCompleter(this, false);
-    reconstructedVolumeFileName->setCompleter(com4);
-    QObject::connect(com4, SIGNAL(activated(const QString &)), this, SLOT(on_reconstructedVolumeFileName_textChanged(const QString &)));
+  QFileCompleter* com4 = new QFileCompleter(this, false);
+  reconstructedVolumeFileName->setCompleter(com4);
+  QObject::connect(com4, SIGNAL(activated(const QString &)), this, SLOT(on_reconstructedVolumeFileName_textChanged(const QString &)));
 
-    // setup the Widget List
-    m_WidgetList << inputBrightFieldFilePath << inputBrightFieldFilePathBtn;
-    m_WidgetList << reconstructedVolumeFileName << reconstructedVolumeFileNameBtn << initialReconstructionPath << initialReconstructionPathBtn;
+  // setup the Widget List
+  m_WidgetList << inputBrightFieldFilePath << inputBrightFieldFilePathBtn;
+  m_WidgetList << reconstructedVolumeFileName << reconstructedVolumeFileNameBtn << initialReconstructionPath << initialReconstructionPathBtn;
 
-    setWidgetListEnabled(false);
+  setWidgetListEnabled(false);
 
-    connect(m_MRCDisplayWidget, SIGNAL(memoryCalculationNeedsUpdated()),
-            this, SLOT(memCalculate()));
+  connect(m_MRCDisplayWidget, SIGNAL(memoryCalculationNeedsUpdated()),
+          this, SLOT(memCalculate()));
 
-    m_GainsOffsetsTableModel = NULL;
+  m_GainsOffsetsTableModel = NULL;
 #if 1
-    // Setup the TableView and Table Models
-    QHeaderView* headerView = new QHeaderView(Qt::Horizontal, gainsOffsetsTableView);
-    headerView->setResizeMode(QHeaderView::Interactive);
-    gainsOffsetsTableView->setHorizontalHeader(headerView);
-    headerView->show();
+  // Setup the TableView and Table Models
+  QHeaderView* headerView = new QHeaderView(Qt::Horizontal, gainsOffsetsTableView);
+  headerView->setResizeMode(QHeaderView::Interactive);
+  gainsOffsetsTableView->setHorizontalHeader(headerView);
+  headerView->show();
 
-    m_GainsOffsetsTableModel = new GainsOffsetsTableModel;
-    m_GainsOffsetsTableModel->setInitialValues();
-    gainsOffsetsTableView->setModel(m_GainsOffsetsTableModel);
-    QAbstractItemDelegate* idelegate = m_GainsOffsetsTableModel->getItemDelegate();
-    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::TiltIndex, idelegate);
-    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::A_Tilt, idelegate);
-    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::B_Tilt, idelegate);
-    //  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Gains, idelegate);
-    // gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Offsets, idelegate);
+  m_GainsOffsetsTableModel = new GainsOffsetsTableModel;
+  m_GainsOffsetsTableModel->setInitialValues();
+  gainsOffsetsTableView->setModel(m_GainsOffsetsTableModel);
+  QAbstractItemDelegate* idelegate = m_GainsOffsetsTableModel->getItemDelegate();
+  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::TiltIndex, idelegate);
+  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::A_Tilt, idelegate);
+  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::B_Tilt, idelegate);
+  //  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Gains, idelegate);
+  // gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Offsets, idelegate);
 
-    QAbstractItemDelegate* cbDelegate = new CheckBoxDelegate;
-    gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Exclude, cbDelegate);
+  QAbstractItemDelegate* cbDelegate = new CheckBoxDelegate;
+  gainsOffsetsTableView->setItemDelegateForColumn(GainsOffsetsTableModel::Exclude, cbDelegate);
 #endif
 
-    QDoubleValidator* dVal = new QDoubleValidator(this);
-    dVal->setDecimals(6);
-    smoothness->setValidator(dVal);
+  QDoubleValidator* dVal = new QDoubleValidator(this);
+  dVal->setDecimals(6);
+  smoothness->setValidator(dVal);
 
-    QDoubleValidator* dVal2 = new QDoubleValidator(this);
-    dVal2->setDecimals(6);
-    sigma_x->setValidator(dVal2);
+  QDoubleValidator* dVal2 = new QDoubleValidator(this);
+  dVal2->setDecimals(6);
+  sigma_x->setValidator(dVal2);
 
-    advancedParametersGroupBox->setChecked(false);
-
-    // ySingleSliceValue_Label->hide();
-    // ySingleSliceValue->hide();
-    outputDirectoryPath_OLD->hide();
-    outputDirectoryPathBtn->hide();
-    outputDirectoryLabel->hide();
+  // ySingleSliceValue_Label->hide();
+  // ySingleSliceValue->hide();
+  outputDirectoryPath_OLD->hide();
+  outputDirectoryPathBtn->hide();
+  outputDirectoryLabel->hide();
 
 
-    outputTabWidget->removeTab(1);
-    initialReconstructionPath->hide();
-    initialReconstructionLabel->hide();
-	
-	inputBrightFieldFilePath->hide();
-	inputBrightFieldFilePathBtn->hide();
-	label_37->hide();
+  outputTabWidget->removeTab(1);
+  initialReconstructionPath->hide();
+  initialReconstructionLabel->hide();
 
-    m_MRCInputInfoWidget = new MRCInfoWidget(this);
-    m_MRCInputInfoWidget->hide();
+  inputBrightFieldFilePath->hide();
+  inputBrightFieldFilePathBtn->hide();
+  label_37->hide();
 
-    m_MRCOutputInfoWidget = new MRCInfoWidget(this);
-    m_MRCOutputInfoWidget->hide();
+  m_MRCInputInfoWidget = new MRCInfoWidget(this);
+  m_MRCInputInfoWidget->hide();
+
+  m_MRCOutputInfoWidget = new MRCInfoWidget(this);
+  m_MRCOutputInfoWidget->hide();
+
+  // Disable all group boxes except for the Background Selection group box
+  singleSliceGroupBox->setEnabled(false);
+  fullReconstructionGroupBox->setEnabled(false);
+  parametersGroupBox->setEnabled(false);
+  advancedParametersGroupBox->setEnabled(false);
+
+  // Hide tabs
+  m_ReconstructedDisplayWidget->getControlsTab()->hide();
+  m_MRCDisplayWidget->getControlsTab()->hide();
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool TEMBIRGui::sanityCheckOutputDirectory(QString le, QString msgTitle)
+bool BrightFieldGui::sanityCheckOutputDirectory(QString le, QString msgTitle)
 {
 
   if (le.isEmpty() == true)
@@ -574,7 +582,7 @@ bool TEMBIRGui::sanityCheckOutputDirectory(QString le, QString msgTitle)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool TEMBIRGui::checkTiltAngles(QVector<float> &tilts)
+bool BrightFieldGui::checkTiltAngles(QVector<float> &tilts)
 {
   float sum = 0.0;
   for(int i = 0; i < tilts.count(); ++i)
@@ -591,7 +599,7 @@ bool TEMBIRGui::checkTiltAngles(QVector<float> &tilts)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_m_SingleSliceReconstructionBtn_clicked()
+void BrightFieldGui::on_m_SingleSliceReconstructionBtn_clicked()
 {
   // First make sure we are not already running a reconstruction
   if(m_SingleSliceReconstructionBtn->text().compare("Cancel") == 0)
@@ -625,10 +633,10 @@ void TEMBIRGui::on_m_SingleSliceReconstructionBtn_clicked()
   reconstructedDisplayGroupBox->setTitle(QString("XZ Reconstruction Plane"));
 
   /* Connect the signal 'started()' from the QThread to the 'run' slot of the
-   * SOCEngine object. Since the SOCEngine object has been moved to another
-   * thread of execution and the actual QThread lives in *this* thread then the
-   * type of connection will be a Queued connection.
-   */
+     * SOCEngine object. Since the SOCEngine object has been moved to another
+     * thread of execution and the actual QThread lives in *this* thread then the
+     * type of connection will be a Queued connection.
+     */
   // When the thread starts its event loop, start the Reconstruction going
   connect(m_WorkerThread, SIGNAL(started()), m_MultiResSOC, SLOT(run()));
 
@@ -664,13 +672,13 @@ void TEMBIRGui::on_m_SingleSliceReconstructionBtn_clicked()
   m_WorkerThread->start();
   m_SingleSliceReconstructionBtn->setText("Cancel");
   m_SingleSliceReconstructionActive = true;
-  m_FullReconstrucionActive = false;
+  m_FullReconstructionActive = false;
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_m_GoBtn_clicked()
+void BrightFieldGui::on_m_GoBtn_clicked()
 {
   tiffCount = 0;
   // First make sure we are not already running a reconstruction
@@ -681,6 +689,21 @@ void TEMBIRGui::on_m_GoBtn_clicked()
       std::cout << "canceling from GUI...." << std::endl;
       emit cancelPipeline();
     }
+    return;
+  }
+
+  if(reconstructedVolumeFileName->text().isEmpty())
+  {
+    QString str = QString("The field \"Output Reconstruction File\" is empty.\n\nAborting Reconstruction.");
+    QMessageBox::critical(this, tr("Reconstruction Error"), str , QMessageBox::Ok);
+    return;
+  }
+
+  QFileInfo fileInfo(reconstructedVolumeFileName->text());
+  if(fileInfo.isRelative())
+  {
+    QString str = QString("The field \"Output Reconstruction File\" does not contain a full path name.\n\nAborting Reconstruction.");
+    QMessageBox::critical(this, tr("Reconstruction Error"), str , QMessageBox::Ok);
     return;
   }
 
@@ -729,7 +752,7 @@ void TEMBIRGui::on_m_GoBtn_clicked()
   if(file.exists() == true)
   {
     int ret = QMessageBox::warning(this, tr("OpenMBIR"), tr("The Output File Already Exists\nDo you want to over write the existing file?"), QMessageBox::No
-                                       | QMessageBox::Default, QMessageBox::Yes, QMessageBox::Cancel);
+                                   | QMessageBox::Default, QMessageBox::Yes, QMessageBox::Cancel);
     if(ret == QMessageBox::Cancel)
     {
       return;
@@ -763,9 +786,9 @@ void TEMBIRGui::on_m_GoBtn_clicked()
   writeSettings(prefs);
   writeWindowSettings(prefs);
 
-// Sanity Check the Geometry
+  // Sanity Check the Geometry
   {
-// Sanity Check the Input dimensions
+    // Sanity Check the Input dimensions
     QImage image = m_MRCDisplayWidget->graphicsView()->getBaseImage();
     QSize size = image.size();
 
@@ -828,10 +851,10 @@ void TEMBIRGui::on_m_GoBtn_clicked()
   reconstructedDisplayGroupBox->setTitle(QString("XZ Reconstruction Plane"));
 
   /* Connect the signal 'started()' from the QThread to the 'run' slot of the
-   * SOCEngine object. Since the SOCEngine object has been moved to another
-   * thread of execution and the actual QThread lives in *this* thread then the
-   * type of connection will be a Queued connection.
-   */
+     * SOCEngine object. Since the SOCEngine object has been moved to another
+     * thread of execution and the actual QThread lives in *this* thread then the
+     * type of connection will be a Queued connection.
+     */
   // When the thread starts its event loop, start the Reconstruction going
   connect(m_WorkerThread, SIGNAL(started()), m_MultiResSOC, SLOT(run()));
 
@@ -870,13 +893,13 @@ void TEMBIRGui::on_m_GoBtn_clicked()
   m_WorkerThread->start();
   m_GoBtn->setText("Cancel");
   m_SingleSliceReconstructionActive = false;
-  m_FullReconstrucionActive = true;
+  m_FullReconstructionActive = true;
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
+void BrightFieldGui::initializeSOCEngine(bool fullReconstruction)
 {
   QString path;
   path = QDir::toNativeSeparators(inputMRCFilePath->text());
@@ -895,9 +918,13 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
     QString tempFolder = QDir::tempPath() + QDir::separator() + QString("OpenMBIR");
     m_MultiResSOC->setTempDir(tempFolder.toStdString());
     QString reconVolumeFile = tempFolder + QDir::separator() +
-          finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(ScaleOffsetCorrection::ReconstructedMrcFile);
+        finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(ScaleOffsetCorrection::ReconstructedMrcFile);
 
     m_MultiResSOC->setOutputFile(reconVolumeFile.toStdString());
+
+    QFileInfo fi(reconVolumeFile);
+    QDir dir(fi.absolutePath());
+    dir.mkpath(".");
   }
 
   path = QDir::toNativeSeparators(inputBrightFieldFilePath->text());
@@ -917,23 +944,23 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
   }
   m_MultiResSOC->setFinalResolution(finalResolution->value());
   m_MultiResSOC->setSampleThickness(sampleThickness->text().toFloat(&ok));
-  m_MultiResSOC->setTargetGain(1);//TODO: This forces target gain = 1 in 
-	//BF with bragg code 
-  	
-  //TODO: Add a new input in the GUI and read thate value of Bragg T from there 
-	
-  //m_MultiResSOC->setBraggThreshold(targetGain->text().toFloat(&ok)); 
+  m_MultiResSOC->setTargetGain(1);
+
+  m_MultiResSOC->setBraggThreshold(bragg_threshold->text().toFloat(&ok));
   m_MultiResSOC->setBraggDelta(targetGain->text().toFloat(&ok));
-  //m_MultiResSOC->setBfOffset(targetGain->text().toFloat(&ok)); 	
-  
+  m_MultiResSOC->setBfOffset(bf_offset->text().toFloat(&ok));
+
+  Real_t true_offset = -log(defaultOffset->text().toDouble()+bf_offset->text().toDouble());
+  m_MultiResSOC->setDefaultOffsetValue(true_offset);
+
+  m_MultiResSOC->setUseDefaultOffset(useDefaultOffset->isChecked());
+
   m_MultiResSOC->setStopThreshold(stopThreshold->text().toFloat(&ok));
   m_MultiResSOC->setOuterIterations(outerIterations->value());
   m_MultiResSOC->setInnerIterations(innerIterations->value());
   m_MultiResSOC->setSigmaX(sigma_x->text().toFloat(&ok));
 
   m_MultiResSOC->setMRFShapeParameter(mrf->value());
-  m_MultiResSOC->setDefaultOffsetValue(defaultOffset->text().toFloat(&ok));
-  m_MultiResSOC->setUseDefaultOffset(useDefaultOffset->isChecked());
   m_MultiResSOC->setTiltSelection(static_cast<SOC::TiltSelection>(tiltSelection->currentIndex()));
   m_MultiResSOC->setExtendObject(extendObject->isChecked());
   m_MultiResSOC->setDefaultVariance(defaultVariance->text().toFloat(&ok));
@@ -953,7 +980,7 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
   {
     // Sanity Check the Input dimensions
     QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
-    QSize size = image.size();
+    //QSize size = image.size();
 
     int x_min = 0;
     int x_max = 0;
@@ -972,8 +999,8 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
   else
   {
     QLineF line = m_MRCDisplayWidget->graphicsView()->getXZPlane();
-   // std::cout << "p1: " << line.p1().x() << ", " << line.p1().y()
-   //  << "   p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
+    // std::cout << "p1: " << line.p1().x() << ", " << line.p1().y()
+    //  << "   p2: " << line.p2().x() << ", " << line.p2().y() << std::endl;
 
     QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
     QSize size = image.size();
@@ -985,7 +1012,7 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
     subvolume[0] = midWidth - remWidth;
     subvolume[3] = midWidth + remWidth;
 
-//    std::cout << subvolume[0] << ", " << subvolume[3] << std::endl;
+    //    std::cout << subvolume[0] << ", " << subvolume[3] << std::endl;
     // This is how many slices we are going to reconstruct
     int ySlices = 3 * finalResolution->value();
 
@@ -996,22 +1023,22 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
 
     if (y_max >= size.height())
     {
-        y_min = y_min - (y_max - size.height());
-        y_max = size.height() - 1;
+      y_min = y_min - (y_max - size.height());
+      y_max = size.height() - 1;
     }
 
     subvolume[1] = y_min;
     subvolume[4] = y_max;
 
-//    path = QDir::toNativeSeparators(outputDirectoryPath->text());
+    //    path = QDir::toNativeSeparators(outputDirectoryPath->text());
   }
   m_MultiResSOC->setSubvolume(subvolume);
 
   std::vector<uint8_t> viewMasks;
   if (NULL != m_GainsOffsetsTableModel) {
-  QVector<bool> excludedViews = m_GainsOffsetsTableModel->getExcludedTilts();
-  for (int i = 0; i < excludedViews.size(); ++i)
-  {
+    QVector<bool> excludedViews = m_GainsOffsetsTableModel->getExcludedTilts();
+    for (int i = 0; i < excludedViews.size(); ++i)
+    {
       if(excludedViews[i] == true)
       {
         viewMasks.push_back(i);
@@ -1025,15 +1052,15 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_singleSliceXWidth_valueChanged(int value)
+void BrightFieldGui::on_singleSliceXWidth_valueChanged(int value)
 {
-    m_MRCDisplayWidget->graphicsView()->updateXZLine( static_cast<float>(value/100.0));
+  m_MRCDisplayWidget->graphicsView()->updateXZLine( static_cast<float>(value/100.0));
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_xWidthFullRecon_valueChanged(int value)
+void BrightFieldGui::on_xWidthFullRecon_valueChanged(int value)
 {
   m_MRCDisplayWidget->graphicsView()->reconstructionArea()->updateWidth(static_cast<float>(value/100.0));
 }
@@ -1041,16 +1068,18 @@ void TEMBIRGui::on_xWidthFullRecon_valueChanged(int value)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::singleSlicePlaneSet(int y)
+void BrightFieldGui::singleSlicePlaneSet(int y)
 {
-    m_SingleSliceReconstructionBtn->setEnabled(true);
-    ySingleSliceValue->setText(QString::number(y));
+  m_SingleSliceReconstructionBtn->setEnabled(true);
+  ySingleSliceValue->setText(QString::number(y));
+
+  singleSliceXWidth->setValue(100);
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::singleSliceComplete()
+void BrightFieldGui::singleSliceComplete()
 {
   std::cout << "TomoGui::singleSliceComplete" << std::endl;
   m_SingleSliceReconstructionBtn->setText("Single Slice Reconstruction");
@@ -1058,7 +1087,7 @@ void TEMBIRGui::singleSliceComplete()
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
   QString reconVolumeFile = QString::fromStdString(m_MultiResSOC->getTempDir()) + QDir::separator() +
-          finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(ScaleOffsetCorrection::ReconstructedMrcFile);
+      finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(ScaleOffsetCorrection::ReconstructedMrcFile);
 
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(reconVolumeFile);
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(false);
@@ -1072,11 +1101,11 @@ void TEMBIRGui::singleSliceComplete()
     m_TempFilesToDelete.push_back(filePath);
   }
   {
-    QString filePath = path + ScaleOffsetCorrection::CostFunctionFile.c_str();
+    QString filePath = path + ScaleOffsetCorrection::DetectorResponseFile.c_str();
     m_TempFilesToDelete.push_back(filePath);
   }
   {
-    QString filePath = path + ScaleOffsetCorrection::DetectorResponseFile.c_str();
+    QString filePath = path + ScaleOffsetCorrection::CostFunctionFile.c_str();
     m_TempFilesToDelete.push_back(filePath);
   }
   {
@@ -1091,8 +1120,26 @@ void TEMBIRGui::singleSliceComplete()
     QString filePath = path + ScaleOffsetCorrection::FinalVariancesFile.c_str();
     m_TempFilesToDelete.push_back(filePath);
   }
+
+  // ------------------------------------------------------------------------------------------
+
   {
-    QString filePath = path + ScaleOffsetCorrection::ReconstructedObjectFile.c_str();
+    QString filePath = path + ScaleOffsetCorrection::VoxelProfileFile.c_str();
+    m_TempFilesToDelete.push_back(filePath);
+  }
+  {
+    QString filePath = path + ScaleOffsetCorrection::FilteredMagMapFile.c_str();
+    m_TempFilesToDelete.push_back(filePath);
+  }
+  {
+    QString filePath = path + ScaleOffsetCorrection::MagnitudeMapFile.c_str();
+    m_TempFilesToDelete.push_back(filePath);
+  }
+
+  // ------------------------------------------------------------------------------------------
+
+  {
+    QString filePath = path + ScaleOffsetCorrection::ReconstructedVtkFile.c_str();
     m_TempFilesToDelete.push_back(filePath);
   }
   {
@@ -1100,22 +1147,24 @@ void TEMBIRGui::singleSliceComplete()
     m_TempFilesToDelete.push_back(filePath);
   }
   {
+    QString filePath = path + ScaleOffsetCorrection::ReconstructedObjectFile.c_str();
+    m_TempFilesToDelete.push_back(filePath);
+  }
+  {
     QString filePath = path + ScaleOffsetCorrection::ReconstructedMrcFile.c_str();
     m_TempFilesToDelete.push_back(filePath);
   }
-  {
-    QString filePath = path + ScaleOffsetCorrection::ReconstructedVtkFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::VoxelProfileFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
+
   // Delete the top level directory
   QDir dir(path);
   dir.rmdir(path);
 
-  m_FullReconstrucionActive = false;
+  m_ReconstructedDisplayWidget->getControlsTab()->show();
+
+  // There is no way to hide sub-tabs, so we have to remove it instead
+  m_ReconstructedDisplayWidget->getControlsTab()->removeTab(1);   // Removes Advanced Controls tab
+
+  m_FullReconstructionActive = false;
   m_SingleSliceReconstructionActive = false;
   emit pipelineEnded();
   m_MultiResSOC->deleteLater();
@@ -1124,9 +1173,9 @@ void TEMBIRGui::singleSliceComplete()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::loadProgressMRCFile(QString mrcfilePath)
+void BrightFieldGui::loadProgressMRCFile(QString mrcfilePath)
 {
-//  std::cout << "Loading Progress MRC File: " << filePath.toStdString() << std::endl;
+  //  std::cout << "Loading Progress MRC File: " << filePath.toStdString() << std::endl;
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(mrcfilePath);
   m_ReconstructedDisplayWidget->setImageWidgetsEnabled(true);
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(false);
@@ -1140,22 +1189,49 @@ void TEMBIRGui::loadProgressMRCFile(QString mrcfilePath)
   filepath = filepath.append(QString::number(tiffCount)).append(".tiff");
   m_ReconstructedDisplayWidget->graphicsView()->getBaseImage().save(filepath);
   tiffCount++;
-  #endif
+#endif
 }
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+bool BrightFieldGui::removeDir(const QString &dirName)
+{
+  bool result = true;
+  QDir dir(dirName);
+
+  if (dir.exists(dirName)) {
+    Q_FOREACH(QFileInfo info, dir.entryInfoList(QDir::NoDotAndDotDot | QDir::System | QDir::Hidden  | QDir::AllDirs | QDir::Files, QDir::DirsFirst)) {
+      if (info.isDir()) {
+        result = removeDir(info.absoluteFilePath());
+      }
+      else {
+        result = QFile::remove(info.absoluteFilePath());
+      }
+
+      if (!result) {
+        return result;
+      }
+    }
+    result = dir.rmdir(dirName);
+  }
+
+  return result;
+}
+
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::pipelineComplete()
+void BrightFieldGui::pipelineComplete()
 {
-   std::cout << "TomoGui::pipelineComplete()" << std::endl;
+  std::cout << "TomoGui::pipelineComplete()" << std::endl;
   m_GoBtn->setText("Reconstruct");
   m_SingleSliceReconstructionBtn->setEnabled(true);
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
   emit pipelineEnded();
   m_MultiResSOC->deleteLater();
-  m_FullReconstrucionActive = false;
+  m_FullReconstructionActive = false;
   m_SingleSliceReconstructionActive = false;
 
   setCurrentImageFile(inputMRCFilePath->text());
@@ -1164,7 +1240,7 @@ void TEMBIRGui::pipelineComplete()
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(true);
   m_ReconstructedDisplayWidget->setDrawOrigin(false);
   m_ReconstructedDisplayWidget->loadMRCFile(reconstructedVolumeFileName->text());
-
+  m_ReconstructedDisplayWidget->getControlsTab()->show();
 
   setWindowTitle(m_CurrentImageFile);
   setWidgetListEnabled(true);
@@ -1175,7 +1251,7 @@ void TEMBIRGui::pipelineComplete()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::pipelineProgress(int val)
+void BrightFieldGui::pipelineProgress(int val)
 {
   this->progressBar->setValue( val );
 }
@@ -1183,7 +1259,7 @@ void TEMBIRGui::pipelineProgress(int val)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::addErrorMessage(QString message)
+void BrightFieldGui::addErrorMessage(QString message)
 {
   QString title = "TomoGui Error";
   displayDialogBox(title, message, QMessageBox::Critical);
@@ -1192,7 +1268,7 @@ void TEMBIRGui::addErrorMessage(QString message)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::addWarningMessage(QString message)
+void BrightFieldGui::addWarningMessage(QString message)
 {
   QString title = "TomoGui Warning";
   displayDialogBox(title, message, QMessageBox::Warning);
@@ -1201,7 +1277,7 @@ void TEMBIRGui::addWarningMessage(QString message)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::addProgressMessage(QString message)
+void BrightFieldGui::addProgressMessage(QString message)
 {
   if (NULL != this->statusBar()) {
     this->statusBar()->showMessage(message);
@@ -1211,11 +1287,11 @@ void TEMBIRGui::addProgressMessage(QString message)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_outputDirectoryPathBtn_clicked()
+void BrightFieldGui::on_outputDirectoryPathBtn_clicked()
 {
   bool canWrite = false;
   QString aDir = QFileDialog::getExistingDirectory(this, tr("Select Output Directory"), m_OpenDialogLastDirectory,
-                                            QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+                                                   QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
 
   m_OpenDialogLastDirectory = aDir;
   if (!m_OpenDialogLastDirectory.isNull())
@@ -1237,7 +1313,7 @@ void TEMBIRGui::on_outputDirectoryPathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_reconstructedVolumeFileNameBtn_clicked()
+void BrightFieldGui::on_reconstructedVolumeFileNameBtn_clicked()
 {
   QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled.rec";
   outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("MRC Files (*.mrc);;REC Files (*.rec)"));
@@ -1262,7 +1338,7 @@ void TEMBIRGui::on_reconstructedVolumeFileNameBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_inputMRCFilePathBtn_clicked()
+void BrightFieldGui::on_inputMRCFilePathBtn_clicked()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString imageFile =
@@ -1278,11 +1354,12 @@ void TEMBIRGui::on_inputMRCFilePathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_inputMRCFilePath_textChanged(const QString & filepath)
+void BrightFieldGui::on_inputMRCFilePath_textChanged(const QString & filepath)
 {
   QFileInfo fi(inputMRCFilePath->text());
   if(fi.exists() == true && fi.isDir() == false)
   {
+    QSize pictureSize;
     // Read the header info from the file and populate the GUI with those values
     {
       ImageOpenDialog d(this);
@@ -1295,14 +1372,16 @@ void TEMBIRGui::on_inputMRCFilePath_textChanged(const QString & filepath)
       quint16 halfTilts = m_nTilts/2;
 
       // Load up the middle tilt which we are assuming is the actual "zero" tilt.
+      m_MRCDisplayWidget->resetImageScaling();
       m_MRCDisplayWidget->loadMRCTiltImage(filepath, halfTilts);
       m_MRCDisplayWidget->setImageWidgetsEnabled(true);
       m_MRCDisplayWidget->setMovieWidgetsEnabled(true);
       m_MRCDisplayWidget->on_fitToWindow_clicked();
 
       QSize imageSize = m_MRCDisplayWidget->currentImage().size();
-      QRectF rect(0.0, 0.0, imageSize.width(), imageSize.height() );
-      m_MRCDisplayWidget->graphicsView()->createNewReconstructionArea(rect);
+      pictureSize = imageSize;
+      QRectF image(0.0, 0.0, imageSize.width(), imageSize.height() );
+      m_MRCDisplayWidget->graphicsView()->createNewReconstructionArea(image);
       m_GainsFile = ""; // We are reading a new .mrc file so we probably need a new Gains Offsets File
       smoothness->setText(QString("1.0"));
       on_estimateSigmaX_clicked();
@@ -1320,6 +1399,13 @@ void TEMBIRGui::on_inputMRCFilePath_textChanged(const QString & filepath)
     setWidgetListEnabled(true);
 
     updateBaseRecentFileList(filepath);
+
+    m_MRCDisplayWidget->graphicsView()->removeBackgroundSelector();
+    m_MRCDisplayWidget->graphicsView()->createBackgroundSelector();
+
+    m_MRCDisplayWidget->getControlsTab()->show();
+    m_MRCDisplayWidget->getControlsTab()->setCurrentIndex(0);
+
   }
   else
   {
@@ -1328,13 +1414,14 @@ void TEMBIRGui::on_inputMRCFilePath_textChanged(const QString & filepath)
     m_CachedSigmaX = 0.0;
     m_MRCDisplayWidget->loadMRCFile(QString(""));
     setWidgetListEnabled(false);
+    m_MRCDisplayWidget->getControlsTab()->hide();
   }
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_inputBrightFieldFilePathBtn_clicked()
+void BrightFieldGui::on_inputBrightFieldFilePathBtn_clicked()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString imageFile =
@@ -1350,7 +1437,7 @@ void TEMBIRGui::on_inputBrightFieldFilePathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_inputBrightFieldFilePath_textChanged(const QString & filepath)
+void BrightFieldGui::on_inputBrightFieldFilePath_textChanged(const QString & filepath)
 {
   if (verifyPathExists(inputBrightFieldFilePath->text(), inputBrightFieldFilePath))
   {
@@ -1361,7 +1448,7 @@ void TEMBIRGui::on_inputBrightFieldFilePath_textChanged(const QString & filepath
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_reconstructedVolumeFileName_textChanged(const QString & text)
+void BrightFieldGui::on_reconstructedVolumeFileName_textChanged(const QString & text)
 {
 
 }
@@ -1377,7 +1464,7 @@ void TEMBIRGui::on_reconstructedVolumeFileName_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_initialReconstructionPathBtn_clicked()
+void BrightFieldGui::on_initialReconstructionPathBtn_clicked()
 {
   QString reconFile =
       QFileDialog::getOpenFileName(this, tr("Select Initial Reconstruction file"), m_OpenDialogLastDirectory, tr("All Files (*.*)"));
@@ -1392,7 +1479,7 @@ void TEMBIRGui::on_initialReconstructionPathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_initialReconstructionPath_textChanged(const QString & text)
+void BrightFieldGui::on_initialReconstructionPath_textChanged(const QString & text)
 {
   verifyPathExists(initialReconstructionPath->text(), initialReconstructionPath);
 }
@@ -1400,7 +1487,7 @@ void TEMBIRGui::on_initialReconstructionPath_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::setWidgetListEnabled(bool b)
+void BrightFieldGui::setWidgetListEnabled(bool b)
 {
   foreach (QWidget* w, m_WidgetList)
   {
@@ -1411,7 +1498,7 @@ void TEMBIRGui::setWidgetListEnabled(bool b)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool TEMBIRGui::verifyOutputPathParentExists(QString outFilePath, QLineEdit* lineEdit)
+bool BrightFieldGui::verifyOutputPathParentExists(QString outFilePath, QLineEdit* lineEdit)
 {
   QFileInfo fileinfo(outFilePath);
   QDir parent(fileinfo.dir());
@@ -1421,7 +1508,7 @@ bool TEMBIRGui::verifyOutputPathParentExists(QString outFilePath, QLineEdit* lin
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool TEMBIRGui::verifyPathExists(QString outFilePath, QLineEdit* lineEdit)
+bool BrightFieldGui::verifyPathExists(QString outFilePath, QLineEdit* lineEdit)
 {
   QFileInfo fileinfo(outFilePath);
   if (false == fileinfo.exists() && lineEdit != NULL)
@@ -1438,7 +1525,7 @@ bool TEMBIRGui::verifyPathExists(QString outFilePath, QLineEdit* lineEdit)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-qint32 TEMBIRGui::checkDirtyDocument()
+qint32 BrightFieldGui::checkDirtyDocument()
 {
   qint32 err = -1;
   {
@@ -1450,7 +1537,7 @@ qint32 TEMBIRGui::checkDirtyDocument()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::updateBaseRecentFileList(const QString &file)
+void BrightFieldGui::updateBaseRecentFileList(const QString &file)
 {
   // Clear the Recent Items Menu
   this->menu_FixedRecentFiles->clear();
@@ -1458,20 +1545,20 @@ void TEMBIRGui::updateBaseRecentFileList(const QString &file)
   // Get the list from the static object
   QStringList files = QRecentFileList::instance()->fileList();
   foreach (QString file, files)
-    {
-      QAction* action = new QAction(this->menu_FixedRecentFiles);
-      action->setText(QRecentFileList::instance()->parentAndFileName(file));
-      action->setData(file);
-      action->setVisible(true);
-      this->menu_FixedRecentFiles->addAction(action);
-      connect(action, SIGNAL(triggered()), this, SLOT(openRecentBaseImageFile()));
-    }
+  {
+    QAction* action = new QAction(this->menu_FixedRecentFiles);
+    action->setText(QRecentFileList::instance()->parentAndFileName(file));
+    action->setData(file);
+    action->setVisible(true);
+    this->menu_FixedRecentFiles->addAction(action);
+    connect(action, SIGNAL(triggered()), this, SLOT(openRecentBaseImageFile()));
+  }
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::openRecentBaseImageFile()
+void BrightFieldGui::openRecentBaseImageFile()
 {
   QAction *action = qobject_cast<QAction *>(sender());
   if (action)
@@ -1481,11 +1568,11 @@ void TEMBIRGui::openRecentBaseImageFile()
     QFileInfo fi(file);
     if (fi.suffix().compare("mrc") == 0 || fi.suffix().compare("ali") == 0)
     {
-        inputMRCFilePath->setText( file );
+      inputMRCFilePath->setText( file );
     }
     else if (fi.suffix().compare("txt") == 0 || fi.suffix().compare("config") == 0)
     {
-        loadConfigurationFile(file);
+      loadConfigurationFile(file);
     }
   }
 }
@@ -1493,7 +1580,7 @@ void TEMBIRGui::openRecentBaseImageFile()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionLayers_Palette_triggered()
+void BrightFieldGui::on_actionLayers_Palette_triggered()
 {
   m_LayersPalette->show();
 }
@@ -1501,7 +1588,7 @@ void TEMBIRGui::on_actionLayers_Palette_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionOpenMRCFile_triggered()
+void BrightFieldGui::on_actionOpenMRCFile_triggered()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString file = QFileDialog::getOpenFileName(this, tr("Open MRC File"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc *.rec *.ali)"));
@@ -1518,7 +1605,7 @@ void TEMBIRGui::on_actionOpenMRCFile_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_action_OpenReconstructedMRC_triggered()
+void BrightFieldGui::on_action_OpenReconstructedMRC_triggered()
 {
   QString file = QFileDialog::getOpenFileName(this, tr("Open MRC File"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc *.rec *.ali)"));
 
@@ -1538,12 +1625,12 @@ void TEMBIRGui::on_action_OpenReconstructedMRC_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionOpenOverlayImage_triggered()
+void BrightFieldGui::on_actionOpenOverlayImage_triggered()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString imageFile = QFileDialog::getOpenFileName(this, tr("Open Segmented Image File"),
-    m_OpenDialogLastDirectory,
-    tr("Images (*.tif *.tiff *.bmp *.jpg *.jpeg *.png)") );
+                                                   m_OpenDialogLastDirectory,
+                                                   tr("Images (*.tif *.tiff *.bmp *.jpg *.jpeg *.png)") );
 
   if ( true == imageFile.isEmpty() )
   {
@@ -1558,12 +1645,12 @@ void TEMBIRGui::on_actionOpenOverlayImage_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionAbout_triggered()
+void BrightFieldGui::on_actionAbout_triggered()
 {
   ApplicationAboutBoxDialog about(OpenMBIR::LicenseList, this);
   QString an = QCoreApplication::applicationName();
   QString version("");
-  version.append(MBIRLib::Version::PackageComplete.c_str());
+  version.append(MBIRLib::Version::PackageComplete().c_str());
   about.setApplicationInfo(an, version);
   about.exec();
 }
@@ -1571,7 +1658,7 @@ void TEMBIRGui::on_actionAbout_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionExit_triggered()
+void BrightFieldGui::on_actionExit_triggered()
 {
   this->close();
 }
@@ -1580,7 +1667,7 @@ void TEMBIRGui::on_actionExit_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::openReconstructedMRCFile(QString reconMrcFilePath)
+void BrightFieldGui::openReconstructedMRCFile(QString reconMrcFilePath)
 {
   if ( true == reconMrcFilePath.isEmpty() ) // User cancelled the operation
   {
@@ -1602,7 +1689,7 @@ void TEMBIRGui::openReconstructedMRCFile(QString reconMrcFilePath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::mrcInputFileLoaded(const QString &filename)
+void BrightFieldGui::mrcInputFileLoaded(const QString &filename)
 {
   // std::cout << "TomoGui::overlayImageFileLoaded" << std::endl;
   reconstructedVolumeFileName->blockSignals(true);
@@ -1613,7 +1700,7 @@ void TEMBIRGui::mrcInputFileLoaded(const QString &filename)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::readMRCHeader(QString filepath)
+void BrightFieldGui::readMRCHeader(QString filepath)
 {
 
   MRCHeader header;
@@ -1630,20 +1717,20 @@ void TEMBIRGui::readMRCHeader(QString filepath)
   // Transfer the meta data from the MRC Header to the GUI
   m_XDim = header.nx;
   m_nTilts = header.nz;
- /*
-  m_XDim->setText(QString::number(header.nx));
-  m_YDim->setText(QString::number(header.ny));
-  m_nTilts->setText(QString::number(header.nz));
-  m_XGrid->setText(QString::number(header.mx));
-  m_YGrid->setText(QString::number(header.my));
-  m_ZGrid->setText(QString::number(header.mz));
-  m_XCell->setText(QString::number(header.xlen));
-  m_YCell->setText(QString::number(header.ylen));
-  m_ZCell->setText(QString::number(header.zlen));
-  m_XOrigin->setText(QString::number(header.xorg));
-  m_YOrigin->setText(QString::number(header.yorg));
-  m_ZOrigin->setText(QString::number(header.zorg));
-*/
+  /*
+     m_XDim->setText(QString::number(header.nx));
+     m_YDim->setText(QString::number(header.ny));
+     m_nTilts->setText(QString::number(header.nz));
+     m_XGrid->setText(QString::number(header.mx));
+     m_YGrid->setText(QString::number(header.my));
+     m_ZGrid->setText(QString::number(header.mz));
+     m_XCell->setText(QString::number(header.xlen));
+     m_YCell->setText(QString::number(header.ylen));
+     m_ZCell->setText(QString::number(header.zlen));
+     m_XOrigin->setText(QString::number(header.xorg));
+     m_YOrigin->setText(QString::number(header.yorg));
+     m_ZOrigin->setText(QString::number(header.zorg));
+     */
 
   {
     QIntValidator* val = new QIntValidator(0, header.ny-2, this);
@@ -1662,21 +1749,21 @@ void TEMBIRGui::readMRCHeader(QString filepath)
   {
     FEIHeader fei = header.feiHeaders[tiltIndex];
     /*
-    a_tilt->setText(QString::number(fei.a_tilt));
-    b_tilt->setText(QString::number(fei.b_tilt));
-    x_stage->setText(QString::number(fei.x_stage));
-    y_stage->setText(QString::number(fei.y_stage));
-    z_stage->setText(QString::number(fei.z_stage));
-    x_shift->setText(QString::number(fei.x_shift));
-    y_shift->setText(QString::number(fei.y_shift));
-    defocus->setText(QString::number(fei.defocus));
-    exp_time->setText(QString::number(fei.exp_time));
-    mean_int->setText(QString::number(fei.mean_int));
-    tiltaxis->setText(QString::number(fei.tiltaxis));
-    pixelsize->setText(QString::number(fei.pixelsize));
-    magnification->setText(QString::number(fei.magnification));
-    voltage->setText(QString::number(fei.voltage));
-    */
+         a_tilt->setText(QString::number(fei.a_tilt));
+         b_tilt->setText(QString::number(fei.b_tilt));
+         x_stage->setText(QString::number(fei.x_stage));
+         y_stage->setText(QString::number(fei.y_stage));
+         z_stage->setText(QString::number(fei.z_stage));
+         x_shift->setText(QString::number(fei.x_shift));
+         y_shift->setText(QString::number(fei.y_shift));
+         defocus->setText(QString::number(fei.defocus));
+         exp_time->setText(QString::number(fei.exp_time));
+         mean_int->setText(QString::number(fei.mean_int));
+         tiltaxis->setText(QString::number(fei.tiltaxis));
+         pixelsize->setText(QString::number(fei.pixelsize));
+         magnification->setText(QString::number(fei.magnification));
+         voltage->setText(QString::number(fei.voltage));
+         */
     QVector<int> indices(header.nz);
     QVector<float> a_tilts(header.nz);
     QVector<float> b_tilts(header.nz);
@@ -1716,7 +1803,7 @@ void TEMBIRGui::readMRCHeader(QString filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::displayDialogBox(QString title, QString text, QMessageBox::Icon icon)
+void BrightFieldGui::displayDialogBox(QString title, QString text, QMessageBox::Icon icon)
 {
 
   QMessageBox msgBox;
@@ -1731,70 +1818,71 @@ void TEMBIRGui::displayDialogBox(QString title, QString text, QMessageBox::Icon 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_estimateSigmaX_clicked()
+void BrightFieldGui::on_estimateSigmaX_clicked()
 {
-    //  std::cout << "on_estimateGainSigma_clicked" << std::endl;
-    bool ok = false;
-    if (sampleThickness->text().isEmpty() == true)
-    {
-        return;
-    }
-    if (defaultOffset->text().isEmpty() == true)
-    {
-        return;
-    }
-    if (targetGain->text().isEmpty() == true)
-    {
-        return;
-    }
-
-    int xmin = 0;
-    int xmax = 0;
-    ReconstructionArea* reconArea = m_MRCDisplayWidget->graphicsView()->reconstructionArea();
-    if (NULL == reconArea)
-    {
+  //  std::cout << "on_estimateGainSigma_clicked" << std::endl;
+  bool ok = false;
+  if (sampleThickness->text().isEmpty() == true)
+  {
     return;
-    }
-    reconArea->getXMinMax(xmin, xmax);
+  }
+  if (defaultOffset->text().isEmpty() == true)
+  {
+    return;
+  }
+  if (targetGain->text().isEmpty() == true)
+  {
+    return;
+  }
 
-    quint16 ymin = yMin->text().toUShort(&ok);
-    quint16 ymax = yMax->text().toUShort(&ok);
+  int xmin = 0;
+  int xmax = 0;
+  smoothness->setText(QString::number(1.0));
+  ReconstructionArea* reconArea = m_MRCDisplayWidget->graphicsView()->reconstructionArea();
+  if (NULL == reconArea)
+  {
+    return;
+  }
+  reconArea->getXMinMax(xmin, xmax);
 
-    if (verifyPathExists(inputMRCFilePath->text(), inputMRCFilePath))
-    {
-        SigmaXEstimation::Pointer estimate = SigmaXEstimation::New();
-        estimate->setInputFile(inputMRCFilePath->text().toStdString());
-        estimate->setSampleThickness(sampleThickness->text().toDouble(&ok));
-        estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
-        //estimate->setTargetGain(targetGain->text().toDouble(&ok));
-		//TODO : Set the Offset from the UI 
-        estimate->setTargetGain(1);
-		estimate->setTiltAngles(tiltSelection->currentIndex());
-        estimate->setXDims(xmin, xmax);
-        estimate->setYDims(ymin, ymax);
-        estimate->addObserver(this);
-        estimate->execute();
-        this->progressBar->setValue(0);
+  quint16 ymin = yMin->text().toUShort(&ok);
+  quint16 ymax = yMax->text().toUShort(&ok);
 
-        //targetGain->setText(QString::number(estimate->getTargetGainEstimate()));
+  if (verifyPathExists(inputMRCFilePath->text(), inputMRCFilePath))
+  {
+    SigmaXEstimation::Pointer estimate = SigmaXEstimation::New();
+    estimate->setInputFile(inputMRCFilePath->text().toStdString());
+    estimate->setSampleThickness(sampleThickness->text().toDouble(&ok));
+    estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
+    estimate->setTargetGain(targetGain->text().toDouble(&ok));
+    estimate->setBfOffset(bf_offset->text().toDouble());
+    //TODO : Set the Offset from the UI
+    estimate->setTiltAngles(tiltSelection->currentIndex());
+    estimate->setXDims(xmin, xmax);
+    estimate->setYDims(ymin, ymax);
+    estimate->addObserver(this);
+    estimate->execute();
+    this->progressBar->setValue(0);
 
-        m_CachedSigmaX = estimate->getSigmaXEstimate();
-        //std::cout << "m_CachedSigmaX: " << m_CachedSigmaX << std::endl;
-        qreal smth = 1.0/smoothness->text().toDouble(&ok);
-        //sigma_x->blockSignals(true);
-        sigma_x->setText(QString::number(m_CachedSigmaX * smth));
-        //sigma_x->blockSignals(false);
+    //targetGain->setText(QString::number(estimate->getTargetGainEstimate()));
 
-        //sigmaX_ShouldUpdate(false);
-    }
+    m_CachedSigmaX = estimate->getSigmaXEstimate();
+    //std::cout << "m_CachedSigmaX: " << m_CachedSigmaX << std::endl;
+    qreal smth = 1.0/smoothness->text().toDouble(&ok);
+    //sigma_x->blockSignals(true);
+    sigma_x->setText(QString::number(m_CachedSigmaX * smth));
+    //sigma_x->blockSignals(false);
+
+    //sigmaX_ShouldUpdate(false);
+  }
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_sigma_x_textChanged(const QString & text)
+void BrightFieldGui::on_sigma_x_textChanged(const QString & text)
 {
-//  std::cout << "on_sigma_x_textChanged" << std::endl;
+  //  std::cout << "on_sigma_x_textChanged" << std::endl;
   bool ok = false;
   qreal sigx = sigma_x->text().toDouble(&ok);
   qreal smth = m_CachedSigmaX / sigx;
@@ -1806,9 +1894,9 @@ void TEMBIRGui::on_sigma_x_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_smoothness_textChanged(const QString & text)
+void BrightFieldGui::on_smoothness_textChanged(const QString & text)
 {
-//  std::cout << "on_smoothness_textChanged" << std::endl;
+  //  std::cout << "on_smoothness_textChanged" << std::endl;
   bool ok = false;
   qreal smth = 1.0/smoothness->text().toDouble(&ok);
   sigma_x->blockSignals(true);
@@ -1820,7 +1908,7 @@ void TEMBIRGui::on_smoothness_textChanged(const QString & text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_targetGain_editingFinished()
+void BrightFieldGui::on_targetGain_editingFinished()
 {
   sigmaX_ShouldUpdate(true);
 }
@@ -1828,7 +1916,7 @@ void TEMBIRGui::on_targetGain_editingFinished()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_sampleThickness_editingFinished()
+void BrightFieldGui::on_sampleThickness_editingFinished()
 {
   sigmaX_ShouldUpdate(true);
   memCalculate();
@@ -1837,7 +1925,7 @@ void TEMBIRGui::on_sampleThickness_editingFinished()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_defaultOffset_editingFinished()
+void BrightFieldGui::on_defaultOffset_editingFinished()
 {
   sigmaX_ShouldUpdate(true);
 }
@@ -1845,7 +1933,7 @@ void TEMBIRGui::on_defaultOffset_editingFinished()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_tiltSelection_currentIndexChanged(int index)
+void BrightFieldGui::on_tiltSelection_currentIndexChanged(int index)
 {
   sigmaX_ShouldUpdate(true);
 }
@@ -1854,7 +1942,7 @@ void TEMBIRGui::on_tiltSelection_currentIndexChanged(int index)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_resetSigmaXBtn_clicked()
+void BrightFieldGui::on_resetSigmaXBtn_clicked()
 {
   sigma_x->blockSignals(true);
   sigma_x->setText(QString::number(m_CachedSigmaX));
@@ -1868,7 +1956,7 @@ void TEMBIRGui::on_resetSigmaXBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::updateProgressAndMessage(const char* message, int progress)
+void BrightFieldGui::updateProgressAndMessage(const char* message, int progress)
 {
   this->progressBar->setValue(progress);
   if (NULL != this->statusBar()) {
@@ -1879,7 +1967,7 @@ void TEMBIRGui::updateProgressAndMessage(const char* message, int progress)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::updateProgressAndMessage(const std::string &msg, int progress)
+void BrightFieldGui::updateProgressAndMessage(const std::string &msg, int progress)
 {
   this->progressBar->setValue(progress);
   if (NULL != this->statusBar()) {
@@ -1890,7 +1978,7 @@ void TEMBIRGui::updateProgressAndMessage(const std::string &msg, int progress)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
+void BrightFieldGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
 {
   reconstructionVOIUpdated(reconVOI);
 
@@ -1904,10 +1992,10 @@ void TEMBIRGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
            this, SLOT(reconstructionVOISelected(ReconstructionArea*)), Qt::QueuedConnection);
 
 
-//  connect(xMin, SIGNAL(textEdited ( const QString &)),
-//          reconVOI, SLOT(setXMin(const QString &)));
-//  connect(xMax, SIGNAL(textEdited ( const QString &)),
-//          reconVOI, SLOT(setXMax(const QString &)));
+  //  connect(xMin, SIGNAL(textEdited ( const QString &)),
+  //          reconVOI, SLOT(setXMin(const QString &)));
+  //  connect(xMax, SIGNAL(textEdited ( const QString &)),
+  //          reconVOI, SLOT(setXMax(const QString &)));
 
   connect(yMin, SIGNAL(textEdited ( const QString &)),
           reconVOI, SLOT(setYMax(const QString &)));
@@ -1921,17 +2009,17 @@ void TEMBIRGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_yMin_textChanged(const QString &string)
+void BrightFieldGui::on_yMin_textChanged(const QString &string)
 {
-    geometryChanged();
+  geometryChanged();
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_yMax_textChanged(const QString &string)
+void BrightFieldGui::on_yMax_textChanged(const QString &string)
 {
-    geometryChanged();
+  geometryChanged();
 }
 #endif
 
@@ -1939,70 +2027,70 @@ void TEMBIRGui::on_yMax_textChanged(const QString &string)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::geometryChanged()
+void BrightFieldGui::geometryChanged()
 {
- //   std::cout << "TomoGui::geometryChanged()" << std::endl;
-    bool ok = false;
+  //   std::cout << "TomoGui::geometryChanged()" << std::endl;
+  bool ok = false;
 
-    int x_min = 0;
-    int x_max = 0;
-    ReconstructionArea* reconArea = m_MRCDisplayWidget->graphicsView()->reconstructionArea();
-    if (NULL == reconArea)
-    {
-        return;
-    }
-    reconArea->getXMinMax(x_min, x_max);
+  int x_min = 0;
+  int x_max = 0;
+  ReconstructionArea* reconArea = m_MRCDisplayWidget->graphicsView()->reconstructionArea();
+  if (NULL == reconArea)
+  {
+    return;
+  }
+  reconArea->getXMinMax(x_min, x_max);
 
-//    qint32 x_min = xMin->text().toInt(&ok);
-    qint32 y_min = yMin->text().toInt(&ok);
-//    qint32 x_max = xMax->text().toInt(&ok);
-    qint32 y_max = yMax->text().toInt(&ok);
-    if (y_max < y_min)
-    {
-        yMin->setStyleSheet("border: 1px solid red;");
-        yMax->setStyleSheet("border: 1px solid red;");
-        statusBar()->showMessage("The Y End Value is Less than the Y Start Value. Please Correct.");
-        m_GoBtn->setEnabled(false);
-    }
-    else
-    {
-        yMin->setStyleSheet("");
-        yMax->setStyleSheet("");
-        emit reconstructionVOIGeometryChanged(x_min, y_min, x_max, y_max);
-        m_GoBtn->setEnabled(true);
-        statusBar()->showMessage("");
-    }
+  //    qint32 x_min = xMin->text().toInt(&ok);
+  qint32 y_min = yMin->text().toInt(&ok);
+  //    qint32 x_max = xMax->text().toInt(&ok);
+  qint32 y_max = yMax->text().toInt(&ok);
+  if (y_max < y_min)
+  {
+    yMin->setStyleSheet("border: 1px solid red;");
+    yMax->setStyleSheet("border: 1px solid red;");
+    statusBar()->showMessage("The Y End Value is Less than the Y Start Value. Please Correct.");
+    m_GoBtn->setEnabled(false);
+  }
+  else
+  {
+    yMin->setStyleSheet("");
+    yMax->setStyleSheet("");
+    emit reconstructionVOIGeometryChanged(x_min, y_min, x_max, y_max);
+    m_GoBtn->setEnabled(true);
+    statusBar()->showMessage("");
+  }
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::reconstructionVOIUpdated(ReconstructionArea* recon)
+void BrightFieldGui::reconstructionVOIUpdated(ReconstructionArea* recon)
 {
-    QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
-    QSize size = image.size();
+  QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
+  QSize size = image.size();
 
 
-    int xmin, ymin;
-    recon->getUpperLeft(xmin, ymin);
+  int xmin, ymin;
+  recon->getUpperLeft(xmin, ymin);
 
-    int xmax, ymax;
-    recon->getLowerRight(xmax, ymax);
+  int xmax, ymax;
+  recon->getLowerRight(xmax, ymax);
 
-//    xMin->setText(QString::number(xmin));
-//    xMax->setText(QString::number(xmax - 1));
+  //    xMin->setText(QString::number(xmin));
+  //    xMax->setText(QString::number(xmax - 1));
 
-    yMin->setText(QString::number(size.height() - ymax));
-    yMax->setText(QString::number(size.height() - ymin - 1));
+  yMin->setText(QString::number(size.height() - ymax));
+  yMax->setText(QString::number(size.height() - ymin - 1));
 
-    //sigmaX_ShouldUpdate(true);
-    memCalculate();
+  //sigmaX_ShouldUpdate(true);
+  memCalculate();
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::reconstructionVOISelected(ReconstructionArea* recon)
+void BrightFieldGui::reconstructionVOISelected(ReconstructionArea* recon)
 {
 
 }
@@ -2010,7 +2098,7 @@ void TEMBIRGui::reconstructionVOISelected(ReconstructionArea* recon)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::reconstructionVOIDeleted(ReconstructionArea* recon)
+void BrightFieldGui::reconstructionVOIDeleted(ReconstructionArea* recon)
 {
 
 }
@@ -2019,7 +2107,7 @@ void TEMBIRGui::reconstructionVOIDeleted(ReconstructionArea* recon)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_addResolution_clicked()
+void BrightFieldGui::on_addResolution_clicked()
 {
   int count = tomoInputHorzLayout->count() - 1;
 
@@ -2043,7 +2131,7 @@ void TEMBIRGui::on_addResolution_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_removeResolution_clicked()
+void BrightFieldGui::on_removeResolution_clicked()
 {
   // int count = tomoInputHorzLayout->count() -1;
   if(m_TomoInputs.count() == 1)
@@ -2072,80 +2160,126 @@ void TEMBIRGui::on_removeResolution_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::memCalculate()
+void BrightFieldGui::on_defaultOffsetUpdateBtn_clicked()
 {
-    bool ok = false;
-    float GeomN_x, GeomN_y, GeomN_z;
+  QRect rect = m_MRCDisplayWidget->graphicsView()->getBackgroundRectangle()->getMappedRectangleCoordinates();
 
-    int x_min = 0;
-    int x_max = 0;
-    ReconstructionArea* reconArea = m_MRCDisplayWidget->graphicsView()->reconstructionArea();
-    if (NULL == reconArea)
-    {
-        return;
-    }
-    reconArea->getXMinMax(x_min, x_max);
+  int tilt = m_MRCDisplayWidget->getCurrentTiltIndexBox()->value();
 
-    float SinoN_r = x_max - x_min + 1;
-    float SinoN_t = yMax->text().toInt(&ok) - yMin->text().toInt(&ok) + 1;
-    float SinoNtheta = m_nTilts - 0 + 1;
+  double mean = BackgroundCalculation::getMeanValue(inputMRCFilePath->text().toStdString(), rect.x(), rect.y(), rect.width(), rect.height(), tilt);
 
-    float sample_thickness = sampleThickness->text().toFloat(&ok);
-    int final_resolution = finalResolution->value();
-    int num_resolutions = numResolutions->text().toInt(&ok);
-    float interpolate_factor = powf((float)2, (float)num_resolutions-1) * final_resolution;
-    float delta_r = m_CachedPixelSize * 1.0e9;
-    float delta_xz = delta_r*final_resolution;
-    AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
-    ReconstructionEngine::InitializeAdvancedParams(advancedParams);
+  std::stringstream ss;
+  ss << mean;
 
-    //std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
+  defaultOffset->setText(QString::fromStdString(ss.str()));
 
-    if(extendObject->isChecked() == true)
-    {
-        float maxTilt = m_CachedLargestAngle;
-        //    float LengthZ = sample_thickness * advancedParams->Z_STRETCH;
-        float temp = advancedParams->X_SHRINK_FACTOR * ((SinoN_r * delta_r) / cos(maxTilt * M_PI / 180)) + sample_thickness * tan(maxTilt * M_PI / 180);
-        temp /= (interpolate_factor * delta_r);
-        float GeomLengthX = floor(temp + 0.5) * interpolate_factor * delta_r;
-        GeomN_x = floor(GeomLengthX / delta_xz);
-    }
-    else
-    {
-        GeomN_x = SinoN_r / final_resolution;
-    }
+  // Enable all group boxes
+  singleSliceGroupBox->setEnabled(true);
+  fullReconstructionGroupBox->setEnabled(true);
+  parametersGroupBox->setEnabled(true);
+  advancedParametersGroupBox->setEnabled(true);
+}
 
-    GeomN_y = SinoN_t / final_resolution;
-    GeomN_z = advancedParams->Z_STRETCH * (sample_thickness / (final_resolution * delta_r)); // TODO: need to access Sinogram_deltar and z_stretch.
-    //This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void BrightFieldGui::on_defaultOffset_textChanged(const QString & text)
+{
+  if (text == "")
+  {
+    // Disable all group boxes
+    singleSliceGroupBox->setEnabled(false);
+    fullReconstructionGroupBox->setEnabled(false);
+    parametersGroupBox->setEnabled(false);
+    advancedParametersGroupBox->setEnabled(false);
+  }
+  else
+  {
+    // Enable all group boxes
+    singleSliceGroupBox->setEnabled(true);
+    fullReconstructionGroupBox->setEnabled(true);
+    parametersGroupBox->setEnabled(true);
+    advancedParametersGroupBox->setEnabled(true);
+  }
+}
 
-    float dataTypeMem = sizeof(Real_t);
-    float ObjectMem = GeomN_x * GeomN_y * GeomN_z * dataTypeMem;
-    float SinogramMem = SinoN_r * SinoN_t * SinoNtheta * dataTypeMem;
-    float ErroSinoMem = SinogramMem;
-    float WeightMem = SinogramMem; //Weight matrix
-    float A_MatrixMem;
-    if(extendObject->isChecked() == true)
-    {
-        A_MatrixMem = GeomN_x * GeomN_z * (final_resolution * 3 * (dataTypeMem + 4) * SinoNtheta); // 4 is the bytes to store the counts
-        //*+4 correspodns to bytes to store a single double and a unsigned into to
-        //store the offset. 3*m_FinalRes is the approximate number of detector elements hit per voxel
-    }
-    else
-    {
-        A_MatrixMem = GeomN_x * GeomN_z * (final_resolution * (dataTypeMem + 4) * SinoNtheta); //Since we are reconstructing a larger region there are several voxels with no projection data. so instead of each voxel hitting 3*m_FinalRes det entries we aproximate it by m_FinalRes
-    }
-    float NuisanceParamMem = SinoNtheta * dataTypeMem * 3; //3 is for gains offsets and noise var
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void BrightFieldGui::memCalculate()
+{
+  bool ok = false;
+  float GeomN_x, GeomN_y, GeomN_z;
 
-    if(inputBrightFieldFilePath->text().isEmpty() == false) {
-        SinogramMem *= 2;
-    }
+  int x_min = 0;
+  int x_max = 0;
+  ReconstructionArea* reconArea = m_MRCDisplayWidget->graphicsView()->reconstructionArea();
+  if (NULL == reconArea)
+  {
+    return;
+  }
+  reconArea->getXMinMax(x_min, x_max);
 
-    float TotalMem = ObjectMem + SinogramMem + ErroSinoMem + WeightMem + A_MatrixMem + NuisanceParamMem; //in bytes
+  float SinoN_r = x_max - x_min + 1;
+  float SinoN_t = yMax->text().toInt(&ok) - yMin->text().toInt(&ok) + 1;
+  float SinoNtheta = m_nTilts - 0 + 1;
 
-    TotalMem /= (1e9); //To get answer in Gb
+  float sample_thickness = sampleThickness->text().toFloat(&ok);
+  int final_resolution = finalResolution->value();
+  int num_resolutions = numResolutions->text().toInt(&ok);
+  float interpolate_factor = powf((float)2, (float)num_resolutions-1) * final_resolution;
+  float delta_r = m_CachedPixelSize * 1.0e9;
+  float delta_xz = delta_r*final_resolution;
+  AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
+  ReconstructionEngine::InitializeAdvancedParams(advancedParams);
 
-    memoryUse->setText(QString::number(TotalMem));
+  //std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
+
+  if(extendObject->isChecked() == true)
+  {
+    float maxTilt = m_CachedLargestAngle;
+    //    float LengthZ = sample_thickness * advancedParams->Z_STRETCH;
+    float temp = advancedParams->X_SHRINK_FACTOR * ((SinoN_r * delta_r) / cos(maxTilt * M_PI / 180)) + sample_thickness * tan(maxTilt * M_PI / 180);
+    temp /= (interpolate_factor * delta_r);
+    float GeomLengthX = floor(temp + 0.5) * interpolate_factor * delta_r;
+    GeomN_x = floor(GeomLengthX / delta_xz);
+  }
+  else
+  {
+    GeomN_x = SinoN_r / final_resolution;
+  }
+
+  GeomN_y = SinoN_t / final_resolution;
+  GeomN_z = advancedParams->Z_STRETCH * (sample_thickness / (final_resolution * delta_r)); // TODO: need to access Sinogram_deltar and z_stretch.
+  //This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm
+
+  float dataTypeMem = sizeof(Real_t);
+  float ObjectMem = GeomN_x * GeomN_y * GeomN_z * dataTypeMem;
+  float SinogramMem = SinoN_r * SinoN_t * SinoNtheta * dataTypeMem;
+  float ErroSinoMem = SinogramMem;
+  float WeightMem = SinogramMem; //Weight matrix
+  float A_MatrixMem;
+  if(extendObject->isChecked() == true)
+  {
+    A_MatrixMem = GeomN_x * GeomN_z * (final_resolution * 3 * (dataTypeMem + 4) * SinoNtheta); // 4 is the bytes to store the counts
+    //*+4 correspodns to bytes to store a single double and a unsigned into to
+    //store the offset. 3*m_FinalRes is the approximate number of detector elements hit per voxel
+  }
+  else
+  {
+    A_MatrixMem = GeomN_x * GeomN_z * (final_resolution * (dataTypeMem + 4) * SinoNtheta); //Since we are reconstructing a larger region there are several voxels with no projection data. so instead of each voxel hitting 3*m_FinalRes det entries we aproximate it by m_FinalRes
+  }
+  float NuisanceParamMem = SinoNtheta * dataTypeMem * 3; //3 is for gains offsets and noise var
+
+  if(inputBrightFieldFilePath->text().isEmpty() == false) {
+    SinogramMem *= 2;
+  }
+
+  float TotalMem = ObjectMem + SinogramMem + ErroSinoMem + WeightMem + A_MatrixMem + NuisanceParamMem; //in bytes
+
+  TotalMem /= (1e9); //To get answer in Gb
+
+  memoryUse->setText(QString::number(TotalMem));
 
 }
 
@@ -2153,7 +2287,7 @@ void TEMBIRGui::memCalculate()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionSaveCanvas_triggered()
+void BrightFieldGui::on_actionSaveCanvas_triggered()
 {
   m_MRCDisplayWidget->saveCanvas();
 }
@@ -2162,7 +2296,7 @@ void TEMBIRGui::on_actionSaveCanvas_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_action_InputMRCInfo_triggered()
+void BrightFieldGui::on_action_InputMRCInfo_triggered()
 {
   m_MRCInputInfoWidget->setInfo(inputMRCFilePath->text());
   m_MRCInputInfoWidget->show();
@@ -2171,7 +2305,7 @@ void TEMBIRGui::on_action_InputMRCInfo_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_action_OutputMRCInfo_triggered()
+void BrightFieldGui::on_action_OutputMRCInfo_triggered()
 {
   m_MRCOutputInfoWidget->setInfo(m_ReconstructedDisplayWidget->getMRCFilePath());
   m_MRCOutputInfoWidget->show();
@@ -2180,7 +2314,7 @@ void TEMBIRGui::on_action_OutputMRCInfo_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::deleteTempFiles()
+void BrightFieldGui::deleteTempFiles()
 {
   // Remove Any Temp files that have accumulated
   for(int i = 0; i < m_TempFilesToDelete.size(); ++i)
@@ -2191,23 +2325,46 @@ void TEMBIRGui::deleteTempFiles()
   m_TempFilesToDelete.clear();
 }
 
-#if 0
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::sigmaX_ShouldUpdate(bool b)
+void BrightFieldGui::on_actionLoad_Tilt_Information_triggered()
 {
-  estimateSigmaX->setEnabled(b);
-  estimateSigmaX->setDefault(b);
+  TomogramTiltLoader loader(this);
+  loader.setNumTilts(m_nTilts);
+  int ret = loader.exec();
+  if(ret == QDialog::Accepted) // the user clicked the OK button, now check what they typed
+  {
+    QVector<float> a_tilts = loader.getATilts();
+    QVector<float> b_tilts = loader.getBTilts();
+    QVector<int> indices(a_tilts.size());
 
-  m_UpdateCachedSigmaX = b;
+    QVector<bool>  excludes(a_tilts.size());
+    m_CachedLargestAngle = std::numeric_limits<float>::min();
+    m_CachedPixelSize = loader.getPixelSize();
+    for(int l = 0; l < a_tilts.size(); ++l)
+    {
+      indices[l] = l;
 
-  targetGain->setEnabled(!b);
-  sampleThickness->setEnabled(!b);
-  sigma_x->setEnabled(!b);
-  smoothness->setEnabled(!b);
-  tiltSelection->setEnabled(!b);
+
+      if (abs(a_tilts[l]) > m_CachedLargestAngle)
+      {
+        m_CachedLargestAngle =  abs(a_tilts[l]);
+      }
+      if (abs(b_tilts[l]) > m_CachedLargestAngle)
+      {
+        m_CachedLargestAngle =  abs(b_tilts[l]);
+      }
+
+      excludes[l] = false;
+    }
+    if (NULL != m_GainsOffsetsTableModel)
+    {
+      m_GainsOffsetsTableModel->setTableData(indices, a_tilts, b_tilts, excludes);
+    }
+  }
 }
-#endif
+
+
 
 

@@ -162,7 +162,7 @@ int copyData(MRCHeader &header, int* voxelMin, int* voxelMax, int* subsetValues,
 int main(int argc, char **argv)
 {
 
-  TCLAP::CmdLine cmd("", ' ', MBIRLib::Version::Complete);
+    TCLAP::CmdLine cmd("", ' ', MBIRLib::Version::Complete());
 
   TCLAP::ValueArg<std::string> inputFile("", "inputfile", "The Input MRC File", true, "", "");
   cmd.add(inputFile);

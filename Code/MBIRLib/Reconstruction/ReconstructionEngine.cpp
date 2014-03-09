@@ -751,7 +751,7 @@ void ReconstructionEngine::execute()
 			  m_VisitCount->setValue(0,j,k);
 			
 		}
-		//end of debug 
+		//end of debug
 		
 		EffIterCount++; //cycles between the two types of voxel updates
 		
@@ -762,7 +762,11 @@ void ReconstructionEngine::execute()
         break; //stop inner loop if we have hit the threshold value for x
       }
       // Check to see if we are canceled.
-      if (getCancel() == true) { setErrorCondition(-999); return; }
+      if (getCancel() == true)
+      {
+          setErrorCondition(-999);
+          return;
+      }
 
 		// Write out the MRC File ; If NHICD only after half an equit do a write
 #ifdef NHICD
@@ -935,6 +939,7 @@ void ReconstructionEngine::execute()
   notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
   setErrorCondition(0);
   std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds() - totalTime) / 1000 << std::endl;
+    
   return;
 }
 
@@ -1056,9 +1061,7 @@ int ReconstructionEngine::calculateCost(CostData::Pointer cost,
 // -----------------------------------------------------------------------------
 Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geometry, RealVolumeType::Pointer ErrorSino, QGGMRF::QGGMRF_Values* qggmrf_values)
 {
-	Real_t cost = 0, temp = 0;
-	Real_t delta;
-	Real_t errSinoValue = 0.0;
+	Real_t cost = 0;
 	
 	cost = m_ForwardModel->forwardCost(sinogram,ErrorSino);//Data term error
 	if(getVeryVerbose())

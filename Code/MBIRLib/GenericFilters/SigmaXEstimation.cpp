@@ -62,22 +62,22 @@ void calcMinMax(T* data, int total, Real_t &min, Real_t &max, Real_t &sum2)
 }
 
 template<typename T>
-void calcAvgDeviation(T* data, int total, Real_t &dev)
+void calcAvgDeviation(T* data, int total, Real_t &dev, double bf_offset)
 {
 	dev=0;
     Real_t mean=0;
 	for (int i = 0; i < total; i++)
     {
-		Real_t temp = data[i] + BF_OFFSET;
+		Real_t temp = data[i] + bf_offset;
 		if(temp > 0)
-			mean+=log(data[i]+BF_OFFSET);
+			mean+=log(data[i]+bf_offset);
     }
     mean/=total;
     for (int i = 0; i < total; i++)
     {
-		Real_t temp = data[i] + BF_OFFSET;
+		Real_t temp = data[i] + bf_offset;
 		if(temp > 0)
-			dev+=fabs(log(data[i]+BF_OFFSET)-mean);
+			dev+=fabs(log(data[i]+bf_offset)-mean);
     }
     dev/=total;
 }
@@ -93,6 +93,7 @@ m_SampleThickness(100.0),
 m_TiltAngles(0),
 m_DefaultOffset(0.0),
 m_TargetGain(1.0),
+m_BfOffset(0.0),
 m_SigmaXEstimate(0.0)
 {
     m_XDims[0] = -1;
@@ -116,7 +117,6 @@ SigmaXEstimation::~SigmaXEstimation()
 // -----------------------------------------------------------------------------
 void SigmaXEstimation::execute()
 {
-
     MRCHeader header;
     ::memset(&header, 0, 1024);
     header.feiHeaders = NULL;
@@ -165,15 +165,15 @@ void SigmaXEstimation::execute()
         {
         case 0:
             //calcMinMax<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-            Detail::calcAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2);
+            Detail::calcAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset);
             break;
         case 1:
             //calcMinMax<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-            Detail::calcAvgDeviation<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, sum2);
+            Detail::calcAvgDeviation<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset);
             break;
         case 2:
             //calcMinMax<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-            Detail::calcAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2);
+            Detail::calcAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset);
             break;
         case 3:
             break;
@@ -181,7 +181,7 @@ void SigmaXEstimation::execute()
             break;
         case 6:
             //calcMinMax<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-            Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2);
+            Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset);
             break;
         case 16:
             break;

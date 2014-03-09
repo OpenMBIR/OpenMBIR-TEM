@@ -76,7 +76,7 @@ void maxList(struct List InList)
 
 void minList(struct List InList)
 {
-	int32_t min_z = pow(2, 31);
+	int32_t min_z = 2147483648; //pow(2, 31);
 	int32_t min_x = min_z;
 	for(int32_t i = 0; i < InList.NumElts; i++)
 	{
@@ -842,7 +842,6 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 #endif //NHICD
 	
 	std::cout<<"exiting voxel update routine"<<std::endl;
-	
     return exit_status;
 
 }
@@ -978,7 +977,7 @@ Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdate
 	
     //Partial selection sort
 
-  /*  Real_t max;
+    /*Real_t max;
     uint32_t max_index;
     for (uint32_t i = 0; i <= percentile_index; i++)
     {
@@ -1107,7 +1106,7 @@ struct List ReconstructionEngine::GenRandList(struct List InpList)
 }
 
 
-//Radomized select based on code from : http://stackoverflow.com/questions/5847273/order-statistic-implmentation
+//Radomized select : modified based on code from  http://stackoverflow.com/questions/5847273/order-statistic-implmentation
 
 
 Real_t ReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i)
@@ -1115,6 +1114,8 @@ Real_t ReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A,uint32_t 
 	
 	//std::cout<<"***********Select****************"<<std::endl;
 	//std::cout<<p<<"  "<<r<<"  "<<i<<std::endl;
+   
+	/*
 	if (p == r)
     {
 		return A->d[p];
@@ -1129,7 +1130,30 @@ Real_t ReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A,uint32_t 
     {
 		return RandomizedSelect(A, p, q-1, i) ;
     }
-	else return RandomizedSelect(A, q+1, r, i - k);
+	else return RandomizedSelect(A, q+1, r, i - k);*/
+   
+
+    uint32_t start = p;
+	uint32_t end = r;
+	uint32_t q;
+    do
+	{
+	    q = RandomizedPartition(A, start, end);
+		if (i == q)
+			return A->d[i];
+	    else if  (i < q)
+        {
+            //start = p;
+            end = q-1;
+        }
+        else
+        {
+            start = q+1;
+            //end = r;
+        }
+	}while(i != q);
+    
+	return A->d[i];
 }
 uint32_t ReconstructionEngine::Partition(RealArrayType::Pointer A,uint32_t p,uint32_t r)
 {
@@ -1167,7 +1191,7 @@ uint32_t ReconstructionEngine::RandomizedPartition(RealArrayType::Pointer A,uint
 	generator.seed(arg); // seed with the current time
 	
 	Real_t temp;	
-	uint32_t j = p + numberGenerator()%(r-p+1);//rand()%(r-p+1);
+ 	uint32_t j = p + numberGenerator()%(r-p+1);//rand()%(r-p+1);
 	temp = A->d[r];
 	A->d[r] = A->d[j];
 	A->d[j] = temp;	

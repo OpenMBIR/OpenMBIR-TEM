@@ -13,6 +13,7 @@ set (MBIRLib_GenericFilters_SRCS
     ${MBIRLib_SOURCE_DIR}/GenericFilters/TomoFilter.cpp
     ${MBIRLib_SOURCE_DIR}/GenericFilters/DetectorResponse.cpp
     ${MBIRLib_SOURCE_DIR}/GenericFilters/SigmaXEstimation.cpp
+    ${MBIRLib_SOURCE_DIR}/GenericFilters/BackgroundCalculation.cpp
 )
 
 set (MBIRLib_GenericFilters_HDRS
@@ -24,6 +25,7 @@ set (MBIRLib_GenericFilters_HDRS
     ${MBIRLib_SOURCE_DIR}/GenericFilters/TomoFilter.h
     ${MBIRLib_SOURCE_DIR}/GenericFilters/DetectorResponse.h
     ${MBIRLib_SOURCE_DIR}/GenericFilters/SigmaXEstimation.h
+    ${MBIRLib_SOURCE_DIR}/GenericFilters/BackgroundCalculation.h
 )
 
 cmp_IDE_SOURCE_PROPERTIES( "MBIRLib/GenericFilters" "${MBIRLib_GenericFilters_HDRS}" "${MBIRLib_GenericFilters_SRCS}" "${CMP_INSTALL_FILES}")

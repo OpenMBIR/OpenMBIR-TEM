@@ -28,8 +28,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#ifndef EMMPMGUI_H_
-#define EMMPMGUI_H_
+#ifndef _BRIGHTFIELD_GUI_H
+#define _BRIGHTFIELD_GUI_H
 
 //-- Qt Includes
 #include <QtCore/QObject>
@@ -50,11 +50,13 @@ class ReconstructionArea;
 class MRCInfoWidget;
 
 //-- UIC generated Header
-#include "ui_TEMBIRGui.h"
+#include "ui_BrightFieldGui.h"
 #include "QMultiResolutionReconstruction.h"
 
 #include "MBIRLib/IOFilters/MRCHeader.h"
 #include "MBIRLib/Common/Observer.h"
+#include "MBIRLib/GenericFilters/BackgroundCalculation.h"
+#include "RectangleCreator.h"
 
 
 /**
@@ -65,13 +67,13 @@ class MRCInfoWidget;
  * @date Dec 26, 2011
  * @version 1.0
  */
-class TEMBIRGui :  public QMainWindow, private Ui::TEMBIRGui, public Observer
+class BrightFieldGui :  public QMainWindow, private Ui::BrightFieldGui, public Observer
 {
     Q_OBJECT;
 
 public:
-    TEMBIRGui(QWidget *parent = 0);
-    virtual ~TEMBIRGui();
+    BrightFieldGui(QWidget *parent = 0);
+    virtual ~BrightFieldGui();
 
     MXA_INSTANCE_PROPERTY(QString, CurrentImageFile)
     MXA_INSTANCE_PROPERTY(QString, CurrentProcessedFile)
@@ -144,6 +146,14 @@ public:
       */
     void deleteTempFiles();
 
+/*!
+   Delete a directory along with all of its contents.
+
+   \param dirName Path of directory to remove.
+   \return true on success; false on error.
+*/
+    bool removeDir(const QString &dirName);
+
 public slots:
 
     // Manual hookup slots to get signals from the graphics view
@@ -168,6 +178,7 @@ protected slots:
     void on_actionSaveCanvas_triggered();
     void on_action_InputMRCInfo_triggered();
     void on_action_OutputMRCInfo_triggered();
+    void on_actionLoad_Tilt_Information_triggered();
 
     //Window Menu
     void on_actionParameters_triggered();
@@ -253,12 +264,17 @@ protected slots:
 
     void on_sigma_x_textChanged(const QString & text);
 
+    void on_defaultOffsetUpdateBtn_clicked();
+
+    void on_defaultOffset_textChanged(const QString & text);
+
     void singleSlicePlaneSet(int y);
 
     /**
      * @brief The geometry widgets signal for 'textFinished' connects to this
      */
     void geometryChanged();
+
 
 protected:
 
@@ -366,13 +382,13 @@ signals:
     * @brief Signal emitted when a message is available for display to the user
     * @param s The warning message
     */
-    void pipelineWarningMessage(const QString &s);
+    void pipelineWarningMessage(const char* message);
 
     /**
      * @brief If the pipeline throws an error this signal will emit it.
      * @param s The message to display
      */
-    void pipelineErrorMessage(const QString &s);
+    void pipelineErrorMessage(const char* message);
 
     /**
      * @brief The Reconstruction Area has changed.
@@ -382,6 +398,8 @@ signals:
      * @param ymax Max y value
      */
     void reconstructionVOIGeometryChanged(int xmin, int ymin, int xmax, int ymax);
+
+    void fireRectangleCreatorAdded(RectangleCreator* rectangle);
 
 private slots:
     // slots for our worker thread to communicate
@@ -443,7 +461,7 @@ private:
     GainsOffsetsTableModel*  m_GainsOffsetsTableModel;
 
     bool                  m_SingleSliceReconstructionActive;
-    bool                  m_FullReconstrucionActive;
+    bool                  m_FullReconstructionActive;
     MRCInfoWidget*        m_MRCInputInfoWidget;
     MRCInfoWidget*        m_MRCOutputInfoWidget;
     quint16               m_XDim;
@@ -453,8 +471,8 @@ private:
     bool                  m_UpdateCachedSigmaX;
     QVector<QString>      m_TempFilesToDelete;
 
-    TEMBIRGui(const TEMBIRGui&); // Copy Constructor Not Implemented
-    void operator=(const TEMBIRGui&); // Operator '=' Not Implemented
+    BrightFieldGui(const BrightFieldGui&); // Copy Constructor Not Implemented
+    void operator=(const BrightFieldGui&); // Operator '=' Not Implemented
 };
 
-#endif /* EMMPMGUI_H_ */
+#endif /* _BRIGHTFIELD_GUI_H */
