@@ -58,6 +58,8 @@ SET( TEMBIR_SRCS
   ${TEMBIR_SOURCE_DIR}/GainsOffsetsTableModel.cpp
   ${TEMBIR_SOURCE_DIR}/CheckBoxDelegate.cpp
   ${TEMBIR_SOURCE_DIR}/ReconstructionArea.cpp
+  ${TEMBIR_SOURCE_DIR}/TomogramTiltLoader.cpp
+  ${TEMBIR_SOURCE_DIR}/TiltAngleGroupBox.cpp
 )
 
 # another list, this time it includes all header files that should 
@@ -73,6 +75,8 @@ SET( TEMBIR_MOC_HDRS
   ${TEMBIR_SOURCE_DIR}/GainsOffsetsTableModel.h
   ${TEMBIR_SOURCE_DIR}/CheckBoxDelegate.h
   ${TEMBIR_SOURCE_DIR}/ReconstructionArea.h
+  ${TEMBIR_SOURCE_DIR}/TomogramTiltLoader.h
+  ${TEMBIR_SOURCE_DIR}/TiltAngleGroupBox.h  
 )
 cmp_IDE_SOURCE_PROPERTIES(TEMBIR "${TEMBIR_MOC_HDRS}" "${TEMBIR_SRCS}" "0")
 
@@ -85,6 +89,8 @@ SET( TEMBIR_UIS
  ${TEMBIR_SOURCE_DIR}/UI_Files/QMRCDisplayWidget.ui
  ${TEMBIR_SOURCE_DIR}/UI_Files/MRCInfoWidget.ui
  ${TEMBIR_SOURCE_DIR}/UI_Files/ImageOpenDialog.ui
+ ${TEMBIR_SOURCE_DIR}/UI_Files/TomogramTiltLoader.ui
+ ${TEMBIR_SOURCE_DIR}/UI_Files/TiltAngleGroupBox.ui
 )
 cmp_IDE_SOURCE_PROPERTIES(TEMBIR/UI_Files "${TEMBIR_UIS}" "" "0")
 

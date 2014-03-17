@@ -43,6 +43,7 @@
 //-- Qt Includes
 #include <QtCore/QObject>
 #include <QtGui/QWidget>
+#include <QtGui/QKeyEvent>
 
 
 #include "ui_QMRCDisplayWidget.h"
@@ -82,6 +83,13 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
 
     QString getMRCFilePath();
 
+    QSpinBox* getCurrentTiltIndexBox();
+
+    QTabWidget* getControlsTab();
+
+    QWidget* getAdvancedControls();
+    QWidget* getBasicControls();
+
     void fireOriginCB_Changed();
     void saveCanvas();
     void loadXZSliceReconstruction(QString reconMRCFilePath);
@@ -91,6 +99,10 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
 
     void setImageWidgetsEnabled(bool b);
     void setMovieWidgetsEnabled(bool b);
+
+    void setHeaderValues();
+
+    void resetImageScaling();
 
   protected:
     void setupGui();
@@ -104,13 +116,16 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     void drawOrigin(QImage image);
 
 
-
   public slots:
     void on_playBtn_clicked();
     void on_stopBtn_clicked();
     void on_skipStart_clicked();
     void on_skipEnd_clicked();
     void on_m_SaveCanvasBtn_clicked();
+    void on_updateImageBtn_clicked();
+    void on_resetImageBtn_clicked();
+    void on_minimumField_returnPressed();
+    void on_maximumField_returnPressed();
 
 
     void stepForwardFromTimer();
@@ -133,6 +148,8 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
 
   private:
     bool                  m_StopAnimation;     // Trigger to stop a running animation
+    float                 m_HeaderMinimum;
+    float                 m_HeaderMaximum;
     QTimer*               m_AnimationTimer;
     QList<QWidget*>       m_ImageWidgets;
     QList<QWidget*>       m_MovieWidgets;
@@ -142,6 +159,7 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     bool                  m_ImageWidgetsEnabled;
     bool                  m_MovieWidgetsEnabled;
     bool                  m_DrawOrigin;
+    //RectangleCreator*     m_BackgroundRectangle;
 
 
     QMRCDisplayWidget(const QMRCDisplayWidget&); // Copy Constructor Not Implemented

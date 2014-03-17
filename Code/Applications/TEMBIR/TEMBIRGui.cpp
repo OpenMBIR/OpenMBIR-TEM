@@ -507,12 +507,12 @@ void TEMBIRGui::setupGui()
     outputTabWidget->removeTab(1);
     initialReconstructionPath->hide();
     initialReconstructionLabel->hide();
-	
-	//Uncomment next 3 lines to disable BF normalized recon
-	
-	//inputBrightFieldFilePath->hide();
-	//inputBrightFieldFilePathBtn->hide();
-	//label_37->hide();
+
+  //Uncomment next 3 lines to disable BF normalized recon
+
+  //inputBrightFieldFilePath->hide();
+  //inputBrightFieldFilePathBtn->hide();
+  //label_37->hide();
 
     m_MRCInputInfoWidget = new MRCInfoWidget(this);
     m_MRCInputInfoWidget->hide();
@@ -2158,5 +2158,51 @@ void TEMBIRGui::deleteTempFiles()
     f.remove();
   }
   m_TempFilesToDelete.clear();
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void TEMBIRGui::on_actionLoad_Tilt_Information_triggered()
+{
+  TomogramTiltLoader loader(this);
+  loader.setNumTilts(m_nTilts);
+  int ret = loader.exec();
+  if(ret == QDialog::Accepted) // the user clicked the OK button, now check what they typed
+  {
+    QVector<float> a_tilts = loader.getATilts();
+    QVector<float> b_tilts = loader.getBTilts();
+    if (a_tilts.size() != b_tilts.size() )
+    {
+      QMessageBox::critical(this, "Tilt Loading Error", "The A tilts and B Tiles do not have the same number of values.",  QMessageBox::Ok, QMessageBox::Ok);
+      return;
+    }
+
+    QVector<int> indices(a_tilts.size());
+
+    QVector<bool>  excludes(a_tilts.size());
+    m_CachedLargestAngle = std::numeric_limits<float>::min();
+    m_CachedPixelSize = loader.getPixelSize();
+    for(int l = 0; l < a_tilts.size(); ++l)
+    {
+      indices[l] = l;
+
+
+      if (abs(a_tilts[l]) > m_CachedLargestAngle)
+      {
+        m_CachedLargestAngle =  abs(a_tilts[l]);
+      }
+      if (abs(b_tilts[l]) > m_CachedLargestAngle)
+      {
+        m_CachedLargestAngle =  abs(b_tilts[l]);
+      }
+
+      excludes[l] = false;
+    }
+    if (NULL != m_GainsOffsetsTableModel)
+    {
+      m_GainsOffsetsTableModel->setTableData(indices, a_tilts, b_tilts, excludes);
+    }
+  }
 }
 
