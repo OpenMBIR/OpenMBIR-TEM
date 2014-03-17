@@ -2337,6 +2337,11 @@ void BrightFieldGui::on_actionLoad_Tilt_Information_triggered()
   {
     QVector<float> a_tilts = loader.getATilts();
     QVector<float> b_tilts = loader.getBTilts();
+    if (a_tilts.size() != b_tilts.size() )
+    {
+      QMessageBox::critical(this, "Tilt Loading Error", "The A tilts and B Tiles do not have the same number of values.",  QMessageBox::Ok, QMessageBox::Ok);
+      return;
+    }
     QVector<int> indices(a_tilts.size());
 
     QVector<bool>  excludes(a_tilts.size());
