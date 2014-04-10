@@ -678,7 +678,8 @@ void ReconstructionEngine::execute()
 		{
 			listselector%=NUM_HOM_ITER;// A variable to cycle through the randmoized list of voxels
 			
-			m_VoxelIdxList.NumElts = floor((Real_t)TempList.NumElts/NUM_HOM_ITER);			
+			m_VoxelIdxList.NumElts = floor((Real_t)TempList.NumElts/NUM_HOM_ITER);
+            
 			//If the number of voxels is NOT exactly divisible by NUM_NON .. then compensate and make the last of the lists longer
 			if(listselector == NUM_HOM_ITER-1)
 			{

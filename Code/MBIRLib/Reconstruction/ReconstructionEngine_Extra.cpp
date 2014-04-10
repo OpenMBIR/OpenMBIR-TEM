@@ -599,7 +599,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 			std::cout<<"**********************************************"<<std::endl;
 #endif //debug	
 			
-            //Compute VSC and create a map of pixels that are above the threshold value
+            //Compute VSC threshold and create a map of pixels that are above the threshold value
             ComputeVSC(magUpdateMap, filtMagUpdateMap);
 			
 #ifdef DEBUG
@@ -621,7 +621,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
             std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
 			//Generate a new List based on the NH_threshold
 			NHList = GenNonHomList(NH_Threshold, filtMagUpdateMap);
-			m_VoxelIdxList = NHList;			
+			m_VoxelIdxList = NHList;
         }
 		
 
@@ -709,6 +709,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 		std::cout<<" Voxel update complete .."<<std::endl;
 		
 		// Now sum up magnitude update map values
+        //TODO: replace by a TBB reduce operation
         for (int t = 0; t < m_NumThreads; ++t)
         {
 			
@@ -837,8 +838,10 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 	
 #ifdef NHICD
 	if(updateType == VoxelUpdateType::NonHomogeniousUpdate && NHList.Array != NULL)
+    {
 	free(NHList.Array);
-	
+    std::cout<<"Freeing memory allocated to non-homogenous List"<<std::endl;
+	}
 #endif //NHICD
 	
 	std::cout<<"exiting voxel update routine"<<std::endl;
@@ -894,7 +897,7 @@ void ReconstructionEngine::ComputeVSC(RealImageType::Pointer magUpdateMap, RealI
     fclose(Fp);
 #endif //Debug
 	
-	::memcpy(filtMagUpdateMap->getPointer(0,0),magUpdateMap->getPointer(0,0),m_Geometry->N_x * m_Geometry->N_z*sizeof(Real_t));
+	//::memcpy(filtMagUpdateMap->getPointer(0,0),magUpdateMap->getPointer(0,0),m_Geometry->N_x * m_Geometry->N_z*sizeof(Real_t));
 	
     for (int16_t i = 0; i < m_Geometry->N_z; i++)
     {
@@ -952,7 +955,7 @@ Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdate
     uint32_t ArrLength = m_Geometry->N_z * m_Geometry->N_x;
     Real_t threshold;
 
-	//Copy into a linear list for easier partial sorting
+	//Copy into a new list for sorting
 	Real_t* src = magUpdateMap->getPointer();
 	Real_t* dest = TempMagMap->getPointer();
 	::memcpy(dest,src, ArrLength*sizeof(Real_t));
@@ -1025,9 +1028,9 @@ struct List ReconstructionEngine::GenNonHomList(Real_t NHThresh, RealImageType::
         }
     }
 	
-	struct List NHList = GenRandList(TempList);
+	struct List NHList = GenRandList(TempList); //Randomize the list of indices
 	free(TempList.Array);
-	
+    
 	std::cout<<"Number of elements in the NH list ="<<NHList.NumElts<<std::endl;
 	
 	return NHList;
