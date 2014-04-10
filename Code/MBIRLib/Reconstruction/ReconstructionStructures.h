@@ -40,7 +40,7 @@
 #include <string>
 #include <vector>
 
-typedef float Real_t;
+typedef double Real_t;
 
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Common/TomoArray.hpp"
