@@ -127,7 +127,7 @@ class UpdateYSlice
                  Real_t* averageMagnitudeOfRecon,
                  unsigned int zeroSkipping,
                  QGGMRF::QGGMRF_Values* qggmrf_values,
-				 struct List voxelUpdateList);
+				 struct List* voxelUpdateList);
 
     ~UpdateYSlice();
 
@@ -190,7 +190,7 @@ class UpdateYSlice
     Real_t m_Theta2;
     Real_t m_Neighborhood[27];
 	
-	struct List m_VoxelUpdateList;
+	struct List* m_VoxelUpdateList;
 
 };
 

@@ -666,6 +666,12 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 		dims[1] = m_Geometry->N_x; //width			
 		std::vector <RealImageType::Pointer> magUpdateMaps;
 		
+        //struct List NewList = m_VoxelIdxList;
+        //NewList = GenRandList(NewList);
+        
+        struct List* NewList=(struct List*)malloc(m_NumThreads*sizeof(struct List));
+        int16_t EffCoresUsed=0;
+        
 		std::cout<<" Starting multicore allocation with "<<m_NumThreads<<" threads.."<<std::endl;
 		
         for (int t = 0; t < m_NumThreads; ++t)
@@ -682,13 +688,16 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
             {
                 continue;
             } // Processor has NO tasks to run because we have less Y's than cores
+            else{
+                EffCoresUsed++;
+            }
 			
 			RealImageType::Pointer _magUpdateMap = RealImageType::New(dims, "Mag Update Map");
 			_magUpdateMap->initializeWithZeros();
 			magUpdateMaps.push_back(_magUpdateMap);
 			
-			struct List NewList = m_VoxelIdxList;
-			NewList = GenRandList(NewList);
+            NewList[t]=m_VoxelIdxList;
+            NewList[t]=GenRandList(m_VoxelIdxList);
 			
             UpdateYSlice& a =
             *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
@@ -700,13 +709,15 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
                                                            averageUpdate + t,
                                                            averageMagnitudeOfRecon + t,
                                                            m_AdvParams->ZERO_SKIPPING,
-                                                           qggmrf_values, NewList);
+                                                           qggmrf_values, NewList+t);
             taskList.push_back(a);
         }
 
         tbb::task::spawn_root_and_wait(taskList);
         
-		std::cout<<" Voxel update complete .."<<std::endl;
+        if(getVerbose()){
+		std::cout<<" Voxel update complete using "<<EffCoresUsed<<" threads"<<std::endl;
+        }
 		
 		// Now sum up magnitude update map values
         //TODO: replace by a TBB reduce operation
@@ -723,10 +734,18 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
             AverageUpdate += averageUpdate[t];
             AverageMagnitudeOfRecon += averageMagnitudeOfRecon[t];
 			
+            if(t < EffCoresUsed)
+            {
+                if(getVeryVerbose()){
+                std::cout<<"Freeing Memory for List :"<<t<<std::endl;
+                }
+                free(NewList[t].Array);
+            }
+           
         }
         free(averageUpdate);
         free(averageMagnitudeOfRecon);
-		
+		free(NewList);
 		
 		//From individual threads update the magnitude map
 		std::cout<<" Magnitude Map Update.."<<std::endl;
@@ -1103,7 +1122,6 @@ struct List ReconstructionEngine::GenRandList(struct List InpList)
 	maxList(OpList);
 	
 #endif //Debug
-	
 	return OpList;
 	
 }

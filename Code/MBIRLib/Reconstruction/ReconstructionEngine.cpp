@@ -650,6 +650,7 @@ void ReconstructionEngine::execute()
     for (int16_t reconInnerIter = 0; reconInnerIter < m_TomoInputs->NumIter; reconInnerIter++)
     {	
 	// If at the inner most loops at the coarsest resolution donot apply Bragg
+    // Only at the coarsest scale the NumIter > 1
 	if(m_TomoInputs->NumIter > 1 && reconInnerIter == 0)
 	{
 		m_ForwardModel->setBraggThreshold(DefBraggThreshold);
@@ -735,7 +736,7 @@ void ReconstructionEngine::execute()
 
 		//Debugging information to test if every voxel is getting touched
 #ifdef NHICD
-		//Debug 
+		//Debug every equivalent iteration
 		if(EffIterCount%(2*NUM_NON_HOMOGENOUS_ITER) == 0 && EffIterCount > 0)
 #endif //NHICD
 		{
@@ -771,7 +772,7 @@ void ReconstructionEngine::execute()
 
 		// Write out the MRC File ; If NHICD only after half an equit do a write
 #ifdef NHICD
-	 if(EffIterCount%NUM_NON_HOMOGENOUS_ITER == 0)
+	 if(EffIterCount%(NUM_NON_HOMOGENOUS_ITER) == 0)
 #endif //NHICD 
       {
         ss.str("");
@@ -821,8 +822,8 @@ void ReconstructionEngine::execute()
 	{
         if(m_AdvParams->JOINT_ESTIMATION)
         {
-	  m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
-	  m_ForwardModel->updateSelector(m_Sinogram,errorSino);	
+	    m_ForwardModel->jointEstimation(m_Sinogram, errorSino, y_Est, cost);
+	    m_ForwardModel->updateSelector(m_Sinogram,errorSino);
 
 #ifdef COST_CALCULATE //Debug info
 		int16_t err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);		
@@ -838,9 +839,8 @@ void ReconstructionEngine::execute()
 	
 	if(m_AdvParams->NOISE_ESTIMATION)
         {
-	   m_ForwardModel->updateWeights(m_Sinogram, errorSino);
-	  m_ForwardModel->updateSelector(m_Sinogram, errorSino);
-
+	    m_ForwardModel->updateWeights(m_Sinogram, errorSino);
+	    m_ForwardModel->updateSelector(m_Sinogram, errorSino);
 #ifdef COST_CALCULATE
 		//err = calculateCost(cost, Weight, errorSino);
 		err = calculateCost(cost,m_Sinogram,m_Geometry,errorSino,&qggmrf_values);

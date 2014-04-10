@@ -81,7 +81,7 @@ UpdateYSlice::UpdateYSlice(uint16_t yStart, uint16_t yEnd,
                            Real_t* averageMagnitudeOfRecon,
                            unsigned int zeroSkipping,
                            QGGMRF::QGGMRF_Values *qggmrf_values,
-						   struct List voxelUpdateList) :
+						   struct List* voxelUpdateList) :
 m_YStart(yStart),
 m_YEnd(yEnd),
 m_Geometry(geometry),
@@ -141,7 +141,7 @@ int UpdateYSlice::getZeroCount()
    UpdateYSlice::execute()
    {
 
-     int32_t ArraySize = m_VoxelUpdateList.NumElts;
+     int32_t ArraySize = m_VoxelUpdateList->NumElts;
 	   
 	 size_t dims[3] =
      { ArraySize, 0, 0};
@@ -152,11 +152,11 @@ int UpdateYSlice::getZeroCount()
 	   //theta1 and theta2
 	   
   
-	  for(int32_t j = 0; j < m_VoxelUpdateList.NumElts; j++) 
+	  for(int32_t j = 0; j < m_VoxelUpdateList->NumElts; j++)
 	   {
 		   
-		   int32_t k_new = m_VoxelUpdateList.Array[j].xidx;
-		   int32_t j_new = m_VoxelUpdateList.Array[j].zidx;
+		   int32_t k_new = m_VoxelUpdateList->Array[j].xidx;
+		   int32_t j_new = m_VoxelUpdateList->Array[j].zidx;
 		   int32_t Index = j_new * m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to
 		   //the voxel line (j_new,k_new)		   
 			   
