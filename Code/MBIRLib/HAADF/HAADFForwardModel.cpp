@@ -741,7 +741,7 @@ int HAADFForwardModel::createInitialOffsetsData(SinogramPtr sinogram)
 		  std::cout<<"File not found"<<std::endl;
 	  
 	  Real_t* temp;
-	  temp = (double*)malloc(1*sizeof(double));
+	  temp = (Real_t*)malloc(1*sizeof(Real_t));
 	  for(uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
 	  {
 		  std::cout<<i_theta<<std::endl;
