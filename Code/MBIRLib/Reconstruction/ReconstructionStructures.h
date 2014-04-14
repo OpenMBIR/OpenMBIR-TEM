@@ -70,7 +70,7 @@ namespace SOC {
   };
 }
 
-  /* Axes conventions:
+/* Axes conventions:
 
         . Y
        .
@@ -89,8 +89,8 @@ namespace SOC {
    Z
    */
 
-  typedef struct
-  {
+typedef struct
+{
     uint16_t N_r;//Number of measurements in x direction
     uint16_t N_t;//Number of measurements in y direction
     uint16_t N_theta;//Number of angles
@@ -110,12 +110,12 @@ namespace SOC {
     RealArrayType::Pointer InitialVariance;
     /* ****************** End Forward Model Variables ****/
 #endif
-  } Sinogram;
+} Sinogram;
 
-  typedef boost::shared_ptr<Sinogram> SinogramPtr;
+typedef boost::shared_ptr<Sinogram> SinogramPtr;
 
-  typedef struct
-  {
+typedef struct
+{
     RealVolumeType::Pointer Object;//Holds the volume to be reconstructed
     //Computed From User Input
     Real_t LengthX;//sinogram.N_x * delta_r;
@@ -127,12 +127,12 @@ namespace SOC {
     Real_t x0;// -LengthX/2
     Real_t z0;// -LengthZ/2
     Real_t y0;//-LengthY/2
-  } Geometry;
+} Geometry;
 
-  typedef boost::shared_ptr<Geometry> GeometryPtr;
+typedef boost::shared_ptr<Geometry> GeometryPtr;
 
-  typedef struct
-  {
+typedef struct
+{
     uint16_t NumIter;
     uint16_t NumOuterIter;
     Real_t SigmaX;
@@ -148,7 +148,7 @@ namespace SOC {
     uint16_t zStart;
     uint16_t zEnd;
 
-    SOC::TiltSelection tiltSelection;
+    std::vector<float> tilts;
 
     uint16_t fileXSize; // Size in voxels of the complete width of the image from the file
     uint16_t fileYSize; // Size in voxels of the complete height of the image from the file
@@ -189,34 +189,34 @@ namespace SOC {
     std::string vtkOutputFile;
     std::string mrcOutputFile;
     std::string avizoOutputFile;
-	std::string braggSelectorFile; 
+    std::string braggSelectorFile;
     std::vector<std::string> tempFiles;
 
     std::vector<uint8_t> excludedViews;// Indices of views to exclude from reconstruction
     std::vector<int> goodViews; // Contains the indices of the views to use for reconstruction
-  } TomoInputs;
-  typedef boost::shared_ptr<TomoInputs> TomoInputsPtr;
+} TomoInputs;
+typedef boost::shared_ptr<TomoInputs> TomoInputsPtr;
 
 
-  typedef struct
-  {
-      double X_SHRINK_FACTOR; /* This is defaulted to 0.6 */
-      unsigned int X_STRETCH; /* This is defaulted to 1 */
-      unsigned int Z_STRETCH; /* This is defaulted to 2 */
-      uint16_t DETECTOR_RESPONSE_BINS; /* This is defaulted to 64 */
-      int32_t PROFILE_RESOLUTION; /* This is defaulted to 1536 */
-      unsigned int BEAM_RESOLUTION; /* This is defaulted to 512 */
-      unsigned int AREA_WEIGHTED; /* This is defaulted to 1 */
-      unsigned int THRESHOLD_REDUCTION_FACTOR; /* This is defaulted to 1 */
-      unsigned int JOINT_ESTIMATION; /* It need not be on for all cases. In case
+typedef struct
+{
+    double X_SHRINK_FACTOR; /* This is defaulted to 0.6 */
+    unsigned int X_STRETCH; /* This is defaulted to 1 */
+    unsigned int Z_STRETCH; /* This is defaulted to 2 */
+    uint16_t DETECTOR_RESPONSE_BINS; /* This is defaulted to 64 */
+    int32_t PROFILE_RESOLUTION; /* This is defaulted to 1536 */
+    unsigned int BEAM_RESOLUTION; /* This is defaulted to 512 */
+    unsigned int AREA_WEIGHTED; /* This is defaulted to 1 */
+    unsigned int THRESHOLD_REDUCTION_FACTOR; /* This is defaulted to 1 */
+    unsigned int JOINT_ESTIMATION; /* It need not be on for all cases. In case
                                     the Bright Field image file is present (very unlikely) + the offset
                                     is known the user might want to Turn this OFF. All
                                     other cases it needs be switched ON. */
-      unsigned int ZERO_SKIPPING; /* This will always be ON in the end product I think. */
-      unsigned int NOISE_ESTIMATION; /* This is a parameter that the user MAY or MAY NOT
+    unsigned int ZERO_SKIPPING; /* This will always be ON in the end product I think. */
+    unsigned int NOISE_ESTIMATION; /* This is a parameter that the user MAY or MAY NOT
                                   want turned ON. It is ON by default */
-  } AdvancedParameters;
-  typedef boost::shared_ptr<AdvancedParameters> AdvancedParametersPtr;
+} AdvancedParameters;
+typedef boost::shared_ptr<AdvancedParameters> AdvancedParametersPtr;
 
 
 

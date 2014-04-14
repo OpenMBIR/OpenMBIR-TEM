@@ -229,7 +229,7 @@ void ReconstructionEngine::InitializeTomoInputs(TomoInputsPtr v)
   v->LengthZ = 0;
   v->delta_xz = 0;
   v->delta_xy = 0;
-  v->tiltSelection = SOC::A_Tilt;
+  v->tilts.resize(0);
 }
 
 // -----------------------------------------------------------------------------

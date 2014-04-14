@@ -39,6 +39,7 @@
 #ifndef _SIGMA_X_ESTIMATION_H_
 #define _SIGMA_X_ESTIMATION_H_
 
+#include <vector>
 
 #include "MXA/Common/MXASetGetMacros.h"
 
@@ -60,25 +61,25 @@ class MBIRLib_EXPORT SigmaXEstimation : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(SigmaXEstimation)
-    MXA_STATIC_NEW_MACRO(SigmaXEstimation);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, SigmaXEstimation);
+    MXA_STATIC_NEW_MACRO(SigmaXEstimation)
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, SigmaXEstimation)
     MXA_TYPE_MACRO_SUPER(SigmaXEstimation, TomoFilter)
 
     virtual ~SigmaXEstimation();
 
     // Inputs
-    MXA_INSTANCE_STRING_PROPERTY(InputFile);
-    MXA_INSTANCE_PROPERTY(Real_t, SampleThickness);
-    MXA_INSTANCE_PROPERTY(unsigned int, TiltAngles);
-    MXA_INSTANCE_PROPERTY(Real_t, DefaultOffset);
-    MXA_INSTANCE_PROPERTY(Real_t, TargetGain);
-    MXA_INSTANCE_PROPERTY(double, BfOffset);
+    MXA_INSTANCE_STRING_PROPERTY(InputFile)
+    MXA_INSTANCE_PROPERTY(Real_t, SampleThickness)
+    MXA_INSTANCE_PROPERTY(std::vector<float>, TiltAngles)
+    MXA_INSTANCE_PROPERTY(Real_t, DefaultOffset)
+    MXA_INSTANCE_PROPERTY(Real_t, TargetGain)
+    MXA_INSTANCE_PROPERTY(double, BfOffset)
 
     MXA_INSTANCE_VEC2_PROPERTY(int, XDims)
     MXA_INSTANCE_VEC2_PROPERTY(int, YDims)
 
     // Outputs
-    MXA_INSTANCE_PROPERTY(Real_t, SigmaXEstimate);
+    MXA_INSTANCE_PROPERTY(Real_t, SigmaXEstimate)
 
     virtual void execute();
 

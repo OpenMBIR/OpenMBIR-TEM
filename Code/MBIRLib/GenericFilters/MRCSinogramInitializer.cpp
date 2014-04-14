@@ -269,6 +269,7 @@ void MRCSinogramInitializer::execute()
     {
         int dataZOffset = inputs->goodViews[z] - voxelMin[2];
         // Copy the value of the tilt angle into the inputs->angles vector
+        #if 0
         if (NULL != header.feiHeaders) {
             int offset = inputs->goodViews[z];
             fei = &(header.feiHeaders[offset]);
@@ -280,6 +281,7 @@ void MRCSinogramInitializer::execute()
                 sinogram->angles[z] = -fei->b_tilt;
             }
         }
+        #endif
         // Copy the data from the input into the Sinogram Data
         switch(header.mode)
         {

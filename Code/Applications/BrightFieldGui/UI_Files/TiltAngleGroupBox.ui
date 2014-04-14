@@ -105,6 +105,16 @@
     </layout>
    </item>
    <item>
+    <widget class="QRadioButton" name="noTilts">
+     <property name="text">
+      <string>No Tilts</string>
+     </property>
+     <attribute name="buttonGroup">
+      <string notr="true">buttonGroup</string>
+     </attribute>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>

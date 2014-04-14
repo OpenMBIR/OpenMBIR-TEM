@@ -824,6 +824,7 @@ void BrightFieldGui::on_m_GoBtn_clicked()
     QVector<float> tilts = tableModel->getBTilts();
     goodTilts = checkTiltAngles(tilts);
   }
+
   if (false == goodTilts)
   {
     QMessageBox::critical(this, tr("Tilt Selection Error"), tr("The Tilt Selection does not seem to be correct. Please check to make sure you have selected the correct tilts."), QMessageBox::Ok);
@@ -961,7 +962,14 @@ void BrightFieldGui::initializeSOCEngine(bool fullReconstruction)
   m_MultiResSOC->setSigmaX(sigma_x->text().toFloat(&ok));
 
   m_MultiResSOC->setMRFShapeParameter(mrf->value());
-  m_MultiResSOC->setTiltSelection(static_cast<SOC::TiltSelection>(tiltSelection->currentIndex()));
+  if(tiltSelection->currentIndex() == 0)
+  {
+    m_MultiResSOC->setTilts(m_GainsOffsetsTableModel->getATilts().toStdVector());
+  }
+  else
+  {
+    m_MultiResSOC->setTilts(m_GainsOffsetsTableModel->getBTilts().toStdVector());
+  }
   m_MultiResSOC->setExtendObject(extendObject->isChecked());
   m_MultiResSOC->setDefaultVariance(defaultVariance->text().toFloat(&ok));
   m_MultiResSOC->setInitialReconstructionValue(defaultInitialRecon->text().toFloat(&ok));
@@ -1857,7 +1865,16 @@ void BrightFieldGui::on_estimateSigmaX_clicked()
     estimate->setTargetGain(targetGain->text().toDouble(&ok));
     estimate->setBfOffset(bf_offset->text().toDouble());
     //TODO : Set the Offset from the UI
-    estimate->setTiltAngles(tiltSelection->currentIndex());
+    if(tiltSelection->currentIndex() == 0)
+    {
+      estimate->setTiltAngles(m_GainsOffsetsTableModel->getATilts().toStdVector());
+    }
+    else
+    {
+      estimate->setTiltAngles(m_GainsOffsetsTableModel->getBTilts().toStdVector());
+    }
+
+
     estimate->setXDims(xmin, xmax);
     estimate->setYDims(ymin, ymax);
     estimate->addObserver(this);
@@ -2339,12 +2356,21 @@ void BrightFieldGui::on_actionLoad_Tilt_Information_triggered()
     QVector<float> b_tilts = loader.getBTilts();
     if (a_tilts.size() != b_tilts.size() )
     {
-      QMessageBox::critical(this, "Tilt Loading Error", "The A tilts and B Tiles do not have the same number of values.",  QMessageBox::Ok, QMessageBox::Ok);
-      return;
+      if (a_tilts.size() == 0 && b_tilts.size() != 0)
+      {
+        a_tilts = QVector<float>(b_tilts.size(), 0.0f);
+      }
+      else if(b_tilts.size() == 0 && a_tilts.size() != 0)
+      {
+        b_tilts = QVector<float>(a_tilts.size(), 0.0f);
+      }
+
+      //      QMessageBox::critical(this, "Tilt Loading Error", "The A tilts and B Tiles do not have the same number of values.",  QMessageBox::Ok, QMessageBox::Ok);
+      //      return;
     }
     QVector<int> indices(a_tilts.size());
 
-    QVector<bool>  excludes(a_tilts.size());
+    QVector<bool> excludes(a_tilts.size());
     m_CachedLargestAngle = std::numeric_limits<float>::min();
     m_CachedPixelSize = loader.getPixelSize();
     for(int l = 0; l < a_tilts.size(); ++l)
@@ -2368,6 +2394,9 @@ void BrightFieldGui::on_actionLoad_Tilt_Information_triggered()
       m_GainsOffsetsTableModel->setTableData(indices, a_tilts, b_tilts, excludes);
     }
   }
+
+  // Automatically estimate the Sigma X value by simulating the cuser clicking the button
+  on_estimateSigmaX_clicked();
 }
 
 

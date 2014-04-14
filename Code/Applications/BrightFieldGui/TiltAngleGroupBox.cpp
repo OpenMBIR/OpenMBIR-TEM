@@ -64,6 +64,7 @@ void TiltAngleGroupBox::setupGui()
 
   rawTltBtn->toggle();
   rawTltBtn->toggle();
+  noTilts->setChecked(true);
 }
 
 // -----------------------------------------------------------------------------
@@ -137,6 +138,7 @@ void TiltAngleGroupBox::on_rawTltBtn_toggled(bool b)
   selectRawTlt->setEnabled(rawTltBtn->isChecked());
 }
 
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -208,9 +210,9 @@ void TiltAngleGroupBox::loadAngles()
   while(source.atEnd() == false)
   {
     QString text = source.readLine();
-    qDebug() << text;
-    qDebug() << source.error();
-    qDebug() << source.errorString();
+//    qDebug() << text;
+//    qDebug() << source.error();
+//    qDebug() << source.errorString();
 
     m_Angles.push_back(text.toFloat(&ok));
     if(ok == false)
