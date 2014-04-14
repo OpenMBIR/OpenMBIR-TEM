@@ -90,7 +90,7 @@ void VoxelUpdateList::setZ(int32_t index, int32_t z)
 {
   BOOST_ASSERT(index < (m_NumElements) );
 
-  m_Array[index * 2 + 1]= z;
+  m_Array[index * 2 + 1] = z;
 }
 
 // -----------------------------------------------------------------------------
@@ -163,7 +163,7 @@ VoxelUpdateList::Pointer VoxelUpdateList::GenRandList(VoxelUpdateList::Pointer I
   const uint32_t rangeMax = std::numeric_limits<uint32_t>::max();
   typedef boost::uniform_int<uint32_t> NumberDistribution;
   typedef boost::mt19937 RandomNumberGenerator;
-  typedef boost::variate_generator<RandomNumberGenerator&,NumberDistribution> Generator;
+  typedef boost::variate_generator<RandomNumberGenerator&, NumberDistribution> Generator;
 
   NumberDistribution distribution(rangeMin, rangeMax);
   RandomNumberGenerator generator;
@@ -185,7 +185,7 @@ VoxelUpdateList::Pointer VoxelUpdateList::GenRandList(VoxelUpdateList::Pointer I
   ArrayType OpListPtr = OpList->getArray();
   ArrayType InptListPtr = InList->getArray();
 
-  for(int32_t test_iter = 0;test_iter < InList->numElements();test_iter++)
+  for(int32_t test_iter = 0; test_iter < InList->numElements(); test_iter++)
   {
     int32_t Index = numberGenerator() % InList->numElements();
     OpListPtr[test_iter] = InptListPtr[Counter->d[Index]];
@@ -194,10 +194,10 @@ VoxelUpdateList::Pointer VoxelUpdateList::GenRandList(VoxelUpdateList::Pointer I
   }
 
 #ifdef DEBUG
-  std::cout<<"Input"<<std::endl;
+  std::cout << "Input" << std::endl;
   InList->printMaxList(std::cout);
 
-  std::cout<<"Output"<<std::endl;
+  std::cout << "Output" << std::endl;
   OpList->printMaxList(std::cout);
 #endif //Debug
 
@@ -227,46 +227,46 @@ VoxelUpdateList::Pointer VoxelUpdateList::GenRegularList(uint16_t jCount, uint16
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void VoxelUpdateList::printList(std::ostream &out)
+void VoxelUpdateList::printList(std::ostream& out)
 {
-  out<<"Printing List :"<<std::endl;
-  for(int32_t i=0; i < m_NumElements; i++)
-    out<<"("<<m_Array[i*2 + 1]<<","<<m_Array[i*2]<<")"<<std::endl;
+  out << "Printing List :" << std::endl;
+  for(int32_t i = 0; i < m_NumElements; i++)
+  { out << "(" << m_Array[i * 2 + 1] << "," << m_Array[i * 2] << ")" << std::endl; }
 }
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void VoxelUpdateList::printMaxList(std::ostream &out)
+void VoxelUpdateList::printMaxList(std::ostream& out)
 {
   int32_t max_z = std::numeric_limits<int32_t>::min();
   int32_t max_x = std::numeric_limits<int32_t>::min();
   for(int32_t i = 0; i < m_NumElements; i++)
   {
-    if(m_Array[i*2 + 1] > max_z)
-      max_z = m_Array[i*2 + 1];
+    if(m_Array[i * 2 + 1] > max_z)
+    { max_z = m_Array[i * 2 + 1]; }
 
-    if(m_Array[i*2] > max_x)
-      max_x = m_Array[i*2];
+    if(m_Array[i * 2] > max_x)
+    { max_x = m_Array[i * 2]; }
   }
-  out<<"Number of elements ="<<m_NumElements<<std::endl;
-  out<<"("<<max_z<<","<<max_x<<")"<<std::endl;
+  out << "Number of elements =" << m_NumElements << std::endl;
+  out << "(" << max_z << "," << max_x << ")" << std::endl;
 }
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void VoxelUpdateList::printMinList(std::ostream &out)
+void VoxelUpdateList::printMinList(std::ostream& out)
 {
   int32_t min_z = std::numeric_limits<int32_t>::max(); //pow(2, 31);
   int32_t min_x = std::numeric_limits<int32_t>::max();
   for(int32_t i = 0; i < m_NumElements; i++)
   {
-    if(m_Array[i*2 + 1] < min_z)
-      min_z = m_Array[i*2 + 1];
+    if(m_Array[i * 2 + 1] < min_z)
+    { min_z = m_Array[i * 2 + 1]; }
 
-    if(m_Array[i*2] < min_x)
-      min_x = m_Array[i*2];
+    if(m_Array[i * 2] < min_x)
+    { min_x = m_Array[i * 2]; }
   }
-  out<<"Number of elements ="<<m_NumElements<<std::endl;
-  out<<"("<<min_z<<","<<min_x<<")"<<std::endl;
+  out << "Number of elements =" << m_NumElements << std::endl;
+  out << "(" << min_z << "," << min_x << ")" << std::endl;
 }
 

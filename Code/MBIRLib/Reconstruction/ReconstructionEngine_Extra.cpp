@@ -59,9 +59,9 @@
 //Function to print a list of voxel indices
 void printList(struct List InList)
 {
-  std::cout<<"Printing List :"<<std::endl;
-  for(int32_t i=0; i < InList.NumElts; i++)
-    std::cout<<"("<<InList.Array[i].zidx<<","<<InList.Array[i].xidx<<")"<<std::endl;
+  std::cout << "Printing List :" << std::endl;
+  for(int32_t i = 0; i < InList.NumElts; i++)
+  { std::cout << "(" << InList.Array[i].zidx << "," << InList.Array[i].xidx << ")" << std::endl; }
 
 }
 
@@ -72,13 +72,13 @@ void maxList(struct List InList)
   for(int32_t i = 0; i < InList.NumElts; i++)
   {
     if(InList.Array[i].zidx > max_z)
-      max_z = InList.Array[i].zidx;
+    { max_z = InList.Array[i].zidx; }
 
     if(InList.Array[i].xidx > max_x)
-      max_x = InList.Array[i].xidx;
+    { max_x = InList.Array[i].xidx; }
   }
-  std::cout<<"Number of elements ="<<InList.NumElts<<std::endl;
-  std::cout<<"("<<max_z<<","<<max_x<<")"<<std::endl;
+  std::cout << "Number of elements =" << InList.NumElts << std::endl;
+  std::cout << "(" << max_z << "," << max_x << ")" << std::endl;
 }
 
 
@@ -89,13 +89,13 @@ void minList(struct List InList)
   for(int32_t i = 0; i < InList.NumElts; i++)
   {
     if(InList.Array[i].zidx < min_z)
-      min_z = InList.Array[i].zidx;
+    { min_z = InList.Array[i].zidx; }
 
     if(InList.Array[i].xidx < min_x)
-      min_x = InList.Array[i].xidx;
+    { min_x = InList.Array[i].xidx; }
   }
-  std::cout<<"Number of elements ="<<InList.NumElts<<std::endl;
-  std::cout<<"("<<min_z<<","<<min_x<<")"<<std::endl;
+  std::cout << "Number of elements =" << InList.NumElts << std::endl;
+  std::cout << "(" << min_z << "," << min_x << ")" << std::endl;
 }
 
 #endif
@@ -184,7 +184,7 @@ int ReconstructionEngine::initializeRoughReconstructionData()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::computeOriginalXDims(uint16_t &cropStart, uint16_t &cropEnd)
+void ReconstructionEngine::computeOriginalXDims(uint16_t& cropStart, uint16_t& cropEnd)
 {
 
   Real_t x;
@@ -208,7 +208,7 @@ void ReconstructionEngine::computeOriginalXDims(uint16_t &cropStart, uint16_t &c
       break;
     }
   }
-  cropEnd+=1;
+  cropEnd += 1;
 }
 
 // -----------------------------------------------------------------------------
@@ -219,7 +219,7 @@ void ReconstructionEngine::initializeHt(RealVolumeType::Pointer H_t, Real_t Offs
   Real_t ProfileCenterT;
   for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
   {
-    for (unsigned int i = 0; i <m_AdvParams->DETECTOR_RESPONSE_BINS; i++)
+    for (unsigned int i = 0; i < m_AdvParams->DETECTOR_RESPONSE_BINS; i++)
     {
       ProfileCenterT = i * OffsetT;
       if(m_TomoInputs->delta_xy >= m_Sinogram->delta_t)
@@ -280,7 +280,7 @@ void ReconstructionEngine::initializeVolume(RealVolumeType::Pointer Y_Est, doubl
 //
 // -----------------------------------------------------------------------------
 void ReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
-                                              std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
+                                              std::vector<HAADFAMatrixCol::Pointer>& VoxelLineResponse,
                                               HAADFDetectorParameters::Pointer haadfParameters)
 {
   Real_t ProfileThickness = 0.0;
@@ -370,7 +370,7 @@ void ReconstructionEngine::calculateArithmeticMean()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::writeReconstructionFile(const std::string &filepath)
+void ReconstructionEngine::writeReconstructionFile(const std::string& filepath)
 {
   // Write the Reconstruction out to a file
   RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
@@ -390,7 +390,7 @@ void ReconstructionEngine::writeReconstructionFile(const std::string &filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd)
+void ReconstructionEngine::writeVtkFile(const std::string& vtkFile, uint16_t cropStart, uint16_t cropEnd)
 {
   std::stringstream ss;
   ss << "Writing VTK file to '" << vtkFile << "'";
@@ -434,7 +434,7 @@ void ReconstructionEngine::writeVtkFile(const std::string &vtkFile, uint16_t cro
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::writeMRCFile(const std::string &mrcFile, uint16_t cropStart, uint16_t cropEnd)
+void ReconstructionEngine::writeMRCFile(const std::string& mrcFile, uint16_t cropStart, uint16_t cropEnd)
 {
   /* Write the output to the MRC File */
   std::stringstream ss;
@@ -464,7 +464,7 @@ void ReconstructionEngine::writeMRCFile(const std::string &mrcFile, uint16_t cro
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::writeAvizoFile(const std::string &file, uint16_t cropStart, uint16_t cropEnd)
+void ReconstructionEngine::writeAvizoFile(const std::string& file, uint16_t cropStart, uint16_t cropEnd)
 {
   //  std::cout << "Writing Avizo file " << file << std::endl;
 
@@ -501,9 +501,9 @@ void ReconstructionEngine::writeAvizoFile(const std::string &file, uint16_t crop
 // -----------------------------------------------------------------------------
 uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
                                            int16_t Iter,
-                                           std::vector<HAADFAMatrixCol::Pointer> &TempCol,
+                                           std::vector<HAADFAMatrixCol::Pointer>& TempCol,
                                            RealVolumeType::Pointer ErrorSino,
-                                           std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
+                                           std::vector<HAADFAMatrixCol::Pointer>& VoxelLineResponse,
                                            CostData::Pointer cost,
                                            QGGMRF::QGGMRF_Values* qggmrf_values,
                                            RealImageType::Pointer magUpdateMap,
@@ -579,7 +579,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
   int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
 
 #ifdef DEBUG
-  std::cout<<"Max of list in ReconEngineExtra = "<<std::endl;
+  std::cout << "Max of list in ReconEngineExtra = " << std::endl;
   m_VoxelIdxList->printMaxList(std::cout);
 #endif //DEBUG
 
@@ -601,11 +601,11 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
       for (int32_t j = 0; j < m_Geometry->N_z; j++)
         for (int32_t k = 0; k < m_Geometry->N_x; k++)
         {
-          TempSum += magUpdateMap->getValue(j,k);
+          TempSum += magUpdateMap->getValue(j, k);
         }
-      std::cout<<"**********************************************"<<std::endl;
-      std::cout<<"Average mag Prior to VSC"<<TempSum/(m_Geometry->N_z*m_Geometry->N_x)<<std::endl;
-      std::cout<<"**********************************************"<<std::endl;
+      std::cout << "**********************************************" << std::endl;
+      std::cout << "Average mag Prior to VSC" << TempSum / (m_Geometry->N_z * m_Geometry->N_x) << std::endl;
+      std::cout << "**********************************************" << std::endl;
 #endif //debug
 
       //Compute VSC threshold and create a map of pixels that are above the threshold value
@@ -616,11 +616,11 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
       for (int32_t j = 0; j < m_Geometry->N_z; j++)
         for (int32_t k = 0; k < m_Geometry->N_x; k++)
         {
-          TempSum += magUpdateMap->getValue(j,k);
+          TempSum += magUpdateMap->getValue(j, k);
         }
-      std::cout<<"**********************************************"<<std::endl;
-      std::cout<<"Average mag Prior to NH Thresh"<<TempSum/(m_Geometry->N_z*m_Geometry->N_x)<<std::endl;
-      std::cout<<"**********************************************"<<std::endl;
+      std::cout << "**********************************************" << std::endl;
+      std::cout << "Average mag Prior to NH Thresh" << TempSum / (m_Geometry->N_z * m_Geometry->N_x) << std::endl;
+      std::cout << "**********************************************" << std::endl;
 #endif //debug
 
       START_TIMER;
@@ -653,9 +653,9 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
     //Checking which voxels are going to be visited and setting their magnitude value to zero
     for(int32_t tmpiter = 0; tmpiter < m_VoxelIdxList->numElements(); tmpiter++)
     {
-   //   m_VisitCount->setValue(1, m_VoxelIdxList.Array[tmpiter].zidx, m_VoxelIdxList.Array[tmpiter].xidx);
+      //   m_VisitCount->setValue(1, m_VoxelIdxList.Array[tmpiter].zidx, m_VoxelIdxList.Array[tmpiter].xidx);
       m_VisitCount->setValue(1, m_VoxelIdxList->zIdx(tmpiter), m_VoxelIdxList->xIdx(tmpiter));
-   //   magUpdateMap->setValue(0, m_VoxelIdxList.Array[tmpiter].zidx, m_VoxelIdxList.Array[tmpiter].xidx);
+      //   magUpdateMap->setValue(0, m_VoxelIdxList.Array[tmpiter].zidx, m_VoxelIdxList.Array[tmpiter].xidx);
       magUpdateMap->setValue(0, m_VoxelIdxList->zIdx(tmpiter), m_VoxelIdxList->xIdx(tmpiter));
     }
 
@@ -677,9 +677,9 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
     std::vector<RealImageType::Pointer> magUpdateMaps;
 
     std::vector<VoxelUpdateList::Pointer> NewList(m_NumThreads);
-    int16_t EffCoresUsed=0;
+    int16_t EffCoresUsed = 0;
 
-    std::cout<<" Starting multicore allocation with "<<m_NumThreads<<" threads.."<<std::endl;
+    std::cout << " Starting multicore allocation with " << m_NumThreads << " threads.." << std::endl;
 
     for (int t = 0; t < m_NumThreads; ++t)
     {
@@ -688,14 +688,15 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
       yStop = yStart + yCount[t];
 
 #ifdef DEBUG
-      std::cout<<"Thread :"<<t<<"("<<yStart<<","<<yStop<<")"<<std::endl;
+      std::cout << "Thread :" << t << "(" << yStart << "," << yStop << ")" << std::endl;
 #endif //debug
 
       if(yStart == yStop)
       {
         continue;
       } // Processor has NO tasks to run because we have less Y's than cores
-      else{
+      else
+      {
         EffCoresUsed++;
       }
 
@@ -707,23 +708,24 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
       NewList[t] = VoxelUpdateList::GenRandList(m_VoxelIdxList);
 
       UpdateYSlice& a =
-          *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
-                                                         m_Sinogram, TempCol, ErrorSino,
-                                                         VoxelLineResponse, m_ForwardModel.get(),
-                                                         magUpdateMask,
-                                                         _magUpdateMap,
-                                                         magUpdateMask, updateType,
-                                                         averageUpdate.get() + t,
-                                                         averageMagnitudeOfRecon.get() + t,
-                                                         m_AdvParams->ZERO_SKIPPING,
-                                                         qggmrf_values, NewList[t] );
+        *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
+                                                       m_Sinogram, TempCol, ErrorSino,
+                                                       VoxelLineResponse, m_ForwardModel.get(),
+                                                       magUpdateMask,
+                                                       _magUpdateMap,
+                                                       magUpdateMask, updateType,
+                                                       averageUpdate.get() + t,
+                                                       averageMagnitudeOfRecon.get() + t,
+                                                       m_AdvParams->ZERO_SKIPPING,
+                                                       qggmrf_values, NewList[t] );
       taskList.push_back(a);
     }
 
     tbb::task::spawn_root_and_wait(taskList);
 
-    if(getVerbose()){
-      std::cout<<" Voxel update complete using "<<EffCoresUsed<<" threads"<<std::endl;
+    if(getVerbose())
+    {
+      std::cout << " Voxel update complete using " << EffCoresUsed << " threads" << std::endl;
     }
 
     // Now sum up magnitude update map values
@@ -734,8 +736,8 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 #ifdef DEBUG
       if(getVeryVerbose()) //TODO: Change variable name averageUpdate to totalUpdate
       {
-        std::cout << "Total Update for thread "<<t<<":"<< averageUpdate[t]<< std::endl;
-        std::cout << "Total Magnitude for thread "<<t<<":"<< averageMagnitudeOfRecon[t]<< std::endl;
+        std::cout << "Total Update for thread " << t << ":" << averageUpdate[t] << std::endl;
+        std::cout << "Total Magnitude for thread " << t << ":" << averageMagnitudeOfRecon[t] << std::endl;
       }
 #endif //Debug
       AverageUpdate += averageUpdate[t];
@@ -746,11 +748,11 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
     NewList.resize(0); // Frees all the pointers
 
     //From individual threads update the magnitude map
-    std::cout<<" Magnitude Map Update.."<<std::endl;
+    std::cout << " Magnitude Map Update.." << std::endl;
     RealImageType::Pointer TempPointer;
     for(int32_t tmpiter = 0; tmpiter < m_VoxelIdxList->numElements(); tmpiter++)
     {
-      Real_t TempSum =0;
+      Real_t TempSum = 0;
       for (uint16_t t = 0; t < magUpdateMaps.size(); ++t)
       {
         TempPointer = magUpdateMaps[t];
@@ -758,7 +760,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
       }
 
       //Set the overall magnitude update map
-      magUpdateMap->setValue(TempSum,m_VoxelIdxList->zIdx(tmpiter), m_VoxelIdxList->xIdx(tmpiter));
+      magUpdateMap->setValue(TempSum, m_VoxelIdxList->zIdx(tmpiter), m_VoxelIdxList->xIdx(tmpiter));
     }
 
 #else //TODO modify the single thread code to handle the list based iterations
@@ -830,21 +832,21 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
   }
 
   //Stopping criteria code
-  exit_status=stopCriteria(magUpdateMap,magUpdateMask,PrevMagSum, EffIterCount);
+  exit_status = stopCriteria(magUpdateMap, magUpdateMask, PrevMagSum, EffIterCount);
 
 #ifdef WRITE_INTERMEDIATE_RESULTS
 
-  if(Iter == NumOfWrites*WriteCount)
+  if(Iter == NumOfWrites * WriteCount)
   {
     WriteCount++;
-    sprintf(buffer,"%d",Iter);
-    sprintf(Filename,"ReconstructedObjectAfterIter");
-    strcat(Filename,buffer);
-    strcat(Filename,".bin");
+    sprintf(buffer, "%d", Iter);
+    sprintf(Filename, "ReconstructedObjectAfterIter");
+    strcat(Filename, buffer);
+    strcat(Filename, ".bin");
     Fp3 = fopen(Filename, "w");
     TempPointer = geometry->Object;
-    NumOfBytesWritten=fwrite(&(geometry->Object->d[0][0][0]), sizeof(Real_t),geometry->N_x*geometry->N_y*geometry->N_z, Fp3);
-    printf("%d\n",NumOfBytesWritten);
+    NumOfBytesWritten = fwrite(&(geometry->Object->d[0][0][0]), sizeof(Real_t), geometry->N_x * geometry->N_y * geometry->N_z, Fp3);
+    printf("%d\n", NumOfBytesWritten);
 
     fclose(Fp3);
   }
@@ -859,7 +861,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 //  }
 #endif //NHICD
 
-  std::cout<<"exiting voxel update routine"<<std::endl;
+  std::cout << "exiting voxel update routine" << std::endl;
   return exit_status;
 
 }
@@ -880,7 +882,7 @@ void ReconstructionEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
       x = m_Geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
       z = m_Geometry->z0 + ((Real_t)i + 0.5) * m_TomoInputs->delta_xz;
       if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && z >= -m_TomoInputs->LengthZ / 2
-         && z <= m_TomoInputs->LengthZ / 2)
+          && z <= m_TomoInputs->LengthZ / 2)
       {
         Mask->setValue(1, i, j);
       }
@@ -902,7 +904,7 @@ void ReconstructionEngine::ComputeVSC(RealImageType::Pointer magUpdateMap, RealI
 
   // int err = 0;
 #ifdef DEBUG
-  FILE *Fp = NULL;
+  FILE* Fp = NULL;
   MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::MagnitudeMapFile);
   if(errno < 0)
   {
@@ -934,7 +936,7 @@ void ReconstructionEngine::ComputeVSC(RealImageType::Pointer magUpdateMap, RealI
   }
 
 
-  //	::memcpy(magUpdateMap->getPointer(0,0),filtMagUpdateMap->getPointer(0,0),m_Geometry->N_x * m_Geometry->N_z*sizeof(Real_t));
+  //  ::memcpy(magUpdateMap->getPointer(0,0),filtMagUpdateMap->getPointer(0,0),m_Geometry->N_x * m_Geometry->N_z*sizeof(Real_t));
   /*    for (int16_t i = 0; i < m_Geometry->N_z; i++)
     {
         for (int16_t j = 0; j < m_Geometry->N_x; j++)
@@ -964,7 +966,7 @@ void ReconstructionEngine::ComputeVSC(RealImageType::Pointer magUpdateMap, RealI
 Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdateMap)
 {
   size_t dims[1] =
-  { m_Geometry->N_z * m_Geometry->N_x};
+  { m_Geometry->N_z* m_Geometry->N_x};
   RealArrayType::Pointer TempMagMap = RealArrayType::New(dims, "TempMagMap");
 
   uint32_t ArrLength = m_Geometry->N_z * m_Geometry->N_x;
@@ -973,14 +975,14 @@ Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdate
   //Copy into a new list for sorting
   Real_t* src = magUpdateMap->getPointer();
   Real_t* dest = TempMagMap->getPointer();
-  ::memcpy(dest,src, ArrLength*sizeof(Real_t));
+  ::memcpy(dest, src, ArrLength * sizeof(Real_t));
 
 #ifdef DEBUG
-  Real_t TempSum=0;
-  for(uint32_t i=0;i < ArrLength;i++)
-    TempSum+=TempMagMap->d[i];
+  Real_t TempSum = 0;
+  for(uint32_t i = 0; i < ArrLength; i++)
+  { TempSum += TempMagMap->d[i]; }
 
-  std::cout<<"Temp mag map average= "<<TempSum/ArrLength<<std::endl;
+  std::cout << "Temp mag map average= " << TempSum / ArrLength << std::endl;
 #endif //DEBUG
 
   /* for (uint32_t i = 0; i < m_Geometry->N_z; i++)
@@ -991,7 +993,7 @@ Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdate
         } */
 
   uint32_t percentile_index = ArrLength / Reconstruction::Constants::k_NumNonHomogeniousIter;
-  std::cout<<"Percentile to select= "<<percentile_index<<std::endl;
+  std::cout << "Percentile to select= " << percentile_index << std::endl;
 
   //Partial selection sort
 
@@ -1015,7 +1017,7 @@ Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdate
     }
   threshold = TempMagMap->d[percentile_index];*/
 
-  threshold = RandomizedSelect(TempMagMap,0, ArrLength-1,ArrLength-percentile_index);
+  threshold = RandomizedSelect(TempMagMap, 0, ArrLength - 1, ArrLength - percentile_index);
 
   return threshold;
 }
@@ -1026,7 +1028,7 @@ Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdate
 VoxelUpdateList::Pointer ReconstructionEngine::GenNonHomList(Real_t NHThresh, RealImageType::Pointer magUpdateMap)
 {
 
-  int32_t MaxNumElts = m_Geometry->N_z*m_Geometry->N_x;
+  int32_t MaxNumElts = m_Geometry->N_z * m_Geometry->N_x;
   VoxelUpdateList::Pointer TempList = VoxelUpdateList::New(MaxNumElts);
 
   int32_t count = 0;
@@ -1035,7 +1037,7 @@ VoxelUpdateList::Pointer ReconstructionEngine::GenNonHomList(Real_t NHThresh, Re
   {
     for (int16_t k = 0; k < m_Geometry->N_x; k++)
     {
-      if(magUpdateMap->getValue(j,k) > NHThresh)
+      if(magUpdateMap->getValue(j, k) > NHThresh)
       {
         TempList->setPair(count, k, j);
         count++;
@@ -1048,7 +1050,7 @@ VoxelUpdateList::Pointer ReconstructionEngine::GenNonHomList(Real_t NHThresh, Re
   // In place randomize the list
   TempList = VoxelUpdateList::GenRandList(TempList);
 
-  std::cout<<"Number of elements in the NH list ="<< TempList->numElements() <<std::endl;
+  std::cout << "Number of elements in the NH list =" << TempList->numElements() << std::endl;
 
   // Return the list
   return TempList;
@@ -1083,7 +1085,7 @@ VoxelUpdateList::Pointer ReconstructionEngine::GenRandList(VoxelUpdateList::Poin
   const uint32_t rangeMax = std::numeric_limits<uint32_t>::max();
   typedef boost::uniform_int<uint32_t> NumberDistribution;
   typedef boost::mt19937 RandomNumberGenerator;
-  typedef boost::variate_generator<RandomNumberGenerator&,NumberDistribution> Generator;
+  typedef boost::variate_generator<RandomNumberGenerator&, NumberDistribution> Generator;
 
   NumberDistribution distribution(rangeMin, rangeMax);
   RandomNumberGenerator generator;
@@ -1094,7 +1096,7 @@ VoxelUpdateList::Pointer ReconstructionEngine::GenRandList(VoxelUpdateList::Poin
   int32_t ArraySize = InpList.NumElts;
 
   OpList.NumElts = ArraySize;
-  OpList.Array = (struct ImgIdx*)(malloc(ArraySize*sizeof(struct ImgIdx)));
+  OpList.Array = (struct ImgIdx*)(malloc(ArraySize * sizeof(struct ImgIdx)));
 
   size_t dims[3] =
   { ArraySize, 0, 0};
@@ -1105,7 +1107,7 @@ VoxelUpdateList::Pointer ReconstructionEngine::GenRandList(VoxelUpdateList::Poin
     Counter->d[j_new] = j_new;
   }
 
-  for(int32_t test_iter = 0;test_iter < InpList.NumElts;test_iter++)
+  for(int32_t test_iter = 0; test_iter < InpList.NumElts; test_iter++)
   {
     int32_t Index = numberGenerator() % ArraySize;
     OpList.Array[test_iter] = InpList.Array[Counter->d[Index]];
@@ -1114,10 +1116,10 @@ VoxelUpdateList::Pointer ReconstructionEngine::GenRandList(VoxelUpdateList::Poin
   }
 
 #ifdef DEBUG
-  std::cout<<"Input"<<std::endl;
+  std::cout << "Input" << std::endl;
   maxList(InpList);
 
-  std::cout<<"Output"<<std::endl;
+  std::cout << "Output" << std::endl;
   maxList(OpList);
 
 #endif //Debug
@@ -1128,7 +1130,7 @@ VoxelUpdateList::Pointer ReconstructionEngine::GenRandList(VoxelUpdateList::Poin
 //Radomized select : modified based on code from  http://stackoverflow.com/questions/5847273/order-statistic-implmentation
 
 
-Real_t ReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i)
+Real_t ReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A, uint32_t p, uint32_t r, uint32_t i)
 {
 
   //std::cout<<"***********Select****************"<<std::endl;
@@ -1159,49 +1161,50 @@ Real_t ReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A,uint32_t 
   {
     q = RandomizedPartition(A, start, end);
     if (i == q)
-      return A->d[i];
+    { return A->d[i]; }
     else if  (i < q)
     {
       //start = p;
-      end = q-1;
+      end = q - 1;
     }
     else
     {
-      start = q+1;
+      start = q + 1;
       //end = r;
     }
-  }while(i != q);
+  }
+  while(i != q);
 
   return A->d[i];
 }
-uint32_t ReconstructionEngine::Partition(RealArrayType::Pointer A,uint32_t p,uint32_t r)
+uint32_t ReconstructionEngine::Partition(RealArrayType::Pointer A, uint32_t p, uint32_t r)
 {
-  Real_t x=A->d[r],temp;
-  uint32_t i=p-1,j;
-  for(j=p;j<r;j++)
+  Real_t x = A->d[r], temp;
+  uint32_t i = p - 1, j;
+  for(j = p; j < r; j++)
   {
-    if(A->d[j]<=x)
+    if(A->d[j] <= x)
     {
       i++;
-      temp=A->d[i];
-      A->d[i]=A->d[j];
-      A->d[j]=temp;
+      temp = A->d[i];
+      A->d[i] = A->d[j];
+      A->d[j] = temp;
     }
   }
-  temp=A->d[i+1];
-  A->d[i+1]=A->d[r];
-  A->d[r]=temp;
-  return i+1;
+  temp = A->d[i + 1];
+  A->d[i + 1] = A->d[r];
+  A->d[r] = temp;
+  return i + 1;
 
 }
-uint32_t ReconstructionEngine::RandomizedPartition(RealArrayType::Pointer A,uint32_t p,uint32_t r)
+uint32_t ReconstructionEngine::RandomizedPartition(RealArrayType::Pointer A, uint32_t p, uint32_t r)
 {
 
   const uint32_t rangeMin = 0;
   const uint32_t rangeMax = std::numeric_limits<uint32_t>::max();
   typedef boost::uniform_int<uint32_t> NumberDistribution;
   typedef boost::mt19937 RandomNumberGenerator;
-  typedef boost::variate_generator<RandomNumberGenerator&,NumberDistribution> Generator;
+  typedef boost::variate_generator<RandomNumberGenerator&, NumberDistribution> Generator;
 
   NumberDistribution distribution(rangeMin, rangeMax);
   RandomNumberGenerator generator;
@@ -1210,7 +1213,7 @@ uint32_t ReconstructionEngine::RandomizedPartition(RealArrayType::Pointer A,uint
   generator.seed(arg); // seed with the current time
 
   Real_t temp;
-  uint32_t j = p + numberGenerator()%(r-p+1);//rand()%(r-p+1);
+  uint32_t j = p + numberGenerator() % (r - p + 1); //rand()%(r-p+1);
   temp = A->d[r];
   A->d[r] = A->d[j];
   A->d[j] = temp;
@@ -1224,17 +1227,17 @@ Real_t ReconstructionEngine::roiVolumeSum(UInt8Image_t::Pointer Mask)
   uint32_t counter = 0;
   for(uint16_t j = 0; j < m_Geometry->N_z; j++)
     for(int16_t k = 0; k < m_Geometry->N_x; k++)
-      if(Mask->getValue(j,k) == 1)
+      if(Mask->getValue(j, k) == 1)
       {
         counter++;
         for (uint16_t i = 0; i < m_Geometry->N_y; i++)
-          sum+=m_Geometry->Object->getValue(j,k,i);
+        { sum += m_Geometry->Object->getValue(j, k, i); }
       }
-  std::cout<<"Number of elements in the roiVolumeSum = "<<counter<<std::endl;
+  std::cout << "Number of elements in the roiVolumeSum = " << counter << std::endl;
   return sum;
 }
 
-uint8_t ReconstructionEngine::stopCriteria(RealImageType::Pointer magUpdateMap,UInt8Image_t::Pointer magUpdateMask, Real_t PrevMagSum, uint32_t EffIterCount)
+uint8_t ReconstructionEngine::stopCriteria(RealImageType::Pointer magUpdateMap, UInt8Image_t::Pointer magUpdateMask, Real_t PrevMagSum, uint32_t EffIterCount)
 {
 
   uint8_t exit_status = 1;
@@ -1243,16 +1246,16 @@ uint8_t ReconstructionEngine::stopCriteria(RealImageType::Pointer magUpdateMap,U
   for (int32_t j = 0; j < m_Geometry->N_z; j++)
     for (int32_t k = 0; k < m_Geometry->N_x; k++)
     {
-      TempSum += magUpdateMap->getValue(j,k);
+      TempSum += magUpdateMap->getValue(j, k);
     }
-  std::cout<<"**********************************************"<<std::endl;
-  std::cout<<"Average mag after voxel update"<<TempSum/(m_Geometry->N_z*m_Geometry->N_x)<<std::endl;
-  std::cout<<"**********************************************"<<std::endl;
+  std::cout << "**********************************************" << std::endl;
+  std::cout << "Average mag after voxel update" << TempSum / (m_Geometry->N_z * m_Geometry->N_x) << std::endl;
+  std::cout << "**********************************************" << std::endl;
 #endif //debug
 
 #ifdef NHICD
   //In non homogenous mode check stopping criteria only after a full equit = equivalet iteration
-  if(EffIterCount%Reconstruction::Constants::k_NumNonHomogeniousIter == 0 && EffIterCount > 0 && PrevMagSum > 0)
+  if(EffIterCount % Reconstruction::Constants::k_NumNonHomogeniousIter == 0 && EffIterCount > 0 && PrevMagSum > 0)
 #else
   if(EffIterCount > 0 && PrevMagSum > 0)
 #endif //NHICD
@@ -1262,21 +1265,21 @@ uint8_t ReconstructionEngine::stopCriteria(RealImageType::Pointer magUpdateMap,U
     uint32_t counter = 0;
     for (int32_t j = 0; j < m_Geometry->N_z; j++)
       for (int32_t k = 0; k < m_Geometry->N_x; k++)
-        if(magUpdateMask->getValue(j,k) == 1)
+        if(magUpdateMask->getValue(j, k) == 1)
         {
-          TempSum += magUpdateMap->getValue(j,k);
+          TempSum += magUpdateMap->getValue(j, k);
           counter++;
         }
 
-    std::cout<<"Number of elements in the ROI after an equit= "<<counter<<std::endl;
+    std::cout << "Number of elements in the ROI after an equit= " << counter << std::endl;
 
     if(getVerbose())
     {
-      std::cout<<"************************************************"<<std::endl;
-      std::cout << EffIterCount + 1 << " " << (fabs(TempSum)/ fabs(PrevMagSum))<< std::endl;
-      std::cout<<"************************************************"<<std::endl;
+      std::cout << "************************************************" << std::endl;
+      std::cout << EffIterCount + 1 << " " << (fabs(TempSum) / fabs(PrevMagSum)) << std::endl;
+      std::cout << "************************************************" << std::endl;
     }
-    if( (fabs(TempSum)/ fabs(PrevMagSum)) < m_TomoInputs->StopThreshold && EffIterCount > 0)
+    if( (fabs(TempSum) / fabs(PrevMagSum)) < m_TomoInputs->StopThreshold && EffIterCount > 0)
     {
       std::cout << "This is the terminating point " << EffIterCount << std::endl;
       m_TomoInputs->StopThreshold *= m_AdvParams->THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
