@@ -86,12 +86,12 @@
  *
  */
 class UpdateYSlice
-#if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
-: public tbb::task
-#endif
+    #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
+    : public tbb::task
+    #endif
 {
   public:
-  /**
+    /**
    * @brief
    * @param yStart
    * @param yEnd
@@ -127,7 +127,7 @@ class UpdateYSlice
                  Real_t* averageMagnitudeOfRecon,
                  unsigned int zeroSkipping,
                  QGGMRF::QGGMRF_Values* qggmrf_values,
-				 struct List* voxelUpdateList);
+                 struct List* voxelUpdateList);
 
     ~UpdateYSlice();
 
@@ -137,7 +137,7 @@ class UpdateYSlice
      */
     int getZeroCount();
 
-  /**
+    /**
    *
    */
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
@@ -149,7 +149,7 @@ class UpdateYSlice
 
   protected:
 
-  /**
+    /**
    * @brief
    */
     void initVariables();
@@ -161,7 +161,7 @@ class UpdateYSlice
     int16_t m_OuterIter;
     int16_t m_InnerIter;
     SinogramPtr  m_Sinogram;
-  //  SinogramPtr  m_BFSinogram;
+    //  SinogramPtr  m_BFSinogram;
     std::vector<HAADFAMatrixCol::Pointer> &m_TempCol;
     RealVolumeType::Pointer m_ErrorSino;
     std::vector<HAADFAMatrixCol::Pointer> &m_VoxelLineResponse;//CHANGED! Put a & here
@@ -184,13 +184,13 @@ class UpdateYSlice
 
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
     uint8_t m_BoundaryFlag[27];
-    
+
     //Real_t m_HammingWindow[5][5];
     Real_t m_Theta1;
     Real_t m_Theta2;
     Real_t m_Neighborhood[27];
-	
-	struct List* m_VoxelUpdateList;
+
+    struct List* m_VoxelUpdateList;
 
 };
 
