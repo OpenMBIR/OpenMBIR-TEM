@@ -260,7 +260,6 @@ void MRCSinogramInitializer::execute()
     sinogram->counts = RealVolumeType::New(dims, "Sinogram.counts");
 
     sinogram->angles.resize(sinogram->N_theta);
-    FEIHeader* fei = NULL;
 
     // This data is read as a Z,Y,X array where X is the fastest moving variable and Z is the slowest
     void* data = reader->getDataPointer();
@@ -268,20 +267,11 @@ void MRCSinogramInitializer::execute()
     for (uint16_t z = 0; z < sinogram->N_theta; z++)
     {
         int dataZOffset = inputs->goodViews[z] - voxelMin[2];
-        // Copy the value of the tilt angle into the inputs->angles vector
-        #if 0
-        if (NULL != header.feiHeaders) {
-            int offset = inputs->goodViews[z];
-            fei = &(header.feiHeaders[offset]);
-            if (inputs->tiltSelection == SOC::A_Tilt) {
-                sinogram->angles[z] = -fei->a_tilt;
-            }
-            else if (inputs->tiltSelection == SOC::B_Tilt)
-            {
-                sinogram->angles[z] = -fei->b_tilt;
-            }
-        }
-        #endif
+        // Copy the value of the tilt angle into the sinogram->angles vector. The angles should have
+        // already been set into the inputs structure before this is ever called. This allows a user
+        // to use manually specified angles for the reconstruction if the file does not have any angles
+        // encoded in the .mrc file
+        sinogram->angles[z] = inputs->tilts[z];
         // Copy the data from the input into the Sinogram Data
         switch(header.mode)
         {

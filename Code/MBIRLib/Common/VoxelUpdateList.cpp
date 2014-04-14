@@ -160,7 +160,7 @@ VoxelUpdateList::Pointer VoxelUpdateList::GenRandList(VoxelUpdateList::Pointer I
   VoxelUpdateList::Pointer OpList = VoxelUpdateList::New(InList->numElements());
 
   const uint32_t rangeMin = 0;
-  const uint32_t rangeMax = std::numeric_limits<uint32_t>::max();
+  const uint32_t rangeMax = InList->numElements() - 1;
   typedef boost::uniform_int<uint32_t> NumberDistribution;
   typedef boost::mt19937 RandomNumberGenerator;
   typedef boost::variate_generator<RandomNumberGenerator&, NumberDistribution> Generator;
@@ -171,26 +171,35 @@ VoxelUpdateList::Pointer VoxelUpdateList::GenRandList(VoxelUpdateList::Pointer I
   boost::uint32_t arg = static_cast<boost::uint32_t>(EIMTOMO_getMilliSeconds());
   generator.seed(arg); // seed with the current time
 
-
-  size_t dims[3] =
-  { InList->numElements(), 0, 0};
-  Int32ArrayType::Pointer Counter = Int32ArrayType::New(dims, "Counter");
+  std::vector<int32_t> newIndexes(InList->numElements(), 0);
 
   for (int32_t j_new = 0; j_new < InList->numElements(); j_new++)
   {
-    Counter->d[j_new] = j_new;
+    newIndexes[j_new] = j_new;
   }
 
-  int32_t ArraySize = InList->numElements();
-  ArrayType OpListPtr = OpList->getArray();
+  size_t r;
+  size_t temp;
+  //--- Shuffle elements by randomly exchanging each with one other.
+  for (size_t i = 1; i < InList->numElements(); i++)
+  {
+    r = numberGenerator(); // Random remaining position.
+    if (r >= InList->numElements()) {
+      continue;
+    }
+    temp = newIndexes[i];
+    newIndexes[i] = newIndexes[r];
+    newIndexes[r] = temp;
+  }
+
   ArrayType InptListPtr = InList->getArray();
 
-  for(int32_t test_iter = 0; test_iter < InList->numElements(); test_iter++)
+  // Now copy the data from the Input into the output but using the randomly generated index
+  for(int32_t i = 0; i < InList->numElements(); i++)
   {
-    int32_t Index = numberGenerator() % InList->numElements();
-    OpListPtr[test_iter] = InptListPtr[Counter->d[Index]];
-    Counter->d[Index] = Counter->d[InList->numElements() - 1];
-    ArraySize--;
+    int32_t xVal = InptListPtr[i*2];
+    int32_t zVal = InptListPtr[i*2+1];
+    OpList->setPair(newIndexes[i], xVal, zVal);
   }
 
 #ifdef DEBUG
