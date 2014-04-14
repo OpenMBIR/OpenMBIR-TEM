@@ -58,7 +58,7 @@ namespace VoxelUpdateType
 //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
 #define ROI 1
 #define EIMTOMO_USE_QGGMRF 1 //Was used earlier to switch priors
-#define BRAGG_CORRECTION //TODO : Get rid and make this the default case 
+#define BRAGG_CORRECTION //TODO : Get rid and make this the default case
 
 //#define WRITE_INTERMEDIATE_RESULTS
 //#define COST_CALCULATE
@@ -73,9 +73,19 @@ namespace VoxelUpdateType
 //#define IDENTITY_NOISE_MODEL
 #define POSITIVITY_CONSTRAINT
 #define NHICD
-#define NUM_NON_HOMOGENOUS_ITER 20
+//#define NUM_NON_HOMOGENOUS_ITER 20
 #define SUB_ITER 1
-#define NUM_HOM_ITER 20
+//#define NUM_HOM_ITER 20
+
+
+namespace Reconstruction
+{
+  namespace Constants
+  {
+    const unsigned int k_NumHomogeniousIter = 20;
+    const unsigned int k_NumNonHomogeniousIter = 20;
+  }
+}
 
 namespace ScaleOffsetCorrection
 {

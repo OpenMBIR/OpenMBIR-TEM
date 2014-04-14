@@ -37,6 +37,12 @@
 
 #include "UpdateYSlice.h"
 
+//-- Boost Headers for Random Numbers
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/variate_generator.hpp>
+
 #include "MBIRLib/Common/EIMTime.h"
 #include "MBIRLib/Common/EIMMath.h"
 
@@ -81,7 +87,7 @@ UpdateYSlice::UpdateYSlice(uint16_t yStart, uint16_t yEnd,
                            Real_t* averageMagnitudeOfRecon,
                            unsigned int zeroSkipping,
                            QGGMRF::QGGMRF_Values *qggmrf_values,
-                           struct List* voxelUpdateList) :
+                           VoxelUpdateList::Pointer voxelUpdateList) :
   m_YStart(yStart),
   m_YEnd(yEnd),
   m_Geometry(geometry),
@@ -95,7 +101,7 @@ UpdateYSlice::UpdateYSlice(uint16_t yStart, uint16_t yEnd,
   m_Mask(mask),
   m_MagUpdateMap(magUpdateMap),
   m_MagUpdateMask(magUpdateMask),
-  m_VoxelUpdateType(voxelUpdateType),
+ // m_VoxelUpdateType(voxelUpdateType),
   m_ZeroCount(0),
   m_CurrentVoxelValue(0.0),
   m_AverageUpdate(averageUpdate),
@@ -141,7 +147,7 @@ void
 UpdateYSlice::execute()
 {
 
-  int32_t ArraySize = m_VoxelUpdateList->NumElts;
+  int32_t ArraySize = m_VoxelUpdateList->numElements();
 
   size_t dims[3] =
   { ArraySize, 0, 0};
@@ -152,11 +158,11 @@ UpdateYSlice::execute()
   //theta1 and theta2
 
 
-  for(int32_t j = 0; j < m_VoxelUpdateList->NumElts; j++)
+  for(int32_t j = 0; j < m_VoxelUpdateList->numElements(); j++)
   {
 
-    int32_t k_new = m_VoxelUpdateList->Array[j].xidx;
-    int32_t j_new = m_VoxelUpdateList->Array[j].zidx;
+    int32_t k_new = m_VoxelUpdateList->xIdx(j);
+    int32_t j_new = m_VoxelUpdateList->zIdx(j);
     int32_t Index = j_new * m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to
     //the voxel line (j_new,k_new)
 

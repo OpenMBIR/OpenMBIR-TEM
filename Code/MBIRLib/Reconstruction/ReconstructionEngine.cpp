@@ -585,24 +585,20 @@ void ReconstructionEngine::execute()
   std::cout<<"Generating a list of voxels to update"<<std::endl;
 
   //Takes all the voxels along x-z slice and forms a list
-  m_VoxelIdxList.NumElts = m_Geometry->N_z*m_Geometry->N_x;
-  m_VoxelIdxList.Array = (struct ImgIdx*)(malloc(m_VoxelIdxList.NumElts*sizeof(struct ImgIdx)));
-  GenRegularList(&m_VoxelIdxList);
+  m_VoxelIdxList = VoxelUpdateList::GenRegularList(m_Geometry->N_z, m_Geometry->N_x);
   //Randomize the list of voxels
-  m_VoxelIdxList = GenRandList(m_VoxelIdxList);
+  m_VoxelIdxList = VoxelUpdateList::GenRandList(m_VoxelIdxList);
 
   if(getVerbose())
   {
     std::cout<<"Initial random order list .."<<std::endl;
-    maxList(m_VoxelIdxList);
+    m_VoxelIdxList->printMaxList(std::cout);
   }
 
-  //Create temporary sublists for each iteration
-  struct List TempList;
-  TempList.NumElts = m_VoxelIdxList.NumElts;
-  TempList.Array = m_VoxelIdxList.Array;
-  uint32_t listselector=0; //For the homogenous updates this cycles
-  //through the random list one sublist at a time
+  // Create a copy of the Voxel Update List because we are going to adjust the VoxelUpdateList instance variable
+  // with values for the array pointer and number of elements based on the iteration
+  VoxelUpdateList::Pointer TempList = VoxelUpdateList::New(m_VoxelIdxList->numElements(), m_VoxelIdxList->getArray() );
+  uint32_t listselector=0; //For the homogenous updates this cycles through the random list one sublist at a time
 
 
   //Initialize the update magnitude arrays (for NHICD mainly) & stopping criteria
@@ -677,27 +673,29 @@ void ReconstructionEngine::execute()
       // iterations - cycle through the partial sub lists
       if(EffIterCount%2 == 0) //Even iterations == Homogenous update
       {
-        listselector%=NUM_HOM_ITER;// A variable to cycle through the randmoized list of voxels
+        listselector %= Reconstruction::Constants::k_NumHomogeniousIter;// A variable to cycle through the randmoized list of voxels
 
-        m_VoxelIdxList.NumElts = floor((Real_t)TempList.NumElts/NUM_HOM_ITER);
+        int32_t nElements = floor((Real_t)TempList->numElements()/Reconstruction::Constants::k_NumHomogeniousIter);
 
         //If the number of voxels is NOT exactly divisible by NUM_NON .. then compensate and make the last of the lists longer
-        if(listselector == NUM_HOM_ITER-1)
+        if(listselector == Reconstruction::Constants::k_NumHomogeniousIter-1)
         {
-          m_VoxelIdxList.NumElts += (TempList.NumElts - m_VoxelIdxList.NumElts*NUM_HOM_ITER);
+          nElements += (TempList->numElements()/ - nElements * Reconstruction::Constants::k_NumHomogeniousIter);
           if(getVeryVerbose())
           {
-            std::cout<<"**********Adjusted number of voxel lines for last iter**************"<<std::endl;
-            std::cout<<m_VoxelIdxList.NumElts<<std::endl;
-            std::cout<<"**********************************"<<std::endl;
+            std::cout << "**********Adjusted number of voxel lines for last iter**************" << std::endl;
+            std::cout << nElements << std::endl;
+            std::cout << "**********************************" << std::endl;
           }
         }
 
         //Set the list array for updating voxels
-        m_VoxelIdxList.Array = &(TempList.Array[(uint32_t)(floor(((Real_t)TempList.NumElts/NUM_HOM_ITER))*listselector)]);
+        int32_t start = (uint32_t)(floor(((Real_t)TempList->numElements()/Reconstruction::Constants::k_NumHomogeniousIter)) * listselector);
+        m_VoxelIdxList = TempList->subList(nElements, start);
+        //m_VoxelIdxList.Array = &(TempList.Array[]);
 
         std::cout<<"Partial random order list for homogenous ICD .."<<std::endl;
-        maxList(m_VoxelIdxList);
+        m_VoxelIdxList->printMaxList(std::cout);
 
         listselector++;
         //printList(m_VoxelIdxList);
@@ -718,11 +716,11 @@ void ReconstructionEngine::execute()
 
       status = updateVoxels(reconOuterIter, reconInnerIter, tempCol,
                             errorSino, voxelLineResponse,cost,&qggmrf_values,
-                            magUpdateMap,filtMagUpdateMap, magUpdateMask,m_VisitCount,
+                            magUpdateMap,filtMagUpdateMap, magUpdateMask, m_VisitCount,
                             PrevMagSum,
                             EffIterCount);
 #ifdef NHICD
-      if(EffIterCount%NUM_NON_HOMOGENOUS_ITER == 0) // At the end of half an
+      if(EffIterCount%Reconstruction::Constants::k_NumNonHomogeniousIter == 0) // At the end of half an
         //equivalent iteration compute average Magnitude of recon to test
         //stopping criteria
       {
@@ -737,7 +735,7 @@ void ReconstructionEngine::execute()
       //Debugging information to test if every voxel is getting touched
 #ifdef NHICD
       //Debug every equivalent iteration
-      if(EffIterCount%(2*NUM_NON_HOMOGENOUS_ITER) == 0 && EffIterCount > 0)
+      if(EffIterCount%(2*Reconstruction::Constants::k_NumNonHomogeniousIter) == 0 && EffIterCount > 0)
 #endif //NHICD
       {
         for (int16_t j = 0; j < m_Geometry->N_z; j++)
@@ -772,7 +770,7 @@ void ReconstructionEngine::execute()
 
       // Write out the MRC File ; If NHICD only after half an equit do a write
 #ifdef NHICD
-      if(EffIterCount%(NUM_NON_HOMOGENOUS_ITER) == 0)
+      if(EffIterCount%(Reconstruction::Constants::k_NumNonHomogeniousIter) == 0)
 #endif //NHICD
       {
         ss.str("");
@@ -933,9 +931,9 @@ void ReconstructionEngine::execute()
   std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
 
 #ifdef NHICD
-  std::cout<<"Number of equivalet iterations taken ="<<EffIterCount/NUM_NON_HOMOGENOUS_ITER<<std::endl;
+  std::cout<<"Number of equivalet iterations taken ="<<EffIterCount/Reconstruction::Constants::k_NumNonHomogeniousIter<<std::endl;
 #else
-  std::cout<<"Number of equivalet iterations taken ="<<EffIterCount/NUM_HOM_ITER<<std::endl;
+  std::cout<<"Number of equivalet iterations taken ="<<EffIterCount/Reconstruction::Constants::k_NumHomogeniousIter<<std::endl;
 #endif //NHICD
   notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
   setErrorCondition(0);

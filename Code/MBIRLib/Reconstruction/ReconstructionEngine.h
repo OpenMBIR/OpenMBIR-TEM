@@ -48,6 +48,7 @@
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Common/AbstractFilter.h"
 #include "MBIRLib/Common/Observer.h"
+#include "MBIRLib/Common/VoxelUpdateList.h"
 #include "MBIRLib/GenericFilters/CostData.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
@@ -62,7 +63,7 @@
 #define PRINT_TIME(msg)\
   std::cout << indent << msg << ": " << ((double)stopm-startm)/1000.0 << " seconds" << std::endl;
 
-
+#if 0
 struct ImgIdx {
     int32_t xidx;
     int32_t zidx;
@@ -77,6 +78,7 @@ struct List
 void printList(struct List InList);
 void maxList(struct List InList);
 void minList(struct List InList);
+#endif
 
 /**
  * @class ReconstructionEngine ReconstructionEngine.h TomoEngine/SOC/ReconstructionEngine.h
@@ -173,14 +175,14 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
     Real_t SetNonHomThreshold(RealImageType::Pointer magUpdateMap);
 
     //Generate a regular sequential order list
-    void GenRegularList(struct List* InpList);
+    void GenRegularList(VoxelUpdateList::Pointer InpList);
 
     //Generating a list of indices for ICD updates. Output stored in the
     //private member m_VoxelIdxList
-    struct List GenRandList(struct List InpList);
+//    VoxelUpdateList::Pointer GenRandList(struct List InpList);
 
     //Generating a list for NHICD based on the magnitude update map
-    struct List GenNonHomList(Real_t NHThresh, RealImageType::Pointer magUpdateMap);
+    VoxelUpdateList::Pointer GenNonHomList(Real_t NHThresh, RealImageType::Pointer magUpdateMap);
 
     /**
      * @brief
@@ -272,7 +274,7 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 
     int m_NumThreads;
 
-    struct List m_VoxelIdxList;
+    VoxelUpdateList::Pointer m_VoxelIdxList;
 
     Real_t m_HammingWindow[5][5];
 

@@ -41,12 +41,6 @@
 
 #include <vector>
 
-//-- Boost Headers for Random Numbers
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_real.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/variate_generator.hpp>
-
 
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
@@ -120,14 +114,14 @@ class UpdateYSlice
                  std::vector<HAADFAMatrixCol::Pointer> &voxelLineResponse,
                  HAADFForwardModel* forwardModel,
                  UInt8Image_t::Pointer mask,
-                 RealImageType::Pointer magUpdateMap,//Hold the magnitude of the reconstuction along each voxel line
+                 RealImageType::Pointer magUpdateMap, //Hold the magnitude of the reconstuction along each voxel line
                  UInt8Image_t::Pointer magUpdateMask,
                  unsigned int voxelUpdateType,
                  Real_t* averageUpdate,
                  Real_t* averageMagnitudeOfRecon,
                  unsigned int zeroSkipping,
                  QGGMRF::QGGMRF_Values* qggmrf_values,
-                 struct List* voxelUpdateList);
+                 VoxelUpdateList::Pointer voxelUpdateList);
 
     ~UpdateYSlice();
 
@@ -169,7 +163,7 @@ class UpdateYSlice
     UInt8Image_t::Pointer m_Mask;
     RealImageType::Pointer m_MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
     UInt8Image_t::Pointer m_MagUpdateMask;
-    unsigned int m_VoxelUpdateType;
+    //unsigned int m_VoxelUpdateType;
 
     int m_ZeroCount;
     Real_t m_CurrentVoxelValue;
@@ -190,8 +184,8 @@ class UpdateYSlice
     Real_t m_Theta2;
     Real_t m_Neighborhood[27];
 
-    struct List* m_VoxelUpdateList;
-
+    //struct List* m_VoxelUpdateList;
+    VoxelUpdateList::Pointer m_VoxelUpdateList;
 };
 
 #endif /* UPDATEYSLICE_H_ */

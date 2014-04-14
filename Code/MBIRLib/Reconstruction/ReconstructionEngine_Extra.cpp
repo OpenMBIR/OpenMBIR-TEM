@@ -35,6 +35,14 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 #include "ReconstructionEngine.h"
+
+//-- Boost Headers for Random Numbers
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/variate_generator.hpp>
+
+
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/GenericFilters/MRCSinogramInitializer.h"
 #include "MBIRLib/Common/EIMMath.h"
@@ -47,7 +55,7 @@
 #define PRINT_TIME(msg)\
   std::cout << indent << msg << ": " << ((double)stopm-startm)/1000.0 << " seconds" << std::endl;
 
-
+#if 0
 //Function to print a list of voxel indices
 void printList(struct List InList)
 {
@@ -90,6 +98,7 @@ void minList(struct List InList)
   std::cout<<"("<<min_z<<","<<min_x<<")"<<std::endl;
 }
 
+#endif
 // Read the Input data from the supplied data file
 // We are scoping here so the various readers are automatically cleaned up before
 // the code goes any farther
@@ -513,7 +522,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 #endif
 
   unsigned int updateType = VoxelUpdateType::RegularRandomOrderUpdate;
-  struct List NHList;//non homogenous list of voxels to update
+  VoxelUpdateList::Pointer NHList;//non homogenous list of voxels to update
 
 
 #ifdef NHICD
@@ -571,7 +580,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 
 #ifdef DEBUG
   std::cout<<"Max of list in ReconEngineExtra = "<<std::endl;
-  maxList(m_VoxelIdxList);
+  m_VoxelIdxList->printMaxList(std::cout);
 #endif //DEBUG
 
   for (uint16_t NH_Iter = 0; NH_Iter < subIterations; ++NH_Iter) //This can be varied
@@ -620,8 +629,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
       PRINT_TIME("  SetNonHomThreshold");
       std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
       //Generate a new List based on the NH_threshold
-      NHList = GenNonHomList(NH_Threshold, filtMagUpdateMap);
-      m_VoxelIdxList = NHList;
+      m_VoxelIdxList = GenNonHomList(NH_Threshold, filtMagUpdateMap);
     }
 
 
@@ -643,10 +651,12 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 
 
     //Checking which voxels are going to be visited and setting their magnitude value to zero
-    for(int32_t tmpiter = 0; tmpiter < m_VoxelIdxList.NumElts; tmpiter++)
+    for(int32_t tmpiter = 0; tmpiter < m_VoxelIdxList->numElements(); tmpiter++)
     {
-      m_VisitCount->setValue(1,m_VoxelIdxList.Array[tmpiter].zidx,m_VoxelIdxList.Array[tmpiter].xidx);
-      magUpdateMap->setValue(0,m_VoxelIdxList.Array[tmpiter].zidx,m_VoxelIdxList.Array[tmpiter].xidx);
+   //   m_VisitCount->setValue(1, m_VoxelIdxList.Array[tmpiter].zidx, m_VoxelIdxList.Array[tmpiter].xidx);
+      m_VisitCount->setValue(1, m_VoxelIdxList->zIdx(tmpiter), m_VoxelIdxList->xIdx(tmpiter));
+   //   magUpdateMap->setValue(0, m_VoxelIdxList.Array[tmpiter].zidx, m_VoxelIdxList.Array[tmpiter].xidx);
+      magUpdateMap->setValue(0, m_VoxelIdxList->zIdx(tmpiter), m_VoxelIdxList->xIdx(tmpiter));
     }
 
     uint16_t yStart = 0;
@@ -655,21 +665,18 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
     tbb::task_list taskList;
 
     //Variables to maintain stopping criteria for regular type ICD
-    Real_t* averageUpdate = (Real_t*)(malloc(sizeof(Real_t) * m_NumThreads));
-    ::memset(averageUpdate, 0, sizeof(Real_t) * m_NumThreads);
-    Real_t* averageMagnitudeOfRecon = (Real_t*)(malloc(sizeof(Real_t) * m_NumThreads));
-    ::memset(averageMagnitudeOfRecon, 0, sizeof(Real_t) * m_NumThreads);
+    boost::shared_array<Real_t> averageUpdate(new Real_t[m_NumThreads]);
+    ::memset(averageUpdate.get(), 0, sizeof(Real_t) * m_NumThreads);
+    boost::shared_array<Real_t> averageMagnitudeOfRecon(new Real_t[m_NumThreads]);
+    ::memset(averageMagnitudeOfRecon.get(), 0, sizeof(Real_t) * m_NumThreads);
 
     size_t dims[3];
     //Initialize individual magnitude maps for the separate threads
     dims[0] = m_Geometry->N_z; //height
     dims[1] = m_Geometry->N_x; //width
-    std::vector <RealImageType::Pointer> magUpdateMaps;
+    std::vector<RealImageType::Pointer> magUpdateMaps;
 
-    //struct List NewList = m_VoxelIdxList;
-    //NewList = GenRandList(NewList);
-
-    struct List* NewList=(struct List*)malloc(m_NumThreads*sizeof(struct List));
+    std::vector<VoxelUpdateList::Pointer> NewList(m_NumThreads);
     int16_t EffCoresUsed=0;
 
     std::cout<<" Starting multicore allocation with "<<m_NumThreads<<" threads.."<<std::endl;
@@ -696,8 +703,8 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
       _magUpdateMap->initializeWithZeros();
       magUpdateMaps.push_back(_magUpdateMap);
 
-      NewList[t]=m_VoxelIdxList;
-      NewList[t]=GenRandList(m_VoxelIdxList);
+      //NewList[t] = m_VoxelIdxList;
+      NewList[t] = VoxelUpdateList::GenRandList(m_VoxelIdxList);
 
       UpdateYSlice& a =
           *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
@@ -706,10 +713,10 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
                                                          magUpdateMask,
                                                          _magUpdateMap,
                                                          magUpdateMask, updateType,
-                                                         averageUpdate + t,
-                                                         averageMagnitudeOfRecon + t,
+                                                         averageUpdate.get() + t,
+                                                         averageMagnitudeOfRecon.get() + t,
                                                          m_AdvParams->ZERO_SKIPPING,
-                                                         qggmrf_values, NewList+t);
+                                                         qggmrf_values, NewList[t] );
       taskList.push_back(a);
     }
 
@@ -733,43 +740,34 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 #endif //Debug
       AverageUpdate += averageUpdate[t];
       AverageMagnitudeOfRecon += averageMagnitudeOfRecon[t];
-
-      if(t < EffCoresUsed)
-      {
-        if(getVeryVerbose()){
-          std::cout<<"Freeing Memory for List :"<<t<<std::endl;
-        }
-        free(NewList[t].Array);
-      }
-
     }
-    free(averageUpdate);
-    free(averageMagnitudeOfRecon);
-    free(NewList);
+    averageUpdate.reset(); // We are forcing the array to be deallocated, we could wait till the current scope terminates then the arrays would be automatically cleaned up
+    averageMagnitudeOfRecon.reset(); // We are forcing the array to be deallocated, we could wait till the current scope terminates then the arrays would be automatically cleaned up
+    NewList.resize(0); // Frees all the pointers
 
     //From individual threads update the magnitude map
     std::cout<<" Magnitude Map Update.."<<std::endl;
     RealImageType::Pointer TempPointer;
-    for(int32_t tmpiter = 0; tmpiter < m_VoxelIdxList.NumElts; tmpiter++)
+    for(int32_t tmpiter = 0; tmpiter < m_VoxelIdxList->numElements(); tmpiter++)
     {
       Real_t TempSum =0;
       for (uint16_t t = 0; t < magUpdateMaps.size(); ++t)
       {
         TempPointer = magUpdateMaps[t];
-        TempSum += TempPointer->getValue(m_VoxelIdxList.Array[tmpiter].zidx,m_VoxelIdxList.Array[tmpiter].xidx);
+        TempSum += TempPointer->getValue(m_VoxelIdxList->zIdx(tmpiter), m_VoxelIdxList->xIdx(tmpiter));
       }
 
       //Set the overall magnitude update map
-      magUpdateMap->setValue(TempSum,m_VoxelIdxList.Array[tmpiter].zidx,m_VoxelIdxList.Array[tmpiter].xidx);
+      magUpdateMap->setValue(TempSum,m_VoxelIdxList->zIdx(tmpiter), m_VoxelIdxList->xIdx(tmpiter));
     }
 
 #else //TODO modify the single thread code to handle the list based iterations
     uint16_t yStop = m_Geometry->N_y;
     uint16_t yStart = 0;
-    Real_t* averageUpdate = (Real_t*)(malloc(sizeof(Real_t)));
-    ::memset(averageUpdate, 0, sizeof(Real_t));
-    Real_t* averageMagnitudeOfRecon = (Real_t*)(malloc(sizeof(Real_t) ));
-    ::memset(averageMagnitudeOfRecon, 0, sizeof(Real_t) );
+    boost::shared_array<Real_t> averageUpdate(new Real_t[m_NumThreads]);
+    ::memset(averageUpdate.get(), 0, sizeof(Real_t) * m_NumThreads);
+    boost::shared_array<Real_t> averageMagnitudeOfRecon(new Real_t[m_NumThreads]);
+    ::memset(averageMagnitudeOfRecon.get(), 0, sizeof(Real_t) * m_NumThreads);
 
     size_t dims[3];
     //Initialize individual magnitude maps for the separate threads
@@ -806,11 +804,10 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 
     yVoxelUpdate.execute();
 
-    AverageUpdate += averageUpdate[0];
-    AverageMagnitudeOfRecon += averageMagnitudeOfRecon[0];
-    free(averageUpdate);
-    free(averageMagnitudeOfRecon);
-
+//    AverageUpdate += averageUpdate[0];
+//    AverageMagnitudeOfRecon += averageMagnitudeOfRecon[0];
+    averageUpdate.reset(); // We are forcing the array to be deallocated, we could wait till the current scope terminates then the arrays would be automatically cleaned up
+    averageMagnitudeOfRecon.reset(); // We are forcing the array to be deallocated, we could wait till the current scope terminates then the arrays would be automatically cleaned up
 
 #endif //Parallel algorithms
     /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */STOP_TIMER;
@@ -823,8 +820,6 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
       std::cout << "Total Update " << AverageUpdate << std::endl;
       std::cout << "Total Mag " << AverageMagnitudeOfRecon << std::endl;
     }
-
-
 
     if(getCancel() == true)
     {
@@ -856,11 +851,12 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 #endif //write Intermediate results
 
 #ifdef NHICD
-  if(updateType == VoxelUpdateType::NonHomogeniousUpdate && NHList.Array != NULL)
-  {
-    free(NHList.Array);
-    std::cout<<"Freeing memory allocated to non-homogenous List"<<std::endl;
-  }
+  /* NHList will go out of scope at the end of this function which will cause its destructor to be called and the memory automatically cleaned up */
+//  if(updateType == VoxelUpdateType::NonHomogeniousUpdate && NHList.Array != NULL)
+//  {
+//    free(NHList.Array);
+//    std::cout<<"Freeing memory allocated to non-homogenous List"<<std::endl;
+//  }
 #endif //NHICD
 
   std::cout<<"exiting voxel update routine"<<std::endl;
@@ -994,7 +990,7 @@ Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdate
             TempMagMap->d[i * (uint32_t)m_Geometry->N_x + j] = magUpdateMap->getValue(i, j);
         } */
 
-  uint32_t percentile_index = ArrLength / NUM_NON_HOMOGENOUS_ITER;
+  uint32_t percentile_index = ArrLength / Reconstruction::Constants::k_NumNonHomogeniousIter;
   std::cout<<"Percentile to select= "<<percentile_index<<std::endl;
 
   //Partial selection sort
@@ -1024,61 +1020,64 @@ Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdate
   return threshold;
 }
 
-//Function to generate a list of voxels based on the NH threshold
-struct List ReconstructionEngine::GenNonHomList(Real_t NHThresh, RealImageType::Pointer magUpdateMap)
+// -----------------------------------------------------------------------------
+// Function to generate a list of voxels based on the NH threshold
+// -----------------------------------------------------------------------------
+VoxelUpdateList::Pointer ReconstructionEngine::GenNonHomList(Real_t NHThresh, RealImageType::Pointer magUpdateMap)
 {
 
   int32_t MaxNumElts = m_Geometry->N_z*m_Geometry->N_x;
-  struct List TempList;
-  TempList.NumElts=0;
-  TempList.Array=(struct ImgIdx*)(malloc(MaxNumElts*sizeof(struct ImgIdx)));
+  VoxelUpdateList::Pointer TempList = VoxelUpdateList::New(MaxNumElts);
+
+  int32_t count = 0;
+
   for (int16_t j = 0; j < m_Geometry->N_z; j++)
   {
     for (int16_t k = 0; k < m_Geometry->N_x; k++)
     {
       if(magUpdateMap->getValue(j,k) > NHThresh)
       {
-
-        TempList.Array[TempList.NumElts].xidx = k;
-        TempList.Array[TempList.NumElts].zidx = j;
-        TempList.NumElts++;
+        TempList->setPair(count, k, j);
+        count++;
       }
-
     }
   }
+  // Resize the list
+  TempList->resize(count);
 
-  struct List NHList = GenRandList(TempList); //Randomize the list of indices
-  free(TempList.Array);
+  // In place randomize the list
+  TempList = VoxelUpdateList::GenRandList(TempList);
 
-  std::cout<<"Number of elements in the NH list ="<<NHList.NumElts<<std::endl;
+  std::cout<<"Number of elements in the NH list ="<< TempList->numElements() <<std::endl;
 
-  return NHList;
-
+  // Return the list
+  return TempList;
 }
 
 #endif //NHICD function defines
 
 //Function to generate a list of voxels in sequential order
 //for a given geometry object
-void ReconstructionEngine::GenRegularList(struct List* InpList)
+void ReconstructionEngine::GenRegularList(VoxelUpdateList::Pointer InpList)
 {
   int32_t iter = 0;
   for (int16_t j = 0; j < m_Geometry->N_z; j++)
+  {
     for (int16_t k = 0; k < m_Geometry->N_x; k++)
     {
-      InpList->Array[iter].zidx = j;
-      InpList->Array[iter].xidx = k;
+      InpList->setPair(iter, k, j);
       iter++;
     }
-
+  }
 }
 
+#if 0
+// -----------------------------------------------------------------------------
 //Function to generate a randomized list from a given input list
-//TODO: This function can cause memory leaks!!
-
-struct List ReconstructionEngine::GenRandList(struct List InpList)
+// -----------------------------------------------------------------------------
+VoxelUpdateList::Pointer ReconstructionEngine::GenRandList(VoxelUpdateList::Pointer InpList)
 {
-  struct List OpList;
+  VoxelUpdateList::Pointer OpList;
 
   const uint32_t rangeMin = 0;
   const uint32_t rangeMax = std::numeric_limits<uint32_t>::max();
@@ -1123,9 +1122,8 @@ struct List ReconstructionEngine::GenRandList(struct List InpList)
 
 #endif //Debug
   return OpList;
-
 }
-
+#endif
 
 //Radomized select : modified based on code from  http://stackoverflow.com/questions/5847273/order-statistic-implmentation
 
@@ -1254,7 +1252,7 @@ uint8_t ReconstructionEngine::stopCriteria(RealImageType::Pointer magUpdateMap,U
 
 #ifdef NHICD
   //In non homogenous mode check stopping criteria only after a full equit = equivalet iteration
-  if(EffIterCount%NUM_NON_HOMOGENOUS_ITER == 0 && EffIterCount > 0 && PrevMagSum > 0)
+  if(EffIterCount%Reconstruction::Constants::k_NumNonHomogeniousIter == 0 && EffIterCount > 0 && PrevMagSum > 0)
 #else
   if(EffIterCount > 0 && PrevMagSum > 0)
 #endif //NHICD
