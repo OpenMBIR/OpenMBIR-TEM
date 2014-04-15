@@ -20,5 +20,5 @@ and RedHat Enterprise Linux 5.x, CentOS 5.x and OpenSUSE 12.1
 
 In order to compile the codes on OS X 10.9 (Mavericks), Qt 4.8.6 (unreleased) must be used.
 
-Please see the web site [OpenMBIR WebSite](http://www.openmbir.org) for more information
+Please see the web site [OpenMBIR WebSite](http://www.openmbir.org) for more information and example data files.
 
