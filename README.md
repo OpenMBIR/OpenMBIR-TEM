@@ -1,7 +1,7 @@
 # OpenMBIR #
 
-This package contains source codes to reconstruct STEM HAADF tomographic data using the 
-Model Based Iterative Reconstruction Method. The source codes are open source
+This package contains source codes to reconstruct STEM HAADF and BrightField tomographic data using the 
+Model Based Iterative Reconstruction (MBIR) Method. The source codes are open source
 under a BSD License. See the License.txt file for more information.
 
 ## Dependencies ##
