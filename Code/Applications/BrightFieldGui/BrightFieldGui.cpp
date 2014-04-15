@@ -613,7 +613,7 @@ void BrightFieldGui::on_m_SingleSliceReconstructionBtn_clicked()
   }
 
   // Get everything up and running in a thred, possibly
-  startReconstruction();
+  startReconstruction(false);
 
 }
 
@@ -773,7 +773,7 @@ void BrightFieldGui::on_m_GoBtn_clicked()
     return;
   }
 
-  startReconstruction();
+  startReconstruction(true);
 
 
 }
@@ -781,12 +781,12 @@ void BrightFieldGui::on_m_GoBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void BrightFieldGui::startReconstruction()
+void BrightFieldGui::startReconstruction(bool fullReconstruction)
 {
   // Create a new Reconstruction Object
   m_MultiResSOC = new QMultiResolutionReconstruction(NULL);
 
-  initializeSOCEngine(false);
+  initializeSOCEngine(fullReconstruction);
   if(m_MultiResSOC == NULL)
   {
     return;

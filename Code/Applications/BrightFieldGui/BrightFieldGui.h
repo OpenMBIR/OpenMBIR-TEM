@@ -449,7 +449,7 @@ private slots:
      * or for the full reconstruction. This gathers all the common code between the Single Slice
      * and the full reconstrution into a common function.
      */
-    void startReconstruction();
+    void startReconstruction(bool fullReconstruction);
 
 private:
     LayersDockWidget*        m_LayersPalette;
