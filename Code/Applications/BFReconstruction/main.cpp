@@ -45,7 +45,7 @@
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 #include "MBIRLib/Reconstruction/ReconstructionEngine.h"
 #include "MBIRLib/Reconstruction/MultiResolutionReconstruction.h"
-#include "MBIRReconstructionArgsParser.h"
+#include "BFReconstructionArgsParser.h"
 
 
 int main(int argc, char **argv)
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
   MultiResolutionReconstruction::Pointer engine = MultiResolutionReconstruction::New();
 
-  MBIRReconstructionArgsParser argParser;
+  BFReconstructionArgsParser argParser;
   int err = argParser.parseArguments(argc, argv, engine);
   if(err < 0)
   {

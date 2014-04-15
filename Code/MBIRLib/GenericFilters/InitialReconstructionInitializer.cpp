@@ -112,6 +112,12 @@ void InitialReconstructionInitializer::execute()
   input->delta_xy = input->delta_xz;
   //Find the maximum absolute tilt angle
   max = absMaxArray(sinogram->angles);
+
+  //The max is going to be used to reconstruct a large area
+ //However if its close to 90 this would result in a very large value - so truncate
+ if(max > MAX_ANGLE_STRETCH)
+	 max = MAX_ANGLE_STRETCH;
+	
   // Convert Max to radians
   max = max * M_PI / 180.0;
   input->LengthZ *= advParams->Z_STRETCH;

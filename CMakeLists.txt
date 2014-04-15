@@ -199,7 +199,7 @@ add_subdirectory( ${PROJECT_CODE_DIR}/MXA ${PROJECT_BINARY_DIR}/MXA)
 
 add_subdirectory( ${PROJECT_CODE_DIR}/MBIRLib ${PROJECT_BINARY_DIR}/MBIRLib)
 
-add_subdirectory( ${PROJECT_CODE_DIR}/Applications/MBIRReconstruction ${PROJECT_BINARY_DIR}/Applications/MBIRReconstruction)
+add_subdirectory( ${PROJECT_CODE_DIR}/Applications/BFReconstruction ${PROJECT_BINARY_DIR}/Applications/BFReconstruction)
 
 add_subdirectory( ${PROJECT_CODE_DIR}/Applications/MRCSubset ${PROJECT_BINARY_DIR}/Applications/MRCSubset)
 

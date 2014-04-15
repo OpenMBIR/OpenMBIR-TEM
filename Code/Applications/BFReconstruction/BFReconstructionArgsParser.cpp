@@ -27,7 +27,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-#include "MBIRReconstructionArgsParser.h"
+#include "BFReconstructionArgsParser.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -114,7 +114,7 @@ int parseUnknownArray(const std::string &values, const char* format, std::vector
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-MBIRReconstructionArgsParser::MBIRReconstructionArgsParser()
+BFReconstructionArgsParser::BFReconstructionArgsParser()
 {
 
 }
@@ -122,7 +122,7 @@ MBIRReconstructionArgsParser::MBIRReconstructionArgsParser()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-MBIRReconstructionArgsParser::~MBIRReconstructionArgsParser()
+BFReconstructionArgsParser::~BFReconstructionArgsParser()
 {
 
 }
@@ -131,7 +131,7 @@ MBIRReconstructionArgsParser::~MBIRReconstructionArgsParser()
 // -----------------------------------------------------------------------------
 // Parse the input arguments in the command line tool
 // -----------------------------------------------------------------------------
-int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiResolutionReconstruction::Pointer m_MultiResSOC)
+int BFReconstructionArgsParser::parseArguments(int argc, char **argv, MultiResolutionReconstruction::Pointer m_MultiResSOC)
 {
   if(NULL == m_MultiResSOC)
   {
@@ -357,7 +357,7 @@ int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiRes
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MBIRReconstructionArgsParser::printInputs(TomoInputsPtr inputs, std::ostream &out)
+void BFReconstructionArgsParser::printInputs(TomoInputsPtr inputs, std::ostream &out)
 {
   out << "------------------ TomoInputs Begin ------------------" << std::endl;
   PRINT_VAR(out, inputs, NumIter);

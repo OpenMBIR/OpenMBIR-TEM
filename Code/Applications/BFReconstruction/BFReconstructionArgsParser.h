@@ -40,17 +40,17 @@
 
 
 /**
- * @class MBIRReconstructionArgsParser MBIRReconstructionArgsParser.h ScaleOffsetCorrectionAlgorithm/MBIRReconstructionArgsParser.h
+ * @class BFReconstructionArgsParser BFReconstructionArgsParser.h ScaleOffsetCorrectionAlgorithm/BFReconstructionArgsParser.h
  * @brief
  * @author
  * @date Nov 16, 2011
  * @version 1.0
  */
-class MBIRReconstructionArgsParser
+class BFReconstructionArgsParser
 {
   public:
-    MBIRReconstructionArgsParser();
-    virtual ~MBIRReconstructionArgsParser();
+    BFReconstructionArgsParser();
+    virtual ~BFReconstructionArgsParser();
 
     int parseArguments(int argc, char **argv, MultiResolutionReconstruction::Pointer multiRes);
 
@@ -60,8 +60,8 @@ class MBIRReconstructionArgsParser
     uint64_t startm;
     uint64_t stopm;
 
-    MBIRReconstructionArgsParser(const MBIRReconstructionArgsParser&); // Copy Constructor Not Implemented
-    void operator=(const MBIRReconstructionArgsParser&); // Operator '=' Not Implemented
+    BFReconstructionArgsParser(const BFReconstructionArgsParser&); // Copy Constructor Not Implemented
+    void operator=(const BFReconstructionArgsParser&); // Operator '=' Not Implemented
 
 };
 
