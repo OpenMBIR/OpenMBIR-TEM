@@ -614,7 +614,13 @@ void BrightFieldGui::on_m_SingleSliceReconstructionBtn_clicked()
 
   // Get everything up and running in a thred, possibly
   startReconstruction(false);
-
+  m_SingleSliceReconstructionBtn->setEnabled(true);
+  m_GoBtn->setEnabled(false);
+  m_SingleSliceReconstructionBtn->setText("Cancel");
+  m_SingleSliceReconstructionActive = true;
+  m_FullReconstructionActive = false;
+    // When the QThread finishes, tell this object that it has finished.
+  connect(m_WorkerThread, SIGNAL(finished()), this, SLOT( singleSliceComplete() ));
 }
 
 // -----------------------------------------------------------------------------
@@ -774,8 +780,13 @@ void BrightFieldGui::on_m_GoBtn_clicked()
   }
 
   startReconstruction(true);
-
-
+  m_SingleSliceReconstructionBtn->setEnabled(false);
+  m_GoBtn->setEnabled(true);
+  m_GoBtn->setText("Cancel");
+  m_SingleSliceReconstructionActive = false;
+  m_FullReconstructionActive = true;
+    // When the QThread finishes, tell this object that it has finished.
+  connect(m_WorkerThread, SIGNAL(finished()), this, SLOT( pipelineComplete() ));
 }
 
 // -----------------------------------------------------------------------------
@@ -817,9 +828,6 @@ void BrightFieldGui::startReconstruction(bool fullReconstruction)
   // When the Reconstruction ends then tell the QThread to stop its event loop
   connect(m_MultiResSOC, SIGNAL(finished() ), m_WorkerThread, SLOT(quit()));
 
-  // When the QThread finishes, tell this object that it has finished.
-  connect(m_WorkerThread, SIGNAL(finished()), this, SLOT( singleSliceComplete() ));
-
   // If the use clicks on the "Cancel" button send a message to the Reconstruction object
   // We need a Direct Connection so the
   connect(this, SIGNAL(cancelPipeline() ), m_MultiResSOC, SLOT (on_CancelWorker() ), Qt::DirectConnection);
@@ -840,13 +848,10 @@ void BrightFieldGui::startReconstruction(bool fullReconstruction)
           this, SLOT(loadProgressMRCFile(QString) ));
 
   setWidgetListEnabled(false);
-  m_SingleSliceReconstructionBtn->setEnabled(true);
-  m_GoBtn->setEnabled(false);
+
   emit pipelineStarted();
   m_WorkerThread->start();
-  m_SingleSliceReconstructionBtn->setText("Cancel");
-  m_SingleSliceReconstructionActive = true;
-  m_FullReconstructionActive = false;
+
 }
 
 // -----------------------------------------------------------------------------
