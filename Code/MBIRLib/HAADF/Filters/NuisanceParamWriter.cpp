@@ -50,21 +50,21 @@
 
 
 #define MAKE_OUTPUT_FILE(Fp, err, outdir, filename)\
-    {\
-    std::string filepath(outdir);\
-    filepath = filepath.append(MXADir::getSeparator()).append(filename);\
-    errno = 0;\
-    err = 0;\
-    Fp = fopen(filepath.c_str(),"wb");\
-    if (Fp == NULL) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl; err = -1; }\
-    }
+{\
+  std::string filepath(outdir);\
+  filepath = filepath.append(MXADir::getSeparator()).append(filename);\
+  errno = 0;\
+  err = 0;\
+  Fp = fopen(filepath.c_str(),"wb");\
+  if (Fp == NULL) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl; err = -1; }\
+  }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
 NuisanceParamWriter::NuisanceParamWriter() :
-m_WriteBinary(true),
-m_Ntheta(0)
+  m_WriteBinary(true),
+  m_Ntheta(0)
 {
 }
 
@@ -82,20 +82,6 @@ void NuisanceParamWriter::execute()
 {
   std::stringstream ss;
 
-
-  FILE* file = fopen(m_FileName.c_str(), "wb");
-
-  if(file == 0)
-  {
-    ss.str("");
-    ss << "NuisanceBinWriter: Error opening output file for writing. '" <<
-        m_FileName << "'";
-    setErrorCondition(-1);
-    setErrorMessage(ss.str());
-    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-    return;
-  }
-
   std::string printTitle("UNKNOWN DATA");
   switch(m_DataToWrite)
   {
@@ -112,10 +98,34 @@ void NuisanceParamWriter::execute()
       break;
   }
 
+  if(m_FileName.empty() == true)
+  {
+    ss.str("");
+    ss << "NuisanceBinWriter: Writing " << printTitle << " Data. Filename was empty. No output file being written.";
+    setErrorCondition(-1);
+    setErrorMessage(ss.str());
+    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+    return;
+  }
+
+  FILE* file = fopen(m_FileName.c_str(), "wb");
+
+  if(file == NULL)
+  {
+    ss.str("");
+    ss << "NuisanceBinWriter: Writing " << printTitle << " Data. Error opening output file for writing. '" << m_FileName << "'";
+    setErrorCondition(-1);
+    setErrorMessage(ss.str());
+    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+    return;
+  }
+
   if(NULL == m_Data.get() || NULL == m_Data->d)
   {
+    ss.str("");
+    ss << "NuisanceBinWriter: Writing " << printTitle << " Data. The array to write was NULL";
     setErrorCondition(-1);
-    setErrorMessage("NuisanceBinWriter: The array to write was NULL");
+    setErrorMessage(ss.str());
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }

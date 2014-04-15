@@ -97,7 +97,7 @@ font-size: 10px;
 }</string>
           </property>
           <property name="text">
-           <string>Bright Field Input:</string>
+           <string>Bright Field Input (MRC):</string>
           </property>
          </widget>
         </item>
@@ -136,8 +136,7 @@ font-size: 10px;
 }</string>
           </property>
           <property name="text">
-           <string>Bright Field
-File:</string>
+           <string>Bright Field File:</string>
           </property>
          </widget>
         </item>

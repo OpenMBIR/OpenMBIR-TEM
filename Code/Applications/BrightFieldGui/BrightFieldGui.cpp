@@ -612,67 +612,9 @@ void BrightFieldGui::on_m_SingleSliceReconstructionBtn_clicked()
     return;
   }
 
-  // Remove Any Temp files that have accumulated
-  deleteTempFiles();
+  // Get everything up and running in a thred, possibly
+  startReconstruction();
 
-  // Create a Worker Thread that will run the Reconstruction
-  if(m_WorkerThread != NULL)
-  {
-    m_WorkerThread->wait(); // Wait until the thread is complete
-    delete m_WorkerThread; // Kill the thread
-    m_WorkerThread = NULL;
-  }
-  m_WorkerThread = new QThread(); // Create a new Thread Resource
-
-  m_MultiResSOC = new QMultiResolutionReconstruction(NULL);
-
-  // Move the Reconstruction object into the thread that we just created.
-  m_MultiResSOC->moveToThread(m_WorkerThread);
-  initializeSOCEngine(false);
-
-  reconstructedDisplayGroupBox->setTitle(QString("XZ Reconstruction Plane"));
-
-  /* Connect the signal 'started()' from the QThread to the 'run' slot of the
-     * SOCEngine object. Since the SOCEngine object has been moved to another
-     * thread of execution and the actual QThread lives in *this* thread then the
-     * type of connection will be a Queued connection.
-     */
-  // When the thread starts its event loop, start the Reconstruction going
-  connect(m_WorkerThread, SIGNAL(started()), m_MultiResSOC, SLOT(run()));
-
-  // When the Reconstruction ends then tell the QThread to stop its event loop
-  connect(m_MultiResSOC, SIGNAL(finished() ), m_WorkerThread, SLOT(quit()));
-
-  // When the QThread finishes, tell this object that it has finished.
-  connect(m_WorkerThread, SIGNAL(finished()), this, SLOT( singleSliceComplete() ));
-
-  // If the use clicks on the "Cancel" button send a message to the Reconstruction object
-  // We need a Direct Connection so the
-  connect(this, SIGNAL(cancelPipeline() ), m_MultiResSOC, SLOT (on_CancelWorker() ), Qt::DirectConnection);
-
-  // Send Progress from the Reconstruction to this object for display
-  connect(m_MultiResSOC, SIGNAL (updateProgress(int)), this, SLOT(pipelineProgress(int) ));
-
-  // Send progress messages from Reconstruction to this object for display
-  connect(m_MultiResSOC, SIGNAL (progressMessage(QString)), this, SLOT(addProgressMessage(QString) ));
-
-  // Send progress messages from Reconstruction to this object for display
-  connect(m_MultiResSOC, SIGNAL (warningMessage(QString)), this, SLOT(addWarningMessage(QString) ));
-
-  // Send progress messages from Reconstruction to this object for display
-  connect(m_MultiResSOC, SIGNAL (errorMessage(QString)), this, SLOT(addErrorMessage(QString) ));
-
-  connect(m_MultiResSOC, SIGNAL(progressImageIsReady(QString)),
-          this, SLOT(loadProgressMRCFile(QString) ));
-
-  setWidgetListEnabled(false);
-  m_SingleSliceReconstructionBtn->setEnabled(true);
-  m_GoBtn->setEnabled(false);
-  emit pipelineStarted();
-  m_WorkerThread->start();
-  m_SingleSliceReconstructionBtn->setText("Cancel");
-  m_SingleSliceReconstructionActive = true;
-  m_FullReconstructionActive = false;
 }
 
 // -----------------------------------------------------------------------------
@@ -831,8 +773,24 @@ void BrightFieldGui::on_m_GoBtn_clicked()
     return;
   }
 
-  // Remove Any Temp files that have accumulated
-  deleteTempFiles();
+  startReconstruction();
+
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void BrightFieldGui::startReconstruction()
+{
+  // Create a new Reconstruction Object
+  m_MultiResSOC = new QMultiResolutionReconstruction(NULL);
+
+  initializeSOCEngine(false);
+  if(m_MultiResSOC == NULL)
+  {
+    return;
+  }
 
   // Create a Worker Thread that will run the Reconstruction
   if(m_WorkerThread != NULL)
@@ -843,11 +801,8 @@ void BrightFieldGui::on_m_GoBtn_clicked()
   }
   m_WorkerThread = new QThread(); // Create a new Thread Resource
 
-  m_MultiResSOC = new QMultiResolutionReconstruction(NULL);
-
   // Move the Reconstruction object into the thread that we just created.
   m_MultiResSOC->moveToThread(m_WorkerThread);
-  initializeSOCEngine(true);
 
   reconstructedDisplayGroupBox->setTitle(QString("XZ Reconstruction Plane"));
 
@@ -863,38 +818,35 @@ void BrightFieldGui::on_m_GoBtn_clicked()
   connect(m_MultiResSOC, SIGNAL(finished() ), m_WorkerThread, SLOT(quit()));
 
   // When the QThread finishes, tell this object that it has finished.
-  connect(m_WorkerThread, SIGNAL(finished()), this, SLOT( pipelineComplete() ));
+  connect(m_WorkerThread, SIGNAL(finished()), this, SLOT( singleSliceComplete() ));
 
   // If the use clicks on the "Cancel" button send a message to the Reconstruction object
   // We need a Direct Connection so the
-  connect(this, SIGNAL(cancelPipeline() ),
-          m_MultiResSOC, SLOT (on_CancelWorker() ), Qt::DirectConnection);
+  connect(this, SIGNAL(cancelPipeline() ), m_MultiResSOC, SLOT (on_CancelWorker() ), Qt::DirectConnection);
 
   // Send Progress from the Reconstruction to this object for display
-  connect(m_MultiResSOC, SIGNAL (updateProgress(int)),
-          this, SLOT(pipelineProgress(int) ));
+  connect(m_MultiResSOC, SIGNAL (updateProgress(int)), this, SLOT(pipelineProgress(int) ));
 
   // Send progress messages from Reconstruction to this object for display
-  connect(m_MultiResSOC, SIGNAL (progressMessage(QString)),
-          this, SLOT(addProgressMessage(QString) ));
+  connect(m_MultiResSOC, SIGNAL (progressMessage(QString)), this, SLOT(addProgressMessage(QString) ));
 
   // Send progress messages from Reconstruction to this object for display
-  connect(m_MultiResSOC, SIGNAL (warningMessage(QString)),
-          this, SLOT(addWarningMessage(QString) ));
+  connect(m_MultiResSOC, SIGNAL (warningMessage(QString)), this, SLOT(addWarningMessage(QString) ));
 
   // Send progress messages from Reconstruction to this object for display
-  connect(m_MultiResSOC, SIGNAL (errorMessage(QString)),
-          this, SLOT(addErrorMessage(QString) ));
+  connect(m_MultiResSOC, SIGNAL (errorMessage(QString)), this, SLOT(addErrorMessage(QString) ));
 
   connect(m_MultiResSOC, SIGNAL(progressImageIsReady(QString)),
           this, SLOT(loadProgressMRCFile(QString) ));
 
   setWidgetListEnabled(false);
+  m_SingleSliceReconstructionBtn->setEnabled(true);
+  m_GoBtn->setEnabled(false);
   emit pipelineStarted();
   m_WorkerThread->start();
-  m_GoBtn->setText("Cancel");
-  m_SingleSliceReconstructionActive = false;
-  m_FullReconstructionActive = true;
+  m_SingleSliceReconstructionBtn->setText("Cancel");
+  m_SingleSliceReconstructionActive = true;
+  m_FullReconstructionActive = false;
 }
 
 // -----------------------------------------------------------------------------
@@ -970,6 +922,15 @@ void BrightFieldGui::initializeSOCEngine(bool fullReconstruction)
   {
     m_MultiResSOC->setTilts(m_GainsOffsetsTableModel->getBTilts().toStdVector());
   }
+
+  if(m_MultiResSOC->getTilts().size() == 0)
+  {
+    addErrorMessage(QString::fromLatin1("No tilt angles were specified. Either no angles were in the MRC file or no angles were imported or generated"));
+    delete m_MultiResSOC;
+    m_MultiResSOC = NULL;
+    return;
+  }
+
   m_MultiResSOC->setExtendObject(extendObject->isChecked());
   m_MultiResSOC->setDefaultVariance(defaultVariance->text().toFloat(&ok));
   m_MultiResSOC->setInitialReconstructionValue(defaultInitialRecon->text().toFloat(&ok));
@@ -1089,7 +1050,7 @@ void BrightFieldGui::singleSlicePlaneSet(int y)
 // -----------------------------------------------------------------------------
 void BrightFieldGui::singleSliceComplete()
 {
-  std::cout << "TomoGui::singleSliceComplete" << std::endl;
+  std::cout << "BrightFieldGui::singleSliceComplete" << std::endl;
   m_SingleSliceReconstructionBtn->setText("Single Slice Reconstruction");
   m_GoBtn->setEnabled(true);
   setWidgetListEnabled(true);
@@ -1100,72 +1061,7 @@ void BrightFieldGui::singleSliceComplete()
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(reconVolumeFile);
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(false);
 
-
-  // Remove all the files that just got created:
-  // Remove the Reconstruction.bin file
-  QString path = QString::fromStdString(m_MultiResSOC->getTempDir()) + QDir::separator() + finalResolution->text() + QString("x")+ QDir::separator();
-  {
-    QString filePath = path + QString::fromStdString(m_MultiResSOC->getOutputFile());
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::DetectorResponseFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::CostFunctionFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::FinalGainParametersFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::FinalOffsetParametersFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::FinalVariancesFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-
-  // ------------------------------------------------------------------------------------------
-
-  {
-    QString filePath = path + ScaleOffsetCorrection::VoxelProfileFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::FilteredMagMapFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::MagnitudeMapFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-
-  // ------------------------------------------------------------------------------------------
-
-  {
-    QString filePath = path + ScaleOffsetCorrection::ReconstructedVtkFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::ReconstructedSinogramFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::ReconstructedObjectFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-  {
-    QString filePath = path + ScaleOffsetCorrection::ReconstructedMrcFile.c_str();
-    m_TempFilesToDelete.push_back(filePath);
-  }
-
-  // Delete the top level directory
-  QDir dir(path);
-  dir.rmdir(path);
+  removeDir(QString::fromStdString(m_MultiResSOC->getTempDir()));
 
   m_ReconstructedDisplayWidget->getControlsTab()->show();
 
@@ -1232,12 +1128,17 @@ bool BrightFieldGui::removeDir(const QString &dirName)
 // -----------------------------------------------------------------------------
 void BrightFieldGui::pipelineComplete()
 {
-  std::cout << "TomoGui::pipelineComplete()" << std::endl;
+  std::cout << "BrightFieldGui::pipelineComplete()" << std::endl;
   m_GoBtn->setText("Reconstruct");
   m_SingleSliceReconstructionBtn->setEnabled(true);
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
   emit pipelineEnded();
+
+  // Remove Any Temp files that have accumulated
+  removeDir(QString::fromStdString(m_MultiResSOC->getTempDir()));
+
+
   m_MultiResSOC->deleteLater();
   m_FullReconstructionActive = false;
   m_SingleSliceReconstructionActive = false;
@@ -1269,7 +1170,7 @@ void BrightFieldGui::pipelineProgress(int val)
 // -----------------------------------------------------------------------------
 void BrightFieldGui::addErrorMessage(QString message)
 {
-  QString title = "TomoGui Error";
+  QString title = "BrightFieldGui Error";
   displayDialogBox(title, message, QMessageBox::Critical);
 }
 
@@ -1278,7 +1179,7 @@ void BrightFieldGui::addErrorMessage(QString message)
 // -----------------------------------------------------------------------------
 void BrightFieldGui::addWarningMessage(QString message)
 {
-  QString title = "TomoGui Warning";
+  QString title = "BrightFieldGui Warning";
   displayDialogBox(title, message, QMessageBox::Warning);
 }
 
@@ -1464,7 +1365,7 @@ void BrightFieldGui::on_reconstructedVolumeFileName_textChanged(const QString & 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-//void TomoGui::on_outputDirectoryPath_textChanged(const QString & text)
+//void BrightFieldGui::on_outputDirectoryPath_textChanged(const QString & text)
 //{
 //  verifyPathExists(outputDirectoryPath_OLD->text(), outputDirectoryPath_OLD);
 //}
@@ -1699,7 +1600,7 @@ void BrightFieldGui::openReconstructedMRCFile(QString reconMrcFilePath)
 // -----------------------------------------------------------------------------
 void BrightFieldGui::mrcInputFileLoaded(const QString &filename)
 {
-  // std::cout << "TomoGui::overlayImageFileLoaded" << std::endl;
+  // std::cout << "BrightFieldGui::overlayImageFileLoaded" << std::endl;
   reconstructedVolumeFileName->blockSignals(true);
   reconstructedVolumeFileName->setText(filename);
   reconstructedVolumeFileName->blockSignals(false);
@@ -2046,7 +1947,7 @@ void BrightFieldGui::on_yMax_textChanged(const QString &string)
 // -----------------------------------------------------------------------------
 void BrightFieldGui::geometryChanged()
 {
-  //   std::cout << "TomoGui::geometryChanged()" << std::endl;
+  //   std::cout << "BrightFieldGui::geometryChanged()" << std::endl;
   bool ok = false;
 
   int x_min = 0;
@@ -2331,16 +2232,16 @@ void BrightFieldGui::on_action_OutputMRCInfo_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void BrightFieldGui::deleteTempFiles()
-{
-  // Remove Any Temp files that have accumulated
-  for(int i = 0; i < m_TempFilesToDelete.size(); ++i)
-  {
-    QFile f(m_TempFilesToDelete.at(i));
-    f.remove();
-  }
-  m_TempFilesToDelete.clear();
-}
+//void BrightFieldGui::deleteTempFiles()
+//{
+//  // Remove Any Temp files that have accumulated
+//  for(int i = 0; i < m_TempFilesToDelete.size(); ++i)
+//  {
+//    QFile f(m_TempFilesToDelete.at(i));
+//    f.remove();
+//  }
+//  m_TempFilesToDelete.clear();
+//}
 
 // -----------------------------------------------------------------------------
 //

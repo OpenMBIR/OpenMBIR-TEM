@@ -139,7 +139,9 @@ typedef struct
     Real_t p;
     Real_t StopThreshold;
     uint8_t   InterpFlag;
-
+    bool extendObject; //In case the sinogram data corresponding to voxels outside it
+    bool verbose;
+    bool veryVerbose;
     bool useSubvolume;
     uint16_t xStart;
     uint16_t xEnd;
@@ -147,8 +149,6 @@ typedef struct
     uint16_t yEnd;
     uint16_t zStart;
     uint16_t zEnd;
-
-    std::vector<float> tilts;
 
     uint16_t fileXSize; // Size in voxels of the complete width of the image from the file
     uint16_t fileYSize; // Size in voxels of the complete height of the image from the file
@@ -158,19 +158,11 @@ typedef struct
     Real_t delta_xz;//Voxel size in the x-z plane (assuming square shaped voxels in the x-z plane)
     Real_t delta_xy;//Voxel size in the x-y plane
 
-    bool extendObject; //In case the sinogram data corresponding to voxels outside it
-    Real_t interpolateFactor;
 
+    Real_t interpolateFactor;
     Real_t defaultInitialRecon;
 
-#if 0
-    /* ****************** These should be moved to the ForwardModel Class ****/
-    Real_t defaultVariance;
-    Real_t targetGain;
-    Real_t defaultOffset;
-    bool useDefaultOffset;
-    /* ****************** End Forward Model Variables ****/
-#endif
+    std::vector<float> tilts;
 
     /* These are input files */
     std::string sinoFile; /* .mrc formatted files are accepted currently */

@@ -323,11 +323,11 @@ int MBIRReconstructionArgsParser::parseArguments(int argc, char **argv, MultiRes
     {
       return -1;
     }
-    int tiltIndex = 0;
+  //  int tiltIndex = 0;
     if(header.feiHeaders != NULL)
     {
       std::vector<float> tilts(header.nz, 0.0f);
-      FEIHeader fei = header.feiHeaders[tiltIndex];
+      //FEIHeader fei = header.feiHeaders[tiltIndex];
       for(int l = 0; l < header.nz; ++l)
       {
         if(tiltSelection.getValue() == 0)

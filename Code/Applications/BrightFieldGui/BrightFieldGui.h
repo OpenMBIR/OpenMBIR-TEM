@@ -144,7 +144,7 @@ public:
     /**
       * @brief Delete all the built up temp files
       */
-    void deleteTempFiles();
+    //void deleteTempFiles();
 
 /*!
    Delete a directory along with all of its contents.
@@ -443,6 +443,13 @@ private slots:
      * @brief A single slice reconstruction is complete
      */
     virtual void singleSliceComplete();
+
+    /**
+     * @brief startReconstruction This starts the actual reconstruction either for a single slice
+     * or for the full reconstruction. This gathers all the common code between the Single Slice
+     * and the full reconstrution into a common function.
+     */
+    void startReconstruction();
 
 private:
     LayersDockWidget*        m_LayersPalette;

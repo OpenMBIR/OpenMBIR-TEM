@@ -167,6 +167,43 @@ bool MultiResolutionReconstruction::getCancel()
   return m_Cancel;
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+std::vector<std::string> MultiResolutionReconstruction::setupTempFiles(TomoInputsPtr inputs)
+{
+  std::vector<std::string> tempFiles;
+
+  tempFiles.push_back(ScaleOffsetCorrection::FinalGainParametersFile);
+  tempFiles.push_back(ScaleOffsetCorrection::FinalOffsetParametersFile);
+  tempFiles.push_back(ScaleOffsetCorrection::FinalVariancesFile);
+  tempFiles.push_back(ScaleOffsetCorrection::ReconstructedSinogramFile);
+  tempFiles.push_back(ScaleOffsetCorrection::CostFunctionFile);
+  tempFiles.push_back(ScaleOffsetCorrection::DetectorResponseFile);
+  tempFiles.push_back(ScaleOffsetCorrection::ReconstructedObjectFile);
+  tempFiles.push_back(ScaleOffsetCorrection::VoxelProfileFile);
+  tempFiles.push_back(ScaleOffsetCorrection::UpsampledBinFile);
+  tempFiles.push_back(ScaleOffsetCorrection::FilteredMagMapFile);
+  tempFiles.push_back(ScaleOffsetCorrection::MagnitudeMapFile);
+
+
+//  tempFiles.push_back(ScaleOffsetCorrection::ForwardProjectedObjectFile);
+//  tempFiles.push_back(ScaleOffsetCorrection::CostFunctionCoefficientsFile);
+
+
+//  tempFiles.push_back(ScaleOffsetCorrection::ReconstructedVtkFile);
+
+//  tempFiles.push_back(ScaleOffsetCorrection::ReconstructedMrcFile);
+
+
+  for(size_t i = 0; i < tempFiles.size(); i++)
+  {
+    std::stringstream ss;
+    ss << inputs->tempDir << MXADir::Separator << tempFiles[i];
+    tempFiles[i] = ss.str(); // Replace with the full path
+  }
+  return tempFiles;
+}
 
 // -----------------------------------------------------------------------------
 //
@@ -188,6 +225,11 @@ void MultiResolutionReconstruction::execute()
 
   for (int i = 0; i < m_NumberResolutions; ++i)
   {
+    // Check each loop to make sure something did not go wrong and we should exit the loop.
+    if (getErrorCondition() < 0)
+    {
+      break;
+    }
     HAADFForwardModel::Pointer forwardModel = HAADFForwardModel::New();
     if(getCancel() == true)
     {
@@ -252,7 +294,6 @@ void MultiResolutionReconstruction::execute()
       inputs->vtkOutputFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + ".vtk";
       inputs->avizoOutputFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + ".am";
       inputs->mrcOutputFile = m_OutputFile;
-
     }
     else
     {
@@ -266,45 +307,7 @@ void MultiResolutionReconstruction::execute()
     }
 
     // Line up all the temp files that we are going to delete
-    ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
-    inputs->gainsOutputFile = ss.str();
-    tempFiles.push_back(ss.str());
-
-    ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalOffsetParametersFile;
-    inputs->offsetsOutputFile = ss.str();
-    tempFiles.push_back(ss.str());
-
-    ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalVariancesFile;
-    inputs->varianceOutputFile = ss.str();
-    tempFiles.push_back(ss.str());
-
-    ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedSinogramFile;
-    tempFiles.push_back(ss.str());
-
-    // Create the paths for all the temp files that we want to delete
-    ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::CostFunctionFile;
-    tempFiles.push_back(ss.str());
-
-    ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::DetectorResponseFile;
-    tempFiles.push_back(ss.str());
-
-    ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedObjectFile;
-    tempFiles.push_back(ss.str());
-
-    ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::VoxelProfileFile;
-    tempFiles.push_back(ss.str());
-
-    ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::UpsampledBinFile;
-    tempFiles.push_back(ss.str());
+    //tempFiles = setupTempFiles(inputs);
 
 
     inputs->NumOuterIter = getOuterIterations();
@@ -361,7 +364,6 @@ void MultiResolutionReconstruction::execute()
 
     }
 
-
     inputs->excludedViews = m_ViewMasks;
 
     SinogramPtr sinogram = SinogramPtr(new Sinogram);
@@ -380,8 +382,8 @@ void MultiResolutionReconstruction::execute()
     forwardModel->addObserver(this);
     forwardModel->setMessagePrefix(StringUtils::numToString(inputs->interpolateFactor / static_cast<int>(powf(2.0f, i))) + std::string("x: "));
 
-    forwardModel->setVerbose(true);
-    forwardModel->setVeryVerbose(true);
+    forwardModel->setVerbose(inputs->verbose);
+    forwardModel->setVeryVerbose(inputs->veryVerbose);
 
     //Create an Engine and initialize all the structures
     ReconstructionEngine::Pointer engine = ReconstructionEngine::New();
@@ -392,8 +394,8 @@ void MultiResolutionReconstruction::execute()
     engine->setAdvParams(m_AdvParams);
     engine->setForwardModel(forwardModel);
 
-    engine->setVerbose(true);
-    engine->setVeryVerbose(true);
+    engine->setVerbose(inputs->verbose);
+    engine->setVeryVerbose(inputs->veryVerbose);
 
     // We need to get messages to the gui or command line
     engine->addObserver(this);
@@ -454,6 +456,9 @@ void MultiResolutionReconstruction::execute()
   setErrorCondition(err);
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 void MultiResolutionReconstruction::memCalculate(TomoInputsPtr inputs)
 {
   float GeomNx,GeomNy,GeomNz;

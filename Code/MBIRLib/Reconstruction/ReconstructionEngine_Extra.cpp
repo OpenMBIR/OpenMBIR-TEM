@@ -55,71 +55,32 @@
 #define PRINT_TIME(msg)\
   std::cout << indent << msg << ": " << ((double)stopm-startm)/1000.0 << " seconds" << std::endl;
 
-#if 0
-//Function to print a list of voxel indices
-void printList(struct List InList)
-{
-  std::cout << "Printing List :" << std::endl;
-  for(int32_t i = 0; i < InList.NumElts; i++)
-  { std::cout << "(" << InList.Array[i].zidx << "," << InList.Array[i].xidx << ")" << std::endl; }
-
-}
-
-void maxList(struct List InList)
-{
-  int32_t max_z = -1;
-  int32_t max_x = -1;
-  for(int32_t i = 0; i < InList.NumElts; i++)
-  {
-    if(InList.Array[i].zidx > max_z)
-    { max_z = InList.Array[i].zidx; }
-
-    if(InList.Array[i].xidx > max_x)
-    { max_x = InList.Array[i].xidx; }
-  }
-  std::cout << "Number of elements =" << InList.NumElts << std::endl;
-  std::cout << "(" << max_z << "," << max_x << ")" << std::endl;
-}
-
-
-void minList(struct List InList)
-{
-  int32_t min_z = 2147483648; //pow(2, 31);
-  int32_t min_x = min_z;
-  for(int32_t i = 0; i < InList.NumElts; i++)
-  {
-    if(InList.Array[i].zidx < min_z)
-    { min_z = InList.Array[i].zidx; }
-
-    if(InList.Array[i].xidx < min_x)
-    { min_x = InList.Array[i].xidx; }
-  }
-  std::cout << "Number of elements =" << InList.NumElts << std::endl;
-  std::cout << "(" << min_z << "," << min_x << ")" << std::endl;
-}
-
-#endif
+// -----------------------------------------------------------------------------
 // Read the Input data from the supplied data file
-// We are scoping here so the various readers are automatically cleaned up before
-// the code goes any farther
+// -----------------------------------------------------------------------------
 int ReconstructionEngine::readInputData()
 {
   TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
   std::string extension = MXAFileInfo::extension(m_TomoInputs->sinoFile);
-  if(extension.compare("mrc") == 0 || extension.compare("ali") == 0)
-  {
-    dataReader = MRCSinogramInitializer::NewTomoFilter();
-  }
-  else if(extension.compare("bin") == 0)
+
+  if(extension.compare("bin") == 0)
   {
     dataReader = RawSinogramInitializer::NewTomoFilter();
   }
   else
+    // if(extension.compare("mrc") == 0 || extension.compare("ali") == 0)
   {
-    setErrorCondition(-1);
-    notify("A supported file reader for the input file was not found.", 100, Observable::UpdateProgressValueAndMessage);
-    return -1;
+    // We are going to assume that the user has selected a valid MRC file to get this far so we are just going to try
+    // to read the file as an MRC file which may really cause issues but there does not seem to be any standard file
+    // extensions for MRC files.
+    dataReader = MRCSinogramInitializer::NewTomoFilter();
   }
+
+  //  {
+  //    setErrorCondition(-1);
+  //    notify("A supported file reader for the input file was not found.", 100, Observable::UpdateErrorMessage);
+  //    return -1;
+  //  }
   dataReader->setTomoInputs(m_TomoInputs);
   dataReader->setSinogram(m_Sinogram);
   dataReader->setAdvParams(m_AdvParams);
@@ -129,7 +90,11 @@ int ReconstructionEngine::readInputData()
   dataReader->execute();
   if(dataReader->getErrorCondition() < 0)
   {
-    notify("Error reading Input Sinogram Data file", 100, Observable::UpdateProgressValueAndMessage);
+    std::stringstream ss;
+    ss << "Error reading the input file: '" << m_TomoInputs->sinoFile << "'. MBIR currently considers .bin as a raw binary file "
+       << "and any other file as an MRC input file. If this is NOT the case for your data consider contacting the developers "
+       << " of this software.";
+    notify(ss.str(), 100, Observable::UpdateErrorMessage);
     setErrorCondition(dataReader->getErrorCondition());
     return -1;
   }
@@ -708,16 +673,16 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
       NewList[t] = VoxelUpdateList::GenRandList(m_VoxelIdxList);
 
       UpdateYSlice& a =
-        *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
-                                                       m_Sinogram, TempCol, ErrorSino,
-                                                       VoxelLineResponse, m_ForwardModel.get(),
-                                                       magUpdateMask,
-                                                       _magUpdateMap,
-                                                       magUpdateMask, updateType,
-                                                       averageUpdate.get() + t,
-                                                       averageMagnitudeOfRecon.get() + t,
-                                                       m_AdvParams->ZERO_SKIPPING,
-                                                       qggmrf_values, NewList[t] );
+          *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
+                                                         m_Sinogram, TempCol, ErrorSino,
+                                                         VoxelLineResponse, m_ForwardModel.get(),
+                                                         magUpdateMask,
+                                                         _magUpdateMap,
+                                                         magUpdateMask, updateType,
+                                                         averageUpdate.get() + t,
+                                                         averageMagnitudeOfRecon.get() + t,
+                                                         m_AdvParams->ZERO_SKIPPING,
+                                                         qggmrf_values, NewList[t] );
       taskList.push_back(a);
     }
 
@@ -806,8 +771,8 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 
     yVoxelUpdate.execute();
 
-//    AverageUpdate += averageUpdate[0];
-//    AverageMagnitudeOfRecon += averageMagnitudeOfRecon[0];
+    //    AverageUpdate += averageUpdate[0];
+    //    AverageMagnitudeOfRecon += averageMagnitudeOfRecon[0];
     averageUpdate.reset(); // We are forcing the array to be deallocated, we could wait till the current scope terminates then the arrays would be automatically cleaned up
     averageMagnitudeOfRecon.reset(); // We are forcing the array to be deallocated, we could wait till the current scope terminates then the arrays would be automatically cleaned up
 
@@ -854,11 +819,11 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 
 #ifdef NHICD
   /* NHList will go out of scope at the end of this function which will cause its destructor to be called and the memory automatically cleaned up */
-//  if(updateType == VoxelUpdateType::NonHomogeniousUpdate && NHList.Array != NULL)
-//  {
-//    free(NHList.Array);
-//    std::cout<<"Freeing memory allocated to non-homogenous List"<<std::endl;
-//  }
+  //  if(updateType == VoxelUpdateType::NonHomogeniousUpdate && NHList.Array != NULL)
+  //  {
+  //    free(NHList.Array);
+  //    std::cout<<"Freeing memory allocated to non-homogenous List"<<std::endl;
+  //  }
 #endif //NHICD
 
   std::cout << "exiting voxel update routine" << std::endl;
@@ -882,7 +847,7 @@ void ReconstructionEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
       x = m_Geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
       z = m_Geometry->z0 + ((Real_t)i + 0.5) * m_TomoInputs->delta_xz;
       if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && z >= -m_TomoInputs->LengthZ / 2
-          && z <= m_TomoInputs->LengthZ / 2)
+         && z <= m_TomoInputs->LengthZ / 2)
       {
         Mask->setValue(1, i, j);
       }
@@ -1057,9 +1022,10 @@ VoxelUpdateList::Pointer ReconstructionEngine::GenNonHomList(Real_t NHThresh, Re
 }
 
 #endif //NHICD function defines
-
+// -----------------------------------------------------------------------------
 //Function to generate a list of voxels in sequential order
 //for a given geometry object
+// -----------------------------------------------------------------------------
 void ReconstructionEngine::GenRegularList(VoxelUpdateList::Pointer InpList)
 {
   int32_t iter = 0;
@@ -1129,7 +1095,9 @@ VoxelUpdateList::Pointer ReconstructionEngine::GenRandList(VoxelUpdateList::Poin
 
 //Radomized select : modified based on code from  http://stackoverflow.com/questions/5847273/order-statistic-implmentation
 
-
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 Real_t ReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A, uint32_t p, uint32_t r, uint32_t i)
 {
 
@@ -1177,6 +1145,10 @@ Real_t ReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A, uint32_t
 
   return A->d[i];
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 uint32_t ReconstructionEngine::Partition(RealArrayType::Pointer A, uint32_t p, uint32_t r)
 {
   Real_t x = A->d[r], temp;
@@ -1197,6 +1169,10 @@ uint32_t ReconstructionEngine::Partition(RealArrayType::Pointer A, uint32_t p, u
   return i + 1;
 
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
 uint32_t ReconstructionEngine::RandomizedPartition(RealArrayType::Pointer A, uint32_t p, uint32_t r)
 {
 

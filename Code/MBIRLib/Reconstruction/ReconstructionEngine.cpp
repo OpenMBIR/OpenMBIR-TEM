@@ -230,6 +230,8 @@ void ReconstructionEngine::InitializeTomoInputs(TomoInputsPtr v)
   v->delta_xz = 0;
   v->delta_xy = 0;
   v->tilts.resize(0);
+  v->verbose = false;
+  v->veryVerbose = false;
 }
 
 // -----------------------------------------------------------------------------
@@ -332,26 +334,26 @@ void ReconstructionEngine::execute()
   if(m_TomoInputs == NULL)
   {
     setErrorCondition(-1);
-    notify("Error: The TomoInput Structure was NULL. The proper API is to supply this class with that structure,", 100, Observable::UpdateProgressValueAndMessage);
+    notify("Error: The TomoInput Structure was NULL. The proper API is to supply this class with that structure,", 100, Observable::UpdateErrorMessage);
     return;
   }
   //Based on the inputs , calculate the "other" variables in the structure definition
   if(m_Sinogram == NULL)
   {
     setErrorCondition(-1);
-    notify("Error: The Sinogram Structure was NULL. The proper API is to supply this class with that structure,", 100, Observable::UpdateProgressValueAndMessage);
+    notify("Error: The Sinogram Structure was NULL. The proper API is to supply this class with that structure,", 100, Observable::UpdateErrorMessage);
     return;
   }
   if(m_Geometry == NULL)
   {
     setErrorCondition(-1);
-    notify("Error: The Geometry Structure was NULL. The proper API is to supply this class with that structure,", 100, Observable::UpdateProgressValueAndMessage);
+    notify("Error: The Geometry Structure was NULL. The proper API is to supply this class with that structure,", 100, Observable::UpdateErrorMessage);
     return;
   }
   if (m_ForwardModel.get() == NULL)
   {
     setErrorCondition(-1);
-    notify("Error: The forward model was not set.", 100, Observable::UpdateProgressValueAndMessage);
+    notify("Error: The forward model was not set.", 100, Observable::UpdateErrorMessage);
     return;
   }
 

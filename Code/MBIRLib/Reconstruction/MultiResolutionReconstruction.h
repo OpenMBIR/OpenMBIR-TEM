@@ -128,6 +128,12 @@ class MultiResolutionReconstruction : public FilterPipeline
   protected:
     MultiResolutionReconstruction();
 
+    /**
+     * @brief setupTempFiles This funtion setups up all the paths to the temp files tha need to be deleted
+     * @return
+     */
+    std::vector<std::string> setupTempFiles(TomoInputsPtr inputs);
+
   private:
     bool                 m_Cancel;
     ReconstructionEngine::Pointer   m_CurrentEngine;

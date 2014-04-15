@@ -65,11 +65,8 @@ int main(int argc, char **argv)
   // Run the App - This is a BLOCKING call
   int app_return = app.exec();
 
-  // Remove any temp files
-  viewer->deleteTempFiles();
-
   QRecentFileList::instance()->writeList(prefs);
-    
+
     delete viewer;
     viewer = NULL;
 
