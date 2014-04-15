@@ -52,6 +52,9 @@ namespace VoxelUpdateType
   const unsigned int NonHomogeniousUpdate = 2;
 }
 
+#define MAX_ANGLE_STRETCH 75
+
+
 
 //#define FORWARD_PROJECT_MODE
 
