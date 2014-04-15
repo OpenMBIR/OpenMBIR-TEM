@@ -22,3 +22,4 @@ In order to compile the codes on OS X 10.9 (Mavericks), Qt 4.8.6 (unreleased) mu
 
 Please see the web site [OpenMBIR WebSite](http://www.openmbir.org) for more information and example data files.
 
+Git Commits are emailed to [this google group](https://groups.google.com/forum/#!forum/openmbir-commits)
