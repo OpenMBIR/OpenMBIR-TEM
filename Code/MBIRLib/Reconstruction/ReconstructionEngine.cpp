@@ -685,7 +685,7 @@ void ReconstructionEngine::execute()
         //If the number of voxels is NOT exactly divisible by NUM_NON .. then compensate and make the last of the lists longer
         if(listselector == Reconstruction::Constants::k_NumHomogeniousIter - 1)
         {
-          nElements += (TempList->numElements() / - nElements * Reconstruction::Constants::k_NumHomogeniousIter);
+          nElements += (TempList->numElements() - nElements * Reconstruction::Constants::k_NumHomogeniousIter);
           if(getVeryVerbose())
           {
             std::cout << "**********Adjusted number of voxel lines for last iter**************" << std::endl;
