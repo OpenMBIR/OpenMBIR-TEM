@@ -145,12 +145,6 @@ class  MXAFileInfo
      */
     static MXA_EXPORT std::string fileNameWithOutExtension(const std::string &path);
 
-    /**
-     * @brief Remove a file from the filesystem
-     * @param path The path to the file to remove
-     * @return True on successful removal
-     */
-    static MXA_EXPORT bool remove(const std::string &path);
 
 protected:
     MXAFileInfo();

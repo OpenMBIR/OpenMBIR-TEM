@@ -21,8 +21,7 @@ QString TiltAngleGroupBox::m_OpenDialogLastDirectory = "";
 //
 // -----------------------------------------------------------------------------
 TiltAngleGroupBox::TiltAngleGroupBox(QWidget *parent) :
-  QGroupBox(parent),
-  m_NumTilts(0)
+  QGroupBox(parent)
 {
   setupUi(this);
   setupGui();
@@ -44,95 +43,44 @@ TiltAngleGroupBox::~TiltAngleGroupBox()
 // -----------------------------------------------------------------------------
 void TiltAngleGroupBox::setupGui()
 {
+
+
+
   // Put a file path completer to help out the user to select a valid file
   QFileCompleter* com = new QFileCompleter(this, false);
   rawTltFile->setCompleter(com);
   QObject::connect( com, SIGNAL(activated(const QString&)),
                     this, SLOT(on_rawTltFile_textChanged(const QString&)));
 
-  {
-    QDoubleValidator* dVal = new QDoubleValidator(this);
-    dVal->setDecimals(6);
-    startingAngle->setValidator(dVal);
-  }
 
-  {
-    QDoubleValidator* dVal = new QDoubleValidator(this);
-    dVal->setDecimals(6);
-    increment->setValidator(dVal);
-  }
-
-  rawTltBtn->toggle();
-  rawTltBtn->toggle();
+  on_buttonGroup_buttonClicked(rawTltBtn);
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TiltAngleGroupBox::on_startingAngle_textChanged(const QString& text)
+void TiltAngleGroupBox::on_buttonGroup_buttonClicked(QAbstractButton* button)
 {
-   // Generate tilts if this button is ON
-  if (startIncrementBtn->isChecked() == true)
-  {
-    m_Angles.clear();
-    bool ok = false;
-    float start = startingAngle->text().toFloat(&ok);
-    float incr = increment->text().toFloat(&ok);
-    for(int i = 0; i < m_NumTilts; i++)
-    {
-      m_Angles.push_back(start + (float)(i) * incr);
-    }
-  }
+  toggleWidgetsForIncrement();
+  toggleWidgetsForRawTltFile();
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TiltAngleGroupBox::on_increment_textChanged(const QString& text)
-{
-   // Generate tilts if this button is ON
-  if (startIncrementBtn->isChecked() == true)
-  {
-    m_Angles.clear();
-    bool ok = false;
-    float start = startingAngle->text().toFloat(&ok);
-    float incr = increment->text().toFloat(&ok);
-    for(int i = 0; i < m_NumTilts; i++)
-    {
-      m_Angles.push_back(start + (float)(i) * incr);
-    }
-  }
-}
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TiltAngleGroupBox::on_startIncrementBtn_toggled(bool b)
+void TiltAngleGroupBox::toggleWidgetsForIncrement()
 {
   startLabel->setEnabled(startIncrementBtn->isChecked());
   startingAngle->setEnabled(startIncrementBtn->isChecked());
   incrementLabel->setEnabled(startIncrementBtn->isChecked());
   increment->setEnabled(startIncrementBtn->isChecked());
-
-  // Generate tilts if this button is ON
-  if (startIncrementBtn->isChecked() == true)
-  {
-    m_Angles.clear();
-    bool ok = false;
-    float start = startingAngle->text().toFloat(&ok);
-    float incr = increment->text().toFloat(&ok);
-    for(int i = 0; i < m_NumTilts; i++)
-    {
-      m_Angles.push_back(start + (float)(i) * incr);
-    }
-  }
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TiltAngleGroupBox::on_rawTltBtn_toggled(bool b)
+void TiltAngleGroupBox::toggleWidgetsForRawTltFile()
 {
-  m_Angles.clear();
   rawTltFile->setEnabled(rawTltBtn->isChecked());
   selectRawTlt->setEnabled(rawTltBtn->isChecked());
 }
@@ -235,13 +183,4 @@ void TiltAngleGroupBox::loadAngles()
 QVector<float> TiltAngleGroupBox::getAngles()
 {
   return m_Angles;
-}
-
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void TiltAngleGroupBox::setNumTilts(int nTilts)
-{
-  m_NumTilts = nTilts;
 }

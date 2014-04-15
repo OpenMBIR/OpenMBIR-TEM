@@ -64,7 +64,7 @@ void RawGeometryWriter::execute()
   {
     std::cout << "Fp: " << Fp << " errno: " << errno << std::endl;
     setErrorCondition(-1);
-    setErrorMessage("Could not open output file for writing");
+    setErrorMessage("RawGeometryWriter - Could not open output file for writing");
     notify(getErrorMessage().c_str(), 100, UpdateErrorMessage);
     return;
   }

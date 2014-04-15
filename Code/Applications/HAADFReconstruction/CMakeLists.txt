@@ -5,7 +5,7 @@
 #-- This code was partly written under US Air Force Contract FA8650-07-D-5800
 #--////////////////////////////////////////////////////////////////////////////
 
-project(MbirReconstruction)
+project(HAADFReconstruction)
 cmake_minimum_required(VERSION 2.8.6)
 
 # --------------------------------------------------------------------
@@ -15,20 +15,20 @@ if (WIN32)
     set (install_dir ".")
 endif()
 
-set(MbirReconstruction_SRCS
-    ${MbirReconstruction_SOURCE_DIR}/main.cpp
-    ${MbirReconstruction_SOURCE_DIR}/MBIRReconstructionArgsParser.cpp
-    ${MbirReconstruction_SOURCE_DIR}/MBIRReconstructionArgsParser.h
+set(HAADFReconstruction_SRCS
+    ${HAADFReconstruction_SOURCE_DIR}/main.cpp
+    ${HAADFReconstruction_SOURCE_DIR}/HAADFReconstructionArgsParser.cpp
+    ${HAADFReconstruction_SOURCE_DIR}/HAADFReconstructionArgsParser.h
 )
 
-BuildToolBundle(TARGET MbirReconstruction
-            SOURCES ${MbirReconstruction_SRCS}
+BuildToolBundle(TARGET HAADFReconstruction
+            SOURCES ${HAADFReconstruction_SRCS}
             DEBUG_EXTENSION ${EXE_DEBUG_EXTENSION}
             VERSION_MAJOR
             VERSION_MAJOR ${OpenMBIR_VER_MAJOR}
             VERSION_MINOR ${OpenMBIR_VER_MINOR}
             VERSION_PATCH ${OpenMBIR_VER_PATCH}
-            BINARY_DIR    ${PROJECT_BINARY_DIR}/MbirReconstruction
+            BINARY_DIR    ${PROJECT_BINARY_DIR}/HAADFReconstruction
             COMPONENT     Applications
             INSTALL_DEST  ${install_dir}
             LINK_LIBRARIES MBIRLib 

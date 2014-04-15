@@ -18,15 +18,12 @@ class TiltAngleGroupBox : public QGroupBox, private Ui::TiltAngleGroupBox
 
     virtual ~TiltAngleGroupBox();
     QVector<float> getAngles();
-    void setNumTilts(int nTilts);
 
   public slots:
+    void on_buttonGroup_buttonClicked(QAbstractButton* button);
     void on_selectRawTlt_clicked();
     void on_rawTltFile_textChanged(const QString& text);
-    void on_increment_textChanged(const QString& text);
-    void on_startingAngle_textChanged(const QString& text);
-    void on_startIncrementBtn_toggled(bool b);
-    void on_rawTltBtn_toggled(bool b);
+
 
   protected:
     void setupGui();
@@ -38,7 +35,6 @@ class TiltAngleGroupBox : public QGroupBox, private Ui::TiltAngleGroupBox
 
   private:
     QVector<float> m_Angles;
-    int m_NumTilts;
 
     static QString    m_OpenDialogLastDirectory;
 

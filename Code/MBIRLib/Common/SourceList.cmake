@@ -12,6 +12,7 @@ set (MBIRLib_Common_SRCS
     ${MBIRLib_SOURCE_DIR}/Common/FilterPipeline.cpp
     ${MBIRLib_SOURCE_DIR}/Common/Observer.cpp
     ${MBIRLib_SOURCE_DIR}/Common/Observable.cpp
+    ${MBIRLib_SOURCE_DIR}/Common/VoxelUpdateList.cpp
 )
 
 set (MBIRLib_Common_HDRS
@@ -28,6 +29,7 @@ set (MBIRLib_Common_HDRS
     ${MBIRLib_SOURCE_DIR}/Common/CE_ConstraintEquation.hpp
     ${MBIRLib_SOURCE_DIR}/Common/DerivOfCostFunc.hpp
     ${MBIRLib_SOURCE_DIR}/Common/TomoArray.hpp
+    ${MBIRLib_SOURCE_DIR}/Common/VoxelUpdateList.h
 )
 
 cmp_IDE_SOURCE_PROPERTIES( "MBIRLib/Common" "${MBIRLib_Common_HDRS}" "${MBIRLib_Common_SRCS}" "${CMP_INSTALL_FILES}")

@@ -31,7 +31,6 @@
 #include "FilterPipeline.h"
 
 #include "MXA/MXA.h"
-#include "MXA/Common/LogTime.h"
 
 #if MXA_BENCHMARKS
 #define START_CLOCK()\

@@ -81,8 +81,6 @@ void MRCWriter::execute()
 int MRCWriter::writeHeader()
 {
   int err = -1;
-
-
   return err;
 }
 
@@ -170,6 +168,7 @@ void MRCWriter::initializeMRCHeader(MRCHeader* header)
 
 }
 
+
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -177,7 +176,7 @@ int MRCWriter::write()
 {
   int err = -1;
   std::stringstream ss;
- // std::cout << "MRC Output File:\n  " << m_OutputFile << std::endl;
+  std::cout << "MRC Output File:\n  " << m_OutputFile << std::endl;
   if (m_OutputFile.empty())
   {
       ss.str("");

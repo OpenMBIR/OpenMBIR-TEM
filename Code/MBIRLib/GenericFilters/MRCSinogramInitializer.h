@@ -51,8 +51,8 @@ class MBIRLib_EXPORT MRCSinogramInitializer : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(MRCSinogramInitializer)
-    MXA_STATIC_NEW_MACRO(MRCSinogramInitializer);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, MRCSinogramInitializer);
+    MXA_STATIC_NEW_MACRO(MRCSinogramInitializer)
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, MRCSinogramInitializer)
     MXA_TYPE_MACRO_SUPER(MRCSinogramInitializer, TomoFilter)
 
     virtual ~MRCSinogramInitializer();

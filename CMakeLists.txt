@@ -9,7 +9,7 @@
 #--
 #--////////////////////////////////////////////////////////////////////////////
 project (OpenMBIR)
-cmake_minimum_required(VERSION 2.8.6)
+cmake_minimum_required(VERSION 2.8.9)
 
 # We setup all the libraries and exectuables to all be placed into a single directory
 # ---------- Setup Library output Directories -------------------------
@@ -38,6 +38,9 @@ if (NOT DEFINED CMP_SOURCE_DIR)
 set(CMP_SOURCE_DIR ${OpenMBIR_SOURCE_DIR}/Support/cmp)
 endif()
 
+if(UNIX AND NOT APPLE)
+    set(OpenMBIR_LINUX_SYSTEM ${CMAKE_SYSTEM_NAME} CACHE STRING "The Name of the linux distrubution for packaging")
+endif()
 
 
 SET (PROJECT_CODE_DIR ${PROJECT_SOURCE_DIR}/Code)
@@ -196,7 +199,7 @@ add_subdirectory( ${PROJECT_CODE_DIR}/MXA ${PROJECT_BINARY_DIR}/MXA)
 
 add_subdirectory( ${PROJECT_CODE_DIR}/MBIRLib ${PROJECT_BINARY_DIR}/MBIRLib)
 
-add_subdirectory( ${PROJECT_CODE_DIR}/Applications/MBIRReconstruction ${PROJECT_BINARY_DIR}/Applications/MBIRReconstruction)
+add_subdirectory( ${PROJECT_CODE_DIR}/Applications/HAADFReconstruction ${PROJECT_BINARY_DIR}/Applications/HAADFReconstruction)
 
 add_subdirectory( ${PROJECT_CODE_DIR}/Applications/MRCSubset ${PROJECT_BINARY_DIR}/Applications/MRCSubset)
 
