@@ -34,22 +34,22 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-//q-GGMRF is of the form 
+//q-GGMRF is of the form
 // \rho(\delta)= (|\deta/sigma|^p)/(c + |\deta/sigma|^(p-q))
 // p=2; 1<=q<=2
 
-#ifndef EIMTOMO_USE_QGGMRF_FUNCTIONS_H_
-#define EIMTOMO_USE_QGGMRF_FUNCTIONS_H_
+#ifndef EIMTOMO_USE_BFQGGMRF_FUNCTIONS_H_
+#define EIMTOMO_USE_BFQGGMRF_FUNCTIONS_H_
 
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 
-namespace QGGMRF {
+namespace BFQGGMRF {
 
-  static const unsigned int QGGMRF_ITER = 1;
-  typedef struct { 
+  static const unsigned int BFQGGMRF_ITER = 1;
+  typedef struct {
       Real_t MRF_P;
       Real_t SIGMA_X_P;
       Real_t MRF_Q;
@@ -57,8 +57,8 @@ namespace QGGMRF {
       Real_t MRF_ALPHA;
       Real_t SIGMA_X_P_Q;
       Real_t SIGMA_X_Q;
-	  Real_t k_Filter[27];
-  } QGGMRF_Values;
+    Real_t k_Filter[27];
+  } BFQGGMRF_Values;
 
 
   /**
@@ -66,7 +66,7 @@ namespace QGGMRF {
    * @param tomoInputs
    * @param qggmrf_values
    */
-  void initializePriorModel(TomoInputsPtr tomoInputs, QGGMRF_Values* qggmrf_values);
+  void initializePriorModel(TomoInputsPtr tomoInputs, BFQGGMRF_Values* qggmrf_values);
 
 /**
  *
@@ -74,7 +74,7 @@ namespace QGGMRF {
  * @param qggmrf_values
  * @return
  */
-Real_t Value(Real_t delta, QGGMRF_Values* qggmrf_values);
+Real_t Value(Real_t delta, BFQGGMRF_Values* qggmrf_values);
 
 /**
  *
@@ -82,7 +82,7 @@ Real_t Value(Real_t delta, QGGMRF_Values* qggmrf_values);
  * @param qggmrf_values
  * @return
  */
-Real_t Derivative(Real_t delta, QGGMRF_Values* qggmrf_values);
+Real_t Derivative(Real_t delta, BFQGGMRF_Values* qggmrf_values);
 
 /**
  *
@@ -90,7 +90,7 @@ Real_t Derivative(Real_t delta, QGGMRF_Values* qggmrf_values);
  * @param qggmrf_values
  * @return
  */
-Real_t SecondDerivativeAtZero(QGGMRF_Values* qggmrf_values);
+Real_t SecondDerivativeAtZero(BFQGGMRF_Values* qggmrf_values);
 
 /**
  *
@@ -104,7 +104,7 @@ Real_t SecondDerivativeAtZero(QGGMRF_Values* qggmrf_values);
  */
 void ComputeParameters(Real_t umin, Real_t umax, Real_t RefValue,
                        uint8_t* boundaryFlag, Real_t* neighborhood,
-                       QGGMRF::QGGMRF_Values* qggmrf_values,
+                       BFQGGMRF::BFQGGMRF_Values* qggmrf_values,
                        Real_t* qggmrf_params);
 /**
  *
@@ -119,23 +119,23 @@ void ComputeParameters(Real_t umin, Real_t umax, Real_t RefValue,
  * @param qggmrf_values
  * @return
  */
-Real_t FunctionalSubstitution(Real_t umin, 
-							  Real_t umax, 
-							  Real_t currentVoxelValue,
-							  uint8_t* boundaryFlag, 
-							  //Real_t* filter, 
-							  Real_t* neighborhood,
-							  Real_t theta1, Real_t theta2,
-							  QGGMRF_Values* qggmrf_values);
-	
+Real_t FunctionalSubstitution(Real_t umin,
+                Real_t umax,
+                Real_t currentVoxelValue,
+                uint8_t* boundaryFlag,
+                //Real_t* filter,
+                Real_t* neighborhood,
+                Real_t theta1, Real_t theta2,
+                BFQGGMRF_Values* qggmrf_values);
+
 /**
  *@param Geom
  *@param qggmrf_values
  */
-Real_t PriorModelCost(GeometryPtr geometry, QGGMRF_Values* qggmrf_values);
+Real_t PriorModelCost(GeometryPtr geometry, BFQGGMRF_Values* qggmrf_values);
 
 
 
-} /* end namespace QGGMRF */
+} /* end namespace BFQGGMRF */
 
-#endif /* QGGMRF_FUNCTIONS_H_ */
+#endif /* BFQGGMRF_FUNCTIONS_H_ */

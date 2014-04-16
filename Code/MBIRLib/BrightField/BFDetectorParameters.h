@@ -35,59 +35,44 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#ifndef _HAADFAMATRIXCOL_H_
-#define _HAADFAMATRIXCOL_H_
+#ifndef _HAADFPARAMETERS_H_
+#define _HAADFPARAMETERS_H_
 
+#include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
+
+
+#include "MBIRLib/MBIRLib.h"
+#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/HAADF/HAADFDetectorParameters.h"
-
-
 
 /**
- * @brief Holds a column specific to the HAADF algorihms and inputs codes of the
- * A Matrix for Tomographic reconstructions
+ * @brief This class holds value specific to the HAADF Model
  */
-class HAADFAMatrixCol
+class BFDetectorParameters
 {
   public:
+    MXA_SHARED_POINTERS(BFDetectorParameters);
+    MXA_STATIC_NEW_MACRO(BFDetectorParameters)
+    virtual ~BFDetectorParameters();
+    //used to store cosine and sine of all angles through which sample is tilted
+    MXA_INSTANCE_PROPERTY( RealArrayType::Pointer, cosine)
+    MXA_INSTANCE_PROPERTY( RealArrayType::Pointer, sine)
+    MXA_INSTANCE_PROPERTY( RealArrayType::Pointer, BeamProfile) //used to store the shape of the e-beam
+    MXA_INSTANCE_PROPERTY( Real_t, BeamWidth)
+    MXA_INSTANCE_PROPERTY( Real_t, OffsetR)
+    MXA_INSTANCE_PROPERTY( Real_t, OffsetT)
 
-    MXA_SHARED_POINTERS(HAADFAMatrixCol);
-    static Pointer New(size_t* dims, int32_t count)
-    {
-      Pointer sharedPtr (new HAADFAMatrixCol(dims, count));
-      return sharedPtr;
-    }
-
-    virtual ~HAADFAMatrixCol();
-
-    RealArrayType::Pointer valuesPtr;
-    Real_t* values;
-    UInt32ArrayType::Pointer indexPtr;
-    uint32_t* index;
-    uint64_t d0;
-    uint64_t d1;
-
-    uint32_t count; //The number of non zero values present in the column
-    void setCount(uint32_t c);
-
-    static HAADFAMatrixCol::Pointer calculateHAADFAMatrixColumnPartial(SinogramPtr sinogram,
-                                                                       GeometryPtr geometry,
-                                                                       TomoInputsPtr tomoInputs,
-                                                                       AdvancedParametersPtr advParams,
-                                                                       uint16_t row,
-                                                                       uint16_t col,
-                                                                       uint16_t slice,
-                                                                       RealVolumeType::Pointer detectorResponse,
-                                                                       HAADFDetectorParameters::Pointer haadfParameters);
+    void calculateSinCos(SinogramPtr m_Sinogram);
+    void initializeBeamProfile(SinogramPtr m_Sinogram, AdvancedParametersPtr m_AdvParams);
 
   protected:
-    HAADFAMatrixCol(size_t* dims, int32_t c);
+    BFDetectorParameters();
 
 
   private:
-
-    HAADFAMatrixCol(const HAADFAMatrixCol&); // Copy Constructor Not Implemented
-    void operator=(const HAADFAMatrixCol&); // Operator '=' Not Implemented
+    BFDetectorParameters(const BFDetectorParameters&); // Copy Constructor Not Implemented
+    void operator=(const BFDetectorParameters&); // Operator '=' Not Implemented
 };
-#endif /* _HAADFAMATRIXCOL_H_ */
+
+#endif /* _HAADFPARAMETERS_H_ */

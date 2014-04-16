@@ -33,43 +33,48 @@
  *                           FA8650-07-D-5800
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-#ifndef GAINSOFFSETSREADER_H_
-#define GAINSOFFSETSREADER_H_
 
+
+#ifndef SINOGRAMBINWRITER_H_
+#define SINOGRAMBINWRITER_H_
+
+
+#include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
-
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/GenericFilters/TomoFilter.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-#include "MBIRLib/HAADF/HAADFForwardModel.h"
+#include "MBIRLib/BrightField/BFForwardModel.h"
 
 
-/*
- *
+/**
+ * @class SinogramBinWriter SinogramBinWriter.h TomoEngine/IO/SinogramBinWriter.h
+ * @brief
+ * @author Michael A. Jackson for BlueQuartz Software
+ * @date Dec 9, 2011
+ * @version 1.0
  */
-class MBIRLib_EXPORT GainsOffsetsReader : public TomoFilter
+class MBIRLib_EXPORT SinogramBinWriter : public TomoFilter
 {
   public:
-    MXA_SHARED_POINTERS(GainsOffsetsReader)
-    MXA_STATIC_NEW_MACRO(GainsOffsetsReader);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, GainsOffsetsReader);
-    MXA_TYPE_MACRO_SUPER(GainsOffsetsReader, TomoFilter)
+    MXA_SHARED_POINTERS(SinogramBinWriter)
+    MXA_STATIC_NEW_MACRO(SinogramBinWriter);
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, SinogramBinWriter);
+    MXA_TYPE_MACRO_SUPER(SinogramBinWriter, TomoFilter)
 
-    virtual ~GainsOffsetsReader();
+    virtual ~SinogramBinWriter();
 
-    MXA_INSTANCE_PROPERTY(HAADFForwardModel::Pointer, ForwardModel);
+    MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Data);
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, I_0)//Gains
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Mu)//Offset
 
-
-     virtual void execute();
+    void execute();
 
   protected:
-    GainsOffsetsReader();
+    SinogramBinWriter();
 
   private:
-    GainsOffsetsReader(const GainsOffsetsReader&); // Copy Constructor Not Implemented
-    void operator=(const GainsOffsetsReader&); // Operator '=' Not Implemented
+    SinogramBinWriter(const SinogramBinWriter&); // Copy Constructor Not Implemented
+    void operator=(const SinogramBinWriter&); // Operator '=' Not Implemented
 };
-
-
-#endif /* GAINSOFFSETSREADER_H_ */
+#endif /* SINOGRAMBINWRITER_H_ */

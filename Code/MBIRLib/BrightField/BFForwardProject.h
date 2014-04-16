@@ -35,56 +35,54 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#ifndef NUISANCEBINWRITER_H_
-#define NUISANCEBINWRITER_H_
 
-#include <string>
+#ifndef FORWARDPROJECT_H_
+#define FORWARDPROJECT_H_
 
-#include "MXA/MXA.h"
-#include "MXA/Common/MXASetGetMacros.h"
+#include <iostream>
+
+
 #include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/GenericFilters/TomoFilter.h"
+#include "MBIRLib/Common/Observable.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/HAADF/HAADFForwardModel.h"
+
+#include "BFAMatrixCol.h"
+#include "BFForwardModel.h"
 
 
 /**
- * @class NuisanceBinWriter NuisanceBinWriter.h TomoEngine/IO/NuisanceBinWriter.h
+ * @class BFForwardProject BFForwardProject.h TomoEngine/SOC/BFForwardProject.h
  * @brief
  * @author Michael A. Jackson for BlueQuartz Software
- * @date Dec 9, 2011
+ * @author Singanallur Venkatakrishnan (Purdue University)
+ * @date Dec 12, 2011
  * @version 1.0
  */
-class MBIRLib_EXPORT NuisanceParamWriter : public TomoFilter
+class MBIRLib_EXPORT BFForwardProject
 {
   public:
-    MXA_SHARED_POINTERS(NuisanceParamWriter)
-    MXA_STATIC_NEW_MACRO(NuisanceParamWriter);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, NuisanceParamWriter);
-    MXA_TYPE_MACRO_SUPER(NuisanceParamWriter, TomoFilter)
+    BFForwardProject(Sinogram* sinogram,
+                   Geometry* geometry,
+                   std::vector<BFAMatrixCol::Pointer> &tempCol,
+                   std::vector<BFAMatrixCol::Pointer> &voxelLineResponse,
+                   RealVolumeType::Pointer yEst,
+                   BFForwardModel* forwardModel,
+                   uint16_t tilt,
+                   Observable* obs);
 
-    virtual ~NuisanceParamWriter();
+    virtual ~BFForwardProject();
 
-    enum TargetArray {
-      Nuisance_I_O,
-      Nuisance_mu,
-      Nuisance_alpha
-    };
-
-    MXA_INSTANCE_PROPERTY(bool, WriteBinary);
-    MXA_INSTANCE_STRING_PROPERTY(FileName);
-    MXA_INSTANCE_PROPERTY(TargetArray, DataToWrite);
-    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Data);
-    MXA_INSTANCE_PROPERTY(uint16_t, Ntheta);
-
-    void execute();
-
-  protected:
-    NuisanceParamWriter();
+    void operator()() const;
 
   private:
-    NuisanceParamWriter(const NuisanceParamWriter&); // Copy Constructor Not Implemented
-    void operator=(const NuisanceParamWriter&); // Operator '=' Not Implemented
+    Sinogram* m_Sinogram;
+    Geometry* m_Geometry;
+    std::vector<BFAMatrixCol::Pointer> m_TempCol;
+    std::vector<BFAMatrixCol::Pointer> m_VoxelLineResponse;
+    RealVolumeType::Pointer m_YEstimate;
+    BFForwardModel* m_ForwardModel;
+    uint16_t m_Tilt;
+    Observable* m_Observable;
 };
 
-#endif /* NUISANCEBINWRITER_H_ */
+#endif /* FORWARDPROJECT_H_ */

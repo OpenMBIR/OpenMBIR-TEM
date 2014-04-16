@@ -54,7 +54,7 @@ namespace VoxelUpdateType
 
 //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
 #define ROI 1
-#define EIMTOMO_USE_QGGMRF 1 //Was used earlier to switch priors
+#define EIMTOMO_USE_BFQGGMRF 1 //Was used earlier to switch priors
 #define BRAGG_CORRECTION //TODO : Get rid and make this the default case
 #define DefBraggThreshold 5e10//Thresold in normalized uints. This value ensures at the start we do a "regular" BF recon
 #define BF_OFFSET 32768//0//23696 //- Bio data set
@@ -84,7 +84,7 @@ namespace ScaleOffsetCorrection
   const std::string FinalVariancesFile("FinalVariances.bin");
 
   const std::string VoxelProfileFile("VoxelProfile.bin");
-  const std::string ForwardProjectedObjectFile("ForwardProjectedObject.bin");
+  const std::string BFForwardProjectedObjectFile("BFForwardProjectedObject.bin");
   const std::string CostFunctionCoefficientsFile("CostFunctionCoefficients.bin");
   const std::string FilteredMagMapFile("FilteredMagMap.bin");
   const std::string MagnitudeMapFile("MagnitudeMap.bin");

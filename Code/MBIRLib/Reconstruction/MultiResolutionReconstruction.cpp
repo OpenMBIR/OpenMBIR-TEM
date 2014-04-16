@@ -46,7 +46,7 @@
 #include "MXA/Utilities/MXAFileInfo.h"
 #include "MXA/Utilities/StringUtils.h"
 #include "MBIRLib/Common/EIMMath.h"
-#include "MBIRLib/HAADF/HAADFForwardModel.h"
+#include "MBIRLib/BrightField/BFForwardModel.h"
 
 
 // -----------------------------------------------------------------------------
@@ -76,6 +76,7 @@ MultiResolutionReconstruction::MultiResolutionReconstruction() :
   m_InterpolateInitialReconstruction(false),
   m_DefaultVariance(1.0f),
   m_InitialReconstructionValue(0.0f),
+  m_DefaultPixelSize(1.0),
   m_Cancel(false)
 {
 
@@ -188,7 +189,7 @@ void MultiResolutionReconstruction::execute()
 
   for (int i = 0; i < m_NumberResolutions; ++i)
   {
-    HAADFForwardModel::Pointer forwardModel = HAADFForwardModel::New();
+    BFForwardModel::Pointer forwardModel = BFForwardModel::New();
     if(getCancel() == true)
     {
       setErrorCondition(-999);
@@ -376,6 +377,9 @@ void MultiResolutionReconstruction::execute()
 
     ReconstructionEngine::InitializeSinogram(sinogram);
     ReconstructionEngine::InitializeGeometry(geometry);
+
+    sinogram->delta_r = getDefaultPixelSize() * 1.0e9;
+    sinogram->delta_t = getDefaultPixelSize() * 1.0e9;
 
     //Calculate approximate memory required
     memCalculate(inputs);

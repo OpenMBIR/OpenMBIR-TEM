@@ -34,7 +34,7 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "HAADFForwardModel.h"
+#include "BFForwardModel.h"
 
 // C Includes
 #include <stdlib.h>
@@ -56,13 +56,13 @@
 
 //#include "MBIRLib/GenericFilters/MRCSinogramInitializer.h"
 
-#include "MBIRLib/HAADF/ForwardProject.h"
-#include "MBIRLib/HAADF/UpdateYSlice.h"
-#include "MBIRLib/HAADF/Filters/NuisanceParamWriter.h"
-#include "MBIRLib/HAADF/Filters/NuisanceParamReader.h"
-#include "MBIRLib/HAADF/Filters/GainsOffsetsReader.h"
-#include "MBIRLib/HAADF/Filters/ComputeInitialOffsets.h"
-#include "MBIRLib/HAADF/Filters/SinogramBinWriter.h"
+#include "MBIRLib/BrightField/BFForwardProject.h"
+#include "MBIRLib/BrightField/BFUpdateYSlice.h"
+#include "MBIRLib/BrightField/Filters/NuisanceParamWriter.h"
+#include "MBIRLib/BrightField/Filters/NuisanceParamReader.h"
+#include "MBIRLib/BrightField/Filters/GainsOffsetsReader.h"
+#include "MBIRLib/BrightField/Filters/ComputeInitialOffsets.h"
+#include "MBIRLib/BrightField/Filters/SinogramBinWriter.h"
 
 #define USE_TBB_TASK_GROUP 1
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
@@ -90,7 +90,7 @@
 // -----------------------------------------------------------------------------
 // Contains all the computations and initializations related to forward model
 // -----------------------------------------------------------------------------
-HAADFForwardModel::HAADFForwardModel() :
+BFForwardModel::BFForwardModel() :
   m_Verbose(false), m_VeryVerbose(false), m_ErrorCondition(0), m_Cancel(false), m_UseDefaultOffset(false)
 {
 
@@ -130,7 +130,7 @@ HAADFForwardModel::HAADFForwardModel() :
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-HAADFForwardModel::~HAADFForwardModel()
+BFForwardModel::~BFForwardModel()
 {
 
 }
@@ -138,10 +138,10 @@ HAADFForwardModel::~HAADFForwardModel()
 // -----------------------------------------------------------------------------
 // Project the object in 3-D
 // -----------------------------------------------------------------------------
-int HAADFForwardModel::forwardProject(SinogramPtr sinogram,
+int BFForwardModel::forwardProject(SinogramPtr sinogram,
                                       GeometryPtr geometry,
-                                      std::vector<HAADFAMatrixCol::Pointer> &tempCol,
-                                      std::vector<HAADFAMatrixCol::Pointer> &voxelLineResponse,
+                                      std::vector<BFAMatrixCol::Pointer> &tempCol,
+                                      std::vector<BFAMatrixCol::Pointer> &voxelLineResponse,
                                       RealVolumeType::Pointer yEstimate,
                                       RealVolumeType::Pointer errorSinogram)
 {
@@ -178,10 +178,10 @@ int HAADFForwardModel::forwardProject(SinogramPtr sinogram,
   for (uint16_t t = 0; t < geometry->N_z; t++)
   {
 #if OpenMBIR_USE_PARALLEL_ALGORITHMS
-    g->run(ForwardProject(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate, this, t, this));
+    g->run(BFForwardProject(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate, this, t, this));
 #else
-    // ForwardProject fp(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate, NuisanceParams.get(), t, this);
-    ForwardProject fp(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate,this, t, this);
+    // BFForwardProject fp(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate, NuisanceParams.get(), t, this);
+    BFForwardProject fp(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate,this, t, this);
     //fp.setObservers(getObservers());
     fp();
 #endif
@@ -205,15 +205,15 @@ int HAADFForwardModel::forwardProject(SinogramPtr sinogram,
 // -----------------------------------------------------------------------------
 // Set the prior model parameters
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::setQGGMRFValues(QGGMRF::QGGMRF_Values* qggmrf_values)
+void BFForwardModel::setBFQGGMRFValues(BFQGGMRF::BFQGGMRF_Values* qggmrf_values)
 {
-  m_QGGMRF_Values = qggmrf_values;
+  m_BFQGGMRF_Values = qggmrf_values;
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::printNuisanceParameters(SinogramPtr sinogram)
+void BFForwardModel::printNuisanceParameters(SinogramPtr sinogram)
 {
   if(getVeryVerbose())
   {
@@ -242,7 +242,7 @@ void HAADFForwardModel::printNuisanceParameters(SinogramPtr sinogram)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::resetNuisanceParameters()
+void BFForwardModel::resetNuisanceParameters()
 {
   m_I_0 = RealArrayType::NullPointer();
   m_Mu = RealArrayType::NullPointer();
@@ -252,7 +252,7 @@ void HAADFForwardModel::resetNuisanceParameters()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::allocateNuisanceParameters(SinogramPtr sinogram)
+void BFForwardModel::allocateNuisanceParameters(SinogramPtr sinogram)
 {
   //Gain, Offset and Variance Parameter Structures
   size_t dims[3];
@@ -274,7 +274,7 @@ void HAADFForwardModel::allocateNuisanceParameters(SinogramPtr sinogram)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::gainAndOffsetInitialization(uint16_t nTheta)
+void BFForwardModel::gainAndOffsetInitialization(uint16_t nTheta)
 {
   Real_t sum = 0;
   Real_t temp = 0;
@@ -312,7 +312,7 @@ void HAADFForwardModel::gainAndOffsetInitialization(uint16_t nTheta)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::weightInitialization(size_t dims[3])
+void BFForwardModel::weightInitialization(size_t dims[3])
 {
   m_Weight = RealVolumeType::New(dims, "Weight");
   //This variable selects which entries to retain in the sinogram
@@ -326,7 +326,7 @@ void HAADFForwardModel::weightInitialization(size_t dims[3])
 // Calculate Error Sinogram
 // Also compute weights of the diagonal covariance matrix
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVolumeType::Pointer errorSinogram, RealVolumeType::Pointer yEstimate)
+void BFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVolumeType::Pointer errorSinogram, RealVolumeType::Pointer yEstimate)
 {
 
   std::cout<<"Starting weight assignment"<<std::endl;
@@ -388,7 +388,7 @@ void HAADFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVol
 // -----------------------------------------------------------------------------
 // Estimation of the unknown dosage parameter
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Pointer errorSinogram, RealVolumeType::Pointer yEstimate, CostData::Pointer cost)
+void BFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Pointer errorSinogram, RealVolumeType::Pointer yEstimate, CostData::Pointer cost)
 {
   std::stringstream ss;
   std::string indent("  ");
@@ -445,7 +445,7 @@ void HAADFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Po
 // -----------------------------------------------------------------------------
 // Updating the Weights for Noise Model
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino)
+void BFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino)
 {
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
   {
@@ -515,7 +515,7 @@ void HAADFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Poin
 // -----------------------------------------------------------------------------
 // Updating the boolean selector based on the error and weights
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::updateSelector(SinogramPtr sinogram,
+void BFForwardModel::updateSelector(SinogramPtr sinogram,
                                        RealVolumeType::Pointer ErrorSino)
 {
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta;i_theta++)
@@ -534,7 +534,7 @@ void HAADFForwardModel::updateSelector(SinogramPtr sinogram,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::writeNuisanceParameters(SinogramPtr sinogram)
+void BFForwardModel::writeNuisanceParameters(SinogramPtr sinogram)
 {
   NuisanceParamWriter::Pointer nuisanceBinWriter = NuisanceParamWriter::New();
   nuisanceBinWriter->setNtheta(sinogram->N_theta);
@@ -597,7 +597,7 @@ void HAADFForwardModel::writeNuisanceParameters(SinogramPtr sinogram)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::writeSinogramFile(SinogramPtr sinogram, RealVolumeType::Pointer finalSinogram)
+void BFForwardModel::writeSinogramFile(SinogramPtr sinogram, RealVolumeType::Pointer finalSinogram)
 {
   // Write the Sinogram out to a file
   SinogramBinWriter::Pointer sinogramWriter = SinogramBinWriter::New();
@@ -619,7 +619,7 @@ void HAADFForwardModel::writeSinogramFile(SinogramPtr sinogram, RealVolumeType::
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int HAADFForwardModel::createNuisanceParameters(SinogramPtr sinogram)
+int BFForwardModel::createNuisanceParameters(SinogramPtr sinogram)
 {
   int err = 0;
   err |= createInitialGainsData(sinogram);
@@ -631,7 +631,7 @@ int HAADFForwardModel::createNuisanceParameters(SinogramPtr sinogram)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int HAADFForwardModel::createInitialGainsData(SinogramPtr sinogram)
+int BFForwardModel::createInitialGainsData(SinogramPtr sinogram)
 {
   std::stringstream ss;
   /* ********************* Initialize the Gains Array **************************/
@@ -680,7 +680,7 @@ int HAADFForwardModel::createInitialGainsData(SinogramPtr sinogram)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int HAADFForwardModel::createInitialOffsetsData(SinogramPtr sinogram)
+int BFForwardModel::createInitialOffsetsData(SinogramPtr sinogram)
 {
   std::stringstream ss;
   /* ********************* Initialize the Offsets Array **************************/
@@ -761,7 +761,7 @@ int HAADFForwardModel::createInitialOffsetsData(SinogramPtr sinogram)
 // -----------------------------------------------------------------------------
 // Initialize the variance parameter
 // -----------------------------------------------------------------------------
-int HAADFForwardModel::createInitialVariancesData(SinogramPtr sinogram)
+int BFForwardModel::createInitialVariancesData(SinogramPtr sinogram)
 {
 
   /* ********************* Initialize the Variances Array **************************/
@@ -810,7 +810,7 @@ int HAADFForwardModel::createInitialVariancesData(SinogramPtr sinogram)
 // -----------------------------------------------------------------------------
 // Compute forward model cost
 // -----------------------------------------------------------------------------
-Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Pointer ErrorSino)
+Real_t BFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Pointer ErrorSino)
 {
   Real_t cost = 0,temp=0;
   Real_t errSinoValue = 0.0;
@@ -849,10 +849,10 @@ Real_t HAADFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Point
 // Compute the theta1 and theta2 for a single voxel update - Computataionally
 // intensive
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::computeTheta(size_t Index,
-                                     std::vector<HAADFAMatrixCol::Pointer> &TempCol,
+void BFForwardModel::computeTheta(size_t Index,
+                                     std::vector<BFAMatrixCol::Pointer> &TempCol,
                                      int32_t xzSliceIdx,
-                                     std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
+                                     std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
                                      RealVolumeType::Pointer ErrorSino,
                                      SinogramPtr sinogram,
                                      RealArrayType::Pointer Thetas)
@@ -896,11 +896,11 @@ void HAADFForwardModel::computeTheta(size_t Index,
 // Updates the error sinogram after a single voxel update; Also updates
 // the selector variable simultaneously
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
+void BFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
                                             size_t Index,
-                                            std::vector<HAADFAMatrixCol::Pointer> &TempCol,
+                                            std::vector<BFAMatrixCol::Pointer> &TempCol,
                                             int32_t xzSliceIdx,
-                                            std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
+                                            std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
                                             RealVolumeType::Pointer ErrorSino,
                                             SinogramPtr sinogram)
 {
@@ -936,7 +936,7 @@ void HAADFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 // -----------------------------------------------------------------------------
 // Process the input counts and compute the sinogram
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::processRawCounts(SinogramPtr sinogram)
+void BFForwardModel::processRawCounts(SinogramPtr sinogram)
 {
   Real_t mean=0,maxval= -std::numeric_limits<Real_t>::infinity();// -INFINITY;
   for (int16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++) //slice index
@@ -973,7 +973,7 @@ void HAADFForwardModel::processRawCounts(SinogramPtr sinogram)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADFForwardModel::printRatioSelected(SinogramPtr sinogram)
+void BFForwardModel::printRatioSelected(SinogramPtr sinogram)
 {
   Real_t sum=0;
   for (int16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++) //slice index
@@ -994,7 +994,7 @@ void HAADFForwardModel::printRatioSelected(SinogramPtr sinogram)
   std::cout<<"Ratio of singoram entries used="<<sum/(sinogram->N_theta*sinogram->N_r*sinogram->N_t)<<std::endl;
 }
 
-void HAADFForwardModel::writeSelectorMrc(const std::string &file, SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino)
+void BFForwardModel::writeSelectorMrc(const std::string &file, SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino)
 {
   //const std::string mrcFile="Selector.mrc";
   geometry->N_x = sinogram->N_r;
@@ -1041,7 +1041,7 @@ void HAADFForwardModel::writeSelectorMrc(const std::string &file, SinogramPtr si
 }
 
 //This function is REDUNDANT - Not used in current version
-Real_t HAADFForwardModel::estimateBraggThreshold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage)
+Real_t BFForwardModel::estimateBraggThreshold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage)
 {
 
   Real_t EstBraggThresh = 0.0;

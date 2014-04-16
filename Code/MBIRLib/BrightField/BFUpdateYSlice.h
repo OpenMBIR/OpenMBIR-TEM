@@ -46,8 +46,8 @@
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 #include "MBIRLib/Reconstruction/ReconstructionEngine.h"
-#include "MBIRLib/HAADF/HAADFAMatrixCol.h"
-#include "MBIRLib/HAADF/HAADFForwardModel.h"
+#include "MBIRLib/BrightField/BFAMatrixCol.h"
+#include "MBIRLib/BrightField/BFForwardModel.h"
 
 
 
@@ -79,7 +79,7 @@
  * fashion using the Threading Building Blocks library
  *
  */
-class UpdateYSlice
+class BFUpdateYSlice
     #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
     : public tbb::task
     #endif
@@ -106,13 +106,13 @@ class UpdateYSlice
    * @param zeroSkipping
    * @param qggmrf_values
    */
-    UpdateYSlice(uint16_t yStart, uint16_t yEnd,
+    BFUpdateYSlice(uint16_t yStart, uint16_t yEnd,
                  GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
                  SinogramPtr  sinogram,
-                 std::vector<HAADFAMatrixCol::Pointer> &tempCol,
+                 std::vector<BFAMatrixCol::Pointer> &tempCol,
                  RealVolumeType::Pointer errorSino,
-                 std::vector<HAADFAMatrixCol::Pointer> &voxelLineResponse,
-                 HAADFForwardModel* forwardModel,
+                 std::vector<BFAMatrixCol::Pointer> &voxelLineResponse,
+                 BFForwardModel* forwardModel,
                  UInt8Image_t::Pointer mask,
                  RealImageType::Pointer magUpdateMap, //Hold the magnitude of the reconstuction along each voxel line
                  UInt8Image_t::Pointer magUpdateMask,
@@ -120,10 +120,10 @@ class UpdateYSlice
                  Real_t* averageUpdate,
                  Real_t* averageMagnitudeOfRecon,
                  unsigned int zeroSkipping,
-                 QGGMRF::QGGMRF_Values* qggmrf_values,
+                 BFQGGMRF::BFQGGMRF_Values* qggmrf_values,
                  VoxelUpdateList::Pointer voxelUpdateList);
 
-    ~UpdateYSlice();
+    ~BFUpdateYSlice();
 
     /**
      * @brief
@@ -156,10 +156,10 @@ class UpdateYSlice
     int16_t m_InnerIter;
     SinogramPtr  m_Sinogram;
     //  SinogramPtr  m_BFSinogram;
-    std::vector<HAADFAMatrixCol::Pointer> &m_TempCol;
+    std::vector<BFAMatrixCol::Pointer> &m_TempCol;
     RealVolumeType::Pointer m_ErrorSino;
-    std::vector<HAADFAMatrixCol::Pointer> &m_VoxelLineResponse;//CHANGED! Put a & here
-    HAADFForwardModel* m_ForwardModel;
+    std::vector<BFAMatrixCol::Pointer> &m_VoxelLineResponse;//CHANGED! Put a & here
+    BFForwardModel* m_ForwardModel;
     UInt8Image_t::Pointer m_Mask;
     RealImageType::Pointer m_MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
     UInt8Image_t::Pointer m_MagUpdateMask;
@@ -174,7 +174,7 @@ class UpdateYSlice
 #endif
     unsigned int m_ZeroSkipping;
 
-    QGGMRF::QGGMRF_Values* m_QggmrfValues;
+    BFQGGMRF::BFQGGMRF_Values* m_QggmrfValues;
 
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
     uint8_t m_BoundaryFlag[27];

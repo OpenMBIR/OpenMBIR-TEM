@@ -1,6 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
- * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
+ * Copyright (c) 2011 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2011 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -33,46 +33,43 @@
  *                           FA8650-07-D-5800
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+#ifndef GAINSOFFSETSREADER_H_
+#define GAINSOFFSETSREADER_H_
 
-
-#ifndef _HAADFPARAMETERS_H_
-#define _HAADFPARAMETERS_H_
-
-#include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
 
-
 #include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+#include "MBIRLib/GenericFilters/TomoFilter.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
+#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+#include "MBIRLib/BrightField/BFForwardModel.h"
 
-/**
- * @brief This class holds value specific to the HAADF Model
+
+/*
+ *
  */
-class HAADFDetectorParameters
+class MBIRLib_EXPORT GainsOffsetsReader : public TomoFilter
 {
   public:
-    MXA_SHARED_POINTERS(HAADFDetectorParameters);
-    MXA_STATIC_NEW_MACRO(HAADFDetectorParameters)
-    virtual ~HAADFDetectorParameters();
-    //used to store cosine and sine of all angles through which sample is tilted
-    MXA_INSTANCE_PROPERTY( RealArrayType::Pointer, cosine)
-    MXA_INSTANCE_PROPERTY( RealArrayType::Pointer, sine)
-    MXA_INSTANCE_PROPERTY( RealArrayType::Pointer, BeamProfile) //used to store the shape of the e-beam
-    MXA_INSTANCE_PROPERTY( Real_t, BeamWidth)
-    MXA_INSTANCE_PROPERTY( Real_t, OffsetR)
-    MXA_INSTANCE_PROPERTY( Real_t, OffsetT)
+    MXA_SHARED_POINTERS(GainsOffsetsReader)
+    MXA_STATIC_NEW_MACRO(GainsOffsetsReader);
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, GainsOffsetsReader);
+    MXA_TYPE_MACRO_SUPER(GainsOffsetsReader, TomoFilter)
 
-    void calculateSinCos(SinogramPtr m_Sinogram);
-    void initializeBeamProfile(SinogramPtr m_Sinogram, AdvancedParametersPtr m_AdvParams);
+    virtual ~GainsOffsetsReader();
+
+    MXA_INSTANCE_PROPERTY(BFForwardModel::Pointer, ForwardModel);
+
+
+     virtual void execute();
 
   protected:
-    HAADFDetectorParameters();
-
+    GainsOffsetsReader();
 
   private:
-    HAADFDetectorParameters(const HAADFDetectorParameters&); // Copy Constructor Not Implemented
-    void operator=(const HAADFDetectorParameters&); // Operator '=' Not Implemented
+    GainsOffsetsReader(const GainsOffsetsReader&); // Copy Constructor Not Implemented
+    void operator=(const GainsOffsetsReader&); // Operator '=' Not Implemented
 };
 
-#endif /* _HAADFPARAMETERS_H_ */
+
+#endif /* GAINSOFFSETSREADER_H_ */

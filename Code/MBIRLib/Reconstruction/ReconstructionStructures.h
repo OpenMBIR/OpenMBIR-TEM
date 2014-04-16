@@ -98,8 +98,10 @@ typedef struct
     Real_t delta_t;//Distance between successive measurements along y
     RealVolumeType::Pointer counts;//The measured images should be stored in this once read from the input file. It will be a Ny X (Nz X Nx)
     std::vector<Real_t> angles;//Holds the angles through which the object is tilted
-    Real_t R0,RMax;
-    Real_t T0,TMax;
+    Real_t R0;
+    Real_t RMax;
+    Real_t T0;
+    Real_t TMax;
 
 #if 0
     /* ****************** These should be moved to the ForwardModel Class ****/

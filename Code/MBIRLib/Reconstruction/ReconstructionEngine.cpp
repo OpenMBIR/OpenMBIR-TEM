@@ -57,7 +57,7 @@
 #include "MBIRLib/Common/EIMTime.h"
 #include "MBIRLib/Common/CE_ConstraintEquation.hpp"
 #include "MBIRLib/Common/DerivOfCostFunc.hpp"
-#include "MBIRLib/HAADF/UpdateYSlice.h"
+#include "MBIRLib/BrightField/BFUpdateYSlice.h"
 
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 
@@ -424,7 +424,7 @@ void ReconstructionEngine::execute()
   voxelProfile = calculateVoxelProfile(); //This is used for computation of the partial A matrix
 
   //Pre compute sine and cos theta to speed up computations
-  HAADFDetectorParameters::Pointer haadfParameters = HAADFDetectorParameters::New();
+  BFDetectorParameters::Pointer haadfParameters = BFDetectorParameters::New();
   haadfParameters->setOffsetR ( ((m_TomoInputs->delta_xz / sqrt(3.0)) + m_Sinogram->delta_r / 2) / m_AdvParams->DETECTOR_RESPONSE_BINS);
   haadfParameters->setOffsetT ( ((m_TomoInputs->delta_xz / 2) + m_Sinogram->delta_t / 2) / m_AdvParams->DETECTOR_RESPONSE_BINS);
   haadfParameters->setBeamWidth(m_Sinogram->delta_r);
@@ -487,20 +487,20 @@ void ReconstructionEngine::execute()
   notify(ss.str(), 0, Observable::UpdateProgressMessage);
 
 
-  std::vector<HAADFAMatrixCol::Pointer> voxelLineResponse(m_Geometry->N_y);
+  std::vector<BFAMatrixCol::Pointer> voxelLineResponse(m_Geometry->N_y);
 
   maxNumberOfDetectorElts = (uint16_t)((m_TomoInputs->delta_xy / m_Sinogram->delta_t) + 2);
   dims[0] = maxNumberOfDetectorElts;
   for (uint16_t i = 0; i < m_Geometry->N_y; i++)
   {
-    HAADFAMatrixCol::Pointer vlr = HAADFAMatrixCol::New(dims, 0);
+    BFAMatrixCol::Pointer vlr = BFAMatrixCol::New(dims, 0);
     voxelLineResponse[i] = vlr;
   }
 
   //Calculating A-Matrix one column at a time
   //For each entry the idea is to initially allocate space for Sinogram.N_theta * Sinogram.N_x
   // And then store only the non zero entries by allocating a new array of the desired size
-  std::vector<HAADFAMatrixCol::Pointer> tempCol(m_Geometry->N_x * m_Geometry->N_z);
+  std::vector<BFAMatrixCol::Pointer> tempCol(m_Geometry->N_x * m_Geometry->N_z);
 
   checksum = 0;
   temp = 0;
@@ -509,7 +509,7 @@ void ReconstructionEngine::execute()
   {
     for (uint16_t x = 0; x < m_Geometry->N_x; x++)
     {
-      tempCol[voxel_count] = HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(m_Sinogram, m_Geometry, m_TomoInputs, m_AdvParams,
+      tempCol[voxel_count] = BFAMatrixCol::calculateBFAMatrixColumnPartial(m_Sinogram, m_Geometry, m_TomoInputs, m_AdvParams,
                              z, x, 0, detectorResponse, haadfParameters);
       temp += tempCol[voxel_count]->count;
       if(0 == tempCol[voxel_count]->count )
@@ -558,12 +558,12 @@ void ReconstructionEngine::execute()
   return 0; //exit the program once we finish forward projecting the object
 #endif//Forward Project mode
 
-  // Initialize the Prior Model parameters - here we are using a QGGMRF Prior Model
-  QGGMRF::QGGMRF_Values qggmrf_values;
-  QGGMRF::initializePriorModel(m_TomoInputs, &qggmrf_values);
+  // Initialize the Prior Model parameters - here we are using a BFQGGMRF Prior Model
+  BFQGGMRF::BFQGGMRF_Values BFQGGMRF_values;
+  BFQGGMRF::initializePriorModel(m_TomoInputs, &BFQGGMRF_values);
 
 #ifdef COST_CALCULATE
-  err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &qggmrf_values);
+  err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &BFQGGMRF_values);
 #endif //Cost calculation endif
 
   Real_t TempBraggValue, DesBraggValue;
@@ -720,7 +720,7 @@ void ReconstructionEngine::execute()
 #endif //debug
 
       status = updateVoxels(reconOuterIter, reconInnerIter, tempCol,
-                            errorSino, voxelLineResponse, cost, &qggmrf_values,
+                            errorSino, voxelLineResponse, cost, &BFQGGMRF_values,
                             magUpdateMap, filtMagUpdateMap, magUpdateMask, m_VisitCount,
                             PrevMagSum,
                             EffIterCount);
@@ -787,7 +787,7 @@ void ReconstructionEngine::execute()
 
 #ifdef COST_CALCULATE //typically run only for debugging
       /*********************Cost Calculation*************************************/
-      int16_t err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &qggmrf_values);
+      int16_t err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &BFQGGMRF_values);
       if(err < 0)
       {
         std::cout << "Cost went up after voxel update" << std::endl;
@@ -830,7 +830,7 @@ void ReconstructionEngine::execute()
         m_ForwardModel->updateSelector(m_Sinogram, errorSino);
 
 #ifdef COST_CALCULATE //Debug info
-        int16_t err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &qggmrf_values);
+        int16_t err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &BFQGGMRF_values);
         if(err < 0)
         {
           std::cout << "Cost went up after offset update" << std::endl;
@@ -847,7 +847,7 @@ void ReconstructionEngine::execute()
         m_ForwardModel->updateSelector(m_Sinogram, errorSino);
 #ifdef COST_CALCULATE
         //err = calculateCost(cost, Weight, errorSino);
-        err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &qggmrf_values);
+        err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &BFQGGMRF_values);
         if (err < 0 && reconOuterIter > 1)
         {
           std::cout << "Cost went up after variance update" << std::endl;
@@ -873,7 +873,7 @@ void ReconstructionEngine::execute()
 #ifdef FORWARD_PROJECT_MODE
   int fileError = 0;
   FILE* Fp6;
-  MAKE_OUTPUT_FILE(Fp6, fileError, m_TomoInputs->tempDir, ScaleOffsetCorrection::ForwardProjectedObjectFile);
+  MAKE_OUTPUT_FILE(Fp6, fileError, m_TomoInputs->tempDir, ScaleOffsetCorrection::BFForwardProjectedObjectFile);
   if (fileError == 1)
   {
 
@@ -1049,9 +1049,9 @@ int ReconstructionEngine::calculateCost(CostData::Pointer cost,
                                         SinogramPtr sinogram,
                                         GeometryPtr geometry,
                                         RealVolumeType::Pointer ErrorSino,
-                                        QGGMRF::QGGMRF_Values* qggmrf_Values)
+                                        BFQGGMRF::BFQGGMRF_Values* BFQGGMRF_Values)
 {
-  Real_t cost_value = computeCost(sinogram, geometry, ErrorSino, qggmrf_Values);
+  Real_t cost_value = computeCost(sinogram, geometry, ErrorSino, BFQGGMRF_Values);
   //std::cout << "cost_value: " << cost_value << std::endl;
   int increase = cost->addCostValue(cost_value);
   if(increase == 1)
@@ -1065,14 +1065,14 @@ int ReconstructionEngine::calculateCost(CostData::Pointer cost,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geometry, RealVolumeType::Pointer ErrorSino, QGGMRF::QGGMRF_Values* qggmrf_values)
+Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geometry, RealVolumeType::Pointer ErrorSino, BFQGGMRF::BFQGGMRF_Values* BFQGGMRF_values)
 {
   Real_t cost = 0;
 
   cost = m_ForwardModel->forwardCost(sinogram, ErrorSino); //Data term error
   if(getVeryVerbose())
   { std::cout << "Forward cost" << cost << std::endl; }
-  cost += QGGMRF::PriorModelCost(geometry, qggmrf_values);//Prior model error
+  cost += BFQGGMRF::PriorModelCost(geometry, BFQGGMRF_values);//Prior model error
   if(getVeryVerbose())
   { std::cout << "Total cost" << cost << std::endl; }
   return cost;

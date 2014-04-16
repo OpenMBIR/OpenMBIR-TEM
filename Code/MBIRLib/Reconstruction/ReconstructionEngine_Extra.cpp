@@ -47,7 +47,7 @@
 #include "MBIRLib/GenericFilters/MRCSinogramInitializer.h"
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/Common/EIMTime.h"
-#include "MBIRLib/HAADF/UpdateYSlice.h"
+#include "MBIRLib/BrightField/BFUpdateYSlice.h"
 
 
 #define START_TIMER uint64_t startm = EIMTOMO_getMilliSeconds();
@@ -245,8 +245,8 @@ void ReconstructionEngine::initializeVolume(RealVolumeType::Pointer Y_Est, doubl
 //
 // -----------------------------------------------------------------------------
 void ReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
-                                              std::vector<HAADFAMatrixCol::Pointer>& VoxelLineResponse,
-                                              HAADFDetectorParameters::Pointer haadfParameters)
+                                              std::vector<BFAMatrixCol::Pointer>& VoxelLineResponse,
+                                              BFDetectorParameters::Pointer haadfParameters)
 {
   Real_t ProfileThickness = 0.0;
   Real_t y = 0.0;
@@ -310,7 +310,7 @@ void ReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
         {
           std::cout << i_t << "\t" << ProfileThickness << std::endl;
         }
-        HAADFAMatrixCol::Pointer vlr = VoxelLineResponse[i];
+        BFAMatrixCol::Pointer vlr = VoxelLineResponse[i];
         int32_t count = vlr->count;
         vlr->values[count] = ProfileThickness;
         vlr->index[count] = i_t;
@@ -466,11 +466,11 @@ void ReconstructionEngine::writeAvizoFile(const std::string& file, uint16_t crop
 // -----------------------------------------------------------------------------
 uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
                                            int16_t Iter,
-                                           std::vector<HAADFAMatrixCol::Pointer>& TempCol,
+                                           std::vector<BFAMatrixCol::Pointer>& TempCol,
                                            RealVolumeType::Pointer ErrorSino,
-                                           std::vector<HAADFAMatrixCol::Pointer>& VoxelLineResponse,
+                                           std::vector<BFAMatrixCol::Pointer>& VoxelLineResponse,
                                            CostData::Pointer cost,
-                                           QGGMRF::QGGMRF_Values* qggmrf_values,
+                                           BFQGGMRF::BFQGGMRF_Values* BFQGGMRF_values,
                                            RealImageType::Pointer magUpdateMap,
                                            RealImageType::Pointer filtMagUpdateMap,
                                            UInt8Image_t::Pointer magUpdateMask,
@@ -672,8 +672,8 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
       //NewList[t] = m_VoxelIdxList;
       NewList[t] = VoxelUpdateList::GenRandList(m_VoxelIdxList);
 
-      UpdateYSlice& a =
-          *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
+      BFUpdateYSlice& a =
+          *new (tbb::task::allocate_root()) BFUpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
                                                          m_Sinogram, TempCol, ErrorSino,
                                                          VoxelLineResponse, m_ForwardModel.get(),
                                                          magUpdateMask,
@@ -682,7 +682,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
                                                          averageUpdate.get() + t,
                                                          averageMagnitudeOfRecon.get() + t,
                                                          m_AdvParams->ZERO_SKIPPING,
-                                                         qggmrf_values, NewList[t] );
+                                                         BFQGGMRF_values, NewList[t] );
       taskList.push_back(a);
     }
 
@@ -747,7 +747,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
     NewList = GenRandList(NewList);
 
 
-    UpdateYSlice yVoxelUpdate = UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
+    BFUpdateYSlice yVoxelUpdate = BFUpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
                                              m_Sinogram, TempCol, ErrorSino,
                                              VoxelLineResponse, m_ForwardModel.get(),
                                              magUpdateMask,
@@ -756,9 +756,9 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
                                              averageUpdate,
                                              averageMagnitudeOfRecon,
                                              m_AdvParams->ZERO_SKIPPING,
-                                             qggmrf_values, NewList);
+                                             BFQGGMRF_values, NewList);
 
-    /*UpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
+    /*BFUpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
            m_Sinogram, TempCol, ErrorSino,
            VoxelLineResponse, m_ForwardModel.get(), mask,
            magUpdateMap,
@@ -767,7 +767,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
            averageUpdate,
            averageMagnitudeOfRecon ,
            m_AdvParams->ZERO_SKIPPING,
-           qggmrf_values, m_VoxelIdxList);*/
+           BFQGGMRF_values, m_VoxelIdxList);*/
 
     yVoxelUpdate.execute();
 

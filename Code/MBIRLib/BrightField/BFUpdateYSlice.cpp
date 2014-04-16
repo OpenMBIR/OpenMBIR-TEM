@@ -35,7 +35,7 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#include "UpdateYSlice.h"
+#include "BFUpdateYSlice.h"
 
 //-- Boost Headers for Random Numbers
 #include <boost/random/mersenne_twister.hpp>
@@ -72,13 +72,13 @@
 // -----------------------------------------------------------------------------
 // Updates a line of voxels along y-axis
 // -----------------------------------------------------------------------------
-UpdateYSlice::UpdateYSlice(uint16_t yStart, uint16_t yEnd,
+BFUpdateYSlice::BFUpdateYSlice(uint16_t yStart, uint16_t yEnd,
                            GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
                            SinogramPtr  sinogram,
-                           std::vector<HAADFAMatrixCol::Pointer> &tempCol,
+                           std::vector<BFAMatrixCol::Pointer> &tempCol,
                            RealVolumeType::Pointer errorSino,
-                           std::vector<HAADFAMatrixCol::Pointer> &voxelLineResponse,
-                           HAADFForwardModel* forwardModel,
+                           std::vector<BFAMatrixCol::Pointer> &voxelLineResponse,
+                           BFForwardModel* forwardModel,
                            UInt8Image_t::Pointer mask,
                            RealImageType::Pointer magUpdateMap, //Hold the magnitude of the reconstuction along each voxel line
                            UInt8Image_t::Pointer magUpdateMask,
@@ -86,7 +86,7 @@ UpdateYSlice::UpdateYSlice(uint16_t yStart, uint16_t yEnd,
                            Real_t* averageUpdate,
                            Real_t* averageMagnitudeOfRecon,
                            unsigned int zeroSkipping,
-                           QGGMRF::QGGMRF_Values *qggmrf_values,
+                           BFQGGMRF::BFQGGMRF_Values *qggmrf_values,
                            VoxelUpdateList::Pointer voxelUpdateList) :
   m_YStart(yStart),
   m_YEnd(yEnd),
@@ -116,14 +116,14 @@ UpdateYSlice::UpdateYSlice(uint16_t yStart, uint16_t yEnd,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-UpdateYSlice::~UpdateYSlice()
+BFUpdateYSlice::~BFUpdateYSlice()
 {
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void UpdateYSlice::initVariables()
+void BFUpdateYSlice::initVariables()
 {
 
 }
@@ -131,7 +131,7 @@ void UpdateYSlice::initVariables()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int UpdateYSlice::getZeroCount()
+int BFUpdateYSlice::getZeroCount()
 {
   return m_ZeroCount;
 }
@@ -144,7 +144,7 @@ tbb::task*
 #else
 void
 #endif
-UpdateYSlice::execute()
+BFUpdateYSlice::execute()
 {
 
   int32_t ArraySize = m_VoxelUpdateList->numElements();
@@ -269,7 +269,7 @@ UpdateYSlice::execute()
 
           //Compute prior model parameters AND Solve the 1-D optimization problem
           errorcode = 0;
-          UpdatedVoxelValue = QGGMRF::FunctionalSubstitution(low, high, m_CurrentVoxelValue,
+          UpdatedVoxelValue = BFQGGMRF::FunctionalSubstitution(low, high, m_CurrentVoxelValue,
                                                              m_BoundaryFlag, m_Neighborhood,
                                                              m_Theta1, m_Theta2,m_QggmrfValues);
           //Positivity constraints

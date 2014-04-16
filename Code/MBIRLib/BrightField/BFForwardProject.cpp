@@ -1,6 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
- * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
+ * Copyright (c) 2011 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2011 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -34,67 +34,86 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "HAADFDetectorParameters.h"
 
-#include "MBIRLib/MBIRLib.h"
+#include "BFForwardProject.h"
+
+#include <sstream>
+
+
 #include "MBIRLib/Common/EIMMath.h"
+#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-HAADFDetectorParameters::HAADFDetectorParameters()
+BFForwardProject::BFForwardProject(Sinogram* sinogram,
+                               Geometry* geometry,
+                               std::vector<BFAMatrixCol::Pointer> &tempCol,
+                               std::vector<BFAMatrixCol::Pointer> &voxelLineResponse,
+                               RealVolumeType::Pointer yEst,
+                               BFForwardModel* forwardModel,
+                               uint16_t tilt,
+                               Observable* obs) :
+m_Sinogram(sinogram),
+m_Geometry(geometry),
+m_TempCol(tempCol),
+m_VoxelLineResponse(voxelLineResponse),
+m_YEstimate(yEst),
+m_ForwardModel(forwardModel),
+m_Tilt(tilt),
+m_Observable(obs)
 {
-
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-HAADFDetectorParameters::~HAADFDetectorParameters()
+BFForwardProject::~BFForwardProject()
 {
 }
 
 // -----------------------------------------------------------------------------
-/* Initializes the global variables cosine and sine to speed up computation
- */
-void HAADFDetectorParameters::calculateSinCos(SinogramPtr m_Sinogram)
-{
-  uint16_t i;
-  size_t dims[1] =
-  { m_Sinogram->N_theta };
-  m_cosine = RealArrayType::New(dims, "cosine");
-  m_sine = RealArrayType::New(dims, "sine");
-
-  for (i = 0; i < m_Sinogram->N_theta; i++)
-  {
-    m_cosine->d[i] = cos(m_Sinogram->angles[i]);
-    m_sine->d[i] = sin(m_Sinogram->angles[i]);
-  }
-}
-
+// Project the volume
 // -----------------------------------------------------------------------------
-// Beam profile used for A-matrix
-// -----------------------------------------------------------------------------
-void HAADFDetectorParameters::initializeBeamProfile(SinogramPtr m_Sinogram, AdvancedParametersPtr m_AdvParams)
+void BFForwardProject::operator()() const
 {
-  uint16_t i;
-  Real_t sum = 0, W;
-  size_t dims[1] =
-  { m_AdvParams->BEAM_RESOLUTION };
-  m_BeamProfile = RealArrayType::New(dims, "BeamProfile");
-  W = m_BeamWidth / 2;
-  for (i = 0; i < m_AdvParams->BEAM_RESOLUTION; i++)
+  std::stringstream ss;
+  ss << "Forward projecting Z-Slice " << m_Tilt << "/" << m_Geometry->N_z;
+  if (NULL != m_Observable)
   {
-    m_BeamProfile->d[i] = 0.54 - 0.46 * cos((2.0 * M_PI / m_AdvParams->BEAM_RESOLUTION) * i);
-    sum = sum + m_BeamProfile->d[i];
+    m_Observable->notify(ss.str(), 0, Observable::UpdateProgressMessage);
   }
 
-  //Normalize the beam to have an area of 1
-  for (i = 0; i < m_AdvParams->BEAM_RESOLUTION; i++)
-  {
-    m_BeamProfile->d[i] /= sum;
-    m_BeamProfile->d[i] /= m_Sinogram->delta_t; //This is for proper normalization
-    // printf("%lf\n",BeamProfile->d[i]);
-  }
+  uint32_t j = m_Tilt;
+  uint16_t VoxelLineAccessCounter;
+  uint32_t Index;
+  Real_t ttmp = 0.0;
+  RealArrayType::Pointer I_0 = m_ForwardModel->getI_0();
 
+  for (uint32_t k = 0; k < m_Geometry->N_x; k++)
+  {
+    Index = j * m_Geometry->N_x + k;
+    if(m_TempCol[Index]->count > 0)
+    {
+      for (uint32_t i = 0; i < m_Geometry->N_y; i++) //slice index
+      {
+        for (uint32_t q = 0; q < m_TempCol[Index]->count; q++)
+        {
+          //calculating the footprint of the voxel in the t-direction
+          int16_t i_theta = int16_t(floor(static_cast<float>(m_TempCol[Index]->index[q] / (m_Sinogram->N_r))));
+          int16_t i_r = (m_TempCol[Index]->index[q] % (m_Sinogram->N_r));
+          VoxelLineAccessCounter = 0;
+          for (uint32_t i_t = m_VoxelLineResponse[i]->index[0]; i_t < m_VoxelLineResponse[i]->index[0] + m_VoxelLineResponse[i]->count; i_t++) //CHANGED from <= to <
+          {
+            ttmp = (I_0->d[i_theta]
+                * (m_TempCol[Index]->values[q] * m_VoxelLineResponse[i]->values[VoxelLineAccessCounter++] * m_Geometry->Object->getValue(j, k, i)));
+
+            m_YEstimate->addToValue(ttmp, i_theta, i_r, i_t);
+
+          }
+        }
+      }
+    }
+  }
 }

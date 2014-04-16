@@ -205,9 +205,6 @@ void MRCSinogramInitializer::execute()
   sinogram->N_r = voxelMax[0] - voxelMin[0] + 1;
   sinogram->N_t = voxelMax[1] - voxelMin[1] + 1;
 
-  sinogram->delta_r = 1.0;
-  sinogram->delta_t = 1.0;
-
   FEIHeader* feiHeaders = header.feiHeaders;
   if (feiHeaders != NULL)
   {

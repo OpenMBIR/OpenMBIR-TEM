@@ -52,10 +52,10 @@
 #include "MBIRLib/GenericFilters/CostData.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-#include "MBIRLib/HAADF/QGGMRFPriorModel.h"
+#include "MBIRLib/BrightField/BFQGGMRFPriorModel.h"
 
-#include "MBIRLib/HAADF/HAADFForwardModel.h"
-#include "MBIRLib/HAADF/HAADFAMatrixCol.h"
+#include "MBIRLib/BrightField/BFForwardModel.h"
+#include "MBIRLib/BrightField/BFAMatrixCol.h"
 
 #include "MBIRLib/Common/EIMTime.h"
 #define START_TIMER uint64_t startm = EIMTOMO_getMilliSeconds();
@@ -100,7 +100,7 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
     MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
     MXA_INSTANCE_PROPERTY(AdvancedParametersPtr, AdvParams)
 
-    MXA_INSTANCE_PROPERTY(HAADFForwardModel::Pointer, ForwardModel);
+    MXA_INSTANCE_PROPERTY(BFForwardModel::Pointer, ForwardModel);
 
     static void InitializeTomoInputs(TomoInputsPtr);
     static void InitializeSinogram(SinogramPtr);
@@ -133,23 +133,23 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
                       SinogramPtr sinogram,
                       GeometryPtr geometry,
                       RealVolumeType::Pointer ErrorSino,
-                      QGGMRF::QGGMRF_Values* qggmrf_Values);
+                      BFQGGMRF::BFQGGMRF_Values* BFQGGMRF_Values);
 
 
     Real_t computeCost(SinogramPtr sinogram,
                        GeometryPtr geometry,
                        RealVolumeType::Pointer errorSinogram,
-                       QGGMRF::QGGMRF_Values* qggmrf_Values);
+                       BFQGGMRF::BFQGGMRF_Values* BFQGGMRF_Values);
 
     //Updating voxels
     uint8_t updateVoxels(
         int16_t OuterIter,
         int16_t Iter,
-        std::vector<HAADFAMatrixCol::Pointer> &TempCol,
+        std::vector<BFAMatrixCol::Pointer> &TempCol,
         RealVolumeType::Pointer ErrorSino,
-        std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
+        std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
         CostData::Pointer cost,
-        QGGMRF::QGGMRF_Values* qggmrf_Values,
+        BFQGGMRF::BFQGGMRF_Values* BFQGGMRF_Values,
         RealImageType::Pointer magUpdateMap,
         RealImageType::Pointer filtMagUpdateMap,
         UInt8Image_t::Pointer magUpdateMask,
@@ -225,8 +225,8 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
      * @param haadfParameters
      */
     void storeVoxelResponse(RealVolumeType::Pointer H_t,
-                            std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
-                            HAADFDetectorParameters::Pointer haadfParameters);
+                            std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
+                            BFDetectorParameters::Pointer haadfParameters);
 
     /**
      * @brief
@@ -287,7 +287,7 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
      * @brief
      * @return
      */
-#ifndef EIMTOMO_USE_QGGMRF
+#ifndef EIMTOMO_USE_BFQGGMRF
     double surrogateFunctionBasedMin(Real_t currentVoxelValue);
 #endif
 

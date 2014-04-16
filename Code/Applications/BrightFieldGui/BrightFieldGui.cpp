@@ -74,7 +74,7 @@
 #include "MBIRLib/IOFilters/MRCHeader.h"
 #include "MBIRLib/IOFilters/MRCReader.h"
 
-#include "MBIRLib/HAADF/Filters/GainsOffsetsReader.h"
+#include "MBIRLib/BrightField/Filters/GainsOffsetsReader.h"
 
 #include "License/LicenseFiles.h"
 
@@ -912,6 +912,7 @@ void BrightFieldGui::initializeSOCEngine(bool fullReconstruction)
   m_MultiResSOC->setDefaultOffsetValue(true_offset);
 
   m_MultiResSOC->setUseDefaultOffset(useDefaultOffset->isChecked());
+  m_MultiResSOC->setDefaultPixelSize(m_CachedPixelSize);
 
   m_MultiResSOC->setStopThreshold(stopThreshold->text().toFloat(&ok));
   m_MultiResSOC->setOuterIterations(outerIterations->value());

@@ -76,26 +76,26 @@
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 
 #include "MBIRLib/GenericFilters/CostData.h"
-#include "MBIRLib/HAADF/QGGMRFPriorModel.h"
-#include "MBIRLib/HAADF/HAADFAMatrixCol.h"
+#include "MBIRLib/BrightField/BFQGGMRFPriorModel.h"
+#include "MBIRLib/BrightField/BFAMatrixCol.h"
 
 
 /**
- * @class HAADFForwardModel HAADFForwardModel.h MBIRLib/Reconstruction/HAADFForwardModel.h
+ * @class BFForwardModel BFForwardModel.h MBIRLib/Reconstruction/BFForwardModel.h
  * @brief
  * @author Michael A. Jackson for BlueQuartz Software
  * @date Sep 5, 2012
  * @version 1.0
  */
-class HAADFForwardModel : public Observable
+class BFForwardModel : public Observable
 {
   public:
 
-    MXA_SHARED_POINTERS(HAADFForwardModel)
-    MXA_TYPE_MACRO(HAADFForwardModel)
-    MXA_STATIC_NEW_MACRO(HAADFForwardModel)
+    MXA_SHARED_POINTERS(BFForwardModel)
+    MXA_TYPE_MACRO(BFForwardModel)
+    MXA_STATIC_NEW_MACRO(BFForwardModel)
 
-    virtual ~HAADFForwardModel();
+    virtual ~BFForwardModel();
 
     MXA_INSTANCE_PROPERTY(bool, Verbose)
     MXA_INSTANCE_PROPERTY(bool, VeryVerbose)
@@ -118,19 +118,19 @@ class HAADFForwardModel : public Observable
     MXA_INSTANCE_PROPERTY(Real_t, DefaultOffset)
     MXA_INSTANCE_PROPERTY(Real_t, DefaultVariance)
     MXA_INSTANCE_PROPERTY(bool, UseDefaultOffset)
-	MXA_INSTANCE_PROPERTY(Real_t, BraggDelta)
-	MXA_INSTANCE_PROPERTY(Real_t, BraggThreshold)
-    MXA_INSTANCE_PROPERTY(Real_t, BfOffset);
+    MXA_INSTANCE_PROPERTY(Real_t, BraggDelta)
+    MXA_INSTANCE_PROPERTY(Real_t, BraggThreshold)
+    MXA_INSTANCE_PROPERTY(Real_t, BfOffset)
 
-      // These are the Nuisance Parameters that we need to solve for
+    // These are the Nuisance Parameters that we need to solve for
     MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, I_0) //Gains
     MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Mu) //Offset
     MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Alpha) //Noise variance refinement factor
 
     MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Weight) //This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
-    MXA_INSTANCE_PROPERTY(UInt8VolumeType::Pointer, Selector); //This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
-	
-    void setQGGMRFValues(QGGMRF::QGGMRF_Values* qggmrf_values);
+    MXA_INSTANCE_PROPERTY(UInt8VolumeType::Pointer, Selector) //This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
+
+    void setBFQGGMRFValues(BFQGGMRF::BFQGGMRF_Values* qggmrf_values);
 
     void printNuisanceParameters(SinogramPtr sinogram);
 
@@ -156,8 +156,8 @@ class HAADFForwardModel : public Observable
      * @return
      */
     virtual int forwardProject(SinogramPtr sinogram, GeometryPtr geometry,
-                               std::vector<HAADFAMatrixCol::Pointer> &TempCol,
-                               std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
+                               std::vector<BFAMatrixCol::Pointer> &TempCol,
+                               std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
                                RealVolumeType::Pointer yEstimate,
                                RealVolumeType::Pointer errorSinogram);
 
@@ -165,7 +165,7 @@ class HAADFForwardModel : public Observable
     /**
      *
      */
-  
+
 
     /**
      *
@@ -183,52 +183,52 @@ class HAADFForwardModel : public Observable
      * @return
      */
     void jointEstimation(SinogramPtr sinogram,
-                        RealVolumeType::Pointer errorSinogram,
-                        RealVolumeType::Pointer yEstimate, CostData::Pointer cost);
-	void updateWeights(SinogramPtr sinogram,
+                         RealVolumeType::Pointer errorSinogram,
+                         RealVolumeType::Pointer yEstimate, CostData::Pointer cost);
+    void updateWeights(SinogramPtr sinogram,
                        RealVolumeType::Pointer errorSinogram);
-	
-	void updateSelector(SinogramPtr sinogram,
-                       RealVolumeType::Pointer errorSinogram);
-	
-	void printRatioSelected(SinogramPtr sinogram);
-	
-	void writeSelectorMrc(const std::string &file, SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino);
-	
-	Real_t estimateBraggThreshold(SinogramPtr sinogram,RealVolumeType::Pointer ErrorSino,Real_t percentage);
-	
-  
+
+    void updateSelector(SinogramPtr sinogram,
+                        RealVolumeType::Pointer errorSinogram);
+
+    void printRatioSelected(SinogramPtr sinogram);
+
+    void writeSelectorMrc(const std::string &file, SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino);
+
+    Real_t estimateBraggThreshold(SinogramPtr sinogram,RealVolumeType::Pointer ErrorSino,Real_t percentage);
+
+
     void writeNuisanceParameters(SinogramPtr sinogram);
 
     void writeSinogramFile(SinogramPtr sinogram,
                            RealVolumeType::Pointer finalSinogram);
-	
-	Real_t forwardCost(SinogramPtr sinogram,
-					   RealVolumeType::Pointer errorSinogram);
-	
-	//Computing the theta parameters of the cost function
-	void computeTheta(size_t Index,
-						 std::vector<HAADFAMatrixCol::Pointer> &TempCol,
-						 int32_t xzSliceIdx,
-						 std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
-						 RealVolumeType::Pointer ErrorSino,
-						 SinogramPtr sinogram,
-					     RealArrayType::Pointer Thetas);
-	
-	//After updating a voxel "Index",update sinogram
-	void updateErrorSinogram(Real_t ChangeInVoxelValue,
-							 size_t Index,
-							 std::vector<HAADFAMatrixCol::Pointer> &TempCol,
-							 int32_t xzSliceIdx,
-							 std::vector<HAADFAMatrixCol::Pointer> &VoxelLineResponse,
-							 RealVolumeType::Pointer errorSinogram,
-							 SinogramPtr sinogram);
-	
-	void processRawCounts(SinogramPtr sinogram);
+
+    Real_t forwardCost(SinogramPtr sinogram,
+                       RealVolumeType::Pointer errorSinogram);
+
+    //Computing the theta parameters of the cost function
+    void computeTheta(size_t Index,
+                      std::vector<BFAMatrixCol::Pointer> &TempCol,
+                      int32_t xzSliceIdx,
+                      std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
+                      RealVolumeType::Pointer ErrorSino,
+                      SinogramPtr sinogram,
+                      RealArrayType::Pointer Thetas);
+
+    //After updating a voxel "Index",update sinogram
+    void updateErrorSinogram(Real_t ChangeInVoxelValue,
+                             size_t Index,
+                             std::vector<BFAMatrixCol::Pointer> &TempCol,
+                             int32_t xzSliceIdx,
+                             std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
+                             RealVolumeType::Pointer errorSinogram,
+                             SinogramPtr sinogram);
+
+    void processRawCounts(SinogramPtr sinogram);
 
 
   protected:
-    HAADFForwardModel();
+    BFForwardModel();
 
   private:
     RealImageType::Pointer m_QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
@@ -239,17 +239,17 @@ class HAADFForwardModel : public Observable
     RealArrayType::Pointer m_D2; //hold the intermediate values needed to compute optimal mu_k
 
     Real_t k_HammingWindow[5][5];
-	Real_t Theta[2]; //Theta1 and Theta2 in the optimization
- 
-#ifdef EIMTOMO_USE_QGGMRF
-    QGGMRF::QGGMRF_Values* m_QGGMRF_Values;
+    Real_t Theta[2]; //Theta1 and Theta2 in the optimization
+
+#ifdef EIMTOMO_USE_BFQGGMRF
+    BFQGGMRF::BFQGGMRF_Values* m_BFQGGMRF_Values;
 #else
     Real_t MRF_P;
     Real_t SIGMA_X_P;
 #endif
 
-    HAADFForwardModel(const HAADFForwardModel&); // Copy Constructor Not Implemented
-    void operator=(const HAADFForwardModel&); // Operator '=' Not Implemented
+    BFForwardModel(const BFForwardModel&); // Copy Constructor Not Implemented
+    void operator=(const BFForwardModel&); // Operator '=' Not Implemented
 };
 
 #endif /* _HAADFFORWARDMODEL_H_ */

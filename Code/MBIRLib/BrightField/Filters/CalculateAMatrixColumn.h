@@ -41,7 +41,7 @@
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/GenericFilters/TomoFilter.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/HAADF/HAADFAMatrixCol.h"
+#include "MBIRLib/BrightField/BFAMatrixCol.h"
 
 /*
  *
@@ -67,7 +67,7 @@ class MBIRLib_EXPORT CalculateAMatrixColumn : public TomoFilter
     MXA_INSTANCE_PROPERTY_OLD(Real_t**, VoxelProfile, VoxelProfile);
     MXA_INSTANCE_PROPERTY_OLD(Real_t*, D1, d1);
     MXA_INSTANCE_PROPERTY_OLD(Real_t*, D2, d2);
-    MXA_INSTANCE_PROPERTY_OLD(HAADFAMatrixCol::Pointer, AMatrixCol, Ai)
+    MXA_INSTANCE_PROPERTY_OLD(BFAMatrixCol::Pointer, AMatrixCol, Ai)
 
 
     virtual void execute();

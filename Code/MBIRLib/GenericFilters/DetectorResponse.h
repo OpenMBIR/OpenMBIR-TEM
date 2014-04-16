@@ -42,7 +42,7 @@
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/GenericFilters/TomoFilter.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/HAADF/HAADFDetectorParameters.h"
+#include "MBIRLib/BrightField/BFDetectorParameters.h"
 
 /*
  *
@@ -58,7 +58,7 @@ class MBIRLib_EXPORT DetectorResponse : public TomoFilter
     virtual ~DetectorResponse();
 
 
-    MXA_INSTANCE_PROPERTY(HAADFDetectorParameters::Pointer, DetectorParameters)
+    MXA_INSTANCE_PROPERTY(BFDetectorParameters::Pointer, DetectorParameters)
 
     MXA_INSTANCE_PROPERTY(RealImageType::Pointer, VoxelProfile);
 

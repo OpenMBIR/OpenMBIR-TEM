@@ -35,7 +35,7 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#include "HAADFAMatrixCol.h"
+#include "BFAMatrixCol.h"
 
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Common/EIMMath.h"
@@ -44,7 +44,7 @@
 // -----------------------------------------------------------------------------
 // Constructor
 // -----------------------------------------------------------------------------
-HAADFAMatrixCol::HAADFAMatrixCol(size_t* dims, int32_t c)
+BFAMatrixCol::BFAMatrixCol(size_t* dims, int32_t c)
 {
   valuesPtr = RealArrayType::New(dims, "VoxelLineResponse_Values");
   values = valuesPtr->getPointer(0);
@@ -58,14 +58,14 @@ HAADFAMatrixCol::HAADFAMatrixCol(size_t* dims, int32_t c)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-HAADFAMatrixCol::~HAADFAMatrixCol()
+BFAMatrixCol::~BFAMatrixCol()
 {
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADFAMatrixCol::setCount(uint32_t c)
+void BFAMatrixCol::setCount(uint32_t c)
 {
   if(c > valuesPtr->getDims()[0])
   {
@@ -79,7 +79,7 @@ void HAADFAMatrixCol::setCount(uint32_t c)
 // -----------------------------------------------------------------------------
 // Function to calculate the 2-D A matrix column
 // -----------------------------------------------------------------------------
-HAADFAMatrixCol::Pointer HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(SinogramPtr sinogram,
+BFAMatrixCol::Pointer BFAMatrixCol::calculateBFAMatrixColumnPartial(SinogramPtr sinogram,
                                                                              GeometryPtr geometry,
                                                                              TomoInputsPtr tomoInputs,
                                                                              AdvancedParametersPtr advParams,
@@ -87,7 +87,7 @@ HAADFAMatrixCol::Pointer HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(Sin
                                                                              uint16_t col,
                                                                              uint16_t slice,
                                                                              RealVolumeType::Pointer detectorResponse,
-                                                                             HAADFDetectorParameters::Pointer haadfParameters)
+                                                                             BFDetectorParameters::Pointer haadfParameters)
 {
 
 
@@ -129,8 +129,8 @@ HAADFAMatrixCol::Pointer HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(Sin
   MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements) * sinogram->N_theta;
 
   size_t dims[1] = { MaximumSpacePerColumn };
-  HAADFAMatrixCol::Pointer Temp = HAADFAMatrixCol::New(dims, 0);
-//  HAADFAMatrixCol* Temp = (HAADFAMatrixCol*)get_spc(1, sizeof(HAADFAMatrixCol)); //This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
+  BFAMatrixCol::Pointer Temp = BFAMatrixCol::New(dims, 0);
+//  BFAMatrixCol* Temp = (BFAMatrixCol*)get_spc(1, sizeof(BFAMatrixCol)); //This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
 //
 //  Temp->values = (Real_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(Real_t));
 //  Temp->index = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(uint32_t));
@@ -220,7 +220,7 @@ HAADFAMatrixCol::Pointer HAADFAMatrixCol::calculateHAADFAMatrixColumnPartial(Sin
   }
 
   dims[0] = count;
-  HAADFAMatrixCol::Pointer Ai = HAADFAMatrixCol::New(dims, 0);
+  BFAMatrixCol::Pointer Ai = BFAMatrixCol::New(dims, 0);
 
   k = 0;
   for (uint32_t i = 0; i < count; i++)

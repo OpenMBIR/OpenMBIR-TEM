@@ -75,9 +75,6 @@ class MultiResolutionReconstruction : public FilterPipeline
     MXA_INSTANCE_PROPERTY(int, NumberResolutions)
     MXA_INSTANCE_PROPERTY(float, SampleThickness)
     MXA_INSTANCE_PROPERTY(float, TargetGain)
-    MXA_INSTANCE_PROPERTY(float, BraggThreshold)
-    MXA_INSTANCE_PROPERTY(float, BraggDelta)
-    MXA_INSTANCE_PROPERTY(float, BfOffset)
     MXA_INSTANCE_PROPERTY(float, StopThreshold)
     MXA_INSTANCE_PROPERTY(int, OuterIterations)
     MXA_INSTANCE_PROPERTY(int, InnerIterations)
@@ -90,10 +87,10 @@ class MultiResolutionReconstruction : public FilterPipeline
     MXA_INSTANCE_PROPERTY(bool, InterpolateInitialReconstruction)
     MXA_INSTANCE_PROPERTY(float, DefaultVariance)
     MXA_INSTANCE_PROPERTY(float, InitialReconstructionValue)
+    MXA_INSTANCE_PROPERTY(Real_t, DefaultPixelSize)
 
     MXA_INSTANCE_PROPERTY(std::vector<float>, Tilts)
     MXA_INSTANCE_PROPERTY(AdvancedParametersPtr, AdvParams)
-
 
     /**
      * @brief If this vector is set, ie, length = 6, then we are going to use
@@ -104,6 +101,10 @@ class MultiResolutionReconstruction : public FilterPipeline
 
     MXA_INSTANCE_PROPERTY(std::vector<uint8_t>, ViewMasks)
 
+
+    MXA_INSTANCE_PROPERTY(float, BraggThreshold)
+    MXA_INSTANCE_PROPERTY(float, BraggDelta)
+    MXA_INSTANCE_PROPERTY(float, BfOffset)
 
     /**
      * @brief
