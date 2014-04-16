@@ -378,8 +378,8 @@ void MultiResolutionReconstruction::execute()
     ReconstructionEngine::InitializeSinogram(sinogram);
     ReconstructionEngine::InitializeGeometry(geometry);
 
-    sinogram->delta_r = getDefaultPixelSize() * 1.0e9;
-    sinogram->delta_t = getDefaultPixelSize() * 1.0e9;
+    sinogram->delta_r = getDefaultPixelSize();
+    sinogram->delta_t = getDefaultPixelSize();
 
     //Calculate approximate memory required
     memCalculate(inputs);
