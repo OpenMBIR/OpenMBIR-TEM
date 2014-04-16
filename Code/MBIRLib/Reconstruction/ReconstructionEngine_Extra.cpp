@@ -573,7 +573,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
       std::cout << "**********************************************" << std::endl;
 #endif //debug
 
-      //Compute VSC threshold and create a map of pixels that are above the threshold value
+      //Compute a filtered version of the magnitude update map
       ComputeVSC(magUpdateMap, filtMagUpdateMap);
 
 #ifdef DEBUG

@@ -379,7 +379,7 @@ void MultiResolutionReconstruction::execute()
     ReconstructionEngine::InitializeGeometry(geometry);
 
     //This load the pixel size from a user based input if the headers are NOT FEI compliant
-    //If the header is FEI compliant, this value WILL be overwritten in ReconstructionEngine.cpp      
+    //If the header is FEI compliant, this value WILL be overwritten in ReconstructionEngine.cpp
     sinogram->delta_r = getDefaultPixelSize();
     sinogram->delta_t = getDefaultPixelSize();
 
