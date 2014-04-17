@@ -36,8 +36,6 @@
 
 #include "InitialReconstructionInitializer.h"
 
-
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/Common/allocate.h"
 
@@ -115,9 +113,9 @@ void InitialReconstructionInitializer::execute()
 
   //The max is going to be used to reconstruct a large area
  //However if its close to 90 this would result in a very large value - so truncate
- if(max > MAX_ANGLE_STRETCH)
-	 max = MAX_ANGLE_STRETCH;
-	
+ if(max > MBIR::Constants::k_MaxAngleStretch)
+   max = MBIR::Constants::k_MaxAngleStretch;
+
   // Convert Max to radians
   max = max * M_PI / 180.0;
   input->LengthZ *= advParams->Z_STRETCH;

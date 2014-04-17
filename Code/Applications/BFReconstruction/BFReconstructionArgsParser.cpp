@@ -48,6 +48,7 @@
 #include "MBIRLib/IOFilters/MRCHeader.h"
 #include "MBIRLib/IOFilters/MRCReader.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+#include "MBIRLib/BrightField/BFConstants.h"
 
 
 /**
@@ -131,7 +132,7 @@ BFReconstructionArgsParser::~BFReconstructionArgsParser()
 // -----------------------------------------------------------------------------
 // Parse the input arguments in the command line tool
 // -----------------------------------------------------------------------------
-int BFReconstructionArgsParser::parseArguments(int argc, char **argv, MultiResolutionReconstruction::Pointer m_MultiResSOC)
+int BFReconstructionArgsParser::parseArguments(int argc, char **argv, BFMultiResolutionReconstruction::Pointer m_MultiResSOC)
 {
   if(NULL == m_MultiResSOC)
   {
@@ -280,7 +281,7 @@ int BFReconstructionArgsParser::parseArguments(int argc, char **argv, MultiResol
     m_MultiResSOC->setInterpolateInitialReconstruction(interpolateInitialRecontruction.getValue());
     m_MultiResSOC->setDeleteTempFiles(m_DeleteTempFiles.getValue());
     AdvancedParametersPtr advParams = AdvancedParametersPtr(new AdvancedParameters);
-    ReconstructionEngine::InitializeAdvancedParams(advParams);
+    BFReconstructionEngine::InitializeAdvancedParams(advParams);
     m_MultiResSOC->setAdvParams(advParams);
 
     int subvolumeValues[6];

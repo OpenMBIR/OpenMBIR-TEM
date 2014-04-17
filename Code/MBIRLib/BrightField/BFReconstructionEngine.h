@@ -36,8 +36,8 @@
 
 
 
-#ifndef COMPUTATIONENGINE_H_
-#define COMPUTATIONENGINE_H_
+#ifndef _BF_COMPUTATIONENGINE_H_
+#define _BF_COMPUTATIONENGINE_H_
 
 //-- C Headers
 #include <stdio.h>
@@ -52,7 +52,8 @@
 #include "MBIRLib/GenericFilters/CostData.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-#include "MBIRLib/BrightField/BFQGGMRFPriorModel.h"
+#include "MBIRLib/BrightField/BFConstants.h"
+#include "MBIRLib/BrightField/BF_QGGMRFPriorModel.h"
 
 #include "MBIRLib/BrightField/BFForwardModel.h"
 #include "MBIRLib/Common/AMatrixCol.h"
@@ -63,51 +64,34 @@
 #define PRINT_TIME(msg)\
   std::cout << indent << msg << ": " << ((double)stopm-startm)/1000.0 << " seconds" << std::endl;
 
-#if 0
-struct ImgIdx {
-    int32_t xidx;
-    int32_t zidx;
-};
-
-struct List
-{
-    int32_t NumElts;
-    struct ImgIdx* Array;
-};
-
-void printList(struct List InList);
-void maxList(struct List InList);
-void minList(struct List InList);
-#endif
-
 /**
- * @class ReconstructionEngine ReconstructionEngine.h TomoEngine/SOC/ReconstructionEngine.h
+ * @class BFReconstructionEngine BFReconstructionEngine.h TomoEngine/SOC/BFReconstructionEngine.h
  * @brief
  * @author Michael A. Jackson for BlueQuartz Software
  * @author Singanallur Venkatakrishnan (Purdue University)
  * @version 1.0
  */
-class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
+class MBIRLib_EXPORT BFReconstructionEngine : public AbstractFilter
 {
 
   public:
-    MXA_SHARED_POINTERS(ReconstructionEngine);
-    MXA_TYPE_MACRO(ReconstructionEngine);
-    MXA_STATIC_NEW_MACRO(ReconstructionEngine);
+    MXA_SHARED_POINTERS(BFReconstructionEngine)
+    MXA_TYPE_MACRO(BFReconstructionEngine)
+    MXA_STATIC_NEW_MACRO(BFReconstructionEngine)
 
     MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
     MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)
     MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
     MXA_INSTANCE_PROPERTY(AdvancedParametersPtr, AdvParams)
 
-    MXA_INSTANCE_PROPERTY(BFForwardModel::Pointer, ForwardModel);
+    MXA_INSTANCE_PROPERTY(BFForwardModel::Pointer, ForwardModel)
 
     static void InitializeTomoInputs(TomoInputsPtr);
     static void InitializeSinogram(SinogramPtr);
     static void InitializeGeometry(GeometryPtr);
     static void InitializeAdvancedParams(AdvancedParametersPtr v);
 
-    virtual ~ReconstructionEngine();
+    virtual ~BFReconstructionEngine();
 
 
     /**
@@ -121,25 +105,20 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 
   protected:
     // Protect this constructor because we want to force the use of the other
-    ReconstructionEngine();
+    BFReconstructionEngine();
 
-    /**
-     * @brief
-     * @param errorSinogram
-     * @param Weight
-     * @return
-     */
+
     int calculateCost(CostData::Pointer cost,
                       SinogramPtr sinogram,
                       GeometryPtr geometry,
                       RealVolumeType::Pointer ErrorSino,
-                      BFQGGMRF::BFQGGMRF_Values* BFQGGMRF_Values);
+                      QGGMRF::QGGMRF_Values* QGGMRF_Values);
 
 
     Real_t computeCost(SinogramPtr sinogram,
                        GeometryPtr geometry,
                        RealVolumeType::Pointer errorSinogram,
-                       BFQGGMRF::BFQGGMRF_Values* BFQGGMRF_Values);
+                       QGGMRF::QGGMRF_Values* QGGMRF_Values);
 
     //Updating voxels
     uint8_t updateVoxels(
@@ -149,7 +128,7 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
         RealVolumeType::Pointer ErrorSino,
         std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
         CostData::Pointer cost,
-        BFQGGMRF::BFQGGMRF_Values* BFQGGMRF_Values,
+        QGGMRF::QGGMRF_Values* QGGMRF_Values,
         RealImageType::Pointer magUpdateMap,
         RealImageType::Pointer filtMagUpdateMap,
         UInt8Image_t::Pointer magUpdateMask,
@@ -176,10 +155,6 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 
     //Generate a regular sequential order list
     void GenRegularList(VoxelUpdateList::Pointer InpList);
-
-    //Generating a list of indices for ICD updates. Output stored in the
-    //private member m_VoxelIdxList
-//    VoxelUpdateList::Pointer GenRandList(struct List InpList);
 
     //Generating a list for NHICD based on the magnitude update map
     VoxelUpdateList::Pointer GenNonHomList(Real_t NHThresh, RealImageType::Pointer magUpdateMap);
@@ -287,7 +262,7 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
      * @brief
      * @return
      */
-#ifndef EIMTOMO_USE_BFQGGMRF
+#ifndef EIMTOMO_USE_QGGMRF
     double surrogateFunctionBasedMin(Real_t currentVoxelValue);
 #endif
 
@@ -355,8 +330,8 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
       }
     }
 
-    ReconstructionEngine(const ReconstructionEngine&); // Copy Constructor Not Implemented
-    void operator=(const ReconstructionEngine&); // Operator '=' Not Implemented
+    BFReconstructionEngine(const BFReconstructionEngine&); // Copy Constructor Not Implemented
+    void operator=(const BFReconstructionEngine&); // Operator '=' Not Implemented
 };
 
 #endif //CompEngine

@@ -43,8 +43,8 @@
 
 #include "MBIRLib/MBIRLibVersion.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/BrightField/ReconstructionEngine.h"
-#include "MBIRLib/BrightField/MultiResolutionReconstruction.h"
+#include "MBIRLib/BrightField/BFReconstructionEngine.h"
+#include "MBIRLib/BrightField/BFMultiResolutionReconstruction.h"
 #include "BFReconstructionArgsParser.h"
 
 
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
 
 
-  MultiResolutionReconstruction::Pointer engine = MultiResolutionReconstruction::New();
+  BFMultiResolutionReconstruction::Pointer engine = BFMultiResolutionReconstruction::New();
 
   BFReconstructionArgsParser argParser;
   int err = argParser.parseArguments(argc, argv, engine);

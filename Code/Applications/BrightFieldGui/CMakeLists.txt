@@ -40,7 +40,7 @@ include_directories( ${BrightFieldGui_BINARY_DIR} )
 include_directories( ${OpenMBIR_BINARY_DIR}/QtSupport )
 
 
-set(CLASS_NAME "MultiResolutionReconstruction")
+set(CLASS_NAME "BFMultiResolutionReconstruction")
 SET(ENGINE_INCLUDE_PATH "MBIRLib/BrightField")
 configure_file( ${PROJECT_CODE_DIR}/QtSupport/QObserverWrapper.h.in
                 ${BrightFieldGui_BINARY_DIR}/Q${CLASS_NAME}.h @ONLY IMMEDIATE)

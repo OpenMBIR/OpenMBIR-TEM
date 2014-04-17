@@ -43,8 +43,6 @@
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/IOFilters/MRCHeader.h"
 #include "MBIRLib/IOFilters/MRCReader.h"
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-
 
 namespace Detail
 {

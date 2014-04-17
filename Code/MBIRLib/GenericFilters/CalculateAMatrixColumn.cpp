@@ -35,7 +35,6 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 #include "CalculateAMatrixColumn.h"
 
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/Common/allocate.h"
 

@@ -204,9 +204,9 @@ int BFForwardModel::forwardProject(SinogramPtr sinogram,
 // -----------------------------------------------------------------------------
 // Set the prior model parameters
 // -----------------------------------------------------------------------------
-void BFForwardModel::setBFQGGMRFValues(BFQGGMRF::BFQGGMRF_Values* qggmrf_values)
+void BFForwardModel::setQGGMRFValues(QGGMRF::QGGMRF_Values* qggmrf_values)
 {
-  m_BFQGGMRF_Values = qggmrf_values;
+  m_QGGMRF_Values = qggmrf_values;
 }
 
 // -----------------------------------------------------------------------------

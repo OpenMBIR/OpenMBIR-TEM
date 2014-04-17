@@ -34,7 +34,7 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "ReconstructionEngine.h"
+#include "BFReconstructionEngine.h"
 
 //-- Boost Headers for Random Numbers
 #include <boost/random/mersenne_twister.hpp>
@@ -48,6 +48,7 @@
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/Common/EIMTime.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+#include "MBIRLib/BrightField/BFConstants.h"
 #include "MBIRLib/BrightField/BFUpdateYSlice.h"
 #include "MBIRLib/GenericFilters/MRCSinogramInitializer.h"
 #include "MBIRLib/GenericFilters/RawSinogramInitializer.h"
@@ -66,7 +67,7 @@
 // -----------------------------------------------------------------------------
 // Read the Input data from the supplied data file
 // -----------------------------------------------------------------------------
-int ReconstructionEngine::readInputData()
+int BFReconstructionEngine::readInputData()
 {
   TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
   std::string extension = MXAFileInfo::extension(m_TomoInputs->sinoFile);
@@ -112,7 +113,7 @@ int ReconstructionEngine::readInputData()
 // -----------------------------------------------------------------------------
 // Initialize the Geometry data from a rough reconstruction
 // -----------------------------------------------------------------------------
-int ReconstructionEngine::initializeRoughReconstructionData()
+int BFReconstructionEngine::initializeRoughReconstructionData()
 {
   InitialReconstructionInitializer::Pointer geomInitializer = InitialReconstructionInitializer::NullPointer();
   std::string extension = MXAFileInfo::extension(m_TomoInputs->initialReconFile);
@@ -157,7 +158,7 @@ int ReconstructionEngine::initializeRoughReconstructionData()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::computeOriginalXDims(uint16_t& cropStart, uint16_t& cropEnd)
+void BFReconstructionEngine::computeOriginalXDims(uint16_t& cropStart, uint16_t& cropEnd)
 {
 
   Real_t x;
@@ -187,7 +188,7 @@ void ReconstructionEngine::computeOriginalXDims(uint16_t& cropStart, uint16_t& c
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::initializeHt(RealVolumeType::Pointer H_t, Real_t OffsetT)
+void BFReconstructionEngine::initializeHt(RealVolumeType::Pointer H_t, Real_t OffsetT)
 {
   Real_t ProfileCenterT;
   for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
@@ -235,7 +236,7 @@ void ReconstructionEngine::initializeHt(RealVolumeType::Pointer H_t, Real_t Offs
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::initializeVolume(RealVolumeType::Pointer Y_Est, double value)
+void BFReconstructionEngine::initializeVolume(RealVolumeType::Pointer Y_Est, double value)
 {
   for (uint16_t i = 0; i < m_Sinogram->N_theta; i++)
   {
@@ -252,7 +253,7 @@ void ReconstructionEngine::initializeVolume(RealVolumeType::Pointer Y_Est, doubl
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
+void BFReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
                                               std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
                                               DetectorParameters::Pointer haadfParameters)
 {
@@ -334,7 +335,7 @@ void ReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::calculateArithmeticMean()
+void BFReconstructionEngine::calculateArithmeticMean()
 {
 
 }
@@ -343,7 +344,7 @@ void ReconstructionEngine::calculateArithmeticMean()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::writeReconstructionFile(const std::string& filepath)
+void BFReconstructionEngine::writeReconstructionFile(const std::string& filepath)
 {
   // Write the Reconstruction out to a file
   RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
@@ -363,7 +364,7 @@ void ReconstructionEngine::writeReconstructionFile(const std::string& filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::writeVtkFile(const std::string& vtkFile, uint16_t cropStart, uint16_t cropEnd)
+void BFReconstructionEngine::writeVtkFile(const std::string& vtkFile, uint16_t cropStart, uint16_t cropEnd)
 {
   std::stringstream ss;
   ss << "Writing VTK file to '" << vtkFile << "'";
@@ -407,7 +408,7 @@ void ReconstructionEngine::writeVtkFile(const std::string& vtkFile, uint16_t cro
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::writeMRCFile(const std::string& mrcFile, uint16_t cropStart, uint16_t cropEnd)
+void BFReconstructionEngine::writeMRCFile(const std::string& mrcFile, uint16_t cropStart, uint16_t cropEnd)
 {
   /* Write the output to the MRC File */
   std::stringstream ss;
@@ -437,7 +438,7 @@ void ReconstructionEngine::writeMRCFile(const std::string& mrcFile, uint16_t cro
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::writeAvizoFile(const std::string& file, uint16_t cropStart, uint16_t cropEnd)
+void BFReconstructionEngine::writeAvizoFile(const std::string& file, uint16_t cropStart, uint16_t cropEnd)
 {
   //  std::cout << "Writing Avizo file " << file << std::endl;
 
@@ -472,13 +473,13 @@ void ReconstructionEngine::writeAvizoFile(const std::string& file, uint16_t crop
 // Updates the voxels specified in the list for homogenous update. For non homgenous
 // update computes the list. Calls the parallel update of voxels routine
 // -----------------------------------------------------------------------------
-uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
+uint8_t BFReconstructionEngine::updateVoxels(int16_t OuterIter,
                                            int16_t Iter,
                                            std::vector<AMatrixCol::Pointer>& TempCol,
                                            RealVolumeType::Pointer ErrorSino,
                                            std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
                                            CostData::Pointer cost,
-                                           BFQGGMRF::BFQGGMRF_Values* BFQGGMRF_values,
+                                           QGGMRF::QGGMRF_Values* BFQGGMRF_values,
                                            RealImageType::Pointer magUpdateMap,
                                            RealImageType::Pointer filtMagUpdateMap,
                                            UInt8Image_t::Pointer magUpdateMask,
@@ -494,18 +495,18 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
   Real_t AverageMagnitudeOfRecon = 0;
 #endif
 
-  unsigned int updateType = VoxelUpdateType::RegularRandomOrderUpdate;
+  unsigned int updateType = MBIR::VoxelUpdateType::RegularRandomOrderUpdate;
   VoxelUpdateList::Pointer NHList;//non homogenous list of voxels to update
 
 
 #ifdef NHICD
   if(0 == EffIterCount % 2)
   {
-    updateType = VoxelUpdateType::HomogeniousUpdate;
+    updateType = MBIR::VoxelUpdateType::HomogeniousUpdate;
   }
   else
   {
-    updateType = VoxelUpdateType::NonHomogeniousUpdate;
+    updateType = MBIR::VoxelUpdateType::NonHomogeniousUpdate;
   }
 #endif//NHICD end if
 
@@ -523,15 +524,15 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
   uint8_t err = 0;
 
 
-  if(updateType == VoxelUpdateType::RegularRandomOrderUpdate)
+  if(updateType == MBIR::VoxelUpdateType::RegularRandomOrderUpdate)
   {
     ss << indent << "Regular Random Order update of Voxels" << std::endl;
   }
-  else if(updateType == VoxelUpdateType::HomogeniousUpdate)
+  else if(updateType == MBIR::VoxelUpdateType::HomogeniousUpdate)
   {
     ss << indent << "Homogenous update of voxels" << std::endl;
   }
-  else if(updateType == VoxelUpdateType::NonHomogeniousUpdate)
+  else if(updateType == MBIR::VoxelUpdateType::NonHomogeniousUpdate)
   {
     ss << indent << "Non Homogenous update of voxels" << std::endl;
     subIterations = SUB_ITER;
@@ -567,7 +568,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
     ss << "   SubLoop: " << NH_Iter << " of " << subIterations;
     float currentLoop = static_cast<float>(OuterIter * m_TomoInputs->NumIter + Iter);
     notify(ss.str(), currentLoop / totalLoops * 100.0f, Observable::UpdateProgressValueAndMessage);
-    if(updateType == VoxelUpdateType::NonHomogeniousUpdate)
+    if(updateType == MBIR::VoxelUpdateType::NonHomogeniousUpdate)
     {
 #ifdef DEBUG
       Real_t TempSum = 0;
@@ -827,7 +828,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 
 #ifdef NHICD
   /* NHList will go out of scope at the end of this function which will cause its destructor to be called and the memory automatically cleaned up */
-  //  if(updateType == VoxelUpdateType::NonHomogeniousUpdate && NHList.Array != NULL)
+  //  if(updateType == MBIR::VoxelUpdateType::NonHomogeniousUpdate && NHList.Array != NULL)
   //  {
   //    free(NHList.Array);
   //    std::cout<<"Freeing memory allocated to non-homogenous List"<<std::endl;
@@ -844,7 +845,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
+void BFReconstructionEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
 {
   Real_t x = 0.0;
   Real_t z = 0.0;
@@ -870,7 +871,7 @@ void ReconstructionEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::ComputeVSC(RealImageType::Pointer magUpdateMap, RealImageType::Pointer filtMagUpdateMap)
+void BFReconstructionEngine::ComputeVSC(RealImageType::Pointer magUpdateMap, RealImageType::Pointer filtMagUpdateMap)
 {
   Real_t filter_op = 0;
 
@@ -878,7 +879,7 @@ void ReconstructionEngine::ComputeVSC(RealImageType::Pointer magUpdateMap, RealI
   // int err = 0;
 #ifdef DEBUG
   FILE* Fp = NULL;
-  MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::MagnitudeMapFile);
+  MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, MBIR::Defaults::MagnitudeMapFile);
   if(errno < 0)
   {
 
@@ -919,7 +920,7 @@ void ReconstructionEngine::ComputeVSC(RealImageType::Pointer magUpdateMap, RealI
     }*/
 
 #ifdef DEBUG
-  MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::FilteredMagMapFile);
+  MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, MBIR::Defaults::FilteredMagMapFile);
   if(errno < 0)
   {
 
@@ -936,7 +937,7 @@ void ReconstructionEngine::ComputeVSC(RealImageType::Pointer magUpdateMap, RealI
 // -----------------------------------------------------------------------------
 // Sort the entries of filtMagUpdateMap and set the threshold to be ? percentile
 // -----------------------------------------------------------------------------
-Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdateMap)
+Real_t BFReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdateMap)
 {
   size_t dims[1] =
   { m_Geometry->N_z* m_Geometry->N_x};
@@ -965,7 +966,7 @@ Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdate
             TempMagMap->d[i * (uint32_t)m_Geometry->N_x + j] = magUpdateMap->getValue(i, j);
         } */
 
-  uint32_t percentile_index = ArrLength / Reconstruction::Constants::k_NumNonHomogeniousIter;
+  uint32_t percentile_index = ArrLength / MBIR::Constants::k_NumNonHomogeniousIter;
   std::cout << "Percentile to select= " << percentile_index << std::endl;
 
   //Partial selection sort
@@ -998,7 +999,7 @@ Real_t ReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpdate
 // -----------------------------------------------------------------------------
 // Function to generate a list of voxels based on the NH threshold
 // -----------------------------------------------------------------------------
-VoxelUpdateList::Pointer ReconstructionEngine::GenNonHomList(Real_t NHThresh, RealImageType::Pointer magUpdateMap)
+VoxelUpdateList::Pointer BFReconstructionEngine::GenNonHomList(Real_t NHThresh, RealImageType::Pointer magUpdateMap)
 {
 
   int32_t MaxNumElts = m_Geometry->N_z * m_Geometry->N_x;
@@ -1034,7 +1035,7 @@ VoxelUpdateList::Pointer ReconstructionEngine::GenNonHomList(Real_t NHThresh, Re
 //Function to generate a list of voxels in sequential order
 //for a given geometry object
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::GenRegularList(VoxelUpdateList::Pointer InpList)
+void BFReconstructionEngine::GenRegularList(VoxelUpdateList::Pointer InpList)
 {
   int32_t iter = 0;
   for (int16_t j = 0; j < m_Geometry->N_z; j++)
@@ -1051,7 +1052,7 @@ void ReconstructionEngine::GenRegularList(VoxelUpdateList::Pointer InpList)
 // -----------------------------------------------------------------------------
 //Function to generate a randomized list from a given input list
 // -----------------------------------------------------------------------------
-VoxelUpdateList::Pointer ReconstructionEngine::GenRandList(VoxelUpdateList::Pointer InpList)
+VoxelUpdateList::Pointer BFReconstructionEngine::GenRandList(VoxelUpdateList::Pointer InpList)
 {
   VoxelUpdateList::Pointer OpList;
 
@@ -1106,7 +1107,7 @@ VoxelUpdateList::Pointer ReconstructionEngine::GenRandList(VoxelUpdateList::Poin
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Real_t ReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A, uint32_t p, uint32_t r, uint32_t i)
+Real_t BFReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A, uint32_t p, uint32_t r, uint32_t i)
 {
 
   //std::cout<<"***********Select****************"<<std::endl;
@@ -1157,7 +1158,7 @@ Real_t ReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A, uint32_t
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-uint32_t ReconstructionEngine::Partition(RealArrayType::Pointer A, uint32_t p, uint32_t r)
+uint32_t BFReconstructionEngine::Partition(RealArrayType::Pointer A, uint32_t p, uint32_t r)
 {
   Real_t x = A->d[r], temp;
   uint32_t i = p - 1, j;
@@ -1181,7 +1182,7 @@ uint32_t ReconstructionEngine::Partition(RealArrayType::Pointer A, uint32_t p, u
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-uint32_t ReconstructionEngine::RandomizedPartition(RealArrayType::Pointer A, uint32_t p, uint32_t r)
+uint32_t BFReconstructionEngine::RandomizedPartition(RealArrayType::Pointer A, uint32_t p, uint32_t r)
 {
 
   const uint32_t rangeMin = 0;
@@ -1204,7 +1205,7 @@ uint32_t ReconstructionEngine::RandomizedPartition(RealArrayType::Pointer A, uin
   return Partition(A, p, r);
 }
 
-Real_t ReconstructionEngine::roiVolumeSum(UInt8Image_t::Pointer Mask)
+Real_t BFReconstructionEngine::roiVolumeSum(UInt8Image_t::Pointer Mask)
 {
 
   Real_t sum = 0;
@@ -1221,7 +1222,7 @@ Real_t ReconstructionEngine::roiVolumeSum(UInt8Image_t::Pointer Mask)
   return sum;
 }
 
-uint8_t ReconstructionEngine::stopCriteria(RealImageType::Pointer magUpdateMap, UInt8Image_t::Pointer magUpdateMask, Real_t PrevMagSum, uint32_t EffIterCount)
+uint8_t BFReconstructionEngine::stopCriteria(RealImageType::Pointer magUpdateMap, UInt8Image_t::Pointer magUpdateMask, Real_t PrevMagSum, uint32_t EffIterCount)
 {
 
   uint8_t exit_status = 1;
@@ -1239,7 +1240,7 @@ uint8_t ReconstructionEngine::stopCriteria(RealImageType::Pointer magUpdateMap, 
 
 #ifdef NHICD
   //In non homogenous mode check stopping criteria only after a full equit = equivalet iteration
-  if(EffIterCount % Reconstruction::Constants::k_NumNonHomogeniousIter == 0 && EffIterCount > 0 && PrevMagSum > 0)
+  if(EffIterCount % MBIR::Constants::k_NumNonHomogeniousIter == 0 && EffIterCount > 0 && PrevMagSum > 0)
 #else
   if(EffIterCount > 0 && PrevMagSum > 0)
 #endif //NHICD
@@ -1280,7 +1281,7 @@ uint8_t ReconstructionEngine::stopCriteria(RealImageType::Pointer magUpdateMap, 
       std::cout << Iter + 1 << " " << AverageUpdate / AverageMagnitudeOfRecon << std::endl;
     }
     //Use the stopping criteria if we are performing a full update of all voxels
-    if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != VoxelUpdateType::NonHomogeniousUpdate)
+    if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != MBIR::VoxelUpdateType::NonHomogeniousUpdate)
     {
       std::cout << "This is the terminating point " << Iter << std::endl;
       m_TomoInputs->StopThreshold *= m_AdvParams->THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations

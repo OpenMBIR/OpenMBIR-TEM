@@ -39,6 +39,8 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+
 /**
  * @brief Creates a new Array by allocating memory in a contiguous space
  * @param dims The dimensions of your data with the SLOWEST moving dimension
@@ -386,5 +388,19 @@ class TomoArray
 
 };
 
+typedef TomoArray<uint8_t, uint8_t*, 3> UInt8VolumeType;
+typedef TomoArray<uint8_t, uint8_t*, 2> UInt8Image_t;
+typedef TomoArray<uint8_t, uint8_t*, 1> UInt8ArrayType;
+
+typedef TomoArray<int32_t, int32_t*, 1> Int32ArrayType;
+typedef TomoArray<uint32_t, uint32_t*, 1> UInt32ArrayType;
+
+typedef TomoArray<Real_t, Real_t*, 3> RealVolumeType;
+typedef TomoArray<Real_t, Real_t*, 2> RealImageType;
+typedef TomoArray<Real_t, Real_t*, 1> RealArrayType;
+
+typedef TomoArray<float, float*, 3> FloatVolumeType;
+typedef TomoArray<float, float*, 2> FloatImageType;
+typedef TomoArray<float, float*, 1> FloatArrayType;
 
 #endif /* TOMOARRAY_HPP_ */

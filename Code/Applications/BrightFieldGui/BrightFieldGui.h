@@ -51,7 +51,7 @@ class MRCInfoWidget;
 
 //-- UIC generated Header
 #include "ui_BrightFieldGui.h"
-#include "QMultiResolutionReconstruction.h"
+#include "QBFMultiResolutionReconstruction.h"
 
 #include "MBIRLib/IOFilters/MRCHeader.h"
 #include "MBIRLib/Common/Observer.h"
@@ -464,7 +464,7 @@ private:
     QString               m_OffsetsFile;
     QString               m_VarianceFile;
     QThread*              m_WorkerThread;
-    QMultiResolutionReconstruction*   m_MultiResSOC;
+    QBFMultiResolutionReconstruction*   m_MultiResSOC;
     GainsOffsetsTableModel*  m_GainsOffsetsTableModel;
 
     bool                  m_SingleSliceReconstructionActive;

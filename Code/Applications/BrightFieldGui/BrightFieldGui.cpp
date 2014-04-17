@@ -69,7 +69,7 @@
 #include "MBIRLib/MBIRLibVersion.h"
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/BrightField/ReconstructionEngine.h"
+#include "MBIRLib/BrightField/BFReconstructionEngine.h"
 #include "MBIRLib/GenericFilters/SigmaXEstimation.h"
 #include "MBIRLib/IOFilters/MRCHeader.h"
 #include "MBIRLib/IOFilters/MRCReader.h"
@@ -793,7 +793,7 @@ void BrightFieldGui::on_m_GoBtn_clicked()
 void BrightFieldGui::startReconstruction(bool fullReconstruction)
 {
   // Create a new Reconstruction Object
-  m_MultiResSOC = new QMultiResolutionReconstruction(NULL);
+  m_MultiResSOC = new QBFMultiResolutionReconstruction(NULL);
 
   initializeSOCEngine(fullReconstruction);
   if(m_MultiResSOC == NULL)
@@ -875,7 +875,7 @@ void BrightFieldGui::initializeSOCEngine(bool fullReconstruction)
     QString tempFolder = QDir::tempPath() + QDir::separator() + QString("OpenMBIR");
     m_MultiResSOC->setTempDir(tempFolder.toStdString());
     QString reconVolumeFile = tempFolder + QDir::separator() +
-        finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(ScaleOffsetCorrection::ReconstructedMrcFile);
+        finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(MBIR::Defaults::ReconstructedMrcFile);
 
     m_MultiResSOC->setOutputFile(reconVolumeFile.toStdString());
 
@@ -943,7 +943,7 @@ void BrightFieldGui::initializeSOCEngine(bool fullReconstruction)
   m_MultiResSOC->setInterpolateInitialReconstruction(interpolateInitialRecontruction->isChecked());
   m_MultiResSOC->setDeleteTempFiles(m_DeleteTempFiles->isChecked());
   AdvancedParametersPtr advParams = AdvancedParametersPtr(new AdvancedParameters);
-  ReconstructionEngine::InitializeAdvancedParams(advParams);
+  BFReconstructionEngine::InitializeAdvancedParams(advParams);
   m_MultiResSOC->setAdvParams(advParams);
 
 
@@ -1061,7 +1061,7 @@ void BrightFieldGui::singleSliceComplete()
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
   QString reconVolumeFile = QString::fromStdString(m_MultiResSOC->getTempDir()) + QDir::separator() +
-      finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(ScaleOffsetCorrection::ReconstructedMrcFile);
+      finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(MBIR::Defaults::ReconstructedMrcFile);
 
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(reconVolumeFile);
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(false);
@@ -1776,8 +1776,6 @@ void BrightFieldGui::on_estimateSigmaX_clicked()
     {
       estimate->setTiltAngles(m_GainsOffsetsTableModel->getBTilts().toStdVector());
     }
-
-
     estimate->setXDims(xmin, xmax);
     estimate->setYDims(ymin, ymax);
     estimate->addObserver(this);
@@ -2151,7 +2149,7 @@ void BrightFieldGui::memCalculate()
   float delta_r = m_CachedPixelSize * 1.0e9;
   float delta_xz = delta_r*final_resolution;
   AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
-  ReconstructionEngine::InitializeAdvancedParams(advancedParams);
+  BFReconstructionEngine::InitializeAdvancedParams(advancedParams);
 
   //std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
 

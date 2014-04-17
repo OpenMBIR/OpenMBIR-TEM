@@ -33,7 +33,7 @@
  *                           FA8650-07-D-5800
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-#include "ReconstructionEngine.h"
+#include "BFReconstructionEngine.h"
 
 // C Includes
 #include <stdlib.h>
@@ -60,6 +60,7 @@
 #include "MBIRLib/BrightField/BFUpdateYSlice.h"
 
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+#include "MBIRLib/BrightField/BFConstants.h"
 
 #include "MBIRLib/IOFilters/MRCHeader.h"
 #include "MBIRLib/IOFilters/MRCReader.h"
@@ -143,7 +144,7 @@ namespace Detail
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ReconstructionEngine::ReconstructionEngine()
+BFReconstructionEngine::BFReconstructionEngine()
 {
 
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
@@ -190,17 +191,17 @@ ReconstructionEngine::ReconstructionEngine()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ReconstructionEngine::~ReconstructionEngine()
+BFReconstructionEngine::~BFReconstructionEngine()
 {
 }
 
 
-#include "ReconstructionEngine_Extra.cpp"
+#include "BFReconstructionEngine_Extra.cpp"
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::InitializeTomoInputs(TomoInputsPtr v)
+void BFReconstructionEngine::InitializeTomoInputs(TomoInputsPtr v)
 {
   v->sinoFile = "";
   v->initialReconFile = "";
@@ -237,7 +238,7 @@ void ReconstructionEngine::InitializeTomoInputs(TomoInputsPtr v)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::InitializeSinogram(SinogramPtr v)
+void BFReconstructionEngine::InitializeSinogram(SinogramPtr v)
 {
   v->N_r = 0;
   v->N_t = 0;
@@ -254,7 +255,7 @@ void ReconstructionEngine::InitializeSinogram(SinogramPtr v)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::InitializeGeometry(GeometryPtr v)
+void BFReconstructionEngine::InitializeGeometry(GeometryPtr v)
 {
   v->Object = RealVolumeType::NullPointer();
 
@@ -272,7 +273,7 @@ void ReconstructionEngine::InitializeGeometry(GeometryPtr v)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
+void BFReconstructionEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
 {
   v->X_SHRINK_FACTOR = 0.6;
   v->X_STRETCH = 1;
@@ -291,7 +292,7 @@ void ReconstructionEngine::InitializeAdvancedParams(AdvancedParametersPtr v)
 // -----------------------------------------------------------------------------
 // Main ICD reconstruction
 // -----------------------------------------------------------------------------
-void ReconstructionEngine::execute()
+void BFReconstructionEngine::execute()
 {
   uint64_t totalTime = EIMTOMO_getMilliSeconds();
   int32_t err = 0;
@@ -320,7 +321,7 @@ void ReconstructionEngine::execute()
 
   //#ifdef COST_CALCULATE //Commented out because if not the code fails to run.
   std::string filepath(m_TomoInputs->tempDir);
-  filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::CostFunctionFile);
+  filepath = filepath.append(MXADir::getSeparator()).append(MBIR::Defaults::CostFunctionFile);
 
   CostData::Pointer cost = CostData::New();
   cost->initOutputFile(filepath);
@@ -558,12 +559,12 @@ void ReconstructionEngine::execute()
   return 0; //exit the program once we finish forward projecting the object
 #endif//Forward Project mode
 
-  // Initialize the Prior Model parameters - here we are using a BFQGGMRF Prior Model
-  BFQGGMRF::BFQGGMRF_Values BFQGGMRF_values;
-  BFQGGMRF::initializePriorModel(m_TomoInputs, &BFQGGMRF_values);
+  // Initialize the Prior Model parameters - here we are using a QGGMRF Prior Model
+  QGGMRF::QGGMRF_Values QGGMRF_values;
+  QGGMRF::initializePriorModel(m_TomoInputs, &QGGMRF_values, NULL);
 
 #ifdef COST_CALCULATE
-  err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &BFQGGMRF_values);
+  err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &QGGMRF_values);
 #endif //Cost calculation endif
 
   Real_t TempBraggValue, DesBraggValue;
@@ -575,7 +576,7 @@ void ReconstructionEngine::execute()
     std::cout << "Desired Bragg threshold =" << DesBraggValue << std::endl;
     TempBraggValue = DefBraggThreshold;//m_ForwardModel->getBraggThreshold();
     m_ForwardModel->setBraggThreshold(TempBraggValue); //setting the Threshold T of \beta_{T,\delta}
-    //the \delta value is set in MultiResolutionReconstruction.cpp
+    //the \delta value is set in BFMultiResolutionReconstruction.cpp
   }
   else
   {
@@ -678,14 +679,14 @@ void ReconstructionEngine::execute()
       // iterations - cycle through the partial sub lists
       if(EffIterCount % 2 == 0) //Even iterations == Homogenous update
       {
-        listselector %= Reconstruction::Constants::k_NumHomogeniousIter;// A variable to cycle through the randmoized list of voxels
+        listselector %= MBIR::Constants::k_NumHomogeniousIter;// A variable to cycle through the randmoized list of voxels
 
-        int32_t nElements = floor((Real_t)TempList->numElements() / Reconstruction::Constants::k_NumHomogeniousIter);
+        int32_t nElements = floor((Real_t)TempList->numElements() / MBIR::Constants::k_NumHomogeniousIter);
 
         //If the number of voxels is NOT exactly divisible by NUM_NON .. then compensate and make the last of the lists longer
-        if(listselector == Reconstruction::Constants::k_NumHomogeniousIter - 1)
+        if(listselector == MBIR::Constants::k_NumHomogeniousIter - 1)
         {
-          nElements += (TempList->numElements() - nElements * Reconstruction::Constants::k_NumHomogeniousIter);
+          nElements += (TempList->numElements() - nElements * MBIR::Constants::k_NumHomogeniousIter);
           if(getVeryVerbose())
           {
             std::cout << "**********Adjusted number of voxel lines for last iter**************" << std::endl;
@@ -695,7 +696,7 @@ void ReconstructionEngine::execute()
         }
 
         //Set the list array for updating voxels
-        int32_t start = (uint32_t)(floor(((Real_t)TempList->numElements() / Reconstruction::Constants::k_NumHomogeniousIter)) * listselector);
+        int32_t start = (uint32_t)(floor(((Real_t)TempList->numElements() / MBIR::Constants::k_NumHomogeniousIter)) * listselector);
         m_VoxelIdxList = TempList->subList(nElements, start);
         //m_VoxelIdxList.Array = &(TempList.Array[]);
 
@@ -720,12 +721,12 @@ void ReconstructionEngine::execute()
 #endif //debug
 
       status = updateVoxels(reconOuterIter, reconInnerIter, tempCol,
-                            errorSino, voxelLineResponse, cost, &BFQGGMRF_values,
+                            errorSino, voxelLineResponse, cost, &QGGMRF_values,
                             magUpdateMap, filtMagUpdateMap, magUpdateMask, m_VisitCount,
                             PrevMagSum,
                             EffIterCount);
 #ifdef NHICD
-      if(EffIterCount % Reconstruction::Constants::k_NumNonHomogeniousIter == 0) // At the end of half an
+      if(EffIterCount % MBIR::Constants::k_NumNonHomogeniousIter == 0) // At the end of half an
         //equivalent iteration compute average Magnitude of recon to test
         //stopping criteria
       {
@@ -740,7 +741,7 @@ void ReconstructionEngine::execute()
       //Debugging information to test if every voxel is getting touched
 #ifdef NHICD
       //Debug every equivalent iteration
-      if(EffIterCount % (2 * Reconstruction::Constants::k_NumNonHomogeniousIter) == 0 && EffIterCount > 0)
+      if(EffIterCount % (2 * MBIR::Constants::k_NumNonHomogeniousIter) == 0 && EffIterCount > 0)
 #endif //NHICD
       {
         for (int16_t j = 0; j < m_Geometry->N_z; j++)
@@ -775,11 +776,11 @@ void ReconstructionEngine::execute()
 
       // Write out the MRC File ; If NHICD only after half an equit do a write
 #ifdef NHICD
-      if(EffIterCount % (Reconstruction::Constants::k_NumNonHomogeniousIter) == 0)
+      if(EffIterCount % (MBIR::Constants::k_NumNonHomogeniousIter) == 0)
 #endif //NHICD
       {
         ss.str("");
-        ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << reconInnerIter << "_" << ScaleOffsetCorrection::ReconstructedMrcFile;
+        ss << m_TomoInputs->tempDir << MXADir::getSeparator() << reconOuterIter << "_" << reconInnerIter << "_" << MBIR::Defaults::ReconstructedMrcFile;
         writeMRCFile(ss.str(), cropStart, cropEnd);
         notify(ss.str(), 0, Observable::UpdateIntermediateImage);
         m_TomoInputs->tempFiles.push_back(ss.str());
@@ -787,7 +788,7 @@ void ReconstructionEngine::execute()
 
 #ifdef COST_CALCULATE //typically run only for debugging
       /*********************Cost Calculation*************************************/
-      int16_t err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &BFQGGMRF_values);
+      int16_t err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &QGGMRF_values);
       if(err < 0)
       {
         std::cout << "Cost went up after voxel update" << std::endl;
@@ -830,7 +831,7 @@ void ReconstructionEngine::execute()
         m_ForwardModel->updateSelector(m_Sinogram, errorSino);
 
 #ifdef COST_CALCULATE //Debug info
-        int16_t err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &BFQGGMRF_values);
+        int16_t err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &QGGMRF_values);
         if(err < 0)
         {
           std::cout << "Cost went up after offset update" << std::endl;
@@ -847,7 +848,7 @@ void ReconstructionEngine::execute()
         m_ForwardModel->updateSelector(m_Sinogram, errorSino);
 #ifdef COST_CALCULATE
         //err = calculateCost(cost, Weight, errorSino);
-        err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &BFQGGMRF_values);
+        err = calculateCost(cost, m_Sinogram, m_Geometry, errorSino, &QGGMRF_values);
         if (err < 0 && reconOuterIter > 1)
         {
           std::cout << "Cost went up after variance update" << std::endl;
@@ -873,7 +874,7 @@ void ReconstructionEngine::execute()
 #ifdef FORWARD_PROJECT_MODE
   int fileError = 0;
   FILE* Fp6;
-  MAKE_OUTPUT_FILE(Fp6, fileError, m_TomoInputs->tempDir, ScaleOffsetCorrection::BFForwardProjectedObjectFile);
+  MAKE_OUTPUT_FILE(Fp6, fileError, m_TomoInputs->tempDir, MBIR::Defaults::BFForwardProjectedObjectFile);
   if (fileError == 1)
   {
 
@@ -908,7 +909,7 @@ void ReconstructionEngine::execute()
   // Writes ReconstructedObject.bin file for next resolution
   {
     std::stringstream ss;
-    ss << m_TomoInputs->tempDir << MXADir::getSeparator() << ScaleOffsetCorrection::ReconstructedObjectFile;
+    ss << m_TomoInputs->tempDir << MXADir::getSeparator() << MBIR::Defaults::ReconstructedObjectFile;
     writeReconstructionFile(ss.str());
   }
   // Write out the VTK file
@@ -937,9 +938,9 @@ void ReconstructionEngine::execute()
   std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
 
 #ifdef NHICD
-  std::cout << "Number of equivalet iterations taken =" << EffIterCount / Reconstruction::Constants::k_NumNonHomogeniousIter << std::endl;
+  std::cout << "Number of equivalet iterations taken =" << EffIterCount / MBIR::Constants::k_NumNonHomogeniousIter << std::endl;
 #else
-  std::cout << "Number of equivalet iterations taken =" << EffIterCount / Reconstruction::Constants::k_NumHomogeniousIter << std::endl;
+  std::cout << "Number of equivalet iterations taken =" << EffIterCount / MBIR::Constants::k_NumHomogeniousIter << std::endl;
 #endif //NHICD
   notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
   setErrorCondition(0);
@@ -953,7 +954,7 @@ void ReconstructionEngine::execute()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-RealImageType::Pointer ReconstructionEngine::calculateVoxelProfile()
+RealImageType::Pointer BFReconstructionEngine::calculateVoxelProfile()
 {
   Real_t angle, maxValLineIntegral;
   Real_t temp, dist1, dist2, leftCorner, leftNear, rightNear, rightCorner, t;
@@ -964,11 +965,11 @@ RealImageType::Pointer ReconstructionEngine::calculateVoxelProfile()
   Real_t checksum = 0;
   uint16_t i, j;
   FILE* fp = NULL;
-  MAKE_OUTPUT_FILE(fp, m_TomoInputs->tempDir, ScaleOffsetCorrection::VoxelProfileFile);
+  MAKE_OUTPUT_FILE(fp, m_TomoInputs->tempDir, MBIR::Defaults::VoxelProfileFile);
   if(errno > 0)
   {
     std::string filepath(m_TomoInputs->tempDir);
-    filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::VoxelProfileFile);
+    filepath = filepath.append(MXADir::getSeparator()).append(MBIR::Defaults::VoxelProfileFile);
     \
     std::cout << "VoxelProfile will NOT be written to file '" << filepath << std::endl;
   }
@@ -1029,7 +1030,7 @@ RealImageType::Pointer ReconstructionEngine::calculateVoxelProfile()
 // -----------------------------------------------------------------------------
 //Finds the maximum of absolute value elements in an array
 // -----------------------------------------------------------------------------
-Real_t ReconstructionEngine::absMaxArray(std::vector<Real_t>& Array)
+Real_t BFReconstructionEngine::absMaxArray(std::vector<Real_t>& Array)
 {
   uint16_t i;
   Real_t max;
@@ -1045,13 +1046,13 @@ Real_t ReconstructionEngine::absMaxArray(std::vector<Real_t>& Array)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int ReconstructionEngine::calculateCost(CostData::Pointer cost,
+int BFReconstructionEngine::calculateCost(CostData::Pointer cost,
                                         SinogramPtr sinogram,
                                         GeometryPtr geometry,
                                         RealVolumeType::Pointer ErrorSino,
-                                        BFQGGMRF::BFQGGMRF_Values* BFQGGMRF_Values)
+                                        QGGMRF::QGGMRF_Values* QGGMRF_Values)
 {
-  Real_t cost_value = computeCost(sinogram, geometry, ErrorSino, BFQGGMRF_Values);
+  Real_t cost_value = computeCost(sinogram, geometry, ErrorSino, QGGMRF_Values);
   //std::cout << "cost_value: " << cost_value << std::endl;
   int increase = cost->addCostValue(cost_value);
   if(increase == 1)
@@ -1065,14 +1066,15 @@ int ReconstructionEngine::calculateCost(CostData::Pointer cost,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Real_t ReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geometry, RealVolumeType::Pointer ErrorSino, BFQGGMRF::BFQGGMRF_Values* BFQGGMRF_values)
+Real_t BFReconstructionEngine::computeCost(SinogramPtr sinogram, GeometryPtr geometry, RealVolumeType::Pointer ErrorSino, QGGMRF::QGGMRF_Values* QGGMRF_values)
 {
   Real_t cost = 0;
-
+  Real_t filter[27];
+  QGGMRF::initializeFilter(filter);
   cost = m_ForwardModel->forwardCost(sinogram, ErrorSino); //Data term error
   if(getVeryVerbose())
   { std::cout << "Forward cost" << cost << std::endl; }
-  cost += BFQGGMRF::PriorModelCost(geometry, BFQGGMRF_values);//Prior model error
+  cost += QGGMRF::PriorModelCost(geometry, QGGMRF_values, filter);//Prior model error
   if(getVeryVerbose())
   { std::cout << "Total cost" << cost << std::endl; }
   return cost;

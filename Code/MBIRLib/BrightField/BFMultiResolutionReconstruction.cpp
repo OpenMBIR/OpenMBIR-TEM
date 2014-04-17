@@ -36,7 +36,7 @@
 
 
 
-#include "MultiResolutionReconstruction.h"
+#include "BFMultiResolutionReconstruction.h"
 
 #include <errno.h>
 
@@ -52,7 +52,7 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-MultiResolutionReconstruction::MultiResolutionReconstruction() :
+BFMultiResolutionReconstruction::BFMultiResolutionReconstruction() :
   FilterPipeline(),
   m_Debug(false),
   m_InputFile(""),
@@ -85,7 +85,7 @@ MultiResolutionReconstruction::MultiResolutionReconstruction() :
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-MultiResolutionReconstruction::~MultiResolutionReconstruction()
+BFMultiResolutionReconstruction::~BFMultiResolutionReconstruction()
 {
 }
 
@@ -96,7 +96,7 @@ MultiResolutionReconstruction::~MultiResolutionReconstruction()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std::ostream &out)
+void BFMultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std::ostream &out)
 {
 #if 1
   out << "------------------ TomoInputs Begin ------------------" << std::endl;
@@ -150,7 +150,7 @@ void MultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std::ostre
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MultiResolutionReconstruction::setCancel(bool value)
+void BFMultiResolutionReconstruction::setCancel(bool value)
 {
   m_Cancel = value;
   if (NULL != m_CurrentEngine.get())
@@ -163,7 +163,7 @@ void MultiResolutionReconstruction::setCancel(bool value)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool MultiResolutionReconstruction::getCancel()
+bool BFMultiResolutionReconstruction::getCancel()
 {
   return m_Cancel;
 }
@@ -172,7 +172,7 @@ bool MultiResolutionReconstruction::getCancel()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MultiResolutionReconstruction::execute()
+void BFMultiResolutionReconstruction::execute()
 {
   std::vector<std::string>  tempFiles;
 
@@ -184,7 +184,7 @@ void MultiResolutionReconstruction::execute()
   ss.str("");
 
   TomoInputsPtr prevInputs = TomoInputsPtr(new TomoInputs);
-  ReconstructionEngine::InitializeTomoInputs(prevInputs);
+  BFReconstructionEngine::InitializeTomoInputs(prevInputs);
 
 
   for (int i = 0; i < m_NumberResolutions; ++i)
@@ -197,7 +197,7 @@ void MultiResolutionReconstruction::execute()
     }
 
     TomoInputsPtr inputs = TomoInputsPtr(new TomoInputs);
-    ReconstructionEngine::InitializeTomoInputs(inputs);
+    BFReconstructionEngine::InitializeTomoInputs(inputs);
 
     /* ******* this is bad. Remove this for production work ****** */
     inputs->extendObject = getExtendObject();
@@ -254,7 +254,7 @@ void MultiResolutionReconstruction::execute()
     else
     {
       ss.str("");
-      ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedObjectFile;
+      ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::ReconstructedObjectFile;
       inputs->reconstructedOutputFile = ss.str();
 
       inputs->vtkOutputFile = "";
@@ -264,58 +264,58 @@ void MultiResolutionReconstruction::execute()
 
     // Line up all the temp files that we are going to delete
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::FinalGainParametersFile;
     inputs->gainsOutputFile = ss.str();
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalOffsetParametersFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::FinalOffsetParametersFile;
     inputs->offsetsOutputFile = ss.str();
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalVariancesFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::FinalVariancesFile;
     inputs->varianceOutputFile = ss.str();
     tempFiles.push_back(ss.str());
 
 
     //initialize the Bragg selector file
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::BraggSelectorFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::BraggSelectorFile;
     inputs->braggSelectorFile = ss.str();
     tempFiles.push_back(ss.str());
 
     // Create the paths for all the temp files that we want to delete
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedSinogramFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::ReconstructedSinogramFile;
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::CostFunctionFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::CostFunctionFile;
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::DetectorResponseFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::DetectorResponseFile;
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedObjectFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::ReconstructedObjectFile;
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::VoxelProfileFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::VoxelProfileFile;
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::UpsampledBinFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::UpsampledBinFile;
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FilteredMagMapFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::FilteredMagMapFile;
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::MagnitudeMapFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::MagnitudeMapFile;
     tempFiles.push_back(ss.str());
 
     inputs->NumOuterIter = getOuterIterations();
@@ -378,11 +378,11 @@ void MultiResolutionReconstruction::execute()
     GeometryPtr geometry = GeometryPtr(new Geometry);
 
 
-    ReconstructionEngine::InitializeSinogram(sinogram);
-    ReconstructionEngine::InitializeGeometry(geometry);
+    BFReconstructionEngine::InitializeSinogram(sinogram);
+    BFReconstructionEngine::InitializeGeometry(geometry);
 
     //This load the pixel size from a user based input if the headers are NOT FEI compliant
-    //If the header is FEI compliant, this value WILL be overwritten in ReconstructionEngine.cpp
+    //If the header is FEI compliant, this value WILL be overwritten in BFReconstructionEngine.cpp
     sinogram->delta_r = getDefaultPixelSize();
     sinogram->delta_t = getDefaultPixelSize();
 
@@ -399,7 +399,7 @@ void MultiResolutionReconstruction::execute()
     forwardModel->setVeryVerbose(true);
 
     //Create an Engine and initialize all the structures
-    ReconstructionEngine::Pointer engine = ReconstructionEngine::New();
+    BFReconstructionEngine::Pointer engine = BFReconstructionEngine::New();
     m_CurrentEngine = engine;
     engine->setTomoInputs(inputs);
     engine->setSinogram(sinogram);
@@ -419,7 +419,7 @@ void MultiResolutionReconstruction::execute()
     pipelineProgressMessage(ss.str());
 
     engine->execute();
-    engine = ReconstructionEngine::NullPointer();
+    engine = BFReconstructionEngine::NullPointer();
 
     prevInputs = inputs;
 
@@ -469,7 +469,7 @@ void MultiResolutionReconstruction::execute()
   setErrorCondition(err);
 }
 
-void MultiResolutionReconstruction::memCalculate(TomoInputsPtr inputs)
+void BFMultiResolutionReconstruction::memCalculate(TomoInputsPtr inputs)
 {
   float GeomNx,GeomNy,GeomNz;
   float SinoNr,SinoNt,SinoNtheta;
@@ -478,7 +478,7 @@ void MultiResolutionReconstruction::memCalculate(TomoInputsPtr inputs)
   SinoNtheta = static_cast<float>(inputs->zEnd - inputs->zStart+1);
 
   AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
-  ReconstructionEngine::InitializeAdvancedParams(advancedParams);
+  BFReconstructionEngine::InitializeAdvancedParams(advancedParams);
 
   if(inputs->extendObject == 1)
   {

@@ -44,9 +44,6 @@
 
 #include "MXA/Utilities/MXADir.h"
 
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -96,7 +93,7 @@ void SinogramBinWriter::execute()
 
 
   std::string filepath(getTomoInputs()->tempDir);
-  filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedSinogramFile);
+  filepath = filepath.append(MXADir::getSeparator()).append(MBIR::Defaults::ReconstructedSinogramFile);
   file = fopen(filepath.c_str(), "wb");
   if(file == 0)
   {

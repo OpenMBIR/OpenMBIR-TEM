@@ -43,7 +43,6 @@
 
 
 #include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 
 /**

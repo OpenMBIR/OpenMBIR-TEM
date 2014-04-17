@@ -35,27 +35,27 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#ifndef MULTIRESOLUTIONSOC_H_
-#define MULTIRESOLUTIONSOC_H_
+#ifndef _BFMULTIRESOLUTIONSOC_H_
+#define _BFMULTIRESOLUTIONSOC_H_
 
 
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Common/FilterPipeline.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/BrightField/ReconstructionEngine.h"
+#include "MBIRLib/BrightField/BFReconstructionEngine.h"
 
 /**
  * @brief This class controls the multiresolution reconstruction of an input
  * data set
  */
-class MultiResolutionReconstruction : public FilterPipeline
+class BFMultiResolutionReconstruction : public FilterPipeline
 {
   public:
-    MXA_SHARED_POINTERS(MultiResolutionReconstruction)
-    MXA_TYPE_MACRO_SUPER(MultiResolutionReconstruction, FilterPipeline)
-    MXA_STATIC_NEW_MACRO(MultiResolutionReconstruction)
+    MXA_SHARED_POINTERS(BFMultiResolutionReconstruction)
+    MXA_TYPE_MACRO_SUPER(BFMultiResolutionReconstruction, FilterPipeline)
+    MXA_STATIC_NEW_MACRO(BFMultiResolutionReconstruction)
 
-    virtual ~MultiResolutionReconstruction();
+    virtual ~BFMultiResolutionReconstruction();
 
     /**
      * @brief Cancel the operation
@@ -124,10 +124,10 @@ class MultiResolutionReconstruction : public FilterPipeline
      * @param inputs
      * @param bf_inputs
      */
-    void memCalculate(TomoInputsPtr inputs);//,TomoInputsPtr bf_inputs
+    void memCalculate(TomoInputsPtr inputs);
 
   protected:
-    MultiResolutionReconstruction();
+    BFMultiResolutionReconstruction();
 
     /**
      * @brief setupTempFiles This funtion setups up all the paths to the temp files tha need to be deleted
@@ -137,10 +137,10 @@ class MultiResolutionReconstruction : public FilterPipeline
 
   private:
     bool                 m_Cancel;
-    ReconstructionEngine::Pointer   m_CurrentEngine;
+    BFReconstructionEngine::Pointer   m_CurrentEngine;
 
-    MultiResolutionReconstruction(const MultiResolutionReconstruction&); // Copy Constructor Not Implemented
-    void operator=(const MultiResolutionReconstruction&); // Operator '=' Not Implemented
+    BFMultiResolutionReconstruction(const BFMultiResolutionReconstruction&); // Copy Constructor Not Implemented
+    void operator=(const BFMultiResolutionReconstruction&); // Operator '=' Not Implemented
 };
 
-#endif /* MULTIRESOLUTIONSOC_H_ */
+#endif /* _BFMULTIRESOLUTIONSOC_H_ */

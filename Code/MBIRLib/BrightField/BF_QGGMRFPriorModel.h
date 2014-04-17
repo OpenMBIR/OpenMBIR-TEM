@@ -34,48 +34,42 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+//q-GGMRF is of the form
+// \rho(\delta)= (|\deta/sigma|^p)/(c + |\deta/sigma|^(p-q))
+// p=2; 1<=q<=2
 
-#ifndef COMPUTEGAINSOFFETS_H_
-#define COMPUTEGAINSOFFETS_H_
+#ifndef _BF_QGGMRFPriorModel_H_
+#define _BF_QGGMRFPriorModel_H_
 
-
-#include "MXA/MXA.h"
-#include "MXA/Common/MXASetGetMacros.h"
 #include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/GenericFilters/TomoFilter.h"
-#include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Common/allocate.h"
-#include "MBIRLib/Common/EIMMath.h"
+#include "MBIRLib/Reconstruction/QGGMRF_Functions.h"
 
-/**
- * @class ComputeInitialOffsets ComputeInitialOffsets.h SOC/ComputeInitialOffsets.h
- * @brief
- * @author
- * @date Jan 3, 2012
- * @version 1.0
- */
-class MBIRLib_EXPORT ComputeInitialOffsets : public TomoFilter
-{
-  public:
-    MXA_SHARED_POINTERS(ComputeInitialOffsets)
-    MXA_STATIC_NEW_MACRO(ComputeInitialOffsets);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, ComputeInitialOffsets);
-    MXA_TYPE_MACRO_SUPER(ComputeInitialOffsets, TomoFilter)
-
-    virtual ~ComputeInitialOffsets();
-
-    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialOffset)
+namespace QGGMRF {
 
 
-    virtual void execute();
+  /**
+   * @brief initializePriorModel
+   * @param tomoInputs
+   * @param qggmrf_values
+   */
+  void initializePriorModel(TomoInputsPtr tomoInputs, QGGMRF::QGGMRF_Values* qggmrf_values, Real_t* filter);
+
+  /**
+   * @brief initializeFilter
+   * @param filter
+   */
+  void initializeFilter(Real_t* filter);
+
+  /**
+   * @brief PriorModelCost
+   * @param geometry
+   * @param qggmrf_values
+   * @param filter
+   * @return
+   */
+  Real_t PriorModelCost(GeometryPtr geometry, QGGMRF::QGGMRF_Values* qggmrf_values, Real_t* filter);
 
 
-  protected:
-    ComputeInitialOffsets();
+} /* end namespace BFQGGMRF */
 
-  private:
-    ComputeInitialOffsets(const ComputeInitialOffsets&); // Copy Constructor Not Implemented
-    void operator=(const ComputeInitialOffsets&); // Operator '=' Not Implemented
-};
-
-#endif /* COMPUTEGAINSOFFETS_H_ */
+#endif /* BFQGGMRF_FUNCTIONS_H_ */

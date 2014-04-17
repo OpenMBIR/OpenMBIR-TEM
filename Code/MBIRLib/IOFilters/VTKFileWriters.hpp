@@ -44,10 +44,6 @@
 #include "MXA/Common/MXASetGetMacros.h"
 #include "VTKWriterMacros.h"
 
-#include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-
-
 /**
  * @brief This is the SuperClass to implement if you want to write scalars to
  * a VTK Legacy File. The only method you need to implement is the writeScalars(FILE* f).
@@ -357,11 +353,11 @@ class TomoOutputScalarWriter : public VtkScalarWriter
     std::string file;
     if (getWriteBinaryFiles() == true)
     {
-      WRITE_VTK_FLOAT_VOXEL_BINARY_2(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName, float)
+      WRITE_VTK_FLOAT_VOXEL_BINARY_2(r, MBIR::Defaults::VTK::TomoVoxelScalarName, float)
       }
     else
     {
-      WRITE_VTK_FLOAT_VOXEL_ASCII_2(r, ScaleOffsetCorrection::VTK::TomoVoxelScalarName)
+      WRITE_VTK_FLOAT_VOXEL_ASCII_2(r, MBIR::Defaults::VTK::TomoVoxelScalarName)
     }
     return err;
   }

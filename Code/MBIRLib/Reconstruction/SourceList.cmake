@@ -11,13 +11,17 @@
 
 
 set (MBIRLib_Reconstruction_SRCS
+
     ${MBIRLib_SOURCE_DIR}/Reconstruction/ReconstructionInputs.cpp
+    ${MBIRLib_SOURCE_DIR}/Reconstruction/QGGMRF_Functions.cpp
 )
 
 set (MBIRLib_Reconstruction_HDRS
-    ${MBIRLib_SOURCE_DIR}/Reconstruction/ReconstructionConstants.h
+
     ${MBIRLib_SOURCE_DIR}/Reconstruction/ReconstructionInputs.h
     ${MBIRLib_SOURCE_DIR}/Reconstruction/ReconstructionStructures.h
+    ${MBIRLib_SOURCE_DIR}/Reconstruction/ReconstructionConstants.h
+    ${MBIRLib_SOURCE_DIR}/Reconstruction/QGGMRF_Functions.h
 )
 
 cmp_IDE_SOURCE_PROPERTIES( "MBIRLib/Reconstruction" "${MBIRLib_Reconstruction_HDRS}" "${MBIRLib_Reconstruction_SRCS}" "${CMP_INSTALL_FILES}")

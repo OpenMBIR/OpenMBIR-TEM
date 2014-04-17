@@ -44,8 +44,6 @@
 #include "MXA/Utilities/MXADir.h"
 #include "MXA/Common/IO/MXAFileWriter64.h"
 
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -68,7 +66,7 @@ void DetectorResponseWriter::execute()
  // FILE* Fp = NULL;
 
   std::string filepath(getTomoInputs()->tempDir);
-  filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::DetectorResponseFile);
+  filepath = filepath.append(MXADir::getSeparator()).append(MBIR::Defaults::DetectorResponseFile);
 //  Fp = fopen(filepath.c_str(), "wb");
 //  if(Fp == NULL)
 //  {

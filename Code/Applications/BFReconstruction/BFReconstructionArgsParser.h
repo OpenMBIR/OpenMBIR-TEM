@@ -36,7 +36,7 @@
 
 
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/BrightField/MultiResolutionReconstruction.h"
+#include "MBIRLib/BrightField/BFMultiResolutionReconstruction.h"
 
 
 /**
@@ -52,7 +52,7 @@ class BFReconstructionArgsParser
     BFReconstructionArgsParser();
     virtual ~BFReconstructionArgsParser();
 
-    int parseArguments(int argc, char **argv, MultiResolutionReconstruction::Pointer multiRes);
+    int parseArguments(int argc, char **argv, BFMultiResolutionReconstruction::Pointer multiRes);
 
     void printInputs(TomoInputsPtr inputs, std::ostream &out);
 

@@ -44,8 +44,9 @@
 
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+#include "MBIRLib/BrightField/BFConstants.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/BrightField/ReconstructionEngine.h"
+#include "MBIRLib/BrightField/BFReconstructionEngine.h"
 #include "MBIRLib/Common/AMatrixCol.h"
 #include "MBIRLib/BrightField/BFForwardModel.h"
 
@@ -107,21 +108,21 @@ class BFUpdateYSlice
    * @param qggmrf_values
    */
     BFUpdateYSlice(uint16_t yStart, uint16_t yEnd,
-                 GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
-                 SinogramPtr  sinogram,
-                 std::vector<AMatrixCol::Pointer> &tempCol,
-                 RealVolumeType::Pointer errorSino,
-                 std::vector<AMatrixCol::Pointer> &voxelLineResponse,
-                 BFForwardModel* forwardModel,
-                 UInt8Image_t::Pointer mask,
-                 RealImageType::Pointer magUpdateMap, //Hold the magnitude of the reconstuction along each voxel line
-                 UInt8Image_t::Pointer magUpdateMask,
-                 unsigned int voxelUpdateType,
-                 Real_t* averageUpdate,
-                 Real_t* averageMagnitudeOfRecon,
-                 unsigned int zeroSkipping,
-                 BFQGGMRF::BFQGGMRF_Values* qggmrf_values,
-                 VoxelUpdateList::Pointer voxelUpdateList);
+                   GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
+                   SinogramPtr  sinogram,
+                   std::vector<AMatrixCol::Pointer> &tempCol,
+                   RealVolumeType::Pointer errorSino,
+                   std::vector<AMatrixCol::Pointer> &voxelLineResponse,
+                   BFForwardModel* forwardModel,
+                   UInt8Image_t::Pointer mask,
+                   RealImageType::Pointer magUpdateMap, //Hold the magnitude of the reconstuction along each voxel line
+                   UInt8Image_t::Pointer magUpdateMask,
+                   unsigned int voxelUpdateType,
+                   Real_t* averageUpdate,
+                   Real_t* averageMagnitudeOfRecon,
+                   unsigned int zeroSkipping,
+                   QGGMRF::QGGMRF_Values* qggmrf_values,
+                   VoxelUpdateList::Pointer voxelUpdateList);
 
     ~BFUpdateYSlice();
 
@@ -174,7 +175,7 @@ class BFUpdateYSlice
 #endif
     unsigned int m_ZeroSkipping;
 
-    BFQGGMRF::BFQGGMRF_Values* m_QggmrfValues;
+    QGGMRF::QGGMRF_Values* m_QggmrfValues;
 
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
     uint8_t m_BoundaryFlag[27];
@@ -182,6 +183,7 @@ class BFUpdateYSlice
     //Real_t m_HammingWindow[5][5];
     Real_t m_Theta1;
     Real_t m_Theta2;
+    Real_t m_Filter[27];
     Real_t m_Neighborhood[27];
 
     //struct List* m_VoxelUpdateList;

@@ -74,9 +74,11 @@
 #include "MBIRLib/Common/Observable.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+#include "MBIRLib/BrightField/BFConstants.h"
 
 #include "MBIRLib/GenericFilters/CostData.h"
-#include "MBIRLib/BrightField/BFQGGMRFPriorModel.h"
+#include "MBIRLib/BrightField/BFConstants.h"
+#include "MBIRLib/BrightField/BF_QGGMRFPriorModel.h"
 #include "MBIRLib/Common/AMatrixCol.h"
 
 
@@ -105,11 +107,12 @@ class BFForwardModel : public Observable
     MXA_INSTANCE_PROPERTY(AdvancedParametersPtr, AdvParams)
     MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
 
-    // Bright Field Data Flag
-    MXA_INSTANCE_PROPERTY(bool, BF_Flag)
+
     MXA_INSTANCE_PROPERTY(TomoInputsPtr, BFTomoInputs)
     MXA_INSTANCE_PROPERTY(SinogramPtr, BFSinogram)
 
+    // Bright Field Data Flag
+    MXA_INSTANCE_PROPERTY(bool, BF_Flag)
     MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialGain)
     MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialOffset)
     MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialVariance)
@@ -130,7 +133,7 @@ class BFForwardModel : public Observable
     MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Weight) //This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
     MXA_INSTANCE_PROPERTY(UInt8VolumeType::Pointer, Selector) //This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
 
-    void setBFQGGMRFValues(BFQGGMRF::BFQGGMRF_Values* qggmrf_values);
+    void setQGGMRFValues(QGGMRF::QGGMRF_Values* qggmrf_values);
 
     void printNuisanceParameters(SinogramPtr sinogram);
 
@@ -241,8 +244,8 @@ class BFForwardModel : public Observable
     Real_t k_HammingWindow[5][5];
     Real_t Theta[2]; //Theta1 and Theta2 in the optimization
 
-#ifdef EIMTOMO_USE_BFQGGMRF
-    BFQGGMRF::BFQGGMRF_Values* m_BFQGGMRF_Values;
+#ifdef EIMTOMO_USE_QGGMRF
+    QGGMRF::QGGMRF_Values* m_QGGMRF_Values;
 #else
     Real_t MRF_P;
     Real_t SIGMA_X_P;

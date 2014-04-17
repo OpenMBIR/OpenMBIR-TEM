@@ -45,9 +45,6 @@
 
 #include "MXA/Utilities/MXADir.h"
 
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-
-
 
 #define MAKE_OUTPUT_FILE(Fp, err, outdir, filename)\
 {\

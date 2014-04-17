@@ -34,41 +34,17 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#ifndef SCALEOFFSETMOTIONSTRUCTURES_H_
-#define SCALEOFFSETMOTIONSTRUCTURES_H_
+#ifndef _ReconstructionStructures_H_
+#define _ReconstructionStructures_H_
 
 #include <string>
 #include <vector>
 
-typedef double Real_t;
 
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Common/TomoArray.hpp"
+#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 
-typedef TomoArray<uint8_t, uint8_t*, 3> UInt8VolumeType;
-typedef TomoArray<uint8_t, uint8_t*, 2> UInt8Image_t;
-typedef TomoArray<uint8_t, uint8_t*, 1> UInt8ArrayType;
-
-
-//typedef TomoArray<int32_t, int32_t***, 3> Int32VolumeType;
-
-typedef TomoArray<int32_t, int32_t*, 1> Int32ArrayType;
-typedef TomoArray<uint32_t, uint32_t*, 1> UInt32ArrayType;
-
-typedef TomoArray<Real_t, Real_t*, 3> RealVolumeType;
-typedef TomoArray<Real_t, Real_t*, 2> RealImageType;
-typedef TomoArray<Real_t, Real_t*, 1> RealArrayType;
-
-typedef TomoArray<float, float*, 3> FloatVolumeType;
-typedef TomoArray<float, float*, 2> FloatImageType;
-typedef TomoArray<float, float*, 1> FloatArrayType;
-
-namespace SOC {
-  enum TiltSelection {
-    A_Tilt,
-    B_Tilt
-  };
-}
 
   /* Axes conventions:
 
@@ -102,15 +78,6 @@ namespace SOC {
     Real_t RMax;
     Real_t T0;
     Real_t TMax;
-    #if 0
-    /* ****************** These should be moved to the ForwardModel Class ****/
-    Real_t targetGain;//,InitialOffset;//Initial scale and offset of the sinogram data
-    bool BF_Flag;
-    RealArrayType::Pointer InitialGain;//Reads in the initial value for the gain for each view
-    RealArrayType::Pointer InitialOffset;
-    RealArrayType::Pointer InitialVariance;
-    /* ****************** End Forward Model Variables ****/
-    #endif
   } Sinogram;
 
   typedef boost::shared_ptr<Sinogram> SinogramPtr;
@@ -161,9 +128,9 @@ namespace SOC {
 
     Real_t interpolateFactor;
     Real_t defaultInitialRecon;
-    
+
     std::vector<float> tilts;
-    
+
     /* These are input files */
     std::string sinoFile; /* .mrc formatted files are accepted currently */
     std::string initialReconFile;
@@ -183,16 +150,16 @@ namespace SOC {
     std::string avizoOutputFile;
     std::string braggSelectorFile;
     std::vector<std::string> tempFiles;
-    
+
     std::vector<uint8_t> excludedViews;// Indices of views to exclude from reconstruction
     std::vector<int> goodViews; // Contains the indices of the views to use for reconstruction
-    
+
     /* These are Mainly for the HAADF reconstructions */
     Real_t targetGain;
     bool useDefaultOffset;
     Real_t defaultOffset;
     Real_t defaultVariance;
-    
+
   } TomoInputs;
   typedef boost::shared_ptr<TomoInputs> TomoInputsPtr;
 
@@ -214,20 +181,20 @@ typedef struct
     unsigned int ZERO_SKIPPING; /* This will always be ON in the end product I think. */
     unsigned int NOISE_ESTIMATION; /* This is a parameter that the user MAY or MAY NOT
                                   want turned ON. It is ON by default */
-	unsigned int NOISE_MODEL; /* This is a parameter that the user MAY or MAY NOT
-							  want turned ON. It is ON by default */
-	unsigned int ESTIMATE_PRIOR;
+  unsigned int NOISE_MODEL; /* This is a parameter that the user MAY or MAY NOT
+                want turned ON. It is ON by default */
+  unsigned int ESTIMATE_PRIOR;
 } AdvancedParameters;
 typedef boost::shared_ptr<AdvancedParameters> AdvancedParametersPtr;
 
 /*
 typedef struct
 {
-	RealArrayType::Pointer I_0; //Gains
-	RealArrayType::Pointer mu; //Offset
-	RealArrayType::Pointer alpha;//Noise variance refinement factor
+  RealArrayType::Pointer I_0; //Gains
+  RealArrayType::Pointer mu; //Offset
+  RealArrayType::Pointer alpha;//Noise variance refinement factor
 } ScaleOffsetParams;
 typedef boost::shared_ptr<ScaleOffsetParams> ScaleOffsetParamsPtr;
 */
 
-#endif /* SCALEOFFSETMOTIONSTRUCTURES_H_ */
+#endif /* _ReconstructionStructures_H_ */

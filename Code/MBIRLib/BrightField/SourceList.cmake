@@ -8,23 +8,24 @@
 set (MBIRLib_BrightField_HDRS
     ${MBIRLib_SOURCE_DIR}/BrightField/BFForwardModel.h
     ${MBIRLib_SOURCE_DIR}/BrightField/BFForwardProject.h
-    ${MBIRLib_SOURCE_DIR}/BrightField/BFQGGMRFPriorModel.h
+    ${MBIRLib_SOURCE_DIR}/BrightField/BF_QGGMRFPriorModel.h
     ${MBIRLib_SOURCE_DIR}/BrightField/BFUpdateYSlice.h
-    ${MBIRLib_SOURCE_DIR}/BrightField/ReconstructionEngine.h
-    ${MBIRLib_SOURCE_DIR}/BrightField/MultiResolutionReconstruction.h
+    ${MBIRLib_SOURCE_DIR}/BrightField/BFReconstructionEngine.h
+    ${MBIRLib_SOURCE_DIR}/BrightField/BFMultiResolutionReconstruction.h
+    ${MBIRLib_SOURCE_DIR}/BrightField/BFConstants.h
 )
 
 set (MBIRLib_BrightField_SRCS
     ${MBIRLib_SOURCE_DIR}/BrightField/BFForwardModel.cpp
     ${MBIRLib_SOURCE_DIR}/BrightField/BFForwardProject.cpp
-    ${MBIRLib_SOURCE_DIR}/BrightField/BFQGGMRFPriorModel.cpp
+    ${MBIRLib_SOURCE_DIR}/BrightField/BF_QGGMRFPriorModel.cpp
     ${MBIRLib_SOURCE_DIR}/BrightField/BFUpdateYSlice.cpp
-    ${MBIRLib_SOURCE_DIR}/BrightField/ReconstructionEngine.cpp
-    ${MBIRLib_SOURCE_DIR}/BrightField/ReconstructionEngine_Extra.cpp
-    ${MBIRLib_SOURCE_DIR}/BrightField/MultiResolutionReconstruction.cpp
+    ${MBIRLib_SOURCE_DIR}/BrightField/BFReconstructionEngine.cpp
+    ${MBIRLib_SOURCE_DIR}/BrightField/BFReconstructionEngine_Extra.cpp
+    ${MBIRLib_SOURCE_DIR}/BrightField/BFMultiResolutionReconstruction.cpp
 )
 
-set_source_files_properties( ${MBIRLib_SOURCE_DIR}/BrightField/ReconstructionEngine_Extra.cpp
+set_source_files_properties( ${MBIRLib_SOURCE_DIR}/BrightField/BFReconstructionEngine_Extra.cpp
                              PROPERTIES HEADER_FILE_ONLY TRUE)
 
 cmp_IDE_SOURCE_PROPERTIES( "MBIRLib/BrightField" "${MBIRLib_BrightField_HDRS}" "${MBIRLib_BrightField_SRCS}" "${CMP_INSTALL_FILES}")

@@ -86,7 +86,7 @@ BFUpdateYSlice::BFUpdateYSlice(uint16_t yStart, uint16_t yEnd,
                            Real_t* averageUpdate,
                            Real_t* averageMagnitudeOfRecon,
                            unsigned int zeroSkipping,
-                           BFQGGMRF::BFQGGMRF_Values *qggmrf_values,
+                           QGGMRF::QGGMRF_Values *qggmrf_values,
                            VoxelUpdateList::Pointer voxelUpdateList) :
   m_YStart(yStart),
   m_YEnd(yEnd),
@@ -125,7 +125,7 @@ BFUpdateYSlice::~BFUpdateYSlice()
 // -----------------------------------------------------------------------------
 void BFUpdateYSlice::initVariables()
 {
-
+  QGGMRF::initializeFilter(m_Filter);
 }
 
 // -----------------------------------------------------------------------------
@@ -269,9 +269,9 @@ BFUpdateYSlice::execute()
 
           //Compute prior model parameters AND Solve the 1-D optimization problem
           errorcode = 0;
-          UpdatedVoxelValue = BFQGGMRF::FunctionalSubstitution(low, high, m_CurrentVoxelValue,
-                                                             m_BoundaryFlag, m_Neighborhood,
-                                                             m_Theta1, m_Theta2,m_QggmrfValues);
+          UpdatedVoxelValue = QGGMRF::FunctionalSubstitution(low, high, m_CurrentVoxelValue,
+                                                             m_BoundaryFlag, m_Filter, m_Neighborhood,
+                                                             m_Theta1, m_Theta2, m_QggmrfValues);
           //Positivity constraints
           if(errorcode == 0)
           {

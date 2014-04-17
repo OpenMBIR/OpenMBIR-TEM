@@ -42,6 +42,7 @@
 
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+#include "MBIRLib/BrightField/BFConstants.h"
 
 
 // -----------------------------------------------------------------------------
