@@ -62,7 +62,24 @@ namespace Detail
   }
 
   template<typename T>
-  void calcAvgDeviation(T* data, int total, Real_t &dev, double bf_offset)
+  void calcAvgDeviation(T* data, int total, Real_t &dev)
+  {
+    dev=0;
+    Real_t mean=0;
+    for (int i = 0; i < total; i++)
+    {
+      mean+=data[i];
+    }
+    mean/=total;
+    for (int i = 0; i < total; i++)
+    {
+      dev+=fabs(data[i]-mean);
+    }
+    dev/=total;
+  }
+
+  template<typename T>
+  void calcBFAvgDeviation(T* data, int total, Real_t &dev, double bf_offset)
   {
     dev=0;
     Real_t mean=0;
@@ -94,6 +111,7 @@ SigmaXEstimation::SigmaXEstimation() :
   m_DefaultOffset(0.0),
   m_TargetGain(1.0),
   m_BfOffset(0.0),
+  m_UseBFOffset(false),
   m_SigmaXEstimate(0.0)
 {
   m_XDims[0] = -1;
@@ -164,24 +182,24 @@ void SigmaXEstimation::execute()
     switch(header.mode)
     {
       case 0:
-        //calcMinMax<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-        Detail::calcAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset);
+    if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
+    else {  Detail::calcAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 1:
-        //calcMinMax<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-        Detail::calcAvgDeviation<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset);
+    if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
+    else {  Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 2:
-        //calcMinMax<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-        Detail::calcAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset);
+    if(m_UseBFOffset){ Detail::calcBFAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
+    else {  Detail::calcAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 3:
         break;
       case 4:
         break;
       case 6:
-        //calcMinMax<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-        Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset);
+    if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
+    else {  Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 16:
         break;
@@ -192,7 +210,6 @@ void SigmaXEstimation::execute()
 
     notify("Estimating Target Gain and Sigma X from Data. ", (int)progress, Observable::UpdateProgressValueAndMessage);
   }
-
 
   //modify it based on any knowledge they have about the tx. attenuation
 

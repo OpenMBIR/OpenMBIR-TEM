@@ -424,7 +424,7 @@ void ReconstructionEngine::execute()
   voxelProfile = calculateVoxelProfile(); //This is used for computation of the partial A matrix
 
   //Pre compute sine and cos theta to speed up computations
-  BFDetectorParameters::Pointer haadfParameters = BFDetectorParameters::New();
+  DetectorParameters::Pointer haadfParameters = DetectorParameters::New();
   haadfParameters->setOffsetR ( ((m_TomoInputs->delta_xz / sqrt(3.0)) + m_Sinogram->delta_r / 2) / m_AdvParams->DETECTOR_RESPONSE_BINS);
   haadfParameters->setOffsetT ( ((m_TomoInputs->delta_xz / 2) + m_Sinogram->delta_t / 2) / m_AdvParams->DETECTOR_RESPONSE_BINS);
   haadfParameters->setBeamWidth(m_Sinogram->delta_r);

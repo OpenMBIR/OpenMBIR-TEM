@@ -34,45 +34,67 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-
-#ifndef _HAADFPARAMETERS_H_
-#define _HAADFPARAMETERS_H_
-
-#include "MXA/MXA.h"
-#include "MXA/Common/MXASetGetMacros.h"
-
+#include "DetectorParameters.h"
 
 #include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-#include "MBIRLib/Reconstruction/ReconstructionStructures.h"
+#include "MBIRLib/Common/EIMMath.h"
 
-/**
- * @brief This class holds value specific to the HAADF Model
- */
-class BFDetectorParameters
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+DetectorParameters::DetectorParameters()
 {
-  public:
-    MXA_SHARED_POINTERS(BFDetectorParameters);
-    MXA_STATIC_NEW_MACRO(BFDetectorParameters)
-    virtual ~BFDetectorParameters();
-    //used to store cosine and sine of all angles through which sample is tilted
-    MXA_INSTANCE_PROPERTY( RealArrayType::Pointer, cosine)
-    MXA_INSTANCE_PROPERTY( RealArrayType::Pointer, sine)
-    MXA_INSTANCE_PROPERTY( RealArrayType::Pointer, BeamProfile) //used to store the shape of the e-beam
-    MXA_INSTANCE_PROPERTY( Real_t, BeamWidth)
-    MXA_INSTANCE_PROPERTY( Real_t, OffsetR)
-    MXA_INSTANCE_PROPERTY( Real_t, OffsetT)
 
-    void calculateSinCos(SinogramPtr m_Sinogram);
-    void initializeBeamProfile(SinogramPtr m_Sinogram, AdvancedParametersPtr m_AdvParams);
+}
 
-  protected:
-    BFDetectorParameters();
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+DetectorParameters::~DetectorParameters()
+{
+}
 
+// -----------------------------------------------------------------------------
+/* Initializes the global variables cosine and sine to speed up computation
+ */
+void DetectorParameters::calculateSinCos(SinogramPtr m_Sinogram)
+{
+  uint16_t i;
+  size_t dims[1] =
+  { m_Sinogram->N_theta };
+  m_cosine = RealArrayType::New(dims, "cosine");
+  m_sine = RealArrayType::New(dims, "sine");
 
-  private:
-    BFDetectorParameters(const BFDetectorParameters&); // Copy Constructor Not Implemented
-    void operator=(const BFDetectorParameters&); // Operator '=' Not Implemented
-};
+  for (i = 0; i < m_Sinogram->N_theta; i++)
+  {
+    m_cosine->d[i] = cos(m_Sinogram->angles[i]);
+    m_sine->d[i] = sin(m_Sinogram->angles[i]);
+  }
+}
 
-#endif /* _HAADFPARAMETERS_H_ */
+// -----------------------------------------------------------------------------
+// Beam profile used for A-matrix
+// -----------------------------------------------------------------------------
+void DetectorParameters::initializeBeamProfile(SinogramPtr m_Sinogram, AdvancedParametersPtr m_AdvParams)
+{
+  uint16_t i;
+  Real_t sum = 0, W;
+  size_t dims[1] =
+  { m_AdvParams->BEAM_RESOLUTION };
+  m_BeamProfile = RealArrayType::New(dims, "BeamProfile");
+  W = m_BeamWidth / 2;
+  for (i = 0; i < m_AdvParams->BEAM_RESOLUTION; i++)
+  {
+    m_BeamProfile->d[i] = 0.54 - 0.46 * cos((2.0 * M_PI / m_AdvParams->BEAM_RESOLUTION) * i);
+    sum = sum + m_BeamProfile->d[i];
+  }
+
+  //Normalize the beam to have an area of 1
+  for (i = 0; i < m_AdvParams->BEAM_RESOLUTION; i++)
+  {
+    m_BeamProfile->d[i] /= sum;
+    m_BeamProfile->d[i] /= m_Sinogram->delta_t; //This is for proper normalization
+    // printf("%lf\n",BeamProfile->d[i]);
+  }
+
+}

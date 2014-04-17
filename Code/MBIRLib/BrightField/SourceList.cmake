@@ -11,7 +11,6 @@ set (MBIRLib_BrightField_HDRS
     ${MBIRLib_SOURCE_DIR}/BrightField/BFForwardProject.h
     ${MBIRLib_SOURCE_DIR}/BrightField/BFQGGMRFPriorModel.h
     ${MBIRLib_SOURCE_DIR}/BrightField/BFUpdateYSlice.h
-    ${MBIRLib_SOURCE_DIR}/BrightField/BFDetectorParameters.h
 )
 
 set (MBIRLib_BrightField_SRCS
@@ -20,7 +19,6 @@ set (MBIRLib_BrightField_SRCS
     ${MBIRLib_SOURCE_DIR}/BrightField/BFForwardProject.cpp
     ${MBIRLib_SOURCE_DIR}/BrightField/BFQGGMRFPriorModel.cpp
     ${MBIRLib_SOURCE_DIR}/BrightField/BFUpdateYSlice.cpp
-    ${MBIRLib_SOURCE_DIR}/BrightField/BFDetectorParameters.cpp
 )
 
 cmp_IDE_SOURCE_PROPERTIES( "MBIRLib/BrightField" "${MBIRLib_BrightField_HDRS}" "${MBIRLib_BrightField_SRCS}" "${CMP_INSTALL_FILES}")
@@ -28,7 +26,7 @@ cmp_IDE_SOURCE_PROPERTIES( "MBIRLib/BrightField" "${MBIRLib_BrightField_HDRS}" "
 
 set (MBIRLib_BF_FILTERS_HDRS
     ${MBIRLib_SOURCE_DIR}/BrightField/Filters/CalculateAMatrixColumn.h
-    ${MBIRLib_SOURCE_DIR}/BrightField/Filters/ComputeInitialOffsets.h 
+    ${MBIRLib_SOURCE_DIR}/BrightField/Filters/ComputeInitialOffsets.h
     ${MBIRLib_SOURCE_DIR}/BrightField/Filters/GainsOffsetsReader.h
     ${MBIRLib_SOURCE_DIR}/BrightField/Filters/NuisanceParamWriter.h
     ${MBIRLib_SOURCE_DIR}/BrightField/Filters/NuisanceParamReader.h
@@ -50,8 +48,7 @@ set(MBIRLib_BrightField_HDRS
     ${MBIRLib_BrightField_HDRS}
     ${MBIRLib_BF_FILTERS_HDRS}
     )
-    
+
 set(MBIRLib_BrightField_SRCS
     ${MBIRLib_BrightField_SRCS}
     ${MBIRLib_BF_FILTERS_SRCS})
-    

@@ -226,7 +226,7 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
      */
     void storeVoxelResponse(RealVolumeType::Pointer H_t,
                             std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
-                            BFDetectorParameters::Pointer haadfParameters);
+                            DetectorParameters::Pointer haadfParameters);
 
     /**
      * @brief

@@ -40,7 +40,7 @@
 
 #include "MXA/Common/MXASetGetMacros.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/BrightField/BFDetectorParameters.h"
+#include "MBIRLib/GenericFilters/DetectorParameters.h"
 
 
 
@@ -52,7 +52,7 @@ class BFAMatrixCol
 {
   public:
 
-    MXA_SHARED_POINTERS(BFAMatrixCol);
+    MXA_SHARED_POINTERS(BFAMatrixCol)
     static Pointer New(size_t* dims, int32_t count)
     {
       Pointer sharedPtr (new BFAMatrixCol(dims, count));
@@ -79,7 +79,7 @@ class BFAMatrixCol
                                                                        uint16_t col,
                                                                        uint16_t slice,
                                                                        RealVolumeType::Pointer detectorResponse,
-                                                                       BFDetectorParameters::Pointer haadfParameters);
+                                                                       DetectorParameters::Pointer haadfParameters);
 
   protected:
     BFAMatrixCol(size_t* dims, int32_t c);

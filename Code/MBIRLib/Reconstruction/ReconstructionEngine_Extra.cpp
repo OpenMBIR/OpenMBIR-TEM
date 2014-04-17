@@ -246,7 +246,7 @@ void ReconstructionEngine::initializeVolume(RealVolumeType::Pointer Y_Est, doubl
 // -----------------------------------------------------------------------------
 void ReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
                                               std::vector<BFAMatrixCol::Pointer>& VoxelLineResponse,
-                                              BFDetectorParameters::Pointer haadfParameters)
+                                              DetectorParameters::Pointer haadfParameters)
 {
   Real_t ProfileThickness = 0.0;
   Real_t y = 0.0;

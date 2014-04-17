@@ -1768,6 +1768,7 @@ void BrightFieldGui::on_estimateSigmaX_clicked()
     estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
     estimate->setTargetGain(targetGain->text().toDouble(&ok));
     estimate->setBfOffset(bf_offset->text().toDouble());
+    estimate->setUseBFOffset(true);
     //TODO : Set the Offset from the UI
     if(tiltSelection->currentIndex() == 0)
     {
