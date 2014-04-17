@@ -77,6 +77,27 @@ namespace Detail
     }
     dev/=total;
   }
+  
+  template<typename T>
+  void calcBFAvgDeviation(T* data, int total, Real_t &dev, double bf_offset)
+  {
+    dev=0;
+    Real_t mean=0;
+    for (int i = 0; i < total; i++)
+    {
+      Real_t temp = data[i] + bf_offset;
+      if(temp > 0)
+        mean+=log(data[i]+bf_offset);
+    }
+    mean/=total;
+    for (int i = 0; i < total; i++)
+    {
+      Real_t temp = data[i] + bf_offset;
+      if(temp > 0)
+        dev+=fabs(log(data[i]+bf_offset)-mean);
+    }
+    dev/=total;
+  }
 
 }
 
@@ -89,6 +110,8 @@ SigmaXEstimation::SigmaXEstimation() :
   m_TiltAngles(0),
   m_DefaultOffset(0.0),
   m_TargetGain(1.0),
+  m_BfOffset(0.0),
+  m_UseBFOffset(false),
   m_SigmaXEstimate(0.0)
 {
   m_XDims[0] = -1;
@@ -112,7 +135,6 @@ SigmaXEstimation::~SigmaXEstimation()
 // -----------------------------------------------------------------------------
 void SigmaXEstimation::execute()
 {
-
   MRCHeader header;
   ::memset(&header, 0, 1024);
   header.feiHeaders = NULL;
@@ -160,24 +182,24 @@ void SigmaXEstimation::execute()
     switch(header.mode)
     {
       case 0:
-        //calcMinMax<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-        Detail::calcAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2);
+		if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); } 
+		else {  Detail::calcAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 1:
-        //calcMinMax<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-        Detail::calcAvgDeviation<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, sum2);
+		if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); } 
+		else {  Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 2:
-        //calcMinMax<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-        Detail::calcAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2);
+		if(m_UseBFOffset){ Detail::calcBFAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); } 
+		else {  Detail::calcAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 3:
         break;
       case 4:
         break;
       case 6:
-        //calcMinMax<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, min, max, sum2);
-        Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2);
+		if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); } 
+		else {  Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 16:
         break;
@@ -189,28 +211,15 @@ void SigmaXEstimation::execute()
     notify("Estimating Target Gain and Sigma X from Data. ", (int)progress, Observable::UpdateProgressValueAndMessage);
   }
 
-
   //modify it based on any knowledge they have about the tx. attenuation
 
   // Now Calculate the Sigma X estimation
   Real_t cosine = 0.0;
-  for(int i_theta = 0; i_theta < header.nz; ++i_theta)
+  for(int i_theta = 0; i_theta < m_TiltAngles.size(); ++i_theta)
   {
     //Subtract off any offset in the data
-    //      sum2s[i_theta] -= min * voxelCount;
-
-    //      sum2s[i_theta] /= voxelCount * m_TargetGain;
     sum2s[i_theta]/=m_TargetGain;
-
-    if(m_TiltAngles == 0 && NULL != header.feiHeaders)
-    {
-      cosine = cos(header.feiHeaders[i_theta].a_tilt * (Detail::DegToRad));
-    }
-    else if (NULL != header.feiHeaders)
-    {
-      cosine = cos(header.feiHeaders[i_theta].b_tilt * (Detail::DegToRad));
-    }
-
+    cosine = cos(m_TiltAngles[i_theta] * (Detail::DegToRad));
     sum1 += (sum2s[i_theta] * cosine) / (m_SampleThickness);
   }
 

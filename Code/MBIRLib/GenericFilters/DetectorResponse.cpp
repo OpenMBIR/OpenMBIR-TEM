@@ -71,9 +71,15 @@ void DetectorResponse::execute()
   TomoInputsPtr inputs = getTomoInputs();
   AdvancedParametersPtr advParams = getAdvParams();
 
+  Real_t beamWidth = m_DetectorParameters->getBeamWidth();
+  Real_t offsetR = m_DetectorParameters->getOffsetR();
+  Real_t offsetT = m_DetectorParameters->getOffsetT();
+  RealArrayType::Pointer beamProfile = m_DetectorParameters->getBeamProfile();
+
+
   Real_t r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,tmin;
-  Real_t r0 = -(m_BeamWidth)/2;
-  Real_t StepSize = m_BeamWidth/advParams->BEAM_RESOLUTION;
+  Real_t r0 = -(beamWidth)/2;
+  Real_t StepSize = beamWidth/advParams->BEAM_RESOLUTION;
   size_t dims[3] = {1, sinogram->N_theta,advParams->DETECTOR_RESPONSE_BINS};
   RealVolumeType::Pointer H = RealVolumeType::New(dims, "DetectorResponse");
 
@@ -84,11 +90,11 @@ void DetectorResponse::execute()
   {
     for (i = 0; i < advParams->DETECTOR_RESPONSE_BINS; i++) //displacement along r
     {
-      ProfileCenterR = i * m_OffsetR;
+      ProfileCenterR = i * offsetR;
       rmin = ProfileCenterR - inputs->delta_xz;
       for (j = 0; j < 1; j++) //displacement along t ;change to DETECTOR_RESPONSE_BINS later
       {
-        ProfileCenterT = j * m_OffsetT;
+        ProfileCenterT = j * offsetT;
         tmin = ProfileCenterT - inputs->delta_xy / 2;
         sum = 0;
         for (uint32_t p = 0; p < advParams->BEAM_RESOLUTION; p++)
@@ -105,7 +111,7 @@ void DetectorResponse::execute()
           {
             ProfileIndex = advParams->PROFILE_RESOLUTION - 1;
           }
-          sum += m_VoxelProfile->getValue(k, ProfileIndex) * m_BeamProfile->d[p];
+          sum += m_VoxelProfile->getValue(k, ProfileIndex) * beamProfile->d[p];
 //          sum += (m_VoxelProfile->d[k][ProfileIndex] * m_BeamProfile->d[p]);//;*BeamProfile[l]);
         }
         H->setValue(sum, j, k, i);

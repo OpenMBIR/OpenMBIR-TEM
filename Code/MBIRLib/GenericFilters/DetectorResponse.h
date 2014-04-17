@@ -42,6 +42,7 @@
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/GenericFilters/TomoFilter.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
+#include "MBIRLib/GenericFilters/DetectorParameters.h"
 
 /*
  *
@@ -50,18 +51,17 @@ class MBIRLib_EXPORT DetectorResponse : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(DetectorResponse)
-    MXA_STATIC_NEW_MACRO(DetectorResponse);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, DetectorResponse);
+    MXA_STATIC_NEW_MACRO(DetectorResponse)
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, DetectorResponse)
     MXA_TYPE_MACRO_SUPER(DetectorResponse, TomoFilter)
 
     virtual ~DetectorResponse();
 
-    MXA_INSTANCE_PROPERTY(Real_t, BeamWidth);
-    MXA_INSTANCE_PROPERTY(Real_t, OffsetR);
-    MXA_INSTANCE_PROPERTY(Real_t, OffsetT);
-    MXA_INSTANCE_PROPERTY(RealImageType::Pointer, VoxelProfile);
-    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, BeamProfile);
-    MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Response);
+
+    MXA_INSTANCE_PROPERTY(DetectorParameters::Pointer, DetectorParameters)
+    
+    MXA_INSTANCE_PROPERTY(RealImageType::Pointer, VoxelProfile)
+    MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Response)
 
     virtual void execute();
 
