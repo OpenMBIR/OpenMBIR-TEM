@@ -244,16 +244,12 @@ void MultiResolutionReconstruction::execute()
       return;
     }
 
-    //initialize the Bragg selector file
-    inputs->braggSelectorFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + "Selector.mrc";
-
     // Only write the mrc and vtk files on the last iteration
     if(m_NumberResolutions - 1 == i) // Last Iteration
     {
       inputs->vtkOutputFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + ".vtk";
       inputs->avizoOutputFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + ".am";
       inputs->mrcOutputFile = m_OutputFile;
-
     }
     else
     {
@@ -280,6 +276,13 @@ void MultiResolutionReconstruction::execute()
     ss.str("");
     ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalVariancesFile;
     inputs->varianceOutputFile = ss.str();
+    tempFiles.push_back(ss.str());
+
+
+    //initialize the Bragg selector file
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::BraggSelectorFile;
+    inputs->braggSelectorFile = ss.str();
     tempFiles.push_back(ss.str());
 
     // Create the paths for all the temp files that we want to delete

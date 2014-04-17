@@ -867,7 +867,8 @@ void BrightFieldGui::initializeSOCEngine(bool fullReconstruction)
   path = fi.absolutePath();
   if (fullReconstruction == true)
   {
-    m_MultiResSOC->setTempDir(path.toStdString());
+    QString tempFolder = QDir::tempPath() + QDir::separator() + QString("OpenMBIR");
+    m_MultiResSOC->setTempDir(tempFolder.toStdString() /*path.toStdString()*/);
     path = QDir::toNativeSeparators(fi.absoluteFilePath());
     m_MultiResSOC->setOutputFile(path.toStdString());
   }
@@ -1140,10 +1141,6 @@ void BrightFieldGui::pipelineComplete()
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
   emit pipelineEnded();
-
-  // Remove Any Temp files that have accumulated
-  removeDir(QString::fromStdString(m_MultiResSOC->getTempDir()));
-
 
   m_MultiResSOC->deleteLater();
   m_FullReconstructionActive = false;

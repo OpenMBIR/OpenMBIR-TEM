@@ -88,6 +88,7 @@ namespace ScaleOffsetCorrection
   const std::string CostFunctionCoefficientsFile("CostFunctionCoefficients.bin");
   const std::string FilteredMagMapFile("FilteredMagMap.bin");
   const std::string MagnitudeMapFile("MagnitudeMap.bin");
+  const std::string BraggSelectorFile("BraggSelector.mrc");
 
   const std::string ReconstructedVtkFile("ReconstructedVolume.vtk");
   const std::string ReconstructedSinogramFile("ReconstructedSinogram.bin");
