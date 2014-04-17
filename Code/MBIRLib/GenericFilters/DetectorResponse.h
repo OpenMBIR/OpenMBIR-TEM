@@ -57,9 +57,7 @@ class MBIRLib_EXPORT DetectorResponse : public TomoFilter
 
     virtual ~DetectorResponse();
 
-
     MXA_INSTANCE_PROPERTY(DetectorParameters::Pointer, DetectorParameters)
-    
     MXA_INSTANCE_PROPERTY(RealImageType::Pointer, VoxelProfile)
     MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Response)
 
