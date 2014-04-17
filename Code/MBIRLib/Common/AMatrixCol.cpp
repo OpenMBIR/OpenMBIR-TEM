@@ -35,7 +35,7 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#include "BFAMatrixCol.h"
+#include "AMatrixCol.h"
 
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Common/EIMMath.h"
@@ -44,7 +44,7 @@
 // -----------------------------------------------------------------------------
 // Constructor
 // -----------------------------------------------------------------------------
-BFAMatrixCol::BFAMatrixCol(size_t* dims, int32_t c)
+AMatrixCol::AMatrixCol(size_t* dims, int32_t c)
 {
   valuesPtr = RealArrayType::New(dims, "VoxelLineResponse_Values");
   values = valuesPtr->getPointer(0);
@@ -58,14 +58,14 @@ BFAMatrixCol::BFAMatrixCol(size_t* dims, int32_t c)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-BFAMatrixCol::~BFAMatrixCol()
+AMatrixCol::~AMatrixCol()
 {
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void BFAMatrixCol::setCount(uint32_t c)
+void AMatrixCol::setCount(uint32_t c)
 {
   if(c > valuesPtr->getDims()[0])
   {
@@ -79,7 +79,7 @@ void BFAMatrixCol::setCount(uint32_t c)
 // -----------------------------------------------------------------------------
 // Function to calculate the 2-D A matrix column
 // -----------------------------------------------------------------------------
-BFAMatrixCol::Pointer BFAMatrixCol::calculateBFAMatrixColumnPartial(SinogramPtr sinogram,
+AMatrixCol::Pointer AMatrixCol::calculateAMatrixColumnPartial(SinogramPtr sinogram,
                                                                              GeometryPtr geometry,
                                                                              TomoInputsPtr tomoInputs,
                                                                              AdvancedParametersPtr advParams,
@@ -129,8 +129,8 @@ BFAMatrixCol::Pointer BFAMatrixCol::calculateBFAMatrixColumnPartial(SinogramPtr 
   MaximumSpacePerColumn = (AvgNumXElements * AvgNumYElements) * sinogram->N_theta;
 
   size_t dims[1] = { MaximumSpacePerColumn };
-  BFAMatrixCol::Pointer Temp = BFAMatrixCol::New(dims, 0);
-//  BFAMatrixCol* Temp = (BFAMatrixCol*)get_spc(1, sizeof(BFAMatrixCol)); //This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
+  AMatrixCol::Pointer Temp = AMatrixCol::New(dims, 0);
+//  AMatrixCol* Temp = (AMatrixCol*)get_spc(1, sizeof(AMatrixCol)); //This will assume we have a total of N_theta*N_x entries . We will freeuname -m this space at the end
 //
 //  Temp->values = (Real_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(Real_t));
 //  Temp->index = (uint32_t*)get_spc((uint32_t)MaximumSpacePerColumn, sizeof(uint32_t));
@@ -220,7 +220,7 @@ BFAMatrixCol::Pointer BFAMatrixCol::calculateBFAMatrixColumnPartial(SinogramPtr 
   }
 
   dims[0] = count;
-  BFAMatrixCol::Pointer Ai = BFAMatrixCol::New(dims, 0);
+  AMatrixCol::Pointer Ai = AMatrixCol::New(dims, 0);
 
   k = 0;
   for (uint32_t i = 0; i < count; i++)

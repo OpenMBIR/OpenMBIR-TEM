@@ -36,7 +36,7 @@
 
 
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Reconstruction/MultiResolutionReconstruction.h"
+#include "MBIRLib/BrightField/MultiResolutionReconstruction.h"
 
 
 /**

@@ -46,7 +46,7 @@
 #include "MBIRLib/Common/Observable.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 
-#include "BFAMatrixCol.h"
+#include "MBIRLib/Common/AMatrixCol.h"
 #include "BFForwardModel.h"
 
 
@@ -63,8 +63,8 @@ class MBIRLib_EXPORT BFForwardProject
   public:
     BFForwardProject(Sinogram* sinogram,
                    Geometry* geometry,
-                   std::vector<BFAMatrixCol::Pointer> &tempCol,
-                   std::vector<BFAMatrixCol::Pointer> &voxelLineResponse,
+                   std::vector<AMatrixCol::Pointer> &tempCol,
+                   std::vector<AMatrixCol::Pointer> &voxelLineResponse,
                    RealVolumeType::Pointer yEst,
                    BFForwardModel* forwardModel,
                    uint16_t tilt,
@@ -77,8 +77,8 @@ class MBIRLib_EXPORT BFForwardProject
   private:
     Sinogram* m_Sinogram;
     Geometry* m_Geometry;
-    std::vector<BFAMatrixCol::Pointer> m_TempCol;
-    std::vector<BFAMatrixCol::Pointer> m_VoxelLineResponse;
+    std::vector<AMatrixCol::Pointer> m_TempCol;
+    std::vector<AMatrixCol::Pointer> m_VoxelLineResponse;
     RealVolumeType::Pointer m_YEstimate;
     BFForwardModel* m_ForwardModel;
     uint16_t m_Tilt;

@@ -45,8 +45,8 @@
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Reconstruction/ReconstructionEngine.h"
-#include "MBIRLib/BrightField/BFAMatrixCol.h"
+#include "MBIRLib/BrightField/ReconstructionEngine.h"
+#include "MBIRLib/Common/AMatrixCol.h"
 #include "MBIRLib/BrightField/BFForwardModel.h"
 
 
@@ -109,9 +109,9 @@ class BFUpdateYSlice
     BFUpdateYSlice(uint16_t yStart, uint16_t yEnd,
                  GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
                  SinogramPtr  sinogram,
-                 std::vector<BFAMatrixCol::Pointer> &tempCol,
+                 std::vector<AMatrixCol::Pointer> &tempCol,
                  RealVolumeType::Pointer errorSino,
-                 std::vector<BFAMatrixCol::Pointer> &voxelLineResponse,
+                 std::vector<AMatrixCol::Pointer> &voxelLineResponse,
                  BFForwardModel* forwardModel,
                  UInt8Image_t::Pointer mask,
                  RealImageType::Pointer magUpdateMap, //Hold the magnitude of the reconstuction along each voxel line
@@ -156,9 +156,9 @@ class BFUpdateYSlice
     int16_t m_InnerIter;
     SinogramPtr  m_Sinogram;
     //  SinogramPtr  m_BFSinogram;
-    std::vector<BFAMatrixCol::Pointer> &m_TempCol;
+    std::vector<AMatrixCol::Pointer> &m_TempCol;
     RealVolumeType::Pointer m_ErrorSino;
-    std::vector<BFAMatrixCol::Pointer> &m_VoxelLineResponse;//CHANGED! Put a & here
+    std::vector<AMatrixCol::Pointer> &m_VoxelLineResponse;//CHANGED! Put a & here
     BFForwardModel* m_ForwardModel;
     UInt8Image_t::Pointer m_Mask;
     RealImageType::Pointer m_MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line

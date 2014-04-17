@@ -35,8 +35,8 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#ifndef _HAADFAMATRIXCOL_H_
-#define _HAADFAMATRIXCOL_H_
+#ifndef _BFAMATRIXCOL_H_
+#define _BFAMATRIXCOL_H_
 
 #include "MXA/Common/MXASetGetMacros.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
@@ -48,18 +48,18 @@
  * @brief Holds a column specific to the HAADF algorihms and inputs codes of the
  * A Matrix for Tomographic reconstructions
  */
-class BFAMatrixCol
+class AMatrixCol
 {
   public:
 
-    MXA_SHARED_POINTERS(BFAMatrixCol)
+    MXA_SHARED_POINTERS(AMatrixCol)
     static Pointer New(size_t* dims, int32_t count)
     {
-      Pointer sharedPtr (new BFAMatrixCol(dims, count));
+      Pointer sharedPtr (new AMatrixCol(dims, count));
       return sharedPtr;
     }
 
-    virtual ~BFAMatrixCol();
+    virtual ~AMatrixCol();
 
     RealArrayType::Pointer valuesPtr;
     Real_t* values;
@@ -71,7 +71,7 @@ class BFAMatrixCol
     uint32_t count; //The number of non zero values present in the column
     void setCount(uint32_t c);
 
-    static BFAMatrixCol::Pointer calculateBFAMatrixColumnPartial(SinogramPtr sinogram,
+    static AMatrixCol::Pointer calculateAMatrixColumnPartial(SinogramPtr sinogram,
                                                                        GeometryPtr geometry,
                                                                        TomoInputsPtr tomoInputs,
                                                                        AdvancedParametersPtr advParams,
@@ -82,12 +82,12 @@ class BFAMatrixCol
                                                                        DetectorParameters::Pointer haadfParameters);
 
   protected:
-    BFAMatrixCol(size_t* dims, int32_t c);
+    AMatrixCol(size_t* dims, int32_t c);
 
 
   private:
 
-    BFAMatrixCol(const BFAMatrixCol&); // Copy Constructor Not Implemented
-    void operator=(const BFAMatrixCol&); // Operator '=' Not Implemented
+    AMatrixCol(const AMatrixCol&); // Copy Constructor Not Implemented
+    void operator=(const AMatrixCol&); // Operator '=' Not Implemented
 };
-#endif /* _HAADFAMATRIXCOL_H_ */
+#endif /* _BFAMATRIXCOL_H_ */

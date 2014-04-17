@@ -75,9 +75,9 @@
 BFUpdateYSlice::BFUpdateYSlice(uint16_t yStart, uint16_t yEnd,
                            GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
                            SinogramPtr  sinogram,
-                           std::vector<BFAMatrixCol::Pointer> &tempCol,
+                           std::vector<AMatrixCol::Pointer> &tempCol,
                            RealVolumeType::Pointer errorSino,
-                           std::vector<BFAMatrixCol::Pointer> &voxelLineResponse,
+                           std::vector<AMatrixCol::Pointer> &voxelLineResponse,
                            BFForwardModel* forwardModel,
                            UInt8Image_t::Pointer mask,
                            RealImageType::Pointer magUpdateMap, //Hold the magnitude of the reconstuction along each voxel line

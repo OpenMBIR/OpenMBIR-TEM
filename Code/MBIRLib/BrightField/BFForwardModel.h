@@ -62,8 +62,8 @@
  * the acquired data).
  */
 
-#ifndef _HAADFFORWARDMODEL_H_
-#define _HAADFFORWARDMODEL_H_
+#ifndef _BFFORWARDMODEL_H_
+#define _BFFORWARDMODEL_H_
 
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Common/AbstractFilter.h"
@@ -77,7 +77,7 @@
 
 #include "MBIRLib/GenericFilters/CostData.h"
 #include "MBIRLib/BrightField/BFQGGMRFPriorModel.h"
-#include "MBIRLib/BrightField/BFAMatrixCol.h"
+#include "MBIRLib/Common/AMatrixCol.h"
 
 
 /**
@@ -156,8 +156,8 @@ class BFForwardModel : public Observable
      * @return
      */
     virtual int forwardProject(SinogramPtr sinogram, GeometryPtr geometry,
-                               std::vector<BFAMatrixCol::Pointer> &TempCol,
-                               std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
+                               std::vector<AMatrixCol::Pointer> &TempCol,
+                               std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
                                RealVolumeType::Pointer yEstimate,
                                RealVolumeType::Pointer errorSinogram);
 
@@ -208,9 +208,9 @@ class BFForwardModel : public Observable
 
     //Computing the theta parameters of the cost function
     void computeTheta(size_t Index,
-                      std::vector<BFAMatrixCol::Pointer> &TempCol,
+                      std::vector<AMatrixCol::Pointer> &TempCol,
                       int32_t xzSliceIdx,
-                      std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
+                      std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
                       RealVolumeType::Pointer ErrorSino,
                       SinogramPtr sinogram,
                       RealArrayType::Pointer Thetas);
@@ -218,9 +218,9 @@ class BFForwardModel : public Observable
     //After updating a voxel "Index",update sinogram
     void updateErrorSinogram(Real_t ChangeInVoxelValue,
                              size_t Index,
-                             std::vector<BFAMatrixCol::Pointer> &TempCol,
+                             std::vector<AMatrixCol::Pointer> &TempCol,
                              int32_t xzSliceIdx,
-                             std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
+                             std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
                              RealVolumeType::Pointer errorSinogram,
                              SinogramPtr sinogram);
 
@@ -252,4 +252,4 @@ class BFForwardModel : public Observable
     void operator=(const BFForwardModel&); // Operator '=' Not Implemented
 };
 
-#endif /* _HAADFFORWARDMODEL_H_ */
+#endif /* _BFFORWARDMODEL_H_ */

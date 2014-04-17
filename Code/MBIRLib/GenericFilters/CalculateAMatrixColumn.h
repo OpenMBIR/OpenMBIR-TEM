@@ -41,7 +41,7 @@
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/GenericFilters/TomoFilter.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/BrightField/BFAMatrixCol.h"
+#include "MBIRLib/Common/AMatrixCol.h"
 
 /*
  *
@@ -50,24 +50,24 @@ class MBIRLib_EXPORT CalculateAMatrixColumn : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(CalculateAMatrixColumn)
-    MXA_STATIC_NEW_MACRO(CalculateAMatrixColumn);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, CalculateAMatrixColumn);
+    MXA_STATIC_NEW_MACRO(CalculateAMatrixColumn)
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, CalculateAMatrixColumn)
     MXA_TYPE_MACRO_SUPER(CalculateAMatrixColumn, TomoFilter)
 
     virtual ~CalculateAMatrixColumn();
 
 
-    MXA_INSTANCE_PROPERTY_OLD(Real_t*, Cosine, cosine);
-    MXA_INSTANCE_PROPERTY_OLD(Real_t*, Sine, sine);
+    MXA_INSTANCE_PROPERTY_OLD(Real_t*, Cosine, cosine)
+    MXA_INSTANCE_PROPERTY_OLD(Real_t*, Sine, sine)
 
-    MXA_INSTANCE_PROPERTY_OLD(Real_t, BeamWidth, BEAM_WIDTH);
-    MXA_INSTANCE_PROPERTY_OLD(uint16_t, row, row);
-    MXA_INSTANCE_PROPERTY_OLD(uint16_t, col, col);
-    MXA_INSTANCE_PROPERTY_OLD(uint16_t, Slice, slice);
-    MXA_INSTANCE_PROPERTY_OLD(Real_t**, VoxelProfile, VoxelProfile);
-    MXA_INSTANCE_PROPERTY_OLD(Real_t*, D1, d1);
-    MXA_INSTANCE_PROPERTY_OLD(Real_t*, D2, d2);
-    MXA_INSTANCE_PROPERTY_OLD(BFAMatrixCol::Pointer, AMatrixCol, Ai)
+    MXA_INSTANCE_PROPERTY_OLD(Real_t, BeamWidth, BEAM_WIDTH)
+    MXA_INSTANCE_PROPERTY_OLD(uint16_t, row, row)
+    MXA_INSTANCE_PROPERTY_OLD(uint16_t, col, col)
+    MXA_INSTANCE_PROPERTY_OLD(uint16_t, Slice, slice)
+    MXA_INSTANCE_PROPERTY_OLD(Real_t**, VoxelProfile, VoxelProfile)
+    MXA_INSTANCE_PROPERTY_OLD(Real_t*, D1, d1)
+    MXA_INSTANCE_PROPERTY_OLD(Real_t*, D2, d2)
+    MXA_INSTANCE_PROPERTY_OLD(AMatrixCol::Pointer, AMatrixCol, Ai)
 
 
     virtual void execute();

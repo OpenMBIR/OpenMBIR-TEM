@@ -6,6 +6,7 @@
 #--////////////////////////////////////////////////////////////////////////////
 set (MBIRLib_Common_SRCS
     ${MBIRLib_SOURCE_DIR}/Common/allocate.c
+    ${MBIRLib_SOURCE_DIR}/Common/AMatrixCol.cpp
     ${MBIRLib_SOURCE_DIR}/Common/EIMTime.c
     ${MBIRLib_SOURCE_DIR}/Common/EIMImage.cpp
     ${MBIRLib_SOURCE_DIR}/Common/AbstractFilter.cpp
@@ -17,6 +18,7 @@ set (MBIRLib_Common_SRCS
 
 set (MBIRLib_Common_HDRS
     ${MBIRLib_SOURCE_DIR}/Common/allocate.h
+    ${MBIRLib_SOURCE_DIR}/Common/AMatrixCol.h
     ${MBIRLib_SOURCE_DIR}/Common/MBIRLibDLLExport.h
     ${MBIRLib_SOURCE_DIR}/Common/MSVCDefines.h
     ${MBIRLib_SOURCE_DIR}/Common/EIMImage.h

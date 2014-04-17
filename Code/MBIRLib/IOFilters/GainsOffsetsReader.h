@@ -40,28 +40,31 @@
 
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/GenericFilters/TomoFilter.h"
-#include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-#include "MBIRLib/BrightField/BFForwardModel.h"
 
 
-/*
- *
+/**
+ * @brief The GainsOffsetsReader class
  */
 class MBIRLib_EXPORT GainsOffsetsReader : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(GainsOffsetsReader)
-    MXA_STATIC_NEW_MACRO(GainsOffsetsReader);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, GainsOffsetsReader);
+    MXA_STATIC_NEW_MACRO(GainsOffsetsReader)
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, GainsOffsetsReader)
     MXA_TYPE_MACRO_SUPER(GainsOffsetsReader, TomoFilter)
 
     virtual ~GainsOffsetsReader();
 
-    MXA_INSTANCE_PROPERTY(BFForwardModel::Pointer, ForwardModel);
+    // This is an input parameter and is defaulted to 0.0
+    MXA_INSTANCE_PROPERTY(Real_t, TargetGain)
 
 
-     virtual void execute();
+    // These are the output arrays that are read from the files
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialGain)
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialOffset)
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialVariance)
+
+    virtual void execute();
 
   protected:
     GainsOffsetsReader();

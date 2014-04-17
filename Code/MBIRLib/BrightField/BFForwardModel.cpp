@@ -58,11 +58,10 @@
 
 #include "MBIRLib/BrightField/BFForwardProject.h"
 #include "MBIRLib/BrightField/BFUpdateYSlice.h"
-#include "MBIRLib/BrightField/Filters/NuisanceParamWriter.h"
-#include "MBIRLib/BrightField/Filters/NuisanceParamReader.h"
-#include "MBIRLib/BrightField/Filters/GainsOffsetsReader.h"
-#include "MBIRLib/BrightField/Filters/ComputeInitialOffsets.h"
-#include "MBIRLib/BrightField/Filters/SinogramBinWriter.h"
+#include "MBIRLib/IOFilters/NuisanceParamWriter.h"
+#include "MBIRLib/IOFilters/NuisanceParamReader.h"
+#include "MBIRLib/GenericFilters/ComputeInitialOffsets.h"
+#include "MBIRLib/IOFilters/SinogramBinWriter.h"
 
 #define USE_TBB_TASK_GROUP 1
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
@@ -140,8 +139,8 @@ BFForwardModel::~BFForwardModel()
 // -----------------------------------------------------------------------------
 int BFForwardModel::forwardProject(SinogramPtr sinogram,
                                       GeometryPtr geometry,
-                                      std::vector<BFAMatrixCol::Pointer> &tempCol,
-                                      std::vector<BFAMatrixCol::Pointer> &voxelLineResponse,
+                                      std::vector<AMatrixCol::Pointer> &tempCol,
+                                      std::vector<AMatrixCol::Pointer> &voxelLineResponse,
                                       RealVolumeType::Pointer yEstimate,
                                       RealVolumeType::Pointer errorSinogram)
 {
@@ -850,9 +849,9 @@ Real_t BFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Pointer 
 // intensive
 // -----------------------------------------------------------------------------
 void BFForwardModel::computeTheta(size_t Index,
-                                     std::vector<BFAMatrixCol::Pointer> &TempCol,
+                                     std::vector<AMatrixCol::Pointer> &TempCol,
                                      int32_t xzSliceIdx,
-                                     std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
+                                     std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
                                      RealVolumeType::Pointer ErrorSino,
                                      SinogramPtr sinogram,
                                      RealArrayType::Pointer Thetas)
@@ -898,9 +897,9 @@ void BFForwardModel::computeTheta(size_t Index,
 // -----------------------------------------------------------------------------
 void BFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
                                             size_t Index,
-                                            std::vector<BFAMatrixCol::Pointer> &TempCol,
+                                            std::vector<AMatrixCol::Pointer> &TempCol,
                                             int32_t xzSliceIdx,
-                                            std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
+                                            std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
                                             RealVolumeType::Pointer ErrorSino,
                                             SinogramPtr sinogram)
 {

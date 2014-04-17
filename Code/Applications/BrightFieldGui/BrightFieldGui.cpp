@@ -69,12 +69,10 @@
 #include "MBIRLib/MBIRLibVersion.h"
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Reconstruction/ReconstructionEngine.h"
+#include "MBIRLib/BrightField/ReconstructionEngine.h"
 #include "MBIRLib/GenericFilters/SigmaXEstimation.h"
 #include "MBIRLib/IOFilters/MRCHeader.h"
 #include "MBIRLib/IOFilters/MRCReader.h"
-
-#include "MBIRLib/BrightField/Filters/GainsOffsetsReader.h"
 
 #include "License/LicenseFiles.h"
 

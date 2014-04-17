@@ -42,7 +42,7 @@
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Common/FilterPipeline.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Reconstruction/ReconstructionEngine.h"
+#include "MBIRLib/BrightField/ReconstructionEngine.h"
 
 /**
  * @brief This class controls the multiresolution reconstruction of an input

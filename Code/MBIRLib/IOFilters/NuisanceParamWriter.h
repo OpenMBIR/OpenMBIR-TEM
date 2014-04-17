@@ -35,46 +35,54 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#ifndef SINOGRAMBINWRITER_H_
-#define SINOGRAMBINWRITER_H_
+#ifndef NUISANCEBINWRITER_H_
+#define NUISANCEBINWRITER_H_
 
+#include <string>
 
 #include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/GenericFilters/TomoFilter.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/BrightField/BFForwardModel.h"
-
 
 /**
- * @class SinogramBinWriter SinogramBinWriter.h TomoEngine/IO/SinogramBinWriter.h
+ * @class NuisanceBinWriter NuisanceBinWriter.h TomoEngine/IO/NuisanceBinWriter.h
  * @brief
  * @author Michael A. Jackson for BlueQuartz Software
  * @date Dec 9, 2011
  * @version 1.0
  */
-class MBIRLib_EXPORT SinogramBinWriter : public TomoFilter
+class MBIRLib_EXPORT NuisanceParamWriter : public TomoFilter
 {
   public:
-    MXA_SHARED_POINTERS(SinogramBinWriter)
-    MXA_STATIC_NEW_MACRO(SinogramBinWriter);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, SinogramBinWriter);
-    MXA_TYPE_MACRO_SUPER(SinogramBinWriter, TomoFilter)
+    MXA_SHARED_POINTERS(NuisanceParamWriter)
+    MXA_STATIC_NEW_MACRO(NuisanceParamWriter);
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, NuisanceParamWriter);
+    MXA_TYPE_MACRO_SUPER(NuisanceParamWriter, TomoFilter)
 
-    virtual ~SinogramBinWriter();
+    virtual ~NuisanceParamWriter();
 
-    MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Data);
-    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, I_0)//Gains
-    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Mu)//Offset
+    enum TargetArray {
+      Nuisance_I_O,
+      Nuisance_mu,
+      Nuisance_alpha
+    };
+
+    MXA_INSTANCE_PROPERTY(bool, WriteBinary);
+    MXA_INSTANCE_STRING_PROPERTY(FileName);
+    MXA_INSTANCE_PROPERTY(TargetArray, DataToWrite);
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Data);
+    MXA_INSTANCE_PROPERTY(uint16_t, Ntheta);
 
     void execute();
 
   protected:
-    SinogramBinWriter();
+    NuisanceParamWriter();
 
   private:
-    SinogramBinWriter(const SinogramBinWriter&); // Copy Constructor Not Implemented
-    void operator=(const SinogramBinWriter&); // Operator '=' Not Implemented
+    NuisanceParamWriter(const NuisanceParamWriter&); // Copy Constructor Not Implemented
+    void operator=(const NuisanceParamWriter&); // Operator '=' Not Implemented
 };
-#endif /* SINOGRAMBINWRITER_H_ */
+
+#endif /* NUISANCEBINWRITER_H_ */

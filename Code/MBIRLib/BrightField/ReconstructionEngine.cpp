@@ -487,20 +487,20 @@ void ReconstructionEngine::execute()
   notify(ss.str(), 0, Observable::UpdateProgressMessage);
 
 
-  std::vector<BFAMatrixCol::Pointer> voxelLineResponse(m_Geometry->N_y);
+  std::vector<AMatrixCol::Pointer> voxelLineResponse(m_Geometry->N_y);
 
   maxNumberOfDetectorElts = (uint16_t)((m_TomoInputs->delta_xy / m_Sinogram->delta_t) + 2);
   dims[0] = maxNumberOfDetectorElts;
   for (uint16_t i = 0; i < m_Geometry->N_y; i++)
   {
-    BFAMatrixCol::Pointer vlr = BFAMatrixCol::New(dims, 0);
+    AMatrixCol::Pointer vlr = AMatrixCol::New(dims, 0);
     voxelLineResponse[i] = vlr;
   }
 
   //Calculating A-Matrix one column at a time
   //For each entry the idea is to initially allocate space for Sinogram.N_theta * Sinogram.N_x
   // And then store only the non zero entries by allocating a new array of the desired size
-  std::vector<BFAMatrixCol::Pointer> tempCol(m_Geometry->N_x * m_Geometry->N_z);
+  std::vector<AMatrixCol::Pointer> tempCol(m_Geometry->N_x * m_Geometry->N_z);
 
   checksum = 0;
   temp = 0;
@@ -509,7 +509,7 @@ void ReconstructionEngine::execute()
   {
     for (uint16_t x = 0; x < m_Geometry->N_x; x++)
     {
-      tempCol[voxel_count] = BFAMatrixCol::calculateBFAMatrixColumnPartial(m_Sinogram, m_Geometry, m_TomoInputs, m_AdvParams,
+      tempCol[voxel_count] = AMatrixCol::calculateAMatrixColumnPartial(m_Sinogram, m_Geometry, m_TomoInputs, m_AdvParams,
                              z, x, 0, detectorResponse, haadfParameters);
       temp += tempCol[voxel_count]->count;
       if(0 == tempCol[voxel_count]->count )

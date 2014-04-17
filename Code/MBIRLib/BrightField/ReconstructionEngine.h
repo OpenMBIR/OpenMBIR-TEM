@@ -55,7 +55,7 @@
 #include "MBIRLib/BrightField/BFQGGMRFPriorModel.h"
 
 #include "MBIRLib/BrightField/BFForwardModel.h"
-#include "MBIRLib/BrightField/BFAMatrixCol.h"
+#include "MBIRLib/Common/AMatrixCol.h"
 
 #include "MBIRLib/Common/EIMTime.h"
 #define START_TIMER uint64_t startm = EIMTOMO_getMilliSeconds();
@@ -145,9 +145,9 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
     uint8_t updateVoxels(
         int16_t OuterIter,
         int16_t Iter,
-        std::vector<BFAMatrixCol::Pointer> &TempCol,
+        std::vector<AMatrixCol::Pointer> &TempCol,
         RealVolumeType::Pointer ErrorSino,
-        std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
+        std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
         CostData::Pointer cost,
         BFQGGMRF::BFQGGMRF_Values* BFQGGMRF_Values,
         RealImageType::Pointer magUpdateMap,
@@ -225,7 +225,7 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
      * @param haadfParameters
      */
     void storeVoxelResponse(RealVolumeType::Pointer H_t,
-                            std::vector<BFAMatrixCol::Pointer> &VoxelLineResponse,
+                            std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
                             DetectorParameters::Pointer haadfParameters);
 
     /**

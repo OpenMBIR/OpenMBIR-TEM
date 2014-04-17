@@ -35,8 +35,8 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#ifndef _HAADFPARAMETERS_H_
-#define _HAADFPARAMETERS_H_
+#ifndef _BFPARAMETERS_H_
+#define _BFPARAMETERS_H_
 
 #include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
@@ -75,4 +75,4 @@ class DetectorParameters
     void operator=(const DetectorParameters&); // Operator '=' Not Implemented
 };
 
-#endif /* _HAADFPARAMETERS_H_ */
+#endif /* _BFPARAMETERS_H_ */

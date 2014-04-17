@@ -43,8 +43,8 @@
 
 #include "MBIRLib/MBIRLibVersion.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Reconstruction/ReconstructionEngine.h"
-#include "MBIRLib/Reconstruction/MultiResolutionReconstruction.h"
+#include "MBIRLib/BrightField/ReconstructionEngine.h"
+#include "MBIRLib/BrightField/MultiResolutionReconstruction.h"
 #include "BFReconstructionArgsParser.h"
 
 

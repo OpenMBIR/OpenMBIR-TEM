@@ -42,12 +42,20 @@
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/variate_generator.hpp>
 
+#include "MXA/Utilities/MXAFileInfo.h"
 
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-#include "MBIRLib/GenericFilters/MRCSinogramInitializer.h"
+
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/Common/EIMTime.h"
+#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/BrightField/BFUpdateYSlice.h"
+#include "MBIRLib/GenericFilters/MRCSinogramInitializer.h"
+#include "MBIRLib/GenericFilters/RawSinogramInitializer.h"
+#include "MBIRLib/GenericFilters/InitialReconstructionInitializer.h"
+#include "MBIRLib/GenericFilters/InitialReconstructionBinReader.h"
+#include "MBIRLib/IOFilters/RawGeometryWriter.h"
+#include "MBIRLib/IOFilters/VTKFileWriters.hpp"
+#include "MBIRLib/IOFilters/AvizoUniformCoordinateWriter.h"
 
 
 #define START_TIMER uint64_t startm = EIMTOMO_getMilliSeconds();
@@ -245,7 +253,7 @@ void ReconstructionEngine::initializeVolume(RealVolumeType::Pointer Y_Est, doubl
 //
 // -----------------------------------------------------------------------------
 void ReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
-                                              std::vector<BFAMatrixCol::Pointer>& VoxelLineResponse,
+                                              std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
                                               DetectorParameters::Pointer haadfParameters)
 {
   Real_t ProfileThickness = 0.0;
@@ -310,7 +318,7 @@ void ReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
         {
           std::cout << i_t << "\t" << ProfileThickness << std::endl;
         }
-        BFAMatrixCol::Pointer vlr = VoxelLineResponse[i];
+        AMatrixCol::Pointer vlr = VoxelLineResponse[i];
         int32_t count = vlr->count;
         vlr->values[count] = ProfileThickness;
         vlr->index[count] = i_t;
@@ -466,9 +474,9 @@ void ReconstructionEngine::writeAvizoFile(const std::string& file, uint16_t crop
 // -----------------------------------------------------------------------------
 uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter,
                                            int16_t Iter,
-                                           std::vector<BFAMatrixCol::Pointer>& TempCol,
+                                           std::vector<AMatrixCol::Pointer>& TempCol,
                                            RealVolumeType::Pointer ErrorSino,
-                                           std::vector<BFAMatrixCol::Pointer>& VoxelLineResponse,
+                                           std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
                                            CostData::Pointer cost,
                                            BFQGGMRF::BFQGGMRF_Values* BFQGGMRF_values,
                                            RealImageType::Pointer magUpdateMap,

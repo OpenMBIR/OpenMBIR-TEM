@@ -70,7 +70,7 @@ namespace SOC {
   };
 }
 
-/* Axes conventions:
+  /* Axes conventions:
 
         . Y
        .
@@ -89,8 +89,8 @@ namespace SOC {
    Z
    */
 
-typedef struct
-{
+  typedef struct
+  {
     uint16_t N_r;//Number of measurements in x direction
     uint16_t N_t;//Number of measurements in y direction
     uint16_t N_theta;//Number of angles
@@ -102,8 +102,7 @@ typedef struct
     Real_t RMax;
     Real_t T0;
     Real_t TMax;
-
-#if 0
+    #if 0
     /* ****************** These should be moved to the ForwardModel Class ****/
     Real_t targetGain;//,InitialOffset;//Initial scale and offset of the sinogram data
     bool BF_Flag;
@@ -111,13 +110,13 @@ typedef struct
     RealArrayType::Pointer InitialOffset;
     RealArrayType::Pointer InitialVariance;
     /* ****************** End Forward Model Variables ****/
-#endif
-} Sinogram;
+    #endif
+  } Sinogram;
 
-typedef boost::shared_ptr<Sinogram> SinogramPtr;
+  typedef boost::shared_ptr<Sinogram> SinogramPtr;
 
-typedef struct
-{
+  typedef struct
+  {
     RealVolumeType::Pointer Object;//Holds the volume to be reconstructed
     //Computed From User Input
     Real_t LengthX;//sinogram.N_x * delta_r;
@@ -129,12 +128,12 @@ typedef struct
     Real_t x0;// -LengthX/2
     Real_t z0;// -LengthZ/2
     Real_t y0;//-LengthY/2
-} Geometry;
+  } Geometry;
 
-typedef boost::shared_ptr<Geometry> GeometryPtr;
+  typedef boost::shared_ptr<Geometry> GeometryPtr;
 
-typedef struct
-{
+  typedef struct
+  {
     uint16_t NumIter;
     uint16_t NumOuterIter;
     Real_t SigmaX;
@@ -160,12 +159,11 @@ typedef struct
     Real_t delta_xz;//Voxel size in the x-z plane (assuming square shaped voxels in the x-z plane)
     Real_t delta_xy;//Voxel size in the x-y plane
 
-
     Real_t interpolateFactor;
     Real_t defaultInitialRecon;
-
+    
     std::vector<float> tilts;
-
+    
     /* These are input files */
     std::string sinoFile; /* .mrc formatted files are accepted currently */
     std::string initialReconFile;
@@ -185,11 +183,18 @@ typedef struct
     std::string avizoOutputFile;
     std::string braggSelectorFile;
     std::vector<std::string> tempFiles;
-
+    
     std::vector<uint8_t> excludedViews;// Indices of views to exclude from reconstruction
     std::vector<int> goodViews; // Contains the indices of the views to use for reconstruction
-} TomoInputs;
-typedef boost::shared_ptr<TomoInputs> TomoInputsPtr;
+    
+    /* These are Mainly for the HAADF reconstructions */
+    Real_t targetGain;
+    bool useDefaultOffset;
+    Real_t defaultOffset;
+    Real_t defaultVariance;
+    
+  } TomoInputs;
+  typedef boost::shared_ptr<TomoInputs> TomoInputsPtr;
 
 
 typedef struct
@@ -209,11 +214,20 @@ typedef struct
     unsigned int ZERO_SKIPPING; /* This will always be ON in the end product I think. */
     unsigned int NOISE_ESTIMATION; /* This is a parameter that the user MAY or MAY NOT
                                   want turned ON. It is ON by default */
+	unsigned int NOISE_MODEL; /* This is a parameter that the user MAY or MAY NOT
+							  want turned ON. It is ON by default */
+	unsigned int ESTIMATE_PRIOR;
 } AdvancedParameters;
 typedef boost::shared_ptr<AdvancedParameters> AdvancedParametersPtr;
 
-
-
-
+/*
+typedef struct
+{
+	RealArrayType::Pointer I_0; //Gains
+	RealArrayType::Pointer mu; //Offset
+	RealArrayType::Pointer alpha;//Noise variance refinement factor
+} ScaleOffsetParams;
+typedef boost::shared_ptr<ScaleOffsetParams> ScaleOffsetParamsPtr;
+*/
 
 #endif /* SCALEOFFSETMOTIONSTRUCTURES_H_ */

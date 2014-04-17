@@ -49,8 +49,8 @@
 // -----------------------------------------------------------------------------
 BFForwardProject::BFForwardProject(Sinogram* sinogram,
                                Geometry* geometry,
-                               std::vector<BFAMatrixCol::Pointer> &tempCol,
-                               std::vector<BFAMatrixCol::Pointer> &voxelLineResponse,
+                               std::vector<AMatrixCol::Pointer> &tempCol,
+                               std::vector<AMatrixCol::Pointer> &voxelLineResponse,
                                RealVolumeType::Pointer yEst,
                                BFForwardModel* forwardModel,
                                uint16_t tilt,
