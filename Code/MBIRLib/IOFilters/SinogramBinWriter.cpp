@@ -44,9 +44,6 @@
 
 #include "MXA/Utilities/MXADir.h"
 
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-
-
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -82,10 +79,10 @@ void SinogramBinWriter::execute()
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
-  if(NULL == m_NuisanceParams)
+  if(NULL == m_Data.get())
   {
     setErrorCondition(-1);
-    setErrorMessage("SinogramBinWriter:: NuisanceParams not initialized Correctly");
+    setErrorMessage("SinogramBinWriter:: Data to write not initialized Correctly");
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
@@ -96,7 +93,7 @@ void SinogramBinWriter::execute()
 
 
   std::string filepath(getTomoInputs()->tempDir);
-  filepath = filepath.append(MXADir::getSeparator()).append(ScaleOffsetCorrection::ReconstructedSinogramFile);
+  filepath = filepath.append(MXADir::getSeparator()).append(MBIR::Defaults::ReconstructedSinogramFile);
   file = fopen(filepath.c_str(), "wb");
   if(file == 0)
   {
@@ -124,8 +121,8 @@ void SinogramBinWriter::execute()
       {
         //value = m_Data->d[i_theta][i_r][i_t];
         value = m_Data->getValue(i_theta, i_r, i_t);
-        value *= m_NuisanceParams->I_0->d[i_theta];
-        value += m_NuisanceParams->mu->d[i_theta];
+        value *= m_I_0->d[i_theta];
+        value += m_Mu->d[i_theta];
         fwrite(&value, sizeof(Real_t), 1, file);
       }
     }

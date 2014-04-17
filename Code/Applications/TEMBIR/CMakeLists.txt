@@ -40,11 +40,11 @@ include_directories( ${TEMBIR_BINARY_DIR} )
 include_directories( ${OpenMBIR_BINARY_DIR}/QtSupport )
 
 
-set(CLASS_NAME "MultiResolutionReconstruction")
-SET(ENGINE_INCLUDE_PATH "MBIRLib/Reconstruction")
+set(CLASS_NAME "HAADF_MultiResolutionReconstruction")
+SET(ENGINE_INCLUDE_PATH "MBIRLib/HAADF")
 configure_file( ${PROJECT_CODE_DIR}/QtSupport/QObserverWrapper.h.in
                 ${TEMBIR_BINARY_DIR}/Q${CLASS_NAME}.h @ONLY IMMEDIATE)
-                
+
 # --------------------------------------------------------------------
 # Set up all the source codes
 SET( TEMBIR_SRCS
@@ -62,7 +62,7 @@ SET( TEMBIR_SRCS
   ${TEMBIR_SOURCE_DIR}/TiltAngleGroupBox.cpp
 )
 
-# another list, this time it includes all header files that should 
+# another list, this time it includes all header files that should
 #  be treated with moc
 SET( TEMBIR_MOC_HDRS
   ${TEMBIR_SOURCE_DIR}/TEMBIRGui.h
@@ -76,7 +76,7 @@ SET( TEMBIR_MOC_HDRS
   ${TEMBIR_SOURCE_DIR}/CheckBoxDelegate.h
   ${TEMBIR_SOURCE_DIR}/ReconstructionArea.h
   ${TEMBIR_SOURCE_DIR}/TomogramTiltLoader.h
-  ${TEMBIR_SOURCE_DIR}/TiltAngleGroupBox.h  
+  ${TEMBIR_SOURCE_DIR}/TiltAngleGroupBox.h
 )
 cmp_IDE_SOURCE_PROPERTIES(TEMBIR "${TEMBIR_MOC_HDRS}" "${TEMBIR_SRCS}" "0")
 
@@ -103,7 +103,7 @@ SET( TEMBIR_RCS
 )
 cmp_IDE_SOURCE_PROPERTIES(TEMBIR/QrcFiles "${TEMBIR_RCS}" "" "0")
 
-# -- Run MOC and UIC on the necessary files   
+# -- Run MOC and UIC on the necessary files
 QT4_ADD_RESOURCES( Generated_RC_SRCS ${TEMBIR_RCS}  ${QRC_LICENSE_FILES})
 
 # this will run uic on .ui files:
@@ -117,12 +117,12 @@ cmp_IDE_GENERATED_PROPERTIES(TEMBIR/Generated "${Generated_UI_HDRS};${TEMBIR_BIN
 
 
 # -- Finally set the Project Sources to include all the sources
-SET (${PROJECT_NAME}_PROJECT_SRCS 
-  ${TEMBIR_SRCS} 
+SET (${PROJECT_NAME}_PROJECT_SRCS
+  ${TEMBIR_SRCS}
   ${TEMBIR_MOC_HDRS}
   ${TEMBIR_HDRS}
-  ${Generated_RC_SRCS} 
-  ${Generated_UI_HDRS} 
+  ${Generated_RC_SRCS}
+  ${Generated_UI_HDRS}
   ${Generated_MOC_SRCS}
 )
 
@@ -141,10 +141,10 @@ endif()
 
 # Clear the file first otherwise we get duplicates
 file(WRITE ${PROJECT_BINARY_DIR}/Qt_Plugins.txt "")
-FindQt4Plugins("qgif;qjpeg;qtiff" "${PROJECT_BINARY_DIR}/Qt_Plugins.txt" 
-                "${PROJECT_BINARY_DIR}/LibSearchDirs.txt" 
+FindQt4Plugins("qgif;qjpeg;qtiff" "${PROJECT_BINARY_DIR}/Qt_Plugins.txt"
+                "${PROJECT_BINARY_DIR}/LibSearchDirs.txt"
                 "imageformats" )
-                
+
 file(READ ${PROJECT_BINARY_DIR}/Qt_Plugins.txt QT_PLUGINS)
 BuildQtAppBundle(
     TARGET ${PROJECT_NAME}
@@ -155,12 +155,12 @@ BuildQtAppBundle(
     VERSION_MINOR ${QTEMBIR_VER_MINOR}
     VERSION_PATCH ${QTEMBIR_VER_PATCH}
     BINARY_DIR    ${${PROJECT_NAME}_BINARY_DIR}
-    LINK_LIBRARIES ${QT_LIBRARIES} QtSupport MBIRLib 
+    LINK_LIBRARIES ${QT_LIBRARIES} QtSupport MBIRLib
     LIB_SEARCH_DIRS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
     QT_PLUGINS    ${QT_PLUGINS}
 #        OTHER_PLUGINS ${OTHER_PLUGINS}
     COMPONENT     Applications
     INSTALL_DEST  ${DEST_DIR}
-)   
+)
 
 

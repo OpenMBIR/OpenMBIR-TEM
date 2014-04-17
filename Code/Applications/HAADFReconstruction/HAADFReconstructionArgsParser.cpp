@@ -47,7 +47,7 @@
 #include "MBIRLib/Common/allocate.h"
 #include "MBIRLib/IOFilters/MRCReader.h"
 #include "MBIRLib/IOFilters/MRCHeader.h"
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+#include "MBIRLib/HAADF/HAADFConstants.h"
 
 /**
  * @brief Parses numeric values from a delimited string into a preallocated array storage.
@@ -130,182 +130,208 @@ HAADFReconstructionArgsParser::~HAADFReconstructionArgsParser()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int HAADFReconstructionArgsParser::parseArguments(int argc, char **argv, MultiResolutionReconstruction::Pointer m_MultiResSOC)
+int HAADFReconstructionArgsParser::parseArguments(int argc, char **argv, HAADF_MultiResolutionReconstruction::Pointer m_MultiResSOC)
 {
-    if(NULL == m_MultiResSOC)
-    {
-        printf("The MultiResolutionSOC was null. Returning early.\n");
-        return -1;
-    }
+  if(NULL == m_MultiResSOC)
+  {
+    printf("The MultiResolutionSOC was null. Returning early.\n");
+    return -1;
+  }
 
-    TCLAP::CmdLine cmd("", ' ', MBIRLib::Version::Complete());
+  TCLAP::CmdLine cmd("", ' ', MBIRLib::Version::Complete());
 
-    TCLAP::ValueArg<std::string> in_MRCFile("s", "sinofile", "The Sinogram File", true, "", "");
-    cmd.add(in_MRCFile);
-    TCLAP::ValueArg<std::string> inputBrightFieldFilePath("", "brightfield", "Acquired Bright Field tilt series", false, "", "");
-    cmd.add(inputBrightFieldFilePath);
-    TCLAP::ValueArg<std::string> reconstructedVolumeFileName("", "outputfile", "The Output File", true, "", "");
-    cmd.add(reconstructedVolumeFileName);
-
-
-    TCLAP::ValueArg<std::string> subvolume("", "subvolume", "SubVolume to Reconstruct in the form xmin,ymin,zmin,xmax,ymax,zmax", false, "", "");
-    cmd.add(subvolume);
-    TCLAP::ValueArg<Real_t> sampleThickness("", "thickness", "Thickness of sample in nm", true, 0, "");
-    cmd.add(sampleThickness);
-    TCLAP::ValueArg<unsigned int> tiltSelection("", "tilt_selection", "Which Tilt Values to use from file. Default is 'A'", false, SOC::A_Tilt, "0");
-    cmd.add(tiltSelection);
-    TCLAP::ValueArg<double> mrf("", "diffuseness", "Diffuseness Parameter (Markov Random Field Parameter)", false, 0.200, "0.2");
-    cmd.add(mrf);
-    TCLAP::ValueArg<int> finalResolution("", "final_resolution", "The final resolution multiple for the reconstruction" , false, 1, "1");
-    cmd.add(finalResolution);
-    TCLAP::ValueArg<double> sigma_x("", "sigma_x", "Sigma X Value", true, 1.0, "1.0");
-    cmd.add(sigma_x);
-    TCLAP::ValueArg<double> stopThreshold("", "stop_threshold", "Stopping Threshold for inner loop", false, .005, "0.005");
-    cmd.add(stopThreshold);
-    TCLAP::ValueArg<int> numResolutions("", "num_resolutions", "The number of resolutions to use" , false, 3, "3");
-    cmd.add(numResolutions);
-    TCLAP::ValueArg<double> targetGain("", "target_gain", "Normalizing value for unscattered electrons", true, 1, "");
-    cmd.add(targetGain);
-    TCLAP::SwitchArg interpolateInitialRecontruction ("", "interpolate_initial_recon", "Interpolate Initial Reconstruction Value", false);
-    cmd.add(interpolateInitialRecontruction);
-    TCLAP::ValueArg<int> outerIterations("", "outer_iterations", "Outer Iterations to use", false, 30, "30");
-    cmd.add(outerIterations);
-    TCLAP::ValueArg<int> innerIterations("", "inner_iterations", "Number of Inner Iterations", false, 10, "10");
-    cmd.add(innerIterations);
-    TCLAP::ValueArg<double> defaultOffset("", "default_offset", "Default offset for all Tilts", false, 0.0, "");
-    cmd.add(defaultOffset);
-    TCLAP::SwitchArg useDefaultOffset("", "use_default_offset", "Use the Default Offset Value" , false);
-    cmd.add(useDefaultOffset);
-    TCLAP::ValueArg<double> defaultVariance("", "default_variance", "Default variance for all Tilts", false, 1.0, "");
-    cmd.add(defaultVariance);
-    TCLAP::ValueArg<double> defaultInitialRecon("", "default_recon_value", "Default initial value of reconstruction", false, 0.0, "");
-    cmd.add(defaultInitialRecon);
-    TCLAP::SwitchArg extendObject("", "extend_object", "To extend the object or not", false);
-    cmd.add(extendObject);
-    TCLAP::SwitchArg m_DeleteTempFiles ("", "delete_tmp_files", "Delete all the Temp files that are created", false);
-    cmd.add(m_DeleteTempFiles);
+  TCLAP::ValueArg<std::string> in_MRCFile("s", "sinofile", "The Sinogram File", true, "", "");
+  cmd.add(in_MRCFile);
+  TCLAP::ValueArg<std::string> inputBrightFieldFilePath("", "brightfield", "Acquired Bright Field tilt series", false, "", "");
+  cmd.add(inputBrightFieldFilePath);
+  TCLAP::ValueArg<std::string> reconstructedVolumeFileName("", "outputfile", "The Output File", true, "", "");
+  cmd.add(reconstructedVolumeFileName);
 
 
-    TCLAP::ValueArg<std::string> initialReconstructionPath("i", "initial_recon_file", "Initial Reconstruction to initialize algorithm", false, "", "");
-    cmd.add(initialReconstructionPath);
+  TCLAP::ValueArg<std::string> subvolume("", "subvolume", "SubVolume to Reconstruct in the form xmin,ymin,zmin,xmax,ymax,zmax", false, "", "");
+  cmd.add(subvolume);
+  TCLAP::ValueArg<Real_t> sampleThickness("", "thickness", "Thickness of sample in nm", true, 0, "");
+  cmd.add(sampleThickness);
+  TCLAP::ValueArg<unsigned int> tiltSelection("", "tilt_selection", "Which Tilt Values to use from file. Default is 'A'", false, SOC::A_Tilt, "0");
+  cmd.add(tiltSelection);
+  TCLAP::ValueArg<double> mrf("", "diffuseness", "Diffuseness Parameter (Markov Random Field Parameter)", false, 0.200, "0.2");
+  cmd.add(mrf);
+  TCLAP::ValueArg<int> finalResolution("", "final_resolution", "The final resolution multiple for the reconstruction" , false, 1, "1");
+  cmd.add(finalResolution);
+  TCLAP::ValueArg<double> sigma_x("", "sigma_x", "Sigma X Value", true, 1.0, "1.0");
+  cmd.add(sigma_x);
+  TCLAP::ValueArg<double> stopThreshold("", "stop_threshold", "Stopping Threshold for inner loop", false, .005, "0.005");
+  cmd.add(stopThreshold);
+  TCLAP::ValueArg<int> numResolutions("", "num_resolutions", "The number of resolutions to use" , false, 3, "3");
+  cmd.add(numResolutions);
+  TCLAP::ValueArg<double> targetGain("", "target_gain", "Normalizing value for unscattered electrons", true, 1, "");
+  cmd.add(targetGain);
+  TCLAP::SwitchArg interpolateInitialRecontruction ("", "interpolate_initial_recon", "Interpolate Initial Reconstruction Value", false);
+  cmd.add(interpolateInitialRecontruction);
+  TCLAP::ValueArg<int> outerIterations("", "outer_iterations", "Outer Iterations to use", false, 30, "30");
+  cmd.add(outerIterations);
+  TCLAP::ValueArg<int> innerIterations("", "inner_iterations", "Number of Inner Iterations", false, 10, "10");
+  cmd.add(innerIterations);
+  TCLAP::ValueArg<double> defaultOffset("", "default_offset", "Default offset for all Tilts", false, 0.0, "");
+  cmd.add(defaultOffset);
+  TCLAP::SwitchArg useDefaultOffset("", "use_default_offset", "Use the Default Offset Value" , false);
+  cmd.add(useDefaultOffset);
+  TCLAP::ValueArg<double> defaultVariance("", "default_variance", "Default variance for all Tilts", false, 1.0, "");
+  cmd.add(defaultVariance);
+  TCLAP::ValueArg<double> defaultInitialRecon("", "default_recon_value", "Default initial value of reconstruction", false, 0.0, "");
+  cmd.add(defaultInitialRecon);
+  TCLAP::SwitchArg extendObject("", "extend_object", "To extend the object or not", false);
+  cmd.add(extendObject);
+  TCLAP::SwitchArg m_DeleteTempFiles ("", "delete_tmp_files", "Delete all the Temp files that are created", false);
+  cmd.add(m_DeleteTempFiles);
+
+
+  TCLAP::ValueArg<std::string> initialReconstructionPath("i", "initial_recon_file", "Initial Reconstruction to initialize algorithm", false, "", "");
+  cmd.add(initialReconstructionPath);
 
 #if 0
-    TCLAP::ValueArg<std::string> in_Gains("", "gains", "Initial Gains to use.", false, "", "");
-    cmd.add(in_Gains);
+  TCLAP::ValueArg<std::string> in_Gains("", "gains", "Initial Gains to use.", false, "", "");
+  cmd.add(in_Gains);
 
-    TCLAP::ValueArg<std::string> in_Offsets("", "offsets", "Initial Offsets to use.", false, "", "");
-    cmd.add(in_Offsets);
+  TCLAP::ValueArg<std::string> in_Offsets("", "offsets", "Initial Offsets to use.", false, "", "");
+  cmd.add(in_Offsets);
 
-    TCLAP::ValueArg<std::string> in_Variance("", "variance", "Initial Variance to use.", false, "", "");
-    cmd.add(in_Variance);
+  TCLAP::ValueArg<std::string> in_Variance("", "variance", "Initial Variance to use.", false, "", "");
+  cmd.add(in_Variance);
 
-    TCLAP::ValueArg<double> in_InterpFactor("", "interpFactor", "Interpolate Factor", false, 0.0, "");
-    cmd.add(in_InterpFactor);
+  TCLAP::ValueArg<double> in_InterpFactor("", "interpFactor", "Interpolate Factor", false, 0.0, "");
+  cmd.add(in_InterpFactor);
 
-    TCLAP::ValueArg<Real_t> xz_size("", "xz_size", "Size in nm of output pixel xz plane", true, 1, "1");
-    cmd.add(xz_size);
-    TCLAP::ValueArg<Real_t> xy_size("", "xy_size", "Size in nm of output pixel xy plane", true, 1, "1");
-    cmd.add(xy_size);
+  TCLAP::ValueArg<Real_t> xz_size("", "xz_size", "Size in nm of output pixel xz plane", true, 1, "1");
+  cmd.add(xz_size);
+  TCLAP::ValueArg<Real_t> xy_size("", "xy_size", "Size in nm of output pixel xy plane", true, 1, "1");
+  cmd.add(xy_size);
 #endif
-    TCLAP::ValueArg<std::string> viewMask("", "exclude_views", "Comma separated list of tilts to exclude by index", false, "", "");
-    cmd.add(viewMask);
+  TCLAP::ValueArg<std::string> viewMask("", "exclude_views", "Comma separated list of tilts to exclude by index", false, "", "");
+  cmd.add(viewMask);
 
 
-    if(argc < 2)
+  if(argc < 2)
+  {
+    std::cout << "Scale Offset Correction Command Line Version " << cmd.getVersion() << std::endl;
+    std::vector<std::string> args;
+    args.push_back(argv[0]);
+    args.push_back("-h");
+    cmd.parse(args);
+    return -1;
+  }
+
+  try
+  {
+    cmd.parse(argc, argv);
+
+    std::string path;
+    path = MXADir::toNativeSeparators(in_MRCFile.getValue());
+    m_MultiResSOC->setInputFile(path);
+
+    //MXAFileInfo fi(reconstructedVolumeFileName.getValue());
+    path = MXAFileInfo::parentPath(reconstructedVolumeFileName.getValue());
+    m_MultiResSOC->setTempDir(path);
+
+    path = MXADir::toNativeSeparators(MXAFileInfo::absolutePath(reconstructedVolumeFileName.getValue()));
+    m_MultiResSOC->setOutputFile(path);
+
+    path = MXADir::toNativeSeparators(inputBrightFieldFilePath.getValue());
+    m_MultiResSOC->setBrightFieldFile(path);
+
+    path = MXADir::toNativeSeparators(initialReconstructionPath.getValue());
+    m_MultiResSOC->setInitialReconstructionFile(path);
+
+    m_MultiResSOC->setNumberResolutions(numResolutions.getValue());
+
+    m_MultiResSOC->setFinalResolution(finalResolution.getValue());
+    m_MultiResSOC->setSampleThickness(sampleThickness.getValue());
+    m_MultiResSOC->setTargetGain(targetGain.getValue());
+    m_MultiResSOC->setStopThreshold(stopThreshold.getValue());
+    m_MultiResSOC->setOuterIterations(outerIterations.getValue());
+    m_MultiResSOC->setInnerIterations(innerIterations.getValue());
+    m_MultiResSOC->setSigmaX(sigma_x.getValue());
+
+    m_MultiResSOC->setMRFShapeParameter(mrf.getValue());
+    m_MultiResSOC->setDefaultOffsetValue(defaultOffset.getValue());
+    m_MultiResSOC->setUseDefaultOffset(useDefaultOffset.getValue());
+    m_MultiResSOC->setExtendObject(extendObject.getValue());
+    m_MultiResSOC->setDefaultVariance(defaultVariance.getValue());
+    m_MultiResSOC->setInitialReconstructionValue(defaultInitialRecon.getValue());
+
+    m_MultiResSOC->setInterpolateInitialReconstruction(interpolateInitialRecontruction.getValue());
+    m_MultiResSOC->setDeleteTempFiles(m_DeleteTempFiles.getValue());
+    AdvancedParametersPtr advParams = AdvancedParametersPtr(new AdvancedParameters);
+    HAADF_ReconstructionEngine::InitializeAdvancedParams(advParams);
+    m_MultiResSOC->setAdvParams(advParams);
+
+    int subvolumeValues[6];
+    ::memset(subvolumeValues, 0, 6 * sizeof(int));
+
+    if(subvolume.getValue().length() != 0)
     {
-        std::cout << "Scale Offset Correction Command Line Version " << cmd.getVersion() << std::endl;
-        std::vector<std::string> args;
-        args.push_back(argv[0]);
-        args.push_back("-h");
-        cmd.parse(args);
+      int err = parseValues(subvolume.getValue(), "%d", subvolumeValues);
+      if(err < 0)
+      {
+        std::cout << "Error Parsing the Subvolume Dimensions. They should be entered as --subvolume 64,128,256,80,150,280" << std::endl;
         return -1;
+      }
     }
 
-    try
+    std::vector<uint16_t> multiResSubVolume(6);
+    for(int i = 0; i < 6; ++i) { multiResSubVolume[i] = subvolumeValues[i]; }
+    m_MultiResSOC->setSubvolume(multiResSubVolume);
+
+
+    std::vector<uint8_t> viewMasks;
+
+    if(viewMask.getValue().length() != 0 && parseUnknownArray(viewMask.getValue(), "%d", viewMasks) < 0)
     {
-        cmd.parse(argc, argv);
-
-        std::string path;
-        path = MXADir::toNativeSeparators(in_MRCFile.getValue());
-        m_MultiResSOC->setInputFile(path);
-
-        //MXAFileInfo fi(reconstructedVolumeFileName.getValue());
-        path = MXAFileInfo::parentPath(reconstructedVolumeFileName.getValue());
-        m_MultiResSOC->setTempDir(path);
-
-        path = MXADir::toNativeSeparators(MXAFileInfo::absolutePath(reconstructedVolumeFileName.getValue()));
-        m_MultiResSOC->setOutputFile(path);
-
-        path = MXADir::toNativeSeparators(inputBrightFieldFilePath.getValue());
-        m_MultiResSOC->setBrightFieldFile(path);
-
-        path = MXADir::toNativeSeparators(initialReconstructionPath.getValue());
-        m_MultiResSOC->setInitialReconstructionFile(path);
-
-        m_MultiResSOC->setNumberResolutions(numResolutions.getValue());
-
-        m_MultiResSOC->setFinalResolution(finalResolution.getValue());
-        m_MultiResSOC->setSampleThickness(sampleThickness.getValue());
-        m_MultiResSOC->setTargetGain(targetGain.getValue());
-        m_MultiResSOC->setStopThreshold(stopThreshold.getValue());
-        m_MultiResSOC->setOuterIterations(outerIterations.getValue());
-        m_MultiResSOC->setInnerIterations(innerIterations.getValue());
-        m_MultiResSOC->setSigmaX(sigma_x.getValue());
-
-        m_MultiResSOC->setMRFShapeParameter(mrf.getValue());
-        m_MultiResSOC->setDefaultOffsetValue(defaultOffset.getValue());
-        m_MultiResSOC->setUseDefaultOffset(useDefaultOffset.getValue());
-        m_MultiResSOC->setTiltSelection(static_cast<SOC::TiltSelection>(tiltSelection.getValue()));
-        m_MultiResSOC->setExtendObject(extendObject.getValue());
-        m_MultiResSOC->setDefaultVariance(defaultVariance.getValue());
-        m_MultiResSOC->setInitialReconstructionValue(defaultInitialRecon.getValue());
-
-        m_MultiResSOC->setInterpolateInitialReconstruction(interpolateInitialRecontruction.getValue());
-        m_MultiResSOC->setDeleteTempFiles(m_DeleteTempFiles.getValue());
-        AdvancedParametersPtr advParams = AdvancedParametersPtr(new AdvancedParameters);
-        ReconstructionEngine::InitializeAdvancedParams(advParams);
-        m_MultiResSOC->setAdvParams(advParams);
-
-        int subvolumeValues[6];
-        ::memset(subvolumeValues, 0, 6 * sizeof(int));
-
-        if(subvolume.getValue().length() != 0)
-        {
-          int err = parseValues(subvolume.getValue(), "%d", subvolumeValues);
-          if(err < 0)
-          {
-            std::cout << "Error Parsing the Subvolume Dimensions. They should be entered as --subvolume 64,128,256,80,150,280" << std::endl;
-            return -1;
-          }
-        }
-
-        std::vector<uint16_t> multiResSubVolume(6);
-        for(int i = 0; i < 6; ++i) { multiResSubVolume[i] = subvolumeValues[i]; }
-        m_MultiResSOC->setSubvolume(multiResSubVolume);
-
-
-        std::vector<uint8_t> viewMasks;
-
-        if(viewMask.getValue().length() != 0 && parseUnknownArray(viewMask.getValue(), "%d", viewMasks) < 0)
-        {
-          std::cout << "Error Parsing the Tilt Mask Values. They should be entered as 4,7,12,34,67" << std::endl;
-          return -1;
-        }
-
-        m_MultiResSOC->setViewMasks(viewMasks);
-
+      std::cout << "Error Parsing the Tilt Mask Values. They should be entered as 4,7,12,34,67" << std::endl;
+      return -1;
     }
-    catch (TCLAP::ArgException &e)
+
+    m_MultiResSOC->setViewMasks(viewMasks);
+    // Read the proper tilts from the mrc file
+    MRCHeader header;
+    ::memset(&header, 0, sizeof(header));
+    MRCReader::Pointer reader = MRCReader::New(true);
+    // Read the header from the file
+    int err = reader->readHeader(m_MultiResSOC->getInputFile(), &header);
+    if(err < 0)
     {
-        std::cerr << " error: " << e.error() << " for arg " << e.argId() << std::endl;
-        std::cout << "** Unknown Arguments. Displaying help listing instead. **" << std::endl;
-        return -1;
+      return -1;
     }
-    return 0;
+    //  int tiltIndex = 0;
+    if(header.feiHeaders != NULL)
+    {
+      std::vector<float> tilts(header.nz, 0.0f);
+      //FEIHeader fei = header.feiHeaders[tiltIndex];
+      for(int l = 0; l < header.nz; ++l)
+      {
+        if(tiltSelection.getValue() == 0)
+        {
+          tilts[l] = header.feiHeaders[l].a_tilt;
+        }
+        else
+        {
+          tilts[l] = header.feiHeaders[l].b_tilt;
+        }
+      }
+      m_MultiResSOC->setTilts(tilts);
+    }
+  }
+  catch (TCLAP::ArgException &e)
+  {
+    std::cerr << " error: " << e.error() << " for arg " << e.argId() << std::endl;
+    std::cout << "** Unknown Arguments. Displaying help listing instead. **" << std::endl;
+    return -1;
+  }
+  return 0;
 }
 
 #define PRINT_VAR(out, inputs, var)\
-    out << #var << ": " << inputs->var << std::endl;
+  out << #var << ": " << inputs->var << std::endl;
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
@@ -325,7 +351,7 @@ void HAADFReconstructionArgsParser::printInputs(TomoInputsPtr inputs, std::ostre
   PRINT_VAR(out, inputs, yEnd);
   PRINT_VAR(out, inputs, zStart);
   PRINT_VAR(out, inputs, zEnd);
-  PRINT_VAR(out, inputs, tiltSelection);
+  //PRINT_VAR(out, inputs, tiltSelection);
   PRINT_VAR(out, inputs, fileXSize);
   PRINT_VAR(out, inputs, fileYSize);
   PRINT_VAR(out, inputs, fileZSize);

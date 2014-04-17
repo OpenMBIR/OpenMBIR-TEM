@@ -37,7 +37,6 @@
 #include "DetectorResponse.h"
 
 #include "MBIRLib/Common/EIMMath.h"
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 
 // -----------------------------------------------------------------------------
 //

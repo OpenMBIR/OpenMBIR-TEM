@@ -1,6 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2011 Michael A. Jackson (BlueQuartz Software)
- * Copyright (c) 2011 Singanallur Venkatakrishnan (Purdue University)
+ * Copyright (c) 2014 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2014 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -36,74 +36,80 @@
 
 
 
-#ifndef SCALEOFFSETCORRECTIONCONSTANTS_H_
-#define SCALEOFFSETCORRECTIONCONSTANTS_H_
+#ifndef _ReconstructionConstants_H_
+#define _ReconstructionConstants_H_
 
 #include <string>
 
-
 #define INDEX_3(i, j, k)\
-    ((9*(i)) + (3*(j)) + ((k)))
+  ((9*(i)) + (3*(j)) + ((k)))
 
 
+typedef double Real_t;
 
-//#define FORWARD_PROJECT_MODE
-//#define DEBUG 0
-
-
-//Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
-#define ROI 1
-
-#define SURROGATE_FUNCTION
-#define EIMTOMO_USE_QGGMRF 1
-#define MAX_ANGLE_STRETCH 75
-
-//#define WRITE_INTERMEDIATE_RESULTS
-//#define COST_CALCULATE
-//#define BF_RECON //Bright Field Reconstruction
-#define BF_OFFSET 0 //23696 - Bio data set 
-#define BF_MAX  1865//5689//42122 
-
-//#define IDENTITY_NOISE_MODEL
-
-#define POSITIVITY_CONSTRAINT
-#define RANDOM_ORDER_UPDATES
-
-//#define NHICD
-
-#define NUM_NON_HOMOGENOUS_ITER 20
+namespace SOC {
+  enum TiltSelection {
+    A_Tilt,
+    B_Tilt
+  };
+}
 
 
-namespace ScaleOffsetCorrection
+namespace MBIR
 {
 
-//  const std::string OutputDirectory("ScaleOffsetCorrection_Output");
-  const std::string DetectorResponseFile("DetectorResponse.bin");
-  const std::string CostFunctionFile("CostFunc.bin");
-  const std::string FinalGainParametersFile("FinalGainParameters.bin");
-  const std::string FinalOffsetParametersFile("FinalOffsetParameters.bin");
-  const std::string FinalVariancesFile("FinalVariances.bin");
 
-  const std::string VoxelProfileFile("VoxelProfile.bin");
-  const std::string ForwardProjectedObjectFile("ForwardProjectedObject.bin");
-  const std::string CostFunctionCoefficientsFile("CostFunctionCoefficients.bin");
-  const std::string FilteredMagMapFile("FilteredMagMap.bin");
-  const std::string MagnitudeMapFile("MagnitudeMap.bin");
 
-  const std::string ReconstructedVtkFile("ReconstructedVolume.vtk");
-  const std::string ReconstructedSinogramFile("ReconstructedSinogram.bin");
-  const std::string ReconstructedObjectFile("ReconstructedObject.bin");
-  const std::string ReconstructedMrcFile("ReconstructedVolume.rec");
-
-  const std::string UpsampledBinFile("UpsampledObject.bin");
-
-  namespace VTK
+  namespace VoxelUpdateType
   {
-    const std::string TomoVoxelScalarName("TomoVoxel");
+    const unsigned int RegularRandomOrderUpdate = 0;
+    const unsigned int HomogeniousUpdate = 1;
+    const unsigned int NonHomogeniousUpdate = 2;
+  }
+
+
+
+  namespace Constants
+  {
+    const unsigned int k_NumHomogeniousIter = 20;
+    const unsigned int k_NumNonHomogeniousIter = 20;
+    const Real_t k_QGGMRF_Gamma = 5.0;
+    const Real_t k_MaxAngleStretch = 75.0;
+  }
+
+
+  namespace Defaults
+  {
+
+    //  const std::string OutputDirectory("ScaleOffsetCorrection_Output");
+    const std::string DetectorResponseFile("DetectorResponse.bin");
+    const std::string CostFunctionFile("CostFunc.bin");
+    const std::string FinalGainParametersFile("FinalGainParameters.bin");
+    const std::string FinalOffsetParametersFile("FinalOffsetParameters.bin");
+    const std::string FinalVariancesFile("FinalVariances.bin");
+
+    const std::string VoxelProfileFile("VoxelProfile.bin");
+    const std::string BFHAADF_ForwardProjectedObjectFile("BFHAADF_ForwardProjectedObject.bin");
+    const std::string CostFunctionCoefficientsFile("CostFunctionCoefficients.bin");
+    const std::string FilteredMagMapFile("FilteredMagMap.bin");
+    const std::string MagnitudeMapFile("MagnitudeMap.bin");
+    const std::string BraggSelectorFile("BraggSelector.mrc");
+
+    const std::string ReconstructedVtkFile("ReconstructedVolume.vtk");
+    const std::string ReconstructedSinogramFile("ReconstructedSinogram.bin");
+    const std::string ReconstructedObjectFile("ReconstructedObject.bin");
+    const std::string ReconstructedMrcFile("ReconstructedVolume.rec");
+
+    const std::string UpsampledBinFile("UpsampledObject.bin");
+
+    namespace VTK
+    {
+      const std::string TomoVoxelScalarName("TomoVoxel");
+    }
+
   }
 
 }
 
 
-
-#endif /* SCALEOFFSETCORRECTIONCONSTANTS_H_ */
+#endif /* _ReconstructionConstants_H_ */

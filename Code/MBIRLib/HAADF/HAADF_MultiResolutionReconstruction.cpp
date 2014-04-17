@@ -36,7 +36,7 @@
 
 
 
-#include "MultiResolutionReconstruction.h"
+#include "HAADF_MultiResolutionReconstruction.h"
 
 #include <errno.h>
 
@@ -46,12 +46,13 @@
 #include "MXA/Utilities/MXAFileInfo.h"
 #include "MXA/Utilities/StringUtils.h"
 #include "MBIRLib/Common/EIMMath.h"
+#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-MultiResolutionReconstruction::MultiResolutionReconstruction() :
+HAADF_MultiResolutionReconstruction::HAADF_MultiResolutionReconstruction() :
 FilterPipeline(),
 m_Debug(false),
 m_InputFile(""),
@@ -75,7 +76,7 @@ m_ExtendObject(true),
 m_InterpolateInitialReconstruction(false),
 m_DefaultVariance(1.0f),
 m_InitialReconstructionValue(0.0f),
-m_TiltSelection(SOC::A_Tilt),
+m_DefaultPixelSize(1.0),
 m_Cancel(false)
 {
 
@@ -84,7 +85,7 @@ m_Cancel(false)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-MultiResolutionReconstruction::~MultiResolutionReconstruction()
+HAADF_MultiResolutionReconstruction::~HAADF_MultiResolutionReconstruction()
 {
 }
 
@@ -95,7 +96,7 @@ MultiResolutionReconstruction::~MultiResolutionReconstruction()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std::ostream &out)
+void HAADF_MultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std::ostream &out)
 {
 #if 1
     out << "------------------ TomoInputs Begin ------------------" << std::endl;
@@ -112,7 +113,7 @@ void MultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std::ostre
   PRINT_VAR(out, inputs, yEnd);
   PRINT_VAR(out, inputs, zStart);
   PRINT_VAR(out, inputs, zEnd);
-  PRINT_VAR(out, inputs, tiltSelection);
+  //PRINT_VAR(out, inputs, tiltSelection);
   PRINT_VAR(out, inputs, fileXSize);
   PRINT_VAR(out, inputs, fileYSize);
   PRINT_VAR(out, inputs, fileZSize);
@@ -121,11 +122,14 @@ void MultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std::ostre
   PRINT_VAR(out, inputs, delta_xy);
   PRINT_VAR(out, inputs, extendObject);
   PRINT_VAR(out, inputs, interpolateFactor);
+  PRINT_VAR(out, inputs, defaultInitialRecon);
+
+
   PRINT_VAR(out, inputs, targetGain);
   PRINT_VAR(out, inputs, useDefaultOffset);
   PRINT_VAR(out, inputs, defaultOffset);
-  PRINT_VAR(out, inputs, defaultInitialRecon);
   PRINT_VAR(out, inputs, defaultVariance);
+
 
   PRINT_VAR(out, inputs, sinoFile);
   PRINT_VAR(out, inputs, initialReconFile);
@@ -146,7 +150,7 @@ void MultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std::ostre
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MultiResolutionReconstruction::setCancel(bool value)
+void HAADF_MultiResolutionReconstruction::setCancel(bool value)
 {
  m_Cancel = value;
  if (NULL != m_CurrentEngine.get())
@@ -159,7 +163,7 @@ void MultiResolutionReconstruction::setCancel(bool value)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool MultiResolutionReconstruction::getCancel()
+bool HAADF_MultiResolutionReconstruction::getCancel()
 {
   return m_Cancel;
 }
@@ -168,7 +172,7 @@ bool MultiResolutionReconstruction::getCancel()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MultiResolutionReconstruction::execute()
+void HAADF_MultiResolutionReconstruction::execute()
 {
   std::vector<std::string>  tempFiles;
 
@@ -180,10 +184,10 @@ void MultiResolutionReconstruction::execute()
   ss.str("");
 
   TomoInputsPtr prevInputs = TomoInputsPtr(new TomoInputs);
-  ReconstructionEngine::InitializeTomoInputs(prevInputs);
+  HAADF_ReconstructionEngine::InitializeTomoInputs(prevInputs);
 
   TomoInputsPtr bf_inputs = TomoInputsPtr(new TomoInputs);
-  ReconstructionEngine::InitializeTomoInputs(bf_inputs);
+  HAADF_ReconstructionEngine::InitializeTomoInputs(bf_inputs);
 
   for (int i = 0; i < m_NumberResolutions; ++i)
   {
@@ -194,7 +198,7 @@ void MultiResolutionReconstruction::execute()
     }
 
     TomoInputsPtr inputs = TomoInputsPtr(new TomoInputs);
-    ReconstructionEngine::InitializeTomoInputs(inputs);
+    HAADF_ReconstructionEngine::InitializeTomoInputs(inputs);
 
     bf_inputs->sinoFile = getBrightFieldFile();
 
@@ -253,7 +257,7 @@ void MultiResolutionReconstruction::execute()
     else
     {
         ss.str("");
-        ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedObjectFile;
+        ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::ReconstructedObjectFile;
         inputs->reconstructedOutputFile = ss.str();
 
         inputs->vtkOutputFile = "";
@@ -261,52 +265,65 @@ void MultiResolutionReconstruction::execute()
         inputs->avizoOutputFile = "";
     }
 
-    // Line up all the temp files that we are going to delete
+  // Line up all the temp files that we are going to delete
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalGainParametersFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::FinalGainParametersFile;
     inputs->gainsOutputFile = ss.str();
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalOffsetParametersFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::FinalOffsetParametersFile;
     inputs->offsetsOutputFile = ss.str();
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::FinalVariancesFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::FinalVariancesFile;
     inputs->varianceOutputFile = ss.str();
     tempFiles.push_back(ss.str());
 
+
+    //initialize the Bragg selector file
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedSinogramFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::BraggSelectorFile;
+    inputs->braggSelectorFile = ss.str();
     tempFiles.push_back(ss.str());
 
     // Create the paths for all the temp files that we want to delete
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::CostFunctionFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::ReconstructedSinogramFile;
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::DetectorResponseFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::CostFunctionFile;
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::ReconstructedObjectFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::DetectorResponseFile;
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::VoxelProfileFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::ReconstructedObjectFile;
     tempFiles.push_back(ss.str());
 
     ss.str("");
-    ss << inputs->tempDir << MXADir::Separator << ScaleOffsetCorrection::UpsampledBinFile;
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::VoxelProfileFile;
     tempFiles.push_back(ss.str());
 
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::UpsampledBinFile;
+    tempFiles.push_back(ss.str());
+
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::FilteredMagMapFile;
+    tempFiles.push_back(ss.str());
+
+    ss.str("");
+    ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::MagnitudeMapFile;
+    tempFiles.push_back(ss.str());
 
     inputs->NumOuterIter = getOuterIterations();
     if(i == 0)
     {
-//      inputs->NumIter = 20;
       inputs->NumIter = getInnerIterations();
     }
     else
@@ -339,7 +356,7 @@ void MultiResolutionReconstruction::execute()
     }
     inputs->LengthZ = m_SampleThickness;
     inputs->targetGain = m_TargetGain;
-    inputs->tiltSelection = m_TiltSelection;
+    inputs->tilts = m_Tilts;
     if(m_Subvolume.size() > 0)
     {
       inputs->useSubvolume = true;
@@ -368,16 +385,21 @@ void MultiResolutionReconstruction::execute()
     GeometryPtr geometry = GeometryPtr(new Geometry);
     ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
 
-    ReconstructionEngine::InitializeSinogram(sinogram);
-    ReconstructionEngine::InitializeGeometry(geometry);
-    ReconstructionEngine::InitializeScaleOffsetParams(nuisanceParams);
-    ReconstructionEngine::InitializeSinogram(bf_sinogram);
+    HAADF_ReconstructionEngine::InitializeSinogram(sinogram);
+    HAADF_ReconstructionEngine::InitializeGeometry(geometry);
+    HAADF_ReconstructionEngine::InitializeScaleOffsetParams(nuisanceParams);
+    HAADF_ReconstructionEngine::InitializeSinogram(bf_sinogram);
+
+    //This load the pixel size from a user based input if the headers are NOT FEI compliant
+    //If the header is FEI compliant, this value WILL be overwritten in HAADF_ReconstructionEngine.cpp
+    sinogram->delta_r = getDefaultPixelSize();
+    sinogram->delta_t = getDefaultPixelSize();
 
     //Calculate approximate memory required
-    memCalculate(inputs, bf_inputs);
+    memCalculate(inputs);
 
     //Create an Engine and initialize all the structures
-    ReconstructionEngine::Pointer engine = ReconstructionEngine::New();
+    HAADF_ReconstructionEngine::Pointer engine = HAADF_ReconstructionEngine::New();
     m_CurrentEngine = engine;
     engine->setTomoInputs(inputs);
     engine->setSinogram(sinogram);
@@ -399,7 +421,7 @@ void MultiResolutionReconstruction::execute()
     pipelineProgressMessage(ss.str());
 
     engine->execute();
-    engine = ReconstructionEngine::NullPointer();
+    engine = HAADF_ReconstructionEngine::NullPointer();
 
     prevInputs = inputs;
 
@@ -440,7 +462,7 @@ void MultiResolutionReconstruction::execute()
         }
         else
         {
-            MXAFileInfo::remove(tempFiles[i]);
+            MXADir::remove(tempFiles[i]);
         }
     }
   }
@@ -449,7 +471,7 @@ void MultiResolutionReconstruction::execute()
   setErrorCondition(err);
 }
 
-void MultiResolutionReconstruction::memCalculate(TomoInputsPtr inputs, TomoInputsPtr bf_inputs)
+void HAADF_MultiResolutionReconstruction::memCalculate(TomoInputsPtr inputs)
 {
     float GeomNx,GeomNy,GeomNz;
     float SinoNr,SinoNt,SinoNtheta;
@@ -458,10 +480,7 @@ void MultiResolutionReconstruction::memCalculate(TomoInputsPtr inputs, TomoInput
     SinoNtheta = static_cast<float>(inputs->zEnd - inputs->zStart+1);
 
     AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
-    ReconstructionEngine::InitializeAdvancedParams(advancedParams);
-
-    //std::cout<<"Advaced params"<<advancedParams->Z_STRETCH<<std::endl;
-
+    HAADF_ReconstructionEngine::InitializeAdvancedParams(advancedParams);
 
     if(inputs->extendObject == 1)
     {
@@ -498,6 +517,5 @@ void MultiResolutionReconstruction::memCalculate(TomoInputsPtr inputs, TomoInput
     TotalMem/=(1e9);//To get answer in Gb
 
     std::cout<<"Total Max Mem needed = "<<TotalMem<<" Gb"<<std::endl;
-
 
 }

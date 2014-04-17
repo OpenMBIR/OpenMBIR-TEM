@@ -51,7 +51,7 @@ class MRCInfoWidget;
 
 //-- UIC generated Header
 #include "ui_TEMBIRGui.h"
-#include "QMultiResolutionReconstruction.h"
+#include "QHAADF_MultiResolutionReconstruction.h"
 
 #include "MBIRLib/IOFilters/MRCHeader.h"
 #include "MBIRLib/Common/Observer.h"
@@ -176,7 +176,6 @@ protected slots:
     void on_actionSaveCanvas_triggered();
     void on_action_InputMRCInfo_triggered();
     void on_action_OutputMRCInfo_triggered();
-    void on_actionLoad_Tilt_Information_triggered();
 
     //Window Menu
     void on_actionParameters_triggered();
@@ -262,6 +261,7 @@ protected slots:
 
     void on_sigma_x_textChanged(const QString & text);
 
+    void on_actionLoad_Tilt_Information_triggered();
 
     void singleSlicePlaneSet(int y);
 
@@ -372,22 +372,6 @@ signals:
     */
     void cancelPipeline();
 
-     /**
-      * @brief This message reports some human readable message suitable for display
-      * on a GUI or printed to a console or possibly saved to a log file
-      * @param message
-      */
-     virtual void pipelineWarningMessage(const char* message);
-     virtual void pipelineWarningMessage(const std::string &msg);
-
-     /**
-      * @brief This message reports some human readable message suitable for display
-      * on a GUI or printed to a console or possibly saved to a log file
-      * @param message
-      */
-     virtual void pipelineErrorMessage(const char* message);
-     virtual void pipelineErrorMessage(const std::string &msg);
-
     /**
      * @brief The Reconstruction Area has changed.
      * @param xmin Min x value
@@ -454,7 +438,7 @@ private:
     QString               m_OffsetsFile;
     QString               m_VarianceFile;
     QThread*              m_WorkerThread;
-    QMultiResolutionReconstruction*   m_MultiResSOC;
+    QHAADF_MultiResolutionReconstruction*   m_MultiResSOC;
     GainsOffsetsTableModel*  m_GainsOffsetsTableModel;
 
     bool                  m_SingleSliceReconstructionActive;

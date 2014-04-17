@@ -39,6 +39,8 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+
 /**
  * @brief Creates a new Array by allocating memory in a contiguous space
  * @param dims The dimensions of your data with the SLOWEST moving dimension
@@ -287,21 +289,21 @@ class TomoArray
 
     T* allocate(size_t s, unsigned int d, size_t* d1)
     {
-     // va_list ap;             /* varargs list traverser */
+      // va_list ap;             /* varargs list traverser */
       size_t max,                /* size of array to be declared */
-      *q;                     /* pointer to dimension list */
+          *q;                     /* pointer to dimension list */
       char **r,               /* pointer to beginning of the array of the
-                               * pointers for a dimension */
-      **s1, *t, *tree;        /* base pointer to beginning of first array */
+                                   * pointers for a dimension */
+          **s1, *t, *tree;        /* base pointer to beginning of first array */
       size_t i, j;               /* loop counters */
       assert(false);
-     // int *d1;                /* dimension list */
+      // int *d1;                /* dimension list */
 
-     // va_start(ap,d);
-     // d1 = (int *) mget_spc(d,sizeof(int));
+      // va_start(ap,d);
+      // d1 = (int *) mget_spc(d,sizeof(int));
 
-//      for(i=0;i<d;i++)
-//        d1[i] = va_arg(ap,int);
+      //      for(i=0;i<d;i++)
+      //        d1[i] = va_arg(ap,int);
 
       r = &tree;
       q = d1;                /* first dimension */
@@ -309,16 +311,16 @@ class TomoArray
       for (i = 0; i < d - 1; i++, q++) {      /* for each of the dimensions
                                                * but the last */
         max *= (*q);
-//        r[0]=(char *)mget_spc(max,sizeof(char**));
+        //        r[0]=(char *)mget_spc(max,sizeof(char**));
         r[0]=(char*)malloc((size_t)(max*sizeof(char**)));
-     //   printf("max: %d   sizeof(char **): %d  r: %p r[0]: 0x%08x \n", max , sizeof(char **), r, r[0]);
+        //   printf("max: %d   sizeof(char **): %d  r: %p r[0]: 0x%08x \n", max , sizeof(char **), r, r[0]);
         r = (char **) r[0];     /* step through to beginning of next
                                  * dimension array */
       }
       max *= s * (*q);        /* grab actual array memory */
       //r[0] = (char*)mget_spc(max,sizeof(char));
       r[0]=(char*)malloc((size_t)(max*sizeof(char)));
-     // printf("max: %d   sizeof(char): %d  r: %p r[0]: 0x%08x \n", max , sizeof(char), r, r[0]);
+      // printf("max: %d   sizeof(char): %d  r: %p r[0]: 0x%08x \n", max , sizeof(char), r, r[0]);
       /*
        * r is now set to point to the beginning of each array so that we can
        * use it to scan down each array rather than having to go across and
@@ -334,7 +336,7 @@ class TomoArray
                                                  * first and subsequent
                                                  * elements */
 
-        /*  modify each of the pointers so that it points to
+          /*  modify each of the pointers so that it points to
          * the correct position (sub-array) of the next
          * dimension array. s1 is the current position in the
          * current array. t is the current position in the
@@ -355,8 +357,8 @@ class TomoArray
       for (j = 1, s1 = r + 1, t = r[0]; j < max; j++)
         *s1++ = (t += s * *(q + 1));
 
-//      va_end(ap);
-//      free((void *)d1);
+      //      va_end(ap);
+      //      free((void *)d1);
       return (T*)tree;              /* return base pointer */
     }
     /*
@@ -375,7 +377,7 @@ class TomoArray
         if(p != NULL)
         {
           next = *p;
-         // printf("p: %p  Value of P: 0x%08x  i:  %d   Value of Next: 0x%08x \n", p, *p, i, next);
+          // printf("p: %p  Value of P: 0x%08x  i:  %d   Value of Next: 0x%08x \n", p, *p, i, next);
           free((void*)p);
         }
       }
@@ -386,5 +388,19 @@ class TomoArray
 
 };
 
+typedef TomoArray<uint8_t, uint8_t*, 3> UInt8VolumeType;
+typedef TomoArray<uint8_t, uint8_t*, 2> UInt8Image_t;
+typedef TomoArray<uint8_t, uint8_t*, 1> UInt8ArrayType;
+
+typedef TomoArray<int32_t, int32_t*, 1> Int32ArrayType;
+typedef TomoArray<uint32_t, uint32_t*, 1> UInt32ArrayType;
+
+typedef TomoArray<Real_t, Real_t*, 3> RealVolumeType;
+typedef TomoArray<Real_t, Real_t*, 2> RealImageType;
+typedef TomoArray<Real_t, Real_t*, 1> RealArrayType;
+
+typedef TomoArray<float, float*, 3> FloatVolumeType;
+typedef TomoArray<float, float*, 2> FloatImageType;
+typedef TomoArray<float, float*, 1> FloatArrayType;
 
 #endif /* TOMOARRAY_HPP_ */

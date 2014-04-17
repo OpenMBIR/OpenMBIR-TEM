@@ -6,9 +6,9 @@
 #--////////////////////////////////////////////////////////////////////////////
 set (MBIRLib_GenericFilters_SRCS
     ${MBIRLib_SOURCE_DIR}/GenericFilters/BackgroundCalculation.cpp
-    ${MBIRLib_SOURCE_DIR}/GenericFilters/CostData.cpp
     ${MBIRLib_SOURCE_DIR}/GenericFilters/CalculateAMatrixColumn.cpp
     ${MBIRLib_SOURCE_DIR}/GenericFilters/ComputeInitialOffsets.cpp
+    ${MBIRLib_SOURCE_DIR}/GenericFilters/CostData.cpp
     ${MBIRLib_SOURCE_DIR}/GenericFilters/DetectorParameters.cpp
     ${MBIRLib_SOURCE_DIR}/GenericFilters/DetectorResponse.cpp
     ${MBIRLib_SOURCE_DIR}/GenericFilters/InitialReconstructionBinReader.cpp
@@ -22,9 +22,9 @@ set (MBIRLib_GenericFilters_SRCS
 
 set (MBIRLib_GenericFilters_HDRS
     ${MBIRLib_SOURCE_DIR}/GenericFilters/BackgroundCalculation.h
-    ${MBIRLib_SOURCE_DIR}/GenericFilters/CostData.h
     ${MBIRLib_SOURCE_DIR}/GenericFilters/CalculateAMatrixColumn.h
     ${MBIRLib_SOURCE_DIR}/GenericFilters/ComputeInitialOffsets.h
+    ${MBIRLib_SOURCE_DIR}/GenericFilters/CostData.h
     ${MBIRLib_SOURCE_DIR}/GenericFilters/DetectorParameters.h
     ${MBIRLib_SOURCE_DIR}/GenericFilters/DetectorResponse.h
     ${MBIRLib_SOURCE_DIR}/GenericFilters/InitialReconstructionBinReader.h

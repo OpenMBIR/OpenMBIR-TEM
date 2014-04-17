@@ -1,6 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
- * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
+ * Copyright (c) 2014 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2014 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -13,7 +13,7 @@
  * list of conditions and the following disclaimer in the documentation and/or
  * other materials provided with the distribution.
  *
- * Neither the name of Singanallur Venkatakrishnan, Michael A. Jackson, the Pudue
+ * Neither the name of Singanallur Venkatakrishnan, Michael A. Jackson, the Purdue
  * Univeristy, BlueQuartz Software nor the names of its contributors may be used
  * to endorse or promote products derived from this software without specific
  * prior written permission.
@@ -35,47 +35,23 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#ifndef COMPUTEGAINSOFFETS_H_
-#define COMPUTEGAINSOFFETS_H_
 
+#ifndef _HAADFConstants_H_
+#define _HAADFConstants_H_
 
-#include "MXA/MXA.h"
-#include "MXA/Common/MXASetGetMacros.h"
-#include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/GenericFilters/TomoFilter.h"
-#include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Common/allocate.h"
-#include "MBIRLib/Common/EIMMath.h"
+#include <string>
 
-/**
- * @class ComputeInitialOffsets ComputeInitialOffsets.h SOC/ComputeInitialOffsets.h
- * @brief
- * @author
- * @date Jan 3, 2012
- * @version 1.0
- */
-class MBIRLib_EXPORT ComputeInitialOffsets : public TomoFilter
-{
-  public:
-    MXA_SHARED_POINTERS(ComputeInitialOffsets)
-    MXA_STATIC_NEW_MACRO(ComputeInitialOffsets);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, ComputeInitialOffsets);
-    MXA_TYPE_MACRO_SUPER(ComputeInitialOffsets, TomoFilter)
+//Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
+#define ROI 1
+#define MAX_ANGLE_STRETCH 75
+#define EIMTOMO_USE_QGGMRF 1 //Was used earlier to switch priors
+#define POSITIVITY_CONSTRAINT
 
-    virtual ~ComputeInitialOffsets();
+#define BF_OFFSET 0 //23696 - Bio data set
+#define BF_MAX  1865//5689//42122
 
-    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialOffset)
+#define SURROGATE_FUNCTION
 
+#define RANDOM_ORDER_UPDATES
 
-    virtual void execute();
-
-
-  protected:
-    ComputeInitialOffsets();
-
-  private:
-    ComputeInitialOffsets(const ComputeInitialOffsets&); // Copy Constructor Not Implemented
-    void operator=(const ComputeInitialOffsets&); // Operator '=' Not Implemented
-};
-
-#endif /* COMPUTEGAINSOFFETS_H_ */
+#endif /* _HAADFConstants_H_ */

@@ -43,8 +43,8 @@
 
 #include "MBIRLib/MBIRLibVersion.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Reconstruction/ReconstructionEngine.h"
-#include "MBIRLib/Reconstruction/MultiResolutionReconstruction.h"
+#include "MBIRLib/HAADF/HAADF_ReconstructionEngine.h"
+#include "MBIRLib/HAADF/HAADF_MultiResolutionReconstruction.h"
 #include "HAADFReconstructionArgsParser.h"
 
 int main(int argc, char **argv)
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 
 
 
-    MultiResolutionReconstruction::Pointer engine = MultiResolutionReconstruction::New();
+    HAADF_MultiResolutionReconstruction::Pointer engine = HAADF_MultiResolutionReconstruction::New();
 
     HAADFReconstructionArgsParser argParser;
     int err = argParser.parseArguments(argc, argv, engine);

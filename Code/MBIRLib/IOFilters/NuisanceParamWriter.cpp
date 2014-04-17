@@ -45,26 +45,23 @@
 
 #include "MXA/Utilities/MXADir.h"
 
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-
-
 
 #define MAKE_OUTPUT_FILE(Fp, err, outdir, filename)\
-    {\
-    std::string filepath(outdir);\
-    filepath = filepath.append(MXADir::getSeparator()).append(filename);\
-    errno = 0;\
-    err = 0;\
-    Fp = fopen(filepath.c_str(),"wb");\
-    if (Fp == NULL) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl; err = -1; }\
-    }
+{\
+  std::string filepath(outdir);\
+  filepath = filepath.append(MXADir::getSeparator()).append(filename);\
+  errno = 0;\
+  err = 0;\
+  Fp = fopen(filepath.c_str(),"wb");\
+  if (Fp == NULL) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl; err = -1; }\
+  }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
 NuisanceParamWriter::NuisanceParamWriter() :
-m_WriteBinary(true),
-m_NuisanceParams(NULL)
+  m_WriteBinary(true),
+  m_Ntheta(0)
 {
 }
 
@@ -76,70 +73,56 @@ NuisanceParamWriter::~NuisanceParamWriter()
 }
 
 // -----------------------------------------------------------------------------
-//
+// Writes out the nuisance parameters for multi-resolution reconstruction
 // -----------------------------------------------------------------------------
 void NuisanceParamWriter::execute()
 {
   std::stringstream ss;
-  if(NULL == getTomoInputs())
-  {
-    setErrorCondition(-1);
-    setErrorMessage("NuisanceBinWriter::TomoInputs not initialized Correctly");
-    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-    return;
-  }
-  if(NULL == getSinogram())
-  {
-    setErrorCondition(-1);
-    setErrorMessage("NuisanceBinWriter::Sinogram not initialized Correctly");
-    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-    return;
-  }
-  if(NULL == m_NuisanceParams)
-  {
-    setErrorCondition(-1);
-    setErrorMessage("NuisanceBinWriter:: NuisanceParams not initialized Correctly");
-    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-    return;
-  }
 
-  FILE* file = fopen(m_FileName.c_str(), "wb");
-
-  if(file == 0)
-  {
-    ss.str("");
-    ss << "NuisanceBinWriter: Error opening output file for writing. '" <<
-        m_FileName << "'";
-    setErrorCondition(-1);
-    setErrorMessage(ss.str());
-    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-    return;
-  }
-
-  RealArrayType::Pointer src = RealArrayType::NullPointer();
   std::string printTitle("UNKNOWN DATA");
   switch(m_DataToWrite)
   {
     case Nuisance_I_O:
-      src = m_NuisanceParams->I_0;
       printTitle = "Gains";
       break;
     case Nuisance_mu:
-      src = m_NuisanceParams->mu;
       printTitle = "Offsets";
       break;
     case Nuisance_alpha:
-      src = m_NuisanceParams->alpha;
       printTitle = "Variances";
       break;
     default:
       break;
   }
 
-  if(NULL == src.get() || NULL == src->d)
+  if(m_FileName.empty() == true)
   {
+    ss.str("");
+    ss << "NuisanceBinWriter: Writing " << printTitle << " Data. Filename was empty. No output file being written.";
     setErrorCondition(-1);
-    setErrorMessage("NuisanceBinWriter: The array to write was NULL");
+    setErrorMessage(ss.str());
+    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+    return;
+  }
+
+  FILE* file = fopen(m_FileName.c_str(), "wb");
+
+  if(file == NULL)
+  {
+    ss.str("");
+    ss << "NuisanceBinWriter: Writing " << printTitle << " Data. Error opening output file for writing. '" << m_FileName << "'";
+    setErrorCondition(-1);
+    setErrorMessage(ss.str());
+    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+    return;
+  }
+
+  if(NULL == m_Data.get() || NULL == m_Data->d)
+  {
+    ss.str("");
+    ss << "NuisanceBinWriter: Writing " << printTitle << " Data. The array to write was NULL";
+    setErrorCondition(-1);
+    setErrorMessage(ss.str());
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
@@ -151,13 +134,13 @@ void NuisanceParamWriter::execute()
 
   if(m_WriteBinary == true)
   {
-    fwrite(src->d, sizeof(Real_t), getSinogram()->N_theta, file);
+    fwrite(m_Data->d, sizeof(Real_t), m_Ntheta, file);
   }
   else
   {
-    for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
+    for (uint16_t i_theta = 0; i_theta < m_Ntheta; i_theta++)
     {
-      fprintf(file, "%lf\n", src->d[i_theta]);
+      fprintf(file, "%lf\n", m_Data->d[i_theta]);
     }
   }
   fclose(file);

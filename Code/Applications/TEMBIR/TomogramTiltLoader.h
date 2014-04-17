@@ -22,11 +22,12 @@ class TomogramTiltLoader : public QDialog, private Ui::TomogramTiltLoader
     QVector<float> getBTilts();
     float getPixelSize();
 
-
+    void setNumTilts(int nTilts);
   protected:
     void setupGui();
 
   private:
+    int m_NumTilts;
 
     TomogramTiltLoader(const TomogramTiltLoader&); // Copy Constructor Not Implemented
     void operator=(const TomogramTiltLoader&); // Operator '=' Not Implemented

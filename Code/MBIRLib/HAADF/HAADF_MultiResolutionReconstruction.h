@@ -35,26 +35,27 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#ifndef MULTIRESOLUTIONSOC_H_
-#define MULTIRESOLUTIONSOC_H_
+#ifndef HAADF_MULTIRESOLUTIONSOC_H_
+#define HAADF_MULTIRESOLUTIONSOC_H_
 
 
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Common/FilterPipeline.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Reconstruction/ReconstructionEngine.h"
+#include "MBIRLib/HAADF/HAADF_ReconstructionEngine.h"
 
-/*
- *
+/**
+ * @brief This class controls the multiresolution reconstruction of an input
+ * data set
  */
-class MultiResolutionReconstruction : public FilterPipeline
+class HAADF_MultiResolutionReconstruction : public FilterPipeline
 {
   public:
-    MXA_SHARED_POINTERS(MultiResolutionReconstruction)
-    MXA_TYPE_MACRO_SUPER(MultiResolutionReconstruction, FilterPipeline)
-    MXA_STATIC_NEW_MACRO(MultiResolutionReconstruction)
+    MXA_SHARED_POINTERS(HAADF_MultiResolutionReconstruction)
+    MXA_TYPE_MACRO_SUPER(HAADF_MultiResolutionReconstruction, FilterPipeline)
+    MXA_STATIC_NEW_MACRO(HAADF_MultiResolutionReconstruction)
 
-    virtual ~MultiResolutionReconstruction();
+    virtual ~HAADF_MultiResolutionReconstruction();
 
     /**
      * @brief Cancel the operation
@@ -86,10 +87,10 @@ class MultiResolutionReconstruction : public FilterPipeline
     MXA_INSTANCE_PROPERTY(bool, InterpolateInitialReconstruction)
     MXA_INSTANCE_PROPERTY(float, DefaultVariance)
     MXA_INSTANCE_PROPERTY(float, InitialReconstructionValue)
+    MXA_INSTANCE_PROPERTY(Real_t, DefaultPixelSize)
 
-    MXA_INSTANCE_PROPERTY(SOC::TiltSelection, TiltSelection)
+    MXA_INSTANCE_PROPERTY(std::vector<float>, Tilts)
     MXA_INSTANCE_PROPERTY(AdvancedParametersPtr, AdvParams)
-
 
     /**
      * @brief If this vector is set, ie, length = 6, then we are going to use
@@ -100,25 +101,41 @@ class MultiResolutionReconstruction : public FilterPipeline
 
     MXA_INSTANCE_PROPERTY(std::vector<uint8_t>, ViewMasks)
 
-
     /**
      * @brief
      */
     virtual void execute();
 
+
+    /**
+   * @brief Prints the values of the input variables
+   * @param inputs
+   * @param out
+   */
     void printInputs(TomoInputsPtr inputs, std::ostream &out);
 
-    void memCalculate(TomoInputsPtr inputs,TomoInputsPtr bf_inputs);
+    /**
+     * @brief Trys to estimate the amount of memory that will be used.
+     * @param inputs
+     * @param bf_inputs
+     */
+    void memCalculate(TomoInputsPtr inputs);
 
   protected:
-    MultiResolutionReconstruction();
+    HAADF_MultiResolutionReconstruction();
+
+    /**
+     * @brief setupTempFiles This funtion setups up all the paths to the temp files tha need to be deleted
+     * @return
+     */
+    std::vector<std::string> setupTempFiles(TomoInputsPtr inputs);
 
   private:
     bool                 m_Cancel;
-    ReconstructionEngine::Pointer   m_CurrentEngine;
+    HAADF_ReconstructionEngine::Pointer   m_CurrentEngine;
 
-    MultiResolutionReconstruction(const MultiResolutionReconstruction&); // Copy Constructor Not Implemented
-    void operator=(const MultiResolutionReconstruction&); // Operator '=' Not Implemented
+    HAADF_MultiResolutionReconstruction(const HAADF_MultiResolutionReconstruction&); // Copy Constructor Not Implemented
+    void operator=(const HAADF_MultiResolutionReconstruction&); // Operator '=' Not Implemented
 };
 
-#endif /* MULTIRESOLUTIONSOC_H_ */
+#endif /* HAADF_MULTIRESOLUTIONSOC_H_ */

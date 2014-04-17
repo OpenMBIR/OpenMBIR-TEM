@@ -1,6 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2011 Michael A. Jackson (BlueQuartz Software)
- * Copyright (c) 2011 Singanallur Venkatakrishnan (Purdue University)
+ * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -35,52 +35,43 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
+#ifndef _BFPARAMETERS_H_
+#define _BFPARAMETERS_H_
 
-#ifndef FORWARDPROJECT_H_
-#define FORWARDPROJECT_H_
-
-#include <iostream>
+#include "MXA/MXA.h"
+#include "MXA/Common/MXASetGetMacros.h"
 
 
 #include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/Common/Observable.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 
-
-
 /**
- * @class ForwardProject ForwardProject.h TomoEngine/SOC/ForwardProject.h
- * @brief
- * @author Michael A. Jackson for BlueQuartz Software
- * @author Singanallur Venkatakrishnan (Purdue University)
- * @date Dec 12, 2011
- * @version 1.0
+ * @brief This class holds value specific to the HAADF Model
  */
-class MBIRLib_EXPORT ForwardProject
+class DetectorParameters
 {
   public:
-    ForwardProject(Sinogram* sinogram,
-                   Geometry* geometry,
-                   std::vector<AMatrixCol::Pointer> &tempCol,
-                   std::vector<AMatrixCol::Pointer> &voxelLineResponse,
-                   RealVolumeType::Pointer yEst,
-                   ScaleOffsetParams* nuisanceParams,
-                   uint16_t tilt,
-                   Observable* obs);
+    MXA_SHARED_POINTERS(DetectorParameters)
+    MXA_STATIC_NEW_MACRO(DetectorParameters)
+    virtual ~DetectorParameters();
+    //used to store cosine and sine of all angles through which sample is tilted
+    MXA_INSTANCE_PROPERTY( RealArrayType::Pointer, cosine)
+    MXA_INSTANCE_PROPERTY( RealArrayType::Pointer, sine)
+    MXA_INSTANCE_PROPERTY( RealArrayType::Pointer, BeamProfile) //used to store the shape of the e-beam
+    MXA_INSTANCE_PROPERTY( Real_t, BeamWidth)
+    MXA_INSTANCE_PROPERTY( Real_t, OffsetR)
+    MXA_INSTANCE_PROPERTY( Real_t, OffsetT)
 
-    virtual ~ForwardProject();
+    void calculateSinCos(SinogramPtr m_Sinogram);
+    void initializeBeamProfile(SinogramPtr m_Sinogram, AdvancedParametersPtr m_AdvParams);
 
-    void operator()() const;
+  protected:
+    DetectorParameters();
+
 
   private:
-    Sinogram* m_Sinogram;
-    Geometry* m_Geometry;
-    std::vector<AMatrixCol::Pointer> TempCol;
-    std::vector<AMatrixCol::Pointer> VoxelLineResponse;
-    RealVolumeType::Pointer Y_Est;
-    ScaleOffsetParams* NuisanceParams;
-    uint16_t m_Tilt;
-    Observable* m_Observable;
+    DetectorParameters(const DetectorParameters&); // Copy Constructor Not Implemented
+    void operator=(const DetectorParameters&); // Operator '=' Not Implemented
 };
 
-#endif /* FORWARDPROJECT_H_ */
+#endif /* _BFPARAMETERS_H_ */

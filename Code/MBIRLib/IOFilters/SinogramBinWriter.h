@@ -63,7 +63,8 @@ class MBIRLib_EXPORT SinogramBinWriter : public TomoFilter
     virtual ~SinogramBinWriter();
 
     MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Data);
-    MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams);
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, I_0)//Gains
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Mu)//Offset
 
     void execute();
 

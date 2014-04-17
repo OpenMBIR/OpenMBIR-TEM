@@ -36,8 +36,8 @@
 
 
 
-#ifndef COMPUTATIONENGINE_H_
-#define COMPUTATIONENGINE_H_
+#ifndef _HAADF_ReconstructionEngine_H_
+#define _HAADF_ReconstructionEngine_H_
 
 //-- C Headers
 #include <stdio.h>
@@ -48,32 +48,35 @@
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Common/AbstractFilter.h"
 #include "MBIRLib/Common/Observer.h"
+#include "MBIRLib/Common/AMatrixCol.h"
 #include "MBIRLib/GenericFilters/CostData.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
+#include "MBIRLib/HAADF/HAADFConstants.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/Reconstruction/QGGMRF_Functions.h"
 
 
 /**
- * @class ReconstructionEngine ReconstructionEngine.h TomoEngine/SOC/ReconstructionEngine.h
+ * @class HAADF_ReconstructionEngine HAADF_ReconstructionEngine.h TomoEngine/SOC/HAADF_ReconstructionEngine.h
  * @brief
  * @author Michael A. Jackson for BlueQuartz Software
  * @author Singanallur Venkatakrishnan (Purdue University)
  * @version 1.0
  */
-class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
+class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
 {
 
   public:
-    MXA_SHARED_POINTERS(ReconstructionEngine);
-    MXA_TYPE_MACRO(ReconstructionEngine);
-    MXA_STATIC_NEW_MACRO(ReconstructionEngine);
+    MXA_SHARED_POINTERS(HAADF_ReconstructionEngine)
+    MXA_TYPE_MACRO(HAADF_ReconstructionEngine)
+    MXA_STATIC_NEW_MACRO(HAADF_ReconstructionEngine)
 
     MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
     MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)
     MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
-    MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams)
+
     MXA_INSTANCE_PROPERTY(AdvancedParametersPtr, AdvParams)
+    MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams)
 
     MXA_INSTANCE_PROPERTY(bool, UseBrightFieldData)
     MXA_INSTANCE_PROPERTY(TomoInputsPtr, BFTomoInputs)
@@ -82,16 +85,11 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
     static void InitializeTomoInputs(TomoInputsPtr);
     static void InitializeSinogram(SinogramPtr);
     static void InitializeGeometry(GeometryPtr);
-    static void InitializeScaleOffsetParams(ScaleOffsetParamsPtr);
     static void InitializeAdvancedParams(AdvancedParametersPtr v);
 
-    virtual ~ReconstructionEngine();
+    static void InitializeScaleOffsetParams(ScaleOffsetParamsPtr);
 
-    enum VoxelUpdateType {
-      RegularRandomOrderUpdate = 0,
-      HomogeniousUpdate = 1,
-      NonHomogeniousUpdate = 2
-    };
+    virtual ~HAADF_ReconstructionEngine();
 
     /**
      * @brief overload from super class
@@ -103,23 +101,23 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 
   protected:
     // Protect this constructor because we want to force the use of the other
-    ReconstructionEngine();
+    HAADF_ReconstructionEngine();
 
     void initVariables();
 
-    void calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams);
-    void calculateArithmeticMean();
+    int calculateCost(CostData::Pointer cost,
+                      RealVolumeType::Pointer Weight,
+                      RealVolumeType::Pointer ErrorSino);
 
-    /**
-     * @brief This is to be implemented at some point
-     */
-    void updateVoxelValues_NHICD();
+    Real_t computeCost(RealVolumeType::Pointer ErrorSino,
+                       RealVolumeType::Pointer Weight);
+
 
     /**
      *
      */
     uint8_t updateVoxels(int16_t OuterIter, int16_t Iter,
-                         VoxelUpdateType updateType,
+                         unsigned int updateType,
                          UInt8Image_t::Pointer VisitCount,
                          std::vector<AMatrixCol::Pointer> &TempCol,
                          RealVolumeType::Pointer ErrorSino,
@@ -129,35 +127,124 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
                          UInt8Image_t::Pointer Mask,
                          CostData::Pointer cost);
 
-
-    int readInputData();
-    int initializeBrightFieldData();
-    int createInitialGainsData();
-    int createInitialOffsetsData();
-    int createInitialVariancesData();
-    int initializeRoughReconstructionData();
     void initializeROIMask(UInt8Image_t::Pointer Mask);
+
+    void initializeHt(RealVolumeType::Pointer H_t);
+    /**
+     * Code to take the magnitude map and filter it with a hamming window
+     * Returns the filtered magnitude map
+     */
+    void ComputeVSC();
+
+    //Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
+    Real_t SetNonHomThreshold();
+
+
+    void calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams);
+
+    /**
+     * @brief
+     */
+    void calculateArithmeticMean();
+
+    /**
+     * @brief This is to be implemented at some point
+     */
+    void updateVoxelValues_NHICD();
+
+    /**
+     * @brief
+     */
+    int readInputData();
+
+    /**
+     * @brief
+     */
+    int initializeRoughReconstructionData();
+
     /**
      * @brief Calculates the x boundaries so the writers do not write extra data
      */
     void computeOriginalXDims(uint16_t &cropStart, uint16_t &cropEnd);
-    void gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams);
-    void initializeHt(RealVolumeType::Pointer H_t);
-    void storeVoxelResponse(RealVolumeType::Pointer H_t, std::vector<AMatrixCol::Pointer> &VoxelLineResponse);
+
+    /**
+     * @brief
+     * @param H_t
+     * @param OffsetT
+     */
+    void initializeHt(RealVolumeType::Pointer H_t, Real_t OffsetT);
+
+    /**
+     * @brief
+     * @param H_t
+     * @param VoxelLineResponse
+     */
+    void storeVoxelResponse(RealVolumeType::Pointer H_t,
+                            std::vector<AMatrixCol::Pointer> &VoxelLineResponse);
+
+
+
+    /**
+     * @brief
+     * @param filepath
+     */
+    void writeReconstructionFile(const std::string &filepath);
+
+    /**
+     * @brief
+     * @param vtkFile
+     * @param cropStart
+     * @param cropEnd
+     */
+    void writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
+
+    /**
+     * @brief
+     * @param mrcFile
+     * @param cropStart
+     * @param cropEnd
+     */
+    void writeMRCFile(const std::string &mrcFile, uint16_t cropStart, uint16_t cropEnd);
+
+    /**
+     * @brief
+     * @param file
+     * @param cropStart
+     * @param cropEnd
+     */
+    void writeAvizoFile(const std::string &file, uint16_t cropStart, uint16_t cropEnd);
+
+
+    /**
+     * @brief
+     * @param Y_Est
+     * @param value
+     */
     void initializeVolume(RealVolumeType::Pointer Y_Est, double value);
+
+    int initializeBrightFieldData();
+    int createInitialGainsData();
+    int createInitialOffsetsData();
+    int createInitialVariancesData();
+
+
+    void gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams);
+
+
+
+
     void calculateMeasurementWeight(RealVolumeType::Pointer Weight,
-                                               ScaleOffsetParamsPtr NuisanceParams,
-                                               RealVolumeType::Pointer ErrorSino,
-                                               RealVolumeType::Pointer Y_Est);
+                                    ScaleOffsetParamsPtr NuisanceParams,
+                                    RealVolumeType::Pointer ErrorSino,
+                                    RealVolumeType::Pointer Y_Est);
     int jointEstimation(RealVolumeType::Pointer Weight,
-                         ScaleOffsetParamsPtr NuisanceParams,
-                         RealVolumeType::Pointer ErrorSino,
-                         RealVolumeType::Pointer Y_Est,
-                         CostData::Pointer cost);
+                        ScaleOffsetParamsPtr NuisanceParams,
+                        RealVolumeType::Pointer ErrorSino,
+                        RealVolumeType::Pointer Y_Est,
+                        CostData::Pointer cost);
+
     void costInitialization(SinogramPtr sinogram);
-    int calculateCost(CostData::Pointer cost,
-                      RealVolumeType::Pointer Weight,
-                      RealVolumeType::Pointer ErrorSino);
+
     void updateWeights(RealVolumeType::Pointer Weight,
                        ScaleOffsetParamsPtr NuisanceParams,
                        RealVolumeType::Pointer ErrorSino);
@@ -172,13 +259,11 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
 #endif
 
     void writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram);
-    void writeReconstructionFile(const std::string &filepath);
-    void writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
-    void writeMRCFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
-    void writeAvizoFile(const std::string &file, uint16_t cropStart, uint16_t cropEnd);
 
 
   private:
+    int m_NumThreads;
+
     //if 1 then this is NOT outside the support region; If 0 then that pixel should not be considered
     uint8_t BOUNDARYFLAG[27];
     //Markov Random Field Prior parameters - Globals DATA_TYPE
@@ -222,7 +307,7 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
     uint64_t startm;
     uint64_t stopm;
 
-    int m_NumThreads;
+
 
 
     /**
@@ -262,17 +347,9 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
      * @param slice
      * @param VoxelProfile
      */
-   // void* calculateAMatrixColumn(uint16_t row, uint16_t col, uint16_t slice, DATA_TYPE** VoxelProfile);
+    // void* calculateAMatrixColumn(uint16_t row, uint16_t col, uint16_t slice, DATA_TYPE** VoxelProfile);
 
     /**
-     * @brief
-     * @param ErrorSino
-     * @param Weight
-     * @return
-     */
-    Real_t computeCost(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight);
-
-	/**
      * @brief
      * @param ErrorSino
      * @param Weight
@@ -304,14 +381,8 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
     */
     void UpdateVoxelLine(uint16_t j_new,uint16_t k_new);
 
-    /**
-     * Code to take the magnitude map and filter it with a hamming window
-     * Returns the filtered magnitude map
-     */
-    void ComputeVSC();
 
-    //Sort the entries of FiltMagUpdateMap and set the threshold to be ? percentile
-    Real_t SetNonHomThreshold();
+
 
 
     template<typename T>
@@ -370,8 +441,8 @@ class MBIRLib_EXPORT ReconstructionEngine : public AbstractFilter
       }
     }
 
-    ReconstructionEngine(const ReconstructionEngine&); // Copy Constructor Not Implemented
-    void operator=(const ReconstructionEngine&); // Operator '=' Not Implemented
+    HAADF_ReconstructionEngine(const HAADF_ReconstructionEngine&); // Copy Constructor Not Implemented
+    void operator=(const HAADF_ReconstructionEngine&); // Operator '=' Not Implemented
 };
 
 #endif //CompEngine

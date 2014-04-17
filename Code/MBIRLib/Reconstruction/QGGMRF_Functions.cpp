@@ -33,14 +33,10 @@
  *                           FA8650-07-D-5800
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
-
-
-
 #include "QGGMRF_Functions.h"
 
 #include "MBIRLib/Common/EIMMath.h"
-
-
+#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 
 namespace Detail {
   // -----------------------------------------------------------------------------
@@ -77,157 +73,135 @@ namespace Detail {
 
 namespace QGGMRF {
 
-void initializePriorModel(TomoInputsPtr tomoInputs, QGGMRF_Values* qggmrf_values)
-{
-    qggmrf_values->MRF_P = 2;
-    qggmrf_values->MRF_Q = tomoInputs->p;
-    qggmrf_values->MRF_C = 0.001;
-    qggmrf_values->MRF_ALPHA = 1.5;
-    qggmrf_values->SIGMA_X_P = pow(tomoInputs->SigmaX, qggmrf_values->MRF_P);
-    qggmrf_values->SIGMA_X_P_Q = pow(tomoInputs->SigmaX, (qggmrf_values->MRF_P - qggmrf_values->MRF_Q));
-    qggmrf_values->SIGMA_X_Q = pow(tomoInputs->SigmaX, qggmrf_values->MRF_Q);
-	qggmrf_values->gamma = 5;
-}
-	
-	
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-Real_t updatePriorModel(Real_t NewSigmaX,QGGMRF_Values* qggmrf_values)
-{
-    Real_t SigmaX = qggmrf_values->gamma*pow(NewSigmaX*qggmrf_values->MRF_Q,1.0/qggmrf_values->MRF_Q);
-	qggmrf_values->SIGMA_X_P = pow(SigmaX, qggmrf_values->MRF_P);
-	qggmrf_values->SIGMA_X_P_Q = pow(SigmaX, (qggmrf_values->MRF_P - qggmrf_values->MRF_Q));
-	qggmrf_values->SIGMA_X_Q = pow(SigmaX, qggmrf_values->MRF_Q);
-	return SigmaX;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-Real_t Value(Real_t delta, QGGMRF::QGGMRF_Values* qggmrf_values)
-{
-  return ((pow(fabs(delta), qggmrf_values->MRF_P) / qggmrf_values->SIGMA_X_P) / (qggmrf_values->MRF_C + pow(fabs(delta), qggmrf_values->MRF_P - qggmrf_values->MRF_Q) / qggmrf_values->SIGMA_X_P_Q));
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-Real_t Derivative(Real_t delta, QGGMRF::QGGMRF_Values* qggmrf_values)
-{
-  Real_t temp1, temp2, temp3;
-  temp1 = pow(fabs(delta), qggmrf_values->MRF_P - qggmrf_values->MRF_Q) / (qggmrf_values->SIGMA_X_P_Q);
-  temp2 = pow(fabs(delta), qggmrf_values->MRF_P - 1);
-  temp3 = qggmrf_values->MRF_C + temp1;
-  if(delta < 0)
+  // -----------------------------------------------------------------------------
+  //
+  // -----------------------------------------------------------------------------
+  Real_t Value(Real_t delta, QGGMRF::QGGMRF_Values* qggmrf_values)
   {
-    return ((-1 * temp2 / (temp3 * qggmrf_values->SIGMA_X_P)) * (qggmrf_values->MRF_P - ((qggmrf_values->MRF_P - qggmrf_values->MRF_Q) * temp1) / (temp3)));
+    return ((pow(fabs(delta), qggmrf_values->MRF_P) / qggmrf_values->SIGMA_X_P) / (qggmrf_values->MRF_C + pow(fabs(delta), qggmrf_values->MRF_P - qggmrf_values->MRF_Q) / qggmrf_values->SIGMA_X_P_Q));
   }
-  else
-  {
-    return ((temp2 / (temp3 * qggmrf_values->SIGMA_X_P)) * (qggmrf_values->MRF_P - ((qggmrf_values->MRF_P - qggmrf_values->MRF_Q) * temp1) / (temp3)));
-  }
-}
 
-// -----------------------------------------------------------------------------
-// Second derivative at zero //TODO: This is only needed at zero. So the function
-// needs to be renamed
-// -----------------------------------------------------------------------------
-Real_t SecondDerivative(Real_t delta, QGGMRF::QGGMRF_Values* qggmrf_values)
-{
-  return qggmrf_values->MRF_P / (qggmrf_values->SIGMA_X_P * qggmrf_values->MRF_C);
-}
-
-// -----------------------------------------------------------------------------
-//       Real_t QGGMRF_Params[26][3];
-// Function to compute parameters of thesurrogate function
-// -----------------------------------------------------------------------------
-void ComputeParameters(Real_t umin, Real_t umax, Real_t RefValue,
-                       uint8_t* BOUNDARYFLAG, Real_t* NEIGHBORHOOD,
-                       QGGMRF::QGGMRF_Values* qggmrf_values,
-                       Real_t* QGGMRF_Params)
-{
-  Real_t Delta0;
-  uint8_t i, j, k, count = 0;
-  for (i = 0; i < 3; i++)
+  // -----------------------------------------------------------------------------
+  //
+  // -----------------------------------------------------------------------------
+  Real_t Derivative(Real_t delta, QGGMRF::QGGMRF_Values* qggmrf_values)
   {
-    for (j = 0; j < 3; j++)
+    Real_t temp1, temp2, temp3;
+    temp1 = pow(fabs(delta), qggmrf_values->MRF_P - qggmrf_values->MRF_Q) / (qggmrf_values->SIGMA_X_P_Q);
+    temp2 = pow(fabs(delta), qggmrf_values->MRF_P - 1);
+    temp3 = qggmrf_values->MRF_C + temp1;
+    if(delta < 0)
     {
-      for (k = 0; k < 3; k++)
-      {
-        if((i != 1 || j != 1 || k != 1) && BOUNDARYFLAG[INDEX_3(i,j,k)] == 1)
-        {
-          Delta0 = RefValue - NEIGHBORHOOD[INDEX_3(i,j,k)];
-          if(Delta0 != 0)
-          {
-            QGGMRF_Params[count*3 + 0] = QGGMRF::Derivative(Delta0, qggmrf_values) / (Delta0);
-          }
-          else
-          {
-            QGGMRF_Params[count*3 + 0] = QGGMRF::SecondDerivative(0, qggmrf_values);
-          }
-          count++;
-        }
-      }
+      return ((-1 * temp2 / (temp3 * qggmrf_values->SIGMA_X_P)) * (qggmrf_values->MRF_P - ((qggmrf_values->MRF_P - qggmrf_values->MRF_Q) * temp1) / (temp3)));
+    }
+    else
+    {
+      return ((temp2 / (temp3 * qggmrf_values->SIGMA_X_P)) * (qggmrf_values->MRF_P - ((qggmrf_values->MRF_P - qggmrf_values->MRF_Q) * temp1) / (temp3)));
     }
   }
-}
 
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue,
-                              uint8_t* BOUNDARYFLAG, Real_t* FILTER, Real_t* NEIGHBORHOOD,
-                              Real_t THETA1, Real_t THETA2,
-                              QGGMRF::QGGMRF_Values* qggmrf_values)
-{
-  Real_t u, temp1 = 0, temp2 = 0, temp_const, RefValue = 0;
-  uint8_t i, j, k, count = 0;
-#ifdef POSITIVITY_CONSTRAINT
-  if(umin < 0)
-  umin =0;
-#endif //Positivity
-  RefValue = currentVoxelValue;
-  //Need to Loop this for multiple iterations of substitute function
-  Real_t QGGMRF_Params[26*3];
-  for (uint8_t qggmrf_iter = 0; qggmrf_iter < QGGMRF::QGGMRF_ITER; qggmrf_iter++)
+  // -----------------------------------------------------------------------------
+  // Second derivative at zero
+  // -----------------------------------------------------------------------------
+  Real_t SecondDerivativeAtZero(QGGMRF::QGGMRF_Values* qggmrf_values)
   {
-    QGGMRF::ComputeParameters(umin, umax, RefValue, BOUNDARYFLAG, NEIGHBORHOOD,
-                              qggmrf_values, QGGMRF_Params);
-	  count = 0;// cycles through the list of parameters of the quadratic surrogate
+    return qggmrf_values->MRF_P / (qggmrf_values->SIGMA_X_P * qggmrf_values->MRF_C);
+  }
+
+  // -----------------------------------------------------------------------------
+  //       Real_t qggmrf_params[26][3];
+  // Function to compute parameters of thesurrogate function
+  // -----------------------------------------------------------------------------
+  void ComputeParameters(Real_t umin, Real_t umax, Real_t refValue,
+                         uint8_t* boundaryFlag, Real_t* neighborhood,
+                         QGGMRF::QGGMRF_Values* qggmrf_values,
+                         Real_t* qggmrf_params)
+  {
+    Real_t Delta0;
+    uint8_t i, j, k, count = 0;
     for (i = 0; i < 3; i++)
     {
       for (j = 0; j < 3; j++)
       {
         for (k = 0; k < 3; k++)
         {
-          if((i != 1 || j != 1 || k != 1) && BOUNDARYFLAG[INDEX_3(i,j,k)] == 1)
+          if((i != 1 || j != 1 || k != 1) && boundaryFlag[INDEX_3(i,j,k)] == 1)
           {
-            temp_const = FILTER[INDEX_3(i,j,k)] * QGGMRF_Params[count*3 + 0];
-            temp1 += temp_const * NEIGHBORHOOD[INDEX_3(i,j,k)];
-            temp2 += temp_const;
+            Delta0 = refValue - neighborhood[INDEX_3(i,j,k)];
+            if(Delta0 != 0)
+            {
+              qggmrf_params[count*3 + 0] = QGGMRF::Derivative(Delta0, qggmrf_values) / (Delta0);
+            }
+            else
+            {
+              qggmrf_params[count*3 + 0] = QGGMRF::SecondDerivativeAtZero(qggmrf_values);
+            }
             count++;
           }
         }
       }
     }
-    u = (temp1 + (THETA2 * currentVoxelValue) - THETA1) / (temp2 + THETA2);
-
-    if(qggmrf_iter < QGGMRF::QGGMRF_ITER - 1)
-    {
-      RefValue = Detail::Clip(RefValue + qggmrf_values->MRF_ALPHA * (u - RefValue), umin, umax);
-    }
-    else
-    {
-      RefValue = Detail::Clip(RefValue + qggmrf_values->MRF_ALPHA * (u - RefValue), umin, umax);
-    }
   }
 
-  return RefValue;
-}
+
+  // -----------------------------------------------------------------------------
+  //
+  // -----------------------------------------------------------------------------
+  Real_t FunctionalSubstitution(Real_t umin,
+                          Real_t umax,
+                          Real_t currentVoxelValue,
+                                uint8_t* boundaryFlag,
+                                Real_t* FILTER,
+                                Real_t* neighborhood,
+                                Real_t theta1,
+                                Real_t theta2,
+                                QGGMRF::QGGMRF_Values* qggmrf_values)
+  {
+    Real_t u, temp1 = 0, temp2 = 0, temp_const, refValue = 0;
+    uint8_t i, j, k, count = 0;
+#ifdef POSITIVITY_CONSTRAINT
+    if(umin < 0)
+      umin =0;
+#endif //Positivity
+    refValue = currentVoxelValue;
+    //Need to Loop this for multiple iterations of substitute function
+    Real_t qggmrf_params[26*3];
+    for (uint8_t qggmrf_iter = 0; qggmrf_iter < QGGMRF::QGGMRF_ITER; qggmrf_iter++)
+    {
+      QGGMRF::ComputeParameters(umin, umax, refValue, boundaryFlag, neighborhood,
+                                qggmrf_values, qggmrf_params);
+      count = 0;// cycles through the list of parameters of the quadratic surrogate
+      for (i = 0; i < 3; i++)
+      {
+        for (j = 0; j < 3; j++)
+        {
+          for (k = 0; k < 3; k++)
+          {
+            if((i != 1 || j != 1 || k != 1) && boundaryFlag[INDEX_3(i,j,k)] == 1)
+            {
+              temp_const = FILTER[INDEX_3(i,j,k)] * qggmrf_params[count*3 + 0];//access the a_{ji} value of the quadratic
+              temp1 += temp_const * neighborhood[INDEX_3(i,j,k)];
+              temp2 += temp_const;
+              count++;
+            }
+          }
+        }
+      }
+      u = (temp1 + (theta2 * currentVoxelValue) - theta1) / (temp2 + theta2);
+
+      if(qggmrf_iter < QGGMRF::QGGMRF_ITER - 1)
+      {
+        refValue = Detail::Clip(refValue + qggmrf_values->MRF_ALPHA * (u - refValue), umin, umax);
+      }
+      else
+      {
+        refValue = Detail::Clip(refValue + qggmrf_values->MRF_ALPHA * (u - refValue), umin, umax);
+      }
+    }
+
+    return refValue;
+  }
+
 
 
 } /* End Namespace */
-
-

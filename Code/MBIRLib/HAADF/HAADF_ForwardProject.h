@@ -1,6 +1,6 @@
 /* ============================================================================
- * Copyright (c) 2012 Michael A. Jackson (BlueQuartz Software)
- * Copyright (c) 2012 Singanallur Venkatakrishnan (Purdue University)
+ * Copyright (c) 2011 Michael A. Jackson (BlueQuartz Software)
+ * Copyright (c) 2011 Singanallur Venkatakrishnan (Purdue University)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -35,47 +35,53 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#ifndef COMPUTEGAINSOFFETS_H_
-#define COMPUTEGAINSOFFETS_H_
+
+#ifndef FORWARDPROJECT_H_
+#define FORWARDPROJECT_H_
+
+#include <iostream>
 
 
-#include "MXA/MXA.h"
-#include "MXA/Common/MXASetGetMacros.h"
 #include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/GenericFilters/TomoFilter.h"
+#include "MBIRLib/Common/Observable.h"
+#include "MBIRLib/Common/AMatrixCol.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Common/allocate.h"
-#include "MBIRLib/Common/EIMMath.h"
+
+
 
 /**
- * @class ComputeInitialOffsets ComputeInitialOffsets.h SOC/ComputeInitialOffsets.h
+ * @class HAADF_ForwardProject HAADF_ForwardProject.h TomoEngine/SOC/HAADF_ForwardProject.h
  * @brief
- * @author
- * @date Jan 3, 2012
+ * @author Michael A. Jackson for BlueQuartz Software
+ * @author Singanallur Venkatakrishnan (Purdue University)
+ * @date Dec 12, 2011
  * @version 1.0
  */
-class MBIRLib_EXPORT ComputeInitialOffsets : public TomoFilter
+class MBIRLib_EXPORT HAADF_ForwardProject
 {
   public:
-    MXA_SHARED_POINTERS(ComputeInitialOffsets)
-    MXA_STATIC_NEW_MACRO(ComputeInitialOffsets);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, ComputeInitialOffsets);
-    MXA_TYPE_MACRO_SUPER(ComputeInitialOffsets, TomoFilter)
+    HAADF_ForwardProject(Sinogram* sinogram,
+                   Geometry* geometry,
+                   std::vector<AMatrixCol::Pointer> &tempCol,
+                   std::vector<AMatrixCol::Pointer> &voxelLineResponse,
+                   RealVolumeType::Pointer yEst,
+                   ScaleOffsetParams* nuisanceParams,
+                   uint16_t tilt,
+                   Observable* obs);
 
-    virtual ~ComputeInitialOffsets();
+    virtual ~HAADF_ForwardProject();
 
-    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialOffset)
-
-
-    virtual void execute();
-
-
-  protected:
-    ComputeInitialOffsets();
+    void operator()() const;
 
   private:
-    ComputeInitialOffsets(const ComputeInitialOffsets&); // Copy Constructor Not Implemented
-    void operator=(const ComputeInitialOffsets&); // Operator '=' Not Implemented
+    Sinogram* m_Sinogram;
+    Geometry* m_Geometry;
+    std::vector<AMatrixCol::Pointer> TempCol;
+    std::vector<AMatrixCol::Pointer> VoxelLineResponse;
+    RealVolumeType::Pointer Y_Est;
+    ScaleOffsetParams* NuisanceParams;
+    uint16_t m_Tilt;
+    Observable* m_Observable;
 };
 
-#endif /* COMPUTEGAINSOFFETS_H_ */
+#endif /* FORWARDPROJECT_H_ */

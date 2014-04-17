@@ -35,47 +35,59 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#ifndef COMPUTEGAINSOFFETS_H_
-#define COMPUTEGAINSOFFETS_H_
+#ifndef _BFAMATRIXCOL_H_
+#define _BFAMATRIXCOL_H_
 
-
-#include "MXA/MXA.h"
 #include "MXA/Common/MXASetGetMacros.h"
-#include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/GenericFilters/TomoFilter.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Common/allocate.h"
-#include "MBIRLib/Common/EIMMath.h"
+#include "MBIRLib/GenericFilters/DetectorParameters.h"
+
+
 
 /**
- * @class ComputeInitialOffsets ComputeInitialOffsets.h SOC/ComputeInitialOffsets.h
- * @brief
- * @author
- * @date Jan 3, 2012
- * @version 1.0
+ * @brief Holds a column specific to the HAADF algorihms and inputs codes of the
+ * A Matrix for Tomographic reconstructions
  */
-class MBIRLib_EXPORT ComputeInitialOffsets : public TomoFilter
+class AMatrixCol
 {
   public:
-    MXA_SHARED_POINTERS(ComputeInitialOffsets)
-    MXA_STATIC_NEW_MACRO(ComputeInitialOffsets);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, ComputeInitialOffsets);
-    MXA_TYPE_MACRO_SUPER(ComputeInitialOffsets, TomoFilter)
 
-    virtual ~ComputeInitialOffsets();
+    MXA_SHARED_POINTERS(AMatrixCol)
+    static Pointer New(size_t* dims, int32_t count)
+    {
+      Pointer sharedPtr (new AMatrixCol(dims, count));
+      return sharedPtr;
+    }
 
-    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialOffset)
+    virtual ~AMatrixCol();
 
+    RealArrayType::Pointer valuesPtr;
+    Real_t* values;
+    UInt32ArrayType::Pointer indexPtr;
+    uint32_t* index;
+    uint64_t d0;
+    uint64_t d1;
 
-    virtual void execute();
+    uint32_t count; //The number of non zero values present in the column
+    void setCount(uint32_t c);
 
+    static AMatrixCol::Pointer calculateAMatrixColumnPartial(SinogramPtr sinogram,
+                                                                       GeometryPtr geometry,
+                                                                       TomoInputsPtr tomoInputs,
+                                                                       AdvancedParametersPtr advParams,
+                                                                       uint16_t row,
+                                                                       uint16_t col,
+                                                                       uint16_t slice,
+                                                                       RealVolumeType::Pointer detectorResponse,
+                                                                       DetectorParameters::Pointer haadfParameters);
 
   protected:
-    ComputeInitialOffsets();
+    AMatrixCol(size_t* dims, int32_t c);
+
 
   private:
-    ComputeInitialOffsets(const ComputeInitialOffsets&); // Copy Constructor Not Implemented
-    void operator=(const ComputeInitialOffsets&); // Operator '=' Not Implemented
-};
 
-#endif /* COMPUTEGAINSOFFETS_H_ */
+    AMatrixCol(const AMatrixCol&); // Copy Constructor Not Implemented
+    void operator=(const AMatrixCol&); // Operator '=' Not Implemented
+};
+#endif /* _BFAMATRIXCOL_H_ */

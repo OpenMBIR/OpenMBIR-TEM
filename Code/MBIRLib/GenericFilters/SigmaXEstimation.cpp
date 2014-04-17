@@ -43,8 +43,6 @@
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/IOFilters/MRCHeader.h"
 #include "MBIRLib/IOFilters/MRCReader.h"
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
-
 
 namespace Detail
 {
@@ -77,7 +75,7 @@ namespace Detail
     }
     dev/=total;
   }
-  
+
   template<typename T>
   void calcBFAvgDeviation(T* data, int total, Real_t &dev, double bf_offset)
   {
@@ -182,24 +180,24 @@ void SigmaXEstimation::execute()
     switch(header.mode)
     {
       case 0:
-		if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); } 
-		else {  Detail::calcAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2); }
+    if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
+    else {  Detail::calcAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 1:
-		if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); } 
-		else {  Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2); }
+    if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
+    else {  Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 2:
-		if(m_UseBFOffset){ Detail::calcBFAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); } 
-		else {  Detail::calcAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2); }
+    if(m_UseBFOffset){ Detail::calcBFAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
+    else {  Detail::calcAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 3:
         break;
       case 4:
         break;
       case 6:
-		if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); } 
-		else {  Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2); }
+    if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
+    else {  Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 16:
         break;

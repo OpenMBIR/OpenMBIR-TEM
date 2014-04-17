@@ -34,48 +34,67 @@
  *
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+#include "DetectorParameters.h"
 
-#ifndef COMPUTEGAINSOFFETS_H_
-#define COMPUTEGAINSOFFETS_H_
-
-
-#include "MXA/MXA.h"
-#include "MXA/Common/MXASetGetMacros.h"
 #include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/GenericFilters/TomoFilter.h"
-#include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Common/allocate.h"
 #include "MBIRLib/Common/EIMMath.h"
 
-/**
- * @class ComputeInitialOffsets ComputeInitialOffsets.h SOC/ComputeInitialOffsets.h
- * @brief
- * @author
- * @date Jan 3, 2012
- * @version 1.0
- */
-class MBIRLib_EXPORT ComputeInitialOffsets : public TomoFilter
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+DetectorParameters::DetectorParameters()
 {
-  public:
-    MXA_SHARED_POINTERS(ComputeInitialOffsets)
-    MXA_STATIC_NEW_MACRO(ComputeInitialOffsets);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, ComputeInitialOffsets);
-    MXA_TYPE_MACRO_SUPER(ComputeInitialOffsets, TomoFilter)
 
-    virtual ~ComputeInitialOffsets();
+}
 
-    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialOffset)
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+DetectorParameters::~DetectorParameters()
+{
+}
 
+// -----------------------------------------------------------------------------
+/* Initializes the global variables cosine and sine to speed up computation
+ */
+void DetectorParameters::calculateSinCos(SinogramPtr m_Sinogram)
+{
+  uint16_t i;
+  size_t dims[1] =
+  { m_Sinogram->N_theta };
+  m_cosine = RealArrayType::New(dims, "cosine");
+  m_sine = RealArrayType::New(dims, "sine");
 
-    virtual void execute();
+  for (i = 0; i < m_Sinogram->N_theta; i++)
+  {
+    m_cosine->d[i] = cos(m_Sinogram->angles[i]);
+    m_sine->d[i] = sin(m_Sinogram->angles[i]);
+  }
+}
 
+// -----------------------------------------------------------------------------
+// Beam profile used for A-matrix
+// -----------------------------------------------------------------------------
+void DetectorParameters::initializeBeamProfile(SinogramPtr m_Sinogram, AdvancedParametersPtr m_AdvParams)
+{
+  uint16_t i;
+  Real_t sum = 0, W;
+  size_t dims[1] =
+  { m_AdvParams->BEAM_RESOLUTION };
+  m_BeamProfile = RealArrayType::New(dims, "BeamProfile");
+  W = m_BeamWidth / 2;
+  for (i = 0; i < m_AdvParams->BEAM_RESOLUTION; i++)
+  {
+    m_BeamProfile->d[i] = 0.54 - 0.46 * cos((2.0 * M_PI / m_AdvParams->BEAM_RESOLUTION) * i);
+    sum = sum + m_BeamProfile->d[i];
+  }
 
-  protected:
-    ComputeInitialOffsets();
+  //Normalize the beam to have an area of 1
+  for (i = 0; i < m_AdvParams->BEAM_RESOLUTION; i++)
+  {
+    m_BeamProfile->d[i] /= sum;
+    m_BeamProfile->d[i] /= m_Sinogram->delta_t; //This is for proper normalization
+    // printf("%lf\n",BeamProfile->d[i]);
+  }
 
-  private:
-    ComputeInitialOffsets(const ComputeInitialOffsets&); // Copy Constructor Not Implemented
-    void operator=(const ComputeInitialOffsets&); // Operator '=' Not Implemented
-};
-
-#endif /* COMPUTEGAINSOFFETS_H_ */
+}

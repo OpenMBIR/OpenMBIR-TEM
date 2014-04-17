@@ -59,7 +59,12 @@ void ComputeInitialOffsets::execute()
 {
   // If an error occurs, clean up any memory, call "setErrorCondition(-1)" and
   // also setErrorMessage("Something went wrong"); and then return
-
+  if (m_InitialOffset.get() == NULL)
+  {
+    std::cout << "ComputeInitialOffsets::execute() InitialOffset was NOT set." << std::endl;
+    assert(false);
+    return;
+  }
   notify("GainsOffsetsCalculation Starting", 0, UpdateProgressMessage);
   SinogramPtr sinogram = getSinogram(); //This I assume some how gets the sinogram as it stands now
   TomoInputsPtr inputs = getTomoInputs(); //This gets the input files
@@ -168,8 +173,8 @@ void ComputeInitialOffsets::execute()
   std::stringstream ss;
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
   {
-    sinogram->InitialOffset->d[i_theta] = LS_Estimates[1];
-    ss << "Tilt: " << i_theta << "  Offset: " << sinogram->InitialOffset->d[i_theta] << std::endl;
+    m_InitialOffset->d[i_theta] = LS_Estimates[1];
+    ss << "Tilt: " << i_theta << "  Offset: " << m_InitialOffset->d[i_theta] << std::endl;
   }
   if (getVeryVerbose()) {
     std::cout << ss.str() << std::endl;

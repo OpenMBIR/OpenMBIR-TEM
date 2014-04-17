@@ -43,7 +43,6 @@
 
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Common/EIMMath.h"
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 
 namespace QGGMRF {
@@ -59,41 +58,33 @@ namespace QGGMRF {
       Real_t MRF_ALPHA;
       Real_t SIGMA_X_P_Q;
       Real_t SIGMA_X_Q;
-    Real_t gamma;
   } QGGMRF_Values;
 
   /**
-   * @brief initializePriorModel
-   * @param tomoInputs
-   * @param qggmrf_values
-   */
-  void initializePriorModel(TomoInputsPtr tomoInputs, QGGMRF_Values* qggmrf_values);
-
-/**
  *
  * @param delta
  * @param qggmrf_values
  * @return
  */
-Real_t Value(Real_t delta, QGGMRF_Values* qggmrf_values);
+  Real_t Value(Real_t delta, QGGMRF_Values* qggmrf_values);
 
-/**
+  /**
  *
  * @param delta
  * @param qggmrf_values
  * @return
  */
-Real_t Derivative(Real_t delta, QGGMRF_Values* qggmrf_values);
+  Real_t Derivative(Real_t delta, QGGMRF_Values* qggmrf_values);
 
-/**
+  /**
  *
  * @param delta
  * @param qggmrf_values
  * @return
  */
-Real_t SecondDerivative(Real_t delta, QGGMRF_Values* qggmrf_values);
+  Real_t SecondDerivative(Real_t delta, QGGMRF_Values* qggmrf_values);
 
-/**
+  /**
  *
  * @param umin
  * @param umax
@@ -103,11 +94,11 @@ Real_t SecondDerivative(Real_t delta, QGGMRF_Values* qggmrf_values);
  * @param qggmrf_values
  * @param QGGMRF_Params
  */
-void ComputeParameters(Real_t umin, Real_t umax, Real_t RefValue,
-                       uint8_t* BOUNDARYFLAG, Real_t* NEIGHBORHOOD,
-                       QGGMRF::QGGMRF_Values* qggmrf_values,
-                       Real_t* QGGMRF_Params);
-/**
+  void ComputeParameters(Real_t umin, Real_t umax, Real_t RefValue,
+                         uint8_t* BOUNDARYFLAG, Real_t* NEIGHBORHOOD,
+                         QGGMRF::QGGMRF_Values* qggmrf_values,
+                         Real_t* QGGMRF_Params);
+  /**
  *
  * @param umin
  * @param umax
@@ -120,14 +111,14 @@ void ComputeParameters(Real_t umin, Real_t umax, Real_t RefValue,
  * @param qggmrf_values
  * @return
  */
-Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue,
-                                 uint8_t* BOUNDARYFLAG, Real_t* FILTER, Real_t* NEIGHBORHOOD,
-                                 Real_t THETA1, Real_t THETA2,
-                                 QGGMRF_Values* qggmrf_values);
+  Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue,
+                                uint8_t* BOUNDARYFLAG, Real_t* FILTER, Real_t* NEIGHBORHOOD,
+                                Real_t THETA1, Real_t THETA2,
+                                QGGMRF_Values* qggmrf_values);
 
 
 
-Real_t updatePriorModel(Real_t NewSigmaX,QGGMRF_Values* qggmrf_values);
+
 } /* end namespace QGGMRF */
 
 #endif /* QGGMRF_FUNCTIONS_H_ */

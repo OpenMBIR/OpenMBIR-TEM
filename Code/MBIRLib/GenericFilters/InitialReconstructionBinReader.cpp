@@ -40,7 +40,6 @@
 
 #include "MXA/Utilities/MXADir.h"
 
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/Common/EIMMath.h"
 
 
@@ -82,7 +81,7 @@ void InitialReconstructionBinReader::initializeData()
   //number of voxels along each dimension as the output
 
   std::stringstream outPath;
-  outPath << input->tempDir << MXADir::Separator << ScaleOffsetCorrection::UpsampledBinFile;
+  outPath << input->tempDir << MXADir::Separator << MBIR::Defaults::UpsampledBinFile;
 
   FILE* Fp = fopen(input->initialReconFile.c_str(), "rb");
   if (getVeryVerbose()) { std::cout << "Reading Geom from File: " << input->initialReconFile << std::endl;}

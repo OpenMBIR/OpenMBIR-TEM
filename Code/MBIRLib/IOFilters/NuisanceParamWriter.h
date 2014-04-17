@@ -72,7 +72,8 @@ class MBIRLib_EXPORT NuisanceParamWriter : public TomoFilter
     MXA_INSTANCE_PROPERTY(bool, WriteBinary);
     MXA_INSTANCE_STRING_PROPERTY(FileName);
     MXA_INSTANCE_PROPERTY(TargetArray, DataToWrite);
-    MXA_INSTANCE_PROPERTY(ScaleOffsetParams*, NuisanceParams);
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Data);
+    MXA_INSTANCE_PROPERTY(uint16_t, Ntheta);
 
     void execute();
 

@@ -36,7 +36,7 @@
 
 
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
-#include "MBIRLib/Reconstruction/MultiResolutionReconstruction.h"
+#include "MBIRLib/HAADF/HAADF_MultiResolutionReconstruction.h"
 
 
 /**
@@ -52,7 +52,7 @@ class HAADFReconstructionArgsParser
     HAADFReconstructionArgsParser();
     virtual ~HAADFReconstructionArgsParser();
 
-    int parseArguments(int argc, char **argv, MultiResolutionReconstruction::Pointer multiRes);
+    int parseArguments(int argc, char **argv, HAADF_MultiResolutionReconstruction::Pointer multiRes);
 
     void printInputs(TomoInputsPtr inputs, std::ostream &out);
 

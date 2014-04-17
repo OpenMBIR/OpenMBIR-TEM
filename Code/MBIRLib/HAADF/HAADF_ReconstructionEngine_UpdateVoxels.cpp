@@ -30,7 +30,7 @@
 
 
 #include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+#include "MBIRLib/HAADF/HAADFConstants.h"
 
 //-- Boost Headers for Random Numbers
 #include <boost/random/mersenne_twister.hpp>
@@ -94,7 +94,7 @@ class UpdateYSlice
                  RealImageType::Pointer magUpdateMap,//Hold the magnitude of the reconstuction along each voxel line
                  UInt8Image_t::Pointer magUpdateMask,
                  QGGMRF::QGGMRF_Values* qggmrfValues,
-                 ReconstructionEngine::VoxelUpdateType updateType,
+                 unsigned int updateType,
                  Real_t nh_Threshold,
                  Real_t* averageUpdate,
                  Real_t* averageMagnitudeOfRecon,
@@ -181,7 +181,7 @@ class UpdateYSlice
       {
         for (int32_t k = 0; k < m_Geometry->N_x; k++)
         {
-          if(m_UpdateType == ReconstructionEngine::NonHomogeniousUpdate)
+          if(m_UpdateType == MBIR::VoxelUpdateType::NonHomogeniousUpdate)
           {
             if(m_MagUpdateMap->getValue(j, k) > m_NH_Threshold)
             {
@@ -194,12 +194,12 @@ class UpdateYSlice
               m_MagUpdateMask->setValue(0, j, k);
             }
           }
-          else if(m_UpdateType == ReconstructionEngine::HomogeniousUpdate)
+          else if(m_UpdateType == MBIR::VoxelUpdateType::HomogeniousUpdate)
           {
             m_MagUpdateMap->setValue(0, j, k);
             NumVoxelsToUpdate++;
           }
-          else if(m_UpdateType == ReconstructionEngine::RegularRandomOrderUpdate)
+          else if(m_UpdateType == MBIR::VoxelUpdateType::RegularRandomOrderUpdate)
           {
             m_MagUpdateMap->setValue(0, j, k);
             NumVoxelsToUpdate++;
@@ -228,18 +228,18 @@ class UpdateYSlice
 #endif //Random Order updates
           int shouldInitNeighborhood = 0;
 
-          if(m_UpdateType == ReconstructionEngine::NonHomogeniousUpdate
+          if(m_UpdateType == MBIR::VoxelUpdateType::NonHomogeniousUpdate
               && m_MagUpdateMask->getValue(j_new, k_new) == 1
               && m_TempCol[Index]->count > 0)
           {
             ++shouldInitNeighborhood;
           }
-          if(m_UpdateType == ReconstructionEngine::HomogeniousUpdate
+          if(m_UpdateType == MBIR::VoxelUpdateType::HomogeniousUpdate
               && m_TempCol[Index]->count > 0)
           {
             ++shouldInitNeighborhood;
           }
-          if(m_UpdateType == ReconstructionEngine::RegularRandomOrderUpdate
+          if(m_UpdateType == MBIR::VoxelUpdateType::RegularRandomOrderUpdate
               && m_TempCol[Index]->count > 0)
           {
             ++shouldInitNeighborhood;
@@ -489,7 +489,7 @@ class UpdateYSlice
     RealImageType::Pointer m_MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
     UInt8Image_t::Pointer m_MagUpdateMask;
     QGGMRF::QGGMRF_Values* m_QggmrfValues;
-    ReconstructionEngine::VoxelUpdateType m_UpdateType;
+   unsigned int m_UpdateType;
 
     Real_t m_NH_Threshold;
 
@@ -541,8 +541,8 @@ class UpdateYSlice
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
-                             VoxelUpdateType updateType,
+uint8_t HAADF_ReconstructionEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
+                             unsigned int updateType,
                              UInt8Image_t::Pointer VisitCount,
                              std::vector<AMatrixCol::Pointer> &TempCol,
                              RealVolumeType::Pointer ErrorSino,
@@ -559,18 +559,18 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
   uint8_t err = 0;
 
 
-  if(updateType == RegularRandomOrderUpdate)
+  if(updateType == MBIR::VoxelUpdateType::RegularRandomOrderUpdate)
   {
     ss << indent << "Regular Random Order update of Voxels" << std::endl;
   }
-  else if(updateType == HomogeniousUpdate)
+  else if(updateType == MBIR::VoxelUpdateType::HomogeniousUpdate)
   {
     ss << indent << "Homogenous update of voxels" << std::endl;
   }
-  else if(updateType == NonHomogeniousUpdate)
+  else if(updateType == MBIR::VoxelUpdateType::NonHomogeniousUpdate)
   {
     ss << indent << "Non Homogenous update of voxels" << std::endl;
-    subIterations = NUM_NON_HOMOGENOUS_ITER;
+    subIterations = MBIR::Constants::k_NumNonHomogeniousIter;
   }
   else
   {
@@ -595,7 +595,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
     ss << "   SubLoop: " << NH_Iter << " of " << subIterations;
     float currentLoop = static_cast<float>(OuterIter * m_TomoInputs->NumIter + Iter);
     notify(ss.str(), currentLoop / totalLoops * 100.0f, Observable::UpdateProgressValueAndMessage);
-    if(updateType == NonHomogeniousUpdate)
+    if(updateType == MBIR::VoxelUpdateType::NonHomogeniousUpdate)
     {
       //Compute VSC and create a map of pixels that are above the threshold value
       ComputeVSC();
@@ -722,7 +722,7 @@ uint8_t ReconstructionEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
         std::cout <<  Iter + 1 << " " << AverageUpdate / AverageMagnitudeOfRecon << std::endl;
       }
       //Use the stopping criteria if we are performing a full update of all voxels
-      if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != NonHomogeniousUpdate)
+      if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != MBIR::VoxelUpdateType::NonHomogeniousUpdate)
       {
         std::cout << "This is the terminating point " << Iter << std::endl;
         m_TomoInputs->StopThreshold *= m_AdvParams->THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations

@@ -35,19 +35,19 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#include "ForwardProject.h"
+#include "HAADF_ForwardProject.h"
 
 #include <sstream>
 
 
 #include "MBIRLib/Common/EIMMath.h"
-#include "MBIRLib/Reconstruction/ReconstructionConstants.h"
+#include "MBIRLib/HAADF/HAADFConstants.h"
 
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ForwardProject::ForwardProject(Sinogram* sinogram,
+HAADF_ForwardProject::HAADF_ForwardProject(Sinogram* sinogram,
                                Geometry* geometry,
                                std::vector<AMatrixCol::Pointer> &tempCol,
                                std::vector<AMatrixCol::Pointer> &voxelLineResponse,
@@ -69,14 +69,14 @@ ForwardProject::ForwardProject(Sinogram* sinogram,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ForwardProject::~ForwardProject()
+HAADF_ForwardProject::~HAADF_ForwardProject()
 {
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void ForwardProject::operator()() const
+void HAADF_ForwardProject::operator()() const
 {
   std::stringstream ss;
   ss << "Forward projecting Z-Slice " << m_Tilt << "/" << m_Geometry->N_z;

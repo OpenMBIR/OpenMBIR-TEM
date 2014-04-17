@@ -32,9 +32,9 @@ set (MBIRLib_INSTALL_FILES 0)
 
 
 #-------------------------------------------------------------------------------
-# Include the cmp project to perform all the basic configuration tests for the 
+# Include the cmp project to perform all the basic configuration tests for the
 # project.
-#------------------------------------------------------------------------------- 
+#-------------------------------------------------------------------------------
 set (CMP_HEADER_DIR ${MBIRLib_BINARY_DIR})
 set (CMP_CONFIGURATION_FILE_NAME "MBIRLibConfiguration.h")
 set (CMP_TYPES_FILE_NAME "MBIRLibTypes.h")
@@ -62,19 +62,19 @@ cmpVersionStringsFromGit(GENERATED_HEADER_FILE_PATH ${CMP_HEADER_DIR}/MBIRLibVer
 # Generate a Header file with Compile Version variables
 # --------------------------------------------------------------------
 configure_file(${MBIRLib_SOURCE_DIR}/MBIRLibConfiguration.h.in
-               ${MBIRLib_BINARY_DIR}/${CMP_TOP_HEADER_FILE})   
+               ${MBIRLib_BINARY_DIR}/${CMP_TOP_HEADER_FILE})
 
-cmp_IDE_GENERATED_PROPERTIES("Generated" 
+cmp_IDE_GENERATED_PROPERTIES("Generated"
                              "${CMP_HEADER_DIR}/${CMP_TOP_HEADER_FILE};${CMP_HEADER_DIR}/${CMP_TYPES_FILE_NAME};${CMP_HEADER_DIR}/${CMP_CONFIGURATION_FILE_NAME};${CMP_HEADER_DIR}/${CMP_VERSION_HEADER_FILE_NAME}"
                              "${CMP_HEADER_DIR}/${CMP_VERSION_SOURCE_FILE_NAME}")
-set(Project_SRCS 
+set(Project_SRCS
     ${CMP_HEADER_DIR}/${CMP_TOP_HEADER_FILE}
     ${CMP_HEADER_DIR}/${CMP_TYPES_FILE_NAME}
     ${CMP_HEADER_DIR}/${CMP_CONFIGURATION_FILE_NAME}
     ${CMP_HEADER_DIR}/${CMP_VERSION_HEADER_FILE_NAME}
     ${CMP_HEADER_DIR}/${CMP_VERSION_SOURCE_FILE_NAME}
 )
-                             
+
 # --------------------------------------------------------------------
 # Gather all the source files that will be put into the library
 
@@ -87,9 +87,10 @@ endMacro()
 CMP_CompileDir(Common)
 CMP_CompileDir(GenericFilters)
 CMP_CompileDir(IOFilters)
+CMP_CompileDir(HAADF)
 CMP_CompileDir(Reconstruction)
 
-include_directories(${MBIRLib_SOURCE_DIR}/..)            
+include_directories(${MBIRLib_SOURCE_DIR}/..)
 include_directories(${MBIRLib_SOURCE_DIR})
 include_directories(${MBIRLib_BINARY_DIR})
 
@@ -112,11 +113,11 @@ endif()
 
 
 if (BUILD_SHARED_LIBS AND NOT APPLE)
-    INSTALL(TARGETS ${PROJECT_NAME}  
+    INSTALL(TARGETS ${PROJECT_NAME}
         COMPONENT Applications
         RUNTIME DESTINATION ${install_dir}
         LIBRARY DESTINATION ${lib_install_dir}
-        ARCHIVE DESTINATION ${lib_install_dir}       
+        ARCHIVE DESTINATION ${lib_install_dir}
         BUNDLE DESTINATION "."
-    ) 
-endif() 
+    )
+endif()
