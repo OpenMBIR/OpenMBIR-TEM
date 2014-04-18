@@ -89,7 +89,7 @@ namespace MBIR
     const std::string FinalVariancesFile("FinalVariances.bin");
 
     const std::string VoxelProfileFile("VoxelProfile.bin");
-    const std::string BFForwardProjectedObjectFile("BFForwardProjectedObject.bin");
+    const std::string ForwardProjectedObjectFile("ForwardProjectedObject.bin");
     const std::string CostFunctionCoefficientsFile("CostFunctionCoefficients.bin");
     const std::string FilteredMagMapFile("FilteredMagMap.bin");
     const std::string MagnitudeMapFile("MagnitudeMap.bin");

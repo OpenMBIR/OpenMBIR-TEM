@@ -56,13 +56,13 @@ class MBIRLib_EXPORT SinogramBinWriter : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(SinogramBinWriter)
-    MXA_STATIC_NEW_MACRO(SinogramBinWriter);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, SinogramBinWriter);
+    MXA_STATIC_NEW_MACRO(SinogramBinWriter)
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, SinogramBinWriter)
     MXA_TYPE_MACRO_SUPER(SinogramBinWriter, TomoFilter)
 
     virtual ~SinogramBinWriter();
 
-    MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Data);
+    MXA_INSTANCE_PROPERTY(RealVolumeType::Pointer, Data)
     MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, I_0)//Gains
     MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Mu)//Offset
 

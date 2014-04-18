@@ -48,15 +48,15 @@
 class MBIRLib_EXPORT FilterPipeline : public Observer
 {
   public:
-    MXA_SHARED_POINTERS(FilterPipeline);
-    MXA_TYPE_MACRO_SUPER(FilterPipeline, Observer);
-    MXA_STATIC_NEW_MACRO(FilterPipeline);
+    MXA_SHARED_POINTERS(FilterPipeline)
+    MXA_TYPE_MACRO_SUPER(FilterPipeline, Observer)
+    MXA_STATIC_NEW_MACRO(FilterPipeline)
 
     virtual ~FilterPipeline();
 
     typedef std::vector<AbstractFilter::Pointer>  FilterContainerType;
 
-    MXA_INSTANCE_PROPERTY(int, ErrorCondition);
+    MXA_INSTANCE_PROPERTY(int, ErrorCondition)
 
     /**
      * @brief Cancel the operation

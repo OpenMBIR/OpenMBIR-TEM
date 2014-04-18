@@ -57,8 +57,8 @@ class MBIRLib_EXPORT NuisanceParamWriter : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(NuisanceParamWriter)
-    MXA_STATIC_NEW_MACRO(NuisanceParamWriter);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, NuisanceParamWriter);
+    MXA_STATIC_NEW_MACRO(NuisanceParamWriter)
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, NuisanceParamWriter)
     MXA_TYPE_MACRO_SUPER(NuisanceParamWriter, TomoFilter)
 
     virtual ~NuisanceParamWriter();
@@ -69,11 +69,11 @@ class MBIRLib_EXPORT NuisanceParamWriter : public TomoFilter
       Nuisance_alpha
     };
 
-    MXA_INSTANCE_PROPERTY(bool, WriteBinary);
-    MXA_INSTANCE_STRING_PROPERTY(FileName);
-    MXA_INSTANCE_PROPERTY(TargetArray, DataToWrite);
-    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Data);
-    MXA_INSTANCE_PROPERTY(uint16_t, Ntheta);
+    MXA_INSTANCE_PROPERTY(bool, WriteBinary)
+    MXA_INSTANCE_STRING_PROPERTY(FileName)
+    MXA_INSTANCE_PROPERTY(TargetArray, DataToWrite)
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Data)
+    MXA_INSTANCE_PROPERTY(uint16_t, Ntheta)
 
     void execute();
 

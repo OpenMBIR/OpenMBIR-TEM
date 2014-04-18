@@ -95,6 +95,9 @@ void MRCSinogramInitializer::execute()
   if (err < 0)
   {
     FREE_FEI_HEADERS( header.feiHeaders )
+    setErrorCondition(err);
+    notify("Error opening MRC File for reading", 100, UpdateErrorMessage);
+    return;
   }
 
   int voxelMin[3] = {0, 0, 0};
