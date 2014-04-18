@@ -383,12 +383,10 @@ void HAADF_MultiResolutionReconstruction::execute()
     SinogramPtr sinogram = SinogramPtr(new Sinogram);
     SinogramPtr bf_sinogram = SinogramPtr(new Sinogram);
     GeometryPtr geometry = GeometryPtr(new Geometry);
-    ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
-
 
     HAADF_ReconstructionEngine::InitializeSinogram(sinogram);
     HAADF_ReconstructionEngine::InitializeGeometry(geometry);
-    HAADF_ReconstructionEngine::InitializeScaleOffsetParams(nuisanceParams);
+
     HAADF_ReconstructionEngine::InitializeSinogram(bf_sinogram);
 
     HAADF_ForwardModel::Pointer forwardModel = HAADF_ForwardModel::New();
@@ -397,6 +395,8 @@ void HAADF_MultiResolutionReconstruction::execute()
     forwardModel->setSinogram(sinogram);
     forwardModel->setGeometry(geometry);
     forwardModel->addObserver(this);
+
+    HAADF_ReconstructionEngine::InitializeScaleOffsetParams(forwardModel.get());
 
     //This load the pixel size from a user based input if the headers are NOT FEI compliant
     //If the header is FEI compliant, this value WILL be overwritten in HAADF_ReconstructionEngine.cpp
@@ -413,7 +413,7 @@ void HAADF_MultiResolutionReconstruction::execute()
     engine->setSinogram(sinogram);
     engine->setGeometry(geometry);
     engine->setAdvParams(m_AdvParams);
-    engine->setNuisanceParams(nuisanceParams);
+    engine->setForwardModel(forwardModel);
     engine->setBFTomoInputs(bf_inputs);
     engine->setBFSinogram(bf_sinogram);
     engine->setForwardModel(forwardModel);

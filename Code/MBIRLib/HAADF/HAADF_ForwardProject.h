@@ -47,7 +47,7 @@
 #include "MBIRLib/Common/AMatrixCol.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 
-
+class HAADF_ForwardModel;
 
 /**
  * @class HAADF_ForwardProject HAADF_ForwardProject.h TomoEngine/SOC/HAADF_ForwardProject.h
@@ -65,7 +65,7 @@ class MBIRLib_EXPORT HAADF_ForwardProject
                    std::vector<AMatrixCol::Pointer> &tempCol,
                    std::vector<AMatrixCol::Pointer> &voxelLineResponse,
                    RealVolumeType::Pointer yEst,
-                   ScaleOffsetParams* nuisanceParams,
+                   HAADF_ForwardModel* forwardModel,
                    uint16_t tilt,
                    Observable* obs);
 
@@ -79,7 +79,7 @@ class MBIRLib_EXPORT HAADF_ForwardProject
     std::vector<AMatrixCol::Pointer> TempCol;
     std::vector<AMatrixCol::Pointer> VoxelLineResponse;
     RealVolumeType::Pointer Y_Est;
-    ScaleOffsetParams* NuisanceParams;
+    HAADF_ForwardModel* m_ForwardModel;
     uint16_t m_Tilt;
     Observable* m_Observable;
 };

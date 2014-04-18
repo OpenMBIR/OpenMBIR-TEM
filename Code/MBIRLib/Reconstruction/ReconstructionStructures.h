@@ -78,15 +78,6 @@
     Real_t RMax;
     Real_t T0;
     Real_t TMax;
-    #if 1
-    /* ****************** These should be moved to the ForwardModel Class ****/
-    Real_t targetGain;//,InitialOffset;//Initial scale and offset of the sinogram data
-    bool BF_Flag;
-    RealArrayType::Pointer InitialGain;//Reads in the initial value for the gain for each view
-    RealArrayType::Pointer InitialOffset;
-    RealArrayType::Pointer InitialVariance;
-    /* ****************** End Forward Model Variables ****/
-    #endif
   } Sinogram;
 
   typedef boost::shared_ptr<Sinogram> SinogramPtr;
@@ -195,15 +186,5 @@ typedef struct
   unsigned int ESTIMATE_PRIOR;
 } AdvancedParameters;
 typedef boost::shared_ptr<AdvancedParameters> AdvancedParametersPtr;
-
-
-typedef struct
-{
-  RealArrayType::Pointer I_0; //Gains
-  RealArrayType::Pointer mu; //Offset
-  RealArrayType::Pointer alpha;//Noise variance refinement factor
-} ScaleOffsetParams;
-typedef boost::shared_ptr<ScaleOffsetParams> ScaleOffsetParamsPtr;
-
 
 #endif /* _ReconstructionStructures_H_ */

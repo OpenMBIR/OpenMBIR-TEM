@@ -42,6 +42,7 @@
 
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/HAADF/HAADFConstants.h"
+#include "MBIRLib/HAADF/HAADF_ForwardModel.h"
 
 
 // -----------------------------------------------------------------------------
@@ -52,7 +53,7 @@ HAADF_ForwardProject::HAADF_ForwardProject(Sinogram* sinogram,
                                std::vector<AMatrixCol::Pointer> &tempCol,
                                std::vector<AMatrixCol::Pointer> &voxelLineResponse,
                                RealVolumeType::Pointer yEst,
-                               ScaleOffsetParams* nuisanceParams,
+                               HAADF_ForwardModel* forwardModel,
                                uint16_t tilt,
                                Observable* obs) :
                   m_Sinogram(sinogram),
@@ -60,7 +61,7 @@ HAADF_ForwardProject::HAADF_ForwardProject(Sinogram* sinogram,
                   TempCol(tempCol),
                   VoxelLineResponse(voxelLineResponse),
                   Y_Est(yEst),
-                  NuisanceParams(nuisanceParams),
+                  m_ForwardModel(forwardModel),
                   m_Tilt(tilt),
                   m_Observable(obs)
 {
@@ -89,6 +90,7 @@ void HAADF_ForwardProject::operator()() const
   uint16_t VoxelLineAccessCounter;
   uint32_t Index;
   Real_t ttmp = 0.0;
+  RealArrayType::Pointer I_0 = m_ForwardModel->getI_0();
 
   for (uint32_t k = 0; k < m_Geometry->N_x; k++)
   {
@@ -105,7 +107,7 @@ void HAADF_ForwardProject::operator()() const
           VoxelLineAccessCounter = 0;
           for (uint32_t i_t = VoxelLineResponse[i]->index[0]; i_t < VoxelLineResponse[i]->index[0] + VoxelLineResponse[i]->count; i_t++) //CHANGED from <= to <
           {
-            ttmp = (NuisanceParams->I_0->d[i_theta]
+            ttmp = (I_0->d[i_theta]
                 * (TempCol[Index]->values[q] * VoxelLineResponse[i]->values[VoxelLineAccessCounter++] * m_Geometry->Object->getValue(j, k, i)));
 
             Y_Est->addToValue(ttmp, i_theta, i_r, i_t);

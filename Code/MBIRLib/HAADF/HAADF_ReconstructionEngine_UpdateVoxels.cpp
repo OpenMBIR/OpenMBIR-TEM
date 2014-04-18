@@ -29,14 +29,16 @@
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
 
-#include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/HAADF/HAADFConstants.h"
-
 //-- Boost Headers for Random Numbers
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/variate_generator.hpp>
+
+
+#include "MBIRLib/MBIRLib.h"
+#include "MBIRLib/HAADF/HAADFConstants.h"
+#include "MBIRLib/HAADF/HAADF_ForwardModel.h"
 
 /*****************************************************************************
  //Finds the min and max of the neighborhood . This is required prior to calling
@@ -89,7 +91,7 @@ class UpdateYSlice
                  RealVolumeType::Pointer errorSino,
                  RealVolumeType::Pointer weight,
                  std::vector<AMatrixCol::Pointer> &voxelLineResponse,
-                 ScaleOffsetParams* nuisanceParams,
+                 HAADF_ForwardModel* forwardModel,
                  UInt8Image_t::Pointer mask,
                  RealImageType::Pointer magUpdateMap,//Hold the magnitude of the reconstuction along each voxel line
                  UInt8Image_t::Pointer magUpdateMask,
@@ -110,7 +112,7 @@ class UpdateYSlice
       m_ErrorSino(errorSino),
       m_Weight(weight),
       m_VoxelLineResponse(voxelLineResponse),
-      m_NuisanceParams(nuisanceParams),
+      m_ForwardModel(forwardModel),
       m_Mask(mask),
       m_MagUpdateMap(magUpdateMap),
       m_MagUpdateMask(magUpdateMask),
@@ -146,8 +148,6 @@ class UpdateYSlice
 #endif
     execute()
     {
-
-
 #ifdef RANDOM_ORDER_UPDATES
       const uint32_t rangeMin = 0;
       const uint32_t rangeMax = std::numeric_limits<uint32_t>::max();
@@ -338,14 +338,14 @@ class UpdateYSlice
                 {
                   uint16_t i_theta = floor(static_cast<float>(m_TempCol[Index]->index[q] / (m_Sinogram->N_r)));
                   uint16_t i_r = (m_TempCol[Index]->index[q] % (m_Sinogram->N_r));
-                  Real_t kConst0 = m_NuisanceParams->I_0->d[i_theta] * (m_TempCol[Index]->values[q]);
+                  Real_t kConst0 = m_ForwardModel->getI_0()->d[i_theta] * (m_TempCol[Index]->values[q]);
                   uint16_t VoxelLineAccessCounter = 0;
                   uint32_t vlrCount = m_VoxelLineResponse[i]->index[0] + m_VoxelLineResponse[i]->count;
                   for (uint32_t i_t = m_VoxelLineResponse[i]->index[0]; i_t < vlrCount; i_t++)
                   {
                     size_t error_idx = m_ErrorSino->calcIndex(i_theta, i_r, i_t);
                     Real_t ProjectionEntry = kConst0 * m_VoxelLineResponse[i]->values[VoxelLineAccessCounter];
-                    if(m_Sinogram->BF_Flag == false)
+                    if(m_ForwardModel->getBF_Flag() == false)
                     {
                       THETA2 += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
                       THETA1 += (m_ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
@@ -423,9 +423,9 @@ class UpdateYSlice
                   for (uint32_t i_t = m_VoxelLineResponse[i]->index[0]; i_t < m_VoxelLineResponse[i]->index[0] + m_VoxelLineResponse[i]->count; i_t++)
                   {
                     size_t error_idx = m_ErrorSino->calcIndex(i_theta, i_r, i_t);
-                    kConst2 = (m_NuisanceParams->I_0->d[i_theta]
+                    kConst2 = (m_ForwardModel->getI_0()->d[i_theta]
                         * (m_TempCol[Index]->values[q] * m_VoxelLineResponse[i]->values[VoxelLineAccessCounter] * (UpdatedVoxelValue - m_CurrentVoxelValue)));
-                    if(m_Sinogram->BF_Flag == false)
+                    if(m_ForwardModel->getBF_Flag() == false)
                     {
                       m_ErrorSino->d[error_idx] -= kConst2;
                     }
@@ -484,7 +484,7 @@ class UpdateYSlice
     RealVolumeType::Pointer m_ErrorSino;
     RealVolumeType::Pointer m_Weight;
     std::vector<AMatrixCol::Pointer> m_VoxelLineResponse;
-    ScaleOffsetParams* m_NuisanceParams;
+    HAADF_ForwardModel* m_ForwardModel;
     UInt8Image_t::Pointer m_Mask;
     RealImageType::Pointer m_MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
     UInt8Image_t::Pointer m_MagUpdateMask;
@@ -548,7 +548,7 @@ uint8_t HAADF_ReconstructionEngine::updateVoxels(int16_t OuterIter, int16_t Iter
                              RealVolumeType::Pointer ErrorSino,
                              RealVolumeType::Pointer Weight,
                              std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
-                             ScaleOffsetParams* NuisanceParams,
+                             HAADF_ForwardModel* forwardModel,
                              UInt8Image_t::Pointer Mask,
                              CostData::Pointer cost)
 {
@@ -650,7 +650,7 @@ uint8_t HAADF_ReconstructionEngine::updateVoxels(int16_t OuterIter, int16_t Iter
                                                          OuterIter, Iter, m_Sinogram,
                                                          m_BFSinogram, TempCol,
                                                          ErrorSino, Weight, VoxelLineResponse,
-                                                         NuisanceParams, Mask,
+                                                         m_ForwardModel.get(), Mask,
                                                          MagUpdateMap, MagUpdateMask,
                                                          &m_QGGMRF_Values,
                                                          updateType,

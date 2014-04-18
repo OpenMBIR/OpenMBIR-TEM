@@ -31,19 +31,16 @@ HAADF_ForwardModel::~HAADF_ForwardModel()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADF_ForwardModel::writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams)
+void HAADF_ForwardModel::writeNuisanceParameters(SinogramPtr sinogram)
 {
   NuisanceParamWriter::Pointer nuisanceBinWriter = NuisanceParamWriter::New();
-  nuisanceBinWriter->setSinogram(m_Sinogram);
-  nuisanceBinWriter->setTomoInputs(m_TomoInputs);
-  nuisanceBinWriter->setAdvParams(m_AdvParams);
-  nuisanceBinWriter->setObservers(getObservers());
-  nuisanceBinWriter->setNtheta(m_Sinogram->N_theta);
+  nuisanceBinWriter->setNtheta(sinogram->N_theta);
+
   if(m_AdvParams->JOINT_ESTIMATION)
   {
     nuisanceBinWriter->setFileName(m_TomoInputs->gainsOutputFile);
     nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_I_O);
-    nuisanceBinWriter->setData(NuisanceParams->I_0);
+    nuisanceBinWriter->setData(m_I_0);
     nuisanceBinWriter->execute();
     if(nuisanceBinWriter->getErrorCondition() < 0)
     {
@@ -53,7 +50,7 @@ void HAADF_ForwardModel::writeNuisanceParameters(ScaleOffsetParamsPtr NuisancePa
 
     nuisanceBinWriter->setFileName(m_TomoInputs->offsetsOutputFile);
     nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_mu);
-    nuisanceBinWriter->setData(NuisanceParams->mu);
+    nuisanceBinWriter->setData(m_Mu);
     nuisanceBinWriter->execute();
     if(nuisanceBinWriter->getErrorCondition() < 0)
     {
@@ -62,11 +59,11 @@ void HAADF_ForwardModel::writeNuisanceParameters(ScaleOffsetParamsPtr NuisancePa
     }
   }
 
-  if(m_AdvParams->NOISE_MODEL)
+  if(m_AdvParams->NOISE_ESTIMATION)
   {
     nuisanceBinWriter->setFileName(m_TomoInputs->varianceOutputFile);
     nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_alpha);
-    nuisanceBinWriter->setData(NuisanceParams->alpha);
+    nuisanceBinWriter->setData(m_Alpha);
     nuisanceBinWriter->execute();
     if(nuisanceBinWriter->getErrorCondition() < 0)
     {
@@ -75,24 +72,41 @@ void HAADF_ForwardModel::writeNuisanceParameters(ScaleOffsetParamsPtr NuisancePa
     }
   } //Noise Model
 
+  if(getVerbose())
+  {
+    std::cout << "Tilt\tFinal Gains\tFinal Offsets\tFinal Variances" << std::endl;
+    for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
+    {
+
+      if(m_AdvParams->NOISE_ESTIMATION)
+      {
+        std::cout << i_theta << "\t" << m_I_0->d[i_theta] << "\t" << m_Mu->d[i_theta] << "\t" << m_Alpha->d[i_theta] << std::endl;
+      }
+      else
+      {
+        std::cout << i_theta << "\t" << m_I_0->d[i_theta] << "\t" << m_Mu->d[i_theta] << std::endl;
+      }
+    }
+  }
+
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADF_ForwardModel::writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram)
+void HAADF_ForwardModel::writeSinogramFile(SinogramPtr sinogram, RealVolumeType::Pointer finalSinogram)
 {
   // Write the Sinogram out to a file
   SinogramBinWriter::Pointer sinogramWriter = SinogramBinWriter::New();
-  sinogramWriter->setSinogram(m_Sinogram);
+  sinogramWriter->setSinogram(sinogram);
   sinogramWriter->setTomoInputs(m_TomoInputs);
   sinogramWriter->setAdvParams(m_AdvParams);
   sinogramWriter->setObservers(getObservers());
-  sinogramWriter->setI_0(NuisanceParams->I_0);
-  sinogramWriter->setMu(NuisanceParams->mu);
-  sinogramWriter->setData(Final_Sinogram);
+  sinogramWriter->setI_0(m_I_0);
+  sinogramWriter->setMu(m_Mu);
+  sinogramWriter->setData(finalSinogram);
   sinogramWriter->execute();
-  if (sinogramWriter->getErrorCondition() < 0)
+  if(sinogramWriter->getErrorCondition() < 0)
   {
     setErrorCondition(-1);
     notify(sinogramWriter->getErrorMessage().c_str(), 100, Observable::UpdateErrorMessage);
@@ -237,13 +251,13 @@ int HAADF_ForwardModel::createInitialGainsData()
   /* ********************* Initialize the Gains Array **************************/
   size_t gains_dims[1] =
   { m_Sinogram->N_theta };
-  m_Sinogram->InitialGain = RealArrayType::New(gains_dims, "sinogram->InitialGain");
+  m_InitialGain = RealArrayType::New(gains_dims, "sinogram->InitialGain");
   if(m_TomoInputs->gainsInputFile.empty() == false)
   {
     // Read the initial Gains from a File
     NuisanceParamReader::Pointer gainsInitializer = NuisanceParamReader::New();
     gainsInitializer->setFileName(m_TomoInputs->gainsInputFile);
-    gainsInitializer->setData(m_Sinogram->InitialGain);
+    gainsInitializer->setData(m_InitialGain);
     gainsInitializer->setSinogram(m_Sinogram);
     gainsInitializer->setAdvParams(m_AdvParams);
     gainsInitializer->setTomoInputs(m_TomoInputs);
@@ -262,13 +276,13 @@ int HAADF_ForwardModel::createInitialGainsData()
     // Set the values to the target gain value set by the user
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      m_Sinogram->InitialGain->d[i_theta] = m_TomoInputs->targetGain;
+      m_InitialGain->d[i_theta] = m_TomoInputs->targetGain;
     }
   }
   /********************REMOVE************************/
   ss << "HARD WIRED TARGET GAIN" << std::endl;
-  m_Sinogram->targetGain = m_TomoInputs->targetGain; //TARGET_GAIN;
-  ss << "Target Gain: " << m_Sinogram->targetGain << std::endl;
+  m_TargetGain = m_TomoInputs->targetGain; //TARGET_GAIN;
+  ss << "Target Gain: " << m_TargetGain << std::endl;
   /*************************************************/
 
   if (getVeryVerbose())
@@ -288,13 +302,13 @@ int HAADF_ForwardModel::createInitialOffsetsData()
   /* ********************* Initialize the Offsets Array **************************/
   size_t offsets_dims[1] =
   { m_Sinogram->N_theta };
-  m_Sinogram->InitialOffset = RealArrayType::New(offsets_dims, "sinogram->InitialOffset");
+  m_InitialOffset = RealArrayType::New(offsets_dims, "sinogram->InitialOffset");
   if(m_TomoInputs->offsetsInputFile.empty() == false)
   {
     // Read the initial offsets from a File
     NuisanceParamReader::Pointer offsetsInitializer = NuisanceParamReader::New();
     offsetsInitializer->setFileName(m_TomoInputs->offsetsInputFile);
-    offsetsInitializer->setData(m_Sinogram->InitialOffset);
+    offsetsInitializer->setData(m_InitialOffset);
     offsetsInitializer->setSinogram(m_Sinogram);
     offsetsInitializer->setAdvParams(m_AdvParams);
     offsetsInitializer->setTomoInputs(m_TomoInputs);
@@ -313,7 +327,7 @@ int HAADF_ForwardModel::createInitialOffsetsData()
     // Set the values to the default offset value set by the user
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      m_Sinogram->InitialOffset->d[i_theta] = m_TomoInputs->defaultOffset;
+      m_InitialOffset->d[i_theta] = m_TomoInputs->defaultOffset;
     }
   }
   else
@@ -323,7 +337,7 @@ int HAADF_ForwardModel::createInitialOffsetsData()
     initializer->setSinogram(m_Sinogram);
     initializer->setTomoInputs(m_TomoInputs);
     initializer->setAdvParams(m_AdvParams);
-    initializer->setInitialOffset(m_Sinogram->InitialOffset);
+    initializer->setInitialOffset(m_InitialOffset);
     initializer->setObservers(getObservers());
     initializer->setVerbose(getVerbose());
     initializer->setVeryVerbose(getVeryVerbose());
@@ -348,13 +362,13 @@ int HAADF_ForwardModel::createInitialVariancesData()
   /* ********************* Initialize the Variances Array **************************/
   size_t variance_dims[1] =
   { m_Sinogram->N_theta };
-  m_Sinogram->InitialVariance = RealArrayType::New(variance_dims, "sinogram->InitialVariance");
+  m_InitialVariance = RealArrayType::New(variance_dims, "sinogram->InitialVariance");
   if(m_TomoInputs->varianceInputFile.empty() == false)
   {
     // Read the initial variances from a File
     NuisanceParamReader::Pointer variancesInitializer = NuisanceParamReader::New();
     variancesInitializer->setFileName(m_TomoInputs->varianceInputFile);
-    variancesInitializer->setData(m_Sinogram->InitialVariance);
+    variancesInitializer->setData(m_InitialVariance);
     variancesInitializer->setSinogram(m_Sinogram);
     variancesInitializer->setTomoInputs(m_TomoInputs);
     variancesInitializer->setGeometry(m_Geometry);
@@ -375,8 +389,8 @@ int HAADF_ForwardModel::createInitialVariancesData()
     std::stringstream ss;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      m_Sinogram->InitialVariance->d[i_theta] = m_TomoInputs->defaultVariance;
-      ss<< "Tilt: " << i_theta << "  Variance: " << m_Sinogram->InitialVariance->d[i_theta] << std::endl;
+      m_InitialVariance->d[i_theta] = m_TomoInputs->defaultVariance;
+      ss<< "Tilt: " << i_theta << "  Variance: " << m_InitialVariance->d[i_theta] << std::endl;
     }
     if (getVeryVerbose())
     {

@@ -79,8 +79,6 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
 
     MXA_INSTANCE_PROPERTY(HAADF_ForwardModel::Pointer, ForwardModel)
 
-    MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams)
-
     MXA_INSTANCE_PROPERTY(bool, UseBrightFieldData)
     MXA_INSTANCE_PROPERTY(TomoInputsPtr, BFTomoInputs)
     MXA_INSTANCE_PROPERTY(SinogramPtr, BFSinogram)
@@ -90,7 +88,7 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
     static void InitializeGeometry(GeometryPtr);
     static void InitializeAdvancedParams(AdvancedParametersPtr v);
 
-    static void InitializeScaleOffsetParams(ScaleOffsetParamsPtr);
+    static void InitializeScaleOffsetParams(HAADF_ForwardModel* forwardModel);
 
     virtual ~HAADF_ReconstructionEngine();
 
@@ -126,7 +124,7 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
                          RealVolumeType::Pointer ErrorSino,
                          RealVolumeType::Pointer Weight,
                          std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
-                         ScaleOffsetParams* NuisanceParams,
+                         HAADF_ForwardModel* forwardModel,
                          UInt8Image_t::Pointer Mask,
                          CostData::Pointer cost);
 
@@ -143,7 +141,7 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
     Real_t SetNonHomThreshold();
 
 
-    void calculateGeometricMeanConstraint(ScaleOffsetParams* NuisanceParams);
+    void calculateGeometricMeanConstraint();
 
     /**
      * @brief
@@ -197,17 +195,16 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
     int initializeBrightFieldData();
 
 
-    void gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams);
+    void gainAndOffsetInitialization();
 
 
 
 
     void calculateMeasurementWeight(RealVolumeType::Pointer Weight,
-                                    ScaleOffsetParamsPtr NuisanceParams,
                                     RealVolumeType::Pointer ErrorSino,
                                     RealVolumeType::Pointer Y_Est);
+
     int jointEstimation(RealVolumeType::Pointer Weight,
-                        ScaleOffsetParamsPtr NuisanceParams,
                         RealVolumeType::Pointer ErrorSino,
                         RealVolumeType::Pointer Y_Est,
                         CostData::Pointer cost);
@@ -215,12 +212,11 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
     void costInitialization(SinogramPtr sinogram);
 
     void updateWeights(RealVolumeType::Pointer Weight,
-                       ScaleOffsetParamsPtr NuisanceParams,
                        RealVolumeType::Pointer ErrorSino);
 
     int createNuisanceParameters(SinogramPtr sinogram);
     void printNuisanceParameters(SinogramPtr sinogram);
-    ScaleOffsetParamsPtr allocateNuisanceParameters(SinogramPtr sinogram);
+    void allocateNuisanceParameters();
 
 #ifdef BF_RECON
     void processRawCounts();
@@ -245,15 +241,6 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
     Real_t MRF_P;
     Real_t SIGMA_X_P;
 #endif
-
-
-    //used to store cosine and sine of all angles through which sample is tilted
-//    RealArrayType::Pointer cosine;
-//    RealArrayType::Pointer sine;
-//    RealArrayType::Pointer BeamProfile; //used to store the shape of the e-beam
-//    Real_t BEAM_WIDTH;
-//    Real_t OffsetR;
-//    Real_t OffsetT;
 
     DetectorParameters::Pointer m_DetectorParameters;
 
@@ -283,7 +270,8 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
      * @param H_t
      * @return
      */
-    RealVolumeType::Pointer forwardProject(RealVolumeType::Pointer DetectorResponse, RealVolumeType::Pointer H_t);
+    RealVolumeType::Pointer forwardProject(RealVolumeType::Pointer DetectorResponse,
+                                           RealVolumeType::Pointer H_t);
 
     /**
      * @brief
@@ -312,7 +300,8 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
      * @param Weight
      * @return
      */
-    Real_t estimateSigmaX(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight);
+    Real_t estimateSigmaX(RealVolumeType::Pointer ErrorSino,
+                          RealVolumeType::Pointer Weight);
     /**
      * @brief
      * @param row
@@ -320,7 +309,8 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
      * @param slice
      * @param DetectorResponse
      */
-    AMatrixCol::Pointer calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice, RealVolumeType::Pointer DetectorResponse);
+    AMatrixCol::Pointer calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice,
+                                                      RealVolumeType::Pointer DetectorResponse);
 
     /**
      * @brief
@@ -336,10 +326,7 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
     * @param j_new
     * @param k_new
     */
-    void UpdateVoxelLine(uint16_t j_new,uint16_t k_new);
-
-
-
+    void UpdateVoxelLine(uint16_t j_new, uint16_t k_new);
 
 
     template<typename T>

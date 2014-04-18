@@ -219,9 +219,6 @@ void HAADF_ReconstructionEngine::InitializeSinogram(SinogramPtr v)
   v->RMax = 0.0;
   v->T0 = 0.0;
   v->TMax = 0.0;
-  v->targetGain = 0.0;
-  v->InitialGain = RealArrayType::NullPointer();
-  v->InitialOffset = RealArrayType::NullPointer();
 }
 
 // -----------------------------------------------------------------------------
@@ -244,11 +241,11 @@ void HAADF_ReconstructionEngine::InitializeGeometry(GeometryPtr v)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADF_ReconstructionEngine::InitializeScaleOffsetParams(ScaleOffsetParamsPtr v)
+void HAADF_ReconstructionEngine::InitializeScaleOffsetParams(HAADF_ForwardModel *forwardModel)
 {
-  v->I_0 = RealArrayType::NullPointer();
-  v->mu = RealArrayType::NullPointer();
-  v->alpha = RealArrayType::NullPointer();
+  forwardModel->setI_0(RealArrayType::NullPointer());
+  forwardModel->setMu(RealArrayType::NullPointer());
+  forwardModel->setAlpha(RealArrayType::NullPointer());
 }
 
 // -----------------------------------------------------------------------------
@@ -413,8 +410,7 @@ void HAADF_ReconstructionEngine::execute()
   //  std::cout << "Crop Start: " << cropStart << std::endl;
   //  std::cout << "Crop End:   " << cropEnd << std::endl;
 
-  ScaleOffsetParamsPtr NuisanceParams = allocateNuisanceParameters(m_Sinogram);
-
+  allocateNuisanceParameters();
 
 #if ROI
   UInt8Image_t::Pointer Mask;
@@ -462,7 +458,7 @@ void HAADF_ReconstructionEngine::execute()
   dims[2] = 0;
   //Hold the coefficients of a quadratic equation
   NumOfViews = m_Sinogram->N_theta;
-  LogGain = m_Sinogram->N_theta * log(m_Sinogram->targetGain);
+  LogGain = m_Sinogram->N_theta * log(m_ForwardModel->getTargetGain());
 
   costInitialization(m_Sinogram);
 
@@ -547,10 +543,10 @@ void HAADF_ReconstructionEngine::execute()
   Mask = UInt8Image_t::New(dims, "Mask");
   initializeROIMask(Mask);
 #endif
-  //m_Sinogram->targetGain=20000;
+  //m_ForwardModel->getTargetGain()=20000;
 
   //Gain and Offset Parameters Initialization
-  gainAndOffsetInitialization(NuisanceParams);
+  gainAndOffsetInitialization();
 
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
@@ -647,9 +643,9 @@ void HAADF_ReconstructionEngine::execute()
   for (uint16_t t = 0; t < m_Geometry->N_z; t++)
   {
 #if OpenMBIR_USE_PARALLEL_ALGORITHMS
-    g->run(HAADF_ForwardProject(m_Sinogram.get(), m_Geometry.get(), TempCol, VoxelLineResponse, Y_Est, NuisanceParams.get(), t, this));
+    g->run(HAADF_ForwardProject(m_Sinogram.get(), m_Geometry.get(), TempCol, VoxelLineResponse, Y_Est, m_ForwardModel.get(), t, this));
 #else
-    HAADF_ForwardProject fp(m_Sinogram.get(), m_Geometry.get(), TempCol, VoxelLineResponse, Y_Est, NuisanceParams.get(), t, this);
+    HAADF_ForwardProject fp(m_Sinogram.get(), m_Geometry.get(), TempCol, VoxelLineResponse, Y_Est, m_ForwardModel.get(), t, this);
     //fp.setObservers(getObservers());
     fp();
 #endif
@@ -664,7 +660,7 @@ void HAADF_ReconstructionEngine::execute()
 
   //Calculate Error Sinogram - Can this be combined with previous loop?
   //Also compute weights of the diagonal covariance matrix
-  calculateMeasurementWeight(Weight, NuisanceParams, ErrorSino, Y_Est);
+  calculateMeasurementWeight(Weight, ErrorSino, Y_Est);
 
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
@@ -713,7 +709,7 @@ void HAADF_ReconstructionEngine::execute()
       // This could contain multiple Subloops also
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
       status =
-          updateVoxels(reconOuterIter, reconInnerIter, updateType, VisitCount, TempCol, ErrorSino, Weight, VoxelLineResponse, NuisanceParams.get(), Mask, cost);
+          updateVoxels(reconOuterIter, reconInnerIter, updateType, VisitCount, TempCol, ErrorSino, Weight, VoxelLineResponse, m_ForwardModel.get(), Mask, cost);
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
       if(status == 0)
@@ -743,7 +739,7 @@ void HAADF_ReconstructionEngine::execute()
 
     if(m_AdvParams->JOINT_ESTIMATION)
     {
-      err = jointEstimation(Weight, NuisanceParams, ErrorSino, Y_Est, cost);
+      err = jointEstimation(Weight, ErrorSino, Y_Est, cost);
       if(err < 0)
       {
         break;
@@ -752,7 +748,7 @@ void HAADF_ReconstructionEngine::execute()
 
     if(m_AdvParams->NOISE_MODEL)
     {
-      updateWeights(Weight, NuisanceParams, ErrorSino);
+      updateWeights(Weight, ErrorSino);
 #ifdef COST_CALCULATE
       err = calculateCost(cost, Weight, ErrorSino);
       if (err < 0)
@@ -809,7 +805,7 @@ void HAADF_ReconstructionEngine::execute()
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
   /* Write the Gains and Offsets to an output file */
-  m_ForwardModel->writeNuisanceParameters(NuisanceParams);
+  m_ForwardModel->writeNuisanceParameters(getSinogram());
 
   if(getVerbose())
   {
@@ -819,12 +815,12 @@ void HAADF_ReconstructionEngine::execute()
 
       if(m_AdvParams->NOISE_MODEL)
       {
-        std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] << "\t" << NuisanceParams->mu->d[i_theta] << "\t" << NuisanceParams->alpha->d[i_theta]
+        std::cout << i_theta << "\t" << m_ForwardModel->getI_0()->d[i_theta] << "\t" << m_ForwardModel->getMu()->d[i_theta] << "\t" << m_ForwardModel->getAlpha()->d[i_theta]
                      << std::endl;
       }
       else
       {
-        std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] << "\t" << NuisanceParams->mu->d[i_theta] << std::endl;
+        std::cout << i_theta << "\t" << m_ForwardModel->getI_0()->d[i_theta] << "\t" << m_ForwardModel->getMu()->d[i_theta] << std::endl;
       }
     }
   }
@@ -845,7 +841,7 @@ void HAADF_ReconstructionEngine::execute()
   if (getCancel() == true) { setErrorCondition(-999); return; }
 
   // This is writing the "ReconstructedSinogram.bin" file
-  m_ForwardModel->writeSinogramFile(NuisanceParams, Final_Sinogram); // Writes the sinogram to a file
+  m_ForwardModel->writeSinogramFile(getSinogram(), Final_Sinogram); // Writes the sinogram to a file
 
   // Writes ReconstructedObject.bin file
   {
@@ -1724,7 +1720,7 @@ void HAADF_ReconstructionEngine::printNuisanceParameters(SinogramPtr sinogram)
     std::cout << "---------------- Initial Gains, Offsets, Variances -------------------" << std::endl;
     std::cout << "Tilt\tGain\tOffset";
 
-    if(NULL != sinogram->InitialVariance.get())
+    if(NULL != m_ForwardModel->getInitialVariance().get())
     {
       std::cout << "\tVariance";
     }
@@ -1732,10 +1728,10 @@ void HAADF_ReconstructionEngine::printNuisanceParameters(SinogramPtr sinogram)
 
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      std::cout << i_theta << "\t" << sinogram->InitialGain->d[i_theta] << "\t" << sinogram->InitialOffset->d[i_theta];
-      if(NULL != sinogram->InitialVariance.get())
+      std::cout << i_theta << "\t" << m_ForwardModel->getInitialGain()->d[i_theta] << "\t" << m_ForwardModel->getInitialOffset()->d[i_theta];
+      if(NULL != m_ForwardModel->getInitialVariance().get())
       {
-        std::cout << "\t" << sinogram->InitialVariance->d[i_theta];
+        std::cout << "\t" << m_ForwardModel->getInitialVariance()->d[i_theta];
       }
       std::cout << std::endl;
     }
@@ -1745,27 +1741,25 @@ void HAADF_ReconstructionEngine::printNuisanceParameters(SinogramPtr sinogram)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ScaleOffsetParamsPtr HAADF_ReconstructionEngine::allocateNuisanceParameters(SinogramPtr sinogram)
+void HAADF_ReconstructionEngine::allocateNuisanceParameters()
 {
 
   //Gain, Offset and Variance Parameter Structures
-  ScaleOffsetParamsPtr NuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
+  //ScaleOffsetParamsPtr NuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
   size_t dims[2];
-  dims[1] = sinogram->N_t;
-  dims[0] = sinogram->N_theta;
-  NuisanceParams->I_0 = RealArrayType::New(dims, "NuisanceParams->I_0");
-  NuisanceParams->mu = RealArrayType::New(dims, "NuisanceParams->mu");
+  dims[1] = getSinogram()->N_t;
+  dims[0] = getSinogram()->N_theta;
+  m_ForwardModel->setI_0(RealArrayType::New(dims, "NuisanceParams->I_0"));
+  m_ForwardModel->setMu(RealArrayType::New(dims, "NuisanceParams->mu"));
   if(m_AdvParams->NOISE_MODEL)
   {
     //alpha is the noise variance adjustment factor
-    NuisanceParams->alpha = RealArrayType::New(dims, "NuisanceParams->alpha");
+    m_ForwardModel->setAlpha(RealArrayType::New(dims, "NuisanceParams->alpha"));
   }
   else
   {
-    NuisanceParams->alpha = RealArrayType::NullPointer();
+     m_ForwardModel->setAlpha(RealArrayType::NullPointer());
   }
-  return NuisanceParams;
-
 }
 
 // -----------------------------------------------------------------------------

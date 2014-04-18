@@ -163,12 +163,12 @@ int HAADF_ReconstructionEngine::initializeBrightFieldData()
         }
       }
     }
-    m_Sinogram->BF_Flag = true;
+    m_ForwardModel->setBF_Flag(true);
     notify("BF initialization complete", 0, Observable::UpdateProgressMessage);
   }
   else
   {
-    m_Sinogram->BF_Flag = false;
+    m_ForwardModel->setBF_Flag(false);
   }
   return 0;
 }
@@ -275,30 +275,30 @@ void HAADF_ReconstructionEngine::computeOriginalXDims(uint16_t &cropStart, uint1
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADF_ReconstructionEngine::gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams)
+void HAADF_ReconstructionEngine::gainAndOffsetInitialization()
 {
   Real_t sum = 0;
   Real_t temp = 0;
   for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
   {
     // Gains
-    NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k];
+    m_ForwardModel->getI_0()->d[k] = m_ForwardModel->getInitialGain()->d[k];
     // Offsets
-    NuisanceParams->mu->d[k] = m_Sinogram->InitialOffset->d[k];
+    m_ForwardModel->getMu()->d[k] = m_ForwardModel->getInitialOffset()->d[k];
 
-    sum += NuisanceParams->I_0->d[k];
+    sum += m_ForwardModel->getI_0()->d[k];
 
   }
   sum /= m_Sinogram->N_theta;
 
   if (getVerbose()) { printf("The Arithmetic mean of the constraint is %lf\n", sum); }
-  if(sum - m_Sinogram->targetGain > 1e-5)
+  if(sum - m_ForwardModel->getTargetGain() > 1e-5)
   {
     if (getVerbose()) { printf("Arithmetic Mean Constraint not met..renormalizing\n");}
-    temp = m_Sinogram->targetGain / sum;
+    temp = m_ForwardModel->getTargetGain() / sum;
     for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
     {
-      NuisanceParams->I_0->d[k] = m_Sinogram->InitialGain->d[k] * temp;
+      m_ForwardModel->getI_0()->d[k] = m_ForwardModel->getInitialGain()->d[k] * temp;
     }
   }
 
@@ -415,15 +415,16 @@ void HAADF_ReconstructionEngine::calculateArithmeticMean()
 //
 // -----------------------------------------------------------------------------
 int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
-                                                ScaleOffsetParamsPtr NuisanceParams,
                                                 RealVolumeType::Pointer ErrorSino,
                                                 RealVolumeType::Pointer Y_Est,
                                                 CostData::Pointer cost)
 {
   std::stringstream ss;
   std::string indent("  ");
+    RealArrayType::Pointer I_0 = m_ForwardModel->getI_0();
+    RealArrayType::Pointer mu = m_ForwardModel->getMu();
 
-  if(m_Sinogram->BF_Flag == false) //If no BF data do gain and offset est.
+  if(m_ForwardModel->getBF_Flag() == false) //If no BF data do gain and offset est.
   {
     Real_t AverageI_kUpdate = 0; //absolute sum of the gain updates
     Real_t AverageMagI_k = 0; //absolute sum of the initial gains
@@ -444,9 +445,9 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
           //Y_Est->d[i_theta][i_r][i_t]=0;
-          Real_t ttmp = m_Sinogram->counts->getValue(i_theta, i_r, i_t) - ErrorSino->getValue(i_theta, i_r, i_t) - NuisanceParams->mu->d[i_theta];
+          Real_t ttmp = m_Sinogram->counts->getValue(i_theta, i_r, i_t) - ErrorSino->getValue(i_theta, i_r, i_t) - mu->d[i_theta];
           Y_Est->setValue(ttmp, i_theta, i_r, i_t);
-          Y_Est->divideByValue(NuisanceParams->I_0->d[i_theta], i_theta, i_r, i_t);
+          Y_Est->divideByValue(m_ForwardModel->getI_0()->d[i_theta], i_theta, i_r, i_t);
         }
       }
     }
@@ -532,10 +533,10 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
     Real_t sum = 0;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      sum += (Qk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta]
-              + 2 * Qk_cost->getValue(i_theta, 1) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta]
-              + NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->getValue(i_theta, 2)
-              - 2 * (bk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]); //evaluating the cost function
+      sum += (Qk_cost->getValue(i_theta, 0) * I_0->d[i_theta] * I_0->d[i_theta]
+              + 2 * Qk_cost->getValue(i_theta, 1) * I_0->d[i_theta] * mu->d[i_theta]
+              + mu->d[i_theta] * mu->d[i_theta] * Qk_cost->getValue(i_theta, 2)
+              - 2 * (bk_cost->getValue(i_theta, 0) * I_0->d[i_theta] + mu->d[i_theta] * bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]); //evaluating the cost function
     }
     sum /= 2;
     printf("The value of the data match error prior to updating the I and mu =%lf\n", sum);
@@ -552,29 +553,29 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
       sum2 += ((bk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d1->d[i_theta])
                / (Qk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d2->d[i_theta]));
     }
-    Real_t LagrangeMultiplier = (-m_Sinogram->N_theta * m_Sinogram->targetGain + sum2) / sum1;
+    Real_t LagrangeMultiplier = (-m_Sinogram->N_theta * m_ForwardModel->getTargetGain() + sum2) / sum1;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
 
-      AverageMagI_k += fabs(NuisanceParams->I_0->d[i_theta]); //store the sum of the vector of gains
+      AverageMagI_k += fabs(I_0->d[i_theta]); //store the sum of the vector of gains
 
       Real_t NewI_k = (-1 * LagrangeMultiplier - Qk_cost->getValue(i_theta, 1) * d1->d[i_theta] + bk_cost->getValue(i_theta, 0))
           / (Qk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d2->d[i_theta]);
 
-      AverageI_kUpdate += fabs(NewI_k - NuisanceParams->I_0->d[i_theta]);
+      AverageI_kUpdate += fabs(NewI_k - I_0->d[i_theta]);
 
-      NuisanceParams->I_0->d[i_theta] = NewI_k;
+      I_0->d[i_theta] = NewI_k;
       //Postivity Constraint on the gains
 
-      if(NuisanceParams->I_0->d[i_theta] < 0)
+      if(I_0->d[i_theta] < 0)
       {
-        NuisanceParams->I_0->d[i_theta] *= 1;
+        I_0->d[i_theta] *= 1;
       }
-      AverageMagDelta_k += fabs(NuisanceParams->mu->d[i_theta]);
+      AverageMagDelta_k += fabs(mu->d[i_theta]);
 
-      Real_t NewDelta_k = d1->d[i_theta] - d2->d[i_theta] * NuisanceParams->I_0->d[i_theta]; //some function of I_0[i_theta]
-      AverageDelta_kUpdate += fabs(NewDelta_k - NuisanceParams->mu->d[i_theta]);
-      NuisanceParams->mu->d[i_theta] = NewDelta_k;
+      Real_t NewDelta_k = d1->d[i_theta] - d2->d[i_theta] * I_0->d[i_theta]; //some function of I_0[i_theta]
+      AverageDelta_kUpdate += fabs(NewDelta_k - mu->d[i_theta]);
+      mu->d[i_theta] = NewDelta_k;
 
     }
 
@@ -584,10 +585,10 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
     sum = 0;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      sum += (Qk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta])
-          + (2 * Qk_cost->getValue(i_theta, 1) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta])
-          + (NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->getValue(i_theta, 2))
-          - (2 * (bk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]); //evaluating the cost function
+      sum += (Qk_cost->getValue(i_theta, 0) * I_0->d[i_theta] * I_0->d[i_theta])
+          + (2 * Qk_cost->getValue(i_theta, 1) * I_0->d[i_theta] * mu->d[i_theta])
+          + (mu->d[i_theta] * mu->d[i_theta] * Qk_cost->getValue(i_theta, 2))
+          - (2 * (bk_cost->getValue(i_theta, 0) * I_0->d[i_theta] + mu->d[i_theta] * bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]); //evaluating the cost function
     }
     sum /= 2;
 
@@ -605,7 +606,7 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
           size_t yest_idx = Y_Est->calcIndex(i_theta, i_r, i_t);
           size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
 
-          ErrorSino->d[error_idx] = m_Sinogram->counts->d[counts_idx] - NuisanceParams->mu->d[i_theta] - (NuisanceParams->I_0->d[i_theta] * Y_Est->d[yest_idx]);
+          ErrorSino->d[error_idx] = m_Sinogram->counts->d[counts_idx] - mu->d[i_theta] - (I_0->d[i_theta] * Y_Est->d[yest_idx]);
         }
       }
     }
@@ -626,7 +627,7 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
       std::cout << "Tilt\tGains\tOffsets" << std::endl;
       for (uint16_t i_theta = 0; i_theta < getSinogram()->N_theta; i_theta++)
       {
-        std::cout << i_theta << "\t" << NuisanceParams->I_0->d[i_theta] << "\t" << NuisanceParams->mu->d[i_theta] << std::endl;
+        std::cout << i_theta << "\t" << I_0->d[i_theta] << "\t" << mu->d[i_theta] << std::endl;
       }
       //std::cout << "Ratio of change in I_k " << AverageI_kUpdate / AverageMagI_k << std::endl;
       //std::cout << "Ratio of change in Delta_k " << AverageDelta_kUpdate / AverageMagDelta_k << std::endl;
@@ -657,9 +658,9 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
         }
       }
 
-      NuisanceParams->mu->d[i_theta] += alpha;
+      mu->d[i_theta] += alpha;
       if(getVeryVerbose()) {
-        std::cout << "Theta: " << i_theta << " Mu: " << NuisanceParams->mu->d[i_theta] << std::endl;
+        std::cout << "Theta: " << i_theta << " Mu: " << mu->d[i_theta] << std::endl;
       }
     }
 #ifdef COST_CALCULATE
@@ -686,17 +687,19 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
 // -----------------------------------------------------------------------------
 
 void HAADF_ReconstructionEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
-                                                            ScaleOffsetParamsPtr NuisanceParams,
                                                             RealVolumeType::Pointer ErrorSino,
                                                             RealVolumeType::Pointer Y_Est)
 {
   Real_t checksum = 0;
   START_TIMER;
+  RealArrayType::Pointer alpha = m_ForwardModel->getAlpha();
+  RealArrayType::Pointer mu = m_ForwardModel->getMu();
+
   for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
   {
     if (m_AdvParams->NOISE_MODEL)
     {
-      NuisanceParams->alpha->d[i_theta] = m_Sinogram->InitialVariance->d[i_theta]; //Initialize the refinement parameters from any previous run
+      alpha->d[i_theta] = m_ForwardModel->getInitialVariance()->d[i_theta]; //Initialize the refinement parameters from any previous run
     }//Noise model
 
     checksum = 0;
@@ -708,16 +711,16 @@ void HAADF_ReconstructionEngine::calculateMeasurementWeight(RealVolumeType::Poin
         size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
         size_t yest_idx = Y_Est->calcIndex(i_theta, i_r, i_t);
         size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
-        if(m_Sinogram->BF_Flag == false)
+        if(m_ForwardModel->getBF_Flag() == false)
         {
-          ErrorSino->d[error_idx] = m_Sinogram->counts->d[counts_idx] - Y_Est->d[yest_idx] - NuisanceParams->mu->d[i_theta];
+          ErrorSino->d[error_idx] = m_Sinogram->counts->d[counts_idx] - Y_Est->d[yest_idx] - mu->d[i_theta];
         }
         else
         {
           size_t bfcounts_idx = m_BFSinogram->counts->calcIndex(i_theta, i_r, i_t);
 
           ErrorSino->d[error_idx] = m_Sinogram->counts->d[counts_idx] - m_BFSinogram->counts->d[bfcounts_idx] * Y_Est->d[yest_idx]
-              - NuisanceParams->mu->d[i_theta];
+              - mu->d[i_theta];
         }
 
 #ifndef IDENTITY_NOISE_MODEL
@@ -734,19 +737,19 @@ void HAADF_ReconstructionEngine::calculateMeasurementWeight(RealVolumeType::Poin
         Weight->d[weight_idx] = 1.0;
 #endif //IDENTITY_NOISE_MODEL endif
 #ifdef FORWARD_PROJECT_MODE
-        temp=Y_Est->d[i_theta][i_r][i_t]/NuisanceParams->I_0->d[i_theta];
+        temp=Y_Est->d[i_theta][i_r][i_t]/I_0->d[i_theta];
         fwrite(&temp,sizeof(Real_t),1,Fp6);
 #endif
 #ifdef DEBUG
         if(Weight->d[weight_idx] < 0)
         {
-          //  std::cout << m_Sinogram->counts->d[counts_idx] << "    " << NuisanceParams->alpha->d[i_theta] << std::endl;
+          //  std::cout << m_Sinogram->counts->d[counts_idx] << "    " << alpha->d[i_theta] << std::endl;
         }
 #endif//Debug
 
         if (m_AdvParams->NOISE_MODEL)
         {
-          Weight->d[weight_idx] /= NuisanceParams->alpha->d[i_theta];
+          Weight->d[weight_idx] /= alpha->d[i_theta];
         }// NOISE_MODEL
 
 
@@ -786,12 +789,12 @@ int HAADF_ReconstructionEngine::calculateCost(CostData::Pointer cost,
 // Updating the Weights for Noise Model
 // -----------------------------------------------------------------------------
 void HAADF_ReconstructionEngine::updateWeights(RealVolumeType::Pointer Weight,
-                                               ScaleOffsetParamsPtr NuisanceParams,
                                                RealVolumeType::Pointer ErrorSino)
 {
   Real_t AverageVarUpdate = 0; //absolute sum of the gain updates
   Real_t AverageMagVar = 0; //absolute sum of the initial gains
   Real_t sum = 0;
+  RealArrayType::Pointer alpha = m_ForwardModel->getAlpha();
 
   for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
   {
@@ -831,9 +834,9 @@ void HAADF_ReconstructionEngine::updateWeights(RealVolumeType::Pointer Weight,
     }
     sum /= (m_Sinogram->N_r * m_Sinogram->N_t);
 
-    AverageMagVar += fabs(NuisanceParams->alpha->d[i_theta]);
-    AverageVarUpdate += fabs(sum - NuisanceParams->alpha->d[i_theta]);
-    NuisanceParams->alpha->d[i_theta] = sum;
+    AverageMagVar += fabs(alpha->d[i_theta]);
+    AverageVarUpdate += fabs(sum - alpha->d[i_theta]);
+    alpha->d[i_theta] = sum;
     //Update the weight for ICD updates
     for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
     {
@@ -843,16 +846,16 @@ void HAADF_ReconstructionEngine::updateWeights(RealVolumeType::Pointer Weight,
         size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
         size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
-        if(NuisanceParams->alpha->d[i_theta] != 0 && m_Sinogram->counts->d[counts_idx] != 0)
+        if(alpha->d[i_theta] != 0 && m_Sinogram->counts->d[counts_idx] != 0)
         {
-          Weight->d[weight_idx] = 1.0 / (m_Sinogram->counts->d[counts_idx] * NuisanceParams->alpha->d[i_theta]);
+          Weight->d[weight_idx] = 1.0 / (m_Sinogram->counts->d[counts_idx] * alpha->d[i_theta]);
         }
         else
         {
           Weight->d[weight_idx] = 1.0;
         }
 #else
-        Weight->d[weight_idx] = 1.0/NuisanceParams->alpha->d[i_theta];
+        Weight->d[weight_idx] = 1.0/alpha->d[i_theta];
 #endif //IDENTITY_NOISE_MODEL endif
       }
     }
@@ -865,7 +868,7 @@ void HAADF_ReconstructionEngine::updateWeights(RealVolumeType::Pointer Weight,
     std::cout << "Tilt\tWeight" << std::endl;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
-      std::cout << i_theta << "\t" << NuisanceParams->alpha->d[i_theta] << std::endl;
+      std::cout << i_theta << "\t" << alpha->d[i_theta] << std::endl;
     }
     std::cout << "Ratio of change in Variance " << AverageVarUpdate / AverageMagVar << std::endl;
   }

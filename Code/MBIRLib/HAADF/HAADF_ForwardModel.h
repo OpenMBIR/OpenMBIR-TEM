@@ -95,10 +95,22 @@ class HAADF_ForwardModel : public Observable
     MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)
     MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
 
+    // Bright Field Data Flag
+    MXA_INSTANCE_PROPERTY(Real_t, TargetGain)
+    MXA_INSTANCE_PROPERTY(bool, BF_Flag)
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialGain)
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialOffset)
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, InitialVariance)
+
+    // These are the Nuisance Parameters that we need to solve for
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, I_0) //Gains
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Mu) //Offset
+    MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Alpha) //Noise variance refinement factor
 
 
-    void writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams);
-    void writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram);
+    void writeNuisanceParameters(SinogramPtr sinogram);
+    void writeSinogramFile(SinogramPtr sinogram,
+                           RealVolumeType::Pointer Final_Sinogram);
     void writeReconstructionFile(const std::string &filepath);
     void writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
     void writeMRCFile(const std::string &mrcFile, uint16_t cropStart, uint16_t cropEnd);
