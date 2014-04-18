@@ -78,7 +78,6 @@
 #include "License/LicenseFiles.h"
 
 #include "CheckBoxDelegate.h"
-#include "LayersDockWidget.h"
 #include "GainsOffsetsTableModel.h"
 #include "ReconstructionArea.h"
 #include "MRCInfoWidget.h"
