@@ -56,7 +56,7 @@ RectangleCreator::RectangleCreator(const QPolygonF &polygon,  QGraphicsItem *par
   setAcceptHoverEvents(true);
   m_isResizing = false;
   m_CurrentResizeHandle = RectangleCreator::NO_CTRL_POINT;
-  ctrlPointSize = 20.0f;
+  ctrlPointSize = 6.0f;
 
   //  m_Class = userIndex;
   //  m_Mu = 1.0;
@@ -216,6 +216,7 @@ void RectangleCreator::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
   if (option->state & QStyle::State_Selected)
   {
+  #if 0
     float x = boundingRect().x();
     float y = boundingRect().y();
     float w = boundingRect().width();
@@ -223,6 +224,7 @@ void RectangleCreator::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
     painter->setPen(QPen(QColor(255, 25, 25, UIA::Alpha)));
     painter->setBrush( QBrush(QColor(255, 25, 25, UIA::Alpha)));
+
     //Upper Left
     painter->drawRect((int)x, (int)y, (int)ctrlPointSize, (int)ctrlPointSize);
     //Upper Right
@@ -231,6 +233,7 @@ void RectangleCreator::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     painter->drawRect((int)x + (int)w - (int)ctrlPointSize, (int)y + (int)h - (int)ctrlPointSize, (int)ctrlPointSize, (int)ctrlPointSize);
     // Lower Left
     painter->drawRect((int)x, (int)y + (int)h - (int)ctrlPointSize, (int)ctrlPointSize, (int)ctrlPointSize);
+  #endif
   }
 
   painter->setRenderHint(QPainter::Antialiasing, false);
