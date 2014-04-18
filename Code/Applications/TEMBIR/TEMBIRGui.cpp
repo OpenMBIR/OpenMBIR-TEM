@@ -519,6 +519,7 @@ void TEMBIRGui::setupGui()
 
   m_MRCOutputInfoWidget = new MRCInfoWidget(this);
   m_MRCOutputInfoWidget->hide();
+
 }
 
 // -----------------------------------------------------------------------------
@@ -2149,7 +2150,7 @@ void TEMBIRGui::memCalculate()
 
   TotalMem /= (1e9); //To get answer in Gb
 
-  memoryUse->setText(QString::number(TotalMem));
+  //memoryUse->setText(QString::number(TotalMem));
 
 }
 

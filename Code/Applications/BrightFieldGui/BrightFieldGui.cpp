@@ -522,6 +522,7 @@ void BrightFieldGui::setupGui()
   // Hide tabs
   m_ReconstructedDisplayWidget->getControlsTab()->hide();
   m_MRCDisplayWidget->getControlsTab()->hide();
+
 }
 
 // -----------------------------------------------------------------------------
@@ -2196,7 +2197,7 @@ void BrightFieldGui::memCalculate()
 
   TotalMem /= (1e9); //To get answer in Gb
 
-  memoryUse->setText(QString::number(TotalMem));
+  //memoryUse->setText(QString::number(TotalMem));
 
 }
 

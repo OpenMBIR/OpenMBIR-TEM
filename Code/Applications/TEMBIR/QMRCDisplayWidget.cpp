@@ -216,6 +216,7 @@ void QMRCDisplayWidget::on_playBtn_clicked()
 {
   playBtn->setEnabled(false);
   stopBtn->setEnabled(true);
+  m_StopAnimation = false;
   m_AnimationTimer->start(0);
 }
 
@@ -520,6 +521,7 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
 
   // This will display the image in the graphics scene
   m_GraphicsView->loadBaseImageFile(m_CurrentImage);
+  m_GraphicsView->removeBackgroundSelector();
 
   // Calculate the approx memory usage
   emit memoryCalculationNeedsUpdated();
