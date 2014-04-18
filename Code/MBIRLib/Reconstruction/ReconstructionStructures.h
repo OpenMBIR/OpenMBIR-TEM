@@ -187,14 +187,4 @@ typedef struct
 } AdvancedParameters;
 typedef boost::shared_ptr<AdvancedParameters> AdvancedParametersPtr;
 
-/*
-typedef struct
-{
-  RealArrayType::Pointer I_0; //Gains
-  RealArrayType::Pointer mu; //Offset
-  RealArrayType::Pointer alpha;//Noise variance refinement factor
-} ScaleOffsetParams;
-typedef boost::shared_ptr<ScaleOffsetParams> ScaleOffsetParamsPtr;
-*/
-
 #endif /* _ReconstructionStructures_H_ */
