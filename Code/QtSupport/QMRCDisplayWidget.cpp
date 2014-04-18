@@ -283,7 +283,7 @@ void QMRCDisplayWidget::stepForwardFromTimer()
     return;
   }
 
-  QCoreApplication::processEvents();
+//  QCoreApplication::processEvents();
 
   int idx = currentTiltIndex->value();
   if (idx == currentTiltIndex->maximum())
@@ -389,6 +389,7 @@ void QMRCDisplayWidget::loadMRCFile(QString mrcFilePath)
     m_GraphicsView->clearContent();
     return;
   }
+  resetImageScaling();
   loadMRCTiltImage(m_CurrentMRCFilePath, 0);
   on_fitToWindow_clicked();
 }
