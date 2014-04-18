@@ -520,7 +520,7 @@ void TEMBIRGui::setupGui()
   m_MRCOutputInfoWidget = new MRCInfoWidget(this);
   m_MRCOutputInfoWidget->hide();
 
-  m_MRCDisplayWidget->enableBackgroundSelection();
+  m_MRCDisplayWidget->disableBackgroundSelection();
 
 
 }
