@@ -43,12 +43,11 @@
 
 //Region Of Interest for calculating the stopping criteria. Should be on with stopping threshold
 #define ROI 1
-#define MAX_ANGLE_STRETCH 75
 #define EIMTOMO_USE_QGGMRF 1 //Was used earlier to switch priors
 #define POSITIVITY_CONSTRAINT
 
 #define BF_OFFSET 0 //23696 - Bio data set
-#define BF_MAX  1865//5689//42122
+#define BF_MAX  1865 //5689//42122
 
 #define SURROGATE_FUNCTION
 

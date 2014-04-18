@@ -950,7 +950,10 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
   }
 
   m_MultiResSOC->setDefaultOffsetValue(defaultOffset->text().toFloat(&ok));
+
   m_MultiResSOC->setUseDefaultOffset(useDefaultOffset->isChecked());
+  m_MultiResSOC->setDefaultPixelSize(m_CachedPixelSize);
+
   m_MultiResSOC->setExtendObject(extendObject->isChecked());
   m_MultiResSOC->setDefaultVariance(defaultVariance->text().toFloat(&ok));
   m_MultiResSOC->setInitialReconstructionValue(defaultInitialRecon->text().toFloat(&ok));
@@ -2206,13 +2209,21 @@ void TEMBIRGui::on_actionLoad_Tilt_Information_triggered()
     QVector<float> b_tilts = loader.getBTilts();
     if (a_tilts.size() != b_tilts.size() )
     {
-      QMessageBox::critical(this, "Tilt Loading Error", "The A tilts and B Tiles do not have the same number of values.",  QMessageBox::Ok, QMessageBox::Ok);
-      return;
-    }
+      if (a_tilts.size() == 0 && b_tilts.size() != 0)
+      {
+        a_tilts = QVector<float>(b_tilts.size(), 0.0f);
+      }
+      else if(b_tilts.size() == 0 && a_tilts.size() != 0)
+      {
+        b_tilts = QVector<float>(a_tilts.size(), 0.0f);
+      }
 
+      //      QMessageBox::critical(this, "Tilt Loading Error", "The A tilts and B Tiles do not have the same number of values.",  QMessageBox::Ok, QMessageBox::Ok);
+      //      return;
+    }
     QVector<int> indices(a_tilts.size());
 
-    QVector<bool>  excludes(a_tilts.size());
+    QVector<bool> excludes(a_tilts.size());
     m_CachedLargestAngle = std::numeric_limits<float>::min();
     m_CachedPixelSize = loader.getPixelSize();
     for(int l = 0; l < a_tilts.size(); ++l)
@@ -2236,5 +2247,8 @@ void TEMBIRGui::on_actionLoad_Tilt_Information_triggered()
       m_GainsOffsetsTableModel->setTableData(indices, a_tilts, b_tilts, excludes);
     }
   }
+
+  // Automatically estimate the Sigma X value by simulating the cuser clicking the button
+  on_estimateSigmaX_clicked();
 }
 
