@@ -52,6 +52,7 @@
 #include "MBIRLib/GenericFilters/CostData.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 #include "MBIRLib/HAADF/HAADFConstants.h"
+#include "MBIRLib/HAADF/HAADF_ForwardModel.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/Reconstruction/QGGMRF_Functions.h"
 
@@ -74,8 +75,10 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
     MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
     MXA_INSTANCE_PROPERTY(SinogramPtr, Sinogram)
     MXA_INSTANCE_PROPERTY(GeometryPtr, Geometry)
-
     MXA_INSTANCE_PROPERTY(AdvancedParametersPtr, AdvParams)
+
+    MXA_INSTANCE_PROPERTY(HAADF_ForwardModel::Pointer, ForwardModel)
+
     MXA_INSTANCE_PROPERTY(ScaleOffsetParamsPtr, NuisanceParams)
 
     MXA_INSTANCE_PROPERTY(bool, UseBrightFieldData)
@@ -129,7 +132,7 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
 
     void initializeROIMask(UInt8Image_t::Pointer Mask);
 
-    void initializeHt(RealVolumeType::Pointer H_t);
+
     /**
      * Code to take the magnitude map and filter it with a hamming window
      * Returns the filtered magnitude map
@@ -172,7 +175,8 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
      * @param H_t
      * @param OffsetT
      */
-    void initializeHt(RealVolumeType::Pointer H_t, Real_t OffsetT);
+//    void initializeHt(RealVolumeType::Pointer H_t, Real_t OffsetT);
+//    void initializeHt(RealVolumeType::Pointer H_t);
 
     /**
      * @brief
@@ -183,38 +187,6 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
                             std::vector<AMatrixCol::Pointer> &VoxelLineResponse);
 
 
-
-    /**
-     * @brief
-     * @param filepath
-     */
-    void writeReconstructionFile(const std::string &filepath);
-
-    /**
-     * @brief
-     * @param vtkFile
-     * @param cropStart
-     * @param cropEnd
-     */
-    void writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
-
-    /**
-     * @brief
-     * @param mrcFile
-     * @param cropStart
-     * @param cropEnd
-     */
-    void writeMRCFile(const std::string &mrcFile, uint16_t cropStart, uint16_t cropEnd);
-
-    /**
-     * @brief
-     * @param file
-     * @param cropStart
-     * @param cropEnd
-     */
-    void writeAvizoFile(const std::string &file, uint16_t cropStart, uint16_t cropEnd);
-
-
     /**
      * @brief
      * @param Y_Est
@@ -223,9 +195,6 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
     void initializeVolume(RealVolumeType::Pointer Y_Est, double value);
 
     int initializeBrightFieldData();
-    int createInitialGainsData();
-    int createInitialOffsetsData();
-    int createInitialVariancesData();
 
 
     void gainAndOffsetInitialization(ScaleOffsetParamsPtr NuisanceParams);
@@ -253,13 +222,9 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
     void printNuisanceParameters(SinogramPtr sinogram);
     ScaleOffsetParamsPtr allocateNuisanceParameters(SinogramPtr sinogram);
 
-    void writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams);
 #ifdef BF_RECON
     void processRawCounts();
 #endif
-
-    void writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram);
-
 
   private:
     int m_NumThreads;
@@ -283,12 +248,14 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
 
 
     //used to store cosine and sine of all angles through which sample is tilted
-    RealArrayType::Pointer cosine;
-    RealArrayType::Pointer sine;
-    RealArrayType::Pointer BeamProfile; //used to store the shape of the e-beam
-    Real_t BEAM_WIDTH;
-    Real_t OffsetR;
-    Real_t OffsetT;
+//    RealArrayType::Pointer cosine;
+//    RealArrayType::Pointer sine;
+//    RealArrayType::Pointer BeamProfile; //used to store the shape of the e-beam
+//    Real_t BEAM_WIDTH;
+//    Real_t OffsetR;
+//    Real_t OffsetT;
+
+    DetectorParameters::Pointer m_DetectorParameters;
 
     RealImageType::Pointer QuadraticParameters; //holds the coefficients of N_theta quadratic equations. This will be initialized inside the MAPICDREconstruct function
 
@@ -317,16 +284,6 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
      * @return
      */
     RealVolumeType::Pointer forwardProject(RealVolumeType::Pointer DetectorResponse, RealVolumeType::Pointer H_t);
-
-    /**
-     * @brief
-     */
-    void calculateSinCos();
-
-    /**
-     * @brief
-     */
-    void initializeBeamProfile();
 
     /**
      * @brief

@@ -44,20 +44,24 @@ int HAADF_ReconstructionEngine::readInputData()
 {
   TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
   std::string extension = MXAFileInfo::extension(m_TomoInputs->sinoFile);
-  if(extension.compare("mrc") == 0 || extension.compare("ali") == 0)
-  {
-    dataReader = MRCSinogramInitializer::NewTomoFilter();
-  }
-  else if(extension.compare("bin") == 0)
+  if(extension.compare("bin") == 0)
   {
     dataReader = RawSinogramInitializer::NewTomoFilter();
   }
   else
+    // if(extension.compare("mrc") == 0 || extension.compare("ali") == 0)
   {
-    setErrorCondition(-1);
-    notify("A supported file reader for the input file was not found.", 100, Observable::UpdateErrorMessage);
-    return -1;
+    // We are going to assume that the user has selected a valid MRC file to get this far so we are just going to try
+    // to read the file as an MRC file which may really cause issues but there does not seem to be any standard file
+    // extensions for MRC files.
+    dataReader = MRCSinogramInitializer::NewTomoFilter();
   }
+
+  //  {
+  //    setErrorCondition(-1);
+  //    notify("A supported file reader for the input file was not found.", 100, Observable::UpdateErrorMessage);
+  //    return -1;
+  //  }
   dataReader->setTomoInputs(m_TomoInputs);
   dataReader->setSinogram(m_Sinogram);
   dataReader->setAdvParams(m_AdvParams);
@@ -84,7 +88,7 @@ int HAADF_ReconstructionEngine::initializeBrightFieldData()
   uint8_t Flag2 = 1;
   if(m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->sinoFile.empty() == false)
   {
-  ss<< "Initializing BF data";
+    ss<< "Initializing BF data";
     notify(ss.str(), 0, Observable::UpdateProgressMessage);
 
     TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
@@ -106,42 +110,42 @@ int HAADF_ReconstructionEngine::initializeBrightFieldData()
     dataReader->execute();
     if(dataReader->getErrorCondition() < 0)
     {
-    Flag1 = 0;
-  //Try one more time - if the sizes are not matches just read in the
-  //full BF sinogram
+      Flag1 = 0;
+      //Try one more time - if the sizes are not matches just read in the
+      //full BF sinogram
       m_BFTomoInputs->xStart = 0;
-    m_BFTomoInputs->xEnd = m_Sinogram->N_r-1;
-    m_BFTomoInputs->yStart = 0;
-    m_BFTomoInputs->yEnd = m_Sinogram->N_t-1;
-    m_BFTomoInputs->zStart = 0;
-    m_BFTomoInputs->zEnd = m_Sinogram->N_theta-1;
+      m_BFTomoInputs->xEnd = m_Sinogram->N_r-1;
+      m_BFTomoInputs->yStart = 0;
+      m_BFTomoInputs->yEnd = m_Sinogram->N_t-1;
+      m_BFTomoInputs->zStart = 0;
+      m_BFTomoInputs->zEnd = m_Sinogram->N_theta-1;
 
-    dataReader->setTomoInputs(m_BFTomoInputs);
-    dataReader->setSinogram(m_BFSinogram);
-    dataReader->setAdvParams(m_AdvParams);
-    dataReader->setObservers(getObservers());
-    dataReader->execute();
-    if(dataReader->getErrorCondition() < 0)
-    {
-      Flag2 = 0;
-    //	notify("Error reading Input Sinogram Data file", 100, Observable::UpdateProgressValueAndMessage);
-    //	setErrorCondition(dataReader->getErrorCondition());
-    //	return -1;
-    }
-    if(Flag1 == 0 && Flag2 == 0)
-    {
-     notify("Error reading Input Sinogram Data file", 100, Observable::UpdateErrorMessage);
-     setErrorCondition(dataReader->getErrorCondition());
-       return -1;
-    }
+      dataReader->setTomoInputs(m_BFTomoInputs);
+      dataReader->setSinogram(m_BFSinogram);
+      dataReader->setAdvParams(m_AdvParams);
+      dataReader->setObservers(getObservers());
+      dataReader->execute();
+      if(dataReader->getErrorCondition() < 0)
+      {
+        Flag2 = 0;
+        //	notify("Error reading Input Sinogram Data file", 100, Observable::UpdateProgressValueAndMessage);
+        //	setErrorCondition(dataReader->getErrorCondition());
+        //	return -1;
+      }
+      if(Flag1 == 0 && Flag2 == 0)
+      {
+        notify("Error reading Input Sinogram Data file", 100, Observable::UpdateErrorMessage);
+        setErrorCondition(dataReader->getErrorCondition());
+        return -1;
+      }
     }
 
-  if(m_BFSinogram->N_r != m_Sinogram->N_r || m_BFSinogram->N_t != m_Sinogram->N_t || m_BFSinogram->N_theta != m_Sinogram->N_theta)
-  {
-    notify("The two file sizes are not matched", 100,Observable::UpdateErrorMessage);
-    setErrorCondition(dataReader->getErrorCondition());
-    return -1;
-  }
+    if(m_BFSinogram->N_r != m_Sinogram->N_r || m_BFSinogram->N_t != m_Sinogram->N_t || m_BFSinogram->N_theta != m_Sinogram->N_theta)
+    {
+      notify("The two file sizes are not matched", 100,Observable::UpdateErrorMessage);
+      setErrorCondition(dataReader->getErrorCondition());
+      return -1;
+    }
 
     //Normalize the HAADF image
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
@@ -151,11 +155,11 @@ int HAADF_ReconstructionEngine::initializeBrightFieldData()
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
           //1000 is for Marc De Graef data which needed to multiplied
-        //  Real_t ttmp = (m_BFSinogram->counts->getValue(i_theta, i_r, i_t) * 1000);
-        //  m_Sinogram->counts->divideByValue(ttmp, i_theta, i_r, i_t);
+          //  Real_t ttmp = (m_BFSinogram->counts->getValue(i_theta, i_r, i_t) * 1000);
+          //  m_Sinogram->counts->divideByValue(ttmp, i_theta, i_r, i_t);
           //100 is for Marc De Graef data which needed to multiplied
-        //  m_BFSinogram->counts->multiplyByValue(100, i_theta, i_r, i_t);
-      m_BFSinogram->counts->setValue(m_BFSinogram->counts->getValue(i_theta, i_r, i_t)+BF_OFFSET,i_theta, i_r, i_t);
+          //  m_BFSinogram->counts->multiplyByValue(100, i_theta, i_r, i_t);
+          m_BFSinogram->counts->setValue(m_BFSinogram->counts->getValue(i_theta, i_r, i_t)+BF_OFFSET,i_theta, i_r, i_t);
         }
       }
     }
@@ -169,161 +173,6 @@ int HAADF_ReconstructionEngine::initializeBrightFieldData()
   return 0;
 }
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-int HAADF_ReconstructionEngine::createInitialGainsData()
-{
-  std::stringstream ss;
-  /* ********************* Initialize the Gains Array **************************/
-  size_t gains_dims[1] =
-  { m_Sinogram->N_theta };
-  m_Sinogram->InitialGain = RealArrayType::New(gains_dims, "sinogram->InitialGain");
-  if(m_TomoInputs->gainsInputFile.empty() == false)
-  {
-    // Read the initial Gains from a File
-    NuisanceParamReader::Pointer gainsInitializer = NuisanceParamReader::New();
-    gainsInitializer->setFileName(m_TomoInputs->gainsInputFile);
-    gainsInitializer->setData(m_Sinogram->InitialGain);
-    gainsInitializer->setSinogram(m_Sinogram);
-    gainsInitializer->setAdvParams(m_AdvParams);
-    gainsInitializer->setTomoInputs(m_TomoInputs);
-    gainsInitializer->setGeometry(m_Geometry);
-    gainsInitializer->setObservers(getObservers());
-    gainsInitializer->execute();
-    if(gainsInitializer->getErrorCondition() < 0)
-    {
-      notify("Error initializing Input Gains from Data file", 100, Observable::UpdateErrorMessage);
-      setErrorCondition(gainsInitializer->getErrorCondition());
-      return -1;
-    }
-  }
-  else
-  {
-    // Set the values to the target gain value set by the user
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      m_Sinogram->InitialGain->d[i_theta] = m_TomoInputs->targetGain;
-    }
-  }
-  /********************REMOVE************************/
-  ss << "HARD WIRED TARGET GAIN" << std::endl;
-  m_Sinogram->targetGain = m_TomoInputs->targetGain; //TARGET_GAIN;
-  ss << "Target Gain: " << m_Sinogram->targetGain << std::endl;
-  /*************************************************/
-
-  if (getVeryVerbose())
-  {
-    std::cout << ss.str() << std::endl;
-  }
-  return 0;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-int HAADF_ReconstructionEngine::createInitialOffsetsData()
-{
-  std::stringstream ss;
-  /* ********************* Initialize the Offsets Array **************************/
-  size_t offsets_dims[1] =
-  { m_Sinogram->N_theta };
-  m_Sinogram->InitialOffset = RealArrayType::New(offsets_dims, "sinogram->InitialOffset");
-  if(m_TomoInputs->offsetsInputFile.empty() == false)
-  {
-    // Read the initial offsets from a File
-    NuisanceParamReader::Pointer offsetsInitializer = NuisanceParamReader::New();
-    offsetsInitializer->setFileName(m_TomoInputs->offsetsInputFile);
-    offsetsInitializer->setData(m_Sinogram->InitialOffset);
-    offsetsInitializer->setSinogram(m_Sinogram);
-    offsetsInitializer->setAdvParams(m_AdvParams);
-    offsetsInitializer->setTomoInputs(m_TomoInputs);
-    offsetsInitializer->setGeometry(m_Geometry);
-    offsetsInitializer->setObservers(getObservers());
-    offsetsInitializer->execute();
-    if(offsetsInitializer->getErrorCondition() < 0)
-    {
-      notify("Error initializing Input Offsets from Data file", 100, Observable::UpdateErrorMessage);
-      setErrorCondition(offsetsInitializer->getErrorCondition());
-      return -1;
-    }
-  }
-  else if(m_TomoInputs->useDefaultOffset == true)
-  {
-    // Set the values to the default offset value set by the user
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      m_Sinogram->InitialOffset->d[i_theta] = m_TomoInputs->defaultOffset;
-    }
-  }
-  else
-  {
-    // Compute the initial offset values from the data
-    ComputeInitialOffsets::Pointer initializer = ComputeInitialOffsets::New();
-    initializer->setSinogram(m_Sinogram);
-    initializer->setTomoInputs(m_TomoInputs);
-    initializer->setAdvParams(m_AdvParams);
-    initializer->setObservers(getObservers());
-    initializer->setVerbose(getVerbose());
-    initializer->setVeryVerbose(getVeryVerbose());
-    initializer->execute();
-    if(initializer->getErrorCondition() < 0)
-    {
-      notify("Error initializing Input Offsets Data file", 100, Observable::UpdateErrorMessage);
-      setErrorCondition(initializer->getErrorCondition());
-      return -1;
-    }
-  }
-  return 0;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-int HAADF_ReconstructionEngine::createInitialVariancesData()
-{
-
-  /* ********************* Initialize the Variances Array **************************/
-  size_t variance_dims[1] =
-  { m_Sinogram->N_theta };
-  m_Sinogram->InitialVariance = RealArrayType::New(variance_dims, "sinogram->InitialVariance");
-  if(m_TomoInputs->varianceInputFile.empty() == false)
-  {
-    // Read the initial variances from a File
-    NuisanceParamReader::Pointer variancesInitializer = NuisanceParamReader::New();
-    variancesInitializer->setFileName(m_TomoInputs->varianceInputFile);
-    variancesInitializer->setData(m_Sinogram->InitialVariance);
-    variancesInitializer->setSinogram(m_Sinogram);
-    variancesInitializer->setTomoInputs(m_TomoInputs);
-    variancesInitializer->setGeometry(m_Geometry);
-    variancesInitializer->setAdvParams(m_AdvParams);
-    variancesInitializer->setObservers(getObservers());
-    variancesInitializer->setVerbose(getVerbose());
-    variancesInitializer->setVeryVerbose(getVeryVerbose());
-    variancesInitializer->execute();
-    if(variancesInitializer->getErrorCondition() < 0)
-    {
-      notify("Error initializing Input Variances from Data file", 100, Observable::UpdateErrorMessage);
-      setErrorCondition(variancesInitializer->getErrorCondition());
-      return -1;
-    }
-  }
-  else
-  {
-    std::stringstream ss;
-    for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    {
-      m_Sinogram->InitialVariance->d[i_theta] = m_TomoInputs->defaultVariance;
-      ss<< "Tilt: " << i_theta << "  Variance: " << m_Sinogram->InitialVariance->d[i_theta] << std::endl;
-    }
-    if (getVeryVerbose())
-    {
-      std::cout << ss.str() << std::endl;
-    }
-  }
-
-  return 0;
-}
 
 // -----------------------------------------------------------------------------
 // Initialize the Geometry data from a rough reconstruction
@@ -384,7 +233,7 @@ void HAADF_ReconstructionEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
       x = m_Geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
       z = m_Geometry->z0 + ((Real_t)i + 0.5) * m_TomoInputs->delta_xz;
       if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && z >= -m_TomoInputs->LengthZ / 2
-          && z <= m_TomoInputs->LengthZ / 2)
+         && z <= m_TomoInputs->LengthZ / 2)
       {
         Mask->setValue(1, i, j);
       }
@@ -458,54 +307,6 @@ void HAADF_ReconstructionEngine::gainAndOffsetInitialization(ScaleOffsetParamsPt
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADF_ReconstructionEngine::initializeHt(RealVolumeType::Pointer H_t)
-{
-  Real_t ProfileCenterT;
-  for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
-  {
-    for (unsigned int i = 0; i <m_AdvParams->DETECTOR_RESPONSE_BINS; i++)
-    {
-      ProfileCenterT = i * OffsetT;
-      if(m_TomoInputs->delta_xy >= m_Sinogram->delta_t)
-      {
-        if(ProfileCenterT <= ((m_TomoInputs->delta_xy / 2) - (m_Sinogram->delta_t / 2)))
-        {
-          H_t->setValue(m_Sinogram->delta_t, 0, k, i);
-        }
-        else
-        {
-          H_t->setValue(-1 * ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2, 0, k, i);
-        }
-        if(H_t->getValue(0, k, i) < 0)
-        {
-          H_t->setValue(0, 0, k, i);
-        }
-
-      }
-      else
-      {
-        if(ProfileCenterT <= m_Sinogram->delta_t / 2 - m_TomoInputs->delta_xy / 2)
-        {
-          H_t->setValue(m_TomoInputs->delta_xy, 0, k, i);
-        }
-        else
-        {
-          H_t->setValue(-ProfileCenterT + (m_TomoInputs->delta_xy / 2) + m_Sinogram->delta_t / 2, 0, k, i);
-        }
-
-        if(H_t->getValue(0, k, i) < 0)
-        {
-          H_t->setValue(0, 0, k, i);
-        }
-
-      }
-    }
-  }
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
 void HAADF_ReconstructionEngine::initializeVolume(RealVolumeType::Pointer Y_Est, double value)
 {
   for (uint16_t i = 0; i < m_Sinogram->N_theta; i++)
@@ -524,7 +325,7 @@ void HAADF_ReconstructionEngine::initializeVolume(RealVolumeType::Pointer Y_Est,
 //
 // -----------------------------------------------------------------------------
 void HAADF_ReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
-                                   std::vector<AMatrixCol::Pointer> &VoxelLineResponse)
+                                                    std::vector<AMatrixCol::Pointer> &VoxelLineResponse)
 {
   Real_t ProfileThickness = 0.0;
   Real_t y = 0.0;
@@ -568,13 +369,13 @@ void HAADF_ReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
     {
       center_t = ((Real_t)i_t + 0.5) * m_Sinogram->delta_t + m_Sinogram->T0;
       delta_t = fabs(center_t - t);
-      index_delta_t = static_cast<uint16_t>(floor(delta_t / OffsetT));
+      index_delta_t = static_cast<uint16_t>(floor(delta_t / m_DetectorParameters->getOffsetT()));
       if(index_delta_t < m_AdvParams->DETECTOR_RESPONSE_BINS)
       {
-        w3 = delta_t - (Real_t)(index_delta_t) * OffsetT;
-        w4 = ((Real_t)index_delta_t + 1) * OffsetT - delta_t;
+        w3 = delta_t - (Real_t)(index_delta_t) *  m_DetectorParameters->getOffsetT();
+        w4 = ((Real_t)index_delta_t + 1) *  m_DetectorParameters->getOffsetT() - delta_t;
         uint16_t ttmp = index_delta_t + 1 < m_AdvParams->DETECTOR_RESPONSE_BINS ? index_delta_t + 1 : m_AdvParams->DETECTOR_RESPONSE_BINS - 1;
-        ProfileThickness = (w4 / OffsetT) * H_t->getValue(0, 0, index_delta_t) + (w3 / OffsetT) * H_t->getValue(0, 0, ttmp);
+        ProfileThickness = (w4 / m_DetectorParameters->getOffsetT()) * H_t->getValue(0, 0, index_delta_t) + (w3 /  m_DetectorParameters->getOffsetT()) * H_t->getValue(0, 0, ttmp);
         //  ProfileThickness = (w4 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t]
         //  + (w3 / OffsetT) * detectorResponse->d[0][uint16_t(floor(m_Sinogram->N_theta/2))][index_delta_t + 1 <m_AdvParams->DETECTOR_RESPONSE_BINS ? index_delta_t + 1 :m_AdvParams->DETECTOR_RESPONSE_BINS - 1];
       }
@@ -593,7 +394,7 @@ void HAADF_ReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
         int32_t count = vlr->count;
         vlr->values[count] = ProfileThickness;
         vlr->index[count] = i_t;
-//        size_t dim0 = vlr->valuesPtr->getDims()[0];
+        //        size_t dim0 = vlr->valuesPtr->getDims()[0];
         vlr->setCount(count + 1);
       }
     }
@@ -614,10 +415,10 @@ void HAADF_ReconstructionEngine::calculateArithmeticMean()
 //
 // -----------------------------------------------------------------------------
 int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
-                                ScaleOffsetParamsPtr NuisanceParams,
-                                RealVolumeType::Pointer ErrorSino,
-                                RealVolumeType::Pointer Y_Est,
-                                CostData::Pointer cost)
+                                                ScaleOffsetParamsPtr NuisanceParams,
+                                                RealVolumeType::Pointer ErrorSino,
+                                                RealVolumeType::Pointer Y_Est,
+                                                CostData::Pointer cost)
 {
   std::stringstream ss;
   std::string indent("  ");
@@ -657,10 +458,10 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
       Real_t b = 0;
       Real_t c = 0;
       Real_t d = 0;
-//  DATA_TYPE e = 0;
+      //  DATA_TYPE e = 0;
       Real_t numerator_sum = 0;
       Real_t denominator_sum = 0;
-//  DATA_TYPE temp = 0.0;
+      //  DATA_TYPE temp = 0.0;
 
       //compute the parameters of the quadratic for each view
       for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
@@ -732,9 +533,9 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
       sum += (Qk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta]
-          + 2 * Qk_cost->getValue(i_theta, 1) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta]
-          + NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->getValue(i_theta, 2)
-          - 2 * (bk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]); //evaluating the cost function
+              + 2 * Qk_cost->getValue(i_theta, 1) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta]
+              + NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->getValue(i_theta, 2)
+              - 2 * (bk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]); //evaluating the cost function
     }
     sum /= 2;
     printf("The value of the data match error prior to updating the I and mu =%lf\n", sum);
@@ -749,7 +550,7 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
     {
       sum1 += (1.0 / (Qk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d2->d[i_theta]));
       sum2 += ((bk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d1->d[i_theta])
-          / (Qk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d2->d[i_theta]));
+               / (Qk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d2->d[i_theta]));
     }
     Real_t LagrangeMultiplier = (-m_Sinogram->N_theta * m_Sinogram->targetGain + sum2) / sum1;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
@@ -784,9 +585,9 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
       sum += (Qk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->I_0->d[i_theta])
-      + (2 * Qk_cost->getValue(i_theta, 1) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta])
-      + (NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->getValue(i_theta, 2))
-      - (2 * (bk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]); //evaluating the cost function
+          + (2 * Qk_cost->getValue(i_theta, 1) * NuisanceParams->I_0->d[i_theta] * NuisanceParams->mu->d[i_theta])
+          + (NuisanceParams->mu->d[i_theta] * NuisanceParams->mu->d[i_theta] * Qk_cost->getValue(i_theta, 2))
+          - (2 * (bk_cost->getValue(i_theta, 0) * NuisanceParams->I_0->d[i_theta] + NuisanceParams->mu->d[i_theta] * bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]); //evaluating the cost function
     }
     sum /= 2;
 
@@ -858,7 +659,7 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
 
       NuisanceParams->mu->d[i_theta] += alpha;
       if(getVeryVerbose()) {
-            std::cout << "Theta: " << i_theta << " Mu: " << NuisanceParams->mu->d[i_theta] << std::endl;
+        std::cout << "Theta: " << i_theta << " Mu: " << NuisanceParams->mu->d[i_theta] << std::endl;
       }
     }
 #ifdef COST_CALCULATE
@@ -885,9 +686,9 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
 // -----------------------------------------------------------------------------
 
 void HAADF_ReconstructionEngine::calculateMeasurementWeight(RealVolumeType::Pointer Weight,
-                                           ScaleOffsetParamsPtr NuisanceParams,
-                                           RealVolumeType::Pointer ErrorSino,
-                                           RealVolumeType::Pointer Y_Est)
+                                                            ScaleOffsetParamsPtr NuisanceParams,
+                                                            RealVolumeType::Pointer ErrorSino,
+                                                            RealVolumeType::Pointer Y_Est)
 {
   Real_t checksum = 0;
   START_TIMER;
@@ -939,7 +740,7 @@ void HAADF_ReconstructionEngine::calculateMeasurementWeight(RealVolumeType::Poin
 #ifdef DEBUG
         if(Weight->d[weight_idx] < 0)
         {
-        //  std::cout << m_Sinogram->counts->d[counts_idx] << "    " << NuisanceParams->alpha->d[i_theta] << std::endl;
+          //  std::cout << m_Sinogram->counts->d[counts_idx] << "    " << NuisanceParams->alpha->d[i_theta] << std::endl;
         }
 #endif//Debug
 
@@ -967,8 +768,8 @@ void HAADF_ReconstructionEngine::calculateMeasurementWeight(RealVolumeType::Poin
 //
 // -----------------------------------------------------------------------------
 int HAADF_ReconstructionEngine::calculateCost(CostData::Pointer cost,
-                             RealVolumeType::Pointer Weight,
-                             RealVolumeType::Pointer ErrorSino)
+                                              RealVolumeType::Pointer Weight,
+                                              RealVolumeType::Pointer ErrorSino)
 {
   Real_t cost_value = computeCost(ErrorSino, Weight);
   std::cout << "cost_value: " << cost_value << std::endl;
@@ -985,8 +786,8 @@ int HAADF_ReconstructionEngine::calculateCost(CostData::Pointer cost,
 // Updating the Weights for Noise Model
 // -----------------------------------------------------------------------------
 void HAADF_ReconstructionEngine::updateWeights(RealVolumeType::Pointer Weight,
-                              ScaleOffsetParamsPtr NuisanceParams,
-                              RealVolumeType::Pointer ErrorSino)
+                                               ScaleOffsetParamsPtr NuisanceParams,
+                                               RealVolumeType::Pointer ErrorSino)
 {
   Real_t AverageVarUpdate = 0; //absolute sum of the gain updates
   Real_t AverageMagVar = 0; //absolute sum of the initial gains
@@ -1072,224 +873,29 @@ void HAADF_ReconstructionEngine::updateWeights(RealVolumeType::Pointer Weight,
   notify("Update Weights Complete", 0, Observable::UpdateProgressMessage);
 }
 
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void HAADF_ReconstructionEngine::writeNuisanceParameters(ScaleOffsetParamsPtr NuisanceParams)
-{
-  NuisanceParamWriter::Pointer nuisanceBinWriter = NuisanceParamWriter::New();
-  nuisanceBinWriter->setSinogram(m_Sinogram);
-  nuisanceBinWriter->setTomoInputs(m_TomoInputs);
-  nuisanceBinWriter->setAdvParams(m_AdvParams);
-  nuisanceBinWriter->setObservers(getObservers());
-//  nuisanceBinWriter->setNuisanceParams(NuisanceParams.get());
-  if(m_AdvParams->JOINT_ESTIMATION)
-  {
-    nuisanceBinWriter->setFileName(m_TomoInputs->gainsOutputFile);
-    nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_I_O);
-    nuisanceBinWriter->execute();
-    if(nuisanceBinWriter->getErrorCondition() < 0)
-    {
-      setErrorCondition(-1);
-      notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateErrorMessage);
-    }
-
-    nuisanceBinWriter->setFileName(m_TomoInputs->offsetsOutputFile);
-    nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_mu);
-    nuisanceBinWriter->execute();
-    if(nuisanceBinWriter->getErrorCondition() < 0)
-    {
-      setErrorCondition(-1);
-      notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateErrorMessage);
-    }
-  }
-
-  if(m_AdvParams->NOISE_MODEL)
-  {
-    nuisanceBinWriter->setFileName(m_TomoInputs->varianceOutputFile);
-    nuisanceBinWriter->setDataToWrite(NuisanceParamWriter::Nuisance_alpha);
-    nuisanceBinWriter->execute();
-    if(nuisanceBinWriter->getErrorCondition() < 0)
-    {
-      setErrorCondition(-1);
-      notify(nuisanceBinWriter->getErrorMessage().c_str(), 100, Observable::UpdateErrorMessage);
-    }
-  } //Noise Model
-
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void HAADF_ReconstructionEngine::writeSinogramFile(ScaleOffsetParamsPtr NuisanceParams, RealVolumeType::Pointer Final_Sinogram)
-{
-  // Write the Sinogram out to a file
-  SinogramBinWriter::Pointer sinogramWriter = SinogramBinWriter::New();
-  sinogramWriter->setSinogram(m_Sinogram);
-  sinogramWriter->setTomoInputs(m_TomoInputs);
-  sinogramWriter->setAdvParams(m_AdvParams);
-  sinogramWriter->setObservers(getObservers());
-//  sinogramWriter->setNuisanceParams(NuisanceParams);
-  sinogramWriter->setData(Final_Sinogram);
-  sinogramWriter->execute();
-  if (sinogramWriter->getErrorCondition() < 0)
-  {
-    setErrorCondition(-1);
-    notify(sinogramWriter->getErrorMessage().c_str(), 100, Observable::UpdateErrorMessage);
-  }
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void HAADF_ReconstructionEngine::writeReconstructionFile(const std::string &filepath)
-{
-  // Write the Reconstruction out to a file
-  RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
-  writer->setGeometry(m_Geometry);
-  writer->setFilePath(filepath);
-  writer->setAdvParams(m_AdvParams);
-  writer->setObservers(getObservers());
-  writer->execute();
-  if (writer->getErrorCondition() < 0)
-  {
-    setErrorCondition(writer->getErrorCondition());
-    notify("Error Writing the Raw Geometry", 100, Observable::UpdateErrorMessage);
-  }
-
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void HAADF_ReconstructionEngine::writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd)
-{
-  std::stringstream ss;
-  ss << "Writing VTK file to '" << vtkFile << "'";
-  notify(ss.str(), 0, Observable::UpdateProgressMessage);
-
-  VTKStructuredPointsFileWriter vtkWriter;
-  vtkWriter.setWriteBinaryFiles(true);
-
-
-  DimsAndRes dimsAndRes;
-  dimsAndRes.xStart = cropStart;
-  dimsAndRes.xEnd = cropEnd;
-  dimsAndRes.yStart = 0;
-  dimsAndRes.yEnd = m_Geometry->N_y;
-  dimsAndRes.zStart = 0;
-  dimsAndRes.zEnd = m_Geometry->N_z;
-  dimsAndRes.resx = 1.0f;
-  dimsAndRes.resy = 1.0f;
-  dimsAndRes.resz = 1.0f;
-
-  std::vector<VtkScalarWriter*> scalarsToWrite;
-
-  VtkScalarWriter* w0 = static_cast<VtkScalarWriter*>(new TomoOutputScalarWriter(m_Geometry.get()));
-  w0->setXDims(cropStart, cropEnd);
-  w0->setYDims(0, m_Geometry->N_y);
-  w0->setZDims(0, m_Geometry->N_z);
-  w0->setWriteBinaryFiles(true);
-  scalarsToWrite.push_back(w0);
-
-  int error = vtkWriter.write<DimsAndRes>(vtkFile, &dimsAndRes, scalarsToWrite);
-  if(error < 0)
-  {
-    ss.str("");
-    ss << "Error writing vtk file\n    '" << vtkFile << "'" << std::endl;
-    setErrorCondition(-12);
-    notify(ss.str(), 0, Observable::UpdateErrorMessage);
-  }
-  delete w0;
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void HAADF_ReconstructionEngine::writeMRCFile(const std::string &mrcFile, uint16_t cropStart, uint16_t cropEnd)
-{
-  /* Write the output to the MRC File */
-  std::stringstream ss;
-  ss.str("");
-  ss << "Writing MRC file to '" << mrcFile << "'";
-  notify(ss.str(), 0, Observable::UpdateProgressMessage);
-
-  MRCWriter::Pointer mrcWriter = MRCWriter::New();
-  mrcWriter->setOutputFile(mrcFile);
-  mrcWriter->setGeometry(m_Geometry);
-  mrcWriter->setAdvParams(m_AdvParams);
-  mrcWriter->setXDims(cropStart, cropEnd);
-  mrcWriter->setYDims(0, m_Geometry->N_y);
-  mrcWriter->setZDims(0, m_Geometry->N_z);
-  mrcWriter->setObservers(getObservers());
-  mrcWriter->execute();
-  if(mrcWriter->getErrorCondition() < 0)
-  {
-    ss.str("");
-    ss << "Error writing MRC file\n    '" << mrcFile << "'" << std::endl;
-    setErrorCondition(mrcWriter->getErrorCondition());
-    notify(ss.str(), 0, Observable::UpdateErrorMessage);
-  }
-
-}
-
-// -----------------------------------------------------------------------------
-//
-// -----------------------------------------------------------------------------
-void HAADF_ReconstructionEngine::writeAvizoFile(const std::string &file, uint16_t cropStart, uint16_t cropEnd)
-{
-  //  std::cout << "Writing Avizo file " << file << std::endl;
-
-  /* Write the output to the Avizo File */
-  std::stringstream ss;
-  ss.str("");
-  ss << "Writing Avizo file to '" << file << "'";
-  notify(ss.str(), 0, Observable::UpdateProgressMessage);
-
-  AvizoUniformCoordinateWriter::Pointer writer = AvizoUniformCoordinateWriter::New();
-  writer->setOutputFile(file);
-  writer->setGeometry(m_Geometry);
-  writer->setAdvParams(m_AdvParams);
-  writer->setTomoInputs(m_TomoInputs);
-  writer->setXDims(cropStart, cropEnd);
-  writer->setYDims(0, m_Geometry->N_y);
-  writer->setZDims(0, m_Geometry->N_z);
-  writer->setObservers(getObservers());
-  writer->setWriteBinaryFile(true);
-  writer->execute();
-  if(writer->getErrorCondition() < 0)
-  {
-    ss.str("");
-    ss << "Error writing Avizo file\n    '" << file << "'" << std::endl;
-    setErrorCondition(writer->getErrorCondition());
-    notify(ss.str(), 0, Observable::UpdateErrorMessage);
-  }
-
-}
-
 #ifdef BF_RECON
 void HAADF_ReconstructionEngine::processRawCounts()
 {
-    Real_t mean=0;
-    for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
+  Real_t mean=0;
+  for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
+  {
+    for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
     {
-        for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
-        {
-            for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
-            {
-                size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
-                m_Sinogram->counts->d[counts_idx] += BF_OFFSET;
-                m_Sinogram->counts->d[counts_idx] = -log(m_Sinogram->counts->d[counts_idx]/BF_MAX);
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+        size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
+        m_Sinogram->counts->d[counts_idx] += BF_OFFSET;
+        m_Sinogram->counts->d[counts_idx] = -log(m_Sinogram->counts->d[counts_idx]/BF_MAX);
 
-                if(m_Sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
-                    m_Sinogram->counts->d[counts_idx] = 0;
+        if(m_Sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
+          m_Sinogram->counts->d[counts_idx] = 0;
 
-                mean+=m_Sinogram->counts->d[counts_idx];
-            }
-        }
+        mean+=m_Sinogram->counts->d[counts_idx];
+      }
     }
-    mean/=(m_Sinogram->N_theta*m_Sinogram->N_r*m_Sinogram->N_t);
-    std::cout<<"Mean log value ="<<mean<<std::endl;
+  }
+  mean/=(m_Sinogram->N_theta*m_Sinogram->N_r*m_Sinogram->N_t);
+  std::cout<<"Mean log value ="<<mean<<std::endl;
 }
 
 #endif //BF Recon

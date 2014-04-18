@@ -58,8 +58,8 @@ class MBIRLib_EXPORT ComputeInitialOffsets : public TomoFilter
 {
   public:
     MXA_SHARED_POINTERS(ComputeInitialOffsets)
-    MXA_STATIC_NEW_MACRO(ComputeInitialOffsets);
-    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, ComputeInitialOffsets);
+    MXA_STATIC_NEW_MACRO(ComputeInitialOffsets)
+    MXA_STATIC_NEW_SUPERCLASS(TomoFilter, ComputeInitialOffsets)
     MXA_TYPE_MACRO_SUPER(ComputeInitialOffsets, TomoFilter)
 
     virtual ~ComputeInitialOffsets();

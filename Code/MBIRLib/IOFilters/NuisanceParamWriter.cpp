@@ -105,6 +105,16 @@ void NuisanceParamWriter::execute()
     return;
   }
 
+  if(NULL == m_Data.get() || NULL == m_Data->d)
+  {
+    ss.str("");
+    ss << "NuisanceBinWriter: Writing " << printTitle << " Data. The array to write was NULL";
+    setErrorCondition(-1);
+    setErrorMessage(ss.str());
+    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+    return;
+  }
+
   FILE* file = fopen(m_FileName.c_str(), "wb");
 
   if(file == NULL)
@@ -116,17 +126,6 @@ void NuisanceParamWriter::execute()
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
   }
-
-  if(NULL == m_Data.get() || NULL == m_Data->d)
-  {
-    ss.str("");
-    ss << "NuisanceBinWriter: Writing " << printTitle << " Data. The array to write was NULL";
-    setErrorCondition(-1);
-    setErrorMessage(ss.str());
-    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-    return;
-  }
-
 
   ss.str("");
   ss << "Writing Nuisance Parameter '" << printTitle << "' to File: '" << m_FileName << "'";

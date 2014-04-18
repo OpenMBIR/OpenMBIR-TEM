@@ -13,6 +13,7 @@
 set (MBIRLib_HAADF_SRCS
   ${MBIRLib_SOURCE_DIR}/HAADF/HAADF_QGGMRFPriorModel.cpp
   ${MBIRLib_SOURCE_DIR}/HAADF/HAADF_MultiResolutionReconstruction.cpp
+  ${MBIRLib_SOURCE_DIR}/HAADF/HAADF_ForwardModel.cpp
   ${MBIRLib_SOURCE_DIR}/HAADF/HAADF_ForwardProject.cpp
   ${MBIRLib_SOURCE_DIR}/HAADF/HAADF_ReconstructionEngine.cpp
   ${MBIRLib_SOURCE_DIR}/HAADF/HAADF_ReconstructionEngine_UpdateVoxels.cpp
@@ -21,6 +22,7 @@ set (MBIRLib_HAADF_SRCS
 
 set (MBIRLib_HAADF_HDRS
     ${MBIRLib_SOURCE_DIR}/HAADF/HAADFConstants.h
+    ${MBIRLib_SOURCE_DIR}/HAADF/HAADF_ForwardModel.h
     ${MBIRLib_SOURCE_DIR}/HAADF/HAADF_QGGMRFPriorModel.h
     ${MBIRLib_SOURCE_DIR}/HAADF/HAADF_MultiResolutionReconstruction.h
     ${MBIRLib_SOURCE_DIR}/HAADF/HAADF_ForwardProject.h

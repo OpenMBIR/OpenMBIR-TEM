@@ -385,10 +385,18 @@ void HAADF_MultiResolutionReconstruction::execute()
     GeometryPtr geometry = GeometryPtr(new Geometry);
     ScaleOffsetParamsPtr nuisanceParams = ScaleOffsetParamsPtr(new ScaleOffsetParams);
 
+
     HAADF_ReconstructionEngine::InitializeSinogram(sinogram);
     HAADF_ReconstructionEngine::InitializeGeometry(geometry);
     HAADF_ReconstructionEngine::InitializeScaleOffsetParams(nuisanceParams);
     HAADF_ReconstructionEngine::InitializeSinogram(bf_sinogram);
+
+    HAADF_ForwardModel::Pointer forwardModel = HAADF_ForwardModel::New();
+    forwardModel->setAdvParams(getAdvParams());
+    forwardModel->setTomoInputs(inputs);
+    forwardModel->setSinogram(sinogram);
+    forwardModel->setGeometry(geometry);
+    forwardModel->addObserver(this);
 
     //This load the pixel size from a user based input if the headers are NOT FEI compliant
     //If the header is FEI compliant, this value WILL be overwritten in HAADF_ReconstructionEngine.cpp
@@ -408,6 +416,7 @@ void HAADF_MultiResolutionReconstruction::execute()
     engine->setNuisanceParams(nuisanceParams);
     engine->setBFTomoInputs(bf_inputs);
     engine->setBFSinogram(bf_sinogram);
+    engine->setForwardModel(forwardModel);
     // We need to get messages to the gui or command line
     engine->addObserver(this);
     engine->setMessagePrefix(StringUtils::numToString(inputs->interpolateFactor / static_cast<int>(powf(2.0f, i))) + std::string("x: "));
@@ -446,7 +455,7 @@ void HAADF_MultiResolutionReconstruction::execute()
   {
     for(size_t i = 0; i < tempFiles.size(); ++i)
     {
-       // std::cout << "Removing: " << tempFiles[i] << std::endl;
+        std::cout << "Removing: " << tempFiles[i] << std::endl;
         if(MXADir::isDirectory(tempFiles[i]) == true )
         {
             errno = 0;
