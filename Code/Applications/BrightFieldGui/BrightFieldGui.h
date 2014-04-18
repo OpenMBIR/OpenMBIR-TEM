@@ -452,7 +452,7 @@ private slots:
     void startReconstruction(bool fullReconstruction);
 
 private:
-    LayersDockWidget*        m_LayersPalette;
+  //  LayersDockWidget*        m_LayersPalette;
     QMap<QObject*, QWidget*> m_TasksMap;
 
     QList<QWidget*>       m_WidgetList;

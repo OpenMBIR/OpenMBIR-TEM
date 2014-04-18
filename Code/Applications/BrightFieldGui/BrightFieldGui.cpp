@@ -169,7 +169,7 @@ static int tiffCount;
 BrightFieldGui::BrightFieldGui(QWidget *parent) :
   QMainWindow(parent),
   m_OutputExistsCheck(false),
-  m_LayersPalette(NULL),
+  //m_LayersPalette(NULL),
   m_WorkerThread(NULL),
   m_MultiResSOC(NULL),
   m_SingleSliceReconstructionActive(false),
@@ -1492,7 +1492,7 @@ void BrightFieldGui::openRecentBaseImageFile()
 // -----------------------------------------------------------------------------
 void BrightFieldGui::on_actionLayers_Palette_triggered()
 {
-  m_LayersPalette->show();
+ // m_LayersPalette->show();
 }
 
 // -----------------------------------------------------------------------------

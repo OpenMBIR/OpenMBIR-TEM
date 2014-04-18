@@ -133,7 +133,7 @@ static int tiffCount;
 TEMBIRGui::TEMBIRGui(QWidget *parent) :
   QMainWindow(parent),
   m_OutputExistsCheck(false),
-  m_LayersPalette(NULL),
+  //m_LayersPalette(NULL),
   m_WorkerThread(NULL),
   m_MultiResSOC(NULL),
   m_SingleSliceReconstructionActive(false),
@@ -1489,7 +1489,7 @@ void TEMBIRGui::openRecentBaseImageFile()
 // -----------------------------------------------------------------------------
 void TEMBIRGui::on_actionLayers_Palette_triggered()
 {
-  m_LayersPalette->show();
+  //m_LayersPalette->show();
 }
 
 // -----------------------------------------------------------------------------
