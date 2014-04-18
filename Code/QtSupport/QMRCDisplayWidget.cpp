@@ -431,20 +431,20 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
         return;
   }
 
-  QIntValidator* validator = NULL;
+  QDoubleValidator* validator = NULL;
   switch(header.mode)
   {
     case 0: /* unsigned or signed bytes depending on flag in imodStamp */
       validator = NULL;
       break;
     case 1: /* signed short integers (16 bits) */
-      validator = new QIntValidator(std::numeric_limits<qint16>::min(), std::numeric_limits<qint16>::max(), minimumField);
+      validator = new QDoubleValidator((double)(std::numeric_limits<qint16>::min()), (double)(std::numeric_limits<qint16>::max()), 6, minimumField);
       break;
     case 2: /* float */
-      validator = new QIntValidator(std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), minimumField);
+      validator = new QDoubleValidator((double)(std::numeric_limits<float>::min()), (double)(std::numeric_limits<float>::max()), 6, minimumField);
       break;
     case 6: /* unsigned 16-bit integers (non-standard) */
-      validator = new QIntValidator(std::numeric_limits<quint16>::min(), std::numeric_limits<quint16>::max(), minimumField);
+      validator = new QDoubleValidator((double)(std::numeric_limits<quint16>::min()), (double)(std::numeric_limits<quint16>::max()), 6, minimumField);
       break;
     default:
       validator = NULL;
