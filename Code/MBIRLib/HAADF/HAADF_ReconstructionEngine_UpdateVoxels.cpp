@@ -88,8 +88,8 @@ class UpdateYSlice
                  GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
                  SinogramPtr  sinogram, SinogramPtr  bfSinogram,
                  std::vector<AMatrixCol::Pointer> &tempCol,
-                 RealVolumeType::Pointer errorSino,
-                 RealVolumeType::Pointer weight,
+                 RealVolumeType* errorSino,
+                 RealVolumeType* weight,
                  std::vector<AMatrixCol::Pointer> &voxelLineResponse,
                  HAADF_ForwardModel* forwardModel,
                  UInt8Image_t::Pointer mask,
@@ -224,6 +224,9 @@ class UpdateYSlice
           m_VisitCount->setValue(1, j_new, k_new);
           ArraySize--;
           Index = j_new * m_Geometry->N_x + k_new; //This index pulls out the apprppriate index corresponding to
+
+          AMatrixCol* tempCol = m_TempCol[Index].get(); // Get a local pointer to avoid over head of boost shared_ptr function calling
+
           //the voxel line (j_new,k_new)
 #endif //Random Order updates
           int shouldInitNeighborhood = 0;
@@ -253,9 +256,12 @@ class UpdateYSlice
             int32_t errorcode = -1;
             size_t Index = j_new * m_Geometry->N_x + k_new;
             Real_t low = 0.0, high = 0.0;
-
+            tempCol = m_TempCol[Index].get(); // Update the tempCol variable with the new 'Index' value
             for (int32_t i = m_YStart; i < m_YEnd; i++) //slice index
             {
+              // Get some loop specific variables to reduce function overhead in these tight loops
+              AMatrixCol* voxelLineResponse = m_VoxelLineResponse[i].get();
+              Real_t* i_0 = m_ForwardModel->getI_0()->d;
 
               //Neighborhood of (i,j,k) should be initialized to zeros each time
               ::memset(NEIGHBORHOOD, 0, 27*sizeof(Real_t));
@@ -334,17 +340,17 @@ class UpdateYSlice
               if(ZSFlag == false)
               {
 
-                for (uint32_t q = 0; q < m_TempCol[Index]->count; q++)
+                for (uint32_t q = 0; q < tempCol->count; q++)
                 {
-                  uint16_t i_theta = floor(static_cast<float>(m_TempCol[Index]->index[q] / (m_Sinogram->N_r)));
-                  uint16_t i_r = (m_TempCol[Index]->index[q] % (m_Sinogram->N_r));
-                  Real_t kConst0 = m_ForwardModel->getI_0()->d[i_theta] * (m_TempCol[Index]->values[q]);
+                  uint16_t i_theta = floor(static_cast<float>(tempCol->index[q] / (m_Sinogram->N_r)));
+                  uint16_t i_r = (tempCol->index[q] % (m_Sinogram->N_r));
+                  Real_t kConst0 = i_0[i_theta] * (tempCol->values[q]);
                   uint16_t VoxelLineAccessCounter = 0;
-                  uint32_t vlrCount = m_VoxelLineResponse[i]->index[0] + m_VoxelLineResponse[i]->count;
-                  for (uint32_t i_t = m_VoxelLineResponse[i]->index[0]; i_t < vlrCount; i_t++)
+                  uint32_t vlrCount = voxelLineResponse->index[0] + voxelLineResponse->count;
+                  for (uint32_t i_t = voxelLineResponse->index[0]; i_t < vlrCount; i_t++)
                   {
                     size_t error_idx = m_ErrorSino->calcIndex(i_theta, i_r, i_t);
-                    Real_t ProjectionEntry = kConst0 * m_VoxelLineResponse[i]->values[VoxelLineAccessCounter];
+                    Real_t ProjectionEntry = kConst0 * voxelLineResponse->values[VoxelLineAccessCounter];
                     if(m_ForwardModel->getBF_Flag() == false)
                     {
                       THETA2 += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
@@ -414,17 +420,20 @@ class UpdateYSlice
                 }
 #endif
                 Real_t kConst2 = 0.0;
+                // Get the current AMatrixCol to reduce function overhead in this tight loop
+                uint32_t end = voxelLineResponse->index[0] + voxelLineResponse->count;
+
                 //Update the ErrorSinogram
-                for (uint32_t q = 0; q < m_TempCol[Index]->count; q++)
+                for (uint32_t q = 0; q < tempCol->count; q++)
                 {
-                  uint16_t i_theta = floor(static_cast<float>(m_TempCol[Index]->index[q] / (m_Sinogram->N_r)));
-                  uint16_t i_r = (m_TempCol[Index]->index[q] % (m_Sinogram->N_r));
+                  uint16_t i_theta = floor(static_cast<float>(tempCol->index[q] / (m_Sinogram->N_r)));
+                  uint16_t i_r = (tempCol->index[q] % (m_Sinogram->N_r));
                   uint16_t VoxelLineAccessCounter = 0;
-                  for (uint32_t i_t = m_VoxelLineResponse[i]->index[0]; i_t < m_VoxelLineResponse[i]->index[0] + m_VoxelLineResponse[i]->count; i_t++)
+
+                  for (uint32_t i_t = voxelLineResponse->index[0]; i_t < end; i_t++)
                   {
                     size_t error_idx = m_ErrorSino->calcIndex(i_theta, i_r, i_t);
-                    kConst2 = (m_ForwardModel->getI_0()->d[i_theta]
-                        * (m_TempCol[Index]->values[q] * m_VoxelLineResponse[i]->values[VoxelLineAccessCounter] * (UpdatedVoxelValue - m_CurrentVoxelValue)));
+                    kConst2 = (i_0[i_theta] * (tempCol->values[q] * voxelLineResponse->values[VoxelLineAccessCounter] * (UpdatedVoxelValue - m_CurrentVoxelValue)));
                     if(m_ForwardModel->getBF_Flag() == false)
                     {
                       m_ErrorSino->d[error_idx] -= kConst2;
@@ -481,15 +490,15 @@ class UpdateYSlice
     SinogramPtr  m_Sinogram;
     SinogramPtr  m_BFSinogram;
     std::vector<AMatrixCol::Pointer> &m_TempCol;
-    RealVolumeType::Pointer m_ErrorSino;
-    RealVolumeType::Pointer m_Weight;
+    RealVolumeType* m_ErrorSino;
+    RealVolumeType* m_Weight;
     std::vector<AMatrixCol::Pointer> m_VoxelLineResponse;
     HAADF_ForwardModel* m_ForwardModel;
     UInt8Image_t::Pointer m_Mask;
     RealImageType::Pointer m_MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line
     UInt8Image_t::Pointer m_MagUpdateMask;
     QGGMRF::QGGMRF_Values* m_QggmrfValues;
-   unsigned int m_UpdateType;
+    unsigned int m_UpdateType;
 
     Real_t m_NH_Threshold;
 
@@ -649,7 +658,8 @@ uint8_t HAADF_ReconstructionEngine::updateVoxels(int16_t OuterIter, int16_t Iter
                                                          m_Geometry,
                                                          OuterIter, Iter, m_Sinogram,
                                                          m_BFSinogram, TempCol,
-                                                         ErrorSino, Weight, VoxelLineResponse,
+                                                         ErrorSino.get(),
+                                                         Weight.get(), VoxelLineResponse,
                                                          m_ForwardModel.get(), Mask,
                                                          MagUpdateMap, MagUpdateMask,
                                                          &m_QGGMRF_Values,
