@@ -1,0 +1,818 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MRCInfoWidget</class>
+ <widget class="QWidget" name="MRCInfoWidget">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>276</width>
+    <height>485</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MRC File Info</string>
+  </property>
+  <layout class="QFormLayout" name="formLayout">
+   <property name="fieldGrowthPolicy">
+    <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+   </property>
+   <property name="horizontalSpacing">
+    <number>8</number>
+   </property>
+   <property name="verticalSpacing">
+    <number>3</number>
+   </property>
+   <property name="margin">
+    <number>4</number>
+   </property>
+   <item row="0" column="0">
+    <widget class="QLabel" name="label">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>nx</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1">
+    <widget class="QLabel" name="nx">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>ny</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <widget class="QLabel" name="ny">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>nz</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QLabel" name="nz">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_7">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>mode</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_6">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>nx start</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="label_8">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>ny start</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="label_9">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>nz start</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="label_11">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>mx</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0">
+    <widget class="QLabel" name="label_10">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>my</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>mz</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="0">
+    <widget class="QLabel" name="label_14">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>x len</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0">
+    <widget class="QLabel" name="label_13">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>y len</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0">
+    <widget class="QLabel" name="label_12">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>z len</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="0">
+    <widget class="QLabel" name="label_17">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>Alpha</string>
+     </property>
+    </widget>
+   </item>
+   <item row="14" column="0">
+    <widget class="QLabel" name="label_16">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>Beta</string>
+     </property>
+    </widget>
+   </item>
+   <item row="15" column="0">
+    <widget class="QLabel" name="label_15">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>Gamma</string>
+     </property>
+    </widget>
+   </item>
+   <item row="16" column="0">
+    <widget class="QLabel" name="label_20">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>mapc</string>
+     </property>
+    </widget>
+   </item>
+   <item row="17" column="0">
+    <widget class="QLabel" name="label_19">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>mapr</string>
+     </property>
+    </widget>
+   </item>
+   <item row="18" column="0">
+    <widget class="QLabel" name="label_18">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>maps</string>
+     </property>
+    </widget>
+   </item>
+   <item row="19" column="0">
+    <widget class="QLabel" name="label_23">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>amin</string>
+     </property>
+    </widget>
+   </item>
+   <item row="20" column="0">
+    <widget class="QLabel" name="label_22">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>amax</string>
+     </property>
+    </widget>
+   </item>
+   <item row="21" column="0">
+    <widget class="QLabel" name="label_21">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>amean</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QLabel" name="mode">
+     <property name="toolTip">
+      <string>0 = unsigned or signed bytes depending on flag in imodStamp
+       only unsigned bytes before IMOD 4.2.23
+1 = signed short integers (16 bits)
+2 = float
+3 = short * 2, (used for complex data)
+4 = float * 2, (used for complex data)
+6 = unsigned 16-bit integers (non-standard)
+16 = unsigned char * 3 (for rgb data, non-standard)</string>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QLabel" name="nxstart">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QLabel" name="nystart">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1">
+    <widget class="QLabel" name="nzstart">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1">
+    <widget class="QLabel" name="mx">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="1">
+    <widget class="QLabel" name="my">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="1">
+    <widget class="QLabel" name="mz">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="1">
+    <widget class="QLabel" name="xlen">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="1">
+    <widget class="QLabel" name="ylen">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="1">
+    <widget class="QLabel" name="zlen">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="1">
+    <widget class="QLabel" name="alpha">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="14" column="1">
+    <widget class="QLabel" name="beta">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="15" column="1">
+    <widget class="QLabel" name="gamma">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="16" column="1">
+    <widget class="QLabel" name="mapc">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="17" column="1">
+    <widget class="QLabel" name="mapr">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="18" column="1">
+    <widget class="QLabel" name="maps">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="19" column="1">
+    <widget class="QLabel" name="amin">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="20" column="1">
+    <widget class="QLabel" name="amax">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="21" column="1">
+    <widget class="QLabel" name="amean">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="22" column="0">
+    <widget class="QLabel" name="label_45">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>idtype</string>
+     </property>
+    </widget>
+   </item>
+   <item row="23" column="0">
+    <widget class="QLabel" name="label_46">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>lens</string>
+     </property>
+    </widget>
+   </item>
+   <item row="24" column="0">
+    <widget class="QLabel" name="label_47">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>nd1</string>
+     </property>
+    </widget>
+   </item>
+   <item row="25" column="0">
+    <widget class="QLabel" name="label_48">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>nd2</string>
+     </property>
+    </widget>
+   </item>
+   <item row="26" column="0">
+    <widget class="QLabel" name="label_49">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>vd1</string>
+     </property>
+    </widget>
+   </item>
+   <item row="27" column="0">
+    <widget class="QLabel" name="label_50">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>vd2</string>
+     </property>
+    </widget>
+   </item>
+   <item row="28" column="0">
+    <widget class="QLabel" name="label_51">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>x org</string>
+     </property>
+    </widget>
+   </item>
+   <item row="29" column="0">
+    <widget class="QLabel" name="label_52">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>y org</string>
+     </property>
+    </widget>
+   </item>
+   <item row="30" column="0">
+    <widget class="QLabel" name="label_53">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-weight: bold;
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>z org</string>
+     </property>
+    </widget>
+   </item>
+   <item row="22" column="1">
+    <widget class="QLabel" name="idtype">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="23" column="1">
+    <widget class="QLabel" name="lens">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="24" column="1">
+    <widget class="QLabel" name="nd1">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="25" column="1">
+    <widget class="QLabel" name="nd2">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="26" column="1">
+    <widget class="QLabel" name="vd1">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="27" column="1">
+    <widget class="QLabel" name="vd2">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="28" column="1">
+    <widget class="QLabel" name="xorg">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="29" column="1">
+    <widget class="QLabel" name="yorg">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+   <item row="30" column="1">
+    <widget class="QLabel" name="zorg">
+     <property name="styleSheet">
+      <string notr="true">QLabel {
+font-size: 10px;
+}</string>
+     </property>
+     <property name="text">
+      <string>0</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

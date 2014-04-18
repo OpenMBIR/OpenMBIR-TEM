@@ -200,7 +200,7 @@ add_subdirectory( ${PROJECT_CODE_DIR}/MXA ${PROJECT_BINARY_DIR}/MXA)
 add_subdirectory( ${PROJECT_CODE_DIR}/MBIRLib ${PROJECT_BINARY_DIR}/MBIRLib)
 
 add_subdirectory( ${PROJECT_CODE_DIR}/Applications/HAADFReconstruction ${PROJECT_BINARY_DIR}/Applications/HAADFReconstruction)
-
+add_subdirectory( ${PROJECT_CODE_DIR}/Applications/BFReconstruction ${PROJECT_BINARY_DIR}/Applications/BFReconstruction)
 add_subdirectory( ${PROJECT_CODE_DIR}/Applications/MRCSubset ${PROJECT_BINARY_DIR}/Applications/MRCSubset)
 
 # --------------------------------------------------------------------
@@ -255,7 +255,8 @@ if (OpenMBIR_BUILD_GUI)
     add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/QtSupport ${PROJECT_BINARY_DIR}/QtSupport)
    
     add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/Applications/TEMBIR ${PROJECT_BINARY_DIR}/Applications/TEMBIR)
-
+    add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/Applications/BrightFieldGui ${PROJECT_BINARY_DIR}/Applications/BrightFieldGui)
+    
 endif()
 
 
