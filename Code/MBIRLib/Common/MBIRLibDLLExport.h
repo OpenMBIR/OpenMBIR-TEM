@@ -51,7 +51,7 @@ projects by hand you need to define MBIRLib_EXPORTS when
 building the TomoLib DLL on windows.
 */
 
-#if defined (ReconstructionCoreLib_BUILT_AS_DYNAMIC_LIB)
+#if defined (MBIRLib_BUILT_AS_DYNAMIC_LIB)
 
   #if defined (MBIRLib_EXPORTS)  /* Compiling the MXA DLL/Dylib */
     #if defined (_MSC_VER)  /* MSVC Compiler Case */

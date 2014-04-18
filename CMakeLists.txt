@@ -195,10 +195,7 @@ include(${PROJECT_SOURCE_DIR}/License/License.cmake)
 
 # Add the MXA as a library project
 add_subdirectory( ${PROJECT_CODE_DIR}/MXA ${PROJECT_BINARY_DIR}/MXA)
-
-
 add_subdirectory( ${PROJECT_CODE_DIR}/MBIRLib ${PROJECT_BINARY_DIR}/MBIRLib)
-
 add_subdirectory( ${PROJECT_CODE_DIR}/Applications/HAADFReconstruction ${PROJECT_BINARY_DIR}/Applications/HAADFReconstruction)
 add_subdirectory( ${PROJECT_CODE_DIR}/Applications/BFReconstruction ${PROJECT_BINARY_DIR}/Applications/BFReconstruction)
 add_subdirectory( ${PROJECT_CODE_DIR}/Applications/MRCSubset ${PROJECT_BINARY_DIR}/Applications/MRCSubset)
@@ -221,12 +218,12 @@ add_subdirectory(${PROJECT_CODE_DIR}/Test ${PROJECT_BINARY_DIR}/Test)
 # Build the Qt Based GUI
 option(OpenMBIR_BUILD_GUI "Build the Qt Based Gui Application" ON)
 if (OpenMBIR_BUILD_GUI)
-# ------------------------------------------------------------------------------
-#  Qt 4 Section
-#  if we are going to build Qt based applications then we need to find Qt 4 first
-# ------------------------------------------------------------------------------
-# by default only QtCore and QtGui modules are enabled
-# other modules must be enabled like this:
+	# ------------------------------------------------------------------------------
+	#  Qt 4 Section
+	#  if we are going to build Qt based applications then we need to find Qt 4 first
+	# ------------------------------------------------------------------------------
+	# by default only QtCore and QtGui modules are enabled
+	# other modules must be enabled like this:
     IF (WIN32)
         SET (QT_USE_QTMAIN TRUE)
     ENDIF (WIN32)

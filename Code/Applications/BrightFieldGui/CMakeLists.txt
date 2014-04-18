@@ -11,17 +11,6 @@
 Project(BrightFieldGui)
 cmake_minimum_required(VERSION 2.8.6)
 
-# ------------------------------------------------------------------------------
-#  Qt 4 Section
-# ------------------------------------------------------------------------------
-if(QT4_FOUND)
-    include( ${QT_USE_FILE} )
-    CMP_COPY_QT4_RUNTIME_LIBRARIES( "QtSvg;QtScript" )
-    CMP_QT_LIBRARIES_INSTALL_RULES("QtSvg;QtScript" ".")
-else()
-    message(FATAL_ERROR "Qt 4 is Needed for this project.")
-endif(QT4_FOUND)
-
 # Set the GUI type for different platforms
 SET(GUI_TYPE )
 

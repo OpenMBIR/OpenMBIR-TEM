@@ -24,7 +24,7 @@ The current set of dependencies are:
 | Operating System | Compiler | Notes |  
 | ------------------------|--------------|---------|  
 | OS X 10.7/8/9 | Xcode  4.6.x & Xcode 5.x | OS X 10.9 requires Qt 4.8.6 |  
-| Windows x64 | VS 2010, VS2012,VS2013 |  |  
+| Windows x64 | VS 2010, VS2012,VS2013 |Static Libraries ONLY  |  
 | Linux x64 | GCC or Clang recent versions | Ubuntu 12.04 or above, CentOS 6.5 or greater |
 
 ## Known Issues ##
