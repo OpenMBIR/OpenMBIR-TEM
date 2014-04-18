@@ -216,12 +216,7 @@ void QMRCDisplayWidget::on_playBtn_clicked()
 {
   playBtn->setEnabled(false);
   stopBtn->setEnabled(true);
-  double rate = 500;
-  double update = 1.0 / rate * 1000.0;
-  this->m_StopAnimation = false;
-  m_AnimationTimer->setSingleShot(true);
-  m_AnimationTimer->start(static_cast<int>(update));
-
+  m_AnimationTimer->start(0);
 }
 
 // -----------------------------------------------------------------------------
@@ -287,13 +282,6 @@ void QMRCDisplayWidget::stepForwardFromTimer()
   {
     m_StopAnimation = true;
   }
-
-  //   qint32 currentIndex = framesPerSecComboBox->currentIndex();
-  double rate = 500;
-  double update = 1.0/rate * 1000.0;
-  m_AnimationTimer->setSingleShot(true);
-  m_AnimationTimer->start(static_cast<int>(update) );
-  QCoreApplication::processEvents();
 }
 
 // -----------------------------------------------------------------------------

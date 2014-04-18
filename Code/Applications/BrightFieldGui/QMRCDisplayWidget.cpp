@@ -131,15 +131,15 @@ QImage QMRCDisplayWidget::currentImage()
   m_GraphicsView->setZoomIndex(index);\
   }
 
-ZOOM_MENU_SLOT_DEF(10, 0);
-ZOOM_MENU_SLOT_DEF(25, 1);
-ZOOM_MENU_SLOT_DEF(50, 2);
-ZOOM_MENU_SLOT_DEF(100, 3);
-ZOOM_MENU_SLOT_DEF(125, 4);
-ZOOM_MENU_SLOT_DEF(150, 5);
-ZOOM_MENU_SLOT_DEF(200, 6);
-ZOOM_MENU_SLOT_DEF(400, 7);
-ZOOM_MENU_SLOT_DEF(600, 8);
+ZOOM_MENU_SLOT_DEF(10, 0)
+ZOOM_MENU_SLOT_DEF(25, 1)
+ZOOM_MENU_SLOT_DEF(50, 2)
+ZOOM_MENU_SLOT_DEF(100, 3)
+ZOOM_MENU_SLOT_DEF(125, 4)
+ZOOM_MENU_SLOT_DEF(150, 5)
+ZOOM_MENU_SLOT_DEF(200, 6)
+ZOOM_MENU_SLOT_DEF(400, 7)
+ZOOM_MENU_SLOT_DEF(600, 8)
 
 // -----------------------------------------------------------------------------
 //
@@ -216,12 +216,7 @@ void QMRCDisplayWidget::on_playBtn_clicked()
 {
   playBtn->setEnabled(false);
   stopBtn->setEnabled(true);
-  double rate = 500;
-  double update = 1.0 / rate * 1000.0;
-  this->m_StopAnimation = false;
-  m_AnimationTimer->setSingleShot(true);
-  m_AnimationTimer->start(static_cast<int>(update));
-
+  m_AnimationTimer->start(static_cast<int>(0));
 }
 
 // -----------------------------------------------------------------------------
@@ -287,13 +282,6 @@ void QMRCDisplayWidget::stepForwardFromTimer()
   {
     m_StopAnimation = true;
   }
-
-  //   qint32 currentIndex = framesPerSecComboBox->currentIndex();
-  double rate = 500;
-  double update = 1.0/rate * 1000.0;
-  m_AnimationTimer->setSingleShot(true);
-  m_AnimationTimer->start(static_cast<int>(update) );
-  QCoreApplication::processEvents();
 }
 
 // -----------------------------------------------------------------------------
