@@ -224,7 +224,7 @@ function UpdateDylibInstallName()
 }
 
 # -----------------------------------------------------------------------------
-#  uses install_name_tool to correct all the DEPENDENCIES of an input file
+#  uses install_name_tool to correct all the DEPENDENCIES of an input filew
 #  $1 is a linked library
 #  $2 is the executable in its final installed location
 # -----------------------------------------------------------------------------
@@ -262,7 +262,7 @@ function UpdateExecutableDependencies()
 # -----------------------------------------------------------------------------
 tmpFile="${TmpDir}/otool.out"
 otool -L "${ApplicationExe}" > "${tmpFile}"
-
+echo "Packaging Tool '${ApplicationName}' to thin architectures and include in download archive"
 i=0
 exec 9<"${tmpFile}"
 while read -u 9 line

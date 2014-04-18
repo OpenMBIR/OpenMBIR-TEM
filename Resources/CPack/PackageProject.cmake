@@ -69,7 +69,7 @@ SET(CPACK_PACKAGE_VERSION ${OpenMBIR_VERSION})
 #set(CPACK_COMPONENT_RUNTIME_REQUIRED 1)
 
 set(CPACK_PACKAGE_EXECUTABLES
-    TomoGui TomoGui MRCSubset MRCSubset MbirReconstruction MbirReconstruction)
+    TEMBIR TEMBIR MRCSubset MRCSubset BFReconstruction BFReconstruction BrightFieldGui BrightFieldGui HAADFReconstruction HAADFReconstruction)
 set(UPLOAD_FILE_NAME "")
 
 if(APPLE)
@@ -151,7 +151,7 @@ SET(CPACK_SOURCE_GENERATOR "TGZ")
 SET(CPACK_SOURCE_PACKAGE_FILE_NAME "OpenMBIR-${OpenMBIR_VERSION_SHORT}-Source")
 
 #-- Create a bash script file that will upload the latest version to the web server
-set (UPLOAD_FILE_NAME ${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz)
+set(UPLOAD_FILE_NAME ${CPACK_SOURCE_PACKAGE_FILE_NAME}.tar.gz)
 configure_file(${PROJECT_RESOURCES_DIR}/upload.sh.in
                ${PROJECT_BINARY_DIR}/src_upload.sh)
 
