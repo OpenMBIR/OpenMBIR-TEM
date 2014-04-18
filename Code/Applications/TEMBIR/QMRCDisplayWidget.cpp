@@ -521,6 +521,7 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
 
   // This will display the image in the graphics scene
   m_GraphicsView->loadBaseImageFile(m_CurrentImage);
+  m_GraphicsView->removeBackgroundSelector();
 
   // Calculate the approx memory usage
   emit memoryCalculationNeedsUpdated();
