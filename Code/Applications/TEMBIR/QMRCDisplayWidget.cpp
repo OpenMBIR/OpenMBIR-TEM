@@ -216,6 +216,7 @@ void QMRCDisplayWidget::on_playBtn_clicked()
 {
   playBtn->setEnabled(false);
   stopBtn->setEnabled(true);
+  m_StopAnimation = false;
   m_AnimationTimer->start(0);
 }
 
