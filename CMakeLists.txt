@@ -51,9 +51,9 @@ SET (PROJECT_INSTALL_HEADERS "0")
 SET (PROJECT_INSTALL_EXECUTABLES "0")
 
 #-------------------------------------------------------------------------------
-# Include the cmp project to perform all the basic configuration tests for the 
+# Include the cmp project to perform all the basic configuration tests for the
 # project.
-#------------------------------------------------------------------------------- 
+#-------------------------------------------------------------------------------
 set (CMP_HEADER_DIR ${OpenMBIR_BINARY_DIR}/DONOTUSE)
 set (CMP_INSTALL_FILES 1)
 set (CMP_CONFIGURED_FILES_SOURCE_DIR ${CMP_SOURCE_DIR}/ConfiguredFiles)
@@ -67,7 +67,7 @@ endif()
 
 
 # --------------------------------------------------------------------
-# In order to increment the version of DREAM3D simply adjust these variables.
+# In order to increment the version of OpenMBIR simply adjust these variables.
 # we are using a 3 part Version scheme commonly found in software development. The
 # example would be Version 2.1.6543 which translates to Version [major].[minor].[patch].
 # The Major version is set here in the CMake file. We will use Git
@@ -75,7 +75,7 @@ endif()
 # calculate how many commits since the last "tag" was applied to the repository.
 # this basically gives us an always incrementing number for the patch level
 # and we can set the Major and Minor versions as we see fit.
-set(CMP_VERSION_MAJOR "v1")
+set(CMP_VERSION_MAJOR "v2")
 
 # --------------------------------------------------------------------
 # Over ride CMake's built in module directory by prepending cmp's module
@@ -94,7 +94,7 @@ configure_file(${PROJECT_RESOURCES_DIR}/OpenMBIR/License.txt.in
                 ${PROJECT_BINARY_DIR}/License.txt )
 configure_file(${PROJECT_RESOURCES_DIR}/OpenMBIR/ReadMe.txt.in
                 ${PROJECT_BINARY_DIR}/ReadMe.txt )
-                
+
 # --------------------------------------------------------------------
 # Build shared libraries
 OPTION (BUILD_SHARED_LIBS "Build Shared Libraries" OFF)
@@ -157,7 +157,7 @@ if (OpenMBIR_USE_TIFF)
         if (HAVE_TIFF_DLL)
             CMP_COPY_DEPENDENT_LIBRARIES ("tiff")
             CMP_LIBRARIES_INSTALL_RULES ("tiff" "." )
-        endif()  
+        endif()
     else()
        message(STATUS "Tiff was asked to be used but was not located on your system. Tiff Support will be disabled")
        set(OpenMBIR_USE_TIFF "OFF")
@@ -226,7 +226,7 @@ if (OpenMBIR_BUILD_GUI)
 #  if we are going to build Qt based applications then we need to find Qt 4 first
 # ------------------------------------------------------------------------------
 # by default only QtCore and QtGui modules are enabled
-# other modules must be enabled like this:  
+# other modules must be enabled like this:
     IF (WIN32)
         SET (QT_USE_QTMAIN TRUE)
     ENDIF (WIN32)
@@ -242,21 +242,21 @@ if (OpenMBIR_BUILD_GUI)
     endif()
  #   message(STATUS "QT_INCLUDE_DIR: ${QT_INCLUDE_DIR}")
     # add some useful macros and variables
-    # (QT_USE_FILE is a variable defined by FIND_PACKAGE( Qt4 ) that 
+    # (QT_USE_FILE is a variable defined by FIND_PACKAGE( Qt4 ) that
     # contains a path to CMake script)
     INCLUDE( ${QT_USE_FILE} )
  #   message(STATUS "QT_INCLUDE_DIR: ${QT_INCLUDE_DIR}")
  #   message(STATUS "QT_USE_FRAMEWORKS: ${QT_USE_FRAMEWORKS}")
     # Append the locations of the Qt libraries to our Library Search Paths
     list(APPEND CMP_LIB_SEARCH_DIRS ${QT_BINARY_DIR} ${QT_LIBRARY_DIR} )
-   
+
     # Build the static QtSupport library - which MUST be a static library or the linking
     # will not work due to signals/slots mechanism.
     add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/QtSupport ${PROJECT_BINARY_DIR}/QtSupport)
-   
+
     add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/Applications/TEMBIR ${PROJECT_BINARY_DIR}/Applications/TEMBIR)
     add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/Applications/BrightFieldGui ${PROJECT_BINARY_DIR}/Applications/BrightFieldGui)
-    
+
 endif()
 
 

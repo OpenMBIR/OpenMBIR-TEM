@@ -41,7 +41,7 @@
 class Observer;
 
 /**
- * @class Observable Observable.h DREAM3D/Common/Observable.h
+ * @class Observable Observable.h OpenMBIR/Common/Observable.h
  * @brief This class implements the "Subject" class of the "Observer" design pattern
  * from the "Gang of Four" book. The basic operations of adding and removing an
  * <b>Observer</b> oject from this class. Multiple Observers can be stored in this

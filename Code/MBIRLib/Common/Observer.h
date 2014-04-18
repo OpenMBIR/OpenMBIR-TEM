@@ -36,7 +36,7 @@
 #include "MXA/Common/MXASetGetMacros.h"
 
 /**
- * @class Observer Observer.h DREAM3D/Common/Observer.h
+ * @class Observer Observer.h OpenMBIR/Common/Observer.h
  * @brief This class implmements the <b>Observer</b> pattern from the <b>Gang of
  * Four Design Patterns</b> book. There are various methods that are used for
  * notifications. The <b>Observerable</b> will decide which method to call.

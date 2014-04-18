@@ -43,7 +43,7 @@
 
 #define WRITE_RECTILINEAR_GRID_HEADER(FILE_TYPE, ptr, xpoints, ypoints, zpoints)\
   fprintf(f, "# vtk DataFile Version 2.0\n");\
-  fprintf(f, "data set from DREAM3D\n");\
+  fprintf(f, "data set from OpenMBIR\n");\
   fprintf(f, FILE_TYPE); fprintf(f, "\n");\
   fprintf(f, "DATASET RECTILINEAR_GRID\n");\
   fprintf(f, "DIMENSIONS %d %d %d\n", xpoints, ypoints, zpoints);\
@@ -53,7 +53,7 @@
 
 #define WRITE_STRUCTURED_POINTS_HEADER(FILE_TYPE, ptr)\
   fprintf(f, "# vtk DataFile Version 2.0\n");\
-  fprintf(f, "data set from DREAM3D\n");\
+  fprintf(f, "data set from OpenMBIR\n");\
   fprintf(f, FILE_TYPE); fprintf(f, "\n");\
   fprintf(f, "DATASET STRUCTURED_POINTS\n");\
   fprintf(f, "DIMENSIONS %d %d %d\n", ptr->dim0, ptr->dim1, ptr->dim2);\

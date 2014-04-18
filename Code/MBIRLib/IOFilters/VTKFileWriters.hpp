@@ -135,7 +135,7 @@ class name : public VtkScalarWriter\
 
 
 /**
- * @class VTKRectilinearGridFileWriter VTKRectilinearGridFileWriter.h DREAM3D/Common/VTKUtils/VTKRectilinearGridFileWriter.h
+ * @class VTKRectilinearGridFileWriter VTKRectilinearGridFileWriter.h OpenMBIR/Common/VTKUtils/VTKRectilinearGridFileWriter.h
  * @brief This is the main class to call when you want to write voxel based data
  * to a Rectilinear Grid based VTK data set. In order to write Scalar attributes
  * one needs to also include a vector of VtkScalarWriter objects. Each VtkScalarWriter
@@ -286,7 +286,7 @@ typedef struct
 
 #define WRITE_STRUCTURED_POINTS_HEADER_2(FILE_TYPE, ptr)\
   fprintf(f, "# vtk DataFile Version 2.0\n");\
-  fprintf(f, "data set from DREAM3D\n");\
+  fprintf(f, "data set from OpenMBIR\n");\
   fprintf(f, FILE_TYPE); fprintf(f, "\n");\
   fprintf(f, "DATASET STRUCTURED_POINTS\n");\
   int xDim = ptr->xEnd - ptr->xStart;\
