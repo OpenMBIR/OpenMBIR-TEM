@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1165</width>
-    <height>821</height>
+    <width>1174</width>
+    <height>768</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Tomography Environment for MBIR</string>
+   <string>HAADF - TEMBIR</string>
   </property>
   <property name="dockNestingEnabled">
    <bool>true</bool>
@@ -465,7 +465,7 @@ font-size: 10px;
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1165</width>
+     <width>1174</width>
      <height>22</height>
     </rect>
    </property>
@@ -2073,6 +2073,53 @@ font-size: 10px;
    <container>1</container>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>inputMRCFilePath</tabstop>
+  <tabstop>inputBrightFieldFilePath</tabstop>
+  <tabstop>reconstructedVolumeFileName</tabstop>
+  <tabstop>singleSliceXWidth</tabstop>
+  <tabstop>singleSliceMultiRes</tabstop>
+  <tabstop>m_SingleSliceReconstructionBtn</tabstop>
+  <tabstop>xWidthFullRecon</tabstop>
+  <tabstop>yMin</tabstop>
+  <tabstop>yMax</tabstop>
+  <tabstop>sampleThickness</tabstop>
+  <tabstop>finalResolution</tabstop>
+  <tabstop>tiltSelection</tabstop>
+  <tabstop>mrf</tabstop>
+  <tabstop>smoothness</tabstop>
+  <tabstop>sigma_x</tabstop>
+  <tabstop>estimateSigmaX</tabstop>
+  <tabstop>stopThreshold</tabstop>
+  <tabstop>numResolutions</tabstop>
+  <tabstop>targetGain</tabstop>
+  <tabstop>interpolateInitialRecontruction</tabstop>
+  <tabstop>outerIterations</tabstop>
+  <tabstop>innerIterations</tabstop>
+  <tabstop>useDefaultOffset</tabstop>
+  <tabstop>defaultOffset</tabstop>
+  <tabstop>defaultVariance</tabstop>
+  <tabstop>defaultInitialRecon</tabstop>
+  <tabstop>extendObject</tabstop>
+  <tabstop>m_DeleteTempFiles</tabstop>
+  <tabstop>resetSigmaXBtn</tabstop>
+  <tabstop>singleSliceGroupBox</tabstop>
+  <tabstop>outputTabWidget</tabstop>
+  <tabstop>advancedParametersGroupBox</tabstop>
+  <tabstop>inputBrightFieldFilePathBtn</tabstop>
+  <tabstop>fullReconstructionGroupBox</tabstop>
+  <tabstop>m_GoBtn</tabstop>
+  <tabstop>outputDirectoryPathBtn</tabstop>
+  <tabstop>initialReconstructionPath</tabstop>
+  <tabstop>initialReconstructionPathBtn</tabstop>
+  <tabstop>reconstructedVolumeFileNameBtn</tabstop>
+  <tabstop>outputDirectoryPath_OLD</tabstop>
+  <tabstop>parametersGroupBox</tabstop>
+  <tabstop>inputMRCFilePathBtn</tabstop>
+  <tabstop>scrollArea</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>gainsOffsetsTableView</tabstop>
+ </tabstops>
  <resources>
   <include location="../../../../Resources/icons/images/Icons.qrc"/>
  </resources>
