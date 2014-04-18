@@ -97,6 +97,9 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     void disableVOISelection();
     void enableVOISelection();
 
+    void disableBackgroundSelection();
+    void enableBackgroundSelection();
+
     void setImageWidgetsEnabled(bool b);
     void setMovieWidgetsEnabled(bool b);
 
@@ -159,7 +162,9 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     bool                  m_ImageWidgetsEnabled;
     bool                  m_MovieWidgetsEnabled;
     bool                  m_DrawOrigin;
+    bool                  m_BackgroundSelection;
     RectangleCreator*     m_BackgroundRectangle;
+
 
 
     QMRCDisplayWidget(const QMRCDisplayWidget&); // Copy Constructor Not Implemented

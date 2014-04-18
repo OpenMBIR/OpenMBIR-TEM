@@ -39,6 +39,7 @@ set(QtSupport_SRCS
     ${QtSupport_SOURCE_DIR}/TiltAngleGroupBox.cpp
     ${QtSupport_SOURCE_DIR}/TomogramTiltLoader.cpp
     ${QtSupport_SOURCE_DIR}/ImageOpenDialog.cpp
+ 	${QtSupport_SOURCE_DIR}/QMRCDisplayWidget.cpp
 )
 set(QtSupport_HDRS
     ${QtSupport_SOURCE_DIR}/ApplicationAboutBoxDialog.h
@@ -64,6 +65,7 @@ set(QtSupport_HDRS
     ${QtSupport_SOURCE_DIR}/TiltAngleGroupBox.h
     ${QtSupport_SOURCE_DIR}/TomogramTiltLoader.h
     ${QtSupport_SOURCE_DIR}/ImageOpenDialog.h
+ 	${QtSupport_SOURCE_DIR}/QMRCDisplayWidget.h
 )
 cmp_IDE_SOURCE_PROPERTIES("QtSupport" "${QtSupport_HDRS}" "${QtSupport_SRCS}" "0")
 
@@ -81,6 +83,7 @@ SET( QtSupport_QT_UI_FILES
   ${QtSupport_SOURCE_DIR}/UI_Files/TiltAngleGroupBox.ui
   ${QtSupport_SOURCE_DIR}/UI_Files/TomogramTiltLoader.ui
   ${QtSupport_SOURCE_DIR}/UI_Files/ImageOpenDialog.ui
+  ${QtSupport_SOURCE_DIR}/UI_Files/QMRCDisplayWidget.ui
 )
 cmp_IDE_SOURCE_PROPERTIES( "QtSupport/UI_Files" "${QtSupport_QT_UI_FILES}" "" "0")
 

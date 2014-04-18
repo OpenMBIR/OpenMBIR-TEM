@@ -69,7 +69,8 @@ QMRCDisplayWidget::QMRCDisplayWidget(QWidget *parent) :
   m_HeaderMaximum(0.0f),
   m_ImageWidgetsEnabled(false),
   m_MovieWidgetsEnabled(false),
-  m_DrawOrigin(true)
+  m_DrawOrigin(true),
+  m_BackgroundSelection(false)
 {
   m_OpenDialogLastDirectory = QDir::homePath();
   setupUi(this);
@@ -163,6 +164,22 @@ void QMRCDisplayWidget::disableVOISelection()
 void QMRCDisplayWidget::enableVOISelection()
 {
   if (m_GraphicsView != NULL) { m_GraphicsView->disableVOISelection(false); }
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void QMRCDisplayWidget::disableBackgroundSelection()
+{
+  m_BackgroundSelection = false;
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void QMRCDisplayWidget::enableBackgroundSelection()
+{
+  m_BackgroundSelection = true;
 }
 
 // -----------------------------------------------------------------------------
@@ -413,31 +430,31 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
         return;
   }
 
-    QIntValidator* validator = NULL;
-    switch(header.mode)
-    {
-        case 0: /* unsigned or signed bytes depending on flag in imodStamp */
-            validator = NULL;
-            break;
-        case 1: /* signed short integers (16 bits) */
-            validator = new QIntValidator(std::numeric_limits<qint16>::min(), std::numeric_limits<qint16>::max(), minimumField);
-            break;
-        case 2: /* float */
-            validator = new QIntValidator(std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), minimumField);
-            break;
-        case 6: /* unsigned 16-bit integers (non-standard) */
-            validator = new QIntValidator(std::numeric_limits<quint16>::min(), std::numeric_limits<quint16>::max(), minimumField);
-            break;
-        default:
-            validator = NULL;
-            break;
-    }
+  QIntValidator* validator = NULL;
+  switch(header.mode)
+  {
+    case 0: /* unsigned or signed bytes depending on flag in imodStamp */
+      validator = NULL;
+      break;
+    case 1: /* signed short integers (16 bits) */
+      validator = new QIntValidator(std::numeric_limits<qint16>::min(), std::numeric_limits<qint16>::max(), minimumField);
+      break;
+    case 2: /* float */
+      validator = new QIntValidator(std::numeric_limits<float>::min(), std::numeric_limits<float>::max(), minimumField);
+      break;
+    case 6: /* unsigned 16-bit integers (non-standard) */
+      validator = new QIntValidator(std::numeric_limits<quint16>::min(), std::numeric_limits<quint16>::max(), minimumField);
+      break;
+    default:
+      validator = NULL;
+      break;
+  }
 
-    if (NULL != validator)
-    {
-        minimumField->setValidator(validator);
-        maximumField->setValidator(validator);
-    }
+  if (NULL != validator)
+  {
+    minimumField->setValidator(validator);
+    maximumField->setValidator(validator);
+  }
 
   currentTiltIndex->blockSignals(true);
   currentTiltIndex->setRange(0, header.nz - 1);
@@ -517,10 +534,14 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
 
   FREE_FEI_HEADERS( header.feiHeaders)
 
-  drawOrigin(image);
+      drawOrigin(image);
 
   // This will display the image in the graphics scene
   m_GraphicsView->loadBaseImageFile(m_CurrentImage);
+  if(m_BackgroundSelection == false)
+  {
+    m_GraphicsView->removeBackgroundSelector();
+  }
 
   // Calculate the approx memory usage
   emit memoryCalculationNeedsUpdated();
@@ -1103,7 +1124,7 @@ QTabWidget* QMRCDisplayWidget::getControlsTab()
 // -----------------------------------------------------------------------------
 QWidget* QMRCDisplayWidget::getAdvancedControls()
 {
-    return advancedControlsTab;
+  return advancedControlsTab;
 }
 
 // -----------------------------------------------------------------------------
@@ -1111,7 +1132,7 @@ QWidget* QMRCDisplayWidget::getAdvancedControls()
 // -----------------------------------------------------------------------------
 QWidget* QMRCDisplayWidget::getBasicControls()
 {
-    return basicControlsTab;
+  return basicControlsTab;
 }
 
 // -----------------------------------------------------------------------------
@@ -1138,7 +1159,7 @@ void QMRCDisplayWidget::on_resetImageBtn_clicked()
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::on_minimumField_returnPressed()
 {
-    on_updateImageBtn_clicked();
+  on_updateImageBtn_clicked();
 }
 
 // -----------------------------------------------------------------------------
@@ -1146,7 +1167,7 @@ void QMRCDisplayWidget::on_minimumField_returnPressed()
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::on_maximumField_returnPressed()
 {
-    on_updateImageBtn_clicked();
+  on_updateImageBtn_clicked();
 }
 
 

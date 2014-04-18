@@ -523,6 +523,8 @@ void BrightFieldGui::setupGui()
   m_ReconstructedDisplayWidget->getControlsTab()->hide();
   m_MRCDisplayWidget->getControlsTab()->hide();
 
+  m_MRCDisplayWidget->enableBackgroundSelection();
+
 }
 
 // -----------------------------------------------------------------------------
