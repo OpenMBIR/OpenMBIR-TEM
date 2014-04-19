@@ -49,14 +49,14 @@
 //
 // -----------------------------------------------------------------------------
 AvizoUniformCoordinateWriter::AvizoUniformCoordinateWriter() :
-TomoFilter()
+  TomoFilter()
 {
-m_XDims[0] = 0;
-m_XDims[1] = 0;
-m_YDims[0] = 0;
-m_YDims[1] = 0;
-m_ZDims[0] = 0;
-m_ZDims[1] = 0;
+  m_XDims[0] = 0;
+  m_XDims[1] = 0;
+  m_YDims[0] = 0;
+  m_YDims[1] = 0;
+  m_ZDims[0] = 0;
+  m_ZDims[1] = 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -73,11 +73,11 @@ AvizoUniformCoordinateWriter::~AvizoUniformCoordinateWriter()
 // -----------------------------------------------------------------------------
 void AvizoUniformCoordinateWriter::execute()
 {
-   int err = write();
-    if (err < 0)
-    {
-        std::cout << "AvizoUniformCoordinateWriter::execute() - There was an error while trying to write." << std::endl;
-    }
+  int err = write();
+  if (err < 0)
+  {
+    std::cout << "AvizoUniformCoordinateWriter::execute() - There was an error while trying to write." << std::endl;
+  }
 }
 
 
@@ -86,30 +86,30 @@ void AvizoUniformCoordinateWriter::execute()
 // -----------------------------------------------------------------------------
 int AvizoUniformCoordinateWriter::write()
 {
- int err = -1;
+  int err = -1;
   std::stringstream ss;
- // std::cout << "Avizo Output File:\n  " << m_OutputFile << std::endl;
+// std::cout << "Avizo Output File:\n  " << m_OutputFile << std::endl;
   if (m_OutputFile.empty())
   {
-      ss.str("");
-      ss << "AvizoUniformCoordinateWriter: Output File was Not Set";
-      setErrorCondition(-1);
-      setErrorMessage(ss.str());
-      notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-      return err;
+    ss.str("");
+    ss << "AvizoUniformCoordinateWriter: Output File was Not Set";
+    setErrorCondition(-1);
+    setErrorMessage(ss.str());
+    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+    return err;
   }
   MXAFileWriter64 writer(m_OutputFile);
   bool success = writer.initWriter();
 
   if (false == success)
   {
-      ss.str("");
-      ss << "AvizoUniformCoordinateWriter: Error opening output file for writing. '" <<
-          m_OutputFile << "'";
-      setErrorCondition(-1);
-      setErrorMessage(ss.str());
-      notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-      return err;
+    ss.str("");
+    ss << "AvizoUniformCoordinateWriter: Error opening output file for writing. '" <<
+       m_OutputFile << "'";
+    setErrorCondition(-1);
+    setErrorMessage(ss.str());
+    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+    return err;
   }
 
   std::string header = generateHeader();
@@ -181,55 +181,55 @@ std::string AvizoUniformCoordinateWriter::generateHeader()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int AvizoUniformCoordinateWriter::writeData(MXAFileWriter64 &writer)
+int AvizoUniformCoordinateWriter::writeData(MXAFileWriter64& writer)
 {
   std::string start("@1\n");
   writer.writeString(start);
   if(true == m_WriteBinaryFile)
   {
-      size_t dims[2] = {m_XDims[1] - m_XDims[0], m_YDims[1] - m_YDims[0]};
-      FloatImageType::Pointer sliceData = FloatImageType::New(dims, "temp slice data");
-      float* slice = sliceData->getPointer(0);
+    size_t dims[2] = {m_XDims[1] - m_XDims[0], m_YDims[1] - m_YDims[0]};
+    FloatImageType::Pointer sliceData = FloatImageType::New(dims, "temp slice data");
+    float* slice = sliceData->getPointer(0);
 
-      size_t index = 0;
-      Real_t d = 0.0;
-      size_t count = 0;
+    size_t index = 0;
+    Real_t d = 0.0;
+    size_t count = 0;
 
-      for (int z = m_ZDims[1]-1; z >= m_ZDims[0]; z--)
+    for (int z = m_ZDims[1] - 1; z >= m_ZDims[0]; z--)
+    {
+      index = 0;
+      for (int y = m_YDims[0]; y < m_YDims[1]; ++y)
       {
-          index = 0;
-          for (int y = m_YDims[0]; y < m_YDims[1]; ++y)
-          {
-              for (int x = m_XDims[0]; x < m_XDims[1]; ++x)
-              {
-                  //index = (x * m_Geometry->N_y) + y;
-                  d = m_Geometry->Object->getValue(z, x, y);
-                  slice[index] = static_cast<float>(d);
-                  count++;
-                  ++index;
-              }
-          }
-          writer.write(reinterpret_cast<char*>(slice), sizeof(float) * dims[0] * dims[1]);
+        for (int x = m_XDims[0]; x < m_XDims[1]; ++x)
+        {
+          //index = (x * m_Geometry->N_y) + y;
+          d = m_Geometry->Object->getValue(z, x, y);
+          slice[index] = static_cast<float>(d);
+          count++;
+          ++index;
+        }
       }
+      writer.write(reinterpret_cast<char*>(slice), sizeof(float) * dims[0] * dims[1]);
+    }
   }
   else
   {
-      Real_t d = 0.0;
-      std::stringstream ss;
-      for (int z = m_ZDims[1]-1; z >= m_ZDims[0]; z--)
+    Real_t d = 0.0;
+    std::stringstream ss;
+    for (int z = m_ZDims[1] - 1; z >= m_ZDims[0]; z--)
+    {
+      for (int y = m_YDims[0]; y < m_YDims[1]; ++y)
       {
-          for (int y = m_YDims[0]; y < m_YDims[1]; ++y)
-          {
-              ss.str("");
-              for (int x = m_XDims[0]; x < m_XDims[1]; ++x)
-              {
-                  d = m_Geometry->Object->getValue(z, x, y);
-                  ss << d << " ";
-              }
-              ss << "\n";
-              writer.writeString(ss.str());
-          }
+        ss.str("");
+        for (int x = m_XDims[0]; x < m_XDims[1]; ++x)
+        {
+          d = m_Geometry->Object->getValue(z, x, y);
+          ss << d << " ";
+        }
+        ss << "\n";
+        writer.writeString(ss.str());
       }
+    }
   }
   return 1;
 }

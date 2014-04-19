@@ -81,7 +81,7 @@ class MBIRLib_EXPORT FilterPipeline : public Observer
      */
     virtual void pipelineFinished();
 
-   // virtual void printFilterNames(std::ostream &out);
+    // virtual void printFilterNames(std::ostream &out);
 
 
   protected:

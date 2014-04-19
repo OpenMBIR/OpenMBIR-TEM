@@ -43,21 +43,21 @@
 
 
 #define CHECK_FOR_CANCELED(FuncClass, Message, name)\
-    if (this->getCancel() ) { \
-              pipelineProgressMessage(#Message);\
-              pipelineProgress(0);\
-              pipelineFinished();\
-              return;}\
-
+  if (this->getCancel() ) { \
+    pipelineProgressMessage(#Message);\
+    pipelineProgress(0);\
+    pipelineFinished();\
+    return;}\
+   
 
 #define CHECK_FOR_ERROR(FuncClass, Message, err)\
-    if(err < 0) {\
-      setErrorCondition(err);\
-      std::string msg = std::string(Message);\
-      pipelineErrorMessage(msg.c_str());\
-      pipelineProgress(0);\
-      pipelineFinished();\
-      return;   }
+  if(err < 0) {\
+    setErrorCondition(err);\
+    std::string msg = std::string(Message);\
+    pipelineErrorMessage(msg.c_str());\
+    pipelineProgress(0);\
+    pipelineFinished();\
+    return;   }
 
 
 
@@ -65,9 +65,9 @@
 //
 // -----------------------------------------------------------------------------
 FilterPipeline::FilterPipeline() :
-    Observer(),
-    m_ErrorCondition(0),
-    m_Cancel(false)
+  Observer(),
+  m_ErrorCondition(0),
+  m_Cancel(false)
 {
 
 }
@@ -118,12 +118,12 @@ void FilterPipeline::run()
 // -----------------------------------------------------------------------------
 void FilterPipeline::execute()
 {
-    //int err = 0;
+  //int err = 0;
 
-    std::stringstream ss;
+  std::stringstream ss;
 
 
-    ss.str("");
-    ss << "FilterPipeline Complete";
-    pipelineProgressMessage(ss.str());
+  ss.str("");
+  ss << "FilterPipeline Complete";
+  pipelineProgressMessage(ss.str());
 }

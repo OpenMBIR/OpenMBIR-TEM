@@ -40,7 +40,7 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ApplicationAboutBoxDialog::ApplicationAboutBoxDialog(QStringList files, QWidget *parent) :
+ApplicationAboutBoxDialog::ApplicationAboutBoxDialog(QStringList files, QWidget* parent) :
   QDialog(parent)
 {
   this->setupUi(this);

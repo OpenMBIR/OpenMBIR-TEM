@@ -75,7 +75,7 @@ class MBIRLib_EXPORT MRCReader
      * be stored.
      * @return Negative on Error.
      */
-    int readHeader(const std::string &filepath, MRCHeader* header);
+    int readHeader(const std::string& filepath, MRCHeader* header);
 
     /**
      * @brief Reads the entire file or a subpart of the file into memory. If a
@@ -101,11 +101,11 @@ class MBIRLib_EXPORT MRCReader
      * @param voxelMax The maximun index value for the voxels [ x, y, z ]
      * @return Negative on Error.
      */
-    int read(const std::string &filepath, int* voxelMin = NULL, int* voxelMax = NULL);
+    int read(const std::string& filepath, int* voxelMin = NULL, int* voxelMax = NULL);
 
-    bool readPartialVolume(MXAFileReader64 &reader, char* dataPtr,
-                       size_t typeSize, size_t nVoxels,
-                       int* voxelMin, int* voxelMax);
+    bool readPartialVolume(MXAFileReader64& reader, char* dataPtr,
+                           size_t typeSize, size_t nVoxels,
+                           int* voxelMin, int* voxelMax);
 
     /**
      * @brief Returns the pointer to the data from the file.
@@ -123,7 +123,7 @@ class MBIRLib_EXPORT MRCReader
 
     std::vector<uint8_t> extendedHeader();
 
-    void printHeader(MRCHeader* header, std::ostream &out);
+    void printHeader(MRCHeader* header, std::ostream& out);
 
   protected:
     MRCReader();

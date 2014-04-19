@@ -69,12 +69,12 @@ NuisanceParamReader::~NuisanceParamReader()
 void NuisanceParamReader::execute()
 {
   if(NULL == getSinogram())
-   {
-     setErrorCondition(-1);
-     setErrorMessage("NuisanceParamReader::Sinogram not initialized Correctly");
-     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-     return;
-   }
+  {
+    setErrorCondition(-1);
+    setErrorMessage("NuisanceParamReader::Sinogram not initialized Correctly");
+    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+    return;
+  }
 
 //  std::string filepath(getTomoInputs()->tempDir);
 //  filepath = filepath.append(MXADir::getSeparator()).append(m_FileName);

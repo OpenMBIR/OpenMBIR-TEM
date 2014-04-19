@@ -33,9 +33,9 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-LayersDockWidget::LayersDockWidget(QWidget *parent) :
-QDockWidget(parent),
-m_GraphicsView(NULL)
+LayersDockWidget::LayersDockWidget(QWidget* parent) :
+  QDockWidget(parent),
+  m_GraphicsView(NULL)
 {
   setupUi(this);
   setupGui();
@@ -68,16 +68,16 @@ void LayersDockWidget::setupGui()
 // -----------------------------------------------------------------------------
 void LayersDockWidget::updateDisplayState()
 {
-  float f = (float)opacitySlider->value()/100.0;
+  float f = (float)opacitySlider->value() / 100.0;
   m_GraphicsView->setOverlayTransparency(f);
 
   if (useColorTable->isEnabled() && useColorTable->isChecked())
   {
-  //  m_GraphicsView->useCustomColorTable(true);
+    //  m_GraphicsView->useCustomColorTable(true);
   }
   else if (useColorTable->isEnabled() && !useColorTable->isChecked())
   {
- //   m_GraphicsView->useCustomGrayScaleTable(true);
+//   m_GraphicsView->useCustomGrayScaleTable(true);
   }
   else
   {
@@ -161,11 +161,11 @@ void LayersDockWidget::on_originalImage_stateChanged(int state)
 // -----------------------------------------------------------------------------
 void LayersDockWidget::on_opacitySlider_valueChanged(int value)
 {
- // std::cout << "on_opacitySlider_valueChanged" << std::endl;
+// std::cout << "on_opacitySlider_valueChanged" << std::endl;
   opacitySpinner->blockSignals(true);
   opacitySpinner->setValue(value);
   opacitySpinner->blockSignals(false);
-  float f = (float)value/100.0;
+  float f = (float)value / 100.0;
   m_GraphicsView->setOverlayTransparency(f);
   m_GraphicsView->updateDisplay();
 }
@@ -179,7 +179,7 @@ void LayersDockWidget::on_opacitySpinner_valueChanged(int value)
   opacitySlider->blockSignals(true);
   opacitySlider->setValue(value);
   opacitySlider->blockSignals(false);
-  float f = (float)value/100.0;
+  float f = (float)value / 100.0;
   m_GraphicsView->setOverlayTransparency(f);
   m_GraphicsView->updateDisplay();
 }

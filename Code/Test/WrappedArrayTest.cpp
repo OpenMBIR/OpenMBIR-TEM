@@ -14,7 +14,7 @@
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
 
 
@@ -31,7 +31,7 @@ int main(int argc, char **argv)
   {
     Int32VolumeType::Pointer object = Int32VolumeType::New(dims, "Test3D");
 
-    int32_t*** data = object->d;
+    int32_t** * data = object->d;
 
     printf("Array to Hold Pointers to start of Slice: Address=%p  Num Elements:%d \n Values:", data, z);
     for(size_t i = 0; i < z; ++i)
@@ -41,8 +41,8 @@ int main(int argc, char **argv)
     printf("|\n");
     printf("-------------------------- \n");
 
-    printf("Array to Hold Pointers to start of each Row: Address=%p  Num Elements:%d \n Values:", &(data[0][0]), z*y);
-    for(size_t i =0; i < y*z; ++i)
+    printf("Array to Hold Pointers to start of each Row: Address=%p  Num Elements:%d \n Values:", &(data[0][0]), z * y);
+    for(size_t i = 0; i < y * z; ++i)
     {
       printf("| 0x%08x ", object->d[0][i]);
     }
@@ -50,19 +50,19 @@ int main(int argc, char **argv)
     printf("-------------------------- \n");
 
     for(size_t k = 0; k < z; ++k)
+    {
+      printf("Slice %lud  Ptr: %p   Value: 0x%08x \n", k, object->d[k], *object->d[k]);
+      for(size_t j = 0; j < y; ++j)
       {
-        printf("Slice %lud  Ptr: %p   Value: 0x%08x \n", k, object->d[k], *object->d[k]);
-        for(size_t j = 0; j < y; ++j)
+        printf("Row %lud %p [%lud][%lud][0] | ", j, object->d[k][j], k, j);
+        for(size_t i = 0; i < x; ++i)
         {
-          printf("Row %lud %p [%lud][%lud][0] | ", j, object->d[k][j], k, j);
-          for(size_t i=0; i < x; ++i)
-          {
-            object->d[k][j][i] = i*10 + j*100 + k*1000;
-            printf(" %04d |", data[k][j][i]);
-          }
-          printf("\n");
+          object->d[k][j][i] = i * 10 + j * 100 + k * 1000;
+          printf(" %04d |", data[k][j][i]);
         }
+        printf("\n");
       }
+    }
     printf("\n");
     std::cout << "Cleaning up Memory\n" << std::endl;
     object = Int32VolumeType::NullPointer();

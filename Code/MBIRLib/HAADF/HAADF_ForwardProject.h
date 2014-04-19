@@ -61,13 +61,13 @@ class MBIRLib_EXPORT HAADF_ForwardProject
 {
   public:
     HAADF_ForwardProject(Sinogram* sinogram,
-                   Geometry* geometry,
-                   std::vector<AMatrixCol::Pointer> &tempCol,
-                   std::vector<AMatrixCol::Pointer> &voxelLineResponse,
-                   RealVolumeType::Pointer yEst,
-                   HAADF_ForwardModel* forwardModel,
-                   uint16_t tilt,
-                   Observable* obs);
+                         Geometry* geometry,
+                         std::vector<AMatrixCol::Pointer>& tempCol,
+                         std::vector<AMatrixCol::Pointer>& voxelLineResponse,
+                         RealVolumeType::Pointer yEst,
+                         HAADF_ForwardModel* forwardModel,
+                         uint16_t tilt,
+                         Observable* obs);
 
     virtual ~HAADF_ForwardProject();
 

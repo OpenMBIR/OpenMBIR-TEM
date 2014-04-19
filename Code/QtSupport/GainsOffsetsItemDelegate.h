@@ -60,10 +60,10 @@
  */
 class GainsOffsetsItemDelegate : public QStyledItemDelegate
 {
-  Q_OBJECT
+    Q_OBJECT
 
   public:
-    explicit GainsOffsetsItemDelegate(QObject *parent = 0) :
+    explicit GainsOffsetsItemDelegate(QObject* parent = 0) :
       QStyledItemDelegate(parent)
     {
     }
@@ -71,7 +71,7 @@ class GainsOffsetsItemDelegate : public QStyledItemDelegate
     // -----------------------------------------------------------------------------
     //
     // -----------------------------------------------------------------------------
-    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+    void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const
     {
       QStyledItemDelegate::paint(painter, option, index);
     }
@@ -79,11 +79,11 @@ class GainsOffsetsItemDelegate : public QStyledItemDelegate
     // -----------------------------------------------------------------------------
     //
     // -----------------------------------------------------------------------------
-    QWidget* createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
+    QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const
     {
 //      QLineEdit* editor;
-    //  QCheckBox* checkbox;
-    //  QIntValidator* intValidator;
+      //  QCheckBox* checkbox;
+      //  QIntValidator* intValidator;
 //      QDoubleValidator* dblValidator;
 
 //      qint32 col = index.column();
@@ -130,7 +130,7 @@ class GainsOffsetsItemDelegate : public QStyledItemDelegate
     // -----------------------------------------------------------------------------
     //
     // -----------------------------------------------------------------------------
-    void setEditorData(QWidget *editor, const QModelIndex &index) const
+    void setEditorData(QWidget* editor, const QModelIndex& index) const
     {
       qint32 col = index.column();
       if (col == GainsOffsetsTableModel::TiltIndex
@@ -155,7 +155,7 @@ class GainsOffsetsItemDelegate : public QStyledItemDelegate
     // -----------------------------------------------------------------------------
     //
     // -----------------------------------------------------------------------------
-    void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
+    void setModelData(QWidget* editor, QAbstractItemModel* model, const QModelIndex& index) const
     {
       //  std::cout << "GainsOffsetsItemDelegate::setModelData" << std::endl;
       qint32 col = index.column();
@@ -183,9 +183,9 @@ class GainsOffsetsItemDelegate : public QStyledItemDelegate
 //        model->setData(index, checkbox->isChecked());
 //      }
       else
-        {
+      {
         QStyledItemDelegate::setModelData(editor, model, index);
-        }
+      }
     }
 
   private:

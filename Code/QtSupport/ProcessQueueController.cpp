@@ -36,8 +36,8 @@
 //
 // -----------------------------------------------------------------------------
 ProcessQueueController::ProcessQueueController(QObject* parent) :
-QThread(parent),
-m_AutoDelete(true)
+  QThread(parent),
+  m_AutoDelete(true)
 {
   m_MaxThreads = QThread::idealThreadCount();
   m_ThreadCount = 1; // We need this to be 1 because the first time we will decrement the value
@@ -76,7 +76,7 @@ void ProcessQueueController::setAutoDeleteQueue(bool deleteQueue)
 // -----------------------------------------------------------------------------
 void ProcessQueueController::addTask(QThread* t)
 {
-  if (NULL == t){ return; }
+  if (NULL == t) { return; }
   if (m_Tasks.contains( t) == false)
   {
     m_Tasks.push_back(t);

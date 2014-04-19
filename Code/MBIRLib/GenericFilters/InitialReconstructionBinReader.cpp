@@ -75,7 +75,7 @@ void InitialReconstructionBinReader::initializeData()
   std::stringstream ss;
   TomoInputsPtr input = getTomoInputs();
   GeometryPtr geometry = getGeometry();
-//	uint16_t INTERP_FACTOR=2;
+//  uint16_t INTERP_FACTOR=2;
   //Read the Initial Reconstruction data into a 3-D matrix
   //If Interpolate flag is set then the input has only half the
   //number of voxels along each dimension as the output

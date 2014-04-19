@@ -77,17 +77,17 @@ class QDisclosableGroupBox : public QGroupBox
   public slots:
     void disclose(bool on);
 
-     /**
-      * @brief Sets the style of the Widget to indicate a selected or non-selected
-      * state
-      * @param selected Is the widget selected or not.
-      */
-     void changeStyle();
+    /**
+     * @brief Sets the style of the Widget to indicate a selected or non-selected
+     * state
+     * @param selected Is the widget selected or not.
+     */
+    void changeStyle();
 
-     /**
-      *@brief
-      */
-     void updateWidgetStyle();
+    /**
+     *@brief
+     */
+    void updateWidgetStyle();
 
 
   protected:
@@ -97,7 +97,7 @@ class QDisclosableGroupBox : public QGroupBox
 
   private:
     // QRect      m_DeleteRect;
-     QLayout*     m_Layout;
+    QLayout*     m_Layout;
 
 
     QDisclosableGroupBox(const QDisclosableGroupBox&); // Copy Constructor Not Implemented

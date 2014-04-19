@@ -125,7 +125,7 @@ class TomoArray
      * @param name The human name for the array. This can be helpful for debugging
      * @return Shared Pointer to the data
      */
-    static Pointer New(size_t* dims, const std::string &name)
+    static Pointer New(size_t* dims, const std::string& name)
     {
       //assert(SIZE < 4);
 
@@ -146,8 +146,9 @@ class TomoArray
       {
         free(d);
       }
-      else {
-        deallocate((T*)d,SIZE);
+      else
+      {
+        deallocate((T*)d, SIZE);
       }
     }
 
@@ -175,13 +176,13 @@ class TomoArray
     inline size_t calcIndex(size_t z, size_t y, size_t x)
     {
       assert(SIZE == 3);
-      return (m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x);
+      return (m_Dims[1] * m_Dims[2] * z) + (m_Dims[2] * y) + (x);
     }
 
     inline T getValue(size_t z, size_t y, size_t x)
     {
       assert(SIZE == 3);
-      return d[(m_Dims[1]*m_Dims[2]*z) + (m_Dims[2]*y) + (x)];
+      return d[(m_Dims[1] * m_Dims[2] * z) + (m_Dims[2] * y) + (x)];
     }
 
     inline void setValue(T v, size_t z, size_t y, size_t x)
@@ -217,14 +218,14 @@ class TomoArray
     inline size_t calcIndex(size_t slow, size_t fast)
     {
       assert(SIZE == 2);
-      return (m_Dims[1]*slow) + (fast);
+      return (m_Dims[1] * slow) + (fast);
     }
 
     /* ******************* These are 2D array methods ********************* */
     inline T getValue(size_t slow, size_t fast)
     {
       assert(SIZE == 2);
-      return d[(m_Dims[1]*slow) + (fast)];
+      return d[(m_Dims[1] * slow) + (fast)];
     }
 
     inline void setValue(T v, size_t slow, size_t fast)
@@ -236,7 +237,7 @@ class TomoArray
     inline T* getPointer(size_t slow, size_t fast)
     {
       assert(SIZE == 2);
-      return d + (m_Dims[1]*slow) + (fast);
+      return d + (m_Dims[1] * slow) + (fast);
     }
 
 
@@ -257,7 +258,7 @@ class TomoArray
     }
 
 
-    void setName(const std::string &name) { m_Name = name;}
+    void setName(const std::string& name) { m_Name = name;}
     Ptr getPointer() { return d; }
     size_t* getDims() {return m_Dims; }
     int getNDims() { return m_NDims; }
@@ -267,7 +268,8 @@ class TomoArray
     TomoArray(size_t* dims)
     {
       size_t total = 1;
-      for(size_t i = 0; i < SIZE; ++i){
+      for(size_t i = 0; i < SIZE; ++i)
+      {
         m_Dims[i] = dims[i];
         total *= m_Dims[i];
       }
@@ -275,7 +277,8 @@ class TomoArray
       {
         d = reinterpret_cast<Ptr>(malloc(sizeof(T) * total));
       }
-      else {
+      else
+      {
         d = reinterpret_cast<Ptr>(allocate(sizeof(T), SIZE, m_Dims));
       }
       m_NDims = SIZE;
@@ -291,10 +294,10 @@ class TomoArray
     {
       // va_list ap;             /* varargs list traverser */
       size_t max,                /* size of array to be declared */
-          *q;                     /* pointer to dimension list */
-      char **r,               /* pointer to beginning of the array of the
+             *q;                     /* pointer to dimension list */
+      char** r,               /* pointer to beginning of the array of the
                                    * pointers for a dimension */
-          **s1, *t, *tree;        /* base pointer to beginning of first array */
+           **s1, *t, *tree;        /* base pointer to beginning of first array */
       size_t i, j;               /* loop counters */
       assert(false);
       // int *d1;                /* dimension list */
@@ -308,46 +311,52 @@ class TomoArray
       r = &tree;
       q = d1;                /* first dimension */
       max = 1;
-      for (i = 0; i < d - 1; i++, q++) {      /* for each of the dimensions
-                                               * but the last */
+      for (i = 0; i < d - 1; i++, q++)
+      {
+        /* for each of the dimensions
+                                                 * but the last */
         max *= (*q);
         //        r[0]=(char *)mget_spc(max,sizeof(char**));
-        r[0]=(char*)malloc((size_t)(max*sizeof(char**)));
+        r[0] = (char*)malloc((size_t)(max * sizeof(char**)));
         //   printf("max: %d   sizeof(char **): %d  r: %p r[0]: 0x%08x \n", max , sizeof(char **), r, r[0]);
-        r = (char **) r[0];     /* step through to beginning of next
+        r = (char**) r[0];     /* step through to beginning of next
                                  * dimension array */
       }
       max *= s * (*q);        /* grab actual array memory */
       //r[0] = (char*)mget_spc(max,sizeof(char));
-      r[0]=(char*)malloc((size_t)(max*sizeof(char)));
+      r[0] = (char*)malloc((size_t)(max * sizeof(char)));
       // printf("max: %d   sizeof(char): %d  r: %p r[0]: 0x%08x \n", max , sizeof(char), r, r[0]);
       /*
        * r is now set to point to the beginning of each array so that we can
        * use it to scan down each array rather than having to go across and
        * then down
        */
-      r = (char **) tree;     /* back to the beginning of list of arrays */
+      r = (char**) tree;      /* back to the beginning of list of arrays */
       q = d1;                 /* back to the first dimension */
       max = 1;
-      for (i = 0; i < d - 2; i++, q++) {      /* we deal with the last
-                                               * array of pointers later on */
+      for (i = 0; i < d - 2; i++, q++)
+      {
+        /* we deal with the last
+                                                 * array of pointers later on */
         max *= (*q);    /* number of elements in this dimension */
-        for (j=1, s1=r+1, t=r[0]; j<max; j++) { /* scans down array for
-                                                 * first and subsequent
-                                                 * elements */
+        for (j = 1, s1 = r + 1, t = r[0]; j < max; j++)
+        {
+          /* scans down array for
+                                                   * first and subsequent
+                                                   * elements */
 
           /*  modify each of the pointers so that it points to
-         * the correct position (sub-array) of the next
-         * dimension array. s1 is the current position in the
-         * current array. t is the current position in the
-         * next array. t is incremented before s1 is, but it
-         * starts off one behind. *(q+1) is the dimension of
-         * the next array. */
+          * the correct position (sub-array) of the next
+          * dimension array. s1 is the current position in the
+          * current array. t is the current position in the
+          * next array. t is incremented before s1 is, but it
+          * starts off one behind. *(q+1) is the dimension of
+          * the next array. */
 
-          *s1 = (t += sizeof (char **) * *(q + 1));
+          *s1 = (t += sizeof (char**)** (q + 1));
           s1++;
         }
-        r = (char **) r[0];     /* step through to begining of next
+        r = (char**) r[0];     /* step through to begining of next
                                  * dimension array */
       }
       max *= (*q);              /* max is total number of elements in the
@@ -355,7 +364,7 @@ class TomoArray
 
       /* same as previous loop, but different size factor */
       for (j = 1, s1 = r + 1, t = r[0]; j < max; j++)
-        *s1++ = (t += s * *(q + 1));
+      { *s1++ = (t += s** (q + 1)); }
 
       //      va_end(ap);
       //      free((void *)d1);

@@ -108,9 +108,9 @@ MXA_FILESYSTEM_BASE_CLASS::~MXA_FILESYSTEM_BASE_CLASS()
 std::string MXA_FILESYSTEM_BASE_CLASS::getSeparator()
 {
 #if defined (WIN32)
-      return "\\";
+  return "\\";
 #else
-      return "/";
+  return "/";
 #endif
 }
 
@@ -118,7 +118,7 @@ std::string MXA_FILESYSTEM_BASE_CLASS::getSeparator()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool MXA_FILESYSTEM_BASE_CLASS::isDirectory(const std::string &fsPath)
+bool MXA_FILESYSTEM_BASE_CLASS::isDirectory(const std::string& fsPath)
 {
 #if defined (WIN32)
   bool existed = false;
@@ -138,7 +138,7 @@ bool MXA_FILESYSTEM_BASE_CLASS::isDirectory(const std::string &fsPath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool MXA_FILESYSTEM_BASE_CLASS::isFile(const std::string &fsPath)
+bool MXA_FILESYSTEM_BASE_CLASS::isFile(const std::string& fsPath)
 {
   int error;
   MXA_STATBUF st;
@@ -153,7 +153,7 @@ bool MXA_FILESYSTEM_BASE_CLASS::isFile(const std::string &fsPath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool MXA_FILESYSTEM_BASE_CLASS::isRelativePath(const std::string &path)
+bool MXA_FILESYSTEM_BASE_CLASS::isRelativePath(const std::string& path)
 {
 #if defined (WIN32)
   if (path.length() > 2 && isalpha(path[0]) == false && path[1] != ':' && path[2] != '\\') {return true;}
@@ -166,7 +166,7 @@ bool MXA_FILESYSTEM_BASE_CLASS::isRelativePath(const std::string &path)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool MXA_FILESYSTEM_BASE_CLASS::isAbsolutePath(const std::string &path)
+bool MXA_FILESYSTEM_BASE_CLASS::isAbsolutePath(const std::string& path)
 {
 #if defined (WIN32)
   if (path.length() > 2 && isalpha(path[0]) != 0 && path[1] == ':' && path[2] == '\\') {return true;}
@@ -186,7 +186,7 @@ std::string MXA_FILESYSTEM_BASE_CLASS::currentPath()
   MXA_STATBUF st;
   if (0 == MXA_STAT(".", &st) )
   {
-    char currentName[MXA_PATH_MAX+1];
+    char currentName[MXA_PATH_MAX + 1];
     char* result = NULL;
     ::memset(&currentName[0], 0, MXA_PATH_MAX + 1); // Clear everything to zeros.
     result = MXA_GET_CWD(currentName, MXA_PATH_MAX);
@@ -214,14 +214,14 @@ std::string MXA_FILESYSTEM_BASE_CLASS::currentPath()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-std::string MXA_FILESYSTEM_BASE_CLASS::absolutePath(const std::string &path)
+std::string MXA_FILESYSTEM_BASE_CLASS::absolutePath(const std::string& path)
 {
   std::string abspath = MXA_FILESYSTEM_BASE_CLASS::toNativeSeparators(path);
   if ( true == MXA_FILESYSTEM_BASE_CLASS::isAbsolutePath(abspath))
   { return path; }
 
   abspath = MXA_FILESYSTEM_BASE_CLASS::currentPath();
-  if(abspath[abspath.length()-1] != MXA_FILESYSTEM_BASE_CLASS::Separator)
+  if(abspath[abspath.length() - 1] != MXA_FILESYSTEM_BASE_CLASS::Separator)
   {
     abspath = abspath + MXA_FILESYSTEM_BASE_CLASS::Separator;
   }
@@ -233,7 +233,7 @@ std::string MXA_FILESYSTEM_BASE_CLASS::absolutePath(const std::string &path)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-std::string MXA_FILESYSTEM_BASE_CLASS::parentPath(const std::string &path)
+std::string MXA_FILESYSTEM_BASE_CLASS::parentPath(const std::string& path)
 {
   std::string curAbsPath = MXA_FILESYSTEM_BASE_CLASS::absolutePath(path);
   curAbsPath = MXA_FILESYSTEM_BASE_CLASS::fromNativeSeparators(curAbsPath);
@@ -242,7 +242,7 @@ std::string MXA_FILESYSTEM_BASE_CLASS::parentPath(const std::string &path)
 // Remove trailing '/' if found
   if (lastSlashPos == curAbsPath.length() - 1)
   {
-    curAbsPath = curAbsPath.substr(0, curAbsPath.length()-2);
+    curAbsPath = curAbsPath.substr(0, curAbsPath.length() - 2);
     lastSlashPos = curAbsPath.find_last_of(MXA_FILESYSTEM_BASE_CLASS::Separator);
   }
 
@@ -271,7 +271,7 @@ std::string MXA_FILESYSTEM_BASE_CLASS::parentPath(const std::string &path)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool MXA_FILESYSTEM_BASE_CLASS::exists(const std::string &fsPath)
+bool MXA_FILESYSTEM_BASE_CLASS::exists(const std::string& fsPath)
 {
   int error;
   if (fsPath.empty() == true) { return false; }
@@ -279,24 +279,27 @@ bool MXA_FILESYSTEM_BASE_CLASS::exists(const std::string &fsPath)
   // Both windows and OS X both don't like trailing slashes so just get rid of them
   // for all Operating Systems.
 
-  if (dirName[dirName.length() - 1] == MXA_FILESYSTEM_BASE_CLASS::Separator) {
+  if (dirName[dirName.length() - 1] == MXA_FILESYSTEM_BASE_CLASS::Separator)
+  {
     dirName = dirName.substr(0, dirName.length() - 1);
   }
 
-  #if defined (_MSC_VER)
+#if defined (_MSC_VER)
   // We have a plain drive such as C:/
-   if (dirName.length() == 2 && isalpha(dirName[0]) != 0 && dirName[1] == ':') {
-      int curdrive;
-      curdrive = _getdrive();
-      if ( 0 == _chdrive(toupper(dirName[0]) - 'A' + 1 ) ) {
-        _chdrive( curdrive ); // Change back to the original drive
-        return true;
-      }
-      else
-      {
-        return false;
-      }
-   }
+  if (dirName.length() == 2 && isalpha(dirName[0]) != 0 && dirName[1] == ':')
+  {
+    int curdrive;
+    curdrive = _getdrive();
+    if ( 0 == _chdrive(toupper(dirName[0]) - 'A' + 1 ) )
+    {
+      _chdrive( curdrive ); // Change back to the original drive
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
 #endif
   MXA_STATBUF st;
   error = MXA_STAT(dirName.c_str(), &st);
@@ -310,22 +313,22 @@ bool MXA_FILESYSTEM_BASE_CLASS::exists(const std::string &fsPath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool MXA_FILESYSTEM_BASE_CLASS::isDirPath(const std::string &folderPath, bool *existed)
+bool MXA_FILESYSTEM_BASE_CLASS::isDirPath(const std::string& folderPath, bool* existed)
 {
-    std::string fsPath = folderPath;
-    if (fsPath.length() == 2 &&fsPath.at(1) == ':')
-        fsPath += MXA_FILESYSTEM_BASE_CLASS::Separator;
+  std::string fsPath = folderPath;
+  if (fsPath.length() == 2 && fsPath.at(1) == ':')
+  { fsPath += MXA_FILESYSTEM_BASE_CLASS::Separator; }
 
-    DWORD fileAttrib = INVALID_FILE_ATTRIBUTES;
-    fileAttrib = ::GetFileAttributesA(fsPath.c_str() );
+  DWORD fileAttrib = INVALID_FILE_ATTRIBUTES;
+  fileAttrib = ::GetFileAttributesA(fsPath.c_str() );
 
-    if (existed)
-        *existed = fileAttrib != INVALID_FILE_ATTRIBUTES;
+  if (existed)
+  { *existed = fileAttrib != INVALID_FILE_ATTRIBUTES; }
 
-    if (fileAttrib == INVALID_FILE_ATTRIBUTES)
-        return false;
+  if (fileAttrib == INVALID_FILE_ATTRIBUTES)
+  { return false; }
 
-    return (fileAttrib & FILE_ATTRIBUTE_DIRECTORY) ? true : false;
+  return (fileAttrib & FILE_ATTRIBUTE_DIRECTORY) ? true : false;
 }
 #endif
 
@@ -333,13 +336,14 @@ bool MXA_FILESYSTEM_BASE_CLASS::isDirPath(const std::string &folderPath, bool *e
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-std::string MXA_FILESYSTEM_BASE_CLASS::fromNativeSeparators(const std::string  &fsPath)
+std::string MXA_FILESYSTEM_BASE_CLASS::fromNativeSeparators(const std::string&  fsPath)
 {
   std::string path(fsPath);
 #if defined (WIN32)
-  for (int i=0; i<(int)path.length(); i++) {
-      if (path[i] ==  MXA_FILESYSTEM_BASE_CLASS::Separator )
-        path[i] =  MXA_FILESYSTEM_BASE_CLASS::UnixSeparator;
+  for (int i = 0; i < (int)path.length(); i++)
+  {
+    if (path[i] ==  MXA_FILESYSTEM_BASE_CLASS::Separator )
+    { path[i] =  MXA_FILESYSTEM_BASE_CLASS::UnixSeparator; }
   }
 #endif
   return path;
@@ -348,112 +352,118 @@ std::string MXA_FILESYSTEM_BASE_CLASS::fromNativeSeparators(const std::string  &
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-std::string MXA_FILESYSTEM_BASE_CLASS::toNativeSeparators(const std::string &fsPath)
+std::string MXA_FILESYSTEM_BASE_CLASS::toNativeSeparators(const std::string& fsPath)
 {
-    std::string path(fsPath);
+  std::string path(fsPath);
 #if defined (WIN32)
-    for (int i=0; i<(int)path.length(); i++) {
-        if (path[i] ==  MXA_FILESYSTEM_BASE_CLASS::UnixSeparator )
-          path[i] =  MXA_FILESYSTEM_BASE_CLASS::Separator;
-    }
+  for (int i = 0; i < (int)path.length(); i++)
+  {
+    if (path[i] ==  MXA_FILESYSTEM_BASE_CLASS::UnixSeparator )
+    { path[i] =  MXA_FILESYSTEM_BASE_CLASS::Separator; }
+  }
 #endif
-    return path;
+  return path;
 }
 
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-std::string MXA_FILESYSTEM_BASE_CLASS::cleanPath(const std::string &fsPath)
+std::string MXA_FILESYSTEM_BASE_CLASS::cleanPath(const std::string& fsPath)
 {
-    if (fsPath.length() == 0)
-        return fsPath;
-      std::string path(fsPath);
-     char slash = '/';
-     char dot = '.';
-     if (MXA_FILESYSTEM_BASE_CLASS::Separator != MXA_FILESYSTEM_BASE_CLASS::UnixSeparator)
-     {
-       path = fromNativeSeparators(path);
-     }
+  if (fsPath.length() == 0)
+  { return fsPath; }
+  std::string path(fsPath);
+  char slash = '/';
+  char dot = '.';
+  if (MXA_FILESYSTEM_BASE_CLASS::Separator != MXA_FILESYSTEM_BASE_CLASS::UnixSeparator)
+  {
+    path = fromNativeSeparators(path);
+  }
 
 #if defined (_MSC_VER)
-     if (path.length() == 3 && isalpha(path[0]) != 0 && path[1] == ':' && path[2] == '/' )
-     {
-       return MXA_FILESYSTEM_BASE_CLASS::toNativeSeparators(path);
-     }
+  if (path.length() == 3 && isalpha(path[0]) != 0 && path[1] == ':' && path[2] == '/' )
+  {
+    return MXA_FILESYSTEM_BASE_CLASS::toNativeSeparators(path);
+  }
 #endif
 
-     // Peel off any trailing slash
-     if (path[path.length() -1 ] == slash)
-     {
-       path = path.substr(0, path.length() -1);
-     }
+  // Peel off any trailing slash
+  if (path[path.length() - 1 ] == slash)
+  {
+    path = path.substr(0, path.length() - 1);
+  }
 
-     std::vector<std::string> stk;
-     std::string::size_type pos = 0;
-     std::string::size_type pos1 = 0;
+  std::vector<std::string> stk;
+  std::string::size_type pos = 0;
+  std::string::size_type pos1 = 0;
 
-     pos = path.find_first_of(slash, pos);
-     pos1 = path.find_first_of(slash, pos + 1);
+  pos = path.find_first_of(slash, pos);
+  pos1 = path.find_first_of(slash, pos + 1);
 #if defined (WIN32)
-     // Check for UNC style paths first
-     if (pos == 0 && pos1 == 1)
-     {
-       pos1 = path.find_first_of(slash, pos1 + 1);
-     } else
+  // Check for UNC style paths first
+  if (pos == 0 && pos1 == 1)
+  {
+    pos1 = path.find_first_of(slash, pos1 + 1);
+  }
+  else
 #endif
-     if (pos != 0)
-     {
-       stk.push_back(path.substr(0, pos));
-     }
+    if (pos != 0)
+    {
+      stk.push_back(path.substr(0, pos));
+    }
 
-     // check for a top level Unix Path:
-     if (pos == 0 && pos1 == std::string::npos)
-     {
-         stk.push_back(path);
-     }
+  // check for a top level Unix Path:
+  if (pos == 0 && pos1 == std::string::npos)
+  {
+    stk.push_back(path);
+  }
 
 
-     while (pos1 != std::string::npos)
-     {
-       if (pos1 - pos == 3 && path[pos+1] == dot && path[pos+2] == dot)
-       {
-       //  std::cout << "Popping back element" << std::endl;
-         if (stk.size() > 0) {
-           stk.pop_back();
-         }
-       }
-       else if (pos1 - pos == 2 && path[pos+1] == dot )
-       {
-
-       }
-       else if (pos + 1 == pos1) {
-
-       }
-       else {
-         stk.push_back(path.substr(pos, pos1-pos));
-       }
-       pos = pos1;
-       pos1 = path.find_first_of(slash, pos + 1);
-       if (pos1 == std::string::npos)
-       {
-         stk.push_back(path.substr(pos, path.length() - pos));
-       }
-     }
-     std::string ret;
-     for (std::vector<std::string>::iterator iter = stk.begin(); iter != stk.end(); ++iter ) {
-       ret.append(*iter);
-     }
-     ret = toNativeSeparators(ret);
-#if defined (WIN32)
-     if (ret.length() > 2
-       && isalpha(ret[0]) != 0
-       && islower(ret[0]) != 0
-        && ret[1] == ':' && ret[2] == '\\')
+  while (pos1 != std::string::npos)
+  {
+    if (pos1 - pos == 3 && path[pos + 1] == dot && path[pos + 2] == dot)
+    {
+      //  std::cout << "Popping back element" << std::endl;
+      if (stk.size() > 0)
       {
-        //we have a lower case drive letter which needs to be changed to upper case.
-        ret[0] = toupper(ret[0]);
+        stk.pop_back();
       }
+    }
+    else if (pos1 - pos == 2 && path[pos + 1] == dot )
+    {
+
+    }
+    else if (pos + 1 == pos1)
+    {
+
+    }
+    else
+    {
+      stk.push_back(path.substr(pos, pos1 - pos));
+    }
+    pos = pos1;
+    pos1 = path.find_first_of(slash, pos + 1);
+    if (pos1 == std::string::npos)
+    {
+      stk.push_back(path.substr(pos, path.length() - pos));
+    }
+  }
+  std::string ret;
+  for (std::vector<std::string>::iterator iter = stk.begin(); iter != stk.end(); ++iter )
+  {
+    ret.append(*iter);
+  }
+  ret = toNativeSeparators(ret);
+#if defined (WIN32)
+  if (ret.length() > 2
+      && isalpha(ret[0]) != 0
+      && islower(ret[0]) != 0
+      && ret[1] == ':' && ret[2] == '\\')
+  {
+    //we have a lower case drive letter which needs to be changed to upper case.
+    ret[0] = toupper(ret[0]);
+  }
 #endif
-     return ret;
+  return ret;
 }

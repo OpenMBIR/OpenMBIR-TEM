@@ -46,8 +46,8 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-MRCInfoWidget::MRCInfoWidget(QWidget *parent) :
-QWidget(parent)
+MRCInfoWidget::MRCInfoWidget(QWidget* parent) :
+  QWidget(parent)
 {
   setupUi(this);
   this->setWindowFlags(Qt::Tool);
@@ -81,11 +81,11 @@ void MRCInfoWidget::setInfo(QString mrcFilePath)
   int err = reader->readHeader(mrcFilePath.toStdString(), &header);
   if(err < 0)
   {
-      std::cout << "Failed to open MRC File: " << mrcFilePath.toStdString() << std::endl;
+    std::cout << "Failed to open MRC File: " << mrcFilePath.toStdString() << std::endl;
     return;
   }
   //int tiltIndex = 0;
-    
+
   // Transfer the meta data from the MRC Header to the GUI
   SET_MRC_INFO(nx)
   SET_MRC_INFO(ny)

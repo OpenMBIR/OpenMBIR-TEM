@@ -56,7 +56,7 @@ QProgressLabel::QProgressLabel(QWidget* parent) :
 // -----------------------------------------------------------------------------
 QProgressLabel::~QProgressLabel()
 {
- // std::cout << "~QProgressLabel" << std::endl;
+// std::cout << "~QProgressLabel" << std::endl;
 }
 
 // -----------------------------------------------------------------------------
@@ -72,12 +72,13 @@ void QProgressLabel::paintEvent(QPaintEvent* event)
   QColor button_color = m_Color;
 
   QRect button_rect = this->geometry();
-  QSize size = this->size();
+  //QSize size = this->size();
   int width = this->size().width() * static_cast<qreal>(m_Value - m_Minimum) / static_cast<qreal>(m_Maximum - m_Minimum);
 
 
 
-  if (m_Value > 0) {
+  if (m_Value > 0)
+  {
     //outline
     painter.setPen(QPen(QBrush(Qt::darkBlue), 2.0));
     QPainterPath outline;

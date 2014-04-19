@@ -47,13 +47,13 @@
 
 
 #define MAKE_OUTPUT_FILE(Fp, err, outdir, filename)\
-{\
-  std::string filepath(outdir);\
-  filepath = filepath.append(MXADir::getSeparator()).append(filename);\
-  errno = 0;\
-  err = 0;\
-  Fp = fopen(filepath.c_str(),"wb");\
-  if (Fp == NULL) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl; err = -1; }\
+  {\
+    std::string filepath(outdir);\
+    filepath = filepath.append(MXADir::getSeparator()).append(filename);\
+    errno = 0;\
+    err = 0;\
+    Fp = fopen(filepath.c_str(),"wb");\
+    if (Fp == NULL) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl; err = -1; }\
   }
 
 // -----------------------------------------------------------------------------

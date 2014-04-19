@@ -43,8 +43,8 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QFSDroppableGraphicsView::QFSDroppableGraphicsView(QWidget *parent)
-: QGraphicsView(parent)
+QFSDroppableGraphicsView::QFSDroppableGraphicsView(QWidget* parent)
+  : QGraphicsView(parent)
 {
   setAcceptDrops(true);
 }
@@ -52,9 +52,9 @@ QFSDroppableGraphicsView::QFSDroppableGraphicsView(QWidget *parent)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void QFSDroppableGraphicsView::dragEnterEvent(QDragEnterEvent *event)
+void QFSDroppableGraphicsView::dragEnterEvent(QDragEnterEvent* event)
 {
- // qWarning("QFSDroppableGraphicsView::dragEnterEvent(QDragEnterEvent *event)");
+// qWarning("QFSDroppableGraphicsView::dragEnterEvent(QDragEnterEvent *event)");
   // accept just text/uri-list mime format
   if (event->mimeData()->hasFormat("text/uri-list"))
   {
@@ -66,7 +66,7 @@ void QFSDroppableGraphicsView::dragEnterEvent(QDragEnterEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void QFSDroppableGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)
+void QFSDroppableGraphicsView::dragLeaveEvent(QDragLeaveEvent* event)
 {
 //  qWarning("QFSDroppableGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)");
   this->setStyleSheet("");
@@ -75,7 +75,7 @@ void QFSDroppableGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void QFSDroppableGraphicsView::dropEvent(QDropEvent *event)
+void QFSDroppableGraphicsView::dropEvent(QDropEvent* event)
 {
   this->setStyleSheet("");
 //  qWarning("QFSDroppableGraphicsView::dropEvent(QDropEvent *event)");

@@ -49,21 +49,21 @@
 //
 // -----------------------------------------------------------------------------
 BFForwardProject::BFForwardProject(Sinogram* sinogram,
-                               Geometry* geometry,
-                               std::vector<AMatrixCol::Pointer> &tempCol,
-                               std::vector<AMatrixCol::Pointer> &voxelLineResponse,
-                               RealVolumeType::Pointer yEst,
-                               BFForwardModel* forwardModel,
-                               uint16_t tilt,
-                               Observable* obs) :
-m_Sinogram(sinogram),
-m_Geometry(geometry),
-m_TempCol(tempCol),
-m_VoxelLineResponse(voxelLineResponse),
-m_YEstimate(yEst),
-m_ForwardModel(forwardModel),
-m_Tilt(tilt),
-m_Observable(obs)
+                                   Geometry* geometry,
+                                   std::vector<AMatrixCol::Pointer>& tempCol,
+                                   std::vector<AMatrixCol::Pointer>& voxelLineResponse,
+                                   RealVolumeType::Pointer yEst,
+                                   BFForwardModel* forwardModel,
+                                   uint16_t tilt,
+                                   Observable* obs) :
+  m_Sinogram(sinogram),
+  m_Geometry(geometry),
+  m_TempCol(tempCol),
+  m_VoxelLineResponse(voxelLineResponse),
+  m_YEstimate(yEst),
+  m_ForwardModel(forwardModel),
+  m_Tilt(tilt),
+  m_Observable(obs)
 {
 }
 
@@ -108,7 +108,7 @@ void BFForwardProject::operator()() const
           for (uint32_t i_t = m_VoxelLineResponse[i]->index[0]; i_t < m_VoxelLineResponse[i]->index[0] + m_VoxelLineResponse[i]->count; i_t++) //CHANGED from <= to <
           {
             ttmp = (I_0->d[i_theta]
-                * (m_TempCol[Index]->values[q] * m_VoxelLineResponse[i]->values[VoxelLineAccessCounter++] * m_Geometry->Object->getValue(j, k, i)));
+                    * (m_TempCol[Index]->values[q] * m_VoxelLineResponse[i]->values[VoxelLineAccessCounter++] * m_Geometry->Object->getValue(j, k, i)));
 
             m_YEstimate->addToValue(ttmp, i_theta, i_r, i_t);
 

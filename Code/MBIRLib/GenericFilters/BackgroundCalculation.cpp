@@ -43,51 +43,51 @@ BackgroundCalculation::~BackgroundCalculation() {}
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-template<class T> double BackgroundCalculation::computeMean(void *ptr, int numVoxels, Type type)
+template<class T> double BackgroundCalculation::computeMean(void* ptr, int numVoxels, Type type)
 {
-    double mean = 0.0;
-    double sum = 0.0;
-    
-    if (type == TYPE_SIGNED_BYTES)
+  double mean = 0.0;
+  double sum = 0.0;
+
+  if (type == TYPE_SIGNED_BYTES)
+  {
+    signed char* dataPtr = (signed char*)ptr;
+    for (int i = 0; i < numVoxels; i++)
     {
-        signed char* dataPtr = (signed char*)ptr;
-        for (int i=0; i<numVoxels; i++)
-        {
-            sum = sum + dataPtr[i];
-        }
+      sum = sum + dataPtr[i];
     }
-    else if (type == TYPE_UNSIGNED_BYTES)
+  }
+  else if (type == TYPE_UNSIGNED_BYTES)
+  {
+    unsigned char* dataPtr = (unsigned char*)ptr;
+    for (int i = 0; i < numVoxels; i++)
     {
-        unsigned char* dataPtr = (unsigned char*)ptr;
-        for (int i=0; i<numVoxels; i++)
-        {
-            sum = sum + dataPtr[i];
-        }
+      sum = sum + dataPtr[i];
     }
-    else if (type == TYPE_SIGNED_SHORT_INT)
+  }
+  else if (type == TYPE_SIGNED_SHORT_INT)
+  {
+    signed short int* dataPtr = (signed short int*)ptr;
+    for (int i = 0; i < numVoxels; i++)
     {
-        signed short int* dataPtr = (signed short int*)ptr;
-        for (int i=0; i<numVoxels; i++)
-        {
-            sum = sum + dataPtr[i];
-        }
+      sum = sum + dataPtr[i];
     }
-    else if (type == TYPE_FLOAT)
+  }
+  else if (type == TYPE_FLOAT)
+  {
+    float* dataPtr = (float*)ptr;
+    for (int i = 0; i < numVoxels; i++)
     {
-        float* dataPtr = (float*)ptr;
-        for (int i=0; i<numVoxels; i++)
-        {
-            sum = sum + dataPtr[i];
-        }
+      sum = sum + dataPtr[i];
     }
-    else
-    {
-        std::cout << "BackgroundCalculation::computeMean(...) - No type recognized\n";
-        return 0.0;
-    }
-    
-    mean = sum/numVoxels;
-    return mean;
+  }
+  else
+  {
+    std::cout << "BackgroundCalculation::computeMean(...) - No type recognized\n";
+    return 0.0;
+  }
+
+  mean = sum / numVoxels;
+  return mean;
 }
 
 // -----------------------------------------------------------------------------
@@ -95,62 +95,62 @@ template<class T> double BackgroundCalculation::computeMean(void *ptr, int numVo
 // -----------------------------------------------------------------------------
 double BackgroundCalculation::getMeanValue(std::string filePath, int x, int y, int width, int height, int tiltNum)
 {
-    MRCReader::Pointer m_Reader = MRCReader::New();
-    MRCHeader* header = new MRCHeader();
-    
-    
-    if ( !m_Reader->readHeader(filePath, header) )
-    {
-        std::cout << "m_Reader did not read header from filepath correctly!\n";
-        return 0.0;
-    }
-    
-    int mode = header->mode;
-    
-    int min[3] = {x, y, tiltNum};
-    int max[3] = {x+width, y+height, tiltNum};
-    int nVoxels = width*height;
-    
-    if ( !m_Reader->read(filePath, min, max) )
-    {
-        std::cout << "m_Reader did not read filepath correctly!\n";
-        return 0.0;
-    }
-    
-    double mean = 0.0;
-    
-    switch (mode)
-    {
-        case TYPE_BYTES:
-        {
-            if (header->imodFlags == 1)
-            {
-                // Signed bytes
-                mean = computeMean<signed char>(m_Reader->getDataPointer(), nVoxels, TYPE_SIGNED_BYTES);
-            }
-            else
-            {
-                // Unsigned bytes
-                mean = computeMean<unsigned char>(m_Reader->getDataPointer(), nVoxels, TYPE_UNSIGNED_BYTES);
-            }
-            break;
-        }
-        case TYPE_SIGNED_SHORT_INT:
-        {
-            mean = computeMean<signed short int>(m_Reader->getDataPointer(), nVoxels, TYPE_SIGNED_SHORT_INT);
-            break;
-        }
-        case TYPE_FLOAT:
-        {
-            mean = computeMean<float>(m_Reader->getDataPointer(), nVoxels, TYPE_FLOAT);
-            break;
-        }
-    }
-    
-    delete header;
-    header = NULL;
+  MRCReader::Pointer m_Reader = MRCReader::New();
+  MRCHeader* header = new MRCHeader();
 
-    return mean;
+
+  if ( !m_Reader->readHeader(filePath, header) )
+  {
+    std::cout << "m_Reader did not read header from filepath correctly!\n";
+    return 0.0;
+  }
+
+  int mode = header->mode;
+
+  int min[3] = {x, y, tiltNum};
+  int max[3] = {x + width, y + height, tiltNum};
+  int nVoxels = width * height;
+
+  if ( !m_Reader->read(filePath, min, max) )
+  {
+    std::cout << "m_Reader did not read filepath correctly!\n";
+    return 0.0;
+  }
+
+  double mean = 0.0;
+
+  switch (mode)
+  {
+    case TYPE_BYTES:
+    {
+      if (header->imodFlags == 1)
+      {
+        // Signed bytes
+        mean = computeMean<signed char>(m_Reader->getDataPointer(), nVoxels, TYPE_SIGNED_BYTES);
+      }
+      else
+      {
+        // Unsigned bytes
+        mean = computeMean<unsigned char>(m_Reader->getDataPointer(), nVoxels, TYPE_UNSIGNED_BYTES);
+      }
+      break;
+    }
+    case TYPE_SIGNED_SHORT_INT:
+    {
+      mean = computeMean<signed short int>(m_Reader->getDataPointer(), nVoxels, TYPE_SIGNED_SHORT_INT);
+      break;
+    }
+    case TYPE_FLOAT:
+    {
+      mean = computeMean<float>(m_Reader->getDataPointer(), nVoxels, TYPE_FLOAT);
+      break;
+    }
+  }
+
+  delete header;
+  header = NULL;
+
+  return mean;
 }
 
 

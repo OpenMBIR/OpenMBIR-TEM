@@ -40,9 +40,9 @@
 class LayersDockWidget : public QDockWidget , private Ui::LayersDockWidget
 {
 
-  Q_OBJECT;
+    Q_OBJECT;
   public:
-    LayersDockWidget(QWidget *parent = 0);
+    LayersDockWidget(QWidget* parent = 0);
     virtual ~LayersDockWidget();
 
     void setGraphicsView(MRCGraphicsView* view);

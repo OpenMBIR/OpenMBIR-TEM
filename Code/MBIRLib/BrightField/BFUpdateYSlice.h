@@ -81,38 +81,38 @@
  *
  */
 class BFUpdateYSlice
-    #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
-    : public tbb::task
-    #endif
+#if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
+  : public tbb::task
+#endif
 {
   public:
     /**
-   * @brief
-   * @param yStart
-   * @param yEnd
-   * @param geometry
-   * @param outerIter
-   * @param innerIter
-   * @param sinogram
-   * @param tempCol
-   * @param errorSino
-   * @param voxelLineResponse
-   * @param forwardModel
-   * @param mask
-   * @param magUpdateMap
-   * @param magUpdateMask
-   * @param voxelUpdateType
-   * @param averageUpdate
-   * @param averageMagnitudeOfRecon
-   * @param zeroSkipping
-   * @param qggmrf_values
-   */
+    * @brief
+    * @param yStart
+    * @param yEnd
+    * @param geometry
+    * @param outerIter
+    * @param innerIter
+    * @param sinogram
+    * @param tempCol
+    * @param errorSino
+    * @param voxelLineResponse
+    * @param forwardModel
+    * @param mask
+    * @param magUpdateMap
+    * @param magUpdateMask
+    * @param voxelUpdateType
+    * @param averageUpdate
+    * @param averageMagnitudeOfRecon
+    * @param zeroSkipping
+    * @param qggmrf_values
+    */
     BFUpdateYSlice(uint16_t yStart, uint16_t yEnd,
                    GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
                    SinogramPtr  sinogram,
-                   std::vector<AMatrixCol::Pointer> &tempCol,
+                   std::vector<AMatrixCol::Pointer>& tempCol,
                    RealVolumeType::Pointer errorSino,
-                   std::vector<AMatrixCol::Pointer> &voxelLineResponse,
+                   std::vector<AMatrixCol::Pointer>& voxelLineResponse,
                    BFForwardModel* forwardModel,
                    UInt8Image_t::Pointer mask,
                    RealImageType::Pointer magUpdateMap, //Hold the magnitude of the reconstuction along each voxel line
@@ -133,8 +133,8 @@ class BFUpdateYSlice
     int getZeroCount();
 
     /**
-   *
-   */
+    *
+    */
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
     tbb::task*
 #else
@@ -145,8 +145,8 @@ class BFUpdateYSlice
   protected:
 
     /**
-   * @brief
-   */
+    * @brief
+    */
     void initVariables();
 
   private:
@@ -157,9 +157,9 @@ class BFUpdateYSlice
     int16_t m_InnerIter;
     SinogramPtr  m_Sinogram;
     //  SinogramPtr  m_BFSinogram;
-    std::vector<AMatrixCol::Pointer> &m_TempCol;
+    std::vector<AMatrixCol::Pointer>& m_TempCol;
     RealVolumeType::Pointer m_ErrorSino;
-    std::vector<AMatrixCol::Pointer> &m_VoxelLineResponse;//CHANGED! Put a & here
+    std::vector<AMatrixCol::Pointer>& m_VoxelLineResponse;//CHANGED! Put a & here
     BFForwardModel* m_ForwardModel;
     UInt8Image_t::Pointer m_Mask;
     RealImageType::Pointer m_MagUpdateMap;//Hold the magnitude of the reconstuction along each voxel line

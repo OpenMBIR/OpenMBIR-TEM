@@ -42,7 +42,7 @@ class MRCGraphicsView;
 
 class ReconstructionArea : public QObject, public QGraphicsPolygonItem
 {
-  Q_OBJECT;
+    Q_OBJECT;
 
   public:
     enum
@@ -62,10 +62,10 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
       BOTTOM_CTRL_POINT
     };
 
-    ReconstructionArea(const QPolygonF &polygon, QSize imageSize, QGraphicsItem *parent = 0);
+    ReconstructionArea(const QPolygonF& polygon, QSize imageSize, QGraphicsItem* parent = 0);
     virtual ~ReconstructionArea();
 
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = 0);
 
     void setGraphicsView(MRCGraphicsView* gView);
 //    void setControlPointMultiplier(float f);
@@ -80,12 +80,12 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
     }
 
     //  void setUpperLeft(unsigned int x, unsigned int y);
-    void getUpperLeft (int &x, int &y);
+    void getUpperLeft (int& x, int& y);
 
     //  void setLowerRight(unsigned int x, unsigned int y);
-    void getLowerRight (int &x, int &y);
+    void getLowerRight (int& x, int& y);
 
-    void getXMinMax(int &min, int &max);
+    void getXMinMax(int& min, int& max);
 
     void setLineWidth(qreal w);
     qreal getLineWidth();
@@ -96,10 +96,10 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
     void updateWidth(float percentWidth);
 
     // These are here to get signals from a GUI Widget that holds the X/Y min/max values
-    void setXMin(const QString &str);
-    void setYMin(const QString &str);
-    void setXMax(const QString &str);
-    void setYMax(const QString &str);
+    void setXMin(const QString& str);
+    void setYMin(const QString& str);
+    void setXMax(const QString& str);
+    void setYMax(const QString& str);
 
   signals:
 
@@ -110,16 +110,16 @@ class ReconstructionArea : public QObject, public QGraphicsPolygonItem
     void fireReconstructionVOIDeleted(ReconstructionArea* reconVOI);
 
   protected:
-    virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent *event);
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    virtual void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-    virtual void keyPressEvent(QKeyEvent *event);
+    virtual void contextMenuEvent(QGraphicsSceneContextMenuEvent* event);
+    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* event);
+    virtual void hoverMoveEvent(QGraphicsSceneHoverEvent* event);
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent* event);
+    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event);
+    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* event);
+    virtual void keyPressEvent(QKeyEvent* event);
 
     virtual int type() const;
-    CTRL_POINTS isInResizeArea(const QPointF &pos);
+    CTRL_POINTS isInResizeArea(const QPointF& pos);
 
   private:
     bool m_isResizing;

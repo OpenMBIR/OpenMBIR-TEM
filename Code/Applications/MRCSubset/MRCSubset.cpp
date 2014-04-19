@@ -63,7 +63,7 @@
  * @return Error condition
  */
 template<typename T>
-int parseValues(const std::string &values, const char* format, T* output)
+int parseValues(const std::string& values, const char* format, T* output)
 {
   std::string::size_type pos = values.find(",", 0);
   size_t index = 0;
@@ -85,8 +85,8 @@ int parseValues(const std::string &values, const char* format, T* output)
 
 
 template<typename T>
-int copyData(MRCHeader &header, int* voxelMin, int* voxelMax, int* subsetValues,
-           int typeSize, const std::string filepath, MXAFileWriter64 &writer)
+int copyData(MRCHeader& header, int* voxelMin, int* voxelMax, int* subsetValues,
+             int typeSize, const std::string filepath, MXAFileWriter64& writer)
 {
   float mean = 0.0;
   float min = std::numeric_limits<float>::max();
@@ -159,10 +159,10 @@ int copyData(MRCHeader &header, int* voxelMin, int* voxelMax, int* subsetValues,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
 
-    TCLAP::CmdLine cmd("", ' ', MBIRLib::Version::Complete());
+  TCLAP::CmdLine cmd("", ' ', MBIRLib::Version::Complete());
 
   TCLAP::ValueArg<std::string> inputFile("", "inputfile", "The Input MRC File", true, "", "");
   cmd.add(inputFile);
@@ -191,7 +191,7 @@ int main(int argc, char **argv)
 
     }
   }
-  catch (TCLAP::ArgException &e)
+  catch (TCLAP::ArgException& e)
   {
     std::cerr << " error: " << e.error() << " for arg " << e.argId() << std::endl;
     std::cout << "** Unknown Arguments. Displaying help listing instead. **" << std::endl;

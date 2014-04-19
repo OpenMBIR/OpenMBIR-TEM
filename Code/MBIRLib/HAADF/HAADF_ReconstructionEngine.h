@@ -98,7 +98,7 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
      */
     void execute();
 
-    Real_t absMaxArray(std::vector<Real_t> &Array);
+    Real_t absMaxArray(std::vector<Real_t>& Array);
 
   protected:
     // Protect this constructor because we want to force the use of the other
@@ -120,10 +120,10 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
     uint8_t updateVoxels(int16_t OuterIter, int16_t Iter,
                          unsigned int updateType,
                          UInt8Image_t::Pointer VisitCount,
-                         std::vector<AMatrixCol::Pointer> &TempCol,
+                         std::vector<AMatrixCol::Pointer>& TempCol,
                          RealVolumeType::Pointer ErrorSino,
                          RealVolumeType::Pointer Weight,
-                         std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
+                         std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
                          HAADF_ForwardModel* forwardModel,
                          UInt8Image_t::Pointer Mask,
                          CostData::Pointer cost);
@@ -166,7 +166,7 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
     /**
      * @brief Calculates the x boundaries so the writers do not write extra data
      */
-    void computeOriginalXDims(uint16_t &cropStart, uint16_t &cropEnd);
+    void computeOriginalXDims(uint16_t& cropStart, uint16_t& cropEnd);
 
     /**
      * @brief
@@ -182,7 +182,7 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
      * @param VoxelLineResponse
      */
     void storeVoxelResponse(RealVolumeType::Pointer H_t,
-                            std::vector<AMatrixCol::Pointer> &VoxelLineResponse);
+                            std::vector<AMatrixCol::Pointer>& VoxelLineResponse);
 
 
     /**
@@ -278,7 +278,7 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
      * @param low
      * @param high
      */
-    void minMax(Real_t *low, Real_t *high, Real_t currentVoxelValue);
+    void minMax(Real_t* low, Real_t* high, Real_t currentVoxelValue);
 
     /**
      * @brief
@@ -309,7 +309,7 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
      * @param slice
      * @param DetectorResponse
      */
-    AMatrixCol::Pointer calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice,
+    AMatrixCol::Pointer calculateAMatrixColumnPartial(uint16_t row, uint16_t col, uint16_t slice,
                                                       RealVolumeType::Pointer DetectorResponse);
 
     /**
@@ -330,14 +330,14 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
 
 
     template<typename T>
-    double solve(T* f, double a, double b, double err, int32_t *code,uint32_t iteration_count)
+    double solve(T* f, double a, double b, double err, int32_t* code, uint32_t iteration_count)
 
     {
 
       int signa, signb, signc;
       double fa, fb, fc, c; //, signaling_nan();
       double dist;
-      uint32_t num_iter=0;
+      uint32_t num_iter = 0;
 
 
       fa = f->execute(a);
@@ -348,14 +348,14 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
       /* check starting conditions */
       if(signa == signb)
       {
-        if(signa == 1) *code = 1;
-        else *code = -1;
+        if(signa == 1) { *code = 1; }
+        else { *code = -1; }
         return (0.0);
       }
-      else *code = 0;
+      else { *code = 0; }
 
       /* half interval search */
-      if((dist = b - a) < 0) dist = -dist;
+      if((dist = b - a) < 0) { dist = -dist; }
 
       while (num_iter < iteration_count)//(dist > err)
       {
@@ -373,11 +373,11 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
           b = c;
           fb = fc;
         }
-        if((dist = b - a) < 0) dist = -dist;
+        if((dist = b - a) < 0) { dist = -dist; }
       }
 
       /* linear interpolation */
-      if((fb - fa) == 0) return (a);
+      if((fb - fa) == 0) { return (a); }
       else
       {
         c = (a * fb - b * fa) / (fb - fa);

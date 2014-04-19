@@ -34,11 +34,11 @@
 //
 // -----------------------------------------------------------------------------
 AbstractFilter::AbstractFilter() :
-m_ErrorMessage(""),
-m_ErrorCondition(0),
-m_Cancel(false),
-m_Verbose(false),
-m_VeryVerbose(false)
+  m_ErrorMessage(""),
+  m_ErrorCondition(0),
+  m_Cancel(false),
+  m_Verbose(false),
+  m_VeryVerbose(false)
 {
 
 }

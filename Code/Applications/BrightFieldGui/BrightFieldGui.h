@@ -71,8 +71,8 @@ class BrightFieldGui :  public QMainWindow, private Ui::BrightFieldGui, public O
 {
     Q_OBJECT;
 
-public:
-    BrightFieldGui(QWidget *parent = 0);
+  public:
+    BrightFieldGui(QWidget* parent = 0);
     virtual ~BrightFieldGui();
 
     MXA_INSTANCE_PROPERTY(QString, CurrentImageFile)
@@ -82,25 +82,25 @@ public:
     /**
      * @brief Reads the Preferences from the users pref file
      */
-    void readSettings(QSettings &prefs);
+    void readSettings(QSettings& prefs);
 
     /**
      * @brief Writes the preferences to the users pref file
      */
-    void writeSettings(QSettings &prefs);
+    void writeSettings(QSettings& prefs);
 
 
     /**
      * @brief Read the Window Settings from the prefs file
      * @param prefs
      */
-    void readWindowSettings(QSettings &prefs);
+    void readWindowSettings(QSettings& prefs);
 
     /**
      * @brief Write the Window settings to the prefs file
      * @param prefs
      */
-    void writeWindowSettings(QSettings &prefs);
+    void writeWindowSettings(QSettings& prefs);
 
     /**
      * @brief Reads the header from the mrc file
@@ -139,25 +139,25 @@ public:
       * @param message The message to print
       * @param progress The progress of the GrainGenerator normalized to a value between 0 and 100
       */
-    virtual void updateProgressAndMessage(const std::string &msg, int progress);
+    virtual void updateProgressAndMessage(const std::string& msg, int progress);
 
     /**
       * @brief Delete all the built up temp files
       */
     //void deleteTempFiles();
 
-/*!
-   Delete a directory along with all of its contents.
+    /*!
+       Delete a directory along with all of its contents.
 
-   \param dirName Path of directory to remove.
-   \return true on success; false on error.
-*/
-    bool removeDir(const QString &dirName);
+       \param dirName Path of directory to remove.
+       \return true on success; false on error.
+    */
+    bool removeDir(const QString& dirName);
 
-public slots:
+  public slots:
 
     // Manual hookup slots to get signals from the graphics view
-    void mrcInputFileLoaded(const QString &filename);
+    void mrcInputFileLoaded(const QString& filename);
     // Slots to deal with events emitted from the Reconstruction Area when it changes
     void reconstructionVOIAdded(ReconstructionArea* recon);
     void reconstructionVOIUpdated(ReconstructionArea* recon);
@@ -165,7 +165,7 @@ public slots:
     void reconstructionVOIDeleted(ReconstructionArea* recon);
 
 
-protected slots:
+  protected slots:
     //Manual Hookup Menu Actions
 
     // File Menu
@@ -214,11 +214,11 @@ protected slots:
     /**
      * @brief Y Min text has changed
      */
-    void on_yMin_textChanged(const QString &string);
+    void on_yMin_textChanged(const QString& string);
     /**
      * @brief Y Max text has changed
      */
-    void on_yMax_textChanged(const QString &string);
+    void on_yMax_textChanged(const QString& string);
 
     /**
      * @brief Qt Slot that fires in response to a click on a "Recent File' Menu entry.
@@ -230,7 +230,7 @@ protected slots:
      * should be connected to the Signal QRecentFileList->fileListChanged
      * @param file The newly added file.
      */
-    void updateBaseRecentFileList(const QString &file);
+    void updateBaseRecentFileList(const QString& file);
 
     /**
      * @brief Loads a configuration file for a reconstruction
@@ -242,31 +242,31 @@ protected slots:
     //  Input Tab Widgets
     void on_inputMRCFilePathBtn_clicked();
 
-    void on_inputMRCFilePath_textChanged(const QString &string);
+    void on_inputMRCFilePath_textChanged(const QString& string);
 
     void on_inputBrightFieldFilePathBtn_clicked();
 
-    void on_inputBrightFieldFilePath_textChanged(const QString &string);
+    void on_inputBrightFieldFilePath_textChanged(const QString& string);
 
     void on_reconstructedVolumeFileNameBtn_clicked();
 
-    void on_reconstructedVolumeFileName_textChanged(const QString & text);
+    void on_reconstructedVolumeFileName_textChanged(const QString& text);
 
     void on_outputDirectoryPathBtn_clicked();
 
     void on_initialReconstructionPathBtn_clicked();
 
-    void on_initialReconstructionPath_textChanged(const QString & text);
+    void on_initialReconstructionPath_textChanged(const QString& text);
 
     void on_resetSigmaXBtn_clicked();
 
-    void on_smoothness_textChanged(const QString & text);
+    void on_smoothness_textChanged(const QString& text);
 
-    void on_sigma_x_textChanged(const QString & text);
+    void on_sigma_x_textChanged(const QString& text);
 
     void on_defaultOffsetUpdateBtn_clicked();
 
-    void on_defaultOffset_textChanged(const QString & text);
+    void on_defaultOffset_textChanged(const QString& text);
 
     void singleSlicePlaneSet(int y);
 
@@ -276,13 +276,13 @@ protected slots:
     void geometryChanged();
 
 
-protected:
+  protected:
 
     /**
     * @brief Implements the CloseEvent to Quit the application and write settings
     * to the preference file
     */
-    void closeEvent(QCloseEvent *event);
+    void closeEvent(QCloseEvent* event);
 
 
     /**
@@ -353,7 +353,7 @@ protected:
      * @param tilts Which tilts were selected
      * @return
      */
-    bool checkTiltAngles(QVector<float> &tilts);
+    bool checkTiltAngles(QVector<float>& tilts);
 
     /**
      * @brief Enables specific widgets in the GUI
@@ -361,7 +361,7 @@ protected:
      */
     void enableWidgets(bool b);
 
-signals:
+  signals:
 
     /**
     * @brief Signal emitted when a process is started
@@ -401,7 +401,7 @@ signals:
 
     void fireRectangleCreatorAdded(RectangleCreator* rectangle);
 
-private slots:
+  private slots:
     // slots for our worker thread to communicate
 
     /**
@@ -451,8 +451,8 @@ private slots:
      */
     void startReconstruction(bool fullReconstruction);
 
-private:
-  //  LayersDockWidget*        m_LayersPalette;
+  private:
+    //  LayersDockWidget*        m_LayersPalette;
     QMap<QObject*, QWidget*> m_TasksMap;
 
     QList<QWidget*>       m_WidgetList;

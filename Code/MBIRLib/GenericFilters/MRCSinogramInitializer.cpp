@@ -84,7 +84,7 @@ void MRCSinogramInitializer::execute()
   // int16_t i,j,k;
   // uint16_t TotalNumMaskedViews;
 
-  Real_t sum=0;
+  Real_t sum = 0;
 
   MRCReader::Pointer reader = MRCReader::New(true);
   MRCHeader header;
@@ -101,12 +101,12 @@ void MRCSinogramInitializer::execute()
   }
 
   int voxelMin[3] = {0, 0, 0};
-  int voxelMax[3] = {header.nx-1, header.ny-1, header.nz-1};
+  int voxelMax[3] = {header.nx - 1, header.ny - 1, header.nz - 1};
   inputs->fileXSize = header.nx;
   inputs->fileYSize = header.ny;
   inputs->fileZSize = header.nz;
 
-  Real_t CenterOfRot = header.nx/2;
+  Real_t CenterOfRot = header.nx / 2;
   ss.str("");
   ss << "Center of rotation in this data set is " << CenterOfRot << std::endl;
 
@@ -145,7 +145,7 @@ void MRCSinogramInitializer::execute()
       {
         Real_t tempx = CenterOfRot + LeftLength - 1;
         //Make sure the adjustment does not overrun the size of the data
-        if(tempx >= header.nx) tempx = header.nx - 1;
+        if(tempx >= header.nx) { tempx = header.nx - 1; }
 
         voxelMax[0] = tempx;
         inputs->xEnd = voxelMax[0];
@@ -155,7 +155,7 @@ void MRCSinogramInitializer::execute()
       {
         Real_t tempx = CenterOfRot - RightLength;
         //Make sure the adjustment does not overrun the size of the data
-        if(tempx < 0) tempx = 0;
+        if(tempx < 0) { tempx = 0; }
 
         voxelMin[0] = tempx;
         inputs->xStart = voxelMin[0];
@@ -168,7 +168,7 @@ void MRCSinogramInitializer::execute()
 
     //Adjusting the volume along the y-directions so we dont have
     //  issues with pixelation
-    ss <<"Current y ROI: "<< "yStart=" << inputs->yStart << " " << "yEnd=" << inputs->yEnd << std::endl;
+    ss << "Current y ROI: " << "yStart=" << inputs->yStart << " " << "yEnd=" << inputs->yEnd << std::endl;
     int16_t disty = inputs->yEnd - inputs->yStart + 1;
     ss << "Interpolate Factor=" << inputs->interpolateFactor << std::endl;
     //3*iterpFactor is to account for the prior which operates on
@@ -180,7 +180,7 @@ void MRCSinogramInitializer::execute()
       int16_t remainder = static_cast<int16_t>((inputs->interpolateFactor * 3) - (rem_temp));
 
       //Make sure the adjustment does not overrun the size of the data
-      if(inputs->yEnd + remainder < header.ny) inputs->yEnd += remainder;
+      if(inputs->yEnd + remainder < header.ny) { inputs->yEnd += remainder; }
       else
       {
         inputs->yEnd = header.ny - 1;
@@ -216,7 +216,7 @@ void MRCSinogramInitializer::execute()
   }
 
   // Clear out the vector as we are going to build it up
-  inputs->goodViews.resize(0,0);
+  inputs->goodViews.resize(0, 0);
   int jStart = 0;
   bool addToGoodView = false;
   for (int i = voxelMin[2]; i <= voxelMax[2]; ++i )
@@ -244,7 +244,7 @@ void MRCSinogramInitializer::execute()
   if (err < 0)
   {
     FREE_FEI_HEADERS( header.feiHeaders )
-        setErrorMessage("Error Code from Reading MRC File");
+    setErrorMessage("Error Code from Reading MRC File");
     setErrorCondition(err);
     notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
     return;
@@ -255,8 +255,9 @@ void MRCSinogramInitializer::execute()
   // will need to "rotate" the data in the XY plane when copying from the MRC read data into our
   // own array.
   size_t dims[3] = {sinogram->N_theta,
-                    inputs->xEnd - inputs->xStart+1,
-                    inputs->yEnd - inputs->yStart+1};
+                    inputs->xEnd - inputs->xStart + 1,
+                    inputs->yEnd - inputs->yStart + 1
+                   };
   sinogram->counts = RealVolumeType::New(dims, "Sinogram.counts");
 
   sinogram->angles.resize(sinogram->N_theta);
@@ -298,22 +299,22 @@ void MRCSinogramInitializer::execute()
   reader->setDeleteMemory(true);
   reader = MRCReader::NullPointer();
   FREE_FEI_HEADERS( header.feiHeaders )
-      sinogram->R0 = -(sinogram->N_r*sinogram->delta_r)/2;
-  sinogram->RMax = (sinogram->N_r*sinogram->delta_r)/2;
-  sinogram->T0 =  -(sinogram->N_t*sinogram->delta_t)/2;
-  sinogram->TMax = (sinogram->N_t*sinogram->delta_t)/2;
+  sinogram->R0 = -(sinogram->N_r * sinogram->delta_r) / 2;
+  sinogram->RMax = (sinogram->N_r * sinogram->delta_r) / 2;
+  sinogram->T0 =  -(sinogram->N_t * sinogram->delta_t) / 2;
+  sinogram->TMax = (sinogram->N_t * sinogram->delta_t) / 2;
 
 
-  ss << "Size of the Masked Sinogram N_r =" << sinogram->N_r << " N_t = "<< sinogram->N_t
+  ss << "Size of the Masked Sinogram N_r =" << sinogram->N_r << " N_t = " << sinogram->N_t
      << " N_theta=" << sinogram->N_theta << std::endl;
 
   if(getVerbose())
   {
     //display tilt angles
-    std::cout<<"The tilt angles are"<<std::endl;
+    std::cout << "The tilt angles are" << std::endl;
     for (uint16_t i = 0; i < sinogram->N_theta; i++)
     {
-      std::cout<<sinogram->angles[i]<<std::endl;
+      std::cout << sinogram->angles[i] << std::endl;
     }
 
     //check sum calculation

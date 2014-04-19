@@ -23,14 +23,14 @@ typedef struct DIR DIR;
 
 struct dirent
 {
-    unsigned char d_namlen;
-    char *d_name;
+  unsigned char d_namlen;
+  char* d_name;
 };
 
-DIR* opendir(const char *);
-int closedir(DIR *);
-struct dirent* readdir(DIR *);
-void rewinddir(DIR *);
+DIR* opendir(const char*);
+int closedir(DIR*);
+struct dirent* readdir(DIR*);
+void rewinddir(DIR*);
 
 /*
 

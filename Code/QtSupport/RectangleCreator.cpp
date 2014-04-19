@@ -45,7 +45,7 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-RectangleCreator::RectangleCreator(const QPolygonF &polygon,  QGraphicsItem *parent) :
+RectangleCreator::RectangleCreator(const QPolygonF& polygon,  QGraphicsItem* parent) :
   QGraphicsPolygonItem(polygon, parent),
   m_LineWidth(1)
 {
@@ -92,7 +92,7 @@ RectangleCreator::~RectangleCreator()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-RectangleCreator* RectangleCreator::NewRectangleCreator(QSettings &prefs, int index, QGraphicsItem *parent)
+RectangleCreator* RectangleCreator::NewRectangleCreator(QSettings& prefs, int index, QGraphicsItem* parent)
 {
   bool ok = false;
   int m_Class = index;
@@ -142,7 +142,7 @@ RectangleCreator* RectangleCreator::NewRectangleCreator(QSettings &prefs, int in
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void RectangleCreator::getUpperLeft(unsigned int &x, unsigned int &y)
+void RectangleCreator::getUpperLeft(unsigned int& x, unsigned int& y)
 {
   QPoint p = pos().toPoint();
   QRect b = boundingRect().toAlignedRect();
@@ -160,7 +160,7 @@ void RectangleCreator::getUpperLeft(unsigned int &x, unsigned int &y)
 //}
 
 
-void RectangleCreator::getLowerRight(unsigned int &x, unsigned int &y)
+void RectangleCreator::getLowerRight(unsigned int& x, unsigned int& y)
 {
   QPoint p = pos().toPoint();
   QRect b = boundingRect().toAlignedRect();
@@ -191,7 +191,7 @@ qreal RectangleCreator::getLineWidth()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void RectangleCreator::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void RectangleCreator::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
   if (isVisible() == false)
   {
@@ -216,7 +216,7 @@ void RectangleCreator::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 
   if (option->state & QStyle::State_Selected)
   {
-  #if 0
+#if 0
     float x = boundingRect().x();
     float y = boundingRect().y();
     float w = boundingRect().width();
@@ -233,7 +233,7 @@ void RectangleCreator::paint(QPainter *painter, const QStyleOptionGraphicsItem *
     painter->drawRect((int)x + (int)w - (int)ctrlPointSize, (int)y + (int)h - (int)ctrlPointSize, (int)ctrlPointSize, (int)ctrlPointSize);
     // Lower Left
     painter->drawRect((int)x, (int)y + (int)h - (int)ctrlPointSize, (int)ctrlPointSize, (int)ctrlPointSize);
-  #endif
+#endif
   }
 
   painter->setRenderHint(QPainter::Antialiasing, false);
@@ -242,20 +242,20 @@ void RectangleCreator::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void RectangleCreator::duplicateSelectedItems(QGraphicsScene *scene)
+void RectangleCreator::duplicateSelectedItems(QGraphicsScene* scene)
 {
   if (!scene)
-    return;
+  { return; }
   //TODO This needs to be fully implemeted
 #if 0
-  QList<QGraphicsItem *> selected;
+  QList<QGraphicsItem*> selected;
   selected = scene->selectedItems();
 
-  foreach (QGraphicsItem *item, selected)
+  foreach (QGraphicsItem * item, selected)
   {
-    RectangleCreator *itemBase = qgraphicsitem_cast<RectangleCreator *>(item);
+    RectangleCreator* itemBase = qgraphicsitem_cast<RectangleCreator*>(item);
     if (itemBase)
-      scene->addItem(itemBase->createNew(itemBase->m_size, itemBase->pos().x() + itemBase->m_size, itemBase->pos().y()));
+    { scene->addItem(itemBase->createNew(itemBase->m_size, itemBase->pos().x() + itemBase->m_size, itemBase->pos().y())); }
   }
 #endif
 
@@ -264,17 +264,17 @@ void RectangleCreator::duplicateSelectedItems(QGraphicsScene *scene)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void RectangleCreator::deleteSelectedItems(QGraphicsScene *scene)
+void RectangleCreator::deleteSelectedItems(QGraphicsScene* scene)
 {
   if (!scene)
-    return;
+  { return; }
 
-  QList<QGraphicsItem *> selected;
+  QList<QGraphicsItem*> selected;
   selected = scene->selectedItems();
 
-  foreach (QGraphicsItem *item, selected)
+  foreach (QGraphicsItem * item, selected)
   {
-    RectangleCreator *itemBase = qgraphicsitem_cast<RectangleCreator *>(item);
+    RectangleCreator* itemBase = qgraphicsitem_cast<RectangleCreator*>(item);
     if (itemBase)
     {
       emit itemBase->fireRectangleCreatorAboutToDelete(itemBase);
@@ -290,13 +290,13 @@ void RectangleCreator::deleteSelectedItems(QGraphicsScene *scene)
 void RectangleCreator::deleteAllRectangleCreators(QGraphicsScene* scene)
 {
   if (!scene)
-    return;
-  QList<QGraphicsItem *> selected;
+  { return; }
+  QList<QGraphicsItem*> selected;
   selected = scene->items();
 
-  foreach (QGraphicsItem *item, selected)
+  foreach (QGraphicsItem * item, selected)
   {
-    RectangleCreator *itemBase = qgraphicsitem_cast<RectangleCreator *>(item);
+    RectangleCreator* itemBase = qgraphicsitem_cast<RectangleCreator*>(item);
     if (itemBase)
     {
       emit itemBase->fireRectangleCreatorAboutToDelete(itemBase);
@@ -310,24 +310,24 @@ void RectangleCreator::deleteAllRectangleCreators(QGraphicsScene* scene)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void RectangleCreator::growSelectedItems(QGraphicsScene *scene)
+void RectangleCreator::growSelectedItems(QGraphicsScene* scene)
 {
   if (!scene)
-    return;
+  { return; }
   //TODO: This needs to be fully implemented
 #if 0
-  QList<QGraphicsItem *> selected;
+  QList<QGraphicsItem*> selected;
   selected = scene->selectedItems();
 
-  foreach (QGraphicsItem *item, selected)
+  foreach (QGraphicsItem * item, selected)
   {
-    RectangleCreator *itemBase = qgraphicsitem_cast<RectangleCreator *>(item);
+    RectangleCreator* itemBase = qgraphicsitem_cast<RectangleCreator*>(item);
     if (itemBase)
     {
       itemBase->prepareGeometryChange();
       itemBase->m_size *= 2;
       if (itemBase->m_size > MAX_ITEM_SIZE)
-        itemBase->m_size = MAX_ITEM_SIZE;
+      { itemBase->m_size = MAX_ITEM_SIZE; }
     }
   }
 #endif
@@ -337,25 +337,25 @@ void RectangleCreator::growSelectedItems(QGraphicsScene *scene)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void RectangleCreator::shrinkSelectedItems(QGraphicsScene *scene)
+void RectangleCreator::shrinkSelectedItems(QGraphicsScene* scene)
 {
   if (!scene)
-    return;
+  { return; }
 
   //TODO: This needs to be fully implemented
 #if 0
-  QList<QGraphicsItem *> selected;
+  QList<QGraphicsItem*> selected;
   selected = scene->selectedItems();
 
-  foreach (QGraphicsItem *item, selected)
+  foreach (QGraphicsItem * item, selected)
   {
-    RectangleCreator *itemBase = qgraphicsitem_cast<RectangleCreator *>(item);
+    RectangleCreator* itemBase = qgraphicsitem_cast<RectangleCreator*>(item);
     if (itemBase)
     {
       itemBase->prepareGeometryChange();
       itemBase->m_size /= 2;
       if (itemBase->m_size < MIN_ITEM_SIZE)
-        itemBase->m_size = MIN_ITEM_SIZE;
+      { itemBase->m_size = MIN_ITEM_SIZE; }
     }
   }
 #endif
@@ -365,7 +365,7 @@ void RectangleCreator::shrinkSelectedItems(QGraphicsScene *scene)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void RectangleCreator::mousePressEvent(QGraphicsSceneMouseEvent *event)
+void RectangleCreator::mousePressEvent(QGraphicsSceneMouseEvent* event)
 {
   static qreal z = 0.0;
   setZValue(z += 1.0);
@@ -385,11 +385,14 @@ void RectangleCreator::mousePressEvent(QGraphicsSceneMouseEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void RectangleCreator::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
+void RectangleCreator::mouseReleaseEvent(QGraphicsSceneMouseEvent* event)
 {
-  if (event->button() == Qt::LeftButton && m_isResizing) {
+  if (event->button() == Qt::LeftButton && m_isResizing)
+  {
     m_isResizing = false;
-  } else {
+  }
+  else
+  {
     QGraphicsItem::mouseReleaseEvent(event);
   }
 }
@@ -397,7 +400,7 @@ void RectangleCreator::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void RectangleCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+void RectangleCreator::mouseMoveEvent(QGraphicsSceneMouseEvent* event)
 {
   QPointF lastPos = event->lastScenePos();
   QPointF pos = event->scenePos();
@@ -449,7 +452,7 @@ void RectangleCreator::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void RectangleCreator::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
+void RectangleCreator::hoverMoveEvent(QGraphicsSceneHoverEvent* event)
 {
   RectangleCreator::CTRL_POINTS pt = isInResizeArea(event->pos());
   if (m_isResizing || (pt != RectangleCreator::NO_CTRL_POINT && isSelected()) )
@@ -474,9 +477,10 @@ void RectangleCreator::hoverMoveEvent(QGraphicsSceneHoverEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void RectangleCreator::keyPressEvent(QKeyEvent *event)
+void RectangleCreator::keyPressEvent(QKeyEvent* event)
 {
-  switch (event->key()) {
+  switch (event->key())
+  {
     case Qt::Key_Delete:
       deleteSelectedItems(scene());
       break;
@@ -498,7 +502,7 @@ void RectangleCreator::keyPressEvent(QKeyEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-RectangleCreator::CTRL_POINTS RectangleCreator::isInResizeArea(const QPointF &pos)
+RectangleCreator::CTRL_POINTS RectangleCreator::isInResizeArea(const QPointF& pos)
 {
   float x = boundingRect().x();
   float y = boundingRect().y();
@@ -516,15 +520,18 @@ RectangleCreator::CTRL_POINTS RectangleCreator::isInResizeArea(const QPointF &po
     //    std::cout << "UPPER_LEFT_CTRL_POINT" << std::endl;
     return UPPER_LEFT_CTRL_POINT;
   }
-  if (upRight.contains(pos))   {
+  if (upRight.contains(pos))
+  {
     //    std::cout << "UPPER_RIGHT_CTRL_POINT" << std::endl;
     return UPPER_RIGHT_CTRL_POINT;
   }
-  if (lowRight.contains(pos))   {
+  if (lowRight.contains(pos))
+  {
     //   std::cout << "LOWER_RIGHT_CTRL_POINT" << std::endl;
     return LOWER_RIGHT_CTRL_POINT;
   }
-  if (lowLeft.contains(pos))   {
+  if (lowLeft.contains(pos))
+  {
     //    std::cout << "LOWER_LEFT_CTRL_POINT" << std::endl;
     return LOWER_LEFT_CTRL_POINT;
   }
@@ -571,9 +578,9 @@ void RectangleCreator::updateRectanglePolygon(QPolygonF polygon)
   int h = polygon.boundingRect().height();
 
   QPointF p1(x, y);
-  QPointF p2(x+w, y);
-  QPointF p3(x, y+h);
-  QPointF p4(x+w, y+h);
+  QPointF p2(x + w, y);
+  QPointF p3(x, y + h);
+  QPointF p4(x + w, y + h);
 
   QVector<QPointF> pts;
   pts.append(mapToParent(p1));

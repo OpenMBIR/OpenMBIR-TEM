@@ -70,85 +70,85 @@ namespace H5Lite
 
 
 
-/**
- *
- * @param value
- * @return
- */
-template<typename T>
- MXA_EXPORT std::string HDFTypeForPrimitiveAsStr(T value)
-{
-  if (typeid(value) == typeid(int8_t)) return "H5T_NATIVE_INT8";
-  if (typeid(value) == typeid(uint8_t)) return "H5T_NATIVE_UINT8";
+  /**
+   *
+   * @param value
+   * @return
+   */
+  template<typename T>
+  MXA_EXPORT std::string HDFTypeForPrimitiveAsStr(T value)
+  {
+    if (typeid(value) == typeid(int8_t)) { return "H5T_NATIVE_INT8"; }
+    if (typeid(value) == typeid(uint8_t)) { return "H5T_NATIVE_UINT8"; }
 
-  if (typeid(value) == typeid(int16_t)) return "H5T_NATIVE_INT16";
-  if (typeid(value) == typeid(uint16_t)) return "H5T_NATIVE_UINT16";
+    if (typeid(value) == typeid(int16_t)) { return "H5T_NATIVE_INT16"; }
+    if (typeid(value) == typeid(uint16_t)) { return "H5T_NATIVE_UINT16"; }
 
-  if (typeid(value) == typeid(int32_t)) return "H5T_NATIVE_INT32";
-  if (typeid(value) == typeid(uint32_t)) return "H5T_NATIVE_UINT32";
+    if (typeid(value) == typeid(int32_t)) { return "H5T_NATIVE_INT32"; }
+    if (typeid(value) == typeid(uint32_t)) { return "H5T_NATIVE_UINT32"; }
 
-  if (typeid(value) == typeid(int64_t)) return "H5T_NATIVE_INT64";
-  if (typeid(value) == typeid(uint64_t)) return "H5T_NATIVE_UINT64";
+    if (typeid(value) == typeid(int64_t)) { return "H5T_NATIVE_INT64"; }
+    if (typeid(value) == typeid(uint64_t)) { return "H5T_NATIVE_UINT64"; }
 
-  if (typeid(value) == typeid(float32)) return "H5T_NATIVE_FLOAT";
-  if (typeid(value) == typeid(float64)) return "H5T_NATIVE_DOUBLE";
+    if (typeid(value) == typeid(float32)) { return "H5T_NATIVE_FLOAT"; }
+    if (typeid(value) == typeid(float64)) { return "H5T_NATIVE_DOUBLE"; }
 
-  //if (typeid(value) == typeid(bool)) return "H5T_NATIVE_UINT8";
+    //if (typeid(value) == typeid(bool)) return "H5T_NATIVE_UINT8";
 
-  std::cout << DEBUG_OUT(logTime) << "Error: HDFTypeForPrimitiveAsStr - Unknown Type: " << typeid(value).name() << std::endl;
-  return "";
-}
+    std::cout << DEBUG_OUT(logTime) << "Error: HDFTypeForPrimitiveAsStr - Unknown Type: " << typeid(value).name() << std::endl;
+    return "";
+  }
 
-/**
- *
- * @param value
- * @return
- */
-template<typename T>
- MXA_EXPORT int32_t HDFTypeForPrimitive(T value)
-{
-  if (typeid(value) == typeid(float32)) return H5T_NATIVE_FLOAT;
-  if (typeid(value) == typeid(float64)) return H5T_NATIVE_DOUBLE;
+  /**
+   *
+   * @param value
+   * @return
+   */
+  template<typename T>
+  MXA_EXPORT int32_t HDFTypeForPrimitive(T value)
+  {
+    if (typeid(value) == typeid(float32)) { return H5T_NATIVE_FLOAT; }
+    if (typeid(value) == typeid(float64)) { return H5T_NATIVE_DOUBLE; }
 
-  if (typeid(value) == typeid(int8_t)) return H5T_NATIVE_INT8;
-  if (typeid(value) == typeid(uint8_t)) return H5T_NATIVE_UINT8;
+    if (typeid(value) == typeid(int8_t)) { return H5T_NATIVE_INT8; }
+    if (typeid(value) == typeid(uint8_t)) { return H5T_NATIVE_UINT8; }
 
-  if (typeid(value) == typeid(int16_t)) return H5T_NATIVE_INT16;
-  if (typeid(value) == typeid(uint16_t)) return H5T_NATIVE_UINT16;
+    if (typeid(value) == typeid(int16_t)) { return H5T_NATIVE_INT16; }
+    if (typeid(value) == typeid(uint16_t)) { return H5T_NATIVE_UINT16; }
 
-  if (typeid(value) == typeid(int32_t)) return H5T_NATIVE_INT32;
-  if (typeid(value) == typeid(uint32_t)) return H5T_NATIVE_UINT32;
+    if (typeid(value) == typeid(int32_t)) { return H5T_NATIVE_INT32; }
+    if (typeid(value) == typeid(uint32_t)) { return H5T_NATIVE_UINT32; }
 
-  if (typeid(value) == typeid(int64_t)) return H5T_NATIVE_INT64;
-  if (typeid(value) == typeid(uint64_t)) return H5T_NATIVE_UINT64;
+    if (typeid(value) == typeid(int64_t)) { return H5T_NATIVE_INT64; }
+    if (typeid(value) == typeid(uint64_t)) { return H5T_NATIVE_UINT64; }
 
-  if (typeid(value) == typeid(bool)) return H5T_NATIVE_UINT8;
+    if (typeid(value) == typeid(bool)) { return H5T_NATIVE_UINT8; }
 
-  return -1;
-}
+    return -1;
+  }
 
-static int32_t HDFTypeFromString(const std::string &value)
-{
-  if (value.compare("H5T_NATIVE_INT8") == 0) return H5T_NATIVE_INT8;
-  if (value.compare("H5T_NATIVE_UINT8") == 0) return H5T_NATIVE_UINT8;
+  static int32_t HDFTypeFromString(const std::string& value)
+  {
+    if (value.compare("H5T_NATIVE_INT8") == 0) { return H5T_NATIVE_INT8; }
+    if (value.compare("H5T_NATIVE_UINT8") == 0) { return H5T_NATIVE_UINT8; }
 
-  if (value.compare("H5T_NATIVE_INT16") == 0) return H5T_NATIVE_INT16;
-  if (value.compare("H5T_NATIVE_UINT16") == 0) return H5T_NATIVE_UINT16;
+    if (value.compare("H5T_NATIVE_INT16") == 0) { return H5T_NATIVE_INT16; }
+    if (value.compare("H5T_NATIVE_UINT16") == 0) { return H5T_NATIVE_UINT16; }
 
-  if (value.compare("H5T_NATIVE_INT32") == 0) return H5T_NATIVE_INT32;
-  if (value.compare("H5T_NATIVE_UINT32") == 0) return H5T_NATIVE_UINT32;
+    if (value.compare("H5T_NATIVE_INT32") == 0) { return H5T_NATIVE_INT32; }
+    if (value.compare("H5T_NATIVE_UINT32") == 0) { return H5T_NATIVE_UINT32; }
 
-  if (value.compare("H5T_NATIVE_INT64") == 0) return H5T_NATIVE_INT64;
-  if (value.compare("H5T_NATIVE_UINT64") == 0) return H5T_NATIVE_UINT64;
+    if (value.compare("H5T_NATIVE_INT64") == 0) { return H5T_NATIVE_INT64; }
+    if (value.compare("H5T_NATIVE_UINT64") == 0) { return H5T_NATIVE_UINT64; }
 
-  if (value.compare("H5T_NATIVE_FLOAT") == 0) return H5T_NATIVE_FLOAT;
-  if (value.compare("H5T_NATIVE_DOUBLE") == 0) return H5T_NATIVE_DOUBLE;
+    if (value.compare("H5T_NATIVE_FLOAT") == 0) { return H5T_NATIVE_FLOAT; }
+    if (value.compare("H5T_NATIVE_DOUBLE") == 0) { return H5T_NATIVE_DOUBLE; }
 
-  if (value.compare("H5T_STRING") == 0) return H5T_STRING;
+    if (value.compare("H5T_STRING") == 0) { return H5T_STRING; }
 
-  std::cout << DEBUG_OUT(logTime) << "Error: HDFTypeFromString - Unknown Type: " << value << std::endl;
-  return -1;
-}
+    std::cout << DEBUG_OUT(logTime) << "Error: HDFTypeFromString - Unknown Type: " << value << std::endl;
+    return -1;
+  }
 
 } /* End H5Lite namespace */
 

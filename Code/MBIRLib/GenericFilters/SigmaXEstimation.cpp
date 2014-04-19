@@ -49,52 +49,52 @@ namespace Detail
   const float DegToRad = 0.017453292519943f;
 
   template<typename T>
-  void calcMinMax(T* data, int total, Real_t &min, Real_t &max, Real_t &sum2)
+  void calcMinMax(T* data, int total, Real_t& min, Real_t& max, Real_t& sum2)
   {
     for (int i = 0; i < total; i++)
     {
-      if(data[i] > max) max = data[i];
-      if(data[i] < min) min = data[i];
+      if(data[i] > max) { max = data[i]; }
+      if(data[i] < min) { min = data[i]; }
       sum2 += (data[i]);
     }
   }
 
   template<typename T>
-  void calcAvgDeviation(T* data, int total, Real_t &dev)
+  void calcAvgDeviation(T* data, int total, Real_t& dev)
   {
-    dev=0;
-    Real_t mean=0;
+    dev = 0;
+    Real_t mean = 0;
     for (int i = 0; i < total; i++)
     {
-      mean+=data[i];
+      mean += data[i];
     }
-    mean/=total;
+    mean /= total;
     for (int i = 0; i < total; i++)
     {
-      dev+=fabs(data[i]-mean);
+      dev += fabs(data[i] - mean);
     }
-    dev/=total;
+    dev /= total;
   }
 
   template<typename T>
-  void calcBFAvgDeviation(T* data, int total, Real_t &dev, double bf_offset)
+  void calcBFAvgDeviation(T* data, int total, Real_t& dev, double bf_offset)
   {
-    dev=0;
-    Real_t mean=0;
+    dev = 0;
+    Real_t mean = 0;
     for (int i = 0; i < total; i++)
     {
       Real_t temp = data[i] + bf_offset;
       if(temp > 0)
-        mean+=log(data[i]+bf_offset);
+      { mean += log(data[i] + bf_offset); }
     }
-    mean/=total;
+    mean /= total;
     for (int i = 0; i < total; i++)
     {
       Real_t temp = data[i] + bf_offset;
       if(temp > 0)
-        dev+=fabs(log(data[i]+bf_offset)-mean);
+      { dev += fabs(log(data[i] + bf_offset) - mean); }
     }
-    dev/=total;
+    dev /= total;
   }
 
 }
@@ -141,7 +141,7 @@ void SigmaXEstimation::execute()
   if (err < 0)
   {
     FREE_FEI_HEADERS( header.feiHeaders )
-        notify("Error reading the MRC input file", 0, Observable::UpdateErrorMessage);
+    notify("Error reading the MRC input file", 0, Observable::UpdateErrorMessage);
     setErrorCondition(-1);
     return;
   }
@@ -173,31 +173,31 @@ void SigmaXEstimation::execute()
     {
       break;
     }
-    progress = (i_theta/header.nz) * 100.0f;
+    progress = (i_theta / header.nz) * 100.0f;
 
 
     Real_t sum2 = 0;
     switch(header.mode)
     {
       case 0:
-    if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
-    else {  Detail::calcAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2); }
+        if(m_UseBFOffset) { Detail::calcBFAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
+        else {  Detail::calcAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 1:
-    if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
-    else {  Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2); }
+        if(m_UseBFOffset) { Detail::calcBFAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
+        else {  Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 2:
-    if(m_UseBFOffset){ Detail::calcBFAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
-    else {  Detail::calcAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2); }
+        if(m_UseBFOffset) { Detail::calcBFAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
+        else {  Detail::calcAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 3:
         break;
       case 4:
         break;
       case 6:
-    if(m_UseBFOffset){ Detail::calcBFAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
-    else {  Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2); }
+        if(m_UseBFOffset) { Detail::calcBFAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
+        else {  Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 16:
         break;
@@ -216,12 +216,12 @@ void SigmaXEstimation::execute()
   for(int i_theta = 0; i_theta < m_TiltAngles.size(); ++i_theta)
   {
     //Subtract off any offset in the data
-    sum2s[i_theta]/=m_TargetGain;
+    sum2s[i_theta] /= m_TargetGain;
     cosine = cos(m_TiltAngles[i_theta] * (Detail::DegToRad));
     sum1 += (sum2s[i_theta] * cosine) / (m_SampleThickness);
   }
 
-  m_SigmaXEstimate = sum1/header.nz;///10.0;
+  m_SigmaXEstimate = sum1 / header.nz; ///10.0;
   FREE_FEI_HEADERS( header.feiHeaders );
 
   //  std::cout << "Estimated Target Gain: " << m_TargetGainEstimate << std::endl;

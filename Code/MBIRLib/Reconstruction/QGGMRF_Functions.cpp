@@ -38,25 +38,27 @@
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 
-namespace Detail {
+namespace Detail
+{
   // -----------------------------------------------------------------------------
   //
   // -----------------------------------------------------------------------------
   inline double Clip(double x, double a, double b)
   {
-    return (x < a) ? a : ((x > b) ? b:x);
+    return (x < a) ? a : ((x > b) ? b : x);
   }
 
   // -----------------------------------------------------------------------------
   //
   // -----------------------------------------------------------------------------
-  inline int16_t mod(int16_t a,int16_t b)
+  inline int16_t mod(int16_t a, int16_t b)
   {
     int16_t temp;
-    temp=a%b;
+    temp = a % b;
     if(temp < 0)
-      return temp + b;
-    else {
+    { return temp + b; }
+    else
+    {
       return temp;
     }
 
@@ -67,11 +69,12 @@ namespace Detail {
   // -----------------------------------------------------------------------------
   inline double Minimum(double a, double b)
   {
-    return (a < b ? a: b);
+    return (a < b ? a : b);
   }
 }
 
-namespace QGGMRF {
+namespace QGGMRF
+{
 
   // -----------------------------------------------------------------------------
   //
@@ -125,16 +128,16 @@ namespace QGGMRF {
       {
         for (k = 0; k < 3; k++)
         {
-          if((i != 1 || j != 1 || k != 1) && boundaryFlag[INDEX_3(i,j,k)] == 1)
+          if((i != 1 || j != 1 || k != 1) && boundaryFlag[INDEX_3(i, j, k)] == 1)
           {
-            Delta0 = refValue - neighborhood[INDEX_3(i,j,k)];
+            Delta0 = refValue - neighborhood[INDEX_3(i, j, k)];
             if(Delta0 != 0)
             {
-              qggmrf_params[count*3 + 0] = QGGMRF::Derivative(Delta0, qggmrf_values) / (Delta0);
+              qggmrf_params[count * 3 + 0] = QGGMRF::Derivative(Delta0, qggmrf_values) / (Delta0);
             }
             else
             {
-              qggmrf_params[count*3 + 0] = QGGMRF::SecondDerivativeAtZero(qggmrf_values);
+              qggmrf_params[count * 3 + 0] = QGGMRF::SecondDerivativeAtZero(qggmrf_values);
             }
             count++;
           }
@@ -148,8 +151,8 @@ namespace QGGMRF {
   //
   // -----------------------------------------------------------------------------
   Real_t FunctionalSubstitution(Real_t umin,
-                          Real_t umax,
-                          Real_t currentVoxelValue,
+                                Real_t umax,
+                                Real_t currentVoxelValue,
                                 uint8_t* boundaryFlag,
                                 Real_t* FILTER,
                                 Real_t* neighborhood,
@@ -161,11 +164,11 @@ namespace QGGMRF {
     uint8_t i, j, k, count = 0;
 #ifdef POSITIVITY_CONSTRAINT
     if(umin < 0)
-      umin =0;
+    { umin = 0; }
 #endif //Positivity
     refValue = currentVoxelValue;
     //Need to Loop this for multiple iterations of substitute function
-    Real_t qggmrf_params[26*3];
+    Real_t qggmrf_params[26 * 3];
     for (uint8_t qggmrf_iter = 0; qggmrf_iter < QGGMRF::QGGMRF_ITER; qggmrf_iter++)
     {
       QGGMRF::ComputeParameters(umin, umax, refValue, boundaryFlag, neighborhood,
@@ -177,10 +180,10 @@ namespace QGGMRF {
         {
           for (k = 0; k < 3; k++)
           {
-            if((i != 1 || j != 1 || k != 1) && boundaryFlag[INDEX_3(i,j,k)] == 1)
+            if((i != 1 || j != 1 || k != 1) && boundaryFlag[INDEX_3(i, j, k)] == 1)
             {
-              temp_const = FILTER[INDEX_3(i,j,k)] * qggmrf_params[count*3 + 0];//access the a_{ji} value of the quadratic
-              temp1 += temp_const * neighborhood[INDEX_3(i,j,k)];
+              temp_const = FILTER[INDEX_3(i, j, k)] * qggmrf_params[count * 3 + 0]; //access the a_{ji} value of the quadratic
+              temp1 += temp_const * neighborhood[INDEX_3(i, j, k)];
               temp2 += temp_const;
               count++;
             }

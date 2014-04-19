@@ -96,7 +96,7 @@ BFMultiResolutionReconstruction::~BFMultiResolutionReconstruction()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void BFMultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std::ostream &out)
+void BFMultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std::ostream& out)
 {
 #if 1
   out << "------------------ TomoInputs Begin ------------------" << std::endl;
@@ -471,49 +471,50 @@ void BFMultiResolutionReconstruction::execute()
 
 void BFMultiResolutionReconstruction::memCalculate(TomoInputsPtr inputs)
 {
-  float GeomNx,GeomNy,GeomNz;
-  float SinoNr,SinoNt,SinoNtheta;
-  SinoNr = static_cast<float>(inputs->xEnd - inputs->xStart+1);
-  SinoNt = static_cast<float>(inputs->yEnd - inputs->yStart+1);
-  SinoNtheta = static_cast<float>(inputs->zEnd - inputs->zStart+1);
+  float GeomNx, GeomNy, GeomNz;
+  float SinoNr, SinoNt, SinoNtheta;
+  SinoNr = static_cast<float>(inputs->xEnd - inputs->xStart + 1);
+  SinoNt = static_cast<float>(inputs->yEnd - inputs->yStart + 1);
+  SinoNtheta = static_cast<float>(inputs->zEnd - inputs->zStart + 1);
 
   AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
   BFReconstructionEngine::InitializeAdvancedParams(advancedParams);
 
   if(inputs->extendObject == 1)
   {
-    GeomNx = (SinoNr/m_FinalResolution)*4;//TODO:Need to access X_Stretch and
+    GeomNx = (SinoNr / m_FinalResolution) * 4; //TODO:Need to access X_Stretch and
   }
   else
   {
-    GeomNx = SinoNr/m_FinalResolution;
+    GeomNx = SinoNr / m_FinalResolution;
   }
 
-  GeomNy = SinoNt/m_FinalResolution;
-  GeomNz = advancedParams->Z_STRETCH*(m_SampleThickness/(m_FinalResolution));// TODO: need to access Sinogram_deltar and z_stretch.
+  GeomNy = SinoNt / m_FinalResolution;
+  GeomNz = advancedParams->Z_STRETCH * (m_SampleThickness / (m_FinalResolution)); // TODO: need to access Sinogram_deltar and z_stretch.
   //This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm
 
   float dataTypeMem = sizeof(Real_t);
-  float ObjectMem = GeomNx*GeomNy*GeomNz*dataTypeMem;
-  float SinogramMem = SinoNr*SinoNt*SinoNtheta*dataTypeMem;
+  float ObjectMem = GeomNx * GeomNy * GeomNz * dataTypeMem;
+  float SinogramMem = SinoNr * SinoNt * SinoNtheta * dataTypeMem;
   float ErroSinoMem = SinogramMem;
   float WeightMem = SinogramMem; //Weight matrix
   float A_MatrixMem;
   if(0 == inputs->extendObject)
   {
-    A_MatrixMem = GeomNx*GeomNz*(m_FinalResolution*3*(dataTypeMem+4)*SinoNtheta);// 4 is the bytes to store the counts
+    A_MatrixMem = GeomNx * GeomNz * (m_FinalResolution * 3 * (dataTypeMem + 4) * SinoNtheta); // 4 is the bytes to store the counts
     //*+4 correspodns to bytes to store a single double and a unsigned into to
     //store the offset. 3*m_FinalRes is the approximate number of detector elements hit per voxel
   }
-  else {
-    A_MatrixMem = GeomNx*GeomNz*(m_FinalResolution*(dataTypeMem+4)*SinoNtheta); //Since we are reconstructing a larger region there are several voxels with no projection data. so instead of each voxel hitting 3*m_FinalRes det entries we aproximate it by m_FinalRes
+  else
+  {
+    A_MatrixMem = GeomNx * GeomNz * (m_FinalResolution * (dataTypeMem + 4) * SinoNtheta); //Since we are reconstructing a larger region there are several voxels with no projection data. so instead of each voxel hitting 3*m_FinalRes det entries we aproximate it by m_FinalRes
   }
-  float NuisanceParamMem = SinoNtheta*dataTypeMem*3;//3 is for gains offsets and noise var
+  float NuisanceParamMem = SinoNtheta * dataTypeMem * 3; //3 is for gains offsets and noise var
 
-  float TotalMem = ObjectMem+SinogramMem*2+ErroSinoMem+WeightMem+A_MatrixMem+NuisanceParamMem;//in bytes
+  float TotalMem = ObjectMem + SinogramMem * 2 + ErroSinoMem + WeightMem + A_MatrixMem + NuisanceParamMem; //in bytes
 
-  TotalMem/=(1e9);//To get answer in Gb
+  TotalMem /= (1e9); //To get answer in Gb
 
-  std::cout<<"Total Max Mem needed = "<<TotalMem<<" Gb"<<std::endl;
+  std::cout << "Total Max Mem needed = " << TotalMem << " Gb" << std::endl;
 
 }

@@ -58,7 +58,7 @@
  * @return Error condition
  */
 template<typename T>
-int parseValues(const std::string &values, const char* format, T* output)
+int parseValues(const std::string& values, const char* format, T* output)
 {
   std::string::size_type pos = values.find(",", 0);
   size_t index = 0;
@@ -87,7 +87,7 @@ int parseValues(const std::string &values, const char* format, T* output)
  * @return Error condition
  */
 template<typename T>
-int parseUnknownArray(const std::string &values, const char* format, std::vector<T> &output)
+int parseUnknownArray(const std::string& values, const char* format, std::vector<T>& output)
 {
   std::string::size_type pos = values.find(",", 0);
   size_t index = 0;
@@ -130,7 +130,7 @@ HAADFReconstructionArgsParser::~HAADFReconstructionArgsParser()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int HAADFReconstructionArgsParser::parseArguments(int argc, char **argv, HAADF_MultiResolutionReconstruction::Pointer m_MultiResSOC)
+int HAADFReconstructionArgsParser::parseArguments(int argc, char** argv, HAADF_MultiResolutionReconstruction::Pointer m_MultiResSOC)
 {
   if(NULL == m_MultiResSOC)
   {
@@ -321,7 +321,7 @@ int HAADFReconstructionArgsParser::parseArguments(int argc, char **argv, HAADF_M
       m_MultiResSOC->setTilts(tilts);
     }
   }
-  catch (TCLAP::ArgException &e)
+  catch (TCLAP::ArgException& e)
   {
     std::cerr << " error: " << e.error() << " for arg " << e.argId() << std::endl;
     std::cout << "** Unknown Arguments. Displaying help listing instead. **" << std::endl;
@@ -335,7 +335,7 @@ int HAADFReconstructionArgsParser::parseArguments(int argc, char **argv, HAADF_M
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADFReconstructionArgsParser::printInputs(TomoInputsPtr inputs, std::ostream &out)
+void HAADFReconstructionArgsParser::printInputs(TomoInputsPtr inputs, std::ostream& out)
 {
   out << "------------------ TomoInputs Begin ------------------" << std::endl;
   PRINT_VAR(out, inputs, NumIter);

@@ -70,51 +70,51 @@ class ProcessQueueTask : public QThread
     MXA_INSTANCE_PROPERTY(bool, Debug);
 
 
-    signals:
+  signals:
 
     /**
      * @brief Signal sent when the encoder has a message to relay to the GUI or other output device.
      */
-      void progressTextChanged ( QString progressText );
+    void progressTextChanged ( QString progressText );
 
-      /**
-       * @brief Signal sent to the GUI to indicate progress of the encoder which is an integer value between 0 and 100.
-       * @param value
-       */
-      void progressValueChanged(int value);
+    /**
+     * @brief Signal sent to the GUI to indicate progress of the encoder which is an integer value between 0 and 100.
+     * @param value
+     */
+    void progressValueChanged(int value);
 
-      /**
-       * @brief Signal sent when the encoding task is complete
-       * @param o A QObject to send with the signal
-       */
-      void taskFinished(QObject *o);
-
-
-      /**
-       * @brief Sends an intermediate image to another thread or process via signal
-       * @param image
-       */
-      void updateImageAvailable(QImage image);
+    /**
+     * @brief Signal sent when the encoding task is complete
+     * @param o A QObject to send with the signal
+     */
+    void taskFinished(QObject* o);
 
 
-    public slots:
+    /**
+     * @brief Sends an intermediate image to another thread or process via signal
+     * @param image
+     */
+    void updateImageAvailable(QImage image);
 
-      /**
-       * @brief Slot to receive a signal to cancel the operation
-       */
-      void cancel();
 
-      /**
-       * @brief Pure Virtual method which should be implemented by sub-classes. The
-       * run method represents the entry point into this class.
-       */
-      virtual void run() = 0;
+  public slots:
 
-    private:
-      bool m_Cancel;
+    /**
+     * @brief Slot to receive a signal to cancel the operation
+     */
+    void cancel();
 
-      ProcessQueueTask(const ProcessQueueTask&); // Copy Constructor Not Implemented
-      void operator=(const ProcessQueueTask&); // Operator '=' Not Implemented
+    /**
+     * @brief Pure Virtual method which should be implemented by sub-classes. The
+     * run method represents the entry point into this class.
+     */
+    virtual void run() = 0;
+
+  private:
+    bool m_Cancel;
+
+    ProcessQueueTask(const ProcessQueueTask&); // Copy Constructor Not Implemented
+    void operator=(const ProcessQueueTask&); // Operator '=' Not Implemented
 
 
 };

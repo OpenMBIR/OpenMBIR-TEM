@@ -32,15 +32,15 @@
 
 #if 0
 #if defined (_MSC_VER)
-  #pragma warning(disable: 4251)
-  #pragma warning(disable: 4710)
-  #pragma warning(disable: 4820)
-  #pragma warning(disable: 4668)
-  #pragma warning(disable: 4265)
-  #pragma warning(disable: 4189)
-  #pragma warning(disable: 4640)
-  #pragma warning(disable: 4996)
-  #pragma warning(disable: 4548)
+#pragma warning(disable: 4251)
+#pragma warning(disable: 4710)
+#pragma warning(disable: 4820)
+#pragma warning(disable: 4668)
+#pragma warning(disable: 4265)
+#pragma warning(disable: 4189)
+#pragma warning(disable: 4640)
+#pragma warning(disable: 4996)
+#pragma warning(disable: 4548)
 #endif
 #endif
 
@@ -53,24 +53,24 @@ building the TomoLib DLL on windows.
 
 #if defined (MBIRLib_BUILT_AS_DYNAMIC_LIB)
 
-  #if defined (MBIRLib_EXPORTS)  /* Compiling the MXA DLL/Dylib */
-    #if defined (_MSC_VER)  /* MSVC Compiler Case */
-      #define  MBIRLib_EXPORT __declspec(dllexport)
-    #elif (__GNUC__ >= 4)  /* GCC 4.x has support for visibility options */
-      #define MBIRLib_EXPORT __attribute__ ((visibility("default")))
-    #endif
-  #else  /* Importing the DLL into another project */
-    #if defined (_MSC_VER)  /* MSVC Compiler Case */
-      #define  MBIRLib_EXPORT __declspec(dllimport)
-    #elif (__GNUC__ >= 4)  /* GCC 4.x has support for visibility options */
-      #define MBIRLib_EXPORT __attribute__ ((visibility("default")))
-    #endif
-  #endif
+#if defined (MBIRLib_EXPORTS)  /* Compiling the MXA DLL/Dylib */
+#if defined (_MSC_VER)  /* MSVC Compiler Case */
+#define  MBIRLib_EXPORT __declspec(dllexport)
+#elif (__GNUC__ >= 4)  /* GCC 4.x has support for visibility options */
+#define MBIRLib_EXPORT __attribute__ ((visibility("default")))
+#endif
+#else  /* Importing the DLL into another project */
+#if defined (_MSC_VER)  /* MSVC Compiler Case */
+#define  MBIRLib_EXPORT __declspec(dllimport)
+#elif (__GNUC__ >= 4)  /* GCC 4.x has support for visibility options */
+#define MBIRLib_EXPORT __attribute__ ((visibility("default")))
+#endif
+#endif
 #endif
 
 /* If MBIRLib_EXPORT was never defined, define it here */
 #ifndef MBIRLib_EXPORT
-  #define MBIRLib_EXPORT
+#define MBIRLib_EXPORT
 #endif
 
 

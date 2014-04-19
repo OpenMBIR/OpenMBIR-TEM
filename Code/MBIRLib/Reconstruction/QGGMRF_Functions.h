@@ -45,72 +45,74 @@
 #include "MBIRLib/Common/EIMMath.h"
 #include "MBIRLib/Reconstruction/ReconstructionStructures.h"
 
-namespace QGGMRF {
+namespace QGGMRF
+{
 
 
   static const unsigned int QGGMRF_ITER = 1;
 
-  typedef struct {
-      Real_t MRF_P;
-      Real_t SIGMA_X_P;
-      Real_t MRF_Q;
-      Real_t MRF_C;
-      Real_t MRF_ALPHA;
-      Real_t SIGMA_X_P_Q;
-      Real_t SIGMA_X_Q;
+  typedef struct
+  {
+    Real_t MRF_P;
+    Real_t SIGMA_X_P;
+    Real_t MRF_Q;
+    Real_t MRF_C;
+    Real_t MRF_ALPHA;
+    Real_t SIGMA_X_P_Q;
+    Real_t SIGMA_X_Q;
   } QGGMRF_Values;
 
   /**
- *
- * @param delta
- * @param qggmrf_values
- * @return
- */
+  *
+  * @param delta
+  * @param qggmrf_values
+  * @return
+  */
   Real_t Value(Real_t delta, QGGMRF_Values* qggmrf_values);
 
   /**
- *
- * @param delta
- * @param qggmrf_values
- * @return
- */
+  *
+  * @param delta
+  * @param qggmrf_values
+  * @return
+  */
   Real_t Derivative(Real_t delta, QGGMRF_Values* qggmrf_values);
 
   /**
- *
- * @param delta
- * @param qggmrf_values
- * @return
- */
+  *
+  * @param delta
+  * @param qggmrf_values
+  * @return
+  */
   Real_t SecondDerivative(Real_t delta, QGGMRF_Values* qggmrf_values);
 
   /**
- *
- * @param umin
- * @param umax
- * @param RefValue
- * @param BOUNDARYFLAG
- * @param NEIGHBORHOOD
- * @param qggmrf_values
- * @param QGGMRF_Params
- */
+  *
+  * @param umin
+  * @param umax
+  * @param RefValue
+  * @param BOUNDARYFLAG
+  * @param NEIGHBORHOOD
+  * @param qggmrf_values
+  * @param QGGMRF_Params
+  */
   void ComputeParameters(Real_t umin, Real_t umax, Real_t RefValue,
                          uint8_t* BOUNDARYFLAG, Real_t* NEIGHBORHOOD,
                          QGGMRF::QGGMRF_Values* qggmrf_values,
                          Real_t* QGGMRF_Params);
   /**
- *
- * @param umin
- * @param umax
- * @param currentVoxelValue
- * @param BOUNDARYFLAG
- * @param FILTER
- * @param NEIGHBORHOOD
- * @param THETA1
- * @param THETA2
- * @param qggmrf_values
- * @return
- */
+  *
+  * @param umin
+  * @param umax
+  * @param currentVoxelValue
+  * @param BOUNDARYFLAG
+  * @param FILTER
+  * @param NEIGHBORHOOD
+  * @param THETA1
+  * @param THETA2
+  * @param qggmrf_values
+  * @return
+  */
   Real_t FunctionalSubstitution(Real_t umin, Real_t umax, Real_t currentVoxelValue,
                                 uint8_t* BOUNDARYFLAG, Real_t* FILTER, Real_t* NEIGHBORHOOD,
                                 Real_t THETA1, Real_t THETA2,

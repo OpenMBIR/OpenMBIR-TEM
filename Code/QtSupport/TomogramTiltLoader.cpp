@@ -4,7 +4,7 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-TomogramTiltLoader::TomogramTiltLoader(QWidget *parent) :
+TomogramTiltLoader::TomogramTiltLoader(QWidget* parent) :
   QDialog(parent)
 {
   setupUi(this);

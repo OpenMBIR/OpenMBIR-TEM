@@ -52,8 +52,8 @@
 #define CHECK_PRECONDITION( stuff )\
   if(m_IsFileBased == false){\
     std::cout << stuff; return std::cout;}\
-    else {\
-      m_OutStream << (stuff);  return m_OutStream; }
+  else {\
+    m_OutStream << (stuff);  return m_OutStream; }
 
 
 /**
@@ -68,13 +68,13 @@ class MXA_EXPORT MXALogger_Implementation
 {
 
   public:
-	  MXALogger_Implementation();
+    MXALogger_Implementation();
     virtual ~MXALogger_Implementation();
 
     MXA_INSTANCE_PROPERTY(bool, IsFileBased)
     MXA_INSTANCE_STRING_PROPERTY(FileName)
 
-    bool open(const std::string &fn, std::ios::openmode mode = std::ios::trunc);
+    bool open(const std::string& fn, std::ios::openmode mode = std::ios::trunc);
     bool close();
 
     std::ostream& dateTime() { CHECK_PRECONDITION(logTime()) }
@@ -88,7 +88,7 @@ class MXA_EXPORT MXALogger_Implementation
     std::ostream& operator<<(uint64_t v) { CHECK_PRECONDITION(v) }
     std::ostream& operator<<(int64_t v) { CHECK_PRECONDITION(v) }
     std::ostream& operator<<(double v)  { CHECK_PRECONDITION(v) }
-    std::ostream& operator<<(const std::string &v) { CHECK_PRECONDITION(v) }
+    std::ostream& operator<<(const std::string& v) { CHECK_PRECONDITION(v) }
     std::ostream& operator<<(const char* v) { CHECK_PRECONDITION(v) }
 
   private:
@@ -125,8 +125,8 @@ class MXA_EXPORT MXALogger_Implementation
 class MXA_EXPORT MXALogger
 {
   public:
-	MXA_SHARED_POINTERS(MXALogger)
-	virtual ~MXALogger();
+    MXA_SHARED_POINTERS(MXALogger)
+    virtual ~MXALogger();
 
     static MXALogger::Pointer instance();
 

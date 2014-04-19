@@ -24,18 +24,20 @@
 #include <typeinfo>
 
 
-namespace MXA {
-namespace RTTI {
-
-
-struct MXA_EXPORT Typed
+namespace MXA
 {
-  static const std::type_info &     classTypeId();
-  virtual const std::type_info &    typeId() const = 0;
-};
+  namespace RTTI
+  {
 
 
-}; // namespace RTTI
+    struct MXA_EXPORT Typed
+    {
+      static const std::type_info&      classTypeId();
+      virtual const std::type_info&     typeId() const = 0;
+    };
+
+
+  }; // namespace RTTI
 }; // namespace MXA
 
 

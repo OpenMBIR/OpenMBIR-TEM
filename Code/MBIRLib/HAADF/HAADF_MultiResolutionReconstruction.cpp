@@ -53,31 +53,31 @@
 //
 // -----------------------------------------------------------------------------
 HAADF_MultiResolutionReconstruction::HAADF_MultiResolutionReconstruction() :
-FilterPipeline(),
-m_Debug(false),
-m_InputFile(""),
-m_TempDir(""),
-m_OutputFile(""),
-m_BrightFieldFile(""),
-m_InitialReconstructionFile(""),
-m_DeleteTempFiles(false),
-m_NumberResolutions(1),
-m_SampleThickness(100.0f),
-m_TargetGain(0.0f),
-m_StopThreshold(0.009f),
-m_OuterIterations(1),
-m_InnerIterations(1),
-m_SigmaX(0.0f),
-m_MRFShapeParameter(1.1f),
-m_DefaultOffsetValue(0.0f),
-m_UseDefaultOffset(false),
-m_FinalResolution(1),
-m_ExtendObject(true),
-m_InterpolateInitialReconstruction(false),
-m_DefaultVariance(1.0f),
-m_InitialReconstructionValue(0.0f),
-m_DefaultPixelSize(1.0),
-m_Cancel(false)
+  FilterPipeline(),
+  m_Debug(false),
+  m_InputFile(""),
+  m_TempDir(""),
+  m_OutputFile(""),
+  m_BrightFieldFile(""),
+  m_InitialReconstructionFile(""),
+  m_DeleteTempFiles(false),
+  m_NumberResolutions(1),
+  m_SampleThickness(100.0f),
+  m_TargetGain(0.0f),
+  m_StopThreshold(0.009f),
+  m_OuterIterations(1),
+  m_InnerIterations(1),
+  m_SigmaX(0.0f),
+  m_MRFShapeParameter(1.1f),
+  m_DefaultOffsetValue(0.0f),
+  m_UseDefaultOffset(false),
+  m_FinalResolution(1),
+  m_ExtendObject(true),
+  m_InterpolateInitialReconstruction(false),
+  m_DefaultVariance(1.0f),
+  m_InitialReconstructionValue(0.0f),
+  m_DefaultPixelSize(1.0),
+  m_Cancel(false)
 {
 
 }
@@ -91,15 +91,15 @@ HAADF_MultiResolutionReconstruction::~HAADF_MultiResolutionReconstruction()
 
 
 #define PRINT_VAR(out, inputs, var)\
-    out << #var << ": " << inputs->var << std::endl;
+  out << #var << ": " << inputs->var << std::endl;
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADF_MultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std::ostream &out)
+void HAADF_MultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std::ostream& out)
 {
 #if 1
-    out << "------------------ TomoInputs Begin ------------------" << std::endl;
+  out << "------------------ TomoInputs Begin ------------------" << std::endl;
   PRINT_VAR(out, inputs, NumIter);
   PRINT_VAR(out, inputs, NumOuterIter);
   PRINT_VAR(out, inputs, SigmaX);
@@ -143,7 +143,7 @@ void HAADF_MultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std:
   PRINT_VAR(out, inputs, offsetsOutputFile);
   PRINT_VAR(out, inputs, varianceOutputFile);
 
-    out << "------------------ TomoInputs End ------------------" << std::endl;
+  out << "------------------ TomoInputs End ------------------" << std::endl;
 #endif
 }
 
@@ -152,11 +152,11 @@ void HAADF_MultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std:
 // -----------------------------------------------------------------------------
 void HAADF_MultiResolutionReconstruction::setCancel(bool value)
 {
- m_Cancel = value;
- if (NULL != m_CurrentEngine.get())
- {
-   m_CurrentEngine->setCancel(value);
- }
+  m_Cancel = value;
+  if (NULL != m_CurrentEngine.get())
+  {
+    m_CurrentEngine->setCancel(value);
+  }
 
 }
 
@@ -250,22 +250,22 @@ void HAADF_MultiResolutionReconstruction::execute()
     // Only write the mrc and vtk files on the last iteration
     if(m_NumberResolutions - 1 == i) // Last Iteration
     {
-        inputs->vtkOutputFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + ".vtk";
-        inputs->avizoOutputFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + ".am";
-        inputs->mrcOutputFile = m_OutputFile;
+      inputs->vtkOutputFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + ".vtk";
+      inputs->avizoOutputFile = MXAFileInfo::parentPath(m_OutputFile) + MXADir::Separator + MXAFileInfo::fileNameWithOutExtension(m_OutputFile) + ".am";
+      inputs->mrcOutputFile = m_OutputFile;
     }
     else
     {
-        ss.str("");
-        ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::ReconstructedObjectFile;
-        inputs->reconstructedOutputFile = ss.str();
+      ss.str("");
+      ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::ReconstructedObjectFile;
+      inputs->reconstructedOutputFile = ss.str();
 
-        inputs->vtkOutputFile = "";
-        inputs->mrcOutputFile = "";
-        inputs->avizoOutputFile = "";
+      inputs->vtkOutputFile = "";
+      inputs->mrcOutputFile = "";
+      inputs->avizoOutputFile = "";
     }
 
-  // Line up all the temp files that we are going to delete
+    // Line up all the temp files that we are going to delete
     ss.str("");
     ss << inputs->tempDir << MXADir::Separator << MBIR::Defaults::FinalGainParametersFile;
     inputs->gainsOutputFile = ss.str();
@@ -442,7 +442,7 @@ void HAADF_MultiResolutionReconstruction::execute()
     // during the reconstruction
     for(size_t i = 0; i < inputs->tempFiles.size(); ++i)
     {
-        tempFiles.push_back(inputs->tempFiles[i]);
+      tempFiles.push_back(inputs->tempFiles[i]);
     }
 
     // Tack on the output temp directory last since we delete in the order we placed them
@@ -459,24 +459,24 @@ void HAADF_MultiResolutionReconstruction::execute()
   {
     for(size_t i = 0; i < tempFiles.size(); ++i)
     {
-        std::cout << "Removing: " << tempFiles[i] << std::endl;
-        if(MXADir::isDirectory(tempFiles[i]) == true )
+      std::cout << "Removing: " << tempFiles[i] << std::endl;
+      if(MXADir::isDirectory(tempFiles[i]) == true )
+      {
+        errno = 0;
+        if (false == MXADir::rmdir(tempFiles[i], false) )
         {
-            errno = 0;
-            if (false == MXADir::rmdir(tempFiles[i], false) )
-            {
-                std::cout << errno << " - Could NOT remove Directory: " << tempFiles[i] << std::endl;
-                std::vector<std::string> dirList = MXADir::entryList(tempFiles[i]);
-                for(size_t i = 0; i < dirList.size(); ++i)
-                {
-                    std::cout << "   " << dirList[i] << std::endl;
-                }
-            }
+          std::cout << errno << " - Could NOT remove Directory: " << tempFiles[i] << std::endl;
+          std::vector<std::string> dirList = MXADir::entryList(tempFiles[i]);
+          for(size_t i = 0; i < dirList.size(); ++i)
+          {
+            std::cout << "   " << dirList[i] << std::endl;
+          }
         }
-        else
-        {
-            MXADir::remove(tempFiles[i]);
-        }
+      }
+      else
+      {
+        MXADir::remove(tempFiles[i]);
+      }
     }
   }
 
@@ -486,49 +486,50 @@ void HAADF_MultiResolutionReconstruction::execute()
 
 void HAADF_MultiResolutionReconstruction::memCalculate(TomoInputsPtr inputs)
 {
-    float GeomNx,GeomNy,GeomNz;
-    float SinoNr,SinoNt,SinoNtheta;
-    SinoNr = static_cast<float>(inputs->xEnd - inputs->xStart+1);
-    SinoNt = static_cast<float>(inputs->yEnd - inputs->yStart+1);
-    SinoNtheta = static_cast<float>(inputs->zEnd - inputs->zStart+1);
+  float GeomNx, GeomNy, GeomNz;
+  float SinoNr, SinoNt, SinoNtheta;
+  SinoNr = static_cast<float>(inputs->xEnd - inputs->xStart + 1);
+  SinoNt = static_cast<float>(inputs->yEnd - inputs->yStart + 1);
+  SinoNtheta = static_cast<float>(inputs->zEnd - inputs->zStart + 1);
 
-    AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
-    HAADF_ReconstructionEngine::InitializeAdvancedParams(advancedParams);
+  AdvancedParametersPtr advancedParams = AdvancedParametersPtr(new AdvancedParameters);
+  HAADF_ReconstructionEngine::InitializeAdvancedParams(advancedParams);
 
-    if(inputs->extendObject == 1)
-    {
-        GeomNx = (SinoNr/m_FinalResolution)*4;//TODO:Need to access X_Stretch and
-    }
-    else
-    {
-        GeomNx = SinoNr/m_FinalResolution;
-    }
+  if(inputs->extendObject == 1)
+  {
+    GeomNx = (SinoNr / m_FinalResolution) * 4; //TODO:Need to access X_Stretch and
+  }
+  else
+  {
+    GeomNx = SinoNr / m_FinalResolution;
+  }
 
-    GeomNy = SinoNt/m_FinalResolution;
-    GeomNz = advancedParams->Z_STRETCH*(m_SampleThickness/(m_FinalResolution));// TODO: need to access Sinogram_deltar and z_stretch.
-    //This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm
+  GeomNy = SinoNt / m_FinalResolution;
+  GeomNz = advancedParams->Z_STRETCH * (m_SampleThickness / (m_FinalResolution)); // TODO: need to access Sinogram_deltar and z_stretch.
+  //This is wrong currently. Need to multiply m_FinalResolution by size of voxel in nm
 
-    float dataTypeMem = sizeof(Real_t);
-    float ObjectMem = GeomNx*GeomNy*GeomNz*dataTypeMem;
-    float SinogramMem = SinoNr*SinoNt*SinoNtheta*dataTypeMem;
-    float ErroSinoMem = SinogramMem;
-    float WeightMem = SinogramMem; //Weight matrix
-    float A_MatrixMem;
-    if(0 == inputs->extendObject)
-    {
-    A_MatrixMem = GeomNx*GeomNz*(m_FinalResolution*3*(dataTypeMem+4)*SinoNtheta);// 4 is the bytes to store the counts
-   //*+4 correspodns to bytes to store a single double and a unsigned into to
-   //store the offset. 3*m_FinalRes is the approximate number of detector elements hit per voxel
-    }
-    else {
-        A_MatrixMem = GeomNx*GeomNz*(m_FinalResolution*(dataTypeMem+4)*SinoNtheta); //Since we are reconstructing a larger region there are several voxels with no projection data. so instead of each voxel hitting 3*m_FinalRes det entries we aproximate it by m_FinalRes
-    }
-    float NuisanceParamMem = SinoNtheta*dataTypeMem*3;//3 is for gains offsets and noise var
+  float dataTypeMem = sizeof(Real_t);
+  float ObjectMem = GeomNx * GeomNy * GeomNz * dataTypeMem;
+  float SinogramMem = SinoNr * SinoNt * SinoNtheta * dataTypeMem;
+  float ErroSinoMem = SinogramMem;
+  float WeightMem = SinogramMem; //Weight matrix
+  float A_MatrixMem;
+  if(0 == inputs->extendObject)
+  {
+    A_MatrixMem = GeomNx * GeomNz * (m_FinalResolution * 3 * (dataTypeMem + 4) * SinoNtheta); // 4 is the bytes to store the counts
+    //*+4 correspodns to bytes to store a single double and a unsigned into to
+    //store the offset. 3*m_FinalRes is the approximate number of detector elements hit per voxel
+  }
+  else
+  {
+    A_MatrixMem = GeomNx * GeomNz * (m_FinalResolution * (dataTypeMem + 4) * SinoNtheta); //Since we are reconstructing a larger region there are several voxels with no projection data. so instead of each voxel hitting 3*m_FinalRes det entries we aproximate it by m_FinalRes
+  }
+  float NuisanceParamMem = SinoNtheta * dataTypeMem * 3; //3 is for gains offsets and noise var
 
-    float TotalMem = ObjectMem+SinogramMem*2+ErroSinoMem+WeightMem+A_MatrixMem+NuisanceParamMem;//in bytes
+  float TotalMem = ObjectMem + SinogramMem * 2 + ErroSinoMem + WeightMem + A_MatrixMem + NuisanceParamMem; //in bytes
 
-    TotalMem/=(1e9);//To get answer in Gb
+  TotalMem /= (1e9); //To get answer in Gb
 
-    std::cout<<"Total Max Mem needed = "<<TotalMem<<" Gb"<<std::endl;
+  std::cout << "Total Max Mem needed = " << TotalMem << " Gb" << std::endl;
 
 }

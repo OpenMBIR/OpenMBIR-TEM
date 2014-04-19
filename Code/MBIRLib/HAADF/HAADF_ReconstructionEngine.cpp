@@ -91,41 +91,43 @@
   std::cout << indent << msg << ": " << ((double)stopm-startm)/1000.0 << " seconds" << std::endl;
 
 #define MAKE_OUTPUT_FILE(Fp, outdir, filename)\
-{\
-  std::string filepath(outdir);\
-  filepath = filepath.append(MXADir::getSeparator()).append(filename);\
-  errno = 0;\
-  Fp = fopen(filepath.c_str(),"wb");\
-  if (Fp == NULL || errno > 0) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl;}\
+  {\
+    std::string filepath(outdir);\
+    filepath = filepath.append(MXADir::getSeparator()).append(filename);\
+    errno = 0;\
+    Fp = fopen(filepath.c_str(),"wb");\
+    if (Fp == NULL || errno > 0) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl;}\
   }
 
 #define COPY_333_ARRAY(i_max, j_max, k_max, src, dest)\
   for(int i = 0; i < i_max; ++i){\
-  for(int j = 0; j < j_max; ++j){\
-  for(int k = 0; k < k_max; ++k){\
-  dest[i][j][k] = src[i][j][k];\
-  }}}
+    for(int j = 0; j < j_max; ++j){\
+      for(int k = 0; k < k_max; ++k){\
+        dest[i][j][k] = src[i][j][k];\
+      }}}
 
-namespace Detail {
+namespace Detail
+{
   // -----------------------------------------------------------------------------
   //
   // -----------------------------------------------------------------------------
   inline double Clip(double x, double a, double b)
   {
-    return (x < a) ? a : ((x > b) ? b:x);
+    return (x < a) ? a : ((x > b) ? b : x);
   }
 
 
   // -----------------------------------------------------------------------------
   //<
   // -----------------------------------------------------------------------------
-  inline int16_t mod(int16_t a,int16_t b)
+  inline int16_t mod(int16_t a, int16_t b)
   {
     int16_t temp;
-    temp=a%b;
+    temp = a % b;
     if(temp < 0)
-      return temp + b;
-    else {
+    { return temp + b; }
+    else
+    {
       return temp;
     }
 
@@ -136,7 +138,7 @@ namespace Detail {
   // -----------------------------------------------------------------------------
   inline double Minimum(double a, double b)
   {
-    return (a < b ? a: b);
+    return (a < b ? a : b);
   }
 
 }
@@ -178,8 +180,8 @@ void HAADF_ReconstructionEngine::InitializeTomoInputs(TomoInputsPtr v)
   v->gainsInputFile = "";
   v->offsetsInputFile = "";
   v->varianceInputFile = "";
-  v->InterpFlag=0;
-  v->interpolateFactor=0.0;
+  v->InterpFlag = 0;
+  v->interpolateFactor = 0.0;
   v->reconstructedOutputFile = "";
   v->tempDir = "";
   v->NumIter = 0;
@@ -241,7 +243,7 @@ void HAADF_ReconstructionEngine::InitializeGeometry(GeometryPtr v)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADF_ReconstructionEngine::InitializeScaleOffsetParams(HAADF_ForwardModel *forwardModel)
+void HAADF_ReconstructionEngine::InitializeScaleOffsetParams(HAADF_ForwardModel* forwardModel)
 {
   forwardModel->setI_0(RealArrayType::NullPointer());
   forwardModel->setMu(RealArrayType::NullPointer());
@@ -273,24 +275,62 @@ void HAADF_ReconstructionEngine::InitializeAdvancedParams(AdvancedParametersPtr 
 // -----------------------------------------------------------------------------
 void HAADF_ReconstructionEngine::initVariables()
 {
-  FILTER[INDEX_3(0,0,0)] = 0.0302; FILTER[INDEX_3(0,0,1)] = 0.0370; FILTER[INDEX_3(0,0,2)] = 0.0302;
-  FILTER[INDEX_3(0,1,0)] = 0.0370; FILTER[INDEX_3(0,1,1)] = 0.0523; FILTER[INDEX_3(0,1,2)] = 0.0370;
-  FILTER[INDEX_3(0,2,0)] = 0.0302; FILTER[INDEX_3(0,2,1)] = 0.0370; FILTER[INDEX_3(0,2,2)] = 0.0302;
+  FILTER[INDEX_3(0, 0, 0)] = 0.0302;
+  FILTER[INDEX_3(0, 0, 1)] = 0.0370;
+  FILTER[INDEX_3(0, 0, 2)] = 0.0302;
+  FILTER[INDEX_3(0, 1, 0)] = 0.0370;
+  FILTER[INDEX_3(0, 1, 1)] = 0.0523;
+  FILTER[INDEX_3(0, 1, 2)] = 0.0370;
+  FILTER[INDEX_3(0, 2, 0)] = 0.0302;
+  FILTER[INDEX_3(0, 2, 1)] = 0.0370;
+  FILTER[INDEX_3(0, 2, 2)] = 0.0302;
 
-  FILTER[INDEX_3(1,0,0)] = 0.0370; FILTER[INDEX_3(1,0,1)] = 0.0523; FILTER[INDEX_3(1,0,2)] = 0.0370;
-  FILTER[INDEX_3(1,1,0)] = 0.0523; FILTER[INDEX_3(1,1,1)] = 0.0000; FILTER[INDEX_3(1,1,2)] = 0.0523;
-  FILTER[INDEX_3(1,2,0)] = 0.0370; FILTER[INDEX_3(1,2,1)] = 0.0523; FILTER[INDEX_3(1,2,2)] = 0.0370;
+  FILTER[INDEX_3(1, 0, 0)] = 0.0370;
+  FILTER[INDEX_3(1, 0, 1)] = 0.0523;
+  FILTER[INDEX_3(1, 0, 2)] = 0.0370;
+  FILTER[INDEX_3(1, 1, 0)] = 0.0523;
+  FILTER[INDEX_3(1, 1, 1)] = 0.0000;
+  FILTER[INDEX_3(1, 1, 2)] = 0.0523;
+  FILTER[INDEX_3(1, 2, 0)] = 0.0370;
+  FILTER[INDEX_3(1, 2, 1)] = 0.0523;
+  FILTER[INDEX_3(1, 2, 2)] = 0.0370;
 
-  FILTER[INDEX_3(2,0,0)] = 0.0302; FILTER[INDEX_3(2,0,1)] = 0.0370; FILTER[INDEX_3(2,0,2)] = 0.0302;
-  FILTER[INDEX_3(2,1,0)] = 0.0370; FILTER[INDEX_3(2,1,1)] = 0.0523; FILTER[INDEX_3(2,1,2)] = 0.0370;
-  FILTER[INDEX_3(2,2,0)] = 0.0302; FILTER[INDEX_3(2,2,1)] = 0.0370; FILTER[INDEX_3(2,2,2)] = 0.0302;
+  FILTER[INDEX_3(2, 0, 0)] = 0.0302;
+  FILTER[INDEX_3(2, 0, 1)] = 0.0370;
+  FILTER[INDEX_3(2, 0, 2)] = 0.0302;
+  FILTER[INDEX_3(2, 1, 0)] = 0.0370;
+  FILTER[INDEX_3(2, 1, 1)] = 0.0523;
+  FILTER[INDEX_3(2, 1, 2)] = 0.0370;
+  FILTER[INDEX_3(2, 2, 0)] = 0.0302;
+  FILTER[INDEX_3(2, 2, 1)] = 0.0370;
+  FILTER[INDEX_3(2, 2, 2)] = 0.0302;
 
   //Hamming Window here
-  HAMMING_WINDOW[0][0]= 0.0013; HAMMING_WINDOW[0][1]=0.0086; HAMMING_WINDOW[0][2]=0.0159; HAMMING_WINDOW[0][3]=0.0086;HAMMING_WINDOW[0][4]=0.0013;
-  HAMMING_WINDOW[1][0]= 0.0086; HAMMING_WINDOW[1][1]=0.0581;HAMMING_WINDOW[1][2]=0.1076;HAMMING_WINDOW[1][3]=0.0581;HAMMING_WINDOW[1][4]=0.0086;
-  HAMMING_WINDOW[2][0]= 0.0159;HAMMING_WINDOW[2][1]=0.1076;HAMMING_WINDOW[2][2]=0.1993;HAMMING_WINDOW[2][3]=0.1076;HAMMING_WINDOW[2][4]=0.0159;
-  HAMMING_WINDOW[3][0]= 0.0013;HAMMING_WINDOW[3][1]=0.0086;HAMMING_WINDOW[3][2]=0.0159;HAMMING_WINDOW[3][3]=0.0086;HAMMING_WINDOW[3][4]=0.0013;
-  HAMMING_WINDOW[4][0]= 0.0086;HAMMING_WINDOW[4][1]=0.0581;HAMMING_WINDOW[4][2]=0.1076;HAMMING_WINDOW[4][3]=0.0581;HAMMING_WINDOW[4][4]=0.0086;
+  HAMMING_WINDOW[0][0] = 0.0013;
+  HAMMING_WINDOW[0][1] = 0.0086;
+  HAMMING_WINDOW[0][2] = 0.0159;
+  HAMMING_WINDOW[0][3] = 0.0086;
+  HAMMING_WINDOW[0][4] = 0.0013;
+  HAMMING_WINDOW[1][0] = 0.0086;
+  HAMMING_WINDOW[1][1] = 0.0581;
+  HAMMING_WINDOW[1][2] = 0.1076;
+  HAMMING_WINDOW[1][3] = 0.0581;
+  HAMMING_WINDOW[1][4] = 0.0086;
+  HAMMING_WINDOW[2][0] = 0.0159;
+  HAMMING_WINDOW[2][1] = 0.1076;
+  HAMMING_WINDOW[2][2] = 0.1993;
+  HAMMING_WINDOW[2][3] = 0.1076;
+  HAMMING_WINDOW[2][4] = 0.0159;
+  HAMMING_WINDOW[3][0] = 0.0013;
+  HAMMING_WINDOW[3][1] = 0.0086;
+  HAMMING_WINDOW[3][2] = 0.0159;
+  HAMMING_WINDOW[3][3] = 0.0086;
+  HAMMING_WINDOW[3][4] = 0.0013;
+  HAMMING_WINDOW[4][0] = 0.0086;
+  HAMMING_WINDOW[4][1] = 0.0581;
+  HAMMING_WINDOW[4][2] = 0.1076;
+  HAMMING_WINDOW[4][3] = 0.0581;
+  HAMMING_WINDOW[4][4] = 0.0086;
 }
 
 // -----------------------------------------------------------------------------
@@ -404,8 +444,8 @@ void HAADF_ReconstructionEngine::execute()
 
   // Get the actual boundaries in the X Direction since we "Extend Object" which makes
   // the output mrc file much wider than they really need to be.
-  uint16_t cropStart=0;
-  uint16_t cropEnd=m_Geometry->N_x;
+  uint16_t cropStart = 0;
+  uint16_t cropEnd = m_Geometry->N_x;
   computeOriginalXDims(cropStart, cropEnd);
   //  std::cout << "Crop Start: " << cropStart << std::endl;
   //  std::cout << "Crop End:   " << cropEnd << std::endl;
@@ -418,7 +458,7 @@ void HAADF_ReconstructionEngine::execute()
 #endif
 
 #ifdef COST_CALCULATE
-  dims[0] = (m_TomoInputs->NumIter+1)*m_TomoInputs->NumOuterIter*3;
+  dims[0] = (m_TomoInputs->NumIter + 1) * m_TomoInputs->NumOuterIter * 3;
 #endif
 
   dims[0] = m_Sinogram->N_theta;
@@ -449,7 +489,7 @@ void HAADF_ReconstructionEngine::execute()
   QGGMRF::initializePriorModel(m_TomoInputs, &m_QGGMRF_Values);
 #else
   MRF_P = m_TomoInputs->p;
-  SIGMA_X_P = pow(m_TomoInputs->SigmaX,MRF_P);
+  SIGMA_X_P = pow(m_TomoInputs->SigmaX, MRF_P);
 #endif //QGGMRF
 
   //globals assosiated with finding the optimal gain and offset parameters
@@ -709,7 +749,7 @@ void HAADF_ReconstructionEngine::execute()
       // This could contain multiple Subloops also
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
       status =
-          updateVoxels(reconOuterIter, reconInnerIter, updateType, VisitCount, TempCol, ErrorSino, Weight, VoxelLineResponse, m_ForwardModel.get(), Mask, cost);
+        updateVoxels(reconOuterIter, reconInnerIter, updateType, VisitCount, TempCol, ErrorSino, Weight, VoxelLineResponse, m_ForwardModel.get(), Mask, cost);
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 
       if(status == 0)
@@ -753,7 +793,7 @@ void HAADF_ReconstructionEngine::execute()
       err = calculateCost(cost, Weight, ErrorSino);
       if (err < 0)
       {
-        std::cout<<"Cost went up after variance update"<<std::endl;
+        std::cout << "Cost went up after variance update" << std::endl;
         break;
       }
 #endif//cost
@@ -767,7 +807,8 @@ void HAADF_ReconstructionEngine::execute()
     else
     {
       if(0 == status && reconOuterIter >= 1)
-      { //&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
+      {
+        //&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
         std::cout << "Exiting the code because status =0" << std::endl;
         break;
       }
@@ -778,9 +819,9 @@ void HAADF_ReconstructionEngine::execute()
     if(m_AdvParams->ESTIMATE_PRIOR)
     {
       /* Estimation of Prior model parameters*/
-      Real_t NewSigmaX=estimateSigmaX(ErrorSino, Weight);
+      Real_t NewSigmaX = estimateSigmaX(ErrorSino, Weight);
       m_TomoInputs->SigmaX = QGGMRF::updatePriorModel(NewSigmaX, &m_QGGMRF_Values, MBIR::Constants::k_QGGMRF_Gamma);
-      std::cout<<"New value of SigmaX = "<<m_TomoInputs->SigmaX<<std::endl;
+      std::cout << "New value of SigmaX = " << m_TomoInputs->SigmaX << std::endl;
     }
 
   }/* ++++++++++ END Outer Iteration Loop +++++++++++++++ */
@@ -793,8 +834,8 @@ void HAADF_ReconstructionEngine::execute()
 #endif
 
 #ifdef FORWARD_PROJECT_MODE
-  int fileError=0;
-  FILE *Fp6;
+  int fileError = 0;
+  FILE* Fp6;
   MAKE_OUTPUT_FILE(Fp6, fileError, m_TomoInputs->tempDir, MBIR::Defaults::HAADF_ForwardProjectedObjectFile);
   if (fileError == 1)
   {
@@ -816,7 +857,7 @@ void HAADF_ReconstructionEngine::execute()
       if(m_AdvParams->NOISE_MODEL)
       {
         std::cout << i_theta << "\t" << m_ForwardModel->getI_0()->d[i_theta] << "\t" << m_ForwardModel->getMu()->d[i_theta] << "\t" << m_ForwardModel->getAlpha()->d[i_theta]
-                     << std::endl;
+                  << std::endl;
       }
       else
       {
@@ -862,7 +903,7 @@ void HAADF_ReconstructionEngine::execute()
     //  std::stringstream ss;
     //  ss << m_TomoInputs->tempDir << MXADir::getSeparator() << MBIR::Defaults::ReconstructedMrcFile;
     //TODO: Remove this HACK (+1)
-    cropEnd+=1;
+    cropEnd += 1;
     m_ForwardModel->writeMRCFile(m_TomoInputs->mrcOutputFile, cropStart, cropEnd);
   }
 
@@ -888,36 +929,36 @@ void HAADF_ReconstructionEngine::execute()
  //Finds the min and max of the neighborhood . This is required prior to calling
  solve()
  *****************************************************************************/
-void HAADF_ReconstructionEngine::minMax(Real_t *low,Real_t *high, Real_t currentVoxelValue)
+void HAADF_ReconstructionEngine::minMax(Real_t* low, Real_t* high, Real_t currentVoxelValue)
 {
-  uint8_t i,j,k;
-  *low=NEIGHBORHOOD[INDEX_3(0,0,0)];
-  *high=NEIGHBORHOOD[INDEX_3(0,0,0)];
+  uint8_t i, j, k;
+  *low = NEIGHBORHOOD[INDEX_3(0, 0, 0)];
+  *high = NEIGHBORHOOD[INDEX_3(0, 0, 0)];
 
-  for(i = 0; i < 3;i++)
+  for(i = 0; i < 3; i++)
   {
-    for(j=0; j < 3; j++)
+    for(j = 0; j < 3; j++)
     {
       for(k = 0; k < 3; k++)
       {
         //  if(NEIGHBORHOOD[i][j][k] != 0)
         //  printf("%lf ", NEIGHBORHOOD[i][j][k]);
 
-        if(NEIGHBORHOOD[INDEX_3(i,j,k)] < *low)
-          *low = NEIGHBORHOOD[INDEX_3(i,j,k)];
-        if(NEIGHBORHOOD[INDEX_3(i,j,k)] > *high)
-          *high=NEIGHBORHOOD[INDEX_3(i,j,k)];
+        if(NEIGHBORHOOD[INDEX_3(i, j, k)] < *low)
+        { *low = NEIGHBORHOOD[INDEX_3(i, j, k)]; }
+        if(NEIGHBORHOOD[INDEX_3(i, j, k)] > *high)
+        { *high = NEIGHBORHOOD[INDEX_3(i, j, k)]; }
       }
       //  printf("\n");
     }
   }
 
 
-  if(THETA2 !=0)
+  if(THETA2 != 0)
   {
-    *low = (*low > (currentVoxelValue - (THETA1/THETA2)) ? (currentVoxelValue - (THETA1/THETA2)): *low);
+    *low = (*low > (currentVoxelValue - (THETA1 / THETA2)) ? (currentVoxelValue - (THETA1 / THETA2)) : *low);
 
-    *high = (*high < (currentVoxelValue - (THETA1/THETA2)) ? (currentVoxelValue - (THETA1/THETA2)): *high);
+    *high = (*high < (currentVoxelValue - (THETA1 / THETA2)) ? (currentVoxelValue - (THETA1 / THETA2)) : *high);
   }
 }
 
@@ -927,71 +968,73 @@ void HAADF_ReconstructionEngine::minMax(Real_t *low,Real_t *high, Real_t current
 // -----------------------------------------------------------------------------
 RealImageType::Pointer HAADF_ReconstructionEngine::calculateVoxelProfile()
 {
-  Real_t angle,MaxValLineIntegral;
-  Real_t temp,dist1,dist2,LeftCorner,LeftNear,RightNear,RightCorner,t;
-  size_t dims[2] = {m_Sinogram->N_theta ,m_AdvParams->PROFILE_RESOLUTION};
+  Real_t angle, MaxValLineIntegral;
+  Real_t temp, dist1, dist2, LeftCorner, LeftNear, RightNear, RightCorner, t;
+  size_t dims[2] = {m_Sinogram->N_theta , m_AdvParams->PROFILE_RESOLUTION};
   RealImageType::Pointer VoxProfile = RealImageType::New(dims, "VoxelProfile");
 
-  Real_t checksum=0;
-  uint16_t i,j;
+  Real_t checksum = 0;
+  uint16_t i, j;
   FILE* Fp = NULL;
   MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, MBIR::Defaults::VoxelProfileFile);
   if (errno > 0)
   {
     std::string filepath(m_TomoInputs->tempDir);
-    filepath = filepath.append(MXADir::getSeparator()).append(MBIR::Defaults::VoxelProfileFile);\
+    filepath = filepath.append(MXADir::getSeparator()).append(MBIR::Defaults::VoxelProfileFile);
+    \
     std::cout << "VoxelProfile will NOT be written to file '" << filepath << std::endl;
   }
 
-  for (i=0;i<m_Sinogram->N_theta;i++)
+  for (i = 0; i < m_Sinogram->N_theta; i++)
   {
-    m_Sinogram->angles[i]=m_Sinogram->angles[i]*(M_PI/180.0);
-    angle=m_Sinogram->angles[i];
+    m_Sinogram->angles[i] = m_Sinogram->angles[i] * (M_PI / 180.0);
+    angle = m_Sinogram->angles[i];
     while(angle > M_PI_2)
-      angle -= M_PI_2;
+    { angle -= M_PI_2; }
 
     while(angle < 0)
-      angle +=M_PI_2;
+    { angle += M_PI_2; }
 
     if(angle <= M_PI_4)
     {
-      MaxValLineIntegral = m_TomoInputs->delta_xz/cos(angle);
+      MaxValLineIntegral = m_TomoInputs->delta_xz / cos(angle);
     }
     else
     {
-      MaxValLineIntegral = m_TomoInputs->delta_xz/cos(M_PI_2-angle);
+      MaxValLineIntegral = m_TomoInputs->delta_xz / cos(M_PI_2 - angle);
     }
-    temp=cos(M_PI_4);
+    temp = cos(M_PI_4);
     dist1 = temp * cos((M_PI_4 - angle));
     dist2 = temp * fabs((cos((M_PI_4 + angle))));
-    LeftCorner = 1-dist1;
-    LeftNear = 1-dist2;
-    RightNear = 1+dist2;
-    RightCorner = 1+dist1;
+    LeftCorner = 1 - dist1;
+    LeftNear = 1 - dist2;
+    RightNear = 1 + dist2;
+    RightCorner = 1 + dist1;
 
-    for(j = 0;j<m_AdvParams->PROFILE_RESOLUTION;j++)
+    for(j = 0; j < m_AdvParams->PROFILE_RESOLUTION; j++)
     {
-      t = 2.0*j /m_AdvParams->PROFILE_RESOLUTION;//2 is the normalized length of the profile (basically equl to 2*delta_xz)
+      t = 2.0 * j / m_AdvParams->PROFILE_RESOLUTION; //2 is the normalized length of the profile (basically equl to 2*delta_xz)
       if(t <= LeftCorner || t >= RightCorner)
-        VoxProfile->setValue(0, i, j);
+      { VoxProfile->setValue(0, i, j); }
       else if(t > RightNear)
-        VoxProfile->setValue(MaxValLineIntegral*(RightCorner-t)/(RightCorner-RightNear), i, j);
+      { VoxProfile->setValue(MaxValLineIntegral * (RightCorner - t) / (RightCorner - RightNear), i, j); }
       else if(t >= LeftNear)
-        VoxProfile->setValue(MaxValLineIntegral, i, j);
+      { VoxProfile->setValue(MaxValLineIntegral, i, j); }
       else
-        VoxProfile->setValue(MaxValLineIntegral*(t-LeftCorner)/(LeftNear-LeftCorner), i, j);
+      { VoxProfile->setValue(MaxValLineIntegral * (t - LeftCorner) / (LeftNear - LeftCorner), i, j); }
 
       if (Fp != NULL)
       {
-        fwrite( VoxProfile->getPointer(i, j), sizeof(Real_t),1,Fp);
+        fwrite( VoxProfile->getPointer(i, j), sizeof(Real_t), 1, Fp);
       }
-      checksum+=VoxProfile->getValue(i, j);
+      checksum += VoxProfile->getValue(i, j);
     }
 
   }
 
   //printf("Pixel Profile Check sum =%lf\n",checksum);
-  if (Fp != NULL) {
+  if (Fp != NULL)
+  {
     fclose(Fp);
   }
   return VoxProfile;
@@ -1001,7 +1044,7 @@ RealImageType::Pointer HAADF_ReconstructionEngine::calculateVoxelProfile()
  Forwards Projects the Object and stores it in a 3-D matrix
  ********************************************************************/
 RealVolumeType::Pointer HAADF_ReconstructionEngine::forwardProject(RealVolumeType::Pointer DetectorResponse,
-                                                                   RealVolumeType::Pointer H_t)
+    RealVolumeType::Pointer H_t)
 {
   notify("Executing Forward Projection", 50, Observable::UpdateProgressValueAndMessage);
 
@@ -1037,14 +1080,14 @@ RealVolumeType::Pointer HAADF_ReconstructionEngine::forwardProject(RealVolumeTyp
           rmin = r - m_TomoInputs->delta_xz;
           rmax = r + m_TomoInputs->delta_xz;
 
-          if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax) continue;
+          if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax) { continue; }
 
           index_min = static_cast<uint16_t>(floor(((rmin - m_Sinogram->R0) / m_Sinogram->delta_r)));
           index_max = static_cast<uint16_t>(floor((rmax - m_Sinogram->R0) / m_Sinogram->delta_r));
 
-          if(index_max >= m_Sinogram->N_r) index_max = m_Sinogram->N_r - 1;
+          if(index_max >= m_Sinogram->N_r) { index_max = m_Sinogram->N_r - 1; }
 
-          if(index_min < 0) index_min = 0;
+          if(index_min < 0) { index_min = 0; }
 
           y = m_Geometry->y0 + ((double)i + 0.5) * m_TomoInputs->delta_xy;
           t = y;
@@ -1055,8 +1098,8 @@ RealVolumeType::Pointer HAADF_ReconstructionEngine::forwardProject(RealVolumeTyp
           slice_index_min = static_cast<uint16_t>(floor((tmin - m_Sinogram->T0) / m_Sinogram->delta_t));
           slice_index_max = static_cast<uint16_t>(floor((tmax - m_Sinogram->T0) / m_Sinogram->delta_t));
 
-          if(slice_index_min < 0) slice_index_min = 0;
-          if(slice_index_max >= m_Sinogram->N_t) slice_index_max = m_Sinogram->N_t - 1;
+          if(slice_index_min < 0) { slice_index_min = 0; }
+          if(slice_index_max >= m_Sinogram->N_t) { slice_index_max = m_Sinogram->N_t - 1; }
 
           for (i_r = index_min; i_r <= index_max; i_r++)
           {
@@ -1070,7 +1113,7 @@ RealVolumeType::Pointer HAADF_ReconstructionEngine::forwardProject(RealVolumeTyp
               w2 = (index_delta_r + 1) * OffsetR - delta_r;
               uint16_t iidx = index_delta_r + 1 < m_AdvParams->DETECTOR_RESPONSE_BINS ? index_delta_r + 1 : m_AdvParams->DETECTOR_RESPONSE_BINS - 1;
               f1 = (w2 / OffsetR) * DetectorResponse->getValue(0, i_theta, index_delta_r)
-                  +(w1 / OffsetR) * DetectorResponse->getValue(0, i_theta, iidx);
+                   + (w1 / OffsetR) * DetectorResponse->getValue(0, i_theta, iidx);
             }
             else
             {
@@ -1113,9 +1156,9 @@ RealVolumeType::Pointer HAADF_ReconstructionEngine::forwardProject(RealVolumeTyp
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Real_t HAADF_ReconstructionEngine::computeCost(RealVolumeType::Pointer ErrorSino,RealVolumeType::Pointer Weight)
+Real_t HAADF_ReconstructionEngine::computeCost(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight)
 {
-  Real_t cost=0,temp=0;
+  Real_t cost = 0, temp = 0;
   Real_t delta;
   Real_t errSinoValue = 0.0;
 #ifdef EIMTOMO_USE_QGGMRF
@@ -1142,70 +1185,70 @@ Real_t HAADF_ReconstructionEngine::computeCost(RealVolumeType::Pointer ErrorSino
   //  fflush(stdout);
 
   //Prior Model Error
-  temp=0;
+  temp = 0;
 #ifndef EIMTOMO_USE_QGGMRF
   for (int16_t i = 0; i < m_Geometry->N_z; i++)
     for (int16_t j = 0; j < m_Geometry->N_x; j++)
       for(int16_t k = 0; k < m_Geometry->N_y; k++)
       {
 
-        if(k+1 <  m_Geometry->N_y)
-          temp += FILTER[2][1][1]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j][k+1]),MRF_P);
+        if(k + 1 <  m_Geometry->N_y)
+        { temp += FILTER[2][1][1] * pow(fabs(m_Geometry->Object->d[i][j][k] - m_Geometry->Object->d[i][j][k + 1]), MRF_P); }
 
 
-        if(j+1 < m_Geometry->N_x)
+        if(j + 1 < m_Geometry->N_x)
         {
-          if(k-1 >= 0)
-            temp += FILTER[0][1][2]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k-1]),MRF_P);
+          if(k - 1 >= 0)
+          { temp += FILTER[0][1][2] * pow(fabs(m_Geometry->Object->d[i][j][k] - m_Geometry->Object->d[i][j + 1][k - 1]), MRF_P); }
 
 
-          temp += FILTER[1][1][2]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k]),MRF_P);
+          temp += FILTER[1][1][2] * pow(fabs(m_Geometry->Object->d[i][j][k] - m_Geometry->Object->d[i][j + 1][k]), MRF_P);
 
 
-          if(k+1 < m_Geometry->N_y)
-            temp += FILTER[2][1][2]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i][j+1][k+1]),MRF_P);
+          if(k + 1 < m_Geometry->N_y)
+          { temp += FILTER[2][1][2] * pow(fabs(m_Geometry->Object->d[i][j][k] - m_Geometry->Object->d[i][j + 1][k + 1]), MRF_P); }
 
         }
 
-        if(i+1 < m_Geometry->N_z)
+        if(i + 1 < m_Geometry->N_z)
         {
 
-          if(j-1 >= 0)
-            temp += FILTER[1][2][0]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k]),MRF_P);
+          if(j - 1 >= 0)
+          { temp += FILTER[1][2][0] * pow(fabs(m_Geometry->Object->d[i][j][k] - m_Geometry->Object->d[i + 1][j - 1][k]), MRF_P); }
 
-          temp += FILTER[1][2][1]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k]),MRF_P);
+          temp += FILTER[1][2][1] * pow(fabs(m_Geometry->Object->d[i][j][k] - m_Geometry->Object->d[i + 1][j][k]), MRF_P);
 
-          if(j+1 < m_Geometry->N_x)
-            temp += FILTER[1][2][2]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k]),MRF_P);
+          if(j + 1 < m_Geometry->N_x)
+          { temp += FILTER[1][2][2] * pow(fabs(m_Geometry->Object->d[i][j][k] - m_Geometry->Object->d[i + 1][j + 1][k]), MRF_P); }
 
 
-          if(j-1 >= 0)
+          if(j - 1 >= 0)
           {
-            if(k-1 >= 0)
-              temp += FILTER[0][2][0]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k-1]),MRF_P);
+            if(k - 1 >= 0)
+            { temp += FILTER[0][2][0] * pow(fabs(m_Geometry->Object->d[i][j][k] - m_Geometry->Object->d[i + 1][j - 1][k - 1]), MRF_P); }
 
-            if(k+1 < m_Geometry->N_y)
-              temp += FILTER[2][2][0]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j-1][k+1]),MRF_P);
+            if(k + 1 < m_Geometry->N_y)
+            { temp += FILTER[2][2][0] * pow(fabs(m_Geometry->Object->d[i][j][k] - m_Geometry->Object->d[i + 1][j - 1][k + 1]), MRF_P); }
 
           }
 
-          if(k-1 >= 0)
-            temp += FILTER[0][2][1]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k-1]),MRF_P);
+          if(k - 1 >= 0)
+          { temp += FILTER[0][2][1] * pow(fabs(m_Geometry->Object->d[i][j][k] - m_Geometry->Object->d[i + 1][j][k - 1]), MRF_P); }
 
-          if(j+1 < m_Geometry->N_x)
+          if(j + 1 < m_Geometry->N_x)
           {
-            if(k-1 >= 0)
-              temp += FILTER[0][2][2]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k-1]),MRF_P);
+            if(k - 1 >= 0)
+            { temp += FILTER[0][2][2] * pow(fabs(m_Geometry->Object->d[i][j][k] - m_Geometry->Object->d[i + 1][j + 1][k - 1]), MRF_P); }
 
-            if(k+1 < m_Geometry->N_y)
-              temp+= FILTER[2][2][2]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j+1][k+1]),MRF_P);
+            if(k + 1 < m_Geometry->N_y)
+            { temp += FILTER[2][2][2] * pow(fabs(m_Geometry->Object->d[i][j][k] - m_Geometry->Object->d[i + 1][j + 1][k + 1]), MRF_P); }
           }
 
-          if(k+1 < m_Geometry->N_y)
-            temp+= FILTER[2][2][1]*pow(fabs(m_Geometry->Object->d[i][j][k]-m_Geometry->Object->d[i+1][j][k+1]),MRF_P);
+          if(k + 1 < m_Geometry->N_y)
+          { temp += FILTER[2][2][1] * pow(fabs(m_Geometry->Object->d[i][j][k] - m_Geometry->Object->d[i + 1][j][k + 1]), MRF_P); }
         }
       }
-  cost+=(temp/(MRF_P*SIGMA_X_P));
+  cost += (temp / (MRF_P * SIGMA_X_P));
 #else
 
   for (int16_t i = 0; i < m_Geometry->N_z; i++)
@@ -1218,7 +1261,7 @@ Real_t HAADF_ReconstructionEngine::computeCost(RealVolumeType::Pointer ErrorSino
         if(k + 1 < m_Geometry->N_y)
         {
           delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j, k + 1);
-          temp += FILTER[INDEX_3(2,1,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+          temp += FILTER[INDEX_3(2, 1, 1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 
         }
 
@@ -1227,16 +1270,16 @@ Real_t HAADF_ReconstructionEngine::computeCost(RealVolumeType::Pointer ErrorSino
           if(k - 1 >= 0)
           {
             delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k - 1);
-            temp += FILTER[INDEX_3(0,1,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+            temp += FILTER[INDEX_3(0, 1, 2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
           }
 
           delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k);
-          temp += FILTER[INDEX_3(1,1,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+          temp += FILTER[INDEX_3(1, 1, 2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 
           if(k + 1 < m_Geometry->N_y)
           {
             delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k + 1);
-            temp += FILTER[INDEX_3(2,1,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+            temp += FILTER[INDEX_3(2, 1, 2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
           }
 
         }
@@ -1247,16 +1290,16 @@ Real_t HAADF_ReconstructionEngine::computeCost(RealVolumeType::Pointer ErrorSino
           if(j - 1 >= 0)
           {
             delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k);
-            temp += FILTER[INDEX_3(1,2,0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+            temp += FILTER[INDEX_3(1, 2, 0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
           }
 
           delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k);
-          temp += FILTER[INDEX_3(1,2,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+          temp += FILTER[INDEX_3(1, 2, 1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 
           if(j + 1 < m_Geometry->N_x)
           {
             delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k);
-            temp += FILTER[INDEX_3(1,2,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+            temp += FILTER[INDEX_3(1, 2, 2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
           }
 
           if(j - 1 >= 0)
@@ -1264,13 +1307,13 @@ Real_t HAADF_ReconstructionEngine::computeCost(RealVolumeType::Pointer ErrorSino
             if(k - 1 >= 0)
             {
               delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k - 1);
-              temp += FILTER[INDEX_3(0,2,0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+              temp += FILTER[INDEX_3(0, 2, 0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
             }
 
             if(k + 1 < m_Geometry->N_y)
             {
               delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k + 1);
-              temp += FILTER[INDEX_3(2,2,0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+              temp += FILTER[INDEX_3(2, 2, 0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
             }
 
           }
@@ -1278,7 +1321,7 @@ Real_t HAADF_ReconstructionEngine::computeCost(RealVolumeType::Pointer ErrorSino
           if(k - 1 >= 0)
           {
             delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k - 1);
-            temp += FILTER[INDEX_3(0,2,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+            temp += FILTER[INDEX_3(0, 2, 1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
           }
 
           if(j + 1 < m_Geometry->N_x)
@@ -1286,33 +1329,34 @@ Real_t HAADF_ReconstructionEngine::computeCost(RealVolumeType::Pointer ErrorSino
             if(k - 1 >= 0)
             {
               delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k - 1);
-              temp += FILTER[INDEX_3(0,2,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+              temp += FILTER[INDEX_3(0, 2, 2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
             }
 
             if(k + 1 < m_Geometry->N_y)
             {
               delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k + 1);
-              temp += FILTER[INDEX_3(2,2,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+              temp += FILTER[INDEX_3(2, 2, 2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
             }
           }
 
           if(k + 1 < m_Geometry->N_y)
           {
             delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k + 1);
-            temp += FILTER[INDEX_3(2,2,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+            temp += FILTER[INDEX_3(2, 2, 1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
           }
         }
       }
     }
   }
-  cost+=(temp);
+  cost += (temp);
 #endif //QGGMRF
 
   //printf("Cost calculation End..\n");
 
 
   //Noise Error
-  if(m_AdvParams->NOISE_MODEL) {
+  if(m_AdvParams->NOISE_MODEL)
+  {
     temp = 0;
     for (int16_t i = 0; i < m_Sinogram->N_theta; i++)
     {
@@ -1321,11 +1365,11 @@ Real_t HAADF_ReconstructionEngine::computeCost(RealVolumeType::Pointer ErrorSino
         for (int16_t k = 0; k < m_Sinogram->N_t; k++)
         {
           if(Weight->getValue(i, j, k) != 0)
-            temp+= log(2 * M_PI * (1.0/Weight->getValue(i, j, k)));
+          { temp += log(2 * M_PI * (1.0 / Weight->getValue(i, j, k))); }
         }
       }
     }
-    temp/=2;
+    temp /= 2;
     cost += temp;
   }//NOISE_MODEL
   return cost;
@@ -1334,8 +1378,8 @@ Real_t HAADF_ReconstructionEngine::computeCost(RealVolumeType::Pointer ErrorSino
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-AMatrixCol::Pointer HAADF_ReconstructionEngine::calculateAMatrixColumnPartial(uint16_t row,uint16_t col, uint16_t slice,
-                                                                              RealVolumeType::Pointer DetectorResponse)
+AMatrixCol::Pointer HAADF_ReconstructionEngine::calculateAMatrixColumnPartial(uint16_t row, uint16_t col, uint16_t slice,
+    RealVolumeType::Pointer DetectorResponse)
 {
   int32_t j, k, sliceidx;
   Real_t x, z, y;
@@ -1399,20 +1443,20 @@ AMatrixCol::Pointer HAADF_ReconstructionEngine::calculateAMatrixColumnPartial(ui
       tmin = (t - m_TomoInputs->delta_xy / 2) > m_Sinogram->T0 ? t - m_TomoInputs->delta_xy / 2 : m_Sinogram->T0;
       tmax = (t + m_TomoInputs->delta_xy / 2) <= m_Sinogram->TMax ? t + m_TomoInputs->delta_xy / 2 : m_Sinogram->TMax;
 
-      if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax) continue;
+      if(rmax < m_Sinogram->R0 || rmin > m_Sinogram->RMax) { continue; }
 
       index_min = static_cast<int32_t>(floor(((rmin - m_Sinogram->R0) / m_Sinogram->delta_r)));
       index_max = static_cast<int32_t>(floor((rmax - m_Sinogram->R0) / m_Sinogram->delta_r));
 
-      if(index_max >= m_Sinogram->N_r) index_max = m_Sinogram->N_r - 1;
+      if(index_max >= m_Sinogram->N_r) { index_max = m_Sinogram->N_r - 1; }
 
-      if(index_min < 0) index_min = 0;
+      if(index_min < 0) { index_min = 0; }
 
       slice_index_min = static_cast<int32_t>(floor((tmin - m_Sinogram->T0) / m_Sinogram->delta_t));
       slice_index_max = static_cast<int32_t>(floor((tmax - m_Sinogram->T0) / m_Sinogram->delta_t));
 
-      if(slice_index_min < 0) slice_index_min = 0;
-      if(slice_index_max >= m_Sinogram->N_t) slice_index_max = m_Sinogram->N_t - 1;
+      if(slice_index_min < 0) { slice_index_min = 0; }
+      if(slice_index_max >= m_Sinogram->N_t) { slice_index_max = m_Sinogram->N_t - 1; }
 
       BaseIndex = i * m_Sinogram->N_r; //*Sinogram->N_t;
 
@@ -1442,11 +1486,11 @@ AMatrixCol::Pointer HAADF_ReconstructionEngine::calculateAMatrixColumnPartial(ui
 
             uint16_t iidx = index_delta_r + 1 < m_AdvParams->DETECTOR_RESPONSE_BINS ? index_delta_r + 1 : m_AdvParams->DETECTOR_RESPONSE_BINS - 1;
             f1 = (w2 / OffsetR) * DetectorResponse->getValue(index_delta_t, i, index_delta_r)
-                + (w1 / OffsetR) * DetectorResponse->getValue(index_delta_t, i, iidx);
+                 + (w1 / OffsetR) * DetectorResponse->getValue(index_delta_t, i, iidx);
             //  f2 = (w2/OffsetR)*DetectorResponse[index_delta_t+1 < m_AdvParams->DETECTOR_RESPONSE_BINS ?index_delta_t+1 : m_AdvParams->DETECTOR_RESPONSE_BINS-1][i][index_delta_r] + (w1/OffsetR)*DetectorResponse[index_delta_t+1 < m_AdvParams->DETECTOR_RESPONSE_BINS? index_delta_t+1:m_AdvParams->DETECTOR_RESPONSE_BINS][i][index_delta_r+1 < m_AdvParams->DETECTOR_RESPONSE_BINS? index_delta_r+1:m_AdvParams->DETECTOR_RESPONSE_BINS-1];
 
-            if(sliceidx == slice_index_min) ContributionAlongT = (sliceidx + 1) * m_Sinogram->delta_t - tmin;
-            else if(sliceidx == slice_index_max) ContributionAlongT = tmax - (sliceidx) * m_Sinogram->delta_t;
+            if(sliceidx == slice_index_min) { ContributionAlongT = (sliceidx + 1) * m_Sinogram->delta_t - tmin; }
+            else if(sliceidx == slice_index_max) { ContributionAlongT = tmax - (sliceidx) * m_Sinogram->delta_t; }
             else
             {
               ContributionAlongT = m_Sinogram->delta_t;
@@ -1534,7 +1578,7 @@ double HAADF_ReconstructionEngine::surrogateFunctionBasedMin(Real_t currentVoxel
     update = 0;
   }
 
-  if(update > 70000) printf("%lf\n", update);
+  if(update > 70000) { printf("%lf\n", update); }
 
   return update;
 
@@ -1544,14 +1588,14 @@ double HAADF_ReconstructionEngine::surrogateFunctionBasedMin(Real_t currentVoxel
 // -----------------------------------------------------------------------------
 //Finds the maximum of absolute value elements in an array
 // -----------------------------------------------------------------------------
-Real_t HAADF_ReconstructionEngine::absMaxArray(std::vector<Real_t> &Array)
+Real_t HAADF_ReconstructionEngine::absMaxArray(std::vector<Real_t>& Array)
 {
   uint16_t i;
   Real_t max;
   max = fabs(Array[0]);
-  for(i =1; i < Array.size();i++)
+  for(i = 1; i < Array.size(); i++)
     if(fabs(Array[i]) > max)
-      max=fabs(Array[i]);
+    { max = fabs(Array[i]); }
   return max;
 
 }
@@ -1563,7 +1607,7 @@ void HAADF_ReconstructionEngine::ComputeVSC()
 {
   Real_t filter_op = 0;
   // int err = 0;
-  FILE *Fp = NULL;
+  FILE* Fp = NULL;
   MAKE_OUTPUT_FILE(Fp, m_TomoInputs->tempDir, MBIR::Defaults::MagnitudeMapFile);
   if(errno < 0)
   {
@@ -1616,7 +1660,7 @@ void HAADF_ReconstructionEngine::ComputeVSC()
 Real_t HAADF_ReconstructionEngine::SetNonHomThreshold()
 {
   size_t dims[2] =
-  { m_Geometry->N_z * m_Geometry->N_x, 0 };
+  { m_Geometry->N_z* m_Geometry->N_x, 0 };
   RealArrayType::Pointer TempMagMap = RealArrayType::New(dims, "TempMagMap");
 
   uint32_t ArrLength = m_Geometry->N_z * m_Geometry->N_x;
@@ -1758,7 +1802,7 @@ void HAADF_ReconstructionEngine::allocateNuisanceParameters()
   }
   else
   {
-     m_ForwardModel->setAlpha(RealArrayType::NullPointer());
+    m_ForwardModel->setAlpha(RealArrayType::NullPointer());
   }
 }
 
@@ -1792,12 +1836,12 @@ void HAADF_ReconstructionEngine::costInitialization(SinogramPtr sinogram)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Real_t HAADF_ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorSino,RealVolumeType::Pointer Weight)
+Real_t HAADF_ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight)
 {
-  Real_t sigmaxEst=0,temp=0;
+  Real_t sigmaxEst = 0, temp = 0;
   Real_t delta;
-  int16_t zStart = 0.25*m_Geometry->N_z;
-  int16_t zEnd = 0.75*m_Geometry->N_z;
+  int16_t zStart = 0.25 * m_Geometry->N_z;
+  int16_t zEnd = 0.75 * m_Geometry->N_z;
   for (int16_t i = zStart; i < zEnd; i++)
   {
     for (int16_t j = 0; j < m_Geometry->N_x; j++)
@@ -1808,8 +1852,8 @@ Real_t HAADF_ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorS
         if(k + 1 < m_Geometry->N_y)
         {
           delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j, k + 1);
-          delta*= m_TomoInputs->SigmaX;
-          temp += FILTER[INDEX_3(2,1,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+          delta *= m_TomoInputs->SigmaX;
+          temp += FILTER[INDEX_3(2, 1, 1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 
         }
 
@@ -1818,19 +1862,19 @@ Real_t HAADF_ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorS
           if(k - 1 >= 0)
           {
             delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k - 1);
-            delta*= m_TomoInputs->SigmaX;
-            temp += FILTER[INDEX_3(0,1,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+            delta *= m_TomoInputs->SigmaX;
+            temp += FILTER[INDEX_3(0, 1, 2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
           }
 
           delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k);
-          delta*= m_TomoInputs->SigmaX;
-          temp += FILTER[INDEX_3(1,1,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+          delta *= m_TomoInputs->SigmaX;
+          temp += FILTER[INDEX_3(1, 1, 2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 
           if(k + 1 < m_Geometry->N_y)
           {
             delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i, j + 1, k + 1);
-            delta*= m_TomoInputs->SigmaX;
-            temp += FILTER[INDEX_3(2,1,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+            delta *= m_TomoInputs->SigmaX;
+            temp += FILTER[INDEX_3(2, 1, 2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
           }
 
         }
@@ -1841,19 +1885,19 @@ Real_t HAADF_ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorS
           if(j - 1 >= 0)
           {
             delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k);
-            delta*= m_TomoInputs->SigmaX;
-            temp += FILTER[INDEX_3(1,2,0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+            delta *= m_TomoInputs->SigmaX;
+            temp += FILTER[INDEX_3(1, 2, 0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
           }
 
           delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k);
-          delta*= m_TomoInputs->SigmaX;
-          temp += FILTER[INDEX_3(1,2,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+          delta *= m_TomoInputs->SigmaX;
+          temp += FILTER[INDEX_3(1, 2, 1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
 
           if(j + 1 < m_Geometry->N_x)
           {
             delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k);
-            delta*= m_TomoInputs->SigmaX;
-            temp += FILTER[INDEX_3(1,2,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+            delta *= m_TomoInputs->SigmaX;
+            temp += FILTER[INDEX_3(1, 2, 2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
           }
 
           if(j - 1 >= 0)
@@ -1861,15 +1905,15 @@ Real_t HAADF_ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorS
             if(k - 1 >= 0)
             {
               delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k - 1);
-              delta*= m_TomoInputs->SigmaX;
-              temp += FILTER[INDEX_3(0,2,0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+              delta *= m_TomoInputs->SigmaX;
+              temp += FILTER[INDEX_3(0, 2, 0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
             }
 
             if(k + 1 < m_Geometry->N_y)
             {
               delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j - 1, k + 1);
-              delta*= m_TomoInputs->SigmaX;
-              temp += FILTER[INDEX_3(2,2,0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+              delta *= m_TomoInputs->SigmaX;
+              temp += FILTER[INDEX_3(2, 2, 0)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
             }
 
           }
@@ -1877,8 +1921,8 @@ Real_t HAADF_ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorS
           if(k - 1 >= 0)
           {
             delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k - 1);
-            delta*= m_TomoInputs->SigmaX;
-            temp += FILTER[INDEX_3(0,2,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+            delta *= m_TomoInputs->SigmaX;
+            temp += FILTER[INDEX_3(0, 2, 1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
           }
 
           if(j + 1 < m_Geometry->N_x)
@@ -1886,33 +1930,33 @@ Real_t HAADF_ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorS
             if(k - 1 >= 0)
             {
               delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k - 1);
-              delta*= m_TomoInputs->SigmaX;
-              temp += FILTER[INDEX_3(0,2,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+              delta *= m_TomoInputs->SigmaX;
+              temp += FILTER[INDEX_3(0, 2, 2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
             }
 
             if(k + 1 < m_Geometry->N_y)
             {
               delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j + 1, k + 1);
-              delta*= m_TomoInputs->SigmaX;
-              temp += FILTER[INDEX_3(2,2,2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+              delta *= m_TomoInputs->SigmaX;
+              temp += FILTER[INDEX_3(2, 2, 2)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
             }
           }
 
           if(k + 1 < m_Geometry->N_y)
           {
             delta = m_Geometry->Object->getValue(i, j, k) - m_Geometry->Object->getValue(i + 1, j, k + 1);
-            delta*= m_TomoInputs->SigmaX;
-            temp += FILTER[INDEX_3(2,2,1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
+            delta *= m_TomoInputs->SigmaX;
+            temp += FILTER[INDEX_3(2, 2, 1)] * QGGMRF::Value(delta, &m_QGGMRF_Values);
           }
         }
       }
     }
   }
-  Real_t NumEntries = m_Geometry->N_x*m_Geometry->N_y*(zEnd-zStart+1);
-  sigmaxEst = temp/(NumEntries);
-  std::cout<<"Value of sigmaX = "<<pow(sigmaxEst,1.0/m_TomoInputs->p)<<std::endl;
-  std::cout<<"Current value of sigmaX = "<<m_TomoInputs->SigmaX<<std::endl;
-  std::cout<<"Ratio = "<<m_TomoInputs->SigmaX/pow(sigmaxEst,1.0/m_TomoInputs->p)<<std::endl;
+  Real_t NumEntries = m_Geometry->N_x * m_Geometry->N_y * (zEnd - zStart + 1);
+  sigmaxEst = temp / (NumEntries);
+  std::cout << "Value of sigmaX = " << pow(sigmaxEst, 1.0 / m_TomoInputs->p) << std::endl;
+  std::cout << "Current value of sigmaX = " << m_TomoInputs->SigmaX << std::endl;
+  std::cout << "Ratio = " << m_TomoInputs->SigmaX / pow(sigmaxEst, 1.0 / m_TomoInputs->p) << std::endl;
   return sigmaxEst;
 }
 

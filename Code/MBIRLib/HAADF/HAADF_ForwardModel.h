@@ -111,10 +111,10 @@ class HAADF_ForwardModel : public Observable
     void writeNuisanceParameters(SinogramPtr sinogram);
     void writeSinogramFile(SinogramPtr sinogram,
                            RealVolumeType::Pointer Final_Sinogram);
-    void writeReconstructionFile(const std::string &filepath);
-    void writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
-    void writeMRCFile(const std::string &mrcFile, uint16_t cropStart, uint16_t cropEnd);
-    void writeAvizoFile(const std::string &file, uint16_t cropStart, uint16_t cropEnd);
+    void writeReconstructionFile(const std::string& filepath);
+    void writeVtkFile(const std::string& vtkFile, uint16_t cropStart, uint16_t cropEnd);
+    void writeMRCFile(const std::string& mrcFile, uint16_t cropStart, uint16_t cropEnd);
+    void writeAvizoFile(const std::string& file, uint16_t cropStart, uint16_t cropEnd);
 
     int createInitialGainsData();
     int createInitialOffsetsData();

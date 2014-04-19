@@ -35,7 +35,7 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ColorComboPicker::ColorComboPicker(QWidget *widget) :
+ColorComboPicker::ColorComboPicker(QWidget* widget) :
   QComboBox(widget)
 {
   populateList();

@@ -12,7 +12,7 @@
  * @param argv
  * @return
  */
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   if (argc != 2)
   {

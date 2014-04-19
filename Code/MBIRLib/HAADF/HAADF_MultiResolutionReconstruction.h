@@ -108,11 +108,11 @@ class HAADF_MultiResolutionReconstruction : public FilterPipeline
 
 
     /**
-   * @brief Prints the values of the input variables
-   * @param inputs
-   * @param out
-   */
-    void printInputs(TomoInputsPtr inputs, std::ostream &out);
+    * @brief Prints the values of the input variables
+    * @param inputs
+    * @param out
+    */
+    void printInputs(TomoInputsPtr inputs, std::ostream& out);
 
     /**
      * @brief Trys to estimate the amount of memory that will be used.

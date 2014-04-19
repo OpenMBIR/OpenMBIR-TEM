@@ -48,8 +48,8 @@
 //
 // -----------------------------------------------------------------------------
 GainsOffsetsTableModel::GainsOffsetsTableModel(QObject* parent) :
-QAbstractTableModel(parent),
-m_RowCount(0)
+  QAbstractTableModel(parent),
+  m_RowCount(0)
 {
   m_ColumnCount = ColumnCount;
 }
@@ -65,7 +65,7 @@ GainsOffsetsTableModel::~GainsOffsetsTableModel()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-Qt::ItemFlags GainsOffsetsTableModel::flags(const QModelIndex &index) const
+Qt::ItemFlags GainsOffsetsTableModel::flags(const QModelIndex& index) const
 {
   //  std::cout << "GainsOffsetsTableModel::flags" << std::endl;
   if (!index.isValid())
@@ -75,7 +75,7 @@ Qt::ItemFlags GainsOffsetsTableModel::flags(const QModelIndex &index) const
   Qt::ItemFlags theFlags = QAbstractTableModel::flags(index);
   if (index.isValid())
   {
-  //  theFlags |= Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+    //  theFlags |= Qt::ItemIsEditable | Qt::ItemIsSelectable | Qt::ItemIsEnabled;
 
     int col = index.column();
     if (col == Exclude)
@@ -90,7 +90,7 @@ Qt::ItemFlags GainsOffsetsTableModel::flags(const QModelIndex &index) const
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QVariant GainsOffsetsTableModel::data(const QModelIndex &index, qint32 role) const
+QVariant GainsOffsetsTableModel::data(const QModelIndex& index, qint32 role) const
 {
 
   if (!index.isValid())
@@ -108,28 +108,28 @@ QVariant GainsOffsetsTableModel::data(const QModelIndex &index, qint32 role) con
       {
         contents.setText( QString("11.") );
         const QString header = headerData(TiltIndex, Qt::Horizontal, Qt::DisplayRole).toString();
-        if (header.length() > contents.text().length()) contents.text() = header;
+        if (header.length() > contents.text().length()) { contents.text() = header; }
         break;
       }
       case A_Tilt:
       {
         contents.setText( QString("11.") );
         const QString header = headerData(A_Tilt, Qt::Horizontal, Qt::DisplayRole).toString();
-        if (header.length() > contents.text().length()) contents.text() = header;
+        if (header.length() > contents.text().length()) { contents.text() = header; }
         break;
       }
       case B_Tilt:
       {
         contents.setText( QString("11.") );
         const QString header = headerData(B_Tilt, Qt::Horizontal, Qt::DisplayRole).toString();
-        if (header.length() > contents.text().length()) contents.text() = header;
+        if (header.length() > contents.text().length()) { contents.text() = header; }
         break;
       }
       case Exclude:
       {
         contents.setText( QString("11.") );
         const QString header = headerData(Exclude, Qt::Horizontal, Qt::DisplayRole).toString();
-        if (header.length() > contents.text().length()) contents.text() = header;
+        if (header.length() > contents.text().length()) { contents.text() = header; }
         break;
       }
       default:
@@ -205,7 +205,7 @@ QVariant GainsOffsetsTableModel::headerData(int section, Qt::Orientation orienta
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int GainsOffsetsTableModel::rowCount(const QModelIndex &index) const
+int GainsOffsetsTableModel::rowCount(const QModelIndex& index) const
 {
   return index.isValid() ? 0 : m_RowCount;
 }
@@ -213,7 +213,7 @@ int GainsOffsetsTableModel::rowCount(const QModelIndex &index) const
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int GainsOffsetsTableModel::columnCount(const QModelIndex &index) const
+int GainsOffsetsTableModel::columnCount(const QModelIndex& index) const
 {
   return index.isValid() ? 0 : m_ColumnCount;
 }
@@ -230,7 +230,7 @@ bool GainsOffsetsTableModel::setHeaderData(int col, Qt::Orientation o, const QVa
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool GainsOffsetsTableModel::setData(const QModelIndex & index, const QVariant & value, int role)
+bool GainsOffsetsTableModel::setData(const QModelIndex& index, const QVariant& value, int role)
 {
   // std::cout << "GainsOffsetsTableModel::setData " << value.toString().toStdString() << std::endl;
   if(!index.isValid() || index.row() < 0 || index.row() >= m_ATilts.count() || index.column() < 0 || index.column() >= m_ColumnCount)
@@ -323,14 +323,16 @@ bool GainsOffsetsTableModel::removeRows(int row, int count, const QModelIndex& i
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void GainsOffsetsTableModel::setColumnData(int col, QVector<float> &data)
+void GainsOffsetsTableModel::setColumnData(int col, QVector<float>& data)
 {
   switch(col)
   {
     case A_Tilt:
-      m_ATilts = data; break;
+      m_ATilts = data;
+      break;
     case Offsets:
-      m_Offsets = data;break;
+      m_Offsets = data;
+      break;
     case Gains:
 //      m_Gains = data; break;
     default:
@@ -353,7 +355,8 @@ void GainsOffsetsTableModel::setTableData(QVector<int> angleIndexes,
   QModelIndex topLeft;
   QModelIndex botRight;
 
-  if (count > 0) {
+  if (count > 0)
+  {
     // Now mass insert the data to the table then emit that the data has changed
     beginInsertRows(QModelIndex(), row, row + count - 1);
     m_AngleIndexes = angleIndexes;
@@ -364,7 +367,7 @@ void GainsOffsetsTableModel::setTableData(QVector<int> angleIndexes,
     m_RowCount = count;
     endInsertRows();
     QModelIndex topLeft = createIndex(0, 0);
-    QModelIndex botRight = createIndex(count-1, ColumnCount);
+    QModelIndex botRight = createIndex(count - 1, ColumnCount);
   }
   emit dataChanged(topLeft, botRight);
 }
@@ -374,7 +377,7 @@ void GainsOffsetsTableModel::setTableData(QVector<int> angleIndexes,
 //
 // -----------------------------------------------------------------------------
 void GainsOffsetsTableModel::setGainsAndOffsets(QVector<double> gains,
-                  QVector<double> offsets, QVector<double> variances)
+                                                QVector<double> offsets, QVector<double> variances)
 {
   qint32 count = gains.count();
   qint32 row = 0;
@@ -390,13 +393,14 @@ void GainsOffsetsTableModel::setGainsAndOffsets(QVector<double> gains,
   QModelIndex botRight;
 
 
-  if (count > 0) {
+  if (count > 0)
+  {
     // Now mass insert the data to the table then emit that the data has changed
     beginInsertRows(QModelIndex(), row, row + count - 1);
     m_RowCount = count;
     endInsertRows();
     QModelIndex topLeft = createIndex(0, 0);
-    QModelIndex botRight = createIndex(count-1, ColumnCount);
+    QModelIndex botRight = createIndex(count - 1, ColumnCount);
   }
 
   m_AngleIndexes = angleIndexes;
@@ -410,7 +414,7 @@ void GainsOffsetsTableModel::setGainsAndOffsets(QVector<double> gains,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void GainsOffsetsTableModel::getGainsAndOffsets(QVector<double> &gains, QVector<double> &offsets, QVector<double> &variances)
+void GainsOffsetsTableModel::getGainsAndOffsets(QVector<double>& gains, QVector<double>& offsets, QVector<double>& variances)
 {
   gains.clear();
   offsets.clear();

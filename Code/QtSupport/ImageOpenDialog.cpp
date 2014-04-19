@@ -32,8 +32,8 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ImageOpenDialog::ImageOpenDialog(QWidget *parent):
-QDialog(parent)
+ImageOpenDialog::ImageOpenDialog(QWidget* parent):
+  QDialog(parent)
 {
   setupUi(this);
 }

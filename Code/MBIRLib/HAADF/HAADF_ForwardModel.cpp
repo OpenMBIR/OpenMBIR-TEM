@@ -116,7 +116,7 @@ void HAADF_ForwardModel::writeSinogramFile(SinogramPtr sinogram, RealVolumeType:
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADF_ForwardModel::writeReconstructionFile(const std::string &filepath)
+void HAADF_ForwardModel::writeReconstructionFile(const std::string& filepath)
 {
   // Write the Reconstruction out to a file
   RawGeometryWriter::Pointer writer = RawGeometryWriter::New();
@@ -136,7 +136,7 @@ void HAADF_ForwardModel::writeReconstructionFile(const std::string &filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADF_ForwardModel::writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd)
+void HAADF_ForwardModel::writeVtkFile(const std::string& vtkFile, uint16_t cropStart, uint16_t cropEnd)
 {
   std::stringstream ss;
   ss << "Writing VTK file to '" << vtkFile << "'";
@@ -180,7 +180,7 @@ void HAADF_ForwardModel::writeVtkFile(const std::string &vtkFile, uint16_t cropS
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADF_ForwardModel::writeMRCFile(const std::string &mrcFile, uint16_t cropStart, uint16_t cropEnd)
+void HAADF_ForwardModel::writeMRCFile(const std::string& mrcFile, uint16_t cropStart, uint16_t cropEnd)
 {
   /* Write the output to the MRC File */
   std::stringstream ss;
@@ -210,7 +210,7 @@ void HAADF_ForwardModel::writeMRCFile(const std::string &mrcFile, uint16_t cropS
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADF_ForwardModel::writeAvizoFile(const std::string &file, uint16_t cropStart, uint16_t cropEnd)
+void HAADF_ForwardModel::writeAvizoFile(const std::string& file, uint16_t cropStart, uint16_t cropEnd)
 {
   //  std::cout << "Writing Avizo file " << file << std::endl;
 
@@ -390,7 +390,7 @@ int HAADF_ForwardModel::createInitialVariancesData()
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
       m_InitialVariance->d[i_theta] = m_TomoInputs->defaultVariance;
-      ss<< "Tilt: " << i_theta << "  Variance: " << m_InitialVariance->d[i_theta] << std::endl;
+      ss << "Tilt: " << i_theta << "  Variance: " << m_InitialVariance->d[i_theta] << std::endl;
     }
     if (getVeryVerbose())
     {
@@ -410,7 +410,7 @@ void HAADF_ForwardModel::initializeHt(RealVolumeType::Pointer H_t, Real_t Offset
   Real_t ProfileCenterT;
   for (uint16_t k = 0; k < m_Sinogram->N_theta; k++)
   {
-    for (unsigned int i = 0; i <m_AdvParams->DETECTOR_RESPONSE_BINS; i++)
+    for (unsigned int i = 0; i < m_AdvParams->DETECTOR_RESPONSE_BINS; i++)
     {
       ProfileCenterT = i * OffsetT;
       if(m_TomoInputs->delta_xy >= m_Sinogram->delta_t)

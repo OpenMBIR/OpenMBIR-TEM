@@ -57,46 +57,46 @@ class MBIRLib_EXPORT Observer
       * @param message The message to print
       * @param progress The progress of the GrainGenerator normalized to a value between 0 and 100
       */
-     virtual void updateProgressAndMessage(const char* message, int progress);
-     virtual void updateProgressAndMessage(const std::string &msg, int progress);
+    virtual void updateProgressAndMessage(const char* message, int progress);
+    virtual void updateProgressAndMessage(const std::string& msg, int progress);
 
-     /**
-      * @brief This method reports progress such that a user interface element such
-      * as a progress bar could be updated. It is assumed the value will fluctuate
-      * between 0 and 100.
-      * @param value
-      */
-     virtual void pipelineProgress(int value);
+    /**
+     * @brief This method reports progress such that a user interface element such
+     * as a progress bar could be updated. It is assumed the value will fluctuate
+     * between 0 and 100.
+     * @param value
+     */
+    virtual void pipelineProgress(int value);
 
-     /**
-      * @brief This message reports some human readable message suitable for display
-      * on a GUI or printed to a console or possibly saved to a log file
-      * @param message
-      */
-     virtual void pipelineProgressMessage(const char* message);
-     virtual void pipelineProgressMessage(const std::string &msg);
-     /**
-      * @brief This message reports some human readable message suitable for display
-      * on a GUI or printed to a console or possibly saved to a log file
-      * @param message
-      */
-     virtual void pipelineWarningMessage(const char* message);
-     virtual void pipelineWarningMessage(const std::string &msg);
+    /**
+     * @brief This message reports some human readable message suitable for display
+     * on a GUI or printed to a console or possibly saved to a log file
+     * @param message
+     */
+    virtual void pipelineProgressMessage(const char* message);
+    virtual void pipelineProgressMessage(const std::string& msg);
+    /**
+     * @brief This message reports some human readable message suitable for display
+     * on a GUI or printed to a console or possibly saved to a log file
+     * @param message
+     */
+    virtual void pipelineWarningMessage(const char* message);
+    virtual void pipelineWarningMessage(const std::string& msg);
 
-     /**
-      * @brief This message reports some human readable message suitable for display
-      * on a GUI or printed to a console or possibly saved to a log file
-      * @param message
-      */
-     virtual void pipelineErrorMessage(const char* message);
-     virtual void pipelineErrorMessage(const std::string &msg);
+    /**
+     * @brief This message reports some human readable message suitable for display
+     * on a GUI or printed to a console or possibly saved to a log file
+     * @param message
+     */
+    virtual void pipelineErrorMessage(const char* message);
+    virtual void pipelineErrorMessage(const std::string& msg);
 
 
-     /**
-      * @brief Update an intermediate image file for display somewhere
-      * @param filepath The path to the file
-      */
-     virtual void updateIntermediateImage(const std::string &filepath);
+    /**
+     * @brief Update an intermediate image file for display somewhere
+     * @param filepath The path to the file
+     */
+    virtual void updateIntermediateImage(const std::string& filepath);
 
   private:
     Observer(const Observer&); // Copy Constructor Not Implemented

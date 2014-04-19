@@ -71,7 +71,7 @@ void Observable::removeObserver(Observer* observer)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void Observable::setMessagePrefix(const std::string &str)
+void Observable::setMessagePrefix(const std::string& str)
 {
   m_Prefix = str;
 }
@@ -87,7 +87,7 @@ std::string Observable::getMessagePrefix()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void Observable::notify(const std::string &msg, int progress, ObserverAspect a)
+void Observable::notify(const std::string& msg, int progress, ObserverAspect a)
 {
   std::string s = msg;
   if(m_Prefix.empty() == false)

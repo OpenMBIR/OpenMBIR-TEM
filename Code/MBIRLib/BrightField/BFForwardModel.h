@@ -159,8 +159,8 @@ class BFForwardModel : public Observable
      * @return
      */
     virtual int forwardProject(SinogramPtr sinogram, GeometryPtr geometry,
-                               std::vector<AMatrixCol::Pointer> &TempCol,
-                               std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
+                               std::vector<AMatrixCol::Pointer>& TempCol,
+                               std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
                                RealVolumeType::Pointer yEstimate,
                                RealVolumeType::Pointer errorSinogram);
 
@@ -196,9 +196,9 @@ class BFForwardModel : public Observable
 
     void printRatioSelected(SinogramPtr sinogram);
 
-    void writeSelectorMrc(const std::string &file, SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino);
+    void writeSelectorMrc(const std::string& file, SinogramPtr sinogram, GeometryPtr geometry, RealVolumeType::Pointer ErrorSino);
 
-    Real_t estimateBraggThreshold(SinogramPtr sinogram,RealVolumeType::Pointer ErrorSino,Real_t percentage);
+    Real_t estimateBraggThreshold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino, Real_t percentage);
 
 
     void writeNuisanceParameters(SinogramPtr sinogram);
@@ -211,9 +211,9 @@ class BFForwardModel : public Observable
 
     //Computing the theta parameters of the cost function
     void computeTheta(size_t Index,
-                      std::vector<AMatrixCol::Pointer> &TempCol,
+                      std::vector<AMatrixCol::Pointer>& TempCol,
                       int32_t xzSliceIdx,
-                      std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
+                      std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
                       RealVolumeType::Pointer ErrorSino,
                       SinogramPtr sinogram,
                       RealArrayType::Pointer Thetas);
@@ -221,9 +221,9 @@ class BFForwardModel : public Observable
     //After updating a voxel "Index",update sinogram
     void updateErrorSinogram(Real_t ChangeInVoxelValue,
                              size_t Index,
-                             std::vector<AMatrixCol::Pointer> &TempCol,
+                             std::vector<AMatrixCol::Pointer>& TempCol,
                              int32_t xzSliceIdx,
-                             std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
+                             std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
                              RealVolumeType::Pointer errorSinogram,
                              SinogramPtr sinogram);
 

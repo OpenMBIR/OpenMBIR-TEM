@@ -47,7 +47,7 @@
   fprintf(f, FILE_TYPE); fprintf(f, "\n");\
   fprintf(f, "DATASET RECTILINEAR_GRID\n");\
   fprintf(f, "DIMENSIONS %d %d %d\n", xpoints, ypoints, zpoints);\
-
+   
 
 
 
@@ -60,7 +60,7 @@
   fprintf(f, "ORIGIN 0.0 0.0 0.0\n");\
   fprintf(f, "SPACING %f %f %f\n", ptr->resx, ptr->resy, ptr->resz);\
   fprintf(f, "POINT_DATA %d\n\n", ptr->dim0 * ptr->dim1 * ptr->dim2 );\
-
+   
 
 #define WRITE_VTK_GRAIN_IDS_ASCII(ptr, ScalarName)\
   fprintf(f, "SCALARS %s int 1\n", ScalarName.c_str());\
@@ -70,26 +70,26 @@
     fprintf(f, "%d ", ptr->grain_indicies[i]);\
   }\
   fprintf(f, "\n");\
-
+   
 
 #define WRITE_VTK_GRAIN_IDS_BINARY(ptr, ScalarName)  \
   fprintf(f, "SCALARS %s int 1\n", ScalarName.c_str());\
   fprintf(f, "LOOKUP_TABLE default\n"); \
   { \
-  int* gn = new int[total];\
-  int t;\
-  for (size_t i = 0; i < total; i++) {\
-    t = ptr->grain_indicies[i];\
-    MXA::Endian::FromSystemToBig::convert<int>(t); \
-    gn[i] = t; \
-  }\
-  size_t totalWritten = fwrite(gn, sizeof(int), total, f);\
-  delete[] gn;\
-  if (totalWritten != total)  {\
-    std::cout << "Error Writing Binary VTK Data into file " << file << std::endl;\
-    fclose(f);\
-    return -1;\
-  }\
+    int* gn = new int[total];\
+    int t;\
+    for (size_t i = 0; i < total; i++) {\
+      t = ptr->grain_indicies[i];\
+      MXA::Endian::FromSystemToBig::convert<int>(t); \
+      gn[i] = t; \
+    }\
+    size_t totalWritten = fwrite(gn, sizeof(int), total, f);\
+    delete[] gn;\
+    if (totalWritten != total)  {\
+      std::cout << "Error Writing Binary VTK Data into file " << file << std::endl;\
+      fclose(f);\
+      return -1;\
+    }\
   }
 
 #define WRITE_VTK_FLOAT_VOXEL_BINARY(ptr, ScalarName, type)  \
@@ -98,8 +98,8 @@
   { \
     float t;\
     for (int i = ptr->N_z -1; i >= 0; i--) {\
-     for (int j = 0; j < ptr->N_y; ++j) {\
-      for (int k = 0; k < ptr->N_x; k++) {\
+      for (int j = 0; j < ptr->N_y; ++j) {\
+        for (int k = 0; k < ptr->N_x; k++) {\
           t = static_cast<float>(ptr->Object->getValue(i, k, j) );\
           MXA::Endian::FromSystemToBig::convert<float>(t); \
           fwrite(&t, sizeof(float), 1, f);\
@@ -129,25 +129,25 @@
     if(i%20 == 0 && i > 0) { fprintf(f, "\n");}\
     fprintf(f, FORMAT, ptr->var[i]);\
   }fprintf(f,"\n"); \
-
+   
 #define WRITE_VTK_SCALARS_FROM_VOXEL_BINARY(ptr, name, type, var)\
   fprintf(f, "SCALARS %s %s 1\n", name.c_str(), #type);\
   fprintf(f, "LOOKUP_TABLE default\n");\
   { \
-  type* gn = new type[total];\
-  type t;\
-  for (size_t i = 0; i < total; i++) {\
-    t = ptr->var[i];\
-    MXA::Endian::FromSystemToBig::convert<type>(t); \
-    gn[i] = t; \
-  }\
-  size_t totalWritten = fwrite(gn, sizeof(type), total, f);\
-  delete[] gn;\
-  if (totalWritten != total)  {\
-    std::cout << "Error Writing Binary VTK Data into file " << file << std::endl;\
-    fclose(f);\
-    return -1;\
-  }\
+    type* gn = new type[total];\
+    type t;\
+    for (size_t i = 0; i < total; i++) {\
+      t = ptr->var[i];\
+      MXA::Endian::FromSystemToBig::convert<type>(t); \
+      gn[i] = t; \
+    }\
+    size_t totalWritten = fwrite(gn, sizeof(type), total, f);\
+    delete[] gn;\
+    if (totalWritten != total)  {\
+      std::cout << "Error Writing Binary VTK Data into file " << file << std::endl;\
+      fclose(f);\
+      return -1;\
+    }\
   }
 
 
@@ -155,18 +155,18 @@
   fprintf(f, "SCALARS %s %s 1\n", name.c_str(), #type);\
   fprintf(f, "LOOKUP_TABLE default\n");\
   { \
-  type* gn = new type[total];\
-  for (size_t i = 0; i < total; i++) {\
-    gn[i] = ptr->var[i];\
-  }\
-  size_t totalWritten = fwrite(gn, sizeof(type), total, f);\
-  delete[] gn;\
-  if (totalWritten != total)  {\
-    std::cout << "Error Writing Binary VTK Data into file " << file << std::endl;\
-    fclose(f);\
-    return -1;\
-  }\
- }
+    type* gn = new type[total];\
+    for (size_t i = 0; i < total; i++) {\
+      gn[i] = ptr->var[i];\
+    }\
+    size_t totalWritten = fwrite(gn, sizeof(type), total, f);\
+    delete[] gn;\
+    if (totalWritten != total)  {\
+      std::cout << "Error Writing Binary VTK Data into file " << file << std::endl;\
+      fclose(f);\
+      return -1;\
+    }\
+  }
 
 
 #define WRITE_VTK_GRAIN_WITH_GRAIN_SCALAR_VALUE_ASCII(ptr, name, type, var, FORMAT)\
@@ -181,39 +181,39 @@
   fprintf(f, "SCALARS %s %s 1\n", name.c_str(), #type);\
   fprintf(f, "LOOKUP_TABLE default\n");\
   { \
-  type* gn = new type[total];\
-  type t;\
-  for (size_t i = 0; i < total; i++) {\
-    t = ptr->m_Grains[ptr->grain_indicies[i]]->var;\
-    MXA::Endian::FromSystemToBig::convert<type>(t); \
-    gn[i] = t; \
-  }\
-  size_t totalWritten = fwrite(gn, sizeof(type), total, f);\
-  delete[] gn;\
-  if (totalWritten != total)  {\
-    std::cout << "Error Writing Binary VTK Data into file " << file << std::endl;\
-    fclose(f);\
-    return -1;\
-  }\
+    type* gn = new type[total];\
+    type t;\
+    for (size_t i = 0; i < total; i++) {\
+      t = ptr->m_Grains[ptr->grain_indicies[i]]->var;\
+      MXA::Endian::FromSystemToBig::convert<type>(t); \
+      gn[i] = t; \
+    }\
+    size_t totalWritten = fwrite(gn, sizeof(type), total, f);\
+    delete[] gn;\
+    if (totalWritten != total)  {\
+      std::cout << "Error Writing Binary VTK Data into file " << file << std::endl;\
+      fclose(f);\
+      return -1;\
+    }\
   }
 
 #define VTK_IPF_COLOR_REFDIRECTION(var)\
-    float var[3] = {0.0f, 0.0f, 1.0f};
+  float var[3] = {0.0f, 0.0f, 1.0f};
 
 #define GGVTKW_IPFCOLOR_BIANRY(var, quat)\
-if (r->crystruct[phase] == Ebsd::CrystalStructure::Cubic) {\
-  OIMColoring::GenerateIPFColor(var->euler1,\
-                              var->euler2,\
-                              var->euler3,\
-                              RefDirection[0], RefDirection[1], RefDirection[2],\
-                              &rgba[i * 4], hkl);\
-} else if (r->crystruct[phase] == Ebsd::CrystalStructure::Hexagonal)   { \
-  q1[1] = var->quat[1];\
-  q1[2] = var->quat[2];\
-  q1[3] = var->quat[3];\
-  q1[4] = var->quat[4];\
-  OIMColoring::CalculateHexIPFColor(q1, RefDirection[0], RefDirection[1], RefDirection[2], &rgba[i * 4]); \
-}
+  if (r->crystruct[phase] == Ebsd::CrystalStructure::Cubic) {\
+    OIMColoring::GenerateIPFColor(var->euler1,\
+                                  var->euler2,\
+                                  var->euler3,\
+                                  RefDirection[0], RefDirection[1], RefDirection[2],\
+                                  &rgba[i * 4], hkl);\
+  } else if (r->crystruct[phase] == Ebsd::CrystalStructure::Hexagonal)   { \
+    q1[1] = var->quat[1];\
+    q1[2] = var->quat[2];\
+    q1[3] = var->quat[3];\
+    q1[4] = var->quat[4];\
+    OIMColoring::CalculateHexIPFColor(q1, RefDirection[0], RefDirection[1], RefDirection[2], &rgba[i * 4]); \
+  }
 
 
 #endif /* VTKWRITER_H_ */

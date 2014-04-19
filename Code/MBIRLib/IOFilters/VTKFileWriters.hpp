@@ -51,14 +51,15 @@
 class VtkScalarWriter
 {
   public:
-    VtkScalarWriter() : m_WriteBinaryFiles(true){}
-    virtual ~VtkScalarWriter(){}
+    VtkScalarWriter() : m_WriteBinaryFiles(true) {}
+    virtual ~VtkScalarWriter() {}
 
     MXA_INSTANCE_VEC2_PROPERTY(uint16_t, XDims)
     MXA_INSTANCE_VEC2_PROPERTY(uint16_t, YDims)
     MXA_INSTANCE_VEC2_PROPERTY(uint16_t, ZDims)
 
-    void setWriteBinaryFiles(bool v) {
+    void setWriteBinaryFiles(bool v)
+    {
       m_WriteBinaryFiles = v;
     }
 
@@ -86,52 +87,52 @@ class VtkScalarWriter
  * properties to the VTK file
  */
 #define VtkSCALARWRITER_CLASS_DEF(name, r, const_name, type, scalar, format)\
-template<typename T>\
-class name : public VtkScalarWriter\
-{\
-  public:\
-    name(T* r) : r(r) {}\
-    virtual ~name(){}\
-  int writeScalars(FILE* f)  {\
-    int err = 0;\
-    std::string file;\
-    size_t total = r->getXPoints() * r->getYPoints() * r->getZPoints();\
-    if (m_WriteBinaryFiles == true) {\
-      WRITE_VTK_SCALARS_FROM_VOXEL_BINARY(r, const_name, type, scalar)\
-    }    else    {\
-      WRITE_VTK_SCALARS_FROM_VOXEL_ASCII(r, const_name, type, scalar, format)\
-    }\
-    return err;\
-  }\
-  private:\
-    T* r;\
-    name(const name&); \
-    void operator=(const name&);\
-};
+  template<typename T>\
+  class name : public VtkScalarWriter\
+  {\
+    public:\
+      name(T* r) : r(r) {}\
+      virtual ~name(){}\
+      int writeScalars(FILE* f)  {\
+        int err = 0;\
+        std::string file;\
+        size_t total = r->getXPoints() * r->getYPoints() * r->getZPoints();\
+        if (m_WriteBinaryFiles == true) {\
+          WRITE_VTK_SCALARS_FROM_VOXEL_BINARY(r, const_name, type, scalar)\
+        }    else    {\
+          WRITE_VTK_SCALARS_FROM_VOXEL_ASCII(r, const_name, type, scalar, format)\
+        }\
+        return err;\
+      }\
+    private:\
+      T* r;\
+      name(const name&); \
+      void operator=(const name&);\
+  };
 
 #define VtkSCALARWRITER_CLASS_DEF_CHAR(name, r, const_name, type, scalar, format)\
-template<typename T>\
-class name : public VtkScalarWriter\
-{\
-  public:\
-    name(T* r) : r(r) {}\
-    virtual ~name(){}\
-  int writeScalars(FILE* f)  {\
-    int err = 0;\
-    std::string file;\
-    size_t total = r->getXPoints() * r->getYPoints() * r->getZPoints();\
-    if (m_WriteBinaryFiles == true) {\
-      WRITE_VTK_SCALARS_FROM_VOXEL_BINARY_NOSWAP(r, const_name, type, scalar)\
-    }    else    {\
-      WRITE_VTK_SCALARS_FROM_VOXEL_ASCII(r, const_name, type, scalar, format)\
-    }\
-    return err;\
-  }\
-  private:\
-    T* r;\
-    name(const name&); \
-    void operator=(const name&);\
-};
+  template<typename T>\
+  class name : public VtkScalarWriter\
+  {\
+    public:\
+      name(T* r) : r(r) {}\
+      virtual ~name(){}\
+      int writeScalars(FILE* f)  {\
+        int err = 0;\
+        std::string file;\
+        size_t total = r->getXPoints() * r->getYPoints() * r->getZPoints();\
+        if (m_WriteBinaryFiles == true) {\
+          WRITE_VTK_SCALARS_FROM_VOXEL_BINARY_NOSWAP(r, const_name, type, scalar)\
+        }    else    {\
+          WRITE_VTK_SCALARS_FROM_VOXEL_ASCII(r, const_name, type, scalar, format)\
+        }\
+        return err;\
+      }\
+    private:\
+      T* r;\
+      name(const name&); \
+      void operator=(const name&);\
+  };
 
 
 /**
@@ -186,7 +187,7 @@ class VTKRectilinearGridFileWriter
         }
         size_t totalWritten = fwrite(static_cast<void*>(data), sizeof(T), static_cast<size_t>(npoints), f);
         delete[] data;
-          data = NULL;
+        data = NULL;
         if (totalWritten != static_cast<size_t>(npoints) )
         {
           std::cout << "Error Writing Binary VTK Data into file " << std::endl;
@@ -218,7 +219,7 @@ class VTKRectilinearGridFileWriter
      * @return Negative Value on error
      */
     template<typename T>
-    int write(const std::string &file, T* r, std::vector<VtkScalarWriter*> scalars)
+    int write(const std::string& file, T* r, std::vector<VtkScalarWriter*> scalars)
     {
       int err = 0;
       FILE* f = NULL;
@@ -271,15 +272,15 @@ class VTKRectilinearGridFileWriter
 // -----------------------------------------------------------------------------
 typedef struct
 {
-    int xStart;
-    int xEnd;
-    int yStart;
-    int yEnd;
-    int zStart;
-    int zEnd;
-    float resx;
-    float resy;
-    float resz;
+  int xStart;
+  int xEnd;
+  int yStart;
+  int yEnd;
+  int zStart;
+  int zEnd;
+  float resx;
+  float resy;
+  float resz;
 }  DimsAndRes;
 
 
@@ -296,7 +297,7 @@ typedef struct
   fprintf(f, "ORIGIN 0.0 0.0 0.0\n");\
   fprintf(f, "SPACING %f %f %f\n", ptr->resx, ptr->resy, ptr->resz);\
   fprintf(f, "POINT_DATA %d\n\n", xDim * yDim * zDim );\
-
+   
 
 #define WRITE_VTK_FLOAT_VOXEL_BINARY_2(ptr, ScalarName, type)  \
   fprintf(f, "SCALARS %s float 1\n", ScalarName.c_str() );\
@@ -308,8 +309,8 @@ typedef struct
     getYDims(yStart, yEnd);\
     getZDims(zStart, zEnd);\
     for (int16_t i = zEnd - 1; i >= zStart; i--) {\
-     for (uint16_t j = yStart; j < yEnd; ++j) {\
-      for (uint16_t k = xStart; k < xEnd; k++) {\
+      for (uint16_t j = yStart; j < yEnd; ++j) {\
+        for (uint16_t k = xStart; k < xEnd; k++) {\
           t = static_cast<float>(ptr->Object->getValue(i, k, j) );\
           MXA::Endian::FromSystemToBig::convert<float>(t); \
           fwrite(&t, sizeof(float), 1, f);\
@@ -328,8 +329,8 @@ typedef struct
     getYDims(yStart, yEnd);\
     getZDims(zStart, zEnd);\
     for (int16_t i = zEnd -1; i >= zStart; i--) {\
-     for (uint16_t j = yStart; j < yEnd; ++j) {\
-      for (uint16_t k = xStart; k < xEnd; k++) {\
+      for (uint16_t j = yStart; j < yEnd; ++j) {\
+        for (uint16_t k = xStart; k < xEnd; k++) {\
           fprintf(f, "%0.6f ", ptr->Object->getValue(i, k, j) );\
         }\
         fprintf(f, "\n");\
@@ -344,23 +345,23 @@ typedef struct
 class TomoOutputScalarWriter : public VtkScalarWriter
 {
   public:
-  TomoOutputScalarWriter(Geometry* r) : r(r) {}
-  virtual ~TomoOutputScalarWriter(){}
+    TomoOutputScalarWriter(Geometry* r) : r(r) {}
+    virtual ~TomoOutputScalarWriter() {}
 
-  int writeScalars(FILE* f)
-  {
-    int err = 0;
-    std::string file;
-    if (getWriteBinaryFiles() == true)
+    int writeScalars(FILE* f)
     {
-      WRITE_VTK_FLOAT_VOXEL_BINARY_2(r, MBIR::Defaults::VTK::TomoVoxelScalarName, float)
+      int err = 0;
+      std::string file;
+      if (getWriteBinaryFiles() == true)
+      {
+        WRITE_VTK_FLOAT_VOXEL_BINARY_2(r, MBIR::Defaults::VTK::TomoVoxelScalarName, float)
       }
-    else
-    {
-      WRITE_VTK_FLOAT_VOXEL_ASCII_2(r, MBIR::Defaults::VTK::TomoVoxelScalarName)
+      else
+      {
+        WRITE_VTK_FLOAT_VOXEL_ASCII_2(r, MBIR::Defaults::VTK::TomoVoxelScalarName)
+      }
+      return err;
     }
-    return err;
-  }
 
   private:
     Geometry* r;
@@ -380,7 +381,7 @@ class VTKStructuredPointsFileWriter
     VTKStructuredPointsFileWriter() {}
     MXA_TYPE_MACRO(VTKStructuredPointsFileWriter);
 
-    virtual ~VTKStructuredPointsFileWriter(){}
+    virtual ~VTKStructuredPointsFileWriter() {}
 
     MXA_INSTANCE_PROPERTY(bool, WriteBinaryFiles)
 
@@ -389,7 +390,7 @@ class VTKStructuredPointsFileWriter
     MXA_INSTANCE_VEC2_PROPERTY(uint16_t, ZDims)
 
     template<typename T>
-    int write(const std::string &file, T* r, std::vector<VtkScalarWriter*> scalars)
+    int write(const std::string& file, T* r, std::vector<VtkScalarWriter*> scalars)
     {
       int err = 0;
       FILE* f = NULL;

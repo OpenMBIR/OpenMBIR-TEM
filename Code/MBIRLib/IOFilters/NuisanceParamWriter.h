@@ -63,7 +63,8 @@ class MBIRLib_EXPORT NuisanceParamWriter : public TomoFilter
 
     virtual ~NuisanceParamWriter();
 
-    enum TargetArray {
+    enum TargetArray
+    {
       Nuisance_I_O,
       Nuisance_mu,
       Nuisance_alpha

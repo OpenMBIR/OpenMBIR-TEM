@@ -13,7 +13,7 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-MXAFILEREADER_CLASS_NAME::MXAFILEREADER_CLASS_NAME(const std::string &filename) :
+MXAFILEREADER_CLASS_NAME::MXAFILEREADER_CLASS_NAME(const std::string& filename) :
   _filename(filename)
 {
 
@@ -36,7 +36,8 @@ bool MXAFILEREADER_CLASS_NAME::initReader()
   _buffer.resize(BUFF_SIZE, 0);
   _instream.rdbuf()->pubsetbuf ( &(_buffer.front()), BUFF_SIZE );
   _instream.open ( _filename.c_str(), std::ifstream::in | std::ifstream::binary );
-  if ( !_instream.is_open() ) {
+  if ( !_instream.is_open() )
+  {
     std::cout  <<  "Error: Failed to open file: " + _filename << std::endl;
     return false;
   }

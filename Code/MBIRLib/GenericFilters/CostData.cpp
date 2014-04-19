@@ -35,7 +35,7 @@
 //
 // -----------------------------------------------------------------------------
 CostData::CostData() :
-m_File(NULL)
+  m_File(NULL)
 {
 }
 
@@ -61,7 +61,7 @@ int CostData::numberOfCosts()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void CostData::printCosts(std::ostream &out)
+void CostData::printCosts(std::ostream& out)
 {
   out << "Cost Values -----------------------------" << std::endl;
   for(std::vector<Real_t>::size_type ii = 0 ; ii < m_Cost.size(); ii++)
@@ -74,13 +74,13 @@ void CostData::printCosts(std::ostream &out)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int CostData::initOutputFile(const std::string &filepath)
+int CostData::initOutputFile(const std::string& filepath)
 {
   m_File = fopen(filepath.c_str(), "wb");
   if (m_File != NULL)
-    return 1;
+  { return 1; }
   else
-    return -1;
+  { return -1; }
 }
 
 // -----------------------------------------------------------------------------
@@ -91,12 +91,13 @@ int CostData::addCostValue(Real_t value)
   m_Cost.push_back(value);
   if(m_Cost[m_Cost.size() - 1] - m_Cost[m_Cost.size() - 2] > 0)
   {
-	  std::cout<<"Increase of cost ="<<m_Cost[m_Cost.size() - 1] - m_Cost[m_Cost.size() - 2]<<std::endl;  
-      return 1;
+    std::cout << "Increase of cost =" << m_Cost[m_Cost.size() - 1] - m_Cost[m_Cost.size() - 2] << std::endl;
+    return 1;
   }
-	else {
-    std::cout<<"Change of cost ="<<m_Cost[m_Cost.size() - 1] - m_Cost[m_Cost.size() - 2]<<std::endl;  
-	}
+  else
+  {
+    std::cout << "Change of cost =" << m_Cost[m_Cost.size() - 1] - m_Cost[m_Cost.size() - 2] << std::endl;
+  }
 
   return 0;
 }
@@ -106,7 +107,8 @@ int CostData::addCostValue(Real_t value)
 // -----------------------------------------------------------------------------
 int CostData::writeCostValue(Real_t value)
 {
-  if (m_File != NULL) {
+  if (m_File != NULL)
+  {
     fwrite(&(value), sizeof(Real_t), 1, m_File);
     return 1;
   }

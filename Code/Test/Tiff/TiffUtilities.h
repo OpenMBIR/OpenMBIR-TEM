@@ -51,17 +51,18 @@
 #include <tiff.h>
 #include <tiffio.h>
 
-typedef struct {
-    int width;
-    int height;
-    unsigned short samplesPerPixel;
-    unsigned short bitsPerSample;
-    unsigned short photometric;
-    unsigned short orientation;
-    unsigned short xResolution;
-    unsigned short yResolution;
-    unsigned short resolutionUnits;
-    void*          imageData;
+typedef struct
+{
+  int width;
+  int height;
+  unsigned short samplesPerPixel;
+  unsigned short bitsPerSample;
+  unsigned short photometric;
+  unsigned short orientation;
+  unsigned short xResolution;
+  unsigned short yResolution;
+  unsigned short resolutionUnits;
+  void*          imageData;
 } TiffImage;
 
 

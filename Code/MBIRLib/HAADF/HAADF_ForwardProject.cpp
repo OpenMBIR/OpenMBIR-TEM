@@ -49,21 +49,21 @@
 //
 // -----------------------------------------------------------------------------
 HAADF_ForwardProject::HAADF_ForwardProject(Sinogram* sinogram,
-                               Geometry* geometry,
-                               std::vector<AMatrixCol::Pointer> &tempCol,
-                               std::vector<AMatrixCol::Pointer> &voxelLineResponse,
-                               RealVolumeType::Pointer yEst,
-                               HAADF_ForwardModel* forwardModel,
-                               uint16_t tilt,
-                               Observable* obs) :
-                  m_Sinogram(sinogram),
-                  m_Geometry(geometry),
-                  TempCol(tempCol),
-                  VoxelLineResponse(voxelLineResponse),
-                  Y_Est(yEst),
-                  m_ForwardModel(forwardModel),
-                  m_Tilt(tilt),
-                  m_Observable(obs)
+                                           Geometry* geometry,
+                                           std::vector<AMatrixCol::Pointer>& tempCol,
+                                           std::vector<AMatrixCol::Pointer>& voxelLineResponse,
+                                           RealVolumeType::Pointer yEst,
+                                           HAADF_ForwardModel* forwardModel,
+                                           uint16_t tilt,
+                                           Observable* obs) :
+  m_Sinogram(sinogram),
+  m_Geometry(geometry),
+  TempCol(tempCol),
+  VoxelLineResponse(voxelLineResponse),
+  Y_Est(yEst),
+  m_ForwardModel(forwardModel),
+  m_Tilt(tilt),
+  m_Observable(obs)
 {
 }
 
@@ -108,7 +108,7 @@ void HAADF_ForwardProject::operator()() const
           for (uint32_t i_t = VoxelLineResponse[i]->index[0]; i_t < VoxelLineResponse[i]->index[0] + VoxelLineResponse[i]->count; i_t++) //CHANGED from <= to <
           {
             ttmp = (I_0->d[i_theta]
-                * (TempCol[Index]->values[q] * VoxelLineResponse[i]->values[VoxelLineAccessCounter++] * m_Geometry->Object->getValue(j, k, i)));
+                    * (TempCol[Index]->values[q] * VoxelLineResponse[i]->values[VoxelLineAccessCounter++] * m_Geometry->Object->getValue(j, k, i)));
 
             Y_Est->addToValue(ttmp, i_theta, i_r, i_t);
 

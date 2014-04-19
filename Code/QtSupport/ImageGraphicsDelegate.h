@@ -55,7 +55,7 @@ class QGraphicsScene;
  */
 class ImageGraphicsDelegate : public QObject
 {
-  Q_OBJECT
+    Q_OBJECT
 
   public:
     ImageGraphicsDelegate(QObject* parent = 0);
@@ -118,7 +118,7 @@ class ImageGraphicsDelegate : public QObject
      * @brief If checkbox_state is "Qt::Checked" then ensures the Image fits into the current size of the QGraphicsView object.
      * @param checkbox_state Use eithet Qt::Checked or Qt::UnChecked.
      */
-  //  void fitToWindow(int checkbox_state);
+    //  void fitToWindow(int checkbox_state);
 
     /**
      * @brief Forcibly updates the embedded QGraphicsView with an option to update the

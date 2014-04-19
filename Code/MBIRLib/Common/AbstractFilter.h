@@ -63,7 +63,7 @@ class MBIRLib_EXPORT AbstractFilter : public Observable
     MXA_INSTANCE_PROPERTY(bool, Verbose);
     MXA_INSTANCE_PROPERTY(bool, VeryVerbose);
 
-    virtual void printValues(std::ostream &out){}
+    virtual void printValues(std::ostream& out) {}
 
 
     /**

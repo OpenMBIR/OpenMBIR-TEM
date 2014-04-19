@@ -43,22 +43,24 @@
 class TEMBIRGui;
 class ReconstructionArea;
 
-namespace TomoGui_Constants {
-
-enum ImageDisplayType {
-  OriginalImage = 0,
-  SegmentedImage,
-  CompositedImage,
-  UnknownDisplayType
-};
-
-enum CompositeType
+namespace TomoGui_Constants
 {
-  Exclusion,
-  Difference,
-  Alpha_Blend,
-  UnknownCompositeType
-};
+
+  enum ImageDisplayType
+  {
+    OriginalImage = 0,
+    SegmentedImage,
+    CompositedImage,
+    UnknownDisplayType
+  };
+
+  enum CompositeType
+  {
+    Exclusion,
+    Difference,
+    Alpha_Blend,
+    UnknownCompositeType
+  };
 
 }
 
@@ -75,8 +77,8 @@ class MRCGraphicsView : public QGraphicsView
 
   public:
 
-    MRCGraphicsView( QWidget *parent = NULL);
-    
+    MRCGraphicsView( QWidget* parent = NULL);
+
     ~MRCGraphicsView();
 
     void setWidget(QWidget* gui);
@@ -89,19 +91,19 @@ class MRCGraphicsView : public QGraphicsView
     * @brief Over-riding implementation from base class
     * @param event QDragEnterEvent Event fired when dragging enters the QGraphicsView
     */
-    void dragEnterEvent(QDragEnterEvent *event);
+    void dragEnterEvent(QDragEnterEvent* event);
 
     /**
     * @brief Over-riding implementation from base class
     * @param event QDropEvent Event fired when object is dropped on QGraphicsView
     */
-    void dropEvent(QDropEvent *event);
+    void dropEvent(QDropEvent* event);
 
     /**
     * @brief Over-riding implementation from base class
     * @param event QDragLeaveEvent Event fired when dragging leaves QGraphicsView
     */
-    void dragLeaveEvent(QDragLeaveEvent *event);
+    void dragLeaveEvent(QDragLeaveEvent* event);
 
     void mousePressEvent( QMouseEvent* event );
     void mouseMoveEvent( QMouseEvent* event );
@@ -114,7 +116,7 @@ class MRCGraphicsView : public QGraphicsView
 
     void addNewReconstructionArea(ReconstructionArea* userInitArea);
     void createNewReconstructionArea(const QRectF brect);
-    
+
     void createBackgroundSelector(QRect rect = QRect());
     void removeBackgroundSelector();
 
@@ -123,9 +125,9 @@ class MRCGraphicsView : public QGraphicsView
     QLineF getXZPlane();
 
     QGraphicsItem* getImageGraphicsItem();
-    
+
     RectangleCreator* getBackgroundRectangle();
-    
+
     void resizeBackgroundRectangle(int width, int height);
     void moveBackgroundRectangle(int x, int y);
     void updateBackgroundRectangle(QRect rect);
@@ -151,45 +153,45 @@ class MRCGraphicsView : public QGraphicsView
 
     void updateXZLine(float percentWidth);
 
-  //  void userInitAreaUpdated(ReconstructionArea* uia);
+    //  void userInitAreaUpdated(ReconstructionArea* uia);
 
   signals:
     void fireBaseMRCFileLoaded();
 
-    void fireImageFileLoaded(const QString &filename);
+    void fireImageFileLoaded(const QString& filename);
 
     void fireSingleSliceSelected(int y);        // SlOT: TEMBIRGui::SingleSlicePlaneSet(int y)
 
     void fireReconstructionVOIAdded(ReconstructionArea* reconVOI);
 
-     void fireReconstructionVOILostFocus();
+    void fireReconstructionVOILostFocus();
 
   protected:
 
 
   private:
-   QGraphicsItem*                       m_ImageGraphicsItem;
-   QImage                               m_BaseImage;
-   bool                                 m_DisableVOISelection;
-   bool                                 m_AddReconstructionArea;
-   QRubberBand*                         m_RubberBand;
-   QPoint                               m_MouseClickOrigin;
-   float                                m_ZoomFactors[10];
-   QGraphicsPolygonItem                 m_XZLine;
-   float                                m_XZWidth;
+    QGraphicsItem*                       m_ImageGraphicsItem;
+    QImage                               m_BaseImage;
+    bool                                 m_DisableVOISelection;
+    bool                                 m_AddReconstructionArea;
+    QRubberBand*                         m_RubberBand;
+    QPoint                               m_MouseClickOrigin;
+    float                                m_ZoomFactors[10];
+    QGraphicsPolygonItem                 m_XZLine;
+    float                                m_XZWidth;
 
-   QWidget*                             m_MainGui;
-   RectangleCreator*                    m_BackgroundRectangle;
-   TomoGui_Constants::ImageDisplayType  m_ImageDisplayType;
-   bool                                 m_ShowOverlayImage;
-   QPainter::CompositionMode            m_composition_mode;
-   float                                m_OverlayTransparency;
+    QWidget*                             m_MainGui;
+    RectangleCreator*                    m_BackgroundRectangle;
+    TomoGui_Constants::ImageDisplayType  m_ImageDisplayType;
+    bool                                 m_ShowOverlayImage;
+    QPainter::CompositionMode            m_composition_mode;
+    float                                m_OverlayTransparency;
 
-   ReconstructionArea*                  m_ReconstructionArea;
+    ReconstructionArea*                  m_ReconstructionArea;
 
 
-   MRCGraphicsView(const MRCGraphicsView&); // Copy Constructor Not Implemented
-   void operator=(const MRCGraphicsView&); // Operator '=' Not Implemented
+    MRCGraphicsView(const MRCGraphicsView&); // Copy Constructor Not Implemented
+    void operator=(const MRCGraphicsView&); // Operator '=' Not Implemented
 };
 
 #endif /* _TomoGui_GRAPHICS_VIEW_H_ */

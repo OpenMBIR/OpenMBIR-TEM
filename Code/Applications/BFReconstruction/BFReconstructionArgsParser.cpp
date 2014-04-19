@@ -60,7 +60,7 @@
  * @return Error condition
  */
 template<typename T>
-int parseValues(const std::string &values, const char* format, T* output)
+int parseValues(const std::string& values, const char* format, T* output)
 {
   std::string::size_type pos = values.find(",", 0);
   size_t index = 0;
@@ -89,7 +89,7 @@ int parseValues(const std::string &values, const char* format, T* output)
  * @return Error condition
  */
 template<typename T>
-int parseUnknownArray(const std::string &values, const char* format, std::vector<T> &output)
+int parseUnknownArray(const std::string& values, const char* format, std::vector<T>& output)
 {
   std::string::size_type pos = values.find(",", 0);
   size_t index = 0;
@@ -132,7 +132,7 @@ BFReconstructionArgsParser::~BFReconstructionArgsParser()
 // -----------------------------------------------------------------------------
 // Parse the input arguments in the command line tool
 // -----------------------------------------------------------------------------
-int BFReconstructionArgsParser::parseArguments(int argc, char **argv, BFMultiResolutionReconstruction::Pointer m_MultiResSOC)
+int BFReconstructionArgsParser::parseArguments(int argc, char** argv, BFMultiResolutionReconstruction::Pointer m_MultiResSOC)
 {
   if(NULL == m_MultiResSOC)
   {
@@ -188,7 +188,7 @@ int BFReconstructionArgsParser::parseArguments(int argc, char **argv, BFMultiRes
   cmd.add(outerIterations);
   TCLAP::ValueArg<int> innerIterations("", "inner_iterations", "Number of Inner Iterations", false, 100, "100");
   cmd.add(innerIterations);
-  TCLAP::ValueArg<double> defaultOffset("", "default_dosage", "Default dosage for all Tilts", true,0, "");
+  TCLAP::ValueArg<double> defaultOffset("", "default_dosage", "Default dosage for all Tilts", true, 0, "");
   cmd.add(defaultOffset);
   TCLAP::SwitchArg useDefaultOffset("", "use_default_dosage", "Use the Default dosage Value" , false);
   cmd.add(useDefaultOffset);
@@ -270,7 +270,7 @@ int BFReconstructionArgsParser::parseArguments(int argc, char **argv, BFMultiRes
     m_MultiResSOC->setMRFShapeParameter(mrf.getValue());
 
     //Based on the dosage in a void and the offset in the data compute the "d" parameter
-    Real_t true_offset = -log(defaultOffset.getValue()+bfOffset.getValue());
+    Real_t true_offset = -log(defaultOffset.getValue() + bfOffset.getValue());
     m_MultiResSOC->setDefaultOffsetValue(true_offset);
 
     m_MultiResSOC->setUseDefaultOffset(useDefaultOffset.getValue());
@@ -324,7 +324,7 @@ int BFReconstructionArgsParser::parseArguments(int argc, char **argv, BFMultiRes
     {
       return -1;
     }
-  //  int tiltIndex = 0;
+    //  int tiltIndex = 0;
     if(header.feiHeaders != NULL)
     {
       std::vector<float> tilts(header.nz, 0.0f);
@@ -344,7 +344,7 @@ int BFReconstructionArgsParser::parseArguments(int argc, char **argv, BFMultiRes
     }
 
   }
-  catch (TCLAP::ArgException &e)
+  catch (TCLAP::ArgException& e)
   {
     std::cerr << " error: " << e.error() << " for arg " << e.argId() << std::endl;
     std::cout << "** Unknown Arguments. Displaying help listing instead. **" << std::endl;
@@ -358,7 +358,7 @@ int BFReconstructionArgsParser::parseArguments(int argc, char **argv, BFMultiRes
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void BFReconstructionArgsParser::printInputs(TomoInputsPtr inputs, std::ostream &out)
+void BFReconstructionArgsParser::printInputs(TomoInputsPtr inputs, std::ostream& out)
 {
   out << "------------------ TomoInputs Begin ------------------" << std::endl;
   PRINT_VAR(out, inputs, NumIter);

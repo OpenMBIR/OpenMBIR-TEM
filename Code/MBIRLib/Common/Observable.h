@@ -98,13 +98,13 @@ class MBIRLib_EXPORT Observable
      * @param progress A progress to indicate how much pipeline has been accomplished
      * @param a The type of notification to send.
      */
-    void notify(const std::string &msg, int progress, ObserverAspect a);
+    void notify(const std::string& msg, int progress, ObserverAspect a);
 
     std::vector<Observer*> getObservers();
 
     void setObservers(std::vector<Observer*> obs);
 
-    virtual void setMessagePrefix(const std::string &str);
+    virtual void setMessagePrefix(const std::string& str);
     virtual std::string getMessagePrefix();
 
   private:

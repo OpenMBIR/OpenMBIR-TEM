@@ -53,78 +53,78 @@ int writeColorTiff(const std::string filename, std::vector<uint8_t> image, int w
 {
 
   int err;
-   TIFF *out;
-   std::string dateTime;
-   char software[1024];
-   tsize_t area;
+  TIFF* out;
+  std::string dateTime;
+  char software[1024];
+  tsize_t area;
 
-   if (image.size() == 0)
-   {
-     return -1;
-   }
-   out = TIFFOpen(filename.c_str(), "w");
-   if (out == NULL)
-   {
-     printf("Could not open output file '%s' for writing.\n", filename.c_str());
-     return -1;
-   }
+  if (image.size() == 0)
+  {
+    return -1;
+  }
+  out = TIFFOpen(filename.c_str(), "w");
+  if (out == NULL)
+  {
+    printf("Could not open output file '%s' for writing.\n", filename.c_str());
+    return -1;
+  }
 
-   err = 0;
-   // set the basic values
-   err = TIFFSetField(out, TIFFTAG_IMAGEWIDTH, width);
-   err = TIFFSetField(out, TIFFTAG_IMAGELENGTH, height);
-   err = TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 8);
-   err = TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 3);
-   err = TIFFSetField(out, TIFFTAG_ROWSPERSTRIP, height); // 1 strip
-   err = TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG); // single image plane
+  err = 0;
+  // set the basic values
+  err = TIFFSetField(out, TIFFTAG_IMAGEWIDTH, width);
+  err = TIFFSetField(out, TIFFTAG_IMAGELENGTH, height);
+  err = TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 8);
+  err = TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 3);
+  err = TIFFSetField(out, TIFFTAG_ROWSPERSTRIP, height); // 1 strip
+  err = TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG); // single image plane
 
-   dateTime = tifDateTime();
-   err = TIFFSetField(out, TIFFTAG_DATETIME, dateTime.c_str());
-   // String based tags
-   if (filename.empty() == false)
-   {
-     err = TIFFSetField(out, TIFFTAG_DOCUMENTNAME, filename.c_str());
-   }
-   if (imageDescription.empty() == false)
-   {
-     err = TIFFSetField(out, TIFFTAG_IMAGEDESCRIPTION, imageDescription.c_str());
-   }
+  dateTime = tifDateTime();
+  err = TIFFSetField(out, TIFFTAG_DATETIME, dateTime.c_str());
+  // String based tags
+  if (filename.empty() == false)
+  {
+    err = TIFFSetField(out, TIFFTAG_DOCUMENTNAME, filename.c_str());
+  }
+  if (imageDescription.empty() == false)
+  {
+    err = TIFFSetField(out, TIFFTAG_IMAGEDESCRIPTION, imageDescription.c_str());
+  }
 
-   err = TIFFSetField(out, TIFFTAG_ORIENTATION, orientation);
-   err = TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
-
-
- #if USE_LZW_COMPRESSION
-   err = TIFFSetField(image, TIFFTAG_COMPRESSION, COMPRESSION_LZW);
-   err = TIFFSetField(image, TIFFTAG_PREDICTOR, PREDICTOR_HORIZONTAL);
- #else
-   err = TIFFSetField(out, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
- #endif
-
-   // Insert Resolution Units here if possible
+  err = TIFFSetField(out, TIFFTAG_ORIENTATION, orientation);
+  err = TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_RGB);
 
 
-   memset(software, 0, 1024);
-   snprintf(software, 1024, "%s using libTif", TomoEngine_PACKAGE_COMPLETE);
+#if USE_LZW_COMPRESSION
+  err = TIFFSetField(image, TIFFTAG_COMPRESSION, COMPRESSION_LZW);
+  err = TIFFSetField(image, TIFFTAG_PREDICTOR, PREDICTOR_HORIZONTAL);
+#else
+  err = TIFFSetField(out, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
+#endif
 
-   err = TIFFSetField(out, TIFFTAG_SOFTWARE, software);
+  // Insert Resolution Units here if possible
 
-   err = TIFFSetField(out, TIFFTAG_HOSTCOMPUTER, MXADATAMODEL_SYSTEM);
 
-   // Write the information to the file
-   area = (tsize_t)( width *  height * 3);
-   err = TIFFWriteEncodedStrip(out, 0, &(image.front()), area);
-   if (err != area)
-   {
-     err = -1;
-   }
-   else
-   {
-     err = 1;
-   }
+  memset(software, 0, 1024);
+  snprintf(software, 1024, "%s using libTif", TomoEngine_PACKAGE_COMPLETE);
 
-   (void)TIFFClose(out);
-   return err;
+  err = TIFFSetField(out, TIFFTAG_SOFTWARE, software);
+
+  err = TIFFSetField(out, TIFFTAG_HOSTCOMPUTER, MXADATAMODEL_SYSTEM);
+
+  // Write the information to the file
+  area = (tsize_t)( width *  height * 3);
+  err = TIFFWriteEncodedStrip(out, 0, &(image.front()), area);
+  if (err != area)
+  {
+    err = -1;
+  }
+  else
+  {
+    err = 1;
+  }
+
+  (void)TIFFClose(out);
+  return err;
 }
 #endif
 
@@ -139,16 +139,16 @@ int writeColorTiff(const std::string filename, std::vector<uint8_t> image, int w
 //
 ////////////////////////////////////////////////////////////////////////////////
 void getColorCorrespondingTovalue(int16_t val,
-                                   float &r, float &g, float &b,
-                                   float max, float min)
+                                  float& r, float& g, float& b,
+                                  float max, float min)
 {
   static const int numColorNodes = 4;
   float color[numColorNodes][3] =
   {
-        {0.25f, 0.2549f, 0.7961f},    // blue
-        {0.8274f, 0.8039f, 0.0941f},    // yellow
-        {0.1803f, 0.6655f, 0.1490f},    // Green
-        {1.0f, 0.0f, 0.0f}     // red
+    {0.25f, 0.2549f, 0.7961f},    // blue
+    {0.8274f, 0.8039f, 0.0941f},    // yellow
+    {0.1803f, 0.6655f, 0.1490f},    // Green
+    {1.0f, 0.0f, 0.0f}     // red
   };
   float range = max - min;
   for (int i = 0; i < (numColorNodes - 1); i++)
@@ -172,7 +172,7 @@ void getColorCorrespondingTovalue(int16_t val,
 //const std::string filepath("/Users/Shared/Data/TomographyData/TiO2Ps100kRun3/Run3TiO2PS100k_2.ali");
 //const std::string filepath("/Users/Shared/Data/TomographyData/TiO2Ps100kRun3/Run3TiO2PS100k.mrc");
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   if(argc != 3)
   {
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
         << std::endl;
     return 1;
   }
-    std::string filepath(argv[1]);
+  std::string filepath(argv[1]);
   std::cout << "Testing file \n  " << filepath << std::endl;
 
   MRCReader::Pointer reader = MRCReader::New(true);
@@ -206,8 +206,8 @@ int main(int argc, char **argv)
 
 
   // Write a folder full of tiff images
-  int voxelMin[3] = {0,0,0};
-  int voxelMax[3] = {header.nx-1, header.ny-1, 0};
+  int voxelMin[3] = {0, 0, 0};
+  int voxelMax[3] = {header.nx - 1, header.ny - 1, 0};
 //  int dims[3] = { (voxelMax[0] - voxelMin[0] + 1),
 //                  (voxelMax[1] - voxelMin[1] + 1),
 //                  (voxelMax[2] - voxelMin[2] + 1) };
@@ -215,7 +215,7 @@ int main(int argc, char **argv)
   // Generate a Color Table
   float max = static_cast<float>(header.amax);
   float min = static_cast<float>(header.amin);
-  int numColors = static_cast<int>((max-min) + 1);
+  int numColors = static_cast<int>((max - min) + 1);
 
   std::vector<unsigned char> colorTable(numColors * 3);
   float range = max - min;
@@ -225,9 +225,9 @@ int main(int argc, char **argv)
   {
     int16_t val = static_cast<int16_t>( min + ((float)i / numColors) * range);
     getColorCorrespondingTovalue(val, r, g, b, max, min);
-    colorTable[i*3] = static_cast<unsigned char>(r*255);
-    colorTable[i*3+1] = static_cast<unsigned char>(g*255);
-    colorTable[i*3+2] = static_cast<unsigned char>(b*255);
+    colorTable[i * 3] = static_cast<unsigned char>(r * 255);
+    colorTable[i * 3 + 1] = static_cast<unsigned char>(g * 255);
+    colorTable[i * 3 + 2] = static_cast<unsigned char>(b * 255);
   }
 
   std::string path = MXAFileInfo::parentPath(filepath);
@@ -270,7 +270,7 @@ int main(int argc, char **argv)
     std::cout << "Writing File " << baseName << std::endl;
     ss << ": Tilt Index " << z;
     err = writeColorTiff(baseName, image, header.nx, header.ny,
-                       ss.str(), ORIENTATION_TOPLEFT);
+                         ss.str(), ORIENTATION_TOPLEFT);
     if (err < 0)
     {
       std::cout << "Error Writing Tif file for slice " << z << std::endl;

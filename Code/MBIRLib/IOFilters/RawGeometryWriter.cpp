@@ -56,7 +56,7 @@ void RawGeometryWriter::execute()
 {
   notify("Starting RawGeometryWriter", 0, UpdateProgressMessage);
 //  Sinogram* sinogram = getSinogram();
- // TomoInputs* input = getInputs();
+// TomoInputs* input = getInputs();
   GeometryPtr geometry = getGeometry();
 
   FILE* Fp = fopen(getFilePath().c_str(), "wb");
@@ -76,7 +76,7 @@ void RawGeometryWriter::execute()
   notify(ss.str(), 0, UpdateProgressMessage);
 
   ss.str("");
-  ss << "  Geometry Y:" << geometry->N_y<<"  Z:"<<geometry->N_z<<"  X:"<<geometry->N_x;
+  ss << "  Geometry Y:" << geometry->N_y << "  Z:" << geometry->N_z << "  X:" << geometry->N_x;
   notify(ss.str(), 0, UpdateProgressMessage);
 
   Real_t buffer = 0.0;
@@ -86,7 +86,7 @@ void RawGeometryWriter::execute()
     {
       for (uint16_t z = 0; z < geometry->N_z; z++)
       {
-      //  std::cout << k << std::endl;
+        //  std::cout << k << std::endl;
         buffer = geometry->Object->getValue(z, x, y);
         fwrite(&buffer, sizeof(Real_t), 1, Fp);
       }

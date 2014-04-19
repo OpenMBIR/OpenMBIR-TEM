@@ -56,11 +56,11 @@ class DerivOfCostFunc
                     Real_t _SIGMA_X_P,
                     Real_t _MRF_P) :
 
-                      V(_V),
-                      THETA1(_THETA1),
-                      THETA2(_THETA2),
-                      SIGMA_X_P(_SIGMA_X_P),
-                      MRF_P(_MRF_P)
+      V(_V),
+      THETA1(_THETA1),
+      THETA2(_THETA2),
+      SIGMA_X_P(_SIGMA_X_P),
+      MRF_P(_MRF_P)
     {
 
       for(size_t i = 0; i < 3; ++i)
@@ -93,8 +93,8 @@ class DerivOfCostFunc
             if(BOUNDARYFLAG[i][j][k] == 1)
             {
               if(u - NEIGHBORHOOD[i][j][k] >= 0.0)
-          temp +=((double)FILTER[i][j][k] * (1.0) * pow(fabs(u - (double)NEIGHBORHOOD[i][j][k]), (double)(MRF_P - 1)));
-              else temp += ((double)FILTER[i][j][k] * (-1.0) * pow(fabs(u - (double)NEIGHBORHOOD[i][j][k]), (double)(MRF_P - 1)));
+              { temp += ((double)FILTER[i][j][k] * (1.0) * pow(fabs(u - (double)NEIGHBORHOOD[i][j][k]), (double)(MRF_P - 1))); }
+              else { temp += ((double)FILTER[i][j][k] * (-1.0) * pow(fabs(u - (double)NEIGHBORHOOD[i][j][k]), (double)(MRF_P - 1))); }
             }
           }
 
@@ -102,7 +102,7 @@ class DerivOfCostFunc
       //scanf("Enter value %d\n",&k);
       value = THETA1 + THETA2 * (u - V) + (temp / SIGMA_X_P);
 
-		return value;
+      return value;
     }
 
   protected:

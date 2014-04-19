@@ -41,20 +41,20 @@
 class ImageOpenDialog : public QDialog, private Ui::ImageOpenDialog
 {
 
-  Q_OBJECT;
+    Q_OBJECT;
 
 
-public:
-    ImageOpenDialog(QWidget *parent = 0);
+  public:
+    ImageOpenDialog(QWidget* parent = 0);
     virtual ~ImageOpenDialog();
 
     void setStatus(QString s);
 
 
-    public slots:
-      void setProgress(int p);
+  public slots:
+    void setProgress(int p);
 
-private:
+  private:
     ImageOpenDialog(const ImageOpenDialog&); // Copy Constructor Not Implemented
     void operator=(const ImageOpenDialog&); // Operator '=' Not Implemented
 };

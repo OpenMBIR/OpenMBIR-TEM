@@ -25,12 +25,12 @@ class CheckBoxDelegate : public QStyledItemDelegate
     virtual ~CheckBoxDelegate();
 
 
-    void paint ( QPainter * painter, const QStyleOptionViewItem & option, const QModelIndex & index ) const;
+    void paint ( QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const;
 
-    bool editorEvent(QEvent *event,
-                     QAbstractItemModel *model,
-                     const QStyleOptionViewItem &option,
-                     const QModelIndex &index);
+    bool editorEvent(QEvent* event,
+                     QAbstractItemModel* model,
+                     const QStyleOptionViewItem& option,
+                     const QModelIndex& index);
 };
 
 #endif /* CHECKBOXDELEGATE_H_ */

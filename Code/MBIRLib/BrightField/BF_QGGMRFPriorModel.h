@@ -44,7 +44,8 @@
 #include "MBIRLib/MBIRLib.h"
 #include "MBIRLib/Reconstruction/QGGMRF_Functions.h"
 
-namespace QGGMRF {
+namespace QGGMRF
+{
 
 
   /**

@@ -184,7 +184,8 @@ VoxelUpdateList::Pointer VoxelUpdateList::GenRandList(VoxelUpdateList::Pointer I
   for (size_t i = 1; i < InList->numElements(); i++)
   {
     r = numberGenerator(); // Random remaining position.
-    if (r >= InList->numElements()) {
+    if (r >= InList->numElements())
+    {
       continue;
     }
     temp = newIndexes[i];
@@ -197,12 +198,13 @@ VoxelUpdateList::Pointer VoxelUpdateList::GenRandList(VoxelUpdateList::Pointer I
   // Now copy the data from the Input into the output but using the randomly generated index
   for(int32_t i = 0; i < InList->numElements(); i++)
   {
-    int32_t xVal = InptListPtr[i*2];
-    int32_t zVal = InptListPtr[i*2+1];
+    int32_t xVal = InptListPtr[i * 2];
+    int32_t zVal = InptListPtr[i * 2 + 1];
     OpList->setPair(newIndexes[i], xVal, zVal);
   }
 
-  if(print) {
+  if(print)
+  {
     std::cout << "Input" << std::endl;
     InList->printMaxList(std::cout);
 

@@ -48,23 +48,23 @@
  */
 class QFileCompleter : public QCompleter
 {
-  Q_OBJECT;
+    Q_OBJECT;
 
-public:
-  /**
-   * @brief Contrstructor
-   * @param o Parent QObject
-   * @param dirs Should the completer ONLY show directories
-   * @return
-   */
-  QFileCompleter(QObject* o, bool dirs);
+  public:
+    /**
+     * @brief Contrstructor
+     * @param o Parent QObject
+     * @param dirs Should the completer ONLY show directories
+     * @return
+     */
+    QFileCompleter(QObject* o, bool dirs);
 
-  /**
-   * @brief Returns a file path from the given QModelIndex
-   * @param idx The QModelIndex to look up a path
-   * @return
-   */
-  virtual QString pathFromIndex(const QModelIndex& idx) const;
+    /**
+     * @brief Returns a file path from the given QModelIndex
+     * @param idx The QModelIndex to look up a path
+     * @return
+     */
+    virtual QString pathFromIndex(const QModelIndex& idx) const;
 };
 
 #endif /* QFILECOMPLETER_H_ */

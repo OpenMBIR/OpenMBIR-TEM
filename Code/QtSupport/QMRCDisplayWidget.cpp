@@ -62,7 +62,7 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QMRCDisplayWidget::QMRCDisplayWidget(QWidget *parent) :
+QMRCDisplayWidget::QMRCDisplayWidget(QWidget* parent) :
   QWidget(parent),
   m_StopAnimation(true),
   m_XZSliceImage(false),
@@ -118,19 +118,19 @@ QImage QMRCDisplayWidget::currentImage()
 //
 // -----------------------------------------------------------------------------
 #define ZOOM_MENU(var, menu, slot)\
-{\
-  QAction* action = new QAction(menu);\
-  action->setText( #var );\
-  QString actionName("action_z" #var "Action");\
-  action->setObjectName(actionName);\
-  zoomMenu->addAction(action);\
-  connect(action, SIGNAL(triggered()), this, SLOT(slot())); \
+  {\
+    QAction* action = new QAction(menu);\
+    action->setText( #var );\
+    QString actionName("action_z" #var "Action");\
+    action->setObjectName(actionName);\
+    zoomMenu->addAction(action);\
+    connect(action, SIGNAL(triggered()), this, SLOT(slot())); \
   }
 
 #define ZOOM_MENU_SLOT_DEF(var, index)\
   void QMRCDisplayWidget::z##var##_triggered() {\
-  zoomButton->setText(#var " % ");\
-  m_GraphicsView->setZoomIndex(index);\
+    zoomButton->setText(#var " % ");\
+    m_GraphicsView->setZoomIndex(index);\
   }
 
 ZOOM_MENU_SLOT_DEF(10, 0)
@@ -430,7 +430,7 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
     QString str = QString("The MRC file could not be loaded. ") + QString(mrcFilePath) + QString("\nThe file path may not have been written correctly, or the file path does not exist. ");
     QMessageBox::critical(this, tr("MRC File Load Error"), str , QMessageBox::Ok);
     FREE_FEI_HEADERS( header.feiHeaders)
-        return;
+    return;
   }
 
   QDoubleValidator* validator = NULL;
@@ -537,7 +537,7 @@ void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
 
   FREE_FEI_HEADERS( header.feiHeaders)
 
-      drawOrigin(image);
+  drawOrigin(image);
 
   // This will display the image in the graphics scene
   m_GraphicsView->loadBaseImageFile(m_CurrentImage);
@@ -583,9 +583,9 @@ void QMRCDisplayWidget::setMovieWidgetsEnabled(bool b)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void QMRCDisplayWidget::showWidgets(bool b, QList<QWidget*> &list)
+void QMRCDisplayWidget::showWidgets(bool b, QList<QWidget*>& list)
 {
-  foreach (QWidget* w, list)
+  foreach (QWidget * w, list)
   {
     w->setVisible(b);
   }
@@ -594,7 +594,7 @@ void QMRCDisplayWidget::showWidgets(bool b, QList<QWidget*> &list)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header, bool flipYAxis)
+QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader& header, bool flipYAxis)
 {
 #if 0
   qint16 dmax = std::numeric_limits<qint16>::min();
@@ -602,8 +602,8 @@ QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header, bool fl
   size_t nVoxels = header.nx * header.ny;
   for (size_t i = 0; i < nVoxels; ++i)
   {
-    if(data[i] > dmax) dmax = data[i];
-    if(data[i] < dmin) dmin = data[i];
+    if(data[i] > dmax) { dmax = data[i]; }
+    if(data[i] < dmin) { dmin = data[i]; }
   }
 
   // Generate a Color Table
@@ -655,7 +655,7 @@ QImage QMRCDisplayWidget::signed16Image(qint16* data, MRCHeader &header, bool fl
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QImage QMRCDisplayWidget::floatImage(float* data, MRCHeader &header, bool flipYAxis)
+QImage QMRCDisplayWidget::floatImage(float* data, MRCHeader& header, bool flipYAxis)
 {
   size_t nVoxels = header.nx * header.ny;
 #if 0
@@ -664,8 +664,8 @@ QImage QMRCDisplayWidget::floatImage(float* data, MRCHeader &header, bool flipYA
 
   for (size_t i = 0; i < nVoxels; ++i)
   {
-    if(data[i] > dmax) dmax = data[i];
-    if(data[i] < dmin) dmin = data[i];
+    if(data[i] > dmax) { dmax = data[i]; }
+    if(data[i] < dmin) { dmin = data[i]; }
   }
 #else
   float dmax = maximumField->text().toFloat();
@@ -678,9 +678,9 @@ QImage QMRCDisplayWidget::floatImage(float* data, MRCHeader &header, bool flipYA
 
   for (size_t i = 0; i < nVoxels; ++i)
   {
-    iData[i] = (data[i]-dmin) / (dmax - dmin) * 255.0;
-    if(iData[i] > imax) imax = iData[i];
-    if(iData[i] < imin) imin = iData[i];
+    iData[i] = (data[i] - dmin) / (dmax - dmin) * 255.0;
+    if(iData[i] > imax) { imax = iData[i]; }
+    if(iData[i] < imin) { imin = iData[i]; }
   }
 
   // Generate a Color Table
@@ -727,7 +727,7 @@ QImage QMRCDisplayWidget::floatImage(float* data, MRCHeader &header, bool flipYA
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QImage QMRCDisplayWidget::unsigned16Image(quint16* data, MRCHeader &header, bool flipYAxis)
+QImage QMRCDisplayWidget::unsigned16Image(quint16* data, MRCHeader& header, bool flipYAxis)
 {
 #if 0
   qint16 dmax = std::numeric_limits<qint16>::min();
@@ -735,8 +735,8 @@ QImage QMRCDisplayWidget::unsigned16Image(quint16* data, MRCHeader &header, bool
   size_t nVoxels = header.nx * header.ny;
   for (size_t i = 0; i < nVoxels; ++i)
   {
-    if(data[i] > dmax) dmax = data[i];
-    if(data[i] < dmin) dmin = data[i];
+    if(data[i] > dmax) { dmax = data[i]; }
+    if(data[i] < dmin) { dmin = data[i]; }
   }
 
   // Generate a Color Table
@@ -789,7 +789,7 @@ QImage QMRCDisplayWidget::unsigned16Image(quint16* data, MRCHeader &header, bool
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QImage QMRCDisplayWidget::xzSigned16CrossSection(qint16* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader &header)
+QImage QMRCDisplayWidget::xzSigned16CrossSection(qint16* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader& header)
 {
 #if 0
   qint16 dmax = std::numeric_limits<qint16>::min();
@@ -797,8 +797,8 @@ QImage QMRCDisplayWidget::xzSigned16CrossSection(qint16* data, size_t nVoxels, i
   size_t nVoxels = header.nx * header.ny;
   for (size_t i = 0; i < nVoxels; ++i)
   {
-    if(data[i] > dmax) dmax = data[i];
-    if(data[i] < dmin) dmin = data[i];
+    if(data[i] > dmax) { dmax = data[i]; }
+    if(data[i] < dmin) { dmin = data[i]; }
   }
 
   // Generate a Color Table
@@ -843,7 +843,7 @@ QImage QMRCDisplayWidget::xzSigned16CrossSection(qint16* data, size_t nVoxels, i
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QImage QMRCDisplayWidget::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader &header)
+QImage QMRCDisplayWidget::xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader& header)
 {
 #if 0
   float dmax = std::numeric_limits<float>::min();
@@ -851,8 +851,8 @@ QImage QMRCDisplayWidget::xzFloatCrossSection(float* data, size_t nVoxels, int* 
 
   for (size_t i = 0; i < nVoxels; ++i)
   {
-    if(data[i] > dmax) dmax = data[i];
-    if(data[i] < dmin) dmin = data[i];
+    if(data[i] > dmax) { dmax = data[i]; }
+    if(data[i] < dmin) { dmin = data[i]; }
   }
 #else
   float dmax = maximumField->text().toFloat();
@@ -865,9 +865,9 @@ QImage QMRCDisplayWidget::xzFloatCrossSection(float* data, size_t nVoxels, int* 
 
   for (size_t i = 0; i < nVoxels; ++i)
   {
-    iData[i] = (data[i]-dmin) / (dmax - dmin) * 255.0;
-    if(iData[i] > imax) imax = iData[i];
-    if(iData[i] < imin) imin = iData[i];
+    iData[i] = (data[i] - dmin) / (dmax - dmin) * 255.0;
+    if(iData[i] > imax) { imax = iData[i]; }
+    if(iData[i] < imin) { imin = iData[i]; }
   }
 
   //  std::cout << "Min int MRC Value:" << imin << std::endl;
@@ -1011,7 +1011,7 @@ void QMRCDisplayWidget::drawOrigin(QImage image)
 //
 ////////////////////////////////////////////////////////////////////////////////
 void QMRCDisplayWidget::getColorCorrespondingTovalue(int16_t val,
-                                                     float &r, float &g, float &b,
+                                                     float& r, float& g, float& b,
                                                      float max, float min)
 {
 #if GRAY_SCALE
@@ -1063,7 +1063,7 @@ void QMRCDisplayWidget::loadXZSliceReconstruction(QString reconMRCFilePath)
   if(err < 0)
   {
     FREE_FEI_HEADERS( header.feiHeaders )
-        return;
+    return;
   }
   //Read the Entire File
   int voxelMin[3] =

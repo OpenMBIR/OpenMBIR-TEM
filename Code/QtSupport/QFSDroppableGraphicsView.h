@@ -48,30 +48,30 @@ class QFSDroppableGraphicsView : public QGraphicsView
     Q_OBJECT
 
   public:
-    QFSDroppableGraphicsView(QWidget *parent = NULL);
+    QFSDroppableGraphicsView(QWidget* parent = NULL);
 
     /**
      * @brief Over-riding implementation from base class
      * @param event QDragEnterEvent Event fired when dragging enters the QGraphicsView
      */
-    void dragEnterEvent(QDragEnterEvent *event);
+    void dragEnterEvent(QDragEnterEvent* event);
 
     /**
      * @brief Over-riding implementation from base class
      * @param event QDropEvent Event fired when object is dropped on QGraphicsView
      */
-    void dropEvent(QDropEvent *event);
+    void dropEvent(QDropEvent* event);
 
     /**
      * @brief Over-riding implementation from base class
      * @param event QDragLeaveEvent Event fired when dragging leaves QGraphicsView
      */
-    void dragLeaveEvent(QDragLeaveEvent *event);
+    void dragLeaveEvent(QDragLeaveEvent* event);
 
   protected:
 
   signals:
-   void loadImageFileRequested(const QString &filename);
+    void loadImageFileRequested(const QString& filename);
 
 };
 

@@ -59,14 +59,14 @@ class CE_ConstraintEquation
                           RealImageType::Pointer bk_cost,
                           RealArrayType::Pointer ck_cost,
                           Real_t LogGain) :
-        NumOfViews(NumOfViews),
-        QuadraticParameters(QuadraticParameters),
-        d1(d1),
-        d2(d2),
-        Qk_cost(Qk_cost),
-        bk_cost(bk_cost),
-        ck_cost(ck_cost),
-        LogGain(LogGain)
+      NumOfViews(NumOfViews),
+      QuadraticParameters(QuadraticParameters),
+      d1(d1),
+      d2(d2),
+      Qk_cost(Qk_cost),
+      bk_cost(bk_cost),
+      ck_cost(ck_cost),
+      LogGain(LogGain)
     {
     }//constructor which assigns values to the private members of the class ; The members of the class and the parameters have the same name here
 
@@ -119,7 +119,7 @@ class CE_ConstraintEquation
 
       for (i_theta = 0; i_theta < NumOfViews; i_theta++)
       {
-    //    root = CE_RootsOfQuadraticFunction(QuadraticParameters->getValue(i_theta,0), QuadraticParameters->getValue(i_theta,1), lambda);
+        //    root = CE_RootsOfQuadraticFunction(QuadraticParameters->getValue(i_theta,0), QuadraticParameters->getValue(i_theta,1), lambda);
         root = CE_RootsOfQuadraticFunction(QuadraticParameters->getValue(i_theta, 0), QuadraticParameters->getValue(i_theta, 1), lambda);
         //Evaluate which root results in a lower cost function
         for (i = 0; i < 2; i++)
@@ -136,10 +136,10 @@ class CE_ConstraintEquation
 
 
             temp_cost = (Qk_cost->getValue(i_theta, 0) * root[i] * root[i]
-                        +  2 * Qk_cost->getValue(i_theta, 1) * root[i] * temp_mu
-                        +  temp_mu * temp_mu * Qk_cost->getValue(i_theta, 2)
-                        - 2 * (bk_cost->getValue(i_theta, 0) * root[i] + temp_mu * bk_cost->getValue(i_theta, 1))
-                        + ck_cost->d[i_theta]); //evaluating the cost function
+                         +  2 * Qk_cost->getValue(i_theta, 1) * root[i] * temp_mu
+                         +  temp_mu * temp_mu * Qk_cost->getValue(i_theta, 2)
+                         - 2 * (bk_cost->getValue(i_theta, 0) * root[i] + temp_mu * bk_cost->getValue(i_theta, 1))
+                         + ck_cost->d[i_theta]); //evaluating the cost function
             if(temp_cost < min)
             {
               min = temp_cost;
@@ -149,7 +149,7 @@ class CE_ConstraintEquation
           }
         }
 
-        if(root[min_index] > 0) sum += log(root[min_index]); //max{(-b+sqrt(b^2 - 4*a*c))/2*a,(-b+sqrt(b^2 - 4*a*c))/2*a}
+        if(root[min_index] > 0) { sum += log(root[min_index]); } //max{(-b+sqrt(b^2 - 4*a*c))/2*a,(-b+sqrt(b^2 - 4*a*c))/2*a}
         else
         {
           printf("Log of a negative number\n");

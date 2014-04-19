@@ -42,7 +42,7 @@
 //
 // -----------------------------------------------------------------------------
 QRecentFileList::QRecentFileList(QObject* parent) :
-QObject(parent)
+  QObject(parent)
 {
   //std::cout << "QRecentFileList()" << std::endl;
 }
@@ -52,7 +52,7 @@ QObject(parent)
 // -----------------------------------------------------------------------------
 QRecentFileList::~QRecentFileList()
 {
- // std::cout << "~QRecentFileList()" << std::endl;
+// std::cout << "~QRecentFileList()" << std::endl;
 }
 
 // -----------------------------------------------------------------------------
@@ -60,7 +60,7 @@ QRecentFileList::~QRecentFileList()
 // -----------------------------------------------------------------------------
 QRecentFileList* QRecentFileList::instance()
 {
- // std::cout << "QRecentFileList::instance()" << std::endl;
+// std::cout << "QRecentFileList::instance()" << std::endl;
   static QRecentFileList* singleton;
 
   if (singleton == NULL)
@@ -74,7 +74,7 @@ QRecentFileList* QRecentFileList::instance()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool QRecentFileList::contains(const QString &file)
+bool QRecentFileList::contains(const QString& file)
 {
   return this->recentFiles.contains(file);
 }
@@ -83,7 +83,7 @@ bool QRecentFileList::contains(const QString &file)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void QRecentFileList::addFile(const QString &file)
+void QRecentFileList::addFile(const QString& file)
 {
   //std::cout << "QRecentFileList::addFile()" << std::endl;
   //std::cout << "recentFiles.count: " << recentFiles.count() << std::endl;
@@ -109,7 +109,7 @@ QStringList QRecentFileList::fileList()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void QRecentFileList::removeFile(const QString &file)
+void QRecentFileList::removeFile(const QString& file)
 {
   //std::cout << "QRecentFileList::removeFile()" << std::endl;
   this->recentFiles.removeAll(file);
@@ -118,7 +118,7 @@ void QRecentFileList::removeFile(const QString &file)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void QRecentFileList::writeList(QSettings &prefs)
+void QRecentFileList::writeList(QSettings& prefs)
 {
   //std::cout << "QRecentFileList::writeList()" << std::endl;
   prefs.beginGroup("RecentFiles");
@@ -129,7 +129,7 @@ void QRecentFileList::writeList(QSettings &prefs)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void QRecentFileList::readList(QSettings &prefs)
+void QRecentFileList::readList(QSettings& prefs)
 {
   //std::cout << "QRecentFileList::readList()" << std::endl;
   prefs.beginGroup("RecentFiles");
@@ -140,19 +140,19 @@ void QRecentFileList::readList(QSettings &prefs)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QString QRecentFileList::strippedName(const QString &fullFileName)
+QString QRecentFileList::strippedName(const QString& fullFileName)
 {
-    return QFileInfo(fullFileName).fileName();
+  return QFileInfo(fullFileName).fileName();
 }
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-QString QRecentFileList::parentAndFileName(const QString &file)
+QString QRecentFileList::parentAndFileName(const QString& file)
 {
   QFileInfo fileinfo(file);
 
   QDir parent = fileinfo.dir();
-  return parent.dirName() + QDir::separator() +fileinfo.fileName();
+  return parent.dirName() + QDir::separator() + fileinfo.fileName();
 }
 

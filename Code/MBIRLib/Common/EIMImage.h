@@ -47,50 +47,50 @@ class EIMImage
 {
   public:
 
-  MXA_SHARED_POINTERS(EIMImage);
-  MXA_STATIC_NEW_MACRO(EIMImage);
-  MXA_TYPE_MACRO(EIMImage);
-  virtual ~EIMImage();
+    MXA_SHARED_POINTERS(EIMImage);
+    MXA_STATIC_NEW_MACRO(EIMImage);
+    MXA_TYPE_MACRO(EIMImage);
+    virtual ~EIMImage();
 
-  /**
-  * @brief Creates a new EIMImage by copying all the settings from a source EIMImage
-  * object and allocate the buffer at the same time. If the 'allocateBuffer' argument is
-  * false then the image buffer will NOT be allocated. Note that the actual data from
-  * the source mosaic is NOT copied into the new object.
-  * @param image The source EIMImage to copy settings from.
-  * @param allocateBuffer If false, the memory to hold the image is NOT allocated. Default=TRUE
-  * @return EIMImage::Pointer object
-  */
-  static EIMImage::Pointer NewFromSourceMosaic(EIMImage::Pointer image, bool allocateBuffer = true);
+    /**
+    * @brief Creates a new EIMImage by copying all the settings from a source EIMImage
+    * object and allocate the buffer at the same time. If the 'allocateBuffer' argument is
+    * false then the image buffer will NOT be allocated. Note that the actual data from
+    * the source mosaic is NOT copied into the new object.
+    * @param image The source EIMImage to copy settings from.
+    * @param allocateBuffer If false, the memory to hold the image is NOT allocated. Default=TRUE
+    * @return EIMImage::Pointer object
+    */
+    static EIMImage::Pointer NewFromSourceMosaic(EIMImage::Pointer image, bool allocateBuffer = true);
 
-  MXA_INSTANCE_VEC2_PROPERTY(int, ImagePixelDimension);
-  const int32_t* getImagePixelDimension()
-  {
-    return m_ImagePixelDimension;
-  }
+    MXA_INSTANCE_VEC2_PROPERTY(int, ImagePixelDimension);
+    const int32_t* getImagePixelDimension()
+    {
+      return m_ImagePixelDimension;
+    }
 
-  void setImagePixelDimension(EIMImage::Pointer image);
-  int32_t getImagePixelWidth();
-  int32_t getImagePixelHeight();
+    void setImagePixelDimension(EIMImage::Pointer image);
+    int32_t getImagePixelWidth();
+    int32_t getImagePixelHeight();
 
 
-  void setImageBuffer(unsigned char* value, bool manageMemory = false);
-  uint8_t* allocateImageBuffer(int32_t width, int32_t height, bool manageMemory = false);
-  uint8_t* allocateSameSizeImage(EIMImage::Pointer image);
-  unsigned char* getImageBuffer();
+    void setImageBuffer(unsigned char* value, bool manageMemory = false);
+    uint8_t* allocateImageBuffer(int32_t width, int32_t height, bool manageMemory = false);
+    uint8_t* allocateSameSizeImage(EIMImage::Pointer image);
+    unsigned char* getImageBuffer();
 
-  uint8_t* getPointer(size_t index = 0);
+    uint8_t* getPointer(size_t index = 0);
 
-  void deallocateImageBuffer();
-  MXA_INSTANCE_PROPERTY(bool, ManageMemory);
+    void deallocateImageBuffer();
+    MXA_INSTANCE_PROPERTY(bool, ManageMemory);
 
-  int32_t initializeImageWithSourceData(int32_t width, int32_t height, uint8_t* source);
+    int32_t initializeImageWithSourceData(int32_t width, int32_t height, uint8_t* source);
 
-  int32_t fillImageBuffer(uint8_t val);
+    int32_t fillImageBuffer(uint8_t val);
 
-  void printSelf(std::ostream& out);
+    void printSelf(std::ostream& out);
 
-  size_t getTotalPixels();
+    size_t getTotalPixels();
 
   protected:
     EIMImage();

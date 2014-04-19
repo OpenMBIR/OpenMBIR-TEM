@@ -63,7 +63,7 @@ DetectorResponseWriter::~DetectorResponseWriter()
 // -----------------------------------------------------------------------------
 void DetectorResponseWriter::execute()
 {
- // FILE* Fp = NULL;
+// FILE* Fp = NULL;
 
   std::string filepath(getTomoInputs()->tempDir);
   filepath = filepath.append(MXADir::getSeparator()).append(MBIR::Defaults::DetectorResponseFile);

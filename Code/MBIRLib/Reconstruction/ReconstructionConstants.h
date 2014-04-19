@@ -47,8 +47,10 @@
 
 typedef double Real_t;
 
-namespace SOC {
-  enum TiltSelection {
+namespace SOC
+{
+  enum TiltSelection
+  {
     A_Tilt,
     B_Tilt
   };

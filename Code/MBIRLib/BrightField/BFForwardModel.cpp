@@ -73,12 +73,12 @@
 
 
 #define MAKE_OUTPUT_FILE(Fp, outdir, filename)\
-{\
-  std::string filepath(outdir);\
-  filepath = filepath.append(MXADir::getSeparator()).append(filename);\
-  errno = 0;\
-  Fp = fopen(filepath.c_str(),"wb");\
-  if (Fp == NULL || errno > 0) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl;}\
+  {\
+    std::string filepath(outdir);\
+    filepath = filepath.append(MXADir::getSeparator()).append(filename);\
+    errno = 0;\
+    Fp = fopen(filepath.c_str(),"wb");\
+    if (Fp == NULL || errno > 0) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl;}\
   }
 
 #define START_TIMER uint64_t startm = EIMTOMO_getMilliSeconds();
@@ -138,11 +138,11 @@ BFForwardModel::~BFForwardModel()
 // Project the object in 3-D
 // -----------------------------------------------------------------------------
 int BFForwardModel::forwardProject(SinogramPtr sinogram,
-                                      GeometryPtr geometry,
-                                      std::vector<AMatrixCol::Pointer> &tempCol,
-                                      std::vector<AMatrixCol::Pointer> &voxelLineResponse,
-                                      RealVolumeType::Pointer yEstimate,
-                                      RealVolumeType::Pointer errorSinogram)
+                                   GeometryPtr geometry,
+                                   std::vector<AMatrixCol::Pointer>& tempCol,
+                                   std::vector<AMatrixCol::Pointer>& voxelLineResponse,
+                                   RealVolumeType::Pointer yEstimate,
+                                   RealVolumeType::Pointer errorSinogram)
 {
   std::string indent("  ");
 
@@ -180,7 +180,7 @@ int BFForwardModel::forwardProject(SinogramPtr sinogram,
     g->run(BFForwardProject(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate, this, t, this));
 #else
     // BFForwardProject fp(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate, NuisanceParams.get(), t, this);
-    BFForwardProject fp(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate,this, t, this);
+    BFForwardProject fp(sinogram.get(), geometry.get(), tempCol, voxelLineResponse, yEstimate, this, t, this);
     //fp.setObservers(getObservers());
     fp();
 #endif
@@ -328,7 +328,7 @@ void BFForwardModel::weightInitialization(size_t dims[3])
 void BFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVolumeType::Pointer errorSinogram, RealVolumeType::Pointer yEstimate)
 {
 
-  std::cout<<"Starting weight assignment"<<std::endl;
+  std::cout << "Starting weight assignment" << std::endl;
   std::string indent("  ");
   Real_t checksum = 0;
   START_TIMER;
@@ -354,16 +354,16 @@ void BFForwardModel::calculateMeasurementWeight(SinogramPtr sinogram, RealVolume
 
 #ifndef IDENTITY_NOISE_MODEL
         //If its a bright field recon just over ride the weights
-        m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);
+        m_Weight->d[weight_idx] = BF_MAX / exp(sinogram->counts->d[counts_idx]);
 #else
         m_Weight->d[weight_idx] = 1.0;
 #endif //IDENTITY_NOISE_MODEL endif
 
-        m_Selector->d[weight_idx]=1;//By default all enties are chosen
+        m_Selector->d[weight_idx] = 1; //By default all enties are chosen
 
 #ifdef FORWARD_PROJECT_MODE
-        temp=yEstimate->d[i_theta][i_r][i_t]/m_I_0->d[i_theta];
-        fwrite(&temp,sizeof(Real_t),1,Fp6);
+        temp = yEstimate->d[i_theta][i_r][i_t] / m_I_0->d[i_theta];
+        fwrite(&temp, sizeof(Real_t), 1, Fp6);
 #endif
 
 
@@ -409,8 +409,8 @@ void BFForwardModel::jointEstimation(SinogramPtr sinogram, RealVolumeType::Point
         }
         else
         {
-          num_sum += (m_BraggThreshold*m_BraggDelta*errorSinogram->getValue(i_theta, i_r, i_t)/fabs(errorSinogram->getValue(i_theta, i_r, i_t)))*sqrt(m_Weight->getValue(i_theta,i_r,i_t));
-          den_sum += ((m_BraggThreshold*m_BraggDelta*sqrt(m_Weight->getValue(i_theta, i_r, i_t)))/fabs(errorSinogram->getValue(i_theta, i_r, i_t)));
+          num_sum += (m_BraggThreshold * m_BraggDelta * errorSinogram->getValue(i_theta, i_r, i_t) / fabs(errorSinogram->getValue(i_theta, i_r, i_t))) * sqrt(m_Weight->getValue(i_theta, i_r, i_t));
+          den_sum += ((m_BraggThreshold * m_BraggDelta * sqrt(m_Weight->getValue(i_theta, i_r, i_t))) / fabs(errorSinogram->getValue(i_theta, i_r, i_t)));
         }
 
       }
@@ -456,7 +456,7 @@ void BFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Pointer
         size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
         //TODO Just assign this once
-        m_Weight->d[weight_idx]*=m_Alpha->d[i_theta];
+        m_Weight->d[weight_idx] *= m_Alpha->d[i_theta];
         //m_Weight->d[weight_idx] = BF_MAX/exp(sinogram->counts->d[counts_idx]);
 #else
         m_Weight->d[weight_idx] = 1.0;
@@ -465,22 +465,22 @@ void BFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Pointer
     }
   }
 
-  Real_t sum1 = 0,sum2 = 0,update;
+  Real_t sum1 = 0, sum2 = 0, update;
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
     for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
       for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
       {
         size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
         if(m_Selector->d[weight_idx] == 1)
-          sum1 += (ErrorSino->d[weight_idx]*ErrorSino->d[weight_idx]*m_Weight->d[weight_idx]);
+        { sum1 += (ErrorSino->d[weight_idx] * ErrorSino->d[weight_idx] * m_Weight->d[weight_idx]); }
         else
-          sum2 += fabs(ErrorSino->d[weight_idx])*sqrt(m_Alpha->d[i_theta]*m_Weight->d[weight_idx]);
+        { sum2 += fabs(ErrorSino->d[weight_idx]) * sqrt(m_Alpha->d[i_theta] * m_Weight->d[weight_idx]); }
       }
-  update = (sum1 + (m_BraggDelta*m_BraggThreshold)*sum2)/(sinogram->N_theta*sinogram->N_r*sinogram->N_t);
+  update = (sum1 + (m_BraggDelta * m_BraggThreshold) * sum2) / (sinogram->N_theta * sinogram->N_r * sinogram->N_t);
 
   for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
   {
-    m_Alpha->d[i_theta]=update;
+    m_Alpha->d[i_theta] = update;
   }
 
   //Update the weights back for future iterations by appropriately scaling it
@@ -491,9 +491,9 @@ void BFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Pointer
       {
         size_t weight_idx = m_Weight->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
-        m_Weight->d[weight_idx]/=m_Alpha->d[i_theta]; //Scales the weight appropriately
+        m_Weight->d[weight_idx] /= m_Alpha->d[i_theta]; //Scales the weight appropriately
 #else
-        m_Weight->d[weight_idx] = 1.0/m_Alpha->d[i_theta];
+        m_Weight->d[weight_idx] = 1.0 / m_Alpha->d[i_theta];
 #endif //IDENTITY_NOISE_MODEL
       }
 
@@ -515,17 +515,17 @@ void BFForwardModel::updateWeights(SinogramPtr sinogram, RealVolumeType::Pointer
 // Updating the boolean selector based on the error and weights
 // -----------------------------------------------------------------------------
 void BFForwardModel::updateSelector(SinogramPtr sinogram,
-                                       RealVolumeType::Pointer ErrorSino)
+                                    RealVolumeType::Pointer ErrorSino)
 {
-  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta;i_theta++)
+  for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
     for (uint16_t i_r = 0; i_r < sinogram->N_r; i_r++)
       for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
       {
         size_t idx = m_Weight->calcIndex(i_theta, i_r, i_t);
-        if(ErrorSino->d[idx] * ErrorSino->d[idx] * m_Weight->d[idx] < m_BraggThreshold*m_BraggThreshold)
-          m_Selector->d[idx] = 1;
+        if(ErrorSino->d[idx] * ErrorSino->d[idx] * m_Weight->d[idx] < m_BraggThreshold * m_BraggThreshold)
+        { m_Selector->d[idx] = 1; }
         else
-          m_Selector->d[idx] = 0;
+        { m_Selector->d[idx] = 0; }
       }
 
 }
@@ -734,11 +734,11 @@ int BFForwardModel::createInitialOffsetsData(SinogramPtr sinogram)
 
     //TODO : HACK to just read offsets from a initial file
     FILE* fp;
-    char PathStr[]="AlTEMOffsets.bin";
+    char PathStr[] = "AlTEMOffsets.bin";
     fp = fopen(PathStr, "rb");
     if(fp == NULL)
     {
-      std::cout<<"File not found '" << PathStr << "'" <<std::endl;
+      std::cout << "File not found '" << PathStr << "'" << std::endl;
     }
     else
     {
@@ -746,7 +746,7 @@ int BFForwardModel::createInitialOffsetsData(SinogramPtr sinogram)
       std::cout << "------ Printing Tilt Angles --------" << std::endl;
       for(uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
       {
-        std::cout<<i_theta<<std::endl;
+        std::cout << i_theta << std::endl;
         fread(&temp, sizeof(Real_t), 1, fp);
         m_InitialOffset->d[i_theta] = -temp;
       }
@@ -809,9 +809,9 @@ int BFForwardModel::createInitialVariancesData(SinogramPtr sinogram)
 // -----------------------------------------------------------------------------
 // Compute forward model cost
 // -----------------------------------------------------------------------------
-Real_t BFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Pointer ErrorSino)
+Real_t BFForwardModel::forwardCost(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino)
 {
-  Real_t cost = 0,temp=0;
+  Real_t cost = 0, temp = 0;
   Real_t errSinoValue = 0.0;
 
   //Data Mismatch Error
@@ -823,10 +823,10 @@ Real_t BFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Pointer 
       for (int16_t k = 0; k < sinogram->N_t; k++)
       {
         errSinoValue = ErrorSino->getValue(i, j, k);
-        if(m_Selector->getValue(i,j,k) == 1)
-          cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k));
+        if(m_Selector->getValue(i, j, k) == 1)
+        { cost += (errSinoValue * errSinoValue * m_Weight->getValue(i, j, k)); }
         else
-          cost += (2*m_BraggThreshold*m_BraggDelta*fabs(errSinoValue)*sqrt(m_Weight->getValue(i, j, k)) + m_BraggThreshold*m_BraggThreshold*(1 - 2*m_BraggDelta));
+        { cost += (2 * m_BraggThreshold * m_BraggDelta * fabs(errSinoValue) * sqrt(m_Weight->getValue(i, j, k)) + m_BraggThreshold * m_BraggThreshold * (1 - 2 * m_BraggDelta)); }
       }
     }
   }
@@ -836,7 +836,7 @@ Real_t BFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Pointer 
   //Noise Error
   if(m_AdvParams->NOISE_ESTIMATION)
   {
-    temp = (sinogram->N_theta*sinogram->N_r*sinogram->N_t/2)*log(m_Alpha->d[0]);
+    temp = (sinogram->N_theta * sinogram->N_r * sinogram->N_t / 2) * log(m_Alpha->d[0]);
     //TODO : This assume a single parameter for the variance. Hence the use of m_Alpha->d[0]. Fix
     cost += temp;
   }
@@ -849,16 +849,16 @@ Real_t BFForwardModel::forwardCost(SinogramPtr sinogram,RealVolumeType::Pointer 
 // intensive
 // -----------------------------------------------------------------------------
 void BFForwardModel::computeTheta(size_t Index,
-                                     std::vector<AMatrixCol::Pointer> &TempCol,
-                                     int32_t xzSliceIdx,
-                                     std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
-                                     RealVolumeType::Pointer ErrorSino,
-                                     SinogramPtr sinogram,
-                                     RealArrayType::Pointer Thetas)
+                                  std::vector<AMatrixCol::Pointer>& TempCol,
+                                  int32_t xzSliceIdx,
+                                  std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
+                                  RealVolumeType::Pointer ErrorSino,
+                                  SinogramPtr sinogram,
+                                  RealArrayType::Pointer Thetas)
 {
 
-  Thetas->d[0]=0;
-  Thetas->d[1]=0;
+  Thetas->d[0] = 0;
+  Thetas->d[1] = 0;
 
   for (uint32_t q = 0; q < TempCol[Index]->count; q++)
   {
@@ -880,15 +880,15 @@ void BFForwardModel::computeTheta(size_t Index,
       }
       else
       {
-        Real_t QuadCoeff = (m_BraggDelta*m_BraggThreshold)/(fabs(ErrorSino->d[error_idx])* sqrt(m_Weight->d[error_idx]));
+        Real_t QuadCoeff = (m_BraggDelta * m_BraggThreshold) / (fabs(ErrorSino->d[error_idx]) * sqrt(m_Weight->d[error_idx]));
         Real_t ProjectionEntry = kConst0 * VoxelLineResponse[xzSliceIdx]->values[VoxelLineAccessCounter];
-        Thetas->d[1] += QuadCoeff*(ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
-        Thetas->d[0] += QuadCoeff*(ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
+        Thetas->d[1] += QuadCoeff * (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
+        Thetas->d[0] += QuadCoeff * (ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
         VoxelLineAccessCounter++;
       }
     }
   }
-  Thetas->d[0]*=-1;
+  Thetas->d[0] *= -1;
 }
 
 // -----------------------------------------------------------------------------
@@ -896,12 +896,12 @@ void BFForwardModel::computeTheta(size_t Index,
 // the selector variable simultaneously
 // -----------------------------------------------------------------------------
 void BFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
-                                            size_t Index,
-                                            std::vector<AMatrixCol::Pointer> &TempCol,
-                                            int32_t xzSliceIdx,
-                                            std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
-                                            RealVolumeType::Pointer ErrorSino,
-                                            SinogramPtr sinogram)
+                                         size_t Index,
+                                         std::vector<AMatrixCol::Pointer>& TempCol,
+                                         int32_t xzSliceIdx,
+                                         std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
+                                         RealVolumeType::Pointer ErrorSino,
+                                         SinogramPtr sinogram)
 {
   Real_t kConst2 = 0.0;
   //Update the ErrorSinogram
@@ -922,8 +922,9 @@ void BFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
       VoxelLineAccessCounter++;
       // Update the selector variable
       if(fabs(ErrorSino->d[error_idx]*sqrt(m_Weight->d[error_idx])) < m_BraggThreshold)
-        m_Selector->d[error_idx] = 1;
-      else {
+      { m_Selector->d[error_idx] = 1; }
+      else
+      {
         m_Selector->d[error_idx] = 0;
       }
     }
@@ -937,7 +938,7 @@ void BFForwardModel::updateErrorSinogram(Real_t ChangeInVoxelValue,
 // -----------------------------------------------------------------------------
 void BFForwardModel::processRawCounts(SinogramPtr sinogram)
 {
-  Real_t mean=0,maxval= -std::numeric_limits<Real_t>::infinity();// -INFINITY;
+  Real_t mean = 0, maxval = -std::numeric_limits<Real_t>::infinity(); // -INFINITY;
   for (int16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++) //slice index
   {
     for (int16_t i_r = 0; i_r < sinogram->N_r; i_r++)
@@ -947,26 +948,27 @@ void BFForwardModel::processRawCounts(SinogramPtr sinogram)
         size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
         sinogram->counts->d[counts_idx] += m_BfOffset;//;BF_OFFSET;
 
-        if(sinogram->counts->d[counts_idx] < 0){
-          std::cout<<"Error: Negative counts! The offset value is not correctly set"<<std::endl;
+        if(sinogram->counts->d[counts_idx] < 0)
+        {
+          std::cout << "Error: Negative counts! The offset value is not correctly set" << std::endl;
           break;
         }
 
-        sinogram->counts->d[counts_idx] = -log(sinogram->counts->d[counts_idx]/BF_MAX);
+        sinogram->counts->d[counts_idx] = -log(sinogram->counts->d[counts_idx] / BF_MAX);
 
         // if(sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
         //     sinogram->counts->d[counts_idx] = 0;
 
         //Debug/Sanity checks
-        mean+=sinogram->counts->d[counts_idx];
+        mean += sinogram->counts->d[counts_idx];
         if(fabs(sinogram->counts->d[counts_idx]) > maxval)
-          maxval = sinogram->counts->d[counts_idx];
+        { maxval = sinogram->counts->d[counts_idx]; }
       }
     }
   }
-  mean/=(sinogram->N_theta*sinogram->N_r*sinogram->N_t);
-  std::cout<<"Mean log value ="<<mean<<std::endl;
-  std::cout<<"Max -log value ="<<maxval<<std::endl;
+  mean /= (sinogram->N_theta * sinogram->N_r * sinogram->N_t);
+  std::cout << "Mean log value =" << mean << std::endl;
+  std::cout << "Max -log value =" << maxval << std::endl;
 }
 
 // -----------------------------------------------------------------------------
@@ -974,28 +976,29 @@ void BFForwardModel::processRawCounts(SinogramPtr sinogram)
 // -----------------------------------------------------------------------------
 void BFForwardModel::printRatioSelected(SinogramPtr sinogram)
 {
-  Real_t sum=0;
+  Real_t sum = 0;
   for (int16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++) //slice index
   {
-    Real_t sum_k=0;//Sum for each tilt
+    Real_t sum_k = 0; //Sum for each tilt
     for (int16_t i_r = 0; i_r < sinogram->N_r; i_r++)
     {
       for (uint16_t i_t = 0; i_t < sinogram->N_t; i_t++)
       {
         size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-        sum_k+=m_Selector->d[counts_idx];
+        sum_k += m_Selector->d[counts_idx];
       }
     }
-    if(getVeryVerbose()) {
-      std::cout<<"Ratio of sinogram at tilt :"<<i_theta<<" "<<sum_k/(sinogram->N_r*sinogram->N_t)<<std::endl;
+    if(getVeryVerbose())
+    {
+      std::cout << "Ratio of sinogram at tilt :" << i_theta << " " << sum_k / (sinogram->N_r * sinogram->N_t) << std::endl;
     }
-    sum+=sum_k;
+    sum += sum_k;
   }
 
-  if(getVeryVerbose()) {std::cout<<"Ratio of singoram entries used="<<sum/(sinogram->N_theta*sinogram->N_r*sinogram->N_t)<<std::endl;}
+  if(getVeryVerbose()) {std::cout << "Ratio of singoram entries used=" << sum / (sinogram->N_theta * sinogram->N_r * sinogram->N_t) << std::endl;}
 }
 
-void BFForwardModel::writeSelectorMrc(const std::string &file, SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino)
+void BFForwardModel::writeSelectorMrc(const std::string& file, SinogramPtr sinogram, GeometryPtr geometry, RealVolumeType::Pointer ErrorSino)
 {
   //const std::string mrcFile="Selector.mrc";
   geometry->N_x = sinogram->N_r;
@@ -1014,7 +1017,7 @@ void BFForwardModel::writeSelectorMrc(const std::string &file, SinogramPtr sinog
         geometry->Object->d[counts_idx] = value;
       }
   }
-  uint16_t cropStart=0;
+  uint16_t cropStart = 0;
   uint16_t cropEnd = geometry->N_x;
   /* Write the output to the MRC File */
   std::stringstream ss;
@@ -1023,7 +1026,7 @@ void BFForwardModel::writeSelectorMrc(const std::string &file, SinogramPtr sinog
   notify(ss.str(), 0, Observable::UpdateProgressMessage);
 
   MRCWriter::Pointer mrcWriter = MRCWriter::New();
-  //	mrcWriter->setOutputFile(mrcFile);
+  //  mrcWriter->setOutputFile(mrcFile);
   mrcWriter->setOutputFile(file);
   mrcWriter->setGeometry(geometry);
   mrcWriter->setAdvParams(m_AdvParams);
@@ -1042,30 +1045,30 @@ void BFForwardModel::writeSelectorMrc(const std::string &file, SinogramPtr sinog
 }
 
 //This function is REDUNDANT - Not used in current version
-Real_t BFForwardModel::estimateBraggThreshold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino,Real_t percentage)
+Real_t BFForwardModel::estimateBraggThreshold(SinogramPtr sinogram, RealVolumeType::Pointer ErrorSino, Real_t percentage)
 {
 
   Real_t EstBraggThresh = 0.0;
-  uint32_t NumElts = sinogram->N_theta*sinogram->N_r*sinogram->N_t;
-  uint32_t NumEltsReject = percentage*NumElts;//Find the Error*Weight
+  uint32_t NumElts = sinogram->N_theta * sinogram->N_r * sinogram->N_t;
+  uint32_t NumEltsReject = percentage * NumElts; //Find the Error*Weight
   //corresponding to this order statistic
   RealArrayType::Pointer Ratio;
-  size_t dims[1]={NumElts};
+  size_t dims[1] = {NumElts};
   Ratio = RealArrayType::New(dims, "Ratio of error to noise variance");
-  uint32_t counts=0;
+  uint32_t counts = 0;
   for(uint32_t i_theta = 0; i_theta <  sinogram->N_theta; i_theta++)
     for(uint32_t i_r = 0; i_r < sinogram->N_r; i_r++)
       for(uint32_t i_t = 0; i_t < sinogram->N_t; i_t++)
       {
         size_t counts_idx = sinogram->counts->calcIndex(i_theta, i_r, i_t);
-        Ratio->d[counts]=ErrorSino->d[counts_idx]*m_Weight->d[counts_idx];
-        Ratio->d[counts]*=ErrorSino->d[counts_idx];
+        Ratio->d[counts] = ErrorSino->d[counts_idx] * m_Weight->d[counts_idx];
+        Ratio->d[counts] *= ErrorSino->d[counts_idx];
         counts++;
       }
-  std::cout<<"Num Elts"<<counts<<std::endl;
-  std::cout<<"Num Elts to reject ="<<NumEltsReject<<std::endl;
+  std::cout << "Num Elts" << counts << std::endl;
+  std::cout << "Num Elts to reject =" << NumEltsReject << std::endl;
 
-  std::cout<<"Bragg Thresh estimated using Randomized select"<<EstBraggThresh<<std::endl;
+  std::cout << "Bragg Thresh estimated using Randomized select" << EstBraggThresh << std::endl;
 
   return EstBraggThresh;
 }

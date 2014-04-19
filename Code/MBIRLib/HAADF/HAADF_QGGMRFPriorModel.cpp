@@ -4,7 +4,8 @@
 #include "MBIRLib/Reconstruction/QGGMRF_Functions.h"
 
 
-namespace QGGMRF {
+namespace QGGMRF
+{
 
   void initializePriorModel(TomoInputsPtr tomoInputs, QGGMRF_Values* qggmrf_values)
   {
@@ -17,12 +18,12 @@ namespace QGGMRF {
     qggmrf_values->SIGMA_X_Q = pow(tomoInputs->SigmaX, qggmrf_values->MRF_Q);
   }
 
-    // -----------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------
   //
   // -----------------------------------------------------------------------------
   Real_t updatePriorModel(Real_t NewSigmaX, QGGMRF_Values* qggmrf_values, Real_t gamma)
   {
-    Real_t SigmaX = gamma * pow(NewSigmaX*qggmrf_values->MRF_Q,1.0/qggmrf_values->MRF_Q);
+    Real_t SigmaX = gamma * pow(NewSigmaX * qggmrf_values->MRF_Q, 1.0 / qggmrf_values->MRF_Q);
     qggmrf_values->SIGMA_X_P = pow(SigmaX, qggmrf_values->MRF_P);
     qggmrf_values->SIGMA_X_P_Q = pow(SigmaX, (qggmrf_values->MRF_P - qggmrf_values->MRF_Q));
     qggmrf_values->SIGMA_X_Q = pow(SigmaX, qggmrf_values->MRF_Q);

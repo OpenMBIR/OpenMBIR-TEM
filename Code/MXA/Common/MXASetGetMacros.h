@@ -93,28 +93,28 @@
 #define MXA_NEW_SUPERCLASS(thisClass, SuperClass)\
   typedef SuperClass::Pointer SuperClass##Type;\
   static SuperClass##Type New##SuperClass(void) \
-{ \
-  SuperClass##Type sharedPtr (new thisClass); \
-  return sharedPtr; \
-}
+  { \
+    SuperClass##Type sharedPtr (new thisClass); \
+    return sharedPtr; \
+  }
 
 /**
  * @brief Implements a Static 'New' Method for a class
  */
 #define MXA_STATIC_NEW_MACRO(thisClass) \
-static Pointer New(void) \
-{ \
-  Pointer sharedPtr (new thisClass); \
-  return sharedPtr; \
-}
+  static Pointer New(void) \
+  { \
+    Pointer sharedPtr (new thisClass); \
+    return sharedPtr; \
+  }
 
 
 #define MXA_STATIC_NEW_MACRO_WITH_ARGS(thisClass, args) \
-static Pointer New args \
-{ \
-  Pointer sharedPtr (new thisClass args); \
-  return sharedPtr; \
-}
+  static Pointer New args \
+  { \
+    Pointer sharedPtr (new thisClass args); \
+    return sharedPtr; \
+  }
 
 /** Macro used to add standard methods to all classes, mainly type
  * information. */
@@ -124,9 +124,9 @@ static Pointer New args \
   static int IsTypeOf(const char *type) \
   { \
     if ( !strcmp(#thisClass,type) ) \
-      { \
+    { \
       return 1; \
-      } \
+    } \
     return 0; \
   } \
   virtual int IsA(const char *type) \
@@ -135,10 +135,10 @@ static Pointer New args \
   } \
   template <class Target, class Source>\
   inline Target polymorphic_downcast(Source* x) { \
-      if( dynamic_cast<Target>(x) != x ) { \
-        return NULL;\
-      }\
-      return static_cast<Target>(x);\
+    if( dynamic_cast<Target>(x) != x ) { \
+      return NULL;\
+    }\
+    return static_cast<Target>(x);\
   }
 
 
@@ -149,9 +149,9 @@ static Pointer New args \
   static int IsTypeOf(const char *type) \
   { \
     if ( !strcmp(#thisClass,type) ) \
-      { \
+    { \
       return 1; \
-      } \
+    } \
     return superclass::IsTypeOf(type); \
   } \
   virtual int IsA(const char *type) \
@@ -160,10 +160,10 @@ static Pointer New args \
   } \
   template <class Target, class Source>\
   static Target* polymorphic_downcast(Source* x) { \
-      if( dynamic_cast<Target*>(x) != x ) { \
-        return NULL;\
-      }\
-      return static_cast<Target*>(x);\
+    if( dynamic_cast<Target*>(x) != x ) { \
+      return NULL;\
+    }\
+    return static_cast<Target*>(x);\
   }
 
 
@@ -193,75 +193,75 @@ static Pointer New args \
 
 #define MXA_VIRTUAL_INSTANCE_PROPERTY(type, prpty)\
   private:\
-      type   m_##prpty;\
+  type   m_##prpty;\
   public:\
-    virtual MXA_SET_PROPERTY(type, prpty)\
-    virtual MXA_GET_PROPERTY(type, prpty)
+  virtual MXA_SET_PROPERTY(type, prpty)\
+  virtual MXA_GET_PROPERTY(type, prpty)
 
 
 
 #define MXA_INSTANCE_PROPERTY(type, prpty)\
   private:\
-      type   m_##prpty;\
+  type   m_##prpty;\
   public:\
-    MXA_SET_PROPERTY(type, prpty)\
-    MXA_GET_PROPERTY(type, prpty)
+  MXA_SET_PROPERTY(type, prpty)\
+  MXA_GET_PROPERTY(type, prpty)
 
 
 #define MXA_INSTANCE_PROPERTY_OLD(type, prpty, var)\
   private:\
-      type   var;\
+  type   var;\
   public:\
-    type get##prpty() { return var; }\
-    void set##prpty(type value) { this->var = value; }\
-
+  type get##prpty() { return var; }\
+  void set##prpty(type value) { this->var = value; }\
+   
 
 #define MXA_SET_VEC2_PROPERTY(type, prpty, varname)\
   void set##prpty(type value[2]) {\
-      varname[0] = value[0]; varname[1] = value[1]; }\
+    varname[0] = value[0]; varname[1] = value[1]; }\
   void set##prpty(type value_0, type value_1) {\
-      varname[0] = value_0; varname[1] = value_1; }
+    varname[0] = value_0; varname[1] = value_1; }
 
 #define MXA_GET_VEC2_PROPERTY(type, prpty, varname)\
   void get##prpty(type value[2]) {\
-      value[0] = varname[0]; value[1] = varname[1]; }\
+    value[0] = varname[0]; value[1] = varname[1]; }\
   void get##prpty(type &value_0, type &value_1) {\
-      value_0 = varname[0]; value_1 = varname[1]; }
+    value_0 = varname[0]; value_1 = varname[1]; }
 
 
 #define MXA_INSTANCE_VEC2_PROPERTY(type, prpty)\
   private:\
-    type   m_##prpty[2];\
+  type   m_##prpty[2];\
   public:\
-    MXA_SET_VEC2_PROPERTY(type, prpty, m_##prpty)\
-    MXA_GET_VEC2_PROPERTY(type, prpty, m_##prpty)
+  MXA_SET_VEC2_PROPERTY(type, prpty, m_##prpty)\
+  MXA_GET_VEC2_PROPERTY(type, prpty, m_##prpty)
 
 
 #define MXA_SET_VEC3_PROPERTY(type, prpty, varname)\
   void set##prpty(type value[3]) {\
-      varname[0] = value[0]; varname[1] = value[1]; varname[2] = value[2]; }\
+    varname[0] = value[0]; varname[1] = value[1]; varname[2] = value[2]; }\
   void set##prpty(type value_0, type value_1, type value_2) {\
-      varname[0] = value_0; varname[1] = value_1; varname[2] = value_2; }
+    varname[0] = value_0; varname[1] = value_1; varname[2] = value_2; }
 
 #define MXA_GET_VEC3_PROPERTY(type, prpty, varname)\
   void get##prpty(type value[3]) {\
-      value[0] = varname[0]; value[1] = varname[1]; value[2] = varname[2]; }\
+    value[0] = varname[0]; value[1] = varname[1]; value[2] = varname[2]; }\
   void get##prpty(type &value_0, type &value_1, type &value_2) {\
-      value_0 = varname[0]; value_1 = varname[1]; value_2 = varname[2]; }
+    value_0 = varname[0]; value_1 = varname[1]; value_2 = varname[2]; }
 
 
 #define MXA_INSTANCE_VEC3_PROPERTY(type, prpty)\
   private:\
-    type   m_##prpty[3];\
+  type   m_##prpty[3];\
   public:\
-    MXA_SET_VEC3_PROPERTY(type, prpty, m_##prpty)\
-    MXA_GET_VEC3_PROPERTY(type, prpty, m_##prpty)
+  MXA_SET_VEC3_PROPERTY(type, prpty, m_##prpty)\
+  MXA_GET_VEC3_PROPERTY(type, prpty, m_##prpty)
 
 
 
 #define MXA_CONTAINER_TYPE(thisClass, container) \
-    typedef container<thisClass >     ContainerT; \
-    typedef boost::shared_ptr< container<thisClass > > ContainerPType;
+  typedef container<thisClass >     ContainerT; \
+  typedef boost::shared_ptr< container<thisClass > > ContainerPType;
 
 
 
@@ -291,27 +291,29 @@ static Pointer New args \
 // for a few boost headers
 namespace MXA
 {
-  class bad_lexical_cast : public std::runtime_error {
-  public:
-    bad_lexical_cast(const std::string& s)
-      : std::runtime_error(s)
-    { }
+  class bad_lexical_cast : public std::runtime_error
+  {
+    public:
+      bad_lexical_cast(const std::string& s)
+        : std::runtime_error(s)
+      { }
   };
 
-  class bad_any_cast : public std::runtime_error {
-  public:
-    bad_any_cast(const std::string& s)
-      : std::runtime_error(s)
-    { }
+  class bad_any_cast : public std::runtime_error
+  {
+    public:
+      bad_any_cast(const std::string& s)
+        : std::runtime_error(s)
+      { }
   };
 
   template<typename T>
-  T lexical_cast(const std::string &s)
+  T lexical_cast(const std::string& s)
   {
     std::istringstream i(s);
     T x;
     if (!(i >> x))
-      throw bad_lexical_cast("convertToDouble(\"" + s + "\")");
+    { throw bad_lexical_cast("convertToDouble(\"" + s + "\")"); }
 
     return x;
   }
@@ -340,12 +342,12 @@ namespace MXA
 
 #define SET_STRING_PROPERTY_BODY(name_space, type, prpty, key, value) \
   if (name_space::prpty.compare(key) == 0) { \
-  try { \
-  this->set##prpty(value); return 1; \
-}  catch(MXA::bad_lexical_cast &excp) { \
-  std::cout << excp.what() << std::endl; \
-  std::cout << "Could not convert value '" << value << "' to type '" << #type << "' for property '" << #prpty << "'" << std::endl; \
-} \
+    try { \
+      this->set##prpty(value); return 1; \
+    }  catch(MXA::bad_lexical_cast &excp) { \
+      std::cout << excp.what() << std::endl; \
+      std::cout << "Could not convert value '" << value << "' to type '" << #type << "' for property '" << #prpty << "'" << std::endl; \
+    } \
   }
 
 /**
@@ -360,14 +362,14 @@ namespace MXA
 */
 
 #define GET_PROPERTY_BODY(name_space, type, prpty, key, value)\
-    if (name_space::prpty.compare(key) == 0) {  \
-      try { value = *(reinterpret_cast<T*>( &(m_##prpty))); return 1;} \
-  catch(MXA::bad_any_cast &) { std::cout << "Could not cast value '" << value << "' to type '" << #type << "' for property '" << #prpty << "'" << std::endl; } }
+  if (name_space::prpty.compare(key) == 0) {  \
+    try { value = *(reinterpret_cast<T*>( &(m_##prpty))); return 1;} \
+    catch(MXA::bad_any_cast &) { std::cout << "Could not cast value '" << value << "' to type '" << #type << "' for property '" << #prpty << "'" << std::endl; } }
 
 #define GET_STRING_PROPERTY_BODY2(name_space, type, prpty, key, value)\
   if (name_space::prpty.compare(key) == 0) {  \
     try { value = m_##prpty; return 1;} \
-  catch(MXA::bad_any_cast &) { std::cout << "Could not cast value '" << value << "' to type '" << #type << "' for property '" << #prpty << "'" << std::endl; } }
+    catch(MXA::bad_any_cast &) { std::cout << "Could not cast value '" << value << "' to type '" << #type << "' for property '" << #prpty << "'" << std::endl; } }
 
 
 

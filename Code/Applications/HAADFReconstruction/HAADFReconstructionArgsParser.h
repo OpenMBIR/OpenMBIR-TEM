@@ -52,9 +52,9 @@ class HAADFReconstructionArgsParser
     HAADFReconstructionArgsParser();
     virtual ~HAADFReconstructionArgsParser();
 
-    int parseArguments(int argc, char **argv, HAADF_MultiResolutionReconstruction::Pointer multiRes);
+    int parseArguments(int argc, char** argv, HAADF_MultiResolutionReconstruction::Pointer multiRes);
 
-    void printInputs(TomoInputsPtr inputs, std::ostream &out);
+    void printInputs(TomoInputsPtr inputs, std::ostream& out);
 
   private:
     uint64_t startm;

@@ -72,14 +72,14 @@ class AMatrixCol
     void setCount(uint32_t c);
 
     static AMatrixCol::Pointer calculateAMatrixColumnPartial(SinogramPtr sinogram,
-                                                                       GeometryPtr geometry,
-                                                                       TomoInputsPtr tomoInputs,
-                                                                       AdvancedParametersPtr advParams,
-                                                                       uint16_t row,
-                                                                       uint16_t col,
-                                                                       uint16_t slice,
-                                                                       RealVolumeType::Pointer detectorResponse,
-                                                                       DetectorParameters::Pointer haadfParameters);
+                                                             GeometryPtr geometry,
+                                                             TomoInputsPtr tomoInputs,
+                                                             AdvancedParametersPtr advParams,
+                                                             uint16_t row,
+                                                             uint16_t col,
+                                                             uint16_t slice,
+                                                             RealVolumeType::Pointer detectorResponse,
+                                                             DetectorParameters::Pointer haadfParameters);
 
   protected:
     AMatrixCol(size_t* dims, int32_t c);

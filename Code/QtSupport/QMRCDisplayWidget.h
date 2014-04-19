@@ -60,17 +60,17 @@ class QTimer;
  */
 class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
 {
-  Q_OBJECT;
+    Q_OBJECT;
 
   public:
-    QMRCDisplayWidget(QWidget *parent = 0);
+    QMRCDisplayWidget(QWidget* parent = 0);
     virtual ~QMRCDisplayWidget();
 
-    QImage xzSigned16CrossSection(qint16* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader &header);
-    QImage xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader &header);
+    QImage xzSigned16CrossSection(qint16* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader& header);
+    QImage xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader& header);
     static void getColorCorrespondingTovalue(int16_t val,
-                                       float &r, float &g, float &b,
-                                       float max, float min);
+                                             float& r, float& g, float& b,
+                                             float max, float min);
 
 
     MRCGraphicsView* graphicsView();
@@ -110,12 +110,12 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
   protected:
     void setupGui();
 
-    void showWidgets(bool b, QList<QWidget*> &list);
+    void showWidgets(bool b, QList<QWidget*>& list);
 
 
-    QImage signed16Image(qint16* data, MRCHeader &header, bool flipYAxis);
-    QImage floatImage(float* data, MRCHeader &header, bool flipYAxis);
-    QImage unsigned16Image(quint16* data, MRCHeader &header, bool flipYAxis);
+    QImage signed16Image(qint16* data, MRCHeader& header, bool flipYAxis);
+    QImage floatImage(float* data, MRCHeader& header, bool flipYAxis);
+    QImage unsigned16Image(quint16* data, MRCHeader& header, bool flipYAxis);
     void drawOrigin(QImage image);
 
 

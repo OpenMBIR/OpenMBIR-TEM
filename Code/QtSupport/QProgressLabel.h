@@ -45,17 +45,17 @@
 
 #define QT_INSTANCE_PROPERTY(type, prpty, var)\
   private:\
-      type   m_##prpty;\
+  type   m_##prpty;\
   public:\
-    QT_SET_PROPERTY(type, prpty)\
-    QT_GET_PROPERTY(type, prpty, var)
+  QT_SET_PROPERTY(type, prpty)\
+  QT_GET_PROPERTY(type, prpty, var)
 
 #define QT_SLOT_PROPERTY(type, prpty, var)\
-    private:\
-      type   m_##prpty;\
+  private:\
+  type   m_##prpty;\
   public:\
-    QT_GET_PROPERTY(type, prpty, var)\
-
+  QT_GET_PROPERTY(type, prpty, var)\
+   
 #include <iostream>
 /*
  *
@@ -83,12 +83,12 @@ class QProgressLabel : public QLabel
     void setRange(int min, int max) { m_Minimum = min; m_Maximum = max; }
 
 
-    public slots:
-     void setMaximum(int m) { m_Maximum = m; }
-     void setMinimum(int m) { m_Minimum = m; }
-     void setValue(int v)
+  public slots:
+    void setMaximum(int m) { m_Maximum = m; }
+    void setMinimum(int m) { m_Minimum = m; }
+    void setValue(int v)
     {
-     //  std::cout << "Setting Value: " << v << std::endl;
+      //  std::cout << "Setting Value: " << v << std::endl;
       m_Value = v;
       repaint();
       emit valueChanged(m_Value);
@@ -96,7 +96,7 @@ class QProgressLabel : public QLabel
 
   signals:
 
-      void  valueChanged ( int value );
+    void  valueChanged ( int value );
 
   protected:
 

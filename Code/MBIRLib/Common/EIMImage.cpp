@@ -49,9 +49,9 @@ EIMImage::Pointer EIMImage::NewFromSourceMosaic(EIMImage::Pointer image, bool al
     {
       p = EIMImage::NullPointer();
     }
-      
-      delete u8;
-      u8 = NULL;
+
+    delete u8;
+    u8 = NULL;
   }
   return p;
 }
@@ -63,7 +63,8 @@ EIMImage::Pointer EIMImage::NewFromSourceMosaic(EIMImage::Pointer image, bool al
 // -----------------------------------------------------------------------------
 EIMImage::EIMImage()
 {
-  m_ImagePixelDimension[0] = -1; m_ImagePixelDimension[1] = -1;
+  m_ImagePixelDimension[0] = -1;
+  m_ImagePixelDimension[1] = -1;
   m_ManageMemory = false;
   this->m_imageBuffer = NULL;
 }
@@ -178,7 +179,7 @@ void EIMImage::printSelf(std::ostream& out)
 {
 
   out << "EIMImage Properties" << std::endl;
- // out << "  Origin:                 " << _origin[0] << ", " << _origin[1] << std::endl;
+// out << "  Origin:                 " << _origin[0] << ", " << _origin[1] << std::endl;
   //out << "  ImageMicronSize:        " << _micronSize[0] << " x " << _micronSize[1] << std::endl;
   out << "  ImagePixelDimension:         " << m_ImagePixelDimension[0] << " x " << m_ImagePixelDimension[1] << std::endl;
   //out << "  Scaling:                " << _scaling[0] << ", " << _scaling[1] << std::endl;

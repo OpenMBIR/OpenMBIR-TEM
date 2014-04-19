@@ -47,19 +47,19 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-MRCGraphicsView::MRCGraphicsView(QWidget *parent)
-: QGraphicsView(parent),
-  m_ImageGraphicsItem(NULL),
-  m_DisableVOISelection(true),
-  m_AddReconstructionArea(false),
-  m_XZLine(0),
-  m_XZWidth(.90),
-  m_BackgroundRectangle(NULL),
-  m_ReconstructionArea(NULL)
+MRCGraphicsView::MRCGraphicsView(QWidget* parent)
+  : QGraphicsView(parent),
+    m_ImageGraphicsItem(NULL),
+    m_DisableVOISelection(true),
+    m_AddReconstructionArea(false),
+    m_XZLine(0),
+    m_XZWidth(.90),
+    m_BackgroundRectangle(NULL),
+    m_ReconstructionArea(NULL)
 
 {
   setAcceptDrops(true);
- // setDragMode(RubberBandDrag);
+// setDragMode(RubberBandDrag);
 
   m_ZoomFactors[0] = 0.1f;
   m_ZoomFactors[1] = 0.25f;
@@ -84,11 +84,11 @@ MRCGraphicsView::MRCGraphicsView(QWidget *parent)
 // -----------------------------------------------------------------------------
 MRCGraphicsView::~MRCGraphicsView()
 {
-    if (m_BackgroundRectangle != NULL)
-    {
-        delete m_BackgroundRectangle;
-        m_BackgroundRectangle = NULL;
-    }
+  if (m_BackgroundRectangle != NULL)
+  {
+    delete m_BackgroundRectangle;
+    m_BackgroundRectangle = NULL;
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -167,9 +167,9 @@ void MRCGraphicsView::setZoomIndex(int index)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MRCGraphicsView::dragEnterEvent(QDragEnterEvent *event)
+void MRCGraphicsView::dragEnterEvent(QDragEnterEvent* event)
 {
- // qWarning("QFSDroppableGraphicsView::dragEnterEvent(QDragEnterEvent *event)");
+// qWarning("QFSDroppableGraphicsView::dragEnterEvent(QDragEnterEvent *event)");
   // accept just text/uri-list mime format
   if (event->mimeData()->hasFormat("text/uri-list"))
   {
@@ -181,7 +181,7 @@ void MRCGraphicsView::dragEnterEvent(QDragEnterEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MRCGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)
+void MRCGraphicsView::dragLeaveEvent(QDragLeaveEvent* event)
 {
 //  qWarning("QFSDroppableGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)");
   this->setStyleSheet("");
@@ -190,7 +190,7 @@ void MRCGraphicsView::dragLeaveEvent(QDragLeaveEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MRCGraphicsView::dropEvent(QDropEvent *event)
+void MRCGraphicsView::dropEvent(QDropEvent* event)
 {
   this->setStyleSheet("");
 //  qWarning("QFSDroppableGraphicsView::dropEvent(QDropEvent *event)");
@@ -232,7 +232,7 @@ void MRCGraphicsView::updateDisplay()
   QSize pSize(0, 0);
   if (m_BaseImage.isNull() == false)
   {
-   pSize = m_BaseImage.size();
+    pSize = m_BaseImage.size();
   }
   else
   {
@@ -254,7 +254,7 @@ void MRCGraphicsView::updateDisplay()
   {
     return;
   }
-  QGraphicsPixmapItem *pixItem = qgraphicsitem_cast<QGraphicsPixmapItem*> (m_ImageGraphicsItem);
+  QGraphicsPixmapItem* pixItem = qgraphicsitem_cast<QGraphicsPixmapItem*> (m_ImageGraphicsItem);
   pixItem->setPixmap(QPixmap::fromImage(paintImage));
 
   this->update();
@@ -285,7 +285,7 @@ void MRCGraphicsView::clearContent()
     }
     if (NULL != m_BackgroundRectangle)
     {
-        m_BackgroundRectangle->setParentItem(NULL);
+      m_BackgroundRectangle->setParentItem(NULL);
     }
     delete m_ImageGraphicsItem; // Will delete its children
     m_ImageGraphicsItem = NULL;
@@ -299,70 +299,70 @@ void MRCGraphicsView::clearContent()
 // -----------------------------------------------------------------------------
 void MRCGraphicsView::loadBaseImageFile(QImage image)
 {
-    QRect rectCoords(0,0,0,0);
-    m_BaseImage = image;
-    if(m_BaseImage.isNull() == true)
+  QRect rectCoords(0, 0, 0, 0);
+  m_BaseImage = image;
+  if(m_BaseImage.isNull() == true)
+  {
+    //   std::cout << "MRCGraphicsView::loadBaseImageFile() - Input Image was NULL" << std::endl;
+    return;
+  }
+  QSize pSize(0, 0);
+
+  m_BaseImage = m_BaseImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
+
+  QGraphicsScene* gScene = scene();
+  if(gScene == NULL)
+  {
+    gScene = new QGraphicsScene(this);
+    setScene(gScene);
+  }
+  else
+  {
+    if (NULL != m_ImageGraphicsItem)
     {
-        //   std::cout << "MRCGraphicsView::loadBaseImageFile() - Input Image was NULL" << std::endl;
-        return;
+      gScene->removeItem(m_ImageGraphicsItem);
     }
-    QSize pSize(0, 0);
-
-    m_BaseImage = m_BaseImage.convertToFormat(QImage::Format_ARGB32_Premultiplied);
-
-    QGraphicsScene* gScene = scene();
-    if(gScene == NULL)
-    {
-        gScene = new QGraphicsScene(this);
-        setScene(gScene);
-    }
-    else
-    {
-        if (NULL != m_ImageGraphicsItem)
-        {
-            gScene->removeItem(m_ImageGraphicsItem);
-        }
-        if(NULL != m_ReconstructionArea)
-        {
-            m_ReconstructionArea->setParentItem(NULL);
-        }
-        if (NULL != m_BackgroundRectangle)
-        {
-            rectCoords = m_BackgroundRectangle->getMappedRectangleCoordinates();
-            removeBackgroundSelector();
-        }
-
-        delete m_ImageGraphicsItem; // Will delete its children
-        m_ImageGraphicsItem = NULL;
-    }
-
-    gScene->invalidate();
-    m_ImageGraphicsItem = gScene->addPixmap(QPixmap::fromImage(m_BaseImage));
     if(NULL != m_ReconstructionArea)
     {
-        m_ReconstructionArea->setParentItem(m_ImageGraphicsItem);
-        createBackgroundSelector(rectCoords);
+      m_ReconstructionArea->setParentItem(NULL);
     }
-
-    m_ImageGraphicsItem->setAcceptDrops(true);
-    m_ImageGraphicsItem->setZValue(-1);
-    QRectF rect = m_ImageGraphicsItem->boundingRect();
-    gScene->setSceneRect(rect);
-
-    // Line Color
-    m_XZLine.setPen(QPen(QColor(255, 255, 0, UIA::Alpha)));
-    // Fill Color
-    m_XZLine.setBrush(QBrush(QColor(255, 255, 0, UIA::Alpha)));
-    m_XZLine.setZValue(1);
-    m_XZLine.setCacheMode(QGraphicsItem::DeviceCoordinateCache);
-    m_XZLine.setVisible(m_XZLine.isVisible());
-    if(scene()->items().contains(&m_XZLine) == false)
+    if (NULL != m_BackgroundRectangle)
     {
-        scene()->addItem(&m_XZLine);
+      rectCoords = m_BackgroundRectangle->getMappedRectangleCoordinates();
+      removeBackgroundSelector();
     }
 
-    this->updateDisplay();
-    emit fireBaseMRCFileLoaded();
+    delete m_ImageGraphicsItem; // Will delete its children
+    m_ImageGraphicsItem = NULL;
+  }
+
+  gScene->invalidate();
+  m_ImageGraphicsItem = gScene->addPixmap(QPixmap::fromImage(m_BaseImage));
+  if(NULL != m_ReconstructionArea)
+  {
+    m_ReconstructionArea->setParentItem(m_ImageGraphicsItem);
+    createBackgroundSelector(rectCoords);
+  }
+
+  m_ImageGraphicsItem->setAcceptDrops(true);
+  m_ImageGraphicsItem->setZValue(-1);
+  QRectF rect = m_ImageGraphicsItem->boundingRect();
+  gScene->setSceneRect(rect);
+
+  // Line Color
+  m_XZLine.setPen(QPen(QColor(255, 255, 0, UIA::Alpha)));
+  // Fill Color
+  m_XZLine.setBrush(QBrush(QColor(255, 255, 0, UIA::Alpha)));
+  m_XZLine.setZValue(1);
+  m_XZLine.setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+  m_XZLine.setVisible(m_XZLine.isVisible());
+  if(scene()->items().contains(&m_XZLine) == false)
+  {
+    scene()->addItem(&m_XZLine);
+  }
+
+  this->updateDisplay();
+  emit fireBaseMRCFileLoaded();
 }
 
 // -----------------------------------------------------------------------------
@@ -393,7 +393,7 @@ void MRCGraphicsView::setAddReconstructionArea(bool b)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MRCGraphicsView::mousePressEvent(QMouseEvent *event)
+void MRCGraphicsView::mousePressEvent(QMouseEvent* event)
 {
   // std::cout << "TomoGuiGraphicsView::mousePressEvent accepted:" << (int)(event->isAccepted()) << std::endl;
   m_AddReconstructionArea = true;
@@ -427,8 +427,8 @@ void MRCGraphicsView::mousePressEvent(QMouseEvent *event)
   // std::cout << "    event->accepted() == false" << std::endl;
   if(m_AddReconstructionArea == true)
   {
- //   m_MouseClickOrigin = event->pos();
-    if(!m_RubberBand) m_RubberBand = new QRubberBand(QRubberBand::Rectangle, this);
+//   m_MouseClickOrigin = event->pos();
+    if(!m_RubberBand) { m_RubberBand = new QRubberBand(QRubberBand::Rectangle, this); }
     m_RubberBand->setGeometry(QRect(m_MouseClickOrigin, QSize()));
     m_RubberBand->show();
   }
@@ -439,7 +439,7 @@ void MRCGraphicsView::mousePressEvent(QMouseEvent *event)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MRCGraphicsView::mouseMoveEvent(QMouseEvent *event)
+void MRCGraphicsView::mouseMoveEvent(QMouseEvent* event)
 {
   if(m_AddReconstructionArea == true && m_RubberBand != NULL)
   {
@@ -479,12 +479,12 @@ void MRCGraphicsView::updateXZLine(float percentWidth)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
+void MRCGraphicsView::mouseReleaseEvent(QMouseEvent* event)
 {
 
   if (event->modifiers() == Qt::ShiftModifier)
   {
-    if(m_RubberBand) m_RubberBand->hide();
+    if(m_RubberBand) { m_RubberBand->hide(); }
     //QRectF sr = sceneRect();
 
     QPointF mappedPoint = mapToScene(QPoint(0, m_MouseClickOrigin.y()));
@@ -494,15 +494,15 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
       mappedPoint.setY(m_BaseImage.size().height());
     }
 
-    float remWidth = m_BaseImage.size().width() * m_XZWidth/2.0;
-    float midWidth = m_BaseImage.size().width()/2.0f;
+    float remWidth = m_BaseImage.size().width() * m_XZWidth / 2.0;
+    float midWidth = m_BaseImage.size().width() / 2.0f;
     float xStart = midWidth - remWidth;
     float xEnd = midWidth + remWidth;
 
     QPointF p0(xStart, mappedPoint.y());
     QPointF p1(xEnd, mappedPoint.y());
 
-  //  std::cout << "SceneRect: " << sr.x() << ", " << sr.y() << "  " << sr.width() << ", " << sr.height() << std::endl;
+    //  std::cout << "SceneRect: " << sr.x() << ", " << sr.y() << "  " << sr.width() << ", " << sr.height() << std::endl;
     QVector<QPointF> line;
     line.push_back(p0);
     line.push_back(p1);
@@ -546,7 +546,7 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
     QGraphicsView::mouseReleaseEvent(event);
     if (scene())
     {
-      QList<QGraphicsItem *> selected;
+      QList<QGraphicsItem*> selected;
       selected = scene()->selectedItems();
       if (selected.count() == 0)
       {
@@ -561,17 +561,17 @@ void MRCGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 // -----------------------------------------------------------------------------
 QLineF MRCGraphicsView::getXZPlane()
 {
-    if ( m_XZLine.polygon().isEmpty() )
-    {
-        std::cout << "FIX - MRCGraphicsView::getXZPlane()\n";
-        return QLineF(0,0,0,0);
-    }
+  if ( m_XZLine.polygon().isEmpty() )
+  {
+    std::cout << "FIX - MRCGraphicsView::getXZPlane()\n";
+    return QLineF(0, 0, 0, 0);
+  }
 
- QPointF p0 = m_XZLine.polygon().at(0);
- QPointF p1 = m_XZLine.polygon().at(1);
+  QPointF p0 = m_XZLine.polygon().at(0);
+  QPointF p1 = m_XZLine.polygon().at(1);
 
- QLineF line(p0, p1);
- return line;
+  QLineF line(p0, p1);
+  return line;
 }
 
 // -----------------------------------------------------------------------------
@@ -634,35 +634,78 @@ void MRCGraphicsView::setCompositeMode(TomoGui_Constants::CompositeType mode)
   m_ImageDisplayType = TomoGui_Constants::CompositedImage;
   switch(mode)
   {
-    case TomoGui_Constants::Exclusion: m_composition_mode = QPainter::CompositionMode_Exclusion; break;
-    case TomoGui_Constants::Difference: m_composition_mode = QPainter::CompositionMode_Difference; break;
+    case TomoGui_Constants::Exclusion:
+      m_composition_mode = QPainter::CompositionMode_Exclusion;
+      break;
+    case TomoGui_Constants::Difference:
+      m_composition_mode = QPainter::CompositionMode_Difference;
+      break;
     case TomoGui_Constants::Alpha_Blend:
       m_composition_mode = QPainter::CompositionMode_SourceOver;
       break;
 #if 0
-    case 2: m_composition_mode = QPainter::CompositionMode_Plus; break;
-    case 3: m_composition_mode = QPainter::CompositionMode_Multiply; break;
-    case 4: m_composition_mode = QPainter::CompositionMode_Screen; break;
-    case 5: m_composition_mode = QPainter::CompositionMode_Darken; break;
-    case 6: m_composition_mode = QPainter::CompositionMode_Lighten; break;
-    case 7: m_composition_mode = QPainter::CompositionMode_ColorDodge; break;
-    case 8: m_composition_mode = QPainter::CompositionMode_ColorBurn; break;
-    case 9: m_composition_mode = QPainter::CompositionMode_HardLight; break;
-    case 10: m_composition_mode = QPainter::CompositionMode_SoftLight; break;
+    case 2:
+      m_composition_mode = QPainter::CompositionMode_Plus;
+      break;
+    case 3:
+      m_composition_mode = QPainter::CompositionMode_Multiply;
+      break;
+    case 4:
+      m_composition_mode = QPainter::CompositionMode_Screen;
+      break;
+    case 5:
+      m_composition_mode = QPainter::CompositionMode_Darken;
+      break;
+    case 6:
+      m_composition_mode = QPainter::CompositionMode_Lighten;
+      break;
+    case 7:
+      m_composition_mode = QPainter::CompositionMode_ColorDodge;
+      break;
+    case 8:
+      m_composition_mode = QPainter::CompositionMode_ColorBurn;
+      break;
+    case 9:
+      m_composition_mode = QPainter::CompositionMode_HardLight;
+      break;
+    case 10:
+      m_composition_mode = QPainter::CompositionMode_SoftLight;
+      break;
 
-    case 12: m_composition_mode = QPainter::CompositionMode_Destination; break;
-    case 13: m_composition_mode = QPainter::CompositionMode_Source; break;
-    case 14: m_composition_mode = QPainter::CompositionMode_DestinationOver; break;
-    case 15: m_composition_mode = QPainter::CompositionMode_SourceIn; break;
-    case 16: m_composition_mode = QPainter::CompositionMode_DestinationIn; break;
-    case 17: m_composition_mode = QPainter::CompositionMode_DestinationOut; break;
-    case 18: m_composition_mode = QPainter::CompositionMode_SourceAtop; break;
-    case 19: m_composition_mode = QPainter::CompositionMode_DestinationAtop; break;
-    case 20: m_composition_mode = QPainter::CompositionMode_Overlay; break;
-    case 21: m_composition_mode = QPainter::CompositionMode_Clear; break;
+    case 12:
+      m_composition_mode = QPainter::CompositionMode_Destination;
+      break;
+    case 13:
+      m_composition_mode = QPainter::CompositionMode_Source;
+      break;
+    case 14:
+      m_composition_mode = QPainter::CompositionMode_DestinationOver;
+      break;
+    case 15:
+      m_composition_mode = QPainter::CompositionMode_SourceIn;
+      break;
+    case 16:
+      m_composition_mode = QPainter::CompositionMode_DestinationIn;
+      break;
+    case 17:
+      m_composition_mode = QPainter::CompositionMode_DestinationOut;
+      break;
+    case 18:
+      m_composition_mode = QPainter::CompositionMode_SourceAtop;
+      break;
+    case 19:
+      m_composition_mode = QPainter::CompositionMode_DestinationAtop;
+      break;
+    case 20:
+      m_composition_mode = QPainter::CompositionMode_Overlay;
+      break;
+    case 21:
+      m_composition_mode = QPainter::CompositionMode_Clear;
+      break;
 #endif
-  default:
-    m_composition_mode = QPainter::CompositionMode_Exclusion; break;
+    default:
+      m_composition_mode = QPainter::CompositionMode_Exclusion;
+      break;
   }
 
   this->setImageDisplayType(m_ImageDisplayType);
@@ -673,8 +716,8 @@ void MRCGraphicsView::setCompositeMode(TomoGui_Constants::CompositeType mode)
 // -----------------------------------------------------------------------------
 void MRCGraphicsView::removeBackgroundSelector()
 {
-    delete m_BackgroundRectangle;
-    m_BackgroundRectangle = NULL;
+  delete m_BackgroundRectangle;
+  m_BackgroundRectangle = NULL;
 }
 
 // -----------------------------------------------------------------------------
@@ -682,45 +725,45 @@ void MRCGraphicsView::removeBackgroundSelector()
 // -----------------------------------------------------------------------------
 void MRCGraphicsView::createBackgroundSelector(QRect rectObj)
 {
-    QSize imageSize = m_BaseImage.size();
+  QSize imageSize = m_BaseImage.size();
 
-    if (rectObj == QRect())
-    {
-        int boxWidth = imageSize.width()*0.1;
-        int boxHeight = imageSize.height()*0.1;
-        int boxX = (imageSize.width()/2) - (boxWidth/2);
-        int boxY = (imageSize.height()/2) - (boxHeight/2);
-        QPoint scenePt(boxX, boxY);
-        QPoint imagePt = mapFromScene(scenePt);
-        QRect rect = QRect(imagePt.x(), imagePt.y(), boxWidth, boxHeight);
-        QPolygonF box = mapToScene(rect);
-        m_BackgroundRectangle = new RectangleCreator(box);
-    }
-    else
-    {
-        QRect rect = rectObj;
-        QRectF rectf = QRectF(rect);
-        QPolygonF box = QPolygonF(rectf);
-        m_BackgroundRectangle = new RectangleCreator(box);
-    }
-    if(NULL != m_ImageGraphicsItem)
-    {
-        m_BackgroundRectangle->setParentItem(m_ImageGraphicsItem);
+  if (rectObj == QRect())
+  {
+    int boxWidth = imageSize.width() * 0.1;
+    int boxHeight = imageSize.height() * 0.1;
+    int boxX = (imageSize.width() / 2) - (boxWidth / 2);
+    int boxY = (imageSize.height() / 2) - (boxHeight / 2);
+    QPoint scenePt(boxX, boxY);
+    QPoint imagePt = mapFromScene(scenePt);
+    QRect rect = QRect(imagePt.x(), imagePt.y(), boxWidth, boxHeight);
+    QPolygonF box = mapToScene(rect);
+    m_BackgroundRectangle = new RectangleCreator(box);
+  }
+  else
+  {
+    QRect rect = rectObj;
+    QRectF rectf = QRectF(rect);
+    QPolygonF box = QPolygonF(rectf);
+    m_BackgroundRectangle = new RectangleCreator(box);
+  }
+  if(NULL != m_ImageGraphicsItem)
+  {
+    m_BackgroundRectangle->setParentItem(m_ImageGraphicsItem);
 
-    }
+  }
 
-    // Line Color
-    m_BackgroundRectangle->setPen(QPen(QColor(225, 225, 225, UIA::Alpha)));
-    // Fill Color
-    m_BackgroundRectangle->setBrush(QBrush(QColor(255, 0, 0, UIA::Alpha)));
-    m_BackgroundRectangle->setZValue(1);
-    m_BackgroundRectangle->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
+  // Line Color
+  m_BackgroundRectangle->setPen(QPen(QColor(225, 225, 225, UIA::Alpha)));
+  // Fill Color
+  m_BackgroundRectangle->setBrush(QBrush(QColor(255, 0, 0, UIA::Alpha)));
+  m_BackgroundRectangle->setZValue(1);
+  m_BackgroundRectangle->setCacheMode(QGraphicsItem::DeviceCoordinateCache);
 
-    // Set parent item
-    //m_BackgroundRectangle->setParentItem(m_ImageGraphicsItem);
+  // Set parent item
+  //m_BackgroundRectangle->setParentItem(m_ImageGraphicsItem);
 
-    // Make it visible
-    m_BackgroundRectangle->setVisible(true);
+  // Make it visible
+  m_BackgroundRectangle->setVisible(true);
 }
 
 // -----------------------------------------------------------------------------
@@ -728,7 +771,7 @@ void MRCGraphicsView::createBackgroundSelector(QRect rectObj)
 // -----------------------------------------------------------------------------
 RectangleCreator* MRCGraphicsView::getBackgroundRectangle()
 {
-    return m_BackgroundRectangle;
+  return m_BackgroundRectangle;
 }
 
 // -----------------------------------------------------------------------------
@@ -736,11 +779,11 @@ RectangleCreator* MRCGraphicsView::getBackgroundRectangle()
 // -----------------------------------------------------------------------------
 void MRCGraphicsView::resizeBackgroundRectangle(int width, int height)
 {
-    QRect origRect = m_BackgroundRectangle->getMappedRectangleCoordinates();
-    QRect newRect = QRect(origRect.x(), origRect.y(), width, height);
-    QRectF rectf = QRectF(newRect);
-    QPolygonF polygonf = QPolygonF(rectf);
-    m_BackgroundRectangle->updateRectanglePolygon(polygonf);
+  QRect origRect = m_BackgroundRectangle->getMappedRectangleCoordinates();
+  QRect newRect = QRect(origRect.x(), origRect.y(), width, height);
+  QRectF rectf = QRectF(newRect);
+  QPolygonF polygonf = QPolygonF(rectf);
+  m_BackgroundRectangle->updateRectanglePolygon(polygonf);
 }
 
 // -----------------------------------------------------------------------------
@@ -748,11 +791,11 @@ void MRCGraphicsView::resizeBackgroundRectangle(int width, int height)
 // -----------------------------------------------------------------------------
 void MRCGraphicsView::moveBackgroundRectangle(int x, int y)
 {
-    QRect origRect = m_BackgroundRectangle->getMappedRectangleCoordinates();
-    QRect newRect = QRect(x, y, origRect.width(), origRect.height());
-    QRectF rectf = QRectF(newRect);
-    QPolygonF polygonf = QPolygonF(rectf);
-    m_BackgroundRectangle->updateRectanglePolygon(polygonf);
+  QRect origRect = m_BackgroundRectangle->getMappedRectangleCoordinates();
+  QRect newRect = QRect(x, y, origRect.width(), origRect.height());
+  QRectF rectf = QRectF(newRect);
+  QPolygonF polygonf = QPolygonF(rectf);
+  m_BackgroundRectangle->updateRectanglePolygon(polygonf);
 }
 
 // -----------------------------------------------------------------------------
@@ -760,10 +803,10 @@ void MRCGraphicsView::moveBackgroundRectangle(int x, int y)
 // -----------------------------------------------------------------------------
 void MRCGraphicsView::updateBackgroundRectangle(QRect rect)
 {
-    std::cout << "(X,Y): " << rect.x() << ", " << rect.y() << std::endl;
-    QRectF rectf = QRectF(rect);
-    QPolygonF polygonf = QPolygonF(rectf);
-    m_BackgroundRectangle->updateRectanglePolygon(polygonf);
+  std::cout << "(X,Y): " << rect.x() << ", " << rect.y() << std::endl;
+  QRectF rectf = QRectF(rect);
+  QPolygonF polygonf = QPolygonF(rectf);
+  m_BackgroundRectangle->updateRectanglePolygon(polygonf);
 }
 
 

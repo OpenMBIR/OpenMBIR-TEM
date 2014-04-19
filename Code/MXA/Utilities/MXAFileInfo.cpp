@@ -16,7 +16,7 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-uint64_t MXA_FILESYSTEM_BASE_CLASS::fileSize(const std::string &path)
+uint64_t MXA_FILESYSTEM_BASE_CLASS::fileSize(const std::string& path)
 {
   int error;
   MXA_STATBUF st;
@@ -31,7 +31,7 @@ uint64_t MXA_FILESYSTEM_BASE_CLASS::fileSize(const std::string &path)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-std::string MXA_FILESYSTEM_BASE_CLASS::extension(const std::string &fsPath)
+std::string MXA_FILESYSTEM_BASE_CLASS::extension(const std::string& fsPath)
 {
   std::string::size_type pos = fsPath.find_last_of('.');
   // No '.' characters appeared in the path at all
@@ -41,7 +41,7 @@ std::string MXA_FILESYSTEM_BASE_CLASS::extension(const std::string &fsPath)
   }
   // Look for a "Hidden" file  .som ./.some ../.something.something
   if (pos == 0
-      || fsPath[pos-1] == MXA_FILESYSTEM_BASE_CLASS::Separator)
+      || fsPath[pos - 1] == MXA_FILESYSTEM_BASE_CLASS::Separator)
   {
     return std::string();  // Return empty string, there is no extension
   }
@@ -64,7 +64,7 @@ std::string MXA_FILESYSTEM_BASE_CLASS::extension(const std::string &fsPath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-std::string MXA_FILESYSTEM_BASE_CLASS::filename(const std::string &fsPath)
+std::string MXA_FILESYSTEM_BASE_CLASS::filename(const std::string& fsPath)
 {
   if (fsPath.size() == 0) { return std::string(""); }
   std::string::size_type slashPos = fsPath.find_last_of(MXA_FILESYSTEM_BASE_CLASS::Separator);
@@ -74,7 +74,7 @@ std::string MXA_FILESYSTEM_BASE_CLASS::filename(const std::string &fsPath)
   }
 
   std::string fn = fsPath.substr(slashPos + 1, fsPath.size() - slashPos);
-  if (fn.at(fn.size()-1) == '.')
+  if (fn.at(fn.size() - 1) == '.')
   {
     return fn.substr(0, fn.size() - 1);
   }
@@ -84,7 +84,7 @@ std::string MXA_FILESYSTEM_BASE_CLASS::filename(const std::string &fsPath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-std::string MXA_FILESYSTEM_BASE_CLASS::fileNameWithOutExtension(const std::string &fsPath)
+std::string MXA_FILESYSTEM_BASE_CLASS::fileNameWithOutExtension(const std::string& fsPath)
 {
   std::string fname = MXA_FILESYSTEM_BASE_CLASS::filename(fsPath);
   std::string ext = MXA_FILESYSTEM_BASE_CLASS::extension(fsPath);
@@ -101,6 +101,6 @@ std::string MXA_FILESYSTEM_BASE_CLASS::fileNameWithOutExtension(const std::strin
 //  }
 //  else
 //  {
-    return fname;
+  return fname;
 //  }
 }

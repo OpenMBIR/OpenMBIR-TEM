@@ -51,7 +51,7 @@ class ProcessQueueDialog : public QWidget, private Ui::ProcessQueueDialog
 {
     Q_OBJECT
   public:
-    ProcessQueueDialog(QWidget *parent = 0);
+    ProcessQueueDialog(QWidget* parent = 0);
     virtual ~ProcessQueueDialog();
 
     /**
@@ -66,19 +66,19 @@ class ProcessQueueDialog : public QWidget, private Ui::ProcessQueueDialog
      */
     void clearTable();
 
-   signals:
-   /**
-    * @brief Signal emitted when a ProcessQueueTask is completed.
-    */
-     void rowComplete(QWidget* widget);
+  signals:
+    /**
+     * @brief Signal emitted when a ProcessQueueTask is completed.
+     */
+    void rowComplete(QWidget* widget);
 
-   protected slots:
+  protected slots:
 
-   /**
-    * @brief Will remove a row from the Dialog. Each row represents a single ProcessQueueTask
-    * object.
-    * @param sender The sender of the message
-    */
+    /**
+     * @brief Will remove a row from the Dialog. Each row represents a single ProcessQueueTask
+     * object.
+     * @param sender The sender of the message
+     */
     void removeRow(QObject* sender);
 
   private:

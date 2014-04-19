@@ -62,13 +62,13 @@ class MBIRLib_EXPORT BFForwardProject
 {
   public:
     BFForwardProject(Sinogram* sinogram,
-                   Geometry* geometry,
-                   std::vector<AMatrixCol::Pointer> &tempCol,
-                   std::vector<AMatrixCol::Pointer> &voxelLineResponse,
-                   RealVolumeType::Pointer yEst,
-                   BFForwardModel* forwardModel,
-                   uint16_t tilt,
-                   Observable* obs);
+                     Geometry* geometry,
+                     std::vector<AMatrixCol::Pointer>& tempCol,
+                     std::vector<AMatrixCol::Pointer>& voxelLineResponse,
+                     RealVolumeType::Pointer yEst,
+                     BFForwardModel* forwardModel,
+                     uint16_t tilt,
+                     Observable* obs);
 
     virtual ~BFForwardProject();
 

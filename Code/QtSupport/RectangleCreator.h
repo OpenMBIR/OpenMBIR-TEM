@@ -39,79 +39,79 @@
 
 namespace UIA
 {
-    const static int Alpha = 155;
+  const static int Alpha = 155;
 }
 
 
 class RectangleCreator : public QObject, public QGraphicsPolygonItem
 {
     Q_OBJECT;
-    
-public:
+
+  public:
     enum { Type = UserType + 1 };
     enum CTRL_POINTS
     {
-        NO_CTRL_POINT, UPPER_LEFT_CTRL_POINT, UPPER_RIGHT_CTRL_POINT, LOWER_RIGHT_CTRL_POINT, LOWER_LEFT_CTRL_POINT
+      NO_CTRL_POINT, UPPER_LEFT_CTRL_POINT, UPPER_RIGHT_CTRL_POINT, LOWER_RIGHT_CTRL_POINT, LOWER_LEFT_CTRL_POINT
     };
-    
-    
-    RectangleCreator(const QPolygonF &polygon,
-                 QGraphicsItem *parent = 0);
+
+
+    RectangleCreator(const QPolygonF& polygon,
+                     QGraphicsItem* parent = 0);
     virtual ~RectangleCreator();
-    
-    
-    
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget = 0);
-    
+
+
+
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = 0);
+
     static void deleteAllRectangleCreators(QGraphicsScene* scene);
-    
-    static RectangleCreator* NewRectangleCreator(QSettings &prefs, int index, QGraphicsItem *parent = 0);
-    
-    public slots:
-    
+
+    static RectangleCreator* NewRectangleCreator(QSettings& prefs, int index, QGraphicsItem* parent = 0);
+
+  public slots:
+
     void setColor(QColor color);
     QColor getColor() { return brush().color(); }
-    
+
     //  void setUpperLeft(unsigned int x, unsigned int y);
-    void getUpperLeft(unsigned int &x, unsigned int &y);
-    
+    void getUpperLeft(unsigned int& x, unsigned int& y);
+
     //  void setLowerRight(unsigned int x, unsigned int y);
-    void getLowerRight(unsigned int &x, unsigned int &y);
-    
+    void getLowerRight(unsigned int& x, unsigned int& y);
+
     void setLineWidth(qreal w);
     qreal getLineWidth();
-    
+
     QRect getMappedRectangleCoordinates();
-    
+
     void updateRectanglePolygon(QPolygonF polygon);
 
-    
-signals:
-    
+
+  signals:
+
     void fireRectangleCreatorUpdated(RectangleCreator*);
     void fireRectangleCreatorAboutToDelete(RectangleCreator*);
     void fireRectangleCreatorDeleted(RectangleCreator*);
     void fireRectangleCreatorSelected(RectangleCreator*);
-    
-protected:
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    virtual void hoverMoveEvent(QGraphicsSceneHoverEvent *event);
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
-    virtual void keyPressEvent(QKeyEvent *event);
-    
+
+  protected:
+    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent* event);
+    virtual void hoverMoveEvent(QGraphicsSceneHoverEvent* event);
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent* event);
+    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent* event);
+    virtual void keyPressEvent(QKeyEvent* event);
+
     virtual int type() const;
-    CTRL_POINTS isInResizeArea(const QPointF &pos);
-    
-    
-    static void deleteSelectedItems(QGraphicsScene *scene);
-    
-    static void duplicateSelectedItems(QGraphicsScene *scene);
-    static void growSelectedItems(QGraphicsScene *scene);
-    static void shrinkSelectedItems(QGraphicsScene *scene);
-    
-    
-private:
+    CTRL_POINTS isInResizeArea(const QPointF& pos);
+
+
+    static void deleteSelectedItems(QGraphicsScene* scene);
+
+    static void duplicateSelectedItems(QGraphicsScene* scene);
+    static void growSelectedItems(QGraphicsScene* scene);
+    static void shrinkSelectedItems(QGraphicsScene* scene);
+
+
+  private:
     bool m_isResizing;
     CTRL_POINTS m_CurrentResizeHandle;
     float ctrlPointSize;

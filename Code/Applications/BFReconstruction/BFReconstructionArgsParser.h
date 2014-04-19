@@ -52,9 +52,9 @@ class BFReconstructionArgsParser
     BFReconstructionArgsParser();
     virtual ~BFReconstructionArgsParser();
 
-    int parseArguments(int argc, char **argv, BFMultiResolutionReconstruction::Pointer multiRes);
+    int parseArguments(int argc, char** argv, BFMultiResolutionReconstruction::Pointer multiRes);
 
-    void printInputs(TomoInputsPtr inputs, std::ostream &out);
+    void printInputs(TomoInputsPtr inputs, std::ostream& out);
 
   private:
     uint64_t startm;

@@ -61,7 +61,7 @@ class MBIRLib_EXPORT InitialReconstructionInitializer : public TomoFilter
 
     virtual ~InitialReconstructionInitializer();
 
-    Real_t absMaxArray(std::vector<Real_t> &Array);
+    Real_t absMaxArray(std::vector<Real_t>& Array);
 
     virtual void execute();
 

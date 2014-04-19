@@ -33,11 +33,11 @@ MXALogger::Pointer MXALogger::instance()
 {
   static MXALogger::Pointer singleton;
   if (singleton.get() == NULL)
-    {
-  //  std::cout << "MXALogger constructing singleton instance" << std::endl;
-      singleton.reset (new MXALogger() );
-    }
-    return singleton;
+  {
+    //  std::cout << "MXALogger constructing singleton instance" << std::endl;
+    singleton.reset (new MXALogger() );
+  }
+  return singleton;
 }
 
 
@@ -65,17 +65,19 @@ MXALogger_Implementation::~MXALogger_Implementation()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool MXALogger_Implementation::open(const std::string &fn, std::ios::openmode mode)
+bool MXALogger_Implementation::open(const std::string& fn, std::ios::openmode mode)
 {
-  if (fn == this->m_FileName && m_OutStream.is_open() == true) {
+  if (fn == this->m_FileName && m_OutStream.is_open() == true)
+  {
     return true;
   }
-  if (fn != this->m_FileName && m_OutStream.is_open() == true) {
-     this->m_OutStream.flush();
-     this->m_OutStream.close();
-     this->m_IsFileBased = false;
-     this->m_FileName = ""; // Close the current file stream
-   }
+  if (fn != this->m_FileName && m_OutStream.is_open() == true)
+  {
+    this->m_OutStream.flush();
+    this->m_OutStream.close();
+    this->m_IsFileBased = false;
+    this->m_FileName = ""; // Close the current file stream
+  }
 
 
   this->m_FileName = fn;

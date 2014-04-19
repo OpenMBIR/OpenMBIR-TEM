@@ -58,14 +58,14 @@ DetectorResponse::DetectorResponse()
   index = ((dim1) * (idx0)) + (idx1);
 
 #define MAKE_3D_INDEX(index, dim1, dim2, idx0, idx1, idx2) \
-    index = ((dim1)*(dim2)*(idx0)) + ((dim2)*(idx1)) +(idx2);
+  index = ((dim1)*(dim2)*(idx0)) + ((dim2)*(idx1)) +(idx2);
 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
 void DetectorResponse::execute()
 {
-  int16_t i,j,k,ProfileIndex;
+  int16_t i, j, k, ProfileIndex;
   SinogramPtr sinogram = getSinogram();
   TomoInputsPtr inputs = getTomoInputs();
   AdvancedParametersPtr advParams = getAdvParams();
@@ -76,14 +76,14 @@ void DetectorResponse::execute()
   RealArrayType::Pointer beamProfile = m_DetectorParameters->getBeamProfile();
 
 
-  Real_t r,sum=0,rmin,ProfileCenterR,ProfileCenterT,TempConst,tmin;
-  Real_t r0 = -(beamWidth)/2;
-  Real_t StepSize = beamWidth/advParams->BEAM_RESOLUTION;
-  size_t dims[3] = {1, sinogram->N_theta,advParams->DETECTOR_RESPONSE_BINS};
+  Real_t r, sum = 0, rmin, ProfileCenterR, ProfileCenterT, TempConst, tmin;
+  Real_t r0 = -(beamWidth) / 2;
+  Real_t StepSize = beamWidth / advParams->BEAM_RESOLUTION;
+  size_t dims[3] = {1, sinogram->N_theta, advParams->DETECTOR_RESPONSE_BINS};
   RealVolumeType::Pointer H = RealVolumeType::New(dims, "DetectorResponse");
 
   //H = (DATA_TYPE***)get_3D(1, m_Sinogram->N_theta,DETECTOR_RESPONSE_BINS, sizeof(DATA_TYPE));//change from 1 to DETECTOR_RESPONSE_BINS
-  TempConst=(advParams->PROFILE_RESOLUTION)/(2*inputs->delta_xz);
+  TempConst = (advParams->PROFILE_RESOLUTION) / (2 * inputs->delta_xz);
 
   for(k = 0 ; k < sinogram->N_theta; k++)
   {
@@ -99,7 +99,7 @@ void DetectorResponse::execute()
         for (uint32_t p = 0; p < advParams->BEAM_RESOLUTION; p++)
         {
           r = r0 + p * StepSize;
-          if(r < rmin) continue;
+          if(r < rmin) { continue; }
 
           ProfileIndex = (int32_t)floor((r - rmin) * TempConst);
           if(ProfileIndex < 0)

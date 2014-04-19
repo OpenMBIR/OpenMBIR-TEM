@@ -33,7 +33,7 @@
 #include <QApplication>
 
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   QApplication app(argc, argv);
   QCoreApplication::setOrganizationName("BlueQuartz Software");
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
   QRecentFileList::instance()->readList(prefs);
 
-  BrightFieldGui *viewer = new BrightFieldGui;
+  BrightFieldGui* viewer = new BrightFieldGui;
   viewer->readWindowSettings(prefs);
   viewer->show();
   viewer->raise();
@@ -67,8 +67,8 @@ int main(int argc, char **argv)
 
   QRecentFileList::instance()->writeList(prefs);
 
-    delete viewer;
-    viewer = NULL;
+  delete viewer;
+  viewer = NULL;
 
   return app_return;
 }

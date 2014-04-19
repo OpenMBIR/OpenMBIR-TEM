@@ -45,22 +45,22 @@
  solve()
  *****************************************************************************/
 #define find_min_max(low, high, V)\
-{\
-  low=NEIGHBORHOOD[INDEX_3(0,0,0)];\
-  high=NEIGHBORHOOD[INDEX_3(0,0,0)];\
-  for(uint8_t lcv_i = 0; lcv_i < 3;++lcv_i){\
-    for(uint8_t lcv_j = 0; lcv_j < 3; ++lcv_j){\
-      for(uint8_t lcv_k = 0; lcv_k < 3; ++lcv_k){\
-        if(NEIGHBORHOOD[INDEX_3(lcv_i,lcv_j,lcv_k)] < low) {low = NEIGHBORHOOD[INDEX_3(lcv_i,lcv_j,lcv_k)];}\
-        if(NEIGHBORHOOD[INDEX_3(lcv_i,lcv_j,lcv_k)] > high) {high=NEIGHBORHOOD[INDEX_3(lcv_i,lcv_j,lcv_k)];}\
+  {\
+    low=NEIGHBORHOOD[INDEX_3(0,0,0)];\
+    high=NEIGHBORHOOD[INDEX_3(0,0,0)];\
+    for(uint8_t lcv_i = 0; lcv_i < 3;++lcv_i){\
+      for(uint8_t lcv_j = 0; lcv_j < 3; ++lcv_j){\
+        for(uint8_t lcv_k = 0; lcv_k < 3; ++lcv_k){\
+          if(NEIGHBORHOOD[INDEX_3(lcv_i,lcv_j,lcv_k)] < low) {low = NEIGHBORHOOD[INDEX_3(lcv_i,lcv_j,lcv_k)];}\
+          if(NEIGHBORHOOD[INDEX_3(lcv_i,lcv_j,lcv_k)] > high) {high=NEIGHBORHOOD[INDEX_3(lcv_i,lcv_j,lcv_k)];}\
+        }\
       }\
     }\
-  }\
-  if(THETA2 !=0){\
-    low = (low > (V - (THETA1/THETA2)) ? (V - (THETA1/THETA2)): low);\
-    high = (high < (V - (THETA1/THETA2)) ? (V - (THETA1/THETA2)): high);\
-  }\
-}
+    if(THETA2 !=0){\
+      low = (low > (V - (THETA1/THETA2)) ? (V - (THETA1/THETA2)): low);\
+      high = (high < (V - (THETA1/THETA2)) ? (V - (THETA1/THETA2)): high);\
+    }\
+  }
 
 
 //Updates a line of voxels
@@ -80,17 +80,17 @@
 
 class UpdateYSlice
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
-: public tbb::task
+  : public tbb::task
 #endif
 {
   public:
     UpdateYSlice(uint16_t yStart, uint16_t yEnd,
                  GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
                  SinogramPtr  sinogram, SinogramPtr  bfSinogram,
-                 std::vector<AMatrixCol::Pointer> &tempCol,
+                 std::vector<AMatrixCol::Pointer>& tempCol,
                  RealVolumeType* errorSino,
                  RealVolumeType* weight,
-                 std::vector<AMatrixCol::Pointer> &voxelLineResponse,
+                 std::vector<AMatrixCol::Pointer>& voxelLineResponse,
                  HAADF_ForwardModel* forwardModel,
                  UInt8Image_t::Pointer mask,
                  RealImageType::Pointer magUpdateMap,//Hold the magnitude of the reconstuction along each voxel line
@@ -138,9 +138,9 @@ class UpdateYSlice
      */
     int getZeroCount() { return m_ZeroCount; }
 
-  /**
-   *
-   */
+    /**
+     *
+     */
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
     tbb::task*
 #else
@@ -153,8 +153,8 @@ class UpdateYSlice
       const uint32_t rangeMax = std::numeric_limits<uint32_t>::max();
       typedef boost::uniform_int<uint32_t> NumberDistribution;
       typedef boost::mt19937 RandomNumberGenerator;
-      typedef boost::variate_generator<RandomNumberGenerator&,
-                                       NumberDistribution> Generator;
+      typedef boost::variate_generator < RandomNumberGenerator&,
+              NumberDistribution > Generator;
       NumberDistribution distribution(rangeMin, rangeMax);
       RandomNumberGenerator generator;
       Generator numberGenerator(generator, distribution);
@@ -249,7 +249,7 @@ class UpdateYSlice
           }
 
           if(shouldInitNeighborhood > 0)
-          //After this should ideally call UpdateVoxelLine(j_new,k_new) ie put everything in this "if" inside a method called UpdateVoxelLine
+            //After this should ideally call UpdateVoxelLine(j_new,k_new) ie put everything in this "if" inside a method called UpdateVoxelLine
           {
             //   std::cout << "UpdateYSlice- YStart: " << m_YStart << "  YEnd: " << m_YEnd << std::endl;
             Real_t UpdatedVoxelValue = 0.0;
@@ -264,8 +264,8 @@ class UpdateYSlice
               Real_t* i_0 = m_ForwardModel->getI_0()->d;
 
               //Neighborhood of (i,j,k) should be initialized to zeros each time
-              ::memset(NEIGHBORHOOD, 0, 27*sizeof(Real_t));
-              ::memset(BOUNDARYFLAG, 0, 27*sizeof(uint8_t));
+              ::memset(NEIGHBORHOOD, 0, 27 * sizeof(Real_t));
+              ::memset(BOUNDARYFLAG, 0, 27 * sizeof(uint8_t));
 //              for (int32_t p = 0; p <= 2; p++)
 //              {
 //                for (int32_t q = 0; q <= 2; q++)
@@ -319,7 +319,7 @@ class UpdateYSlice
                     for (uint8_t q = 0; q <= 2; q++)
                     {
                       for (uint8_t r = 0; r <= 2; r++)
-                        if(NEIGHBORHOOD[INDEX_3(p,q,r)] > 0.0)
+                        if(NEIGHBORHOOD[INDEX_3(p, q, r)] > 0.0)
                         {
                           ZSFlag = false;
                           break;
@@ -380,20 +380,21 @@ class UpdateYSlice
                 //std::cout<<low<<","<<high<<","<<UpdatedVoxelValue<<std::endl;
 #else
                 errorcode = 0;
-    #ifdef EIMTOMO_USE_QGGMRF
-                    UpdatedVoxelValue =
-                        QGGMRF::FunctionalSubstitution(low, high, m_CurrentVoxelValue, BOUNDARYFLAG, FILTER, NEIGHBORHOOD, THETA1, THETA2, m_QggmrfValues);
-    #else
-                    SurrogateUpdate = surrogateFunctionBasedMin();
-                    UpdatedVoxelValue = SurrogateUpdate;
-    #endif //QGGMRF
+#ifdef EIMTOMO_USE_QGGMRF
+                UpdatedVoxelValue =
+                  QGGMRF::FunctionalSubstitution(low, high, m_CurrentVoxelValue, BOUNDARYFLAG, FILTER, NEIGHBORHOOD, THETA1, THETA2, m_QggmrfValues);
+#else
+                SurrogateUpdate = surrogateFunctionBasedMin();
+                UpdatedVoxelValue = SurrogateUpdate;
+#endif //QGGMRF
 #endif//Surrogate function
                 if(errorcode == 0)
                 {
 
 #ifdef POSITIVITY_CONSTRAINT
                   if(UpdatedVoxelValue < 0.0)
-                  { //Enforcing positivity constraints
+                  {
+                    //Enforcing positivity constraints
                     UpdatedVoxelValue = 0.0;
                   }
 #endif
@@ -464,9 +465,11 @@ class UpdateYSlice
 
 #ifdef RANDOM_ORDER_UPDATES
       for (int j = 0; j < m_Geometry->N_z; j++)
-      { //Row index
+      {
+        //Row index
         for (int k = 0; k < m_Geometry->N_x; k++)
-        { //Column index
+        {
+          //Column index
           if(m_VisitCount->getValue(j, k) == 0)
           {
             printf("Pixel (%d %d) not visited\n", j, k);
@@ -489,7 +492,7 @@ class UpdateYSlice
     int16_t m_InnerIter;
     SinogramPtr  m_Sinogram;
     SinogramPtr  m_BFSinogram;
-    std::vector<AMatrixCol::Pointer> &m_TempCol;
+    std::vector<AMatrixCol::Pointer>& m_TempCol;
     RealVolumeType* m_ErrorSino;
     RealVolumeType* m_Weight;
     std::vector<AMatrixCol::Pointer> m_VoxelLineResponse;
@@ -525,24 +528,62 @@ class UpdateYSlice
     // -----------------------------------------------------------------------------
     void initVariables()
     {
-     FILTER[INDEX_3(0,0,0)] = 0.0302; FILTER[INDEX_3(0,0,1)] = 0.0370; FILTER[INDEX_3(0,0,2)] = 0.0302;
-     FILTER[INDEX_3(0,1,0)] = 0.0370; FILTER[INDEX_3(0,1,1)] = 0.0523; FILTER[INDEX_3(0,1,2)] = 0.0370;
-     FILTER[INDEX_3(0,2,0)] = 0.0302; FILTER[INDEX_3(0,2,1)] = 0.0370; FILTER[INDEX_3(0,2,2)] = 0.0302;
+      FILTER[INDEX_3(0, 0, 0)] = 0.0302;
+      FILTER[INDEX_3(0, 0, 1)] = 0.0370;
+      FILTER[INDEX_3(0, 0, 2)] = 0.0302;
+      FILTER[INDEX_3(0, 1, 0)] = 0.0370;
+      FILTER[INDEX_3(0, 1, 1)] = 0.0523;
+      FILTER[INDEX_3(0, 1, 2)] = 0.0370;
+      FILTER[INDEX_3(0, 2, 0)] = 0.0302;
+      FILTER[INDEX_3(0, 2, 1)] = 0.0370;
+      FILTER[INDEX_3(0, 2, 2)] = 0.0302;
 
-     FILTER[INDEX_3(1,0,0)] = 0.0370; FILTER[INDEX_3(1,0,1)] = 0.0523; FILTER[INDEX_3(1,0,2)] = 0.0370;
-     FILTER[INDEX_3(1,1,0)] = 0.0523; FILTER[INDEX_3(1,1,1)] = 0.0000; FILTER[INDEX_3(1,1,2)] = 0.0523;
-     FILTER[INDEX_3(1,2,0)] = 0.0370; FILTER[INDEX_3(1,2,1)] = 0.0523; FILTER[INDEX_3(1,2,2)] = 0.0370;
+      FILTER[INDEX_3(1, 0, 0)] = 0.0370;
+      FILTER[INDEX_3(1, 0, 1)] = 0.0523;
+      FILTER[INDEX_3(1, 0, 2)] = 0.0370;
+      FILTER[INDEX_3(1, 1, 0)] = 0.0523;
+      FILTER[INDEX_3(1, 1, 1)] = 0.0000;
+      FILTER[INDEX_3(1, 1, 2)] = 0.0523;
+      FILTER[INDEX_3(1, 2, 0)] = 0.0370;
+      FILTER[INDEX_3(1, 2, 1)] = 0.0523;
+      FILTER[INDEX_3(1, 2, 2)] = 0.0370;
 
-     FILTER[INDEX_3(2,0,0)] = 0.0302; FILTER[INDEX_3(2,0,1)] = 0.0370; FILTER[INDEX_3(2,0,2)] = 0.0302;
-     FILTER[INDEX_3(2,1,0)] = 0.0370; FILTER[INDEX_3(2,1,1)] = 0.0523; FILTER[INDEX_3(2,1,2)] = 0.0370;
-     FILTER[INDEX_3(2,2,0)] = 0.0302; FILTER[INDEX_3(2,2,1)] = 0.0370; FILTER[INDEX_3(2,2,2)] = 0.0302;
+      FILTER[INDEX_3(2, 0, 0)] = 0.0302;
+      FILTER[INDEX_3(2, 0, 1)] = 0.0370;
+      FILTER[INDEX_3(2, 0, 2)] = 0.0302;
+      FILTER[INDEX_3(2, 1, 0)] = 0.0370;
+      FILTER[INDEX_3(2, 1, 1)] = 0.0523;
+      FILTER[INDEX_3(2, 1, 2)] = 0.0370;
+      FILTER[INDEX_3(2, 2, 0)] = 0.0302;
+      FILTER[INDEX_3(2, 2, 1)] = 0.0370;
+      FILTER[INDEX_3(2, 2, 2)] = 0.0302;
 
-     //Hamming Window here
-     HAMMING_WINDOW[0][0]= 0.0013; HAMMING_WINDOW[0][1]=0.0086; HAMMING_WINDOW[0][2]=0.0159; HAMMING_WINDOW[0][3]=0.0086;HAMMING_WINDOW[0][4]=0.0013;
-     HAMMING_WINDOW[1][0]= 0.0086; HAMMING_WINDOW[1][1]=0.0581;HAMMING_WINDOW[1][2]=0.1076;HAMMING_WINDOW[1][3]=0.0581;HAMMING_WINDOW[1][4]=0.0086;
-     HAMMING_WINDOW[2][0]= 0.0159;HAMMING_WINDOW[2][1]=0.1076;HAMMING_WINDOW[2][2]=0.1993;HAMMING_WINDOW[2][3]=0.1076;HAMMING_WINDOW[2][4]=0.0159;
-     HAMMING_WINDOW[3][0]= 0.0013;HAMMING_WINDOW[3][1]=0.0086;HAMMING_WINDOW[3][2]=0.0159;HAMMING_WINDOW[3][3]=0.0086;HAMMING_WINDOW[3][4]=0.0013;
-     HAMMING_WINDOW[4][0]= 0.0086;HAMMING_WINDOW[4][1]=0.0581;HAMMING_WINDOW[4][2]=0.1076;HAMMING_WINDOW[4][3]=0.0581;HAMMING_WINDOW[4][4]=0.0086;
+      //Hamming Window here
+      HAMMING_WINDOW[0][0] = 0.0013;
+      HAMMING_WINDOW[0][1] = 0.0086;
+      HAMMING_WINDOW[0][2] = 0.0159;
+      HAMMING_WINDOW[0][3] = 0.0086;
+      HAMMING_WINDOW[0][4] = 0.0013;
+      HAMMING_WINDOW[1][0] = 0.0086;
+      HAMMING_WINDOW[1][1] = 0.0581;
+      HAMMING_WINDOW[1][2] = 0.1076;
+      HAMMING_WINDOW[1][3] = 0.0581;
+      HAMMING_WINDOW[1][4] = 0.0086;
+      HAMMING_WINDOW[2][0] = 0.0159;
+      HAMMING_WINDOW[2][1] = 0.1076;
+      HAMMING_WINDOW[2][2] = 0.1993;
+      HAMMING_WINDOW[2][3] = 0.1076;
+      HAMMING_WINDOW[2][4] = 0.0159;
+      HAMMING_WINDOW[3][0] = 0.0013;
+      HAMMING_WINDOW[3][1] = 0.0086;
+      HAMMING_WINDOW[3][2] = 0.0159;
+      HAMMING_WINDOW[3][3] = 0.0086;
+      HAMMING_WINDOW[3][4] = 0.0013;
+      HAMMING_WINDOW[4][0] = 0.0086;
+      HAMMING_WINDOW[4][1] = 0.0581;
+      HAMMING_WINDOW[4][2] = 0.1076;
+      HAMMING_WINDOW[4][3] = 0.0581;
+      HAMMING_WINDOW[4][4] = 0.0086;
     }
 };
 
@@ -551,15 +592,15 @@ class UpdateYSlice
 //
 // -----------------------------------------------------------------------------
 uint8_t HAADF_ReconstructionEngine::updateVoxels(int16_t OuterIter, int16_t Iter,
-                             unsigned int updateType,
-                             UInt8Image_t::Pointer VisitCount,
-                             std::vector<AMatrixCol::Pointer> &TempCol,
-                             RealVolumeType::Pointer ErrorSino,
-                             RealVolumeType::Pointer Weight,
-                             std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
-                             HAADF_ForwardModel* forwardModel,
-                             UInt8Image_t::Pointer Mask,
-                             CostData::Pointer cost)
+                                                 unsigned int updateType,
+                                                 UInt8Image_t::Pointer VisitCount,
+                                                 std::vector<AMatrixCol::Pointer>& TempCol,
+                                                 RealVolumeType::Pointer ErrorSino,
+                                                 RealVolumeType::Pointer Weight,
+                                                 std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
+                                                 HAADF_ForwardModel* forwardModel,
+                                                 UInt8Image_t::Pointer Mask,
+                                                 CostData::Pointer cost)
 {
   std::stringstream ss;
   uint8_t exit_status = 1; //Indicates normal exit ; else indicates to stop inner iterations
@@ -633,7 +674,7 @@ uint8_t HAADF_ReconstructionEngine::updateVoxels(int16_t OuterIter, int16_t Iter
     {
       yCount[t]++;
       ++t;
-      if (t==m_NumThreads) { t = 0; }
+      if (t == m_NumThreads) { t = 0; }
     }
 
     uint16_t yStart = 0;
@@ -654,20 +695,20 @@ uint8_t HAADF_ReconstructionEngine::updateVoxels(int16_t OuterIter, int16_t Iter
 
       // std::cout << "Thread: " << t << " yStart: " << yStart << "  yEnd: " << yStop << std::endl;
       UpdateYSlice& a =
-          *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop,
-                                                         m_Geometry,
-                                                         OuterIter, Iter, m_Sinogram,
-                                                         m_BFSinogram, TempCol,
-                                                         ErrorSino.get(),
-                                                         Weight.get(), VoxelLineResponse,
-                                                         m_ForwardModel.get(), Mask,
-                                                         MagUpdateMap, MagUpdateMask,
-                                                         &m_QGGMRF_Values,
-                                                         updateType,
-                                                         NH_Threshold,
-                                                         averageUpdate + t,
-                                                         averageMagnitudeOfRecon + t,
-                                                         m_AdvParams->ZERO_SKIPPING);
+        *new (tbb::task::allocate_root()) UpdateYSlice(yStart, yStop,
+                                                       m_Geometry,
+                                                       OuterIter, Iter, m_Sinogram,
+                                                       m_BFSinogram, TempCol,
+                                                       ErrorSino.get(),
+                                                       Weight.get(), VoxelLineResponse,
+                                                       m_ForwardModel.get(), Mask,
+                                                       MagUpdateMap, MagUpdateMask,
+                                                       &m_QGGMRF_Values,
+                                                       updateType,
+                                                       NH_Threshold,
+                                                       averageUpdate + t,
+                                                       averageMagnitudeOfRecon + t,
+                                                       m_AdvParams->ZERO_SKIPPING);
       taskList.push_back(a);
     }
 
@@ -682,25 +723,25 @@ uint8_t HAADF_ReconstructionEngine::updateVoxels(int16_t OuterIter, int16_t Iter
     free(averageMagnitudeOfRecon);
 
 #else
-          uint16_t yStop = m_Geometry->N_y;
-          uint16_t yStart = 0;
-          UpdateYSlice yVoxelUpdate(yStart, yStop,
-                                    m_Geometry,
-                                    OuterIter, Iter, m_Sinogram,
-                                    m_BFSinogram, TempCol,
-                                    ErrorSino, Weight, VoxelLineResponse,
-                                    NuisanceParams, Mask,
-                                    MagUpdateMap, MagUpdateMask,
-                                    &m_QGGMRF_Values,
-                                    updateType,
-                                    NH_Threshold,
-                                    &AverageUpdate,
-                                    &AverageMagnitudeOfRecon,
-                                    m_AdvParams->ZERO_SKIPPING);
+    uint16_t yStop = m_Geometry->N_y;
+    uint16_t yStart = 0;
+    UpdateYSlice yVoxelUpdate(yStart, yStop,
+                              m_Geometry,
+                              OuterIter, Iter, m_Sinogram,
+                              m_BFSinogram, TempCol,
+                              ErrorSino, Weight, VoxelLineResponse,
+                              NuisanceParams, Mask,
+                              MagUpdateMap, MagUpdateMask,
+                              &m_QGGMRF_Values,
+                              updateType,
+                              NH_Threshold,
+                              &AverageUpdate,
+                              &AverageMagnitudeOfRecon,
+                              m_AdvParams->ZERO_SKIPPING);
 
-          yVoxelUpdate.execute();
+    yVoxelUpdate.execute();
 #endif
-          /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
+    /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
     STOP_TIMER;
     ss.str("");
     ss << "Inner Iter: " << Iter << " Voxel Update";
@@ -722,13 +763,15 @@ uint8_t HAADF_ReconstructionEngine::updateVoxels(int16_t OuterIter, int16_t Iter
 #endif //Cost calculation endif
 
 #if ROI
-    if (getVerbose()) {
-      std::cout<<"Average Update "<<AverageUpdate<<std::endl;
-      std::cout<<"Average Mag "<<AverageMagnitudeOfRecon<<std::endl;
+    if (getVerbose())
+    {
+      std::cout << "Average Update " << AverageUpdate << std::endl;
+      std::cout << "Average Mag " << AverageMagnitudeOfRecon << std::endl;
     }
     if(AverageMagnitudeOfRecon > 0)
     {
-      if (getVerbose()) {
+      if (getVerbose())
+      {
         std::cout <<  Iter + 1 << " " << AverageUpdate / AverageMagnitudeOfRecon << std::endl;
       }
       //Use the stopping criteria if we are performing a full update of all voxels
@@ -745,17 +788,17 @@ uint8_t HAADF_ReconstructionEngine::updateVoxels(int16_t OuterIter, int16_t Iter
 
 #ifdef WRITE_INTERMEDIATE_RESULTS
 
-    if(Iter == NumOfWrites*WriteCount)
+    if(Iter == NumOfWrites * WriteCount)
     {
       WriteCount++;
-      sprintf(buffer,"%d",Iter);
-      sprintf(Filename,"ReconstructedObjectAfterIter");
-      strcat(Filename,buffer);
-      strcat(Filename,".bin");
+      sprintf(buffer, "%d", Iter);
+      sprintf(Filename, "ReconstructedObjectAfterIter");
+      strcat(Filename, buffer);
+      strcat(Filename, ".bin");
       Fp3 = fopen(Filename, "w");
       TempPointer = m_Geometry->Object;
-      NumOfBytesWritten=fwrite(&(m_Geometry->Object->d[0][0][0]), sizeof(Real_t),m_Geometry->N_x*m_Geometry->N_y*m_Geometry->N_z, Fp3);
-      printf("%d\n",NumOfBytesWritten);
+      NumOfBytesWritten = fwrite(&(m_Geometry->Object->d[0][0][0]), sizeof(Real_t), m_Geometry->N_x * m_Geometry->N_y * m_Geometry->N_z, Fp3);
+      printf("%d\n", NumOfBytesWritten);
 
       fclose(Fp3);
     }

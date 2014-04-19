@@ -41,7 +41,7 @@
 //
 // -----------------------------------------------------------------------------
 GainsOffsetsReader::GainsOffsetsReader() :
-m_TargetGain(0.0)
+  m_TargetGain(0.0)
 {
 
 }
@@ -73,15 +73,15 @@ void GainsOffsetsReader::execute()
 
 
   //Gains Read
-   Fp = fopen(inputs->gainsInputFile.c_str(), "rb");
+  Fp = fopen(inputs->gainsInputFile.c_str(), "rb");
   if(Fp != NULL)
   {
     // Read all the gains in a single shot
     elementsRead = fread( &(fileGains.front()), sizeof(double), inputs->goodViews.size(), Fp);
     if (elementsRead != inputs->goodViews.size())
     {
-      std::cout<<elementsRead<<std::endl;
-      std::cout<<inputs->fileZSize<<std::endl;
+      std::cout << elementsRead << std::endl;
+      std::cout << inputs->fileZSize << std::endl;
       setErrorCondition(-1);
       setErrorMessage("Error Reading Gains from File");
       notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
@@ -114,7 +114,7 @@ void GainsOffsetsReader::execute()
     std::cout << "------------Initial Gains-----------" << std::endl;
     for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
     {
-      std::cout << "Tilt: " << i_theta<< "  Gain: "<< m_InitialGain->d[i_theta]<< std::endl;
+      std::cout << "Tilt: " << i_theta << "  Gain: " << m_InitialGain->d[i_theta] << std::endl;
     }
 
 #endif
@@ -125,13 +125,13 @@ void GainsOffsetsReader::execute()
   else
   {
     //If no gains file is given just use default values
-    std::cout<<"**************************"<<std::endl;
-    std::cout<<"Setting Gains to the default value="<< getTargetGain() <<std::endl;
-    std::cout<<"**************************"<<std::endl;
+    std::cout << "**************************" << std::endl;
+    std::cout << "Setting Gains to the default value=" << getTargetGain() << std::endl;
+    std::cout << "**************************" << std::endl;
     size_t dims[1] = {sinogram->N_theta};
     m_InitialGain = RealArrayType::New(dims, "InitialGain");
 
-    for(uint16_t i_theta=0; i_theta < inputs->goodViews.size(); i_theta++)
+    for(uint16_t i_theta = 0; i_theta < inputs->goodViews.size(); i_theta++)
     {
       m_InitialGain->d[i_theta] = getTargetGain();
     }
@@ -165,10 +165,10 @@ void GainsOffsetsReader::execute()
     // Copy just the values of the gains and offsets we need from the data read
     // from the file. The indices into the fileGains/fileOffsets array are stored
     // in the inputs->goodViews vector
-  /*	for (size_t i = 0; i < inputs->goodViews.size(); i++)
-    {
-      sinogram->m_InitialOffset->d[i] = fileOffsets[inputs->goodViews[i]];
-    }*/
+    /*  for (size_t i = 0; i < inputs->goodViews.size(); i++)
+      {
+        sinogram->m_InitialOffset->d[i] = fileOffsets[inputs->goodViews[i]];
+      }*/
 
     //This has been changed since the # of gains = # of good views
     for (size_t i = 0; i < inputs->goodViews.size(); i++)
@@ -181,7 +181,7 @@ void GainsOffsetsReader::execute()
     std::cout << "------------Initial Offsets-----------" << std::endl;
     for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
     {
-      std::cout << "Tilt: " << i_theta << "  Offset: "<< m_InitialOffset->d[i_theta] << std::endl;
+      std::cout << "Tilt: " << i_theta << "  Offset: " << m_InitialOffset->d[i_theta] << std::endl;
     }
 #endif
     setErrorCondition(0);
@@ -236,7 +236,7 @@ void GainsOffsetsReader::execute()
     std::cout << "------------Initial Variance-----------" << std::endl;
     for (uint16_t i_theta = 0; i_theta < sinogram->N_theta; i_theta++)
     {
-      std::cout << "Tilt: " << i_theta<< "  Variance: "<< m_InitialVariance->d[i_theta]<< std::endl;
+      std::cout << "Tilt: " << i_theta << "  Variance: " << m_InitialVariance->d[i_theta] << std::endl;
     }
 #endif
     setErrorCondition(0);
@@ -245,14 +245,14 @@ void GainsOffsetsReader::execute()
   }
   else
   {
-    std::cout<<"**************************"<<std::endl;
-    std::cout<<"Setting Variance to the default value=1"<<std::endl;
-    std::cout<<"**************************"<<std::endl;
+    std::cout << "**************************" << std::endl;
+    std::cout << "Setting Variance to the default value=1" << std::endl;
+    std::cout << "**************************" << std::endl;
     size_t dims[1] = {sinogram->N_theta};
     m_InitialVariance = RealArrayType::New(dims, "InitialVariance");
-    for(uint16_t i_theta=0; i_theta < inputs->goodViews.size(); i_theta++)
+    for(uint16_t i_theta = 0; i_theta < inputs->goodViews.size(); i_theta++)
     {
-      m_InitialVariance->d[i_theta]=1;
+      m_InitialVariance->d[i_theta] = 1;
     }
     /*
     setErrorCondition(-1);

@@ -8,7 +8,8 @@
 
 class QGGMRF_Values;
 
-namespace QGGMRF {
+namespace QGGMRF
+{
 
 
   /**

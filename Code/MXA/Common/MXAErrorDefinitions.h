@@ -4,7 +4,7 @@
 //  All rights reserved.
 //  BSD License: http://www.opensource.org/licenses/bsd-license.html
 //
-//  This code was written under United States Air Force Contract number 
+//  This code was written under United States Air Force Contract number
 //                           FA8650-04-C-5229
 //
 
@@ -21,27 +21,27 @@
 //  File errors -50xx
 // -----------------------------------------------------------------------------
 
- /**
-  * @def MXA_ERROR_FILE_NOT_MXA 
-  * @brief Definition for MXA_ERROR_FILE_NOT_XMDA 
+/**
+ * @def MXA_ERROR_FILE_NOT_MXA
+ * @brief Definition for MXA_ERROR_FILE_NOT_XMDA
 */
-#define MXA_ERROR_FILE_NOT_MXA -5002 
+#define MXA_ERROR_FILE_NOT_MXA -5002
 
- /**
-  * @def MXA_ERROR_FILE_NOT_FOUND 
-  * @brief Definition for MXA_ERROR_FILE_NOT_FOUND 
+/**
+ * @def MXA_ERROR_FILE_NOT_FOUND
+ * @brief Definition for MXA_ERROR_FILE_NOT_FOUND
 */
 #define MXA_ERROR_FILE_NOT_FOUND -5003
 
- /**
-  * @def MXA_ERROR_FILE_NOT_DEFINED 
-  * @brief Definition for MXA_ERROR_FILE_NOT_DEFINED 
+/**
+ * @def MXA_ERROR_FILE_NOT_DEFINED
+ * @brief Definition for MXA_ERROR_FILE_NOT_DEFINED
 */
-#define MXA_ERROR_FILE_NOT_DEFINED -5004 
+#define MXA_ERROR_FILE_NOT_DEFINED -5004
 
- /**
-  * @def MXA_ERROR_FILE_ZERO_SIZE 
-  * @brief Definition for MXA_ERROR_FILE_ZERO_SIZE 
+/**
+ * @def MXA_ERROR_FILE_ZERO_SIZE
+ * @brief Definition for MXA_ERROR_FILE_ZERO_SIZE
 */
 #define MXA_ERROR_FILE_ZERO_SIZE -5005
 
@@ -65,13 +65,14 @@
 #define MXA_ERROR_FILE_FORMAT_NOT_SUPPORTED -5008
 
 /**
-  * @def MXA_UNKNOWN_DATA_RECORD_TYPE 
-  * @brief Definition for MXA_UNKNOWN_DATA_RECORD_TYPE 
+  * @def MXA_UNKNOWN_DATA_RECORD_TYPE
+  * @brief Definition for MXA_UNKNOWN_DATA_RECORD_TYPE
 */
-#define MXA_UNKNOWN_DATA_RECORD_TYPE -7000 
+#define MXA_UNKNOWN_DATA_RECORD_TYPE -7000
 
 /* C++ style constants */
-namespace MXA {
+namespace MXA
+{
   const int32_t ErrorFileNotMXA = MXA_ERROR_FILE_NOT_MXA;
   const int32_t ErrorFileNotFound = MXA_ERROR_FILE_NOT_FOUND;
   const int32_t ErrorFileNotDefined = MXA_ERROR_FILE_NOT_DEFINED;

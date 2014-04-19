@@ -20,7 +20,7 @@ QString TiltAngleGroupBox::m_OpenDialogLastDirectory = "";
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-TiltAngleGroupBox::TiltAngleGroupBox(QWidget *parent) :
+TiltAngleGroupBox::TiltAngleGroupBox(QWidget* parent) :
   QGroupBox(parent),
   m_NumTilts(0)
 {
@@ -72,7 +72,7 @@ void TiltAngleGroupBox::setupGui()
 // -----------------------------------------------------------------------------
 void TiltAngleGroupBox::on_startingAngle_textChanged(const QString& text)
 {
-   // Generate tilts if this button is ON
+  // Generate tilts if this button is ON
   if (startIncrementBtn->isChecked() == true)
   {
     m_Angles.clear();
@@ -91,7 +91,7 @@ void TiltAngleGroupBox::on_startingAngle_textChanged(const QString& text)
 // -----------------------------------------------------------------------------
 void TiltAngleGroupBox::on_increment_textChanged(const QString& text)
 {
-   // Generate tilts if this button is ON
+  // Generate tilts if this button is ON
   if (startIncrementBtn->isChecked() == true)
   {
     m_Angles.clear();

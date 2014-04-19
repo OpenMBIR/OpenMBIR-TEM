@@ -89,20 +89,20 @@
 #endif
 
 #define MAKE_OUTPUT_FILE(Fp, outdir, filename)\
-{\
-  std::string filepath(outdir);\
-  filepath = filepath.append(MXADir::getSeparator()).append(filename);\
-  errno = 0;\
-  Fp = fopen(filepath.c_str(),"wb");\
-  if (Fp == NULL || errno > 0) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl;}\
+  {\
+    std::string filepath(outdir);\
+    filepath = filepath.append(MXADir::getSeparator()).append(filename);\
+    errno = 0;\
+    Fp = fopen(filepath.c_str(),"wb");\
+    if (Fp == NULL || errno > 0) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl;}\
   }
 
 #define COPY_333_ARRAY(i_max, j_max, k_max, src, dest)\
   for(int i = 0; i < i_max; ++i){\
-  for(int j = 0; j < j_max; ++j){\
-  for(int k = 0; k < k_max; ++k){\
-  dest[i][j][k] = src[i][j][k];\
-  }}}
+    for(int j = 0; j < j_max; ++j){\
+      for(int k = 0; k < k_max; ++k){\
+        dest[i][j][k] = src[i][j][k];\
+      }}}
 
 namespace Detail
 {
@@ -514,7 +514,7 @@ void BFReconstructionEngine::execute()
     for (uint16_t x = 0; x < m_Geometry->N_x; x++)
     {
       tempCol[voxel_count] = AMatrixCol::calculateAMatrixColumnPartial(m_Sinogram, m_Geometry, m_TomoInputs, m_AdvParams,
-                                                                       z, x, 0, detectorResponse, haadfParameters);
+                             z, x, 0, detectorResponse, haadfParameters);
       temp += tempCol[voxel_count]->count;
       if(0 == tempCol[voxel_count]->count )
       {
@@ -703,7 +703,8 @@ void BFReconstructionEngine::execute()
         m_VoxelIdxList = TempList->subList(nElements, start);
         //m_VoxelIdxList.Array = &(TempList.Array[]);
 
-        if (getVeryVerbose()) {
+        if (getVeryVerbose())
+        {
           std::cout << "Partial random order list for homogenous ICD .." << std::endl;
           m_VoxelIdxList->printMaxList(std::cout);
         }
@@ -722,7 +723,8 @@ void BFReconstructionEngine::execute()
           TempSum += magUpdateMap->getValue(j, k);
         }
       }
-      if (getVeryVerbose()) {
+      if (getVeryVerbose())
+      {
         std::cout << "**********************************************" << std::endl;
         std::cout << "Average mag prior to calling update voxel = " << TempSum / (m_Geometry->N_z * m_Geometry->N_x) << std::endl;
         std::cout << "**********************************************" << std::endl;
@@ -753,17 +755,23 @@ void BFReconstructionEngine::execute()
       if(EffIterCount % (2 * MBIR::Constants::k_NumNonHomogeniousIter) == 0 && EffIterCount > 0)
 #endif //NHICD
       {
-        for (int16_t j = 0; j < m_Geometry->N_z; j++){
-          for (int16_t k = 0; k < m_Geometry->N_x; k++){
+        for (int16_t j = 0; j < m_Geometry->N_z; j++)
+        {
+          for (int16_t k = 0; k < m_Geometry->N_x; k++)
+          {
             if(m_VisitCount->getValue(j, k) == 0)
             {
               printf("Pixel (%d %d) not visited\n", j, k);
-            }}}
+            }
+          }
+        }
         //Reset the visit counter once we have cycled through
         //all voxels once via the homogenous updates
-        for (int16_t j = 0; j < m_Geometry->N_z; j++){
+        for (int16_t j = 0; j < m_Geometry->N_z; j++)
+        {
           for (int16_t k = 0; k < m_Geometry->N_x; k++)
-          { m_VisitCount->setValue(0, j, k); }}
+          { m_VisitCount->setValue(0, j, k); }
+        }
 
       }
       //end of debug
@@ -940,7 +948,8 @@ void BFReconstructionEngine::execute()
 
   //Debug : Writing out the selector array as an MRC file
   m_ForwardModel->writeSelectorMrc(m_TomoInputs->braggSelectorFile, m_Sinogram, m_Geometry, errorSino);
-  if (getVerbose()) {
+  if (getVerbose())
+  {
     std::cout << "Final Dimensions of Object: " << std::endl;
     std::cout << "  Nx = " << m_Geometry->N_x << std::endl;
     std::cout << "  Ny = " << m_Geometry->N_y << std::endl;

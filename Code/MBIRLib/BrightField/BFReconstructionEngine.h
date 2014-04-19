@@ -100,7 +100,7 @@ class MBIRLib_EXPORT BFReconstructionEngine : public AbstractFilter
      */
     void execute();
 
-    Real_t absMaxArray(std::vector<Real_t> &Array);
+    Real_t absMaxArray(std::vector<Real_t>& Array);
 
 
   protected:
@@ -122,26 +122,26 @@ class MBIRLib_EXPORT BFReconstructionEngine : public AbstractFilter
 
     //Updating voxels
     uint8_t updateVoxels(
-        int16_t OuterIter,
-        int16_t Iter,
-        std::vector<AMatrixCol::Pointer> &TempCol,
-        RealVolumeType::Pointer ErrorSino,
-        std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
-        CostData::Pointer cost,
-        QGGMRF::QGGMRF_Values* QGGMRF_Values,
-        RealImageType::Pointer magUpdateMap,
-        RealImageType::Pointer filtMagUpdateMap,
-        UInt8Image_t::Pointer magUpdateMask,
-        UInt8Image_t::Pointer m_VisitCount,
-        Real_t PrevMagSum,
-        uint32_t EffIterCount);
+      int16_t OuterIter,
+      int16_t Iter,
+      std::vector<AMatrixCol::Pointer>& TempCol,
+      RealVolumeType::Pointer ErrorSino,
+      std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
+      CostData::Pointer cost,
+      QGGMRF::QGGMRF_Values* QGGMRF_Values,
+      RealImageType::Pointer magUpdateMap,
+      RealImageType::Pointer filtMagUpdateMap,
+      UInt8Image_t::Pointer magUpdateMask,
+      UInt8Image_t::Pointer m_VisitCount,
+      Real_t PrevMagSum,
+      uint32_t EffIterCount);
 
     void initializeROIMask(UInt8Image_t::Pointer Mask);
 
 
     Real_t roiVolumeSum(UInt8Image_t::Pointer Mask);
 
-    uint8_t stopCriteria(RealImageType::Pointer magUpdateMap,UInt8Image_t::Pointer magUpdateMask, Real_t PrevMagSum, uint32_t EffIterCount);
+    uint8_t stopCriteria(RealImageType::Pointer magUpdateMap, UInt8Image_t::Pointer magUpdateMask, Real_t PrevMagSum, uint32_t EffIterCount);
 
     /**
      * Code to take the magnitude map and filter it with a hamming window
@@ -184,7 +184,7 @@ class MBIRLib_EXPORT BFReconstructionEngine : public AbstractFilter
      * @param cropStart
      * @param cropEnd
      */
-    void computeOriginalXDims(uint16_t &cropStart, uint16_t &cropEnd);
+    void computeOriginalXDims(uint16_t& cropStart, uint16_t& cropEnd);
 
     /**
      * @brief
@@ -200,7 +200,7 @@ class MBIRLib_EXPORT BFReconstructionEngine : public AbstractFilter
      * @param haadfParameters
      */
     void storeVoxelResponse(RealVolumeType::Pointer H_t,
-                            std::vector<AMatrixCol::Pointer> &VoxelLineResponse,
+                            std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
                             DetectorParameters::Pointer haadfParameters);
 
     /**
@@ -214,7 +214,7 @@ class MBIRLib_EXPORT BFReconstructionEngine : public AbstractFilter
      * @brief
      * @param filepath
      */
-    void writeReconstructionFile(const std::string &filepath);
+    void writeReconstructionFile(const std::string& filepath);
 
     /**
      * @brief
@@ -222,7 +222,7 @@ class MBIRLib_EXPORT BFReconstructionEngine : public AbstractFilter
      * @param cropStart
      * @param cropEnd
      */
-    void writeVtkFile(const std::string &vtkFile, uint16_t cropStart, uint16_t cropEnd);
+    void writeVtkFile(const std::string& vtkFile, uint16_t cropStart, uint16_t cropEnd);
 
     /**
      * @brief
@@ -230,7 +230,7 @@ class MBIRLib_EXPORT BFReconstructionEngine : public AbstractFilter
      * @param cropStart
      * @param cropEnd
      */
-    void writeMRCFile(const std::string &mrcFile, uint16_t cropStart, uint16_t cropEnd);
+    void writeMRCFile(const std::string& mrcFile, uint16_t cropStart, uint16_t cropEnd);
 
     /**
      * @brief
@@ -238,12 +238,12 @@ class MBIRLib_EXPORT BFReconstructionEngine : public AbstractFilter
      * @param cropStart
      * @param cropEnd
      */
-    void writeAvizoFile(const std::string &file, uint16_t cropStart, uint16_t cropEnd);
+    void writeAvizoFile(const std::string& file, uint16_t cropStart, uint16_t cropEnd);
 
 
-    uint32_t Partition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
-    Real_t RandomizedSelect(RealArrayType::Pointer A,uint32_t p, uint32_t r,uint32_t i);
-    uint32_t RandomizedPartition(RealArrayType::Pointer A,uint32_t p,uint32_t r);
+    uint32_t Partition(RealArrayType::Pointer A, uint32_t p, uint32_t r);
+    Real_t RandomizedSelect(RealArrayType::Pointer A, uint32_t p, uint32_t r, uint32_t i);
+    uint32_t RandomizedPartition(RealArrayType::Pointer A, uint32_t p, uint32_t r);
 
   private:
 
@@ -271,18 +271,18 @@ class MBIRLib_EXPORT BFReconstructionEngine : public AbstractFilter
     * @param j_new
     * @param k_new
     */
-    void updateVoxelLine(uint16_t j_new,uint16_t k_new);
+    void updateVoxelLine(uint16_t j_new, uint16_t k_new);
 
 
     template<typename T>
-    double solve(T* f, double a, double b, double err, int32_t *code,uint32_t iteration_count)
+    double solve(T* f, double a, double b, double err, int32_t* code, uint32_t iteration_count)
 
     {
 
       int signa, signb, signc;
       double fa, fb, fc, c; //, signaling_nan();
       double dist;
-      uint32_t num_iter=0;
+      uint32_t num_iter = 0;
 
 
       fa = f->execute(a);
@@ -293,14 +293,14 @@ class MBIRLib_EXPORT BFReconstructionEngine : public AbstractFilter
       /* check starting conditions */
       if(signa == signb)
       {
-        if(signa == 1) *code = 1;
-        else *code = -1;
+        if(signa == 1) { *code = 1; }
+        else { *code = -1; }
         return (0.0);
       }
-      else *code = 0;
+      else { *code = 0; }
 
       /* half interval search */
-      if((dist = b - a) < 0) dist = -dist;
+      if((dist = b - a) < 0) { dist = -dist; }
 
       while (num_iter < iteration_count)//(dist > err)
       {
@@ -318,11 +318,11 @@ class MBIRLib_EXPORT BFReconstructionEngine : public AbstractFilter
           b = c;
           fb = fc;
         }
-        if((dist = b - a) < 0) dist = -dist;
+        if((dist = b - a) < 0) { dist = -dist; }
       }
 
       /* linear interpolation */
-      if((fb - fa) == 0) return (a);
+      if((fb - fa) == 0) { return (a); }
       else
       {
         c = (a * fb - b * fa) / (fb - fa);

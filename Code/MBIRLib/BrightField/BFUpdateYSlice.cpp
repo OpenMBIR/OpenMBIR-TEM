@@ -51,21 +51,21 @@
  solve()
  *****************************************************************************/
 #define find_min_max(low, high, V)\
-{\
-  low = m_Neighborhood[INDEX_3(0,0,0)];\
-  high = m_Neighborhood[INDEX_3(0,0,0)];\
-  for(uint8_t lcv_i = 0; lcv_i < 3;++lcv_i){\
-  for(uint8_t lcv_j = 0; lcv_j < 3; ++lcv_j){\
-  for(uint8_t lcv_k = 0; lcv_k < 3; ++lcv_k){\
-  if(m_Neighborhood[INDEX_3(lcv_i,lcv_j,lcv_k)] < low) {low = m_Neighborhood[INDEX_3(lcv_i,lcv_j,lcv_k)];}\
-  if(m_Neighborhood[INDEX_3(lcv_i,lcv_j,lcv_k)] > high) {high = m_Neighborhood[INDEX_3(lcv_i,lcv_j,lcv_k)];}\
-  }\
-  }\
-  }\
-  if(m_Theta2 !=0){\
-  low = (low > (V - (m_Theta1/m_Theta2)) ? (V - (m_Theta1/m_Theta2)): low);\
-  high = (high < (V - (m_Theta1/m_Theta2)) ? (V - (m_Theta1/m_Theta2)): high);\
-  }\
+  {\
+    low = m_Neighborhood[INDEX_3(0,0,0)];\
+    high = m_Neighborhood[INDEX_3(0,0,0)];\
+    for(uint8_t lcv_i = 0; lcv_i < 3;++lcv_i){\
+      for(uint8_t lcv_j = 0; lcv_j < 3; ++lcv_j){\
+        for(uint8_t lcv_k = 0; lcv_k < 3; ++lcv_k){\
+          if(m_Neighborhood[INDEX_3(lcv_i,lcv_j,lcv_k)] < low) {low = m_Neighborhood[INDEX_3(lcv_i,lcv_j,lcv_k)];}\
+          if(m_Neighborhood[INDEX_3(lcv_i,lcv_j,lcv_k)] > high) {high = m_Neighborhood[INDEX_3(lcv_i,lcv_j,lcv_k)];}\
+        }\
+      }\
+    }\
+    if(m_Theta2 !=0){\
+      low = (low > (V - (m_Theta1/m_Theta2)) ? (V - (m_Theta1/m_Theta2)): low);\
+      high = (high < (V - (m_Theta1/m_Theta2)) ? (V - (m_Theta1/m_Theta2)): high);\
+    }\
   }
 
 
@@ -73,21 +73,21 @@
 // Updates a line of voxels along y-axis
 // -----------------------------------------------------------------------------
 BFUpdateYSlice::BFUpdateYSlice(uint16_t yStart, uint16_t yEnd,
-                           GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
-                           SinogramPtr  sinogram,
-                           std::vector<AMatrixCol::Pointer> &tempCol,
-                           RealVolumeType::Pointer errorSino,
-                           std::vector<AMatrixCol::Pointer> &voxelLineResponse,
-                           BFForwardModel* forwardModel,
-                           UInt8Image_t::Pointer mask,
-                           RealImageType::Pointer magUpdateMap, //Hold the magnitude of the reconstuction along each voxel line
-                           UInt8Image_t::Pointer magUpdateMask,
-                           unsigned int voxelUpdateType,
-                           Real_t* averageUpdate,
-                           Real_t* averageMagnitudeOfRecon,
-                           unsigned int zeroSkipping,
-                           QGGMRF::QGGMRF_Values *qggmrf_values,
-                           VoxelUpdateList::Pointer voxelUpdateList) :
+                               GeometryPtr geometry, int16_t outerIter, int16_t innerIter,
+                               SinogramPtr  sinogram,
+                               std::vector<AMatrixCol::Pointer>& tempCol,
+                               RealVolumeType::Pointer errorSino,
+                               std::vector<AMatrixCol::Pointer>& voxelLineResponse,
+                               BFForwardModel* forwardModel,
+                               UInt8Image_t::Pointer mask,
+                               RealImageType::Pointer magUpdateMap, //Hold the magnitude of the reconstuction along each voxel line
+                               UInt8Image_t::Pointer magUpdateMask,
+                               unsigned int voxelUpdateType,
+                               Real_t* averageUpdate,
+                               Real_t* averageMagnitudeOfRecon,
+                               unsigned int zeroSkipping,
+                               QGGMRF::QGGMRF_Values* qggmrf_values,
+                               VoxelUpdateList::Pointer voxelUpdateList) :
   m_YStart(yStart),
   m_YEnd(yEnd),
   m_Geometry(geometry),
@@ -101,7 +101,7 @@ BFUpdateYSlice::BFUpdateYSlice(uint16_t yStart, uint16_t yEnd,
   m_Mask(mask),
   m_MagUpdateMap(magUpdateMap),
   m_MagUpdateMask(magUpdateMask),
- // m_VoxelUpdateType(voxelUpdateType),
+// m_VoxelUpdateType(voxelUpdateType),
   m_ZeroCount(0),
   m_CurrentVoxelValue(0.0),
   m_AverageUpdate(averageUpdate),
@@ -189,8 +189,8 @@ BFUpdateYSlice::execute()
       {
 
         //Neighborhood of (i,j,k) should be initialized to zeros each time
-        ::memset(m_Neighborhood, 0, 27*sizeof(Real_t));
-        ::memset(m_BoundaryFlag, 0, 27*sizeof(uint8_t));
+        ::memset(m_Neighborhood, 0, 27 * sizeof(Real_t));
+        ::memset(m_BoundaryFlag, 0, 27 * sizeof(uint8_t));
 
         //For a given (i,j,k) store its 26 point neighborhood
         for (int32_t p = -1; p <= 1; p++)
@@ -236,7 +236,7 @@ BFUpdateYSlice::execute()
               for (uint8_t q = 0; q <= 2; q++)
               {
                 for (uint8_t r = 0; r <= 2; r++)
-                  if(m_Neighborhood[INDEX_3(p,q,r)] > 0.0)
+                  if(m_Neighborhood[INDEX_3(p, q, r)] > 0.0)
                   {
                     ZSFlag = false;
                     break;
@@ -257,14 +257,15 @@ BFUpdateYSlice::execute()
         if(ZSFlag == false) //If the voxel is to be updated
         {
           //Forward Model parameters \theta_{1} and \theta_{2} compute
-          m_ForwardModel->computeTheta(Index,m_TempCol,i,m_VoxelLineResponse,m_ErrorSino,m_Sinogram,Thetas);
+          m_ForwardModel->computeTheta(Index, m_TempCol, i, m_VoxelLineResponse, m_ErrorSino, m_Sinogram, Thetas);
           m_Theta1 = Thetas->d[0];
           m_Theta2 = Thetas->d[1];
 
           find_min_max(low, high, m_CurrentVoxelValue);
 
-          if(m_Theta2 < 0){
-            std::cout<<"The value of theta2 is negative"<<std::endl;
+          if(m_Theta2 < 0)
+          {
+            std::cout << "The value of theta2 is negative" << std::endl;
           }
 
           //Compute prior model parameters AND Solve the 1-D optimization problem
@@ -277,13 +278,15 @@ BFUpdateYSlice::execute()
           {
 #ifdef POSITIVITY_CONSTRAINT
             if(UpdatedVoxelValue < 0.0)
-            { //Enforcing positivity constraints
+            {
+              //Enforcing positivity constraints
               UpdatedVoxelValue = 0.0;
             }
 #endif
           }
 
-          else {
+          else
+          {
             //Need to fill in what happens in voxel update had some numerical issues
           } //TODO Print appropriate error messages for other values of error code
 
@@ -302,7 +305,8 @@ BFUpdateYSlice::execute()
 
 #if ROI
           if(m_Mask->getValue(j_new, k_new) == 1)
-          { //Stopping criteria variables for "Full update ICD" algorithm
+          {
+            //Stopping criteria variables for "Full update ICD" algorithm
             *m_AverageUpdate += fabs(UpdatedVoxelValue - m_CurrentVoxelValue);
             *m_AverageMagnitudeOfRecon += fabs(m_CurrentVoxelValue); //computing the percentage update =(Change in mag/Initial magnitude)
           }

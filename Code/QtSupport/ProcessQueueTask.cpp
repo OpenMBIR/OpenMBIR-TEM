@@ -34,9 +34,9 @@
 //
 // -----------------------------------------------------------------------------
 ProcessQueueTask::ProcessQueueTask(QObject* parent) :
-QThread(parent),
-m_Debug(true),
-m_Cancel(false)
+  QThread(parent),
+  m_Debug(true),
+  m_Cancel(false)
 {
 }
 
@@ -77,9 +77,9 @@ AIMImage::Pointer ProcessQueueTask::convertQImageToGrayScaleAIMImage(QImage imag
   {
     return AIMImage::NullPointer();
   }
-    
-    delete oImage;
-    oImage = NULL;
+
+  delete oImage;
+  oImage = NULL;
 
   // Copy the QImage into the AIMImage object, converting to gray scale as we go.
   qint32 height = image.height();
@@ -87,8 +87,10 @@ AIMImage::Pointer ProcessQueueTask::convertQImageToGrayScaleAIMImage(QImage imag
   QRgb rgbPixel;
   int gray;
   qint32 index;
-  for (qint32 y=0; y<height; y++) {
-    for (qint32 x =0; x<width; x++) {
+  for (qint32 y = 0; y < height; y++)
+  {
+    for (qint32 x = 0; x < width; x++)
+    {
       index = (y *  width) + x;
       rgbPixel = image.pixel(x, y);
       gray = qGray(rgbPixel);

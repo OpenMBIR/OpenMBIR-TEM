@@ -11,11 +11,12 @@
 #include <QtGui/QApplication>
 #include <QtGui/QMouseEvent>
 
-static QRect CheckBoxRect(const QStyleOptionViewItem &view_item_style_options) {
+static QRect CheckBoxRect(const QStyleOptionViewItem& view_item_style_options)
+{
   QStyleOptionButton check_box_style_option;
   QRect check_box_rect = QApplication::style()->subElementRect(
-      QStyle::SE_CheckBoxIndicator,
-      &check_box_style_option);
+                           QStyle::SE_CheckBoxIndicator,
+                           &check_box_style_option);
   QPoint check_box_point(view_item_style_options.rect.x() +
                          view_item_style_options.rect.width() / 2 -
                          check_box_rect.width() / 2,
@@ -28,8 +29,9 @@ static QRect CheckBoxRect(const QStyleOptionViewItem &view_item_style_options) {
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-CheckBoxDelegate::CheckBoxDelegate(QObject *parent)
-  : QStyledItemDelegate(parent) {
+CheckBoxDelegate::CheckBoxDelegate(QObject* parent)
+  : QStyledItemDelegate(parent)
+{
 }
 
 // -----------------------------------------------------------------------------
@@ -43,16 +45,20 @@ CheckBoxDelegate::~CheckBoxDelegate()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void CheckBoxDelegate::paint(QPainter *painter,
-                             const QStyleOptionViewItem &option,
-                             const QModelIndex &index) const {
+void CheckBoxDelegate::paint(QPainter* painter,
+                             const QStyleOptionViewItem& option,
+                             const QModelIndex& index) const
+{
   bool checked = index.model()->data(index, Qt::DisplayRole).toBool();
 
   QStyleOptionButton check_box_style_option;
   check_box_style_option.state |= QStyle::State_Enabled;
-  if (checked) {
+  if (checked)
+  {
     check_box_style_option.state |= QStyle::State_On;
-  } else {
+  }
+  else
+  {
     check_box_style_option.state |= QStyle::State_Off;
   }
   check_box_style_option.rect = CheckBoxRect(option);
@@ -64,26 +70,35 @@ void CheckBoxDelegate::paint(QPainter *painter,
 
 // This is essentially copied from QStyledItemEditor, except that we
 // have to determine our own "hot zone" for the mouse click.
-bool CheckBoxDelegate::editorEvent(QEvent *event,
-                                   QAbstractItemModel *model,
-                                   const QStyleOptionViewItem &option,
-                                   const QModelIndex &index) {
+bool CheckBoxDelegate::editorEvent(QEvent* event,
+                                   QAbstractItemModel* model,
+                                   const QStyleOptionViewItem& option,
+                                   const QModelIndex& index)
+{
   if ((event->type() == QEvent::MouseButtonRelease) ||
-      (event->type() == QEvent::MouseButtonDblClick)) {
-    QMouseEvent *mouse_event = static_cast<QMouseEvent*>(event);
+      (event->type() == QEvent::MouseButtonDblClick))
+  {
+    QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
     if (mouse_event->button() != Qt::LeftButton ||
-        !CheckBoxRect(option).contains(mouse_event->pos())) {
+        !CheckBoxRect(option).contains(mouse_event->pos()))
+    {
       return false;
     }
-    if (event->type() == QEvent::MouseButtonDblClick) {
+    if (event->type() == QEvent::MouseButtonDblClick)
+    {
       return true;
     }
-  } else if (event->type() == QEvent::KeyPress) {
+  }
+  else if (event->type() == QEvent::KeyPress)
+  {
     if (static_cast<QKeyEvent*>(event)->key() != Qt::Key_Space &&
-        static_cast<QKeyEvent*>(event)->key() != Qt::Key_Select) {
+        static_cast<QKeyEvent*>(event)->key() != Qt::Key_Select)
+    {
       return false;
     }
-  } else {
+  }
+  else
+  {
     return false;
   }
 

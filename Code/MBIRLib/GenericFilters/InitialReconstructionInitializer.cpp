@@ -56,14 +56,14 @@ InitialReconstructionInitializer::~InitialReconstructionInitializer()
 // -----------------------------------------------------------------------------
 //Finds the maximum of absolute value elements in an array
 // -----------------------------------------------------------------------------
-Real_t InitialReconstructionInitializer::absMaxArray(std::vector<Real_t> &Array)
+Real_t InitialReconstructionInitializer::absMaxArray(std::vector<Real_t>& Array)
 {
   uint16_t i;
   Real_t max;
   max = fabs(Array[0]);
-  for(i =1; i < Array.size();i++)
+  for(i = 1; i < Array.size(); i++)
     if(fabs(Array[i]) > max)
-      max=fabs(Array[i]);
+    { max = fabs(Array[i]); }
   return max;
 
 }
@@ -112,9 +112,9 @@ void InitialReconstructionInitializer::execute()
   max = absMaxArray(sinogram->angles);
 
   //The max is going to be used to reconstruct a large area
- //However if its close to 90 this would result in a very large value - so truncate
- if(max > MBIR::Constants::k_MaxAngleStretch)
-   max = MBIR::Constants::k_MaxAngleStretch;
+//However if its close to 90 this would result in a very large value - so truncate
+  if(max > MBIR::Constants::k_MaxAngleStretch)
+  { max = MBIR::Constants::k_MaxAngleStretch; }
 
   // Convert Max to radians
   max = max * M_PI / 180.0;

@@ -66,9 +66,9 @@ class MBIRLib_EXPORT NuisanceParamReader : public TomoFilter
 //      Nuisance_alpha
 //    };
 
-  //  MXA_INSTANCE_PROPERTY(bool, WriteBinary);
+    //  MXA_INSTANCE_PROPERTY(bool, WriteBinary);
     MXA_INSTANCE_STRING_PROPERTY(FileName);
-  //  MXA_INSTANCE_PROPERTY(TargetArray, DataToRead);
+    //  MXA_INSTANCE_PROPERTY(TargetArray, DataToRead);
     MXA_INSTANCE_PROPERTY(RealArrayType::Pointer, Data);
 
     void execute();

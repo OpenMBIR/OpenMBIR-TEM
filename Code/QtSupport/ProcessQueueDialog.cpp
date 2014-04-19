@@ -36,8 +36,8 @@
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-ProcessQueueDialog::ProcessQueueDialog(QWidget *parent) :
-QWidget(parent)
+ProcessQueueDialog::ProcessQueueDialog(QWidget* parent) :
+  QWidget(parent)
 {
   setupUi(this);
 }
@@ -72,8 +72,8 @@ void ProcessQueueDialog::addProcess(ProcessQueueTask* task)
   progBar->setRange(0, 100);
   progBar->setAlignment(Qt::AlignBottom);
 
- // QFileInfo fileInfo(task->getInputFilePath());
- // progBar->setText(fileInfo.fileName());
+// QFileInfo fileInfo(task->getInputFilePath());
+// progBar->setText(fileInfo.fileName());
 
   QSizePolicy sizePolicy1(QSizePolicy::Preferred, QSizePolicy::Fixed);
   sizePolicy1.setHorizontalStretch(0);
@@ -87,21 +87,21 @@ void ProcessQueueDialog::addProcess(ProcessQueueTask* task)
   font.setWeight(75);
   progBar->setFont(font);
 
- // this->processTableWidget->setRowCount(rowCount + 1);
- // this->processTableWidget->setCellWidget(rowCount, 1, progBar);
+// this->processTableWidget->setRowCount(rowCount + 1);
+// this->processTableWidget->setCellWidget(rowCount, 1, progBar);
   verticalLayout->addWidget(progBar);
 
   verticalLayout->addSpacerItem(verticalSpacer);
 
   connect(task, SIGNAL(progressValueChanged(int)), progBar, SLOT(setValue(int)));
   connect(task, SIGNAL(taskFinished(QObject*)), this, SLOT(removeRow(QObject*)));
- // connect(cancelBtn, SIGNAL(clicked()), task, SLOT(cancel()));
+// connect(cancelBtn, SIGNAL(clicked()), task, SLOT(cancel()));
   m_TasksMap[task] = progBar;
 
- // processTableWidget->resizeColumnToContents(0);
- // int width = processTableWidget->columnWidth(0);
- // width = width + (width * .1);
- // processTableWidget->setColumnWidth(0, width);
+// processTableWidget->resizeColumnToContents(0);
+// int width = processTableWidget->columnWidth(0);
+// width = width + (width * .1);
+// processTableWidget->setColumnWidth(0, width);
 
 }
 
@@ -110,9 +110,10 @@ void ProcessQueueDialog::addProcess(ProcessQueueTask* task)
 // -----------------------------------------------------------------------------
 void ProcessQueueDialog::removeRow(QObject* sender)
 {
- // std::cout << "ProcessQueueDialog::removeRow" << std::endl;
+// std::cout << "ProcessQueueDialog::removeRow" << std::endl;
   QWidget* widget = m_TasksMap.value(sender);
-  if (NULL != widget) {
+  if (NULL != widget)
+  {
     verticalLayout->removeWidget(widget);
     m_TasksMap.remove(sender);
     delete widget;

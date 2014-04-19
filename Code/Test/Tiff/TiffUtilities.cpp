@@ -37,13 +37,13 @@
 
 
 #define PIXEL8_TO_GREYVALUE(pal, palIndex, out)\
-    r = pal[0][palIndex]; g = pal[1][palIndex]; b = pal[2][palIndex];\
-    if (r == b && r == g)\
-    { bitmapData[temp] = r; }\
-    else {\
-      R = r * 0.299f; G = g * 0.587f; B = b * 0.114f;\
-      out = (unsigned char)(R + G + B);\
-    }
+  r = pal[0][palIndex]; g = pal[1][palIndex]; b = pal[2][palIndex];\
+  if (r == b && r == g)\
+  { bitmapData[temp] = r; }\
+  else {\
+    R = r * 0.299f; G = g * 0.587f; B = b * 0.114f;\
+    out = (unsigned char)(R + G + B);\
+  }
 
 #define PIXEL24_TO_GREYVALUE(in, out)\
   r = in[0]; g = in[1]; b = in[2];\
@@ -82,7 +82,7 @@ int TiffUtilities::writeOutputImage(TiffImage* data, const char* outpuFileName)
   }
 
   err = writeGrayScaleTiff(data, "Segmented with EM/MPM", outpuFileName);
- // err = writePalettedImage(data, "", outpuFileName);
+// err = writePalettedImage(data, "", outpuFileName);
   if (err < 0)
   {
     printf("Error writing Tiff file %s\n", outpuFileName);
@@ -104,8 +104,8 @@ int TiffUtilities::readInputImage(TiffImage* data, const char* inputFileName)
   in = TIFFOpen(inputFileName, "r");
   if (in == NULL)
   {
-   printf("Error Opening Tiff file with Absolute Path:\n %s\n", inputFileName);
-   return 0;
+    printf("Error Opening Tiff file with Absolute Path:\n %s\n", inputFileName);
+    return 0;
   }
   int width, height;
   unsigned short samplesperpixel;
@@ -137,7 +137,8 @@ int TiffUtilities::readInputImage(TiffImage* data, const char* inputFileName)
 
 
 
-  if (bitspersample == 8) {
+  if (bitspersample == 8)
+  {
     err = readTiffAsGrayScale(in, data);
   }
   else if (bitspersample == 16)
@@ -203,7 +204,7 @@ int TiffUtilities::readTiffAsGrayScale(TIFF* in, TiffImage* data)
   tsize_t totalBytes;
 
   unsigned char r, g, b;
-  float R,G,B;
+  float R, G, B;
 
 
   // This will eventually be TOO much data but we need it to read the initial data
@@ -250,85 +251,85 @@ int TiffUtilities::readTiffAsGrayScale(TIFF* in, TiffImage* data)
 //
 // -----------------------------------------------------------------------------
 int TiffUtilities::writeGrayScaleImage(const char* filename, int rows, int columns,
-                        const char* imageDescription, unsigned char* image)
+                                       const char* imageDescription, unsigned char* image)
 {
 
   int err;
-   TIFF *out;
+  TIFF* out;
 
-   char software[1024];
-   tsize_t area;
+  char software[1024];
+  tsize_t area;
 
-   if (NULL == image)
-   {
-     return -1;
-   }
-   out = TIFFOpen(filename, "w");
-   if (out == NULL)
-   {
-     printf("Could not open output file '%s' for writing.\n", filename);
-     return -1;
-   }
+  if (NULL == image)
+  {
+    return -1;
+  }
+  out = TIFFOpen(filename, "w");
+  if (out == NULL)
+  {
+    printf("Could not open output file '%s' for writing.\n", filename);
+    return -1;
+  }
 
-   err = 0;
-   // set the basic values
-   err = TIFFSetField(out, TIFFTAG_IMAGEWIDTH, (int)columns);
-   err = TIFFSetField(out, TIFFTAG_IMAGELENGTH, (int)rows);
-   err = TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 8);
-   err = TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 1);
-   err = TIFFSetField(out, TIFFTAG_ROWSPERSTRIP, (int)rows); // 1 strip
-
-#if 0
-   dateTime = EIMTOMO_TiffDateTime();
-   err = TIFFSetField(out, TIFFTAG_DATETIME, dateTime);
-#endif
-
-   // String based tags
-   if (NULL != filename)
-   {
-     err = TIFFSetField(out, TIFFTAG_DOCUMENTNAME, filename);
-   }
-   if (NULL != imageDescription)
-   {
-     err = TIFFSetField(out, TIFFTAG_IMAGEDESCRIPTION, imageDescription);
-   }
-
-   err = TIFFSetField(out, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
-   err = TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
-
-
- #if 0
-   err = TIFFSetField(image, TIFFTAG_COMPRESSION, COMPRESSION_LZW);
-   err = TIFFSetField(image, TIFFTAG_PREDICTOR, PREDICTOR_HORIZONTAL);
- #else
-   err = TIFFSetField(out, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
- #endif
-
-   // Insert Resolution Units here if possible
+  err = 0;
+  // set the basic values
+  err = TIFFSetField(out, TIFFTAG_IMAGEWIDTH, (int)columns);
+  err = TIFFSetField(out, TIFFTAG_IMAGELENGTH, (int)rows);
+  err = TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 8);
+  err = TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 1);
+  err = TIFFSetField(out, TIFFTAG_ROWSPERSTRIP, (int)rows); // 1 strip
 
 #if 0
-   memset(software, 0, 1024);
-   snprintf(software, 1024, "%s using libTif", TomoEngine_PACKAGE_COMPLETE );
+  dateTime = EIMTOMO_TiffDateTime();
+  err = TIFFSetField(out, TIFFTAG_DATETIME, dateTime);
 #endif
 
-   err = TIFFSetField(out, TIFFTAG_SOFTWARE, software);
+  // String based tags
+  if (NULL != filename)
+  {
+    err = TIFFSetField(out, TIFFTAG_DOCUMENTNAME, filename);
+  }
+  if (NULL != imageDescription)
+  {
+    err = TIFFSetField(out, TIFFTAG_IMAGEDESCRIPTION, imageDescription);
+  }
 
- //  err = TIFFSetField(out, TIFFTAG_HOSTCOMPUTER, EMMPM_SYSTEM);
+  err = TIFFSetField(out, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
+  err = TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
 
-   // Write the information to the file
-   area = (tsize_t)( columns *  rows);
-   err = TIFFWriteEncodedStrip(out, 0, image, area);
-   if (err != area)
-   {
-     err = -1;
-   }
-   else
-   {
-     err = 1;
-   }
 
-   (void)TIFFClose(out);
-   return err;
+#if 0
+  err = TIFFSetField(image, TIFFTAG_COMPRESSION, COMPRESSION_LZW);
+  err = TIFFSetField(image, TIFFTAG_PREDICTOR, PREDICTOR_HORIZONTAL);
+#else
+  err = TIFFSetField(out, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
+#endif
+
+  // Insert Resolution Units here if possible
+
+#if 0
+  memset(software, 0, 1024);
+  snprintf(software, 1024, "%s using libTif", TomoEngine_PACKAGE_COMPLETE );
+#endif
+
+  err = TIFFSetField(out, TIFFTAG_SOFTWARE, software);
+
+//  err = TIFFSetField(out, TIFFTAG_HOSTCOMPUTER, EMMPM_SYSTEM);
+
+  // Write the information to the file
+  area = (tsize_t)( columns *  rows);
+  err = TIFFWriteEncodedStrip(out, 0, image, area);
+  if (err != area)
+  {
+    err = -1;
+  }
+  else
+  {
+    err = 1;
+  }
+
+  (void)TIFFClose(out);
+  return err;
 }
 
 
@@ -354,15 +355,15 @@ int TiffUtilities::writePalettedImage(TiffImage* data,
 {
   int err;
   unsigned char* raster;
- // size_t i;
-  TIFF *out;
+// size_t i;
+  TIFF* out;
   char* dateTime;
   char software[1024];
   tsize_t area;
   size_t totalPixels = 0;
-  uint16 *r, *g, *b;
+  uint16* r, *g, *b;
   int bitsPerSample = 8;
-  uint16 nColors = 1<<bitsPerSample;
+  uint16 nColors = 1 << bitsPerSample;
   totalPixels = data->width * data->height;
 
 
@@ -399,21 +400,22 @@ int TiffUtilities::writePalettedImage(TiffImage* data,
 
   err = TIFFSetField(out, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
   err = TIFFSetField(out, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_PALETTE);
- // err = TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG); // single image plane
+// err = TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG); // single image plane
 
-  r = (uint16 *) _TIFFmalloc(sizeof(uint16) * nColors);
-  g = (uint16 *) _TIFFmalloc(sizeof(uint16) * nColors);
-  b = (uint16 *) _TIFFmalloc(sizeof(uint16) * nColors);
+  r = (uint16*) _TIFFmalloc(sizeof(uint16) * nColors);
+  g = (uint16*) _TIFFmalloc(sizeof(uint16) * nColors);
+  b = (uint16*) _TIFFmalloc(sizeof(uint16) * nColors);
   // Set the entire color table to Zeros
-  memset(r,0, sizeof(uint16) * nColors);
-  memset(g,0, sizeof(uint16) * nColors);
-  memset(b,0, sizeof(uint16) * nColors);
+  memset(r, 0, sizeof(uint16) * nColors);
+  memset(g, 0, sizeof(uint16) * nColors);
+  memset(b, 0, sizeof(uint16) * nColors);
 
   // Copy in the Gray_Table for the segmentation
-  for (int32_t i = 0; i < 1; i++) {
-    r[i] = UINT16_MAX * ( (float)data->grayTable[i]/(float)UINT8_MAX);
-    g[i] = UINT16_MAX * ( (float)data->grayTable[i]/(float)UINT8_MAX);
-    b[i] = UINT16_MAX * ( (float)data->grayTable[i]/(float)UINT8_MAX);
+  for (int32_t i = 0; i < 1; i++)
+  {
+    r[i] = UINT16_MAX * ( (float)data->grayTable[i] / (float)UINT8_MAX);
+    g[i] = UINT16_MAX * ( (float)data->grayTable[i] / (float)UINT8_MAX);
+    b[i] = UINT16_MAX * ( (float)data->grayTable[i] / (float)UINT8_MAX);
   }
 
   TIFFSetField(out, TIFFTAG_COLORMAP, r, g, b);

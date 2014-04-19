@@ -33,7 +33,7 @@
 #include <QApplication>
 
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   QApplication app(argc, argv);
   QCoreApplication::setOrganizationName("BlueQuartz Software");
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
   QRecentFileList::instance()->readList(prefs);
 
-  TEMBIRGui *viewer = new TEMBIRGui;
+  TEMBIRGui* viewer = new TEMBIRGui;
   viewer->readWindowSettings(prefs);
   viewer->show();
   viewer->raise();

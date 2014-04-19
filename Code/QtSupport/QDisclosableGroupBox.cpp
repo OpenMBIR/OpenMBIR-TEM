@@ -60,7 +60,7 @@
 //
 // -----------------------------------------------------------------------------
 QDisclosableGroupBox::QDisclosableGroupBox(QWidget* parent) :
-QGroupBox(parent)
+  QGroupBox(parent)
 {
 
 
@@ -139,7 +139,7 @@ void QDisclosableGroupBox::updateWidgetStyle()
 void QDisclosableGroupBox::setupGui()
 {
   setCheckable(true);
- // updateWidgetStyle();
+// updateWidgetStyle();
 }
 
 // -----------------------------------------------------------------------------
@@ -148,25 +148,25 @@ void QDisclosableGroupBox::setupGui()
 void QDisclosableGroupBox::disclose(bool on)
 {
 
-    if (on)
-    {
-        this->setMaximumHeight(260000);
-    }
-    else
-    {
-       this->setMaximumHeight(26);
-    }
+  if (on)
+  {
+    this->setMaximumHeight(260000);
+  }
+  else
+  {
+    this->setMaximumHeight(26);
+  }
 
-    QObjectList objs = children();
-    foreach(QObject* obj, objs)
+  QObjectList objs = children();
+  foreach(QObject * obj, objs)
+  {
+    QWidget* w = qobject_cast<QWidget*>(obj);
+    if(NULL != w)
     {
-      QWidget* w = qobject_cast<QWidget*>(obj);
-      if(NULL != w)
-      {
-        if(on) w->show();
-        else w->hide();
-      }
+      if(on) { w->show(); }
+      else { w->hide(); }
     }
+  }
 
 
 }

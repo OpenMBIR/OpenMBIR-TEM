@@ -47,62 +47,62 @@
 #include "MBIRLib/HAADF/HAADF_MultiResolutionReconstruction.h"
 #include "HAADFReconstructionArgsParser.h"
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-    std::cout << "Starting MBIR Reconstruction Version " << MBIRLib::Version::Complete() << std::endl;
+  std::cout << "Starting MBIR Reconstruction Version " << MBIRLib::Version::Complete() << std::endl;
 
 
 
-    HAADF_MultiResolutionReconstruction::Pointer engine = HAADF_MultiResolutionReconstruction::New();
+  HAADF_MultiResolutionReconstruction::Pointer engine = HAADF_MultiResolutionReconstruction::New();
 
-    HAADFReconstructionArgsParser argParser;
-    int err = argParser.parseArguments(argc, argv, engine);
-    if(err < 0)
-    {
-        std::cout << "Error Parsing the arguments." << std::endl;
-        return EXIT_FAILURE;
-    }
+  HAADFReconstructionArgsParser argParser;
+  int err = argParser.parseArguments(argc, argv, engine);
+  if(err < 0)
+  {
+    std::cout << "Error Parsing the arguments." << std::endl;
+    return EXIT_FAILURE;
+  }
 
 
 #if 0
-    char path1[MAXPATHLEN]; // This is a buffer for the text
-    ::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
-    getcwd(path1, MAXPATHLEN);
-    std::cout << "Current Working Directory: " << path1 << std::endl;
+  char path1[MAXPATHLEN]; // This is a buffer for the text
+  ::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
+  getcwd(path1, MAXPATHLEN);
+  std::cout << "Current Working Directory: " << path1 << std::endl;
 #endif
-    // Make sure the output directory is created if it does not exist
-    // Get the absolute path to the users choice for the output file
-    std::string parentPath = engine->getTempDir();
+  // Make sure the output directory is created if it does not exist
+  // Get the absolute path to the users choice for the output file
+  std::string parentPath = engine->getTempDir();
 
 
-    if(MXADir::exists(parentPath) == false)
+  if(MXADir::exists(parentPath) == false)
+  {
+    std::cout << "Output Directory '" << parentPath << "' does NOT exist. Attempting to create it." << std::endl;
+    if(MXADir::mkdir( parentPath, true) == false)
     {
-        std::cout << "Output Directory '" << parentPath << "' does NOT exist. Attempting to create it." << std::endl;
-        if(MXADir::mkdir( parentPath, true) == false)
-        {
-            std::cout << "Error creating the output directory '" << parentPath << "'\n   Exiting Now." << std::endl;
-            return EXIT_FAILURE;
-        }
-        std::cout << "Output Directory Created." << std::endl;
+      std::cout << "Error creating the output directory '" << parentPath << "'\n   Exiting Now." << std::endl;
+      return EXIT_FAILURE;
     }
+    std::cout << "Output Directory Created." << std::endl;
+  }
 #if 0
-    ::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
-    getcwd(path1, MAXPATHLEN);
-    std::cout << "Current Working Directory: " << path1 << std::endl;
+  ::memset(path1, 0, MAXPATHLEN); // Initialize the string to all zeros.
+  getcwd(path1, MAXPATHLEN);
+  std::cout << "Current Working Directory: " << path1 << std::endl;
 #endif
 
-    std::stringstream ss;
+  std::stringstream ss;
 
 
-    // Run the reconstruction
-    engine->execute();
-    if(engine->getErrorCondition() < 0)
-    {
-        std::cout << "Error Reconstructing the Data" << std::endl;
-        return EXIT_FAILURE;
-    }
-    std::cout << "Completed MBIR Reconstruction Run" << std::endl;
+  // Run the reconstruction
+  engine->execute();
+  if(engine->getErrorCondition() < 0)
+  {
+    std::cout << "Error Reconstructing the Data" << std::endl;
+    return EXIT_FAILURE;
+  }
+  std::cout << "Completed MBIR Reconstruction Run" << std::endl;
 
-    return EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 }
 

@@ -21,7 +21,7 @@ int WriteGrayScaleTiff(unsigned char* raster, char* filename,
                        char* documentName, char* imageDescription)
 {
   int err;
-  TIFF *out;
+  TIFF* out;
   std::string dateTime;
   char software[1024];
   tsize_t area;
@@ -89,7 +89,7 @@ int WriteGrayScaleTiff(unsigned char* raster, char* filename,
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   if (argc != 3)
   {

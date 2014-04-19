@@ -52,7 +52,7 @@ class MBIRLib_EXPORT CostData
 
     virtual ~CostData();
 
-    int initOutputFile(const std::string &filepath);
+    int initOutputFile(const std::string& filepath);
 
     int writeCostValue(Real_t value);
 
@@ -60,7 +60,7 @@ class MBIRLib_EXPORT CostData
 
     int numberOfCosts();
 
-    void printCosts(std::ostream &out);
+    void printCosts(std::ostream& out);
 
   protected:
     CostData();

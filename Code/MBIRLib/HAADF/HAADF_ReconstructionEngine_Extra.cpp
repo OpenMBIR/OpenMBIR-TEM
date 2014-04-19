@@ -88,7 +88,7 @@ int HAADF_ReconstructionEngine::initializeBrightFieldData()
   uint8_t Flag2 = 1;
   if(m_BFTomoInputs.get() != NULL && m_BFSinogram.get() != NULL && m_BFTomoInputs->sinoFile.empty() == false)
   {
-    ss<< "Initializing BF data";
+    ss << "Initializing BF data";
     notify(ss.str(), 0, Observable::UpdateProgressMessage);
 
     TomoFilter::Pointer dataReader = TomoFilter::NullPointer();
@@ -114,11 +114,11 @@ int HAADF_ReconstructionEngine::initializeBrightFieldData()
       //Try one more time - if the sizes are not matches just read in the
       //full BF sinogram
       m_BFTomoInputs->xStart = 0;
-      m_BFTomoInputs->xEnd = m_Sinogram->N_r-1;
+      m_BFTomoInputs->xEnd = m_Sinogram->N_r - 1;
       m_BFTomoInputs->yStart = 0;
-      m_BFTomoInputs->yEnd = m_Sinogram->N_t-1;
+      m_BFTomoInputs->yEnd = m_Sinogram->N_t - 1;
       m_BFTomoInputs->zStart = 0;
-      m_BFTomoInputs->zEnd = m_Sinogram->N_theta-1;
+      m_BFTomoInputs->zEnd = m_Sinogram->N_theta - 1;
 
       dataReader->setTomoInputs(m_BFTomoInputs);
       dataReader->setSinogram(m_BFSinogram);
@@ -128,9 +128,9 @@ int HAADF_ReconstructionEngine::initializeBrightFieldData()
       if(dataReader->getErrorCondition() < 0)
       {
         Flag2 = 0;
-        //	notify("Error reading Input Sinogram Data file", 100, Observable::UpdateProgressValueAndMessage);
-        //	setErrorCondition(dataReader->getErrorCondition());
-        //	return -1;
+        //  notify("Error reading Input Sinogram Data file", 100, Observable::UpdateProgressValueAndMessage);
+        //  setErrorCondition(dataReader->getErrorCondition());
+        //  return -1;
       }
       if(Flag1 == 0 && Flag2 == 0)
       {
@@ -142,14 +142,15 @@ int HAADF_ReconstructionEngine::initializeBrightFieldData()
 
     if(m_BFSinogram->N_r != m_Sinogram->N_r || m_BFSinogram->N_t != m_Sinogram->N_t || m_BFSinogram->N_theta != m_Sinogram->N_theta)
     {
-      notify("The two file sizes are not matched", 100,Observable::UpdateErrorMessage);
+      notify("The two file sizes are not matched", 100, Observable::UpdateErrorMessage);
       setErrorCondition(dataReader->getErrorCondition());
       return -1;
     }
 
     //Normalize the HAADF image
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
-    { //slice index
+    {
+      //slice index
       for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
       {
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
@@ -159,7 +160,7 @@ int HAADF_ReconstructionEngine::initializeBrightFieldData()
           //  m_Sinogram->counts->divideByValue(ttmp, i_theta, i_r, i_t);
           //100 is for Marc De Graef data which needed to multiplied
           //  m_BFSinogram->counts->multiplyByValue(100, i_theta, i_r, i_t);
-          m_BFSinogram->counts->setValue(m_BFSinogram->counts->getValue(i_theta, i_r, i_t)+BF_OFFSET,i_theta, i_r, i_t);
+          m_BFSinogram->counts->setValue(m_BFSinogram->counts->getValue(i_theta, i_r, i_t) + BF_OFFSET, i_theta, i_r, i_t);
         }
       }
     }
@@ -233,7 +234,7 @@ void HAADF_ReconstructionEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
       x = m_Geometry->x0 + ((Real_t)j + 0.5) * m_TomoInputs->delta_xz;
       z = m_Geometry->z0 + ((Real_t)i + 0.5) * m_TomoInputs->delta_xz;
       if(x >= -(m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && x <= (m_Sinogram->N_r * m_Sinogram->delta_r) / 2 && z >= -m_TomoInputs->LengthZ / 2
-         && z <= m_TomoInputs->LengthZ / 2)
+          && z <= m_TomoInputs->LengthZ / 2)
       {
         Mask->setValue(1, i, j);
       }
@@ -247,7 +248,7 @@ void HAADF_ReconstructionEngine::initializeROIMask(UInt8Image_t::Pointer Mask)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void HAADF_ReconstructionEngine::computeOriginalXDims(uint16_t &cropStart, uint16_t &cropEnd)
+void HAADF_ReconstructionEngine::computeOriginalXDims(uint16_t& cropStart, uint16_t& cropEnd)
 {
 
   Real_t x;
@@ -325,7 +326,7 @@ void HAADF_ReconstructionEngine::initializeVolume(RealVolumeType::Pointer Y_Est,
 //
 // -----------------------------------------------------------------------------
 void HAADF_ReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
-                                                    std::vector<AMatrixCol::Pointer> &VoxelLineResponse)
+                                                    std::vector<AMatrixCol::Pointer>& VoxelLineResponse)
 {
   Real_t ProfileThickness = 0.0;
   Real_t y = 0.0;
@@ -421,8 +422,8 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
 {
   std::stringstream ss;
   std::string indent("  ");
-    RealArrayType::Pointer I_0 = m_ForwardModel->getI_0();
-    RealArrayType::Pointer mu = m_ForwardModel->getMu();
+  RealArrayType::Pointer I_0 = m_ForwardModel->getI_0();
+  RealArrayType::Pointer mu = m_ForwardModel->getMu();
 
   if(m_ForwardModel->getBF_Flag() == false) //If no BF data do gain and offset est.
   {
@@ -560,7 +561,7 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
       AverageMagI_k += fabs(I_0->d[i_theta]); //store the sum of the vector of gains
 
       Real_t NewI_k = (-1 * LagrangeMultiplier - Qk_cost->getValue(i_theta, 1) * d1->d[i_theta] + bk_cost->getValue(i_theta, 0))
-          / (Qk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d2->d[i_theta]);
+                      / (Qk_cost->getValue(i_theta, 0) - Qk_cost->getValue(i_theta, 1) * d2->d[i_theta]);
 
       AverageI_kUpdate += fabs(NewI_k - I_0->d[i_theta]);
 
@@ -586,9 +587,9 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
       sum += (Qk_cost->getValue(i_theta, 0) * I_0->d[i_theta] * I_0->d[i_theta])
-          + (2 * Qk_cost->getValue(i_theta, 1) * I_0->d[i_theta] * mu->d[i_theta])
-          + (mu->d[i_theta] * mu->d[i_theta] * Qk_cost->getValue(i_theta, 2))
-          - (2 * (bk_cost->getValue(i_theta, 0) * I_0->d[i_theta] + mu->d[i_theta] * bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]); //evaluating the cost function
+             + (2 * Qk_cost->getValue(i_theta, 1) * I_0->d[i_theta] * mu->d[i_theta])
+             + (mu->d[i_theta] * mu->d[i_theta] * Qk_cost->getValue(i_theta, 2))
+             - (2 * (bk_cost->getValue(i_theta, 0) * I_0->d[i_theta] + mu->d[i_theta] * bk_cost->getValue(i_theta, 1)) + ck_cost->d[i_theta]); //evaluating the cost function
     }
     sum /= 2;
 
@@ -615,7 +616,7 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
     int16_t err = calculateCost(cost, Weight, ErrorSino);
     if (err < 0)
     {
-      std::cout<<"Cost went up after Gain+Offset update"<<std::endl;
+      std::cout << "Cost went up after Gain+Offset update" << std::endl;
       return err;
     }
 #endif
@@ -651,7 +652,8 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
       }
       alpha = num_sum / den_sum;
 
-      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++) {
+      for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+      {
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
           ErrorSino->deleteFromValue(alpha, i_theta, i_r, i_t);
@@ -659,16 +661,17 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
       }
 
       mu->d[i_theta] += alpha;
-      if(getVeryVerbose()) {
+      if(getVeryVerbose())
+      {
         std::cout << "Theta: " << i_theta << " Mu: " << mu->d[i_theta] << std::endl;
       }
     }
 #ifdef COST_CALCULATE
     /*********************Cost Calculation*************************************/
     Real_t cost_value = computeCost(ErrorSino, Weight);
-    std::cout<<cost_value<<std::endl;
+    std::cout << cost_value << std::endl;
     int increase = cost->addCostValue(cost_value);
-    if (increase ==1)
+    if (increase == 1)
     {
       std::cout << "Cost just increased after offset update!" << std::endl;
       //break;
@@ -720,7 +723,7 @@ void HAADF_ReconstructionEngine::calculateMeasurementWeight(RealVolumeType::Poin
           size_t bfcounts_idx = m_BFSinogram->counts->calcIndex(i_theta, i_r, i_t);
 
           ErrorSino->d[error_idx] = m_Sinogram->counts->d[counts_idx] - m_BFSinogram->counts->d[bfcounts_idx] * Y_Est->d[yest_idx]
-              - mu->d[i_theta];
+                                    - mu->d[i_theta];
         }
 
 #ifndef IDENTITY_NOISE_MODEL
@@ -737,8 +740,8 @@ void HAADF_ReconstructionEngine::calculateMeasurementWeight(RealVolumeType::Poin
         Weight->d[weight_idx] = 1.0;
 #endif //IDENTITY_NOISE_MODEL endif
 #ifdef FORWARD_PROJECT_MODE
-        temp=Y_Est->d[i_theta][i_r][i_t]/I_0->d[i_theta];
-        fwrite(&temp,sizeof(Real_t),1,Fp6);
+        temp = Y_Est->d[i_theta][i_r][i_t] / I_0->d[i_theta];
+        fwrite(&temp, sizeof(Real_t), 1, Fp6);
 #endif
 #ifdef DEBUG
         if(Weight->d[weight_idx] < 0)
@@ -855,7 +858,7 @@ void HAADF_ReconstructionEngine::updateWeights(RealVolumeType::Pointer Weight,
           Weight->d[weight_idx] = 1.0;
         }
 #else
-        Weight->d[weight_idx] = 1.0/alpha->d[i_theta];
+        Weight->d[weight_idx] = 1.0 / alpha->d[i_theta];
 #endif //IDENTITY_NOISE_MODEL endif
       }
     }
@@ -879,7 +882,7 @@ void HAADF_ReconstructionEngine::updateWeights(RealVolumeType::Pointer Weight,
 #ifdef BF_RECON
 void HAADF_ReconstructionEngine::processRawCounts()
 {
-  Real_t mean=0;
+  Real_t mean = 0;
   for (int16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++) //slice index
   {
     for (int16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
@@ -888,17 +891,17 @@ void HAADF_ReconstructionEngine::processRawCounts()
       {
         size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
         m_Sinogram->counts->d[counts_idx] += BF_OFFSET;
-        m_Sinogram->counts->d[counts_idx] = -log(m_Sinogram->counts->d[counts_idx]/BF_MAX);
+        m_Sinogram->counts->d[counts_idx] = -log(m_Sinogram->counts->d[counts_idx] / BF_MAX);
 
         if(m_Sinogram->counts->d[counts_idx] < 0 ) //Clip the log data to be positive
-          m_Sinogram->counts->d[counts_idx] = 0;
+        { m_Sinogram->counts->d[counts_idx] = 0; }
 
-        mean+=m_Sinogram->counts->d[counts_idx];
+        mean += m_Sinogram->counts->d[counts_idx];
       }
     }
   }
-  mean/=(m_Sinogram->N_theta*m_Sinogram->N_r*m_Sinogram->N_t);
-  std::cout<<"Mean log value ="<<mean<<std::endl;
+  mean /= (m_Sinogram->N_theta * m_Sinogram->N_r * m_Sinogram->N_t);
+  std::cout << "Mean log value =" << mean << std::endl;
 }
 
 #endif //BF Recon

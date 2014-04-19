@@ -40,7 +40,8 @@
 #include "MBIRLib/BrightField/BFConstants.h"
 
 
-namespace QGGMRF {
+namespace QGGMRF
+{
 
   // -----------------------------------------------------------------------------
   //Contains all the prior model related functions
@@ -57,7 +58,7 @@ namespace QGGMRF {
     qggmrf_values->SIGMA_X_Q = pow(tomoInputs->SigmaX, qggmrf_values->MRF_Q);
 #else
     MRF_P = tomoInputs->p;
-    SIGMA_X_P = pow(tomoInputs->SigmaX,MRF_P);
+    SIGMA_X_P = pow(tomoInputs->SigmaX, MRF_P);
 #endif //QGGMRF
     if(NULL != filter)
     {
@@ -70,35 +71,35 @@ namespace QGGMRF {
   // -----------------------------------------------------------------------------
   void initializeFilter(Real_t* filter)
   {
-    filter[INDEX_3(0,0,0)] = 0.0302;
-    filter[INDEX_3(0,0,1)] = 0.0370;
-    filter[INDEX_3(0,0,2)] = 0.0302;
-    filter[INDEX_3(0,1,0)] = 0.0370;
-    filter[INDEX_3(0,1,1)] = 0.0523;
-    filter[INDEX_3(0,1,2)] = 0.0370;
-    filter[INDEX_3(0,2,0)] = 0.0302;
-    filter[INDEX_3(0,2,1)] = 0.0370;
-    filter[INDEX_3(0,2,2)] = 0.0302;
+    filter[INDEX_3(0, 0, 0)] = 0.0302;
+    filter[INDEX_3(0, 0, 1)] = 0.0370;
+    filter[INDEX_3(0, 0, 2)] = 0.0302;
+    filter[INDEX_3(0, 1, 0)] = 0.0370;
+    filter[INDEX_3(0, 1, 1)] = 0.0523;
+    filter[INDEX_3(0, 1, 2)] = 0.0370;
+    filter[INDEX_3(0, 2, 0)] = 0.0302;
+    filter[INDEX_3(0, 2, 1)] = 0.0370;
+    filter[INDEX_3(0, 2, 2)] = 0.0302;
 
-    filter[INDEX_3(1,0,0)] = 0.0370;
-    filter[INDEX_3(1,0,1)] = 0.0523;
-    filter[INDEX_3(1,0,2)] = 0.0370;
-    filter[INDEX_3(1,1,0)] = 0.0523;
-    filter[INDEX_3(1,1,1)] = 0.0000;
-    filter[INDEX_3(1,1,2)] = 0.0523;
-    filter[INDEX_3(1,2,0)] = 0.0370;
-    filter[INDEX_3(1,2,1)] = 0.0523;
-    filter[INDEX_3(1,2,2)] = 0.0370;
+    filter[INDEX_3(1, 0, 0)] = 0.0370;
+    filter[INDEX_3(1, 0, 1)] = 0.0523;
+    filter[INDEX_3(1, 0, 2)] = 0.0370;
+    filter[INDEX_3(1, 1, 0)] = 0.0523;
+    filter[INDEX_3(1, 1, 1)] = 0.0000;
+    filter[INDEX_3(1, 1, 2)] = 0.0523;
+    filter[INDEX_3(1, 2, 0)] = 0.0370;
+    filter[INDEX_3(1, 2, 1)] = 0.0523;
+    filter[INDEX_3(1, 2, 2)] = 0.0370;
 
-    filter[INDEX_3(2,0,0)] = 0.0302;
-    filter[INDEX_3(2,0,1)] = 0.0370;
-    filter[INDEX_3(2,0,2)] = 0.0302;
-    filter[INDEX_3(2,1,0)] = 0.0370;
-    filter[INDEX_3(2,1,1)] = 0.0523;
-    filter[INDEX_3(2,1,2)] = 0.0370;
-    filter[INDEX_3(2,2,0)] = 0.0302;
-    filter[INDEX_3(2,2,1)] = 0.0370;
-    filter[INDEX_3(2,2,2)] = 0.0302;
+    filter[INDEX_3(2, 0, 0)] = 0.0302;
+    filter[INDEX_3(2, 0, 1)] = 0.0370;
+    filter[INDEX_3(2, 0, 2)] = 0.0302;
+    filter[INDEX_3(2, 1, 0)] = 0.0370;
+    filter[INDEX_3(2, 1, 1)] = 0.0523;
+    filter[INDEX_3(2, 1, 2)] = 0.0370;
+    filter[INDEX_3(2, 2, 0)] = 0.0302;
+    filter[INDEX_3(2, 2, 1)] = 0.0370;
+    filter[INDEX_3(2, 2, 2)] = 0.0302;
   }
 
   // -----------------------------------------------------------------------------
@@ -108,7 +109,7 @@ namespace QGGMRF {
   {
     Real_t cost = 0;
     Real_t temp = 0;
-    Real_t delta=0;
+    Real_t delta = 0;
 
 #ifndef EIMTOMO_USE_QGGMRF
     for (int16_t i = 0; i < geometry->N_z; i++)
@@ -116,45 +117,45 @@ namespace QGGMRF {
         for (int16_t k = 0; k < geometry->N_y; k++)
         {
 
-          if(k + 1 < geometry->N_y) temp += k_Filter[2][1][1] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i][j][k + 1]), MRF_P);
+          if(k + 1 < geometry->N_y) { temp += k_Filter[2][1][1] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i][j][k + 1]), MRF_P); }
 
           if(j + 1 < geometry->N_x)
           {
-            if(k - 1 >= 0) temp += k_Filter[0][1][2] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i][j + 1][k - 1]), MRF_P);
+            if(k - 1 >= 0) { temp += k_Filter[0][1][2] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i][j + 1][k - 1]), MRF_P); }
 
             temp += k_Filter[1][1][2] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i][j + 1][k]), MRF_P);
 
-            if(k + 1 < geometry->N_y) temp += k_Filter[2][1][2] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i][j + 1][k + 1]), MRF_P);
+            if(k + 1 < geometry->N_y) { temp += k_Filter[2][1][2] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i][j + 1][k + 1]), MRF_P); }
 
           }
 
           if(i + 1 < geometry->N_z)
           {
 
-            if(j - 1 >= 0) temp += k_Filter[1][2][0] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j - 1][k]), MRF_P);
+            if(j - 1 >= 0) { temp += k_Filter[1][2][0] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j - 1][k]), MRF_P); }
 
             temp += k_Filter[1][2][1] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j][k]), MRF_P);
 
-            if(j + 1 < geometry->N_x) temp += k_Filter[1][2][2] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j + 1][k]), MRF_P);
+            if(j + 1 < geometry->N_x) { temp += k_Filter[1][2][2] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j + 1][k]), MRF_P); }
 
             if(j - 1 >= 0)
             {
-              if(k - 1 >= 0) temp += k_Filter[0][2][0] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j - 1][k - 1]), MRF_P);
+              if(k - 1 >= 0) { temp += k_Filter[0][2][0] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j - 1][k - 1]), MRF_P); }
 
-              if(k + 1 < geometry->N_y) temp += k_Filter[2][2][0] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j - 1][k + 1]), MRF_P);
+              if(k + 1 < geometry->N_y) { temp += k_Filter[2][2][0] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j - 1][k + 1]), MRF_P); }
 
             }
 
-            if(k - 1 >= 0) temp += k_Filter[0][2][1] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j][k - 1]), MRF_P);
+            if(k - 1 >= 0) { temp += k_Filter[0][2][1] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j][k - 1]), MRF_P); }
 
             if(j + 1 < geometry->N_x)
             {
-              if(k - 1 >= 0) temp += k_Filter[0][2][2] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j + 1][k - 1]), MRF_P);
+              if(k - 1 >= 0) { temp += k_Filter[0][2][2] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j + 1][k - 1]), MRF_P); }
 
-              if(k + 1 < geometry->N_y) temp += k_Filter[2][2][2] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j + 1][k + 1]), MRF_P);
+              if(k + 1 < geometry->N_y) { temp += k_Filter[2][2][2] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j + 1][k + 1]), MRF_P); }
             }
 
-            if(k + 1 < geometry->N_y) temp += k_Filter[2][2][1] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j][k + 1]), MRF_P);
+            if(k + 1 < geometry->N_y) { temp += k_Filter[2][2][1] * pow(fabs(geometry->Object->d[i][j][k] - geometry->Object->d[i + 1][j][k + 1]), MRF_P); }
           }
         }
     cost += (temp / (MRF_P * SIGMA_X_P));
@@ -170,7 +171,7 @@ namespace QGGMRF {
           if(k + 1 < geometry->N_y)
           {
             delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i, j, k + 1);
-            temp += filter[INDEX_3(2,1,1)] * QGGMRF::Value(delta, qggmrf_values);
+            temp += filter[INDEX_3(2, 1, 1)] * QGGMRF::Value(delta, qggmrf_values);
 
           }
 
@@ -179,16 +180,16 @@ namespace QGGMRF {
             if(k - 1 >= 0)
             {
               delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i, j + 1, k - 1);
-              temp += filter[INDEX_3(0,1,2)] * QGGMRF::Value(delta, qggmrf_values);
+              temp += filter[INDEX_3(0, 1, 2)] * QGGMRF::Value(delta, qggmrf_values);
             }
 
             delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i, j + 1, k);
-            temp += filter[INDEX_3(1,1,2)] * QGGMRF::Value(delta, qggmrf_values);
+            temp += filter[INDEX_3(1, 1, 2)] * QGGMRF::Value(delta, qggmrf_values);
 
             if(k + 1 < geometry->N_y)
             {
               delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i, j + 1, k + 1);
-              temp += filter[INDEX_3(2,1,2)] * QGGMRF::Value(delta, qggmrf_values);
+              temp += filter[INDEX_3(2, 1, 2)] * QGGMRF::Value(delta, qggmrf_values);
             }
 
           }
@@ -199,16 +200,16 @@ namespace QGGMRF {
             if(j - 1 >= 0)
             {
               delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j - 1, k);
-              temp += filter[INDEX_3(1,2,0)] * QGGMRF::Value(delta, qggmrf_values);
+              temp += filter[INDEX_3(1, 2, 0)] * QGGMRF::Value(delta, qggmrf_values);
             }
 
             delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j, k);
-            temp += filter[INDEX_3(1,2,1)] * QGGMRF::Value(delta, qggmrf_values);
+            temp += filter[INDEX_3(1, 2, 1)] * QGGMRF::Value(delta, qggmrf_values);
 
             if(j + 1 < geometry->N_x)
             {
               delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j + 1, k);
-              temp += filter[INDEX_3(1,2,2)] * QGGMRF::Value(delta, qggmrf_values);
+              temp += filter[INDEX_3(1, 2, 2)] * QGGMRF::Value(delta, qggmrf_values);
             }
 
             if(j - 1 >= 0)
@@ -216,13 +217,13 @@ namespace QGGMRF {
               if(k - 1 >= 0)
               {
                 delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j - 1, k - 1);
-                temp += filter[INDEX_3(0,2,0)] * QGGMRF::Value(delta, qggmrf_values);
+                temp += filter[INDEX_3(0, 2, 0)] * QGGMRF::Value(delta, qggmrf_values);
               }
 
               if(k + 1 < geometry->N_y)
               {
                 delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j - 1, k + 1);
-                temp += filter[INDEX_3(2,2,0)] * QGGMRF::Value(delta, qggmrf_values);
+                temp += filter[INDEX_3(2, 2, 0)] * QGGMRF::Value(delta, qggmrf_values);
               }
 
             }
@@ -230,7 +231,7 @@ namespace QGGMRF {
             if(k - 1 >= 0)
             {
               delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j, k - 1);
-              temp += filter[INDEX_3(0,2,1)] * QGGMRF::Value(delta, qggmrf_values);
+              temp += filter[INDEX_3(0, 2, 1)] * QGGMRF::Value(delta, qggmrf_values);
             }
 
             if(j + 1 < geometry->N_x)
@@ -238,20 +239,20 @@ namespace QGGMRF {
               if(k - 1 >= 0)
               {
                 delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j + 1, k - 1);
-                temp += filter[INDEX_3(0,2,2)] * QGGMRF::Value(delta, qggmrf_values);
+                temp += filter[INDEX_3(0, 2, 2)] * QGGMRF::Value(delta, qggmrf_values);
               }
 
               if(k + 1 < geometry->N_y)
               {
                 delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j + 1, k + 1);
-                temp += filter[INDEX_3(2,2,2)] * QGGMRF::Value(delta, qggmrf_values);
+                temp += filter[INDEX_3(2, 2, 2)] * QGGMRF::Value(delta, qggmrf_values);
               }
             }
 
             if(k + 1 < geometry->N_y)
             {
               delta = geometry->Object->getValue(i, j, k) - geometry->Object->getValue(i + 1, j, k + 1);
-              temp += filter[INDEX_3(2,2,1)] * QGGMRF::Value(delta, qggmrf_values);
+              temp += filter[INDEX_3(2, 2, 1)] * QGGMRF::Value(delta, qggmrf_values);
             }
           }
         }

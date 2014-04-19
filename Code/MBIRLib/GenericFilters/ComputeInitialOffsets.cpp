@@ -82,7 +82,7 @@ void ComputeInitialOffsets::execute()
   //Form the average Gain per view
   std::vector<Real_t> AverageGain(sinogram->N_theta, 0);
   std::vector<Real_t> TargetGain(sinogram->N_theta, 0);
-//	std::vector<std::vector<DATA_TYPE>>LS_Matrix(sinogram->N_theta, std::vector<DATA_TYPE> (2));
+//  std::vector<std::vector<DATA_TYPE>>LS_Matrix(sinogram->N_theta, std::vector<DATA_TYPE> (2));
 //  Real_t** LS_Matrix = (Real_t**)get_img(2, sinogram->N_theta, sizeof(Real_t));
 
   size_t dims[2] = {sinogram->N_theta, 2};
@@ -106,7 +106,7 @@ void ComputeInitialOffsets::execute()
     TargetGain[i_theta] = 1.0 / cos(sinogram->angles[i_theta] * M_PI / 180); //Set to 1/cos(tilt_angle)
     LS_Matrix->setValue(TargetGain[i_theta], i_theta, 0);
     LS_Matrix->setValue(1, i_theta, 1);
-   // LS_Matrix[i_theta][1] = 1;
+    // LS_Matrix[i_theta][1] = 1;
   }
 
 #if 0
@@ -123,8 +123,8 @@ void ComputeInitialOffsets::execute()
   }
 #endif
 
-//	DATA_TYPE max_elt=*max_element(AverageGain.begin(), AverageGain.end());
-//	DATA_TYPE min_elt=*min_element(AverageGain.begin(), AverageGain.end());
+//  DATA_TYPE max_elt=*max_element(AverageGain.begin(), AverageGain.end());
+//  DATA_TYPE min_elt=*min_element(AverageGain.begin(), AverageGain.end());
 
   //Compute A^t * A
   Real_t ProdMatrix[2][2];
@@ -176,7 +176,8 @@ void ComputeInitialOffsets::execute()
     m_InitialOffset->d[i_theta] = LS_Estimates[1];
     ss << "Tilt: " << i_theta << "  Offset: " << m_InitialOffset->d[i_theta] << std::endl;
   }
-  if (getVeryVerbose()) {
+  if (getVeryVerbose())
+  {
     std::cout << ss.str() << std::endl;
   }
   setErrorCondition(0);

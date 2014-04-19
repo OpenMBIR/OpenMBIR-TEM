@@ -91,7 +91,7 @@ class AvizoUniformCoordinateWriter : public TomoFilter
      * @param writer The MXAFileWriter object
      * @return Error code
      */
-    int writeData(MXAFileWriter64 &writer);
+    int writeData(MXAFileWriter64& writer);
 
   private:
     int32_t* m_GrainIds;

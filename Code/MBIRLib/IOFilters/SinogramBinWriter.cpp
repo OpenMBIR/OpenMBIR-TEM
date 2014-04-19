@@ -48,7 +48,7 @@
 //
 // -----------------------------------------------------------------------------
 SinogramBinWriter::SinogramBinWriter() :
-TomoFilter()
+  TomoFilter()
 {
 
 }

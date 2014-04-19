@@ -118,17 +118,17 @@ class MBIRLib_EXPORT VoxelUpdateList
      * @brief printList
      * @param out
      */
-    void printList(std::ostream &out);
+    void printList(std::ostream& out);
     /**
      * @brief printMaxList
      * @param out
      */
-    void printMaxList(std::ostream &out);
+    void printMaxList(std::ostream& out);
     /**
      * @brief printMinList
      * @param out
      */
-    void printMinList(std::ostream &out);
+    void printMinList(std::ostream& out);
 
 
 

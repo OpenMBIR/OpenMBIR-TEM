@@ -80,14 +80,14 @@ void AMatrixCol::setCount(uint32_t c)
 // Function to calculate the 2-D A matrix column
 // -----------------------------------------------------------------------------
 AMatrixCol::Pointer AMatrixCol::calculateAMatrixColumnPartial(SinogramPtr sinogram,
-                                                                             GeometryPtr geometry,
-                                                                             TomoInputsPtr tomoInputs,
-                                                                             AdvancedParametersPtr advParams,
-                                                                             uint16_t row,
-                                                                             uint16_t col,
-                                                                             uint16_t slice,
-                                                                             RealVolumeType::Pointer detectorResponse,
-                                                                             DetectorParameters::Pointer haadfParameters)
+    GeometryPtr geometry,
+    TomoInputsPtr tomoInputs,
+    AdvancedParametersPtr advParams,
+    uint16_t row,
+    uint16_t col,
+    uint16_t slice,
+    RealVolumeType::Pointer detectorResponse,
+    DetectorParameters::Pointer haadfParameters)
 {
 
 
@@ -154,20 +154,20 @@ AMatrixCol::Pointer AMatrixCol::calculateAMatrixColumnPartial(SinogramPtr sinogr
       tmin = (t - tomoInputs->delta_xy / 2) > sinogram->T0 ? t - tomoInputs->delta_xy / 2 : sinogram->T0;
       tmax = (t + tomoInputs->delta_xy / 2) <= sinogram->TMax ? t + tomoInputs->delta_xy / 2 : sinogram->TMax;
 
-      if(rmax < sinogram->R0 || rmin > sinogram->RMax) continue;
+      if(rmax < sinogram->R0 || rmin > sinogram->RMax) { continue; }
 
       index_min = static_cast<int32_t>(floor(((rmin - sinogram->R0) / sinogram->delta_r)));
       index_max = static_cast<int32_t>(floor((rmax - sinogram->R0) / sinogram->delta_r));
 
-      if(index_max >= sinogram->N_r) index_max = sinogram->N_r - 1;
+      if(index_max >= sinogram->N_r) { index_max = sinogram->N_r - 1; }
 
-      if(index_min < 0) index_min = 0;
+      if(index_min < 0) { index_min = 0; }
 
       slice_index_min = static_cast<int32_t>(floor((tmin - sinogram->T0) / sinogram->delta_t));
       slice_index_max = static_cast<int32_t>(floor((tmax - sinogram->T0) / sinogram->delta_t));
 
-      if(slice_index_min < 0) slice_index_min = 0;
-      if(slice_index_max >= sinogram->N_t) slice_index_max = sinogram->N_t - 1;
+      if(slice_index_min < 0) { slice_index_min = 0; }
+      if(slice_index_max >= sinogram->N_t) { slice_index_max = sinogram->N_t - 1; }
 
       BaseIndex = i * sinogram->N_r; //*Sinogram->N_t;
 
@@ -197,10 +197,10 @@ AMatrixCol::Pointer AMatrixCol::calculateAMatrixColumnPartial(SinogramPtr sinogr
 
             uint16_t iidx = index_delta_r + 1 < advParams->DETECTOR_RESPONSE_BINS ? index_delta_r + 1 : advParams->DETECTOR_RESPONSE_BINS - 1;
             f1 = (w2 / OffsetR) * detectorResponse->getValue(index_delta_t, i, index_delta_r)
-                + (w1 / OffsetR) * detectorResponse->getValue(index_delta_t, i, iidx);
+                 + (w1 / OffsetR) * detectorResponse->getValue(index_delta_t, i, iidx);
 
-            if(sliceidx == slice_index_min) ContributionAlongT = (sliceidx + 1) * sinogram->delta_t - tmin;
-            else if(sliceidx == slice_index_max) ContributionAlongT = tmax - (sliceidx) * sinogram->delta_t;
+            if(sliceidx == slice_index_min) { ContributionAlongT = (sliceidx + 1) * sinogram->delta_t - tmin; }
+            else if(sliceidx == slice_index_max) { ContributionAlongT = tmax - (sliceidx) * sinogram->delta_t; }
             else
             {
               ContributionAlongT = sinogram->delta_t;

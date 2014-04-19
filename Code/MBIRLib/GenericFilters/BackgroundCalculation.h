@@ -38,22 +38,22 @@
 
 enum Type
 {
-    TYPE_BYTES,
-    TYPE_SIGNED_SHORT_INT,
-    TYPE_FLOAT,
-    TYPE_SIGNED_BYTES = 50,     // assigned to 50 so as not to confuse with other types
-    TYPE_UNSIGNED_BYTES = 51    // assigned to 51 so as not to confuse with other types
+  TYPE_BYTES,
+  TYPE_SIGNED_SHORT_INT,
+  TYPE_FLOAT,
+  TYPE_SIGNED_BYTES = 50,     // assigned to 50 so as not to confuse with other types
+  TYPE_UNSIGNED_BYTES = 51    // assigned to 51 so as not to confuse with other types
 };
 
 class BackgroundCalculation
 {
-    
-public:
+
+  public:
     virtual ~BackgroundCalculation();
-    
+
     static double getMeanValue(std::string filePath, int x, int y, int width, int height, int tiltNum);
-    
-protected:
+
+  protected:
     BackgroundCalculation();
     template<class T> static double computeMean(void* ptr, int numVoxels, Type type);
 };

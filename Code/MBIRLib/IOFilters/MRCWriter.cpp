@@ -49,15 +49,15 @@
 //
 // -----------------------------------------------------------------------------
 MRCWriter::MRCWriter() :
-TomoFilter(),
-m_MRCHeader(NULL)
+  TomoFilter(),
+  m_MRCHeader(NULL)
 {
-m_XDims[0] = 0;
-m_XDims[1] = 0;
-m_YDims[0] = 0;
-m_YDims[1] = 0;
-m_ZDims[0] = 0;
-m_ZDims[1] = 0;
+  m_XDims[0] = 0;
+  m_XDims[1] = 0;
+  m_YDims[0] = 0;
+  m_YDims[1] = 0;
+  m_ZDims[0] = 0;
+  m_ZDims[1] = 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -72,7 +72,7 @@ MRCWriter::~MRCWriter()
 // -----------------------------------------------------------------------------
 void MRCWriter::execute()
 {
-    write();
+  write();
 }
 
 // -----------------------------------------------------------------------------
@@ -179,25 +179,25 @@ int MRCWriter::write()
   std::cout << "MRC Output File:\n  " << m_OutputFile << std::endl;
   if (m_OutputFile.empty())
   {
-      ss.str("");
-      ss << "MRCWriter: Output File was Not Set";
-      setErrorCondition(-1);
-      setErrorMessage(ss.str());
-      notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-      return err;
+    ss.str("");
+    ss << "MRCWriter: Output File was Not Set";
+    setErrorCondition(-1);
+    setErrorMessage(ss.str());
+    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+    return err;
   }
   MXAFileWriter64 writer(m_OutputFile);
   bool success = writer.initWriter();
 
   if (false == success)
   {
-      ss.str("");
-      ss << "MRCWriter: Error opening output file for writing. '" <<
-          m_OutputFile << "'";
-      setErrorCondition(-1);
-      setErrorMessage(ss.str());
-      notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
-      return err;
+    ss.str("");
+    ss << "MRCWriter: Error opening output file for writing. '" <<
+       m_OutputFile << "'";
+    setErrorCondition(-1);
+    setErrorMessage(ss.str());
+    notify(getErrorMessage().c_str(), 0, UpdateErrorMessage);
+    return err;
   }
 
 //  std::cout << "Writing MRC File with Geometry of: " << std::endl;
@@ -248,7 +248,7 @@ int MRCWriter::write()
   float dmax = std::numeric_limits<Real_t>::min();
   float dmin = std::numeric_limits<Real_t>::max();
 
-  for (int z = m_ZDims[1]-1; z >= m_ZDims[0]; z--)
+  for (int z = m_ZDims[1] - 1; z >= m_ZDims[0]; z--)
   {
     index = 0;
     for (int y = m_YDims[0]; y < m_YDims[1]; ++y)
@@ -260,8 +260,8 @@ int MRCWriter::write()
         slice[index] = static_cast<float>(d);
         mean += slice[index];
         count++;
-        if(d > dmax) dmax = d;
-        if(d < dmin) dmin = d;
+        if(d > dmax) { dmax = d; }
+        if(d < dmin) { dmin = d; }
         ++index;
       }
     }
