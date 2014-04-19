@@ -955,7 +955,7 @@ void BrightFieldGui::initializeSOCEngine(bool fullReconstruction)
   if (fullReconstruction == true)
   {
     // Sanity Check the Input dimensions
-    QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
+    //QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
     //QSize size = image.size();
 
     int x_min = 0;
@@ -1068,12 +1068,10 @@ void BrightFieldGui::singleSliceComplete()
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(reconVolumeFile);
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(false);
 
-  removeDir(QString::fromStdString(m_MultiResSOC->getTempDir()));
+  // Delete the top level directory
+  //removeDir(QString::fromStdString(m_MultiResSOC->getTempDir()));
 
   m_ReconstructedDisplayWidget->getControlsTab()->show();
-
-  // There is no way to hide sub-tabs, so we have to remove it instead
-  m_ReconstructedDisplayWidget->getControlsTab()->removeTab(1);   // Removes Advanced Controls tab
 
   m_FullReconstructionActive = false;
   m_SingleSliceReconstructionActive = false;

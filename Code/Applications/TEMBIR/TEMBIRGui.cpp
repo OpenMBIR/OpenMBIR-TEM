@@ -1085,9 +1085,10 @@ void TEMBIRGui::singleSliceComplete()
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(reconVolumeFile);
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(false);
 
-
   // Delete the top level directory
-  removeDir(QString::fromStdString(m_MultiResSOC->getTempDir()));
+  //removeDir(QString::fromStdString(m_MultiResSOC->getTempDir()));
+
+  m_ReconstructedDisplayWidget->getControlsTab()->show();
 
   m_FullReconstrucionActive = false;
   m_SingleSliceReconstructionActive = false;

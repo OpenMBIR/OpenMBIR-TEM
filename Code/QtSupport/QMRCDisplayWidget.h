@@ -66,8 +66,8 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
     QMRCDisplayWidget(QWidget *parent = 0);
     virtual ~QMRCDisplayWidget();
 
-    static QImage xzSigned16CrossSection(qint16* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader &header);
-    static QImage xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader &header);
+    QImage xzSigned16CrossSection(qint16* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader &header);
+    QImage xzFloatCrossSection(float* data, size_t nVoxels, int* voxelMin, int* voxelMax, MRCHeader &header);
     static void getColorCorrespondingTovalue(int16_t val,
                                        float &r, float &g, float &b,
                                        float max, float min);
@@ -151,6 +151,7 @@ class QMRCDisplayWidget : public QWidget, private Ui::QMRCDisplayWidget
 
   private:
     bool                  m_StopAnimation;     // Trigger to stop a running animation
+    bool                  m_XZSliceImage;
     float                 m_HeaderMinimum;
     float                 m_HeaderMaximum;
     QTimer*               m_AnimationTimer;

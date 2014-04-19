@@ -65,6 +65,7 @@
 QMRCDisplayWidget::QMRCDisplayWidget(QWidget *parent) :
   QWidget(parent),
   m_StopAnimation(true),
+  m_XZSliceImage(false),
   m_HeaderMinimum(0.0f),
   m_HeaderMaximum(0.0f),
   m_ImageWidgetsEnabled(false),
@@ -283,7 +284,7 @@ void QMRCDisplayWidget::stepForwardFromTimer()
     return;
   }
 
-//  QCoreApplication::processEvents();
+  //  QCoreApplication::processEvents();
 
   int idx = currentTiltIndex->value();
   if (idx == currentTiltIndex->maximum())
@@ -408,6 +409,7 @@ void QMRCDisplayWidget::resetImageScaling()
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::loadMRCTiltImage(QString mrcFilePath, int tiltIndex)
 {
+  m_XZSliceImage = false;
   //  std::cout << "QMRCDisplayWidget::loadMRCTiltImage(): " << mrcFilePath.toStdString() << std::endl;
   m_CurrentMRCFilePath = mrcFilePath;
   if (m_CurrentMRCFilePath.isEmpty() == true)
@@ -853,8 +855,8 @@ QImage QMRCDisplayWidget::xzFloatCrossSection(float* data, size_t nVoxels, int* 
     if(data[i] < dmin) dmin = data[i];
   }
 #else
-  float dmax = header.amax;
-  float dmin = header.amin;
+  float dmax = maximumField->text().toFloat();
+  float dmin = minimumField->text().toFloat();
 #endif
   //Scale all the values to 0 and 255 in place over writing the float values with 32 bit ints
   int* iData = reinterpret_cast<int*>(data);
@@ -894,17 +896,17 @@ QImage QMRCDisplayWidget::xzFloatCrossSection(float* data, size_t nVoxels, int* 
   int idx = 0;
   for (int z = voxelMin[2]; z < voxelMax[2]; ++z)
   {
-    QImage image(voxelMax[0], voxelMax[1], QImage::Format_ARGB32);
+    //QImage image(voxelMax[0], voxelMax[1], QImage::Format_ARGB32);
 
     for (int y = voxelMin[1]; y < voxelMax[1]; ++y)
     {
       for (int x = voxelMin[0]; x < voxelMax[0]; ++x)
       {
         // idx = (voxelMax[0] * voxelMax[1] * z) + (x * voxelMax[1]) + y;
-        int iData_idx = iData[idx];
-        image.setPixel(x, y, qRgb(iData_idx, iData_idx, iData_idx)); // m_ColorTable[colorIndex]);
-        if(iData[idx] > imax) imax = iData[idx];
-        if(iData[idx] < imin) imin = iData[idx];
+//        int iData_idx = iData[idx];
+//        image.setPixel(x, y, qRgb(iData_idx, iData_idx, iData_idx)); // m_ColorTable[colorIndex]);
+//        if(iData[idx] > imax) imax = iData[idx];
+//        if(iData[idx] < imin) imin = iData[idx];
         ++idx;
         if(y == 0)
         {
@@ -1050,6 +1052,8 @@ void QMRCDisplayWidget::getColorCorrespondingTovalue(int16_t val,
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::loadXZSliceReconstruction(QString reconMRCFilePath)
 {
+  m_XZSliceImage = true;
+  m_CurrentMRCFilePath = reconMRCFilePath;
   // std::cout << "QMRCDisplayWidget::loadXZSliceReconstruction(" << reconMRCFilePath.toStdString() << ")" << std::endl;
   MRCHeader header;
   header.feiHeaders = NULL;
@@ -1088,9 +1092,20 @@ void QMRCDisplayWidget::loadXZSliceReconstruction(QString reconMRCFilePath)
     }
   }
 
-  FREE_FEI_HEADERS( header.feiHeaders )
+  m_HeaderMinimum = header.amin;
+  m_HeaderMaximum = header.amax;
 
-      QImage image;
+  if (minimumField->text() == "")
+  {
+    minimumField->setText(QString::number(header.amin));
+  }
+  if (maximumField->text() == "")
+  {
+    maximumField->setText(QString::number(header.amax));
+  }
+
+
+  QImage image;
   if(dataType == 1)
   {
     qint16* data = reinterpret_cast<qint16*>(reader->getDataPointer());
@@ -1110,6 +1125,7 @@ void QMRCDisplayWidget::loadXZSliceReconstruction(QString reconMRCFilePath)
   m_GraphicsView->loadBaseImageFile(m_CurrentImage);
   // std::cout << "QMRCDisplayWidget::loadXZSliceReconstruction( COMPLETE )" << std::endl;
 
+  FREE_FEI_HEADERS( header.feiHeaders )
 }
 
 // -----------------------------------------------------------------------------
@@ -1141,8 +1157,15 @@ QWidget* QMRCDisplayWidget::getBasicControls()
 // -----------------------------------------------------------------------------
 void QMRCDisplayWidget::on_updateImageBtn_clicked()
 {
-  int index = currentTiltIndex->value();
-  loadMRCTiltImage(m_CurrentMRCFilePath, index);
+  if (m_XZSliceImage)
+  {
+    loadXZSliceReconstruction(m_CurrentMRCFilePath);
+  }
+  else
+  {
+    int index = currentTiltIndex->value();
+    loadMRCTiltImage(m_CurrentMRCFilePath, index);
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -1151,8 +1174,15 @@ void QMRCDisplayWidget::on_updateImageBtn_clicked()
 void QMRCDisplayWidget::on_resetImageBtn_clicked()
 {
   resetImageScaling();
-  int index = currentTiltIndex->value();
-  loadMRCTiltImage(m_CurrentMRCFilePath, index);
+  if (m_XZSliceImage)
+  {
+    loadXZSliceReconstruction(m_CurrentMRCFilePath);
+  }
+  else
+  {
+    int index = currentTiltIndex->value();
+    loadMRCTiltImage(m_CurrentMRCFilePath, index);
+  }
 }
 
 // -----------------------------------------------------------------------------
