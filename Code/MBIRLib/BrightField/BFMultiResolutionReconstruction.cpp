@@ -395,8 +395,8 @@ void BFMultiResolutionReconstruction::execute()
     forwardModel->addObserver(this);
     forwardModel->setMessagePrefix(StringUtils::numToString(inputs->interpolateFactor / static_cast<int>(powf(2.0f, i))) + std::string("x: "));
 
-    forwardModel->setVerbose(true);
-    forwardModel->setVeryVerbose(true);
+    forwardModel->setVerbose(false);
+    forwardModel->setVeryVerbose(false);
 
     //Create an Engine and initialize all the structures
     BFReconstructionEngine::Pointer engine = BFReconstructionEngine::New();
@@ -407,8 +407,8 @@ void BFMultiResolutionReconstruction::execute()
     engine->setAdvParams(m_AdvParams);
     engine->setForwardModel(forwardModel);
 
-    engine->setVerbose(true);
-    engine->setVeryVerbose(true);
+    engine->setVerbose(false);
+    engine->setVeryVerbose(false);
 
     // We need to get messages to the gui or command line
     engine->addObserver(this);

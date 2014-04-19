@@ -254,8 +254,8 @@ void BFReconstructionEngine::initializeVolume(RealVolumeType::Pointer Y_Est, dou
 //
 // -----------------------------------------------------------------------------
 void BFReconstructionEngine::storeVoxelResponse(RealVolumeType::Pointer H_t,
-                                              std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
-                                              DetectorParameters::Pointer haadfParameters)
+                                                std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
+                                                DetectorParameters::Pointer haadfParameters)
 {
   Real_t ProfileThickness = 0.0;
   Real_t y = 0.0;
@@ -474,18 +474,18 @@ void BFReconstructionEngine::writeAvizoFile(const std::string& file, uint16_t cr
 // update computes the list. Calls the parallel update of voxels routine
 // -----------------------------------------------------------------------------
 uint8_t BFReconstructionEngine::updateVoxels(int16_t OuterIter,
-                                           int16_t Iter,
-                                           std::vector<AMatrixCol::Pointer>& TempCol,
-                                           RealVolumeType::Pointer ErrorSino,
-                                           std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
-                                           CostData::Pointer cost,
-                                           QGGMRF::QGGMRF_Values* BFQGGMRF_values,
-                                           RealImageType::Pointer magUpdateMap,
-                                           RealImageType::Pointer filtMagUpdateMap,
-                                           UInt8Image_t::Pointer magUpdateMask,
-                                           UInt8Image_t::Pointer m_VisitCount,
-                                           Real_t PrevMagSum,
-                                           uint32_t EffIterCount)
+                                             int16_t Iter,
+                                             std::vector<AMatrixCol::Pointer>& TempCol,
+                                             RealVolumeType::Pointer ErrorSino,
+                                             std::vector<AMatrixCol::Pointer>& VoxelLineResponse,
+                                             CostData::Pointer cost,
+                                             QGGMRF::QGGMRF_Values* BFQGGMRF_values,
+                                             RealImageType::Pointer magUpdateMap,
+                                             RealImageType::Pointer filtMagUpdateMap,
+                                             UInt8Image_t::Pointer magUpdateMask,
+                                             UInt8Image_t::Pointer m_VisitCount,
+                                             Real_t PrevMagSum,
+                                             uint32_t EffIterCount)
 
 {
 
@@ -553,8 +553,10 @@ uint8_t BFReconstructionEngine::updateVoxels(int16_t OuterIter,
   int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
 
 #ifdef DEBUG
-  std::cout << "Max of list in ReconEngineExtra = " << std::endl;
-  m_VoxelIdxList->printMaxList(std::cout);
+  if (getVeryVerbose()) {
+    std::cout << "Max of list in ReconEngineExtra = " << std::endl;
+    m_VoxelIdxList->printMaxList(std::cout);
+  }
 #endif //DEBUG
 
   for (uint16_t NH_Iter = 0; NH_Iter < subIterations; ++NH_Iter) //This can be varied
@@ -572,14 +574,16 @@ uint8_t BFReconstructionEngine::updateVoxels(int16_t OuterIter,
     {
 #ifdef DEBUG
       Real_t TempSum = 0;
-      for (int32_t j = 0; j < m_Geometry->N_z; j++)
+      for (int32_t j = 0; j < m_Geometry->N_z; j++) {
         for (int32_t k = 0; k < m_Geometry->N_x; k++)
         {
           TempSum += magUpdateMap->getValue(j, k);
-        }
-      std::cout << "**********************************************" << std::endl;
-      std::cout << "Average mag Prior to VSC" << TempSum / (m_Geometry->N_z * m_Geometry->N_x) << std::endl;
-      std::cout << "**********************************************" << std::endl;
+        }}
+      if (getVeryVerbose()) {
+        std::cout << "**********************************************" << std::endl;
+        std::cout << "Average mag Prior to VSC" << TempSum / (m_Geometry->N_z * m_Geometry->N_x) << std::endl;
+        std::cout << "**********************************************" << std::endl;
+      }
 #endif //debug
 
       //Compute a filtered version of the magnitude update map
@@ -587,21 +591,23 @@ uint8_t BFReconstructionEngine::updateVoxels(int16_t OuterIter,
 
 #ifdef DEBUG
       TempSum = 0;
-      for (int32_t j = 0; j < m_Geometry->N_z; j++)
+      for (int32_t j = 0; j < m_Geometry->N_z; j++) {
         for (int32_t k = 0; k < m_Geometry->N_x; k++)
         {
           TempSum += magUpdateMap->getValue(j, k);
-        }
-      std::cout << "**********************************************" << std::endl;
-      std::cout << "Average mag Prior to NH Thresh" << TempSum / (m_Geometry->N_z * m_Geometry->N_x) << std::endl;
-      std::cout << "**********************************************" << std::endl;
+        }}
+      if (getVeryVerbose()) {
+        std::cout << "**********************************************" << std::endl;
+        std::cout << "Average mag Prior to NH Thresh" << TempSum / (m_Geometry->N_z * m_Geometry->N_x) << std::endl;
+        std::cout << "**********************************************" << std::endl;
+      }
 #endif //debug
 
       START_TIMER;
       NH_Threshold = SetNonHomThreshold(filtMagUpdateMap);
       STOP_TIMER;
       PRINT_TIME("  SetNonHomThreshold");
-      std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
+      if(getVerbose()) std::cout << indent << "NHICD Threshold: " << NH_Threshold << std::endl;
       //Generate a new List based on the NH_threshold
       m_VoxelIdxList = GenNonHomList(NH_Threshold, filtMagUpdateMap);
     }
@@ -653,7 +659,7 @@ uint8_t BFReconstructionEngine::updateVoxels(int16_t OuterIter,
     std::vector<VoxelUpdateList::Pointer> NewList(m_NumThreads);
     int16_t EffCoresUsed = 0;
 
-    std::cout << " Starting multicore allocation with " << m_NumThreads << " threads.." << std::endl;
+    if(getVerbose()) std::cout << " Starting multicore allocation with " << m_NumThreads << " threads.." << std::endl;
 
     for (int t = 0; t < m_NumThreads; ++t)
     {
@@ -661,9 +667,9 @@ uint8_t BFReconstructionEngine::updateVoxels(int16_t OuterIter,
       yStart = yStop;
       yStop = yStart + yCount[t];
 
-#ifdef DEBUG
-      std::cout << "Thread :" << t << "(" << yStart << "," << yStop << ")" << std::endl;
-#endif //debug
+      if (getVeryVerbose()) {
+        std::cout << "Thread :" << t << "(" << yStart << "," << yStop << ")" << std::endl;
+      }
 
       if(yStart == yStop)
       {
@@ -683,15 +689,15 @@ uint8_t BFReconstructionEngine::updateVoxels(int16_t OuterIter,
 
       BFUpdateYSlice& a =
           *new (tbb::task::allocate_root()) BFUpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
-                                                         m_Sinogram, TempCol, ErrorSino,
-                                                         VoxelLineResponse, m_ForwardModel.get(),
-                                                         magUpdateMask,
-                                                         _magUpdateMap,
-                                                         magUpdateMask, updateType,
-                                                         averageUpdate.get() + t,
-                                                         averageMagnitudeOfRecon.get() + t,
-                                                         m_AdvParams->ZERO_SKIPPING,
-                                                         BFQGGMRF_values, NewList[t] );
+                                                           m_Sinogram, TempCol, ErrorSino,
+                                                           VoxelLineResponse, m_ForwardModel.get(),
+                                                           magUpdateMask,
+                                                           _magUpdateMap,
+                                                           magUpdateMask, updateType,
+                                                           averageUpdate.get() + t,
+                                                           averageMagnitudeOfRecon.get() + t,
+                                                           m_AdvParams->ZERO_SKIPPING,
+                                                           BFQGGMRF_values, NewList[t] );
       taskList.push_back(a);
     }
 
@@ -722,7 +728,7 @@ uint8_t BFReconstructionEngine::updateVoxels(int16_t OuterIter,
     NewList.resize(0); // Frees all the pointers
 
     //From individual threads update the magnitude map
-    std::cout << " Magnitude Map Update.." << std::endl;
+    if(getVerbose()) std::cout << " Magnitude Map Update.." << std::endl;
     RealImageType::Pointer TempPointer;
     for(int32_t tmpiter = 0; tmpiter < m_VoxelIdxList->numElements(); tmpiter++)
     {
@@ -757,15 +763,15 @@ uint8_t BFReconstructionEngine::updateVoxels(int16_t OuterIter,
 
 
     BFUpdateYSlice yVoxelUpdate = BFUpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
-                                             m_Sinogram, TempCol, ErrorSino,
-                                             VoxelLineResponse, m_ForwardModel.get(),
-                                             magUpdateMask,
-                                             _magUpdateMap,
-                                             magUpdateMask, updateType,
-                                             averageUpdate,
-                                             averageMagnitudeOfRecon,
-                                             m_AdvParams->ZERO_SKIPPING,
-                                             BFQGGMRF_values, NewList);
+                                                 m_Sinogram, TempCol, ErrorSino,
+                                                 VoxelLineResponse, m_ForwardModel.get(),
+                                                 magUpdateMask,
+                                                 _magUpdateMap,
+                                                 magUpdateMask, updateType,
+                                                 averageUpdate,
+                                                 averageMagnitudeOfRecon,
+                                                 m_AdvParams->ZERO_SKIPPING,
+                                                 BFQGGMRF_values, NewList);
 
     /*BFUpdateYSlice(yStart, yStop, m_Geometry, OuterIter, Iter,
            m_Sinogram, TempCol, ErrorSino,
@@ -835,7 +841,7 @@ uint8_t BFReconstructionEngine::updateVoxels(int16_t OuterIter,
   //  }
 #endif //NHICD
 
-  std::cout << "exiting voxel update routine" << std::endl;
+  if(getVerbose()) std::cout << "exiting voxel update routine" << std::endl;
   return exit_status;
 
 }
@@ -956,7 +962,7 @@ Real_t BFReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpda
   for(uint32_t i = 0; i < ArrLength; i++)
   { TempSum += TempMagMap->d[i]; }
 
-  std::cout << "Temp mag map average= " << TempSum / ArrLength << std::endl;
+  if(getVerbose()) std::cout << "Temp mag map average= " << TempSum / ArrLength << std::endl;
 #endif //DEBUG
 
   /* for (uint32_t i = 0; i < m_Geometry->N_z; i++)
@@ -967,7 +973,7 @@ Real_t BFReconstructionEngine::SetNonHomThreshold(RealImageType::Pointer magUpda
         } */
 
   uint32_t percentile_index = ArrLength / MBIR::Constants::k_NumNonHomogeniousIter;
-  std::cout << "Percentile to select= " << percentile_index << std::endl;
+  if(getVerbose()) std::cout << "Percentile to select= " << percentile_index << std::endl;
 
   //Partial selection sort
 
@@ -1024,7 +1030,7 @@ VoxelUpdateList::Pointer BFReconstructionEngine::GenNonHomList(Real_t NHThresh, 
   // In place randomize the list
   TempList = VoxelUpdateList::GenRandList(TempList);
 
-  std::cout << "Number of elements in the NH list =" << TempList->numElements() << std::endl;
+  if(getVeryVerbose()) {std::cout << "Number of elements in the NH list =" << TempList->numElements() << std::endl;}
 
   // Return the list
   return TempList;
@@ -1091,10 +1097,10 @@ VoxelUpdateList::Pointer BFReconstructionEngine::GenRandList(VoxelUpdateList::Po
   }
 
 #ifdef DEBUG
-  std::cout << "Input" << std::endl;
+  if(getVerbose()) std::cout << "Input" << std::endl;
   maxList(InpList);
 
-  std::cout << "Output" << std::endl;
+  if(getVerbose()) std::cout << "Output" << std::endl;
   maxList(OpList);
 
 #endif //Debug
@@ -1109,28 +1115,6 @@ VoxelUpdateList::Pointer BFReconstructionEngine::GenRandList(VoxelUpdateList::Po
 // -----------------------------------------------------------------------------
 Real_t BFReconstructionEngine::RandomizedSelect(RealArrayType::Pointer A, uint32_t p, uint32_t r, uint32_t i)
 {
-
-  //std::cout<<"***********Select****************"<<std::endl;
-  //std::cout<<p<<"  "<<r<<"  "<<i<<std::endl;
-
-  /*
-  if (p == r)
-    {
-    return A->d[p];
-    }
-  uint32_t q = RandomizedPartition(A, p, r);
-  uint32_t k = q - p + 1;
-  if (i == k)
-    {
-    return A->d[q];
-    }
-  else if  (i < k)
-    {
-    return RandomizedSelect(A, p, q-1, i) ;
-    }
-  else return RandomizedSelect(A, q+1, r, i - k);*/
-
-
   uint32_t start = p;
   uint32_t end = r;
   uint32_t q;
@@ -1218,7 +1202,7 @@ Real_t BFReconstructionEngine::roiVolumeSum(UInt8Image_t::Pointer Mask)
         for (uint16_t i = 0; i < m_Geometry->N_y; i++)
         { sum += m_Geometry->Object->getValue(j, k, i); }
       }
-  std::cout << "Number of elements in the roiVolumeSum = " << counter << std::endl;
+  if(getVeryVerbose()) {std::cout << "Number of elements in the roiVolumeSum = " << counter << std::endl;}
   return sum;
 }
 
@@ -1226,17 +1210,17 @@ uint8_t BFReconstructionEngine::stopCriteria(RealImageType::Pointer magUpdateMap
 {
 
   uint8_t exit_status = 1;
-#ifdef DEBUG
-  Real_t TempSum = 0;
-  for (int32_t j = 0; j < m_Geometry->N_z; j++)
-    for (int32_t k = 0; k < m_Geometry->N_x; k++)
-    {
-      TempSum += magUpdateMap->getValue(j, k);
-    }
-  std::cout << "**********************************************" << std::endl;
-  std::cout << "Average mag after voxel update" << TempSum / (m_Geometry->N_z * m_Geometry->N_x) << std::endl;
-  std::cout << "**********************************************" << std::endl;
-#endif //debug
+  if(getVeryVerbose()) {
+    Real_t TempSum = 0;
+    for (int32_t j = 0; j < m_Geometry->N_z; j++){
+      for (int32_t k = 0; k < m_Geometry->N_x; k++)
+      {
+        TempSum += magUpdateMap->getValue(j, k);
+      }}
+    std::cout << "**********************************************" << std::endl;
+    std::cout << "Average mag after voxel update" << TempSum / (m_Geometry->N_z * m_Geometry->N_x) << std::endl;
+    std::cout << "**********************************************" << std::endl;
+  }
 
 #ifdef NHICD
   //In non homogenous mode check stopping criteria only after a full equit = equivalet iteration
@@ -1256,7 +1240,7 @@ uint8_t BFReconstructionEngine::stopCriteria(RealImageType::Pointer magUpdateMap
           counter++;
         }
 
-    std::cout << "Number of elements in the ROI after an equit= " << counter << std::endl;
+    if(getVeryVerbose()) {std::cout << "Number of elements in the ROI after an equit= " << counter << std::endl;}
 
     if(getVerbose())
     {
@@ -1266,30 +1250,13 @@ uint8_t BFReconstructionEngine::stopCriteria(RealImageType::Pointer magUpdateMap
     }
     if( (fabs(TempSum) / fabs(PrevMagSum)) < m_TomoInputs->StopThreshold && EffIterCount > 0)
     {
-      std::cout << "This is the terminating point " << EffIterCount << std::endl;
+      if(getVerbose()) std::cout << "This is the terminating point " << EffIterCount << std::endl;
       m_TomoInputs->StopThreshold *= m_AdvParams->THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
-      std::cout << "New threshold" << m_TomoInputs->StopThreshold << std::endl;
+      if(getVerbose()) std::cout << "New threshold" << m_TomoInputs->StopThreshold << std::endl;
       exit_status = 0;
     }
 
   }
-  /* #else
-  if(AverageMagnitudeOfRecon > 0)
-  {
-    if(getVerbose())
-    {
-      std::cout << Iter + 1 << " " << AverageUpdate / AverageMagnitudeOfRecon << std::endl;
-    }
-    //Use the stopping criteria if we are performing a full update of all voxels
-    if((AverageUpdate / AverageMagnitudeOfRecon) < m_TomoInputs->StopThreshold && updateType != MBIR::VoxelUpdateType::NonHomogeniousUpdate)
-    {
-      std::cout << "This is the terminating point " << Iter << std::endl;
-      m_TomoInputs->StopThreshold *= m_AdvParams->THRESHOLD_REDUCTION_FACTOR; //Reducing the thresold for subsequent iterations
-      std::cout << "New threshold" << m_TomoInputs->StopThreshold << std::endl;
-      exit_status = 0;
-    }
-  } */
-  //#endif //NHICD
 
   return exit_status;
 }

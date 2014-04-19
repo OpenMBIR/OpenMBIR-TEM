@@ -154,7 +154,7 @@ VoxelUpdateList::ArrayType VoxelUpdateList::getArray()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-VoxelUpdateList::Pointer VoxelUpdateList::GenRandList(VoxelUpdateList::Pointer InList)
+VoxelUpdateList::Pointer VoxelUpdateList::GenRandList(VoxelUpdateList::Pointer InList, bool print)
 {
   // Create a Copy
   VoxelUpdateList::Pointer OpList = VoxelUpdateList::New(InList->numElements());
@@ -202,13 +202,13 @@ VoxelUpdateList::Pointer VoxelUpdateList::GenRandList(VoxelUpdateList::Pointer I
     OpList->setPair(newIndexes[i], xVal, zVal);
   }
 
-#ifdef DEBUG
-  std::cout << "Input" << std::endl;
-  InList->printMaxList(std::cout);
+  if(print) {
+    std::cout << "Input" << std::endl;
+    InList->printMaxList(std::cout);
 
-  std::cout << "Output" << std::endl;
-  OpList->printMaxList(std::cout);
-#endif //Debug
+    std::cout << "Output" << std::endl;
+    OpList->printMaxList(std::cout);
+  }
 
   // Return the Randomized List
   return OpList;

@@ -414,6 +414,10 @@ void HAADF_MultiResolutionReconstruction::execute()
     engine->setGeometry(geometry);
     engine->setAdvParams(m_AdvParams);
     engine->setForwardModel(forwardModel);
+
+    engine->setVerbose(false);
+    engine->setVeryVerbose(false);
+
     engine->setBFTomoInputs(bf_inputs);
     engine->setBFSinogram(bf_sinogram);
     engine->setForwardModel(forwardModel);

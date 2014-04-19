@@ -986,11 +986,13 @@ void BFForwardModel::printRatioSelected(SinogramPtr sinogram)
         sum_k+=m_Selector->d[counts_idx];
       }
     }
-    std::cout<<"Ratio of sinogram at tilt :"<<i_theta<<" "<<sum_k/(sinogram->N_r*sinogram->N_t)<<std::endl;
+    if(getVeryVerbose()) {
+      std::cout<<"Ratio of sinogram at tilt :"<<i_theta<<" "<<sum_k/(sinogram->N_r*sinogram->N_t)<<std::endl;
+    }
     sum+=sum_k;
   }
 
-  std::cout<<"Ratio of singoram entries used="<<sum/(sinogram->N_theta*sinogram->N_r*sinogram->N_t)<<std::endl;
+  if(getVeryVerbose()) {std::cout<<"Ratio of singoram entries used="<<sum/(sinogram->N_theta*sinogram->N_r*sinogram->N_t)<<std::endl;}
 }
 
 void BFForwardModel::writeSelectorMrc(const std::string &file, SinogramPtr sinogram,GeometryPtr geometry,RealVolumeType::Pointer ErrorSino)

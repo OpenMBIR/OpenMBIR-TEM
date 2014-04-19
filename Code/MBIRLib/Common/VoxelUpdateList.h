@@ -45,7 +45,7 @@ class MBIRLib_EXPORT VoxelUpdateList
      * @param InList
      * @return
      */
-    static Pointer GenRandList(Pointer InList);
+    static Pointer GenRandList(Pointer InList, bool print = false);
 
     /**
      * @brief GenRegularList

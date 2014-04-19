@@ -89,20 +89,20 @@
 #endif
 
 #define MAKE_OUTPUT_FILE(Fp, outdir, filename)\
-  {\
-    std::string filepath(outdir);\
-    filepath = filepath.append(MXADir::getSeparator()).append(filename);\
-    errno = 0;\
-    Fp = fopen(filepath.c_str(),"wb");\
-    if (Fp == NULL || errno > 0) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl;}\
+{\
+  std::string filepath(outdir);\
+  filepath = filepath.append(MXADir::getSeparator()).append(filename);\
+  errno = 0;\
+  Fp = fopen(filepath.c_str(),"wb");\
+  if (Fp == NULL || errno > 0) { std::cout << "Error " << errno << " Opening Output file " << filepath << std::endl;}\
   }
 
 #define COPY_333_ARRAY(i_max, j_max, k_max, src, dest)\
   for(int i = 0; i < i_max; ++i){\
-    for(int j = 0; j < j_max; ++j){\
-      for(int k = 0; k < k_max; ++k){\
-        dest[i][j][k] = src[i][j][k];\
-      }}}
+  for(int j = 0; j < j_max; ++j){\
+  for(int k = 0; k < k_max; ++k){\
+  dest[i][j][k] = src[i][j][k];\
+  }}}
 
 namespace Detail
 {
@@ -449,8 +449,10 @@ void BFReconstructionEngine::execute()
   dResponseFilter->execute();
   if(dResponseFilter->getErrorCondition() < 0)
   {
-    std::cout << "Error Calling function detectorResponse in file " << __FILE__ << "(" << __LINE__ << ")" << std::endl;
+    ss.str("");
+    ss << "Error Calling function detectorResponse in file " << __FILE__ << "(" << __LINE__ << ")" << std::endl;
     setErrorCondition(-2);
+    notify(ss.str(), 100, Observable::UpdateErrorMessage);
     return;
   }
   detectorResponse = dResponseFilter->getResponse();
@@ -466,9 +468,10 @@ void BFReconstructionEngine::execute()
   responseWriter->execute();
   if(responseWriter->getErrorCondition() < 0)
   {
-    std::cout << __FILE__ << "(" << __LINE__ << ") " << "Error writing detector response to file." <<  std::endl;
-    setErrorCondition(-2);
-    notify("Error Encountered During Reconstruction", 100, Observable::UpdateProgressValueAndMessage);
+    ss.str("");
+    ss << __FILE__ << "(" << __LINE__ << ") " << "Error writing detector response to file." <<  std::endl;
+    setErrorCondition(-3);
+    notify(ss.str(), 100, Observable::UpdateErrorMessage);
     return;
   }
 
@@ -511,7 +514,7 @@ void BFReconstructionEngine::execute()
     for (uint16_t x = 0; x < m_Geometry->N_x; x++)
     {
       tempCol[voxel_count] = AMatrixCol::calculateAMatrixColumnPartial(m_Sinogram, m_Geometry, m_TomoInputs, m_AdvParams,
-                             z, x, 0, detectorResponse, haadfParameters);
+                                                                       z, x, 0, detectorResponse, haadfParameters);
       temp += tempCol[voxel_count]->count;
       if(0 == tempCol[voxel_count]->count )
       {
@@ -573,7 +576,7 @@ void BFReconstructionEngine::execute()
   {
     //Get the value of the Bragg threshold from the User Interface the first time
     DesBraggValue = m_ForwardModel->getBraggThreshold();
-    std::cout << "Desired Bragg threshold =" << DesBraggValue << std::endl;
+    if (getVeryVerbose()) {std::cout << "Desired Bragg threshold =" << DesBraggValue << std::endl;}
     TempBraggValue = DefBraggThreshold;//m_ForwardModel->getBraggThreshold();
     m_ForwardModel->setBraggThreshold(TempBraggValue); //setting the Threshold T of \beta_{T,\delta}
     //the \delta value is set in BFMultiResolutionReconstruction.cpp
@@ -584,11 +587,11 @@ void BFReconstructionEngine::execute()
     m_ForwardModel->setBraggThreshold(TempBraggValue);
   }
 #endif //Bragg correction
-  std::cout << "Bragg threshold =" << TempBraggValue << std::endl;
+  if (getVeryVerbose()) {std::cout << "Bragg threshold =" << TempBraggValue << std::endl;}
 
 
   //Generate a List
-  std::cout << "Generating a list of voxels to update" << std::endl;
+  if (getVeryVerbose()) {std::cout << "Generating a list of voxels to update" << std::endl;}
 
   //Takes all the voxels along x-z slice and forms a list
   m_VoxelIdxList = VoxelUpdateList::GenRegularList(m_Geometry->N_z, m_Geometry->N_x);
@@ -667,7 +670,7 @@ void BFReconstructionEngine::execute()
       indent = "    ";
 #ifdef DEBUG
       // This is all done PRIOR to calling what will become a method
-      std::cout << "Bragg Threshold =" << m_ForwardModel->getBraggThreshold() << std::endl;
+      if (getVeryVerbose()) {std::cout << "Bragg Threshold =" << m_ForwardModel->getBraggThreshold() << std::endl;}
 #endif //DEBUG
 
       // This could contain multiple Subloops also - voxel update
@@ -700,8 +703,10 @@ void BFReconstructionEngine::execute()
         m_VoxelIdxList = TempList->subList(nElements, start);
         //m_VoxelIdxList.Array = &(TempList.Array[]);
 
-        std::cout << "Partial random order list for homogenous ICD .." << std::endl;
-        m_VoxelIdxList->printMaxList(std::cout);
+        if (getVeryVerbose()) {
+          std::cout << "Partial random order list for homogenous ICD .." << std::endl;
+          m_VoxelIdxList->printMaxList(std::cout);
+        }
 
         listselector++;
         //printList(m_VoxelIdxList);
@@ -711,13 +716,17 @@ void BFReconstructionEngine::execute()
 #ifdef DEBUG
       Real_t TempSum = 0;
       for (int32_t j = 0; j < m_Geometry->N_z; j++)
+      {
         for (int32_t k = 0; k < m_Geometry->N_x; k++)
         {
           TempSum += magUpdateMap->getValue(j, k);
         }
-      std::cout << "**********************************************" << std::endl;
-      std::cout << "Average mag prior to calling update voxel = " << TempSum / (m_Geometry->N_z * m_Geometry->N_x) << std::endl;
-      std::cout << "**********************************************" << std::endl;
+      }
+      if (getVeryVerbose()) {
+        std::cout << "**********************************************" << std::endl;
+        std::cout << "Average mag prior to calling update voxel = " << TempSum / (m_Geometry->N_z * m_Geometry->N_x) << std::endl;
+        std::cout << "**********************************************" << std::endl;
+      }
 #endif //debug
 
       status = updateVoxels(reconOuterIter, reconInnerIter, tempCol,
@@ -731,7 +740,7 @@ void BFReconstructionEngine::execute()
         //stopping criteria
       {
         PrevMagSum = roiVolumeSum(magUpdateMask);
-        std::cout << " Previous Magnitude of the Recon = " << PrevMagSum << std::endl;
+        if (getVeryVerbose()) {std::cout << " Previous Magnitude of the Recon = " << PrevMagSum << std::endl;}
       }
 #else
       PrevMagSum = roiVolumeSum(magUpdateMask);
@@ -744,17 +753,17 @@ void BFReconstructionEngine::execute()
       if(EffIterCount % (2 * MBIR::Constants::k_NumNonHomogeniousIter) == 0 && EffIterCount > 0)
 #endif //NHICD
       {
-        for (int16_t j = 0; j < m_Geometry->N_z; j++)
-          for (int16_t k = 0; k < m_Geometry->N_x; k++)
+        for (int16_t j = 0; j < m_Geometry->N_z; j++){
+          for (int16_t k = 0; k < m_Geometry->N_x; k++){
             if(m_VisitCount->getValue(j, k) == 0)
             {
               printf("Pixel (%d %d) not visited\n", j, k);
-            }
+            }}}
         //Reset the visit counter once we have cycled through
         //all voxels once via the homogenous updates
-        for (int16_t j = 0; j < m_Geometry->N_z; j++)
+        for (int16_t j = 0; j < m_Geometry->N_z; j++){
           for (int16_t k = 0; k < m_Geometry->N_x; k++)
-          { m_VisitCount->setValue(0, j, k); }
+          { m_VisitCount->setValue(0, j, k); }}
 
       }
       //end of debug
@@ -816,7 +825,7 @@ void BFReconstructionEngine::execute()
     if(0 == status && reconOuterIter >= 1) //if stopping criteria is met and
       //number of iterations is greater than 1
     {
-      std::cout << "Exiting the code because status =0" << std::endl;
+      if (getVeryVerbose()) {std::cout << "Exiting the code because status =0" << std::endl;}
       break;
     }
 
@@ -931,20 +940,22 @@ void BFReconstructionEngine::execute()
 
   //Debug : Writing out the selector array as an MRC file
   m_ForwardModel->writeSelectorMrc(m_TomoInputs->braggSelectorFile, m_Sinogram, m_Geometry, errorSino);
-
-  std::cout << "Final Dimensions of Object: " << std::endl;
-  std::cout << "  Nx = " << m_Geometry->N_x << std::endl;
-  std::cout << "  Ny = " << m_Geometry->N_y << std::endl;
-  std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
+  if (getVerbose()) {
+    std::cout << "Final Dimensions of Object: " << std::endl;
+    std::cout << "  Nx = " << m_Geometry->N_x << std::endl;
+    std::cout << "  Ny = " << m_Geometry->N_y << std::endl;
+    std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
 
 #ifdef NHICD
-  std::cout << "Number of equivalet iterations taken =" << EffIterCount / MBIR::Constants::k_NumNonHomogeniousIter << std::endl;
+    std::cout << "Number of equivalet iterations taken =" << EffIterCount / MBIR::Constants::k_NumNonHomogeniousIter << std::endl;
 #else
-  std::cout << "Number of equivalet iterations taken =" << EffIterCount / MBIR::Constants::k_NumHomogeniousIter << std::endl;
+    std::cout << "Number of equivalet iterations taken =" << EffIterCount / MBIR::Constants::k_NumHomogeniousIter << std::endl;
 #endif //NHICD
+  }
   notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
   setErrorCondition(0);
-  std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds() - totalTime) / 1000 << std::endl;
+
+  if (getVerbose()) {std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds() - totalTime) / 1000 << std::endl;}
 
   return;
 }
@@ -970,8 +981,7 @@ RealImageType::Pointer BFReconstructionEngine::calculateVoxelProfile()
   {
     std::string filepath(m_TomoInputs->tempDir);
     filepath = filepath.append(MXADir::getSeparator()).append(MBIR::Defaults::VoxelProfileFile);
-    \
-    std::cout << "VoxelProfile will NOT be written to file '" << filepath << std::endl;
+    if (getVeryVerbose()) {std::cout << "VoxelProfile will NOT be written to file '" << filepath << std::endl;}
   }
 
   for (i = 0; i < m_Sinogram->N_theta; i++)
@@ -1047,10 +1057,10 @@ Real_t BFReconstructionEngine::absMaxArray(std::vector<Real_t>& Array)
 //
 // -----------------------------------------------------------------------------
 int BFReconstructionEngine::calculateCost(CostData::Pointer cost,
-                                        SinogramPtr sinogram,
-                                        GeometryPtr geometry,
-                                        RealVolumeType::Pointer ErrorSino,
-                                        QGGMRF::QGGMRF_Values* QGGMRF_Values)
+                                          SinogramPtr sinogram,
+                                          GeometryPtr geometry,
+                                          RealVolumeType::Pointer ErrorSino,
+                                          QGGMRF::QGGMRF_Values* QGGMRF_Values)
 {
   Real_t cost_value = computeCost(sinogram, geometry, ErrorSino, QGGMRF_Values);
   //std::cout << "cost_value: " << cost_value << std::endl;
