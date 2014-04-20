@@ -877,7 +877,8 @@ void BrightFieldGui::initializeSOCEngine(bool fullReconstruction)
   path = fi.absolutePath();
   if (fullReconstruction == true)
   {
-    QString tempFolder = QDir::tempPath() + QDir::separator() + QString("OpenMBIR");
+    QString tempFolder = fi.path() + QDir::separator() + QString("OpenMBIR-Temp");
+    //QString tempFolder = QDir::tempPath() + QDir::separator() + QString("OpenMBIR");
     m_MultiResSOC->setTempDir(tempFolder.toStdString() /*path.toStdString()*/);
     path = QDir::toNativeSeparators(fi.absoluteFilePath());
     m_MultiResSOC->setOutputFile(path.toStdString());
@@ -1160,6 +1161,10 @@ void BrightFieldGui::pipelineComplete()
   m_FullReconstructionActive = false;
   m_SingleSliceReconstructionActive = false;
 
+  if (m_MultiResSOC != NULL && m_MultiResSOC->getDeleteTempFiles())
+  {
+    removeDir(QString::fromStdString(m_MultiResSOC->getTempDir()));
+  }
   setCurrentImageFile(inputMRCFilePath->text());
   setCurrentProcessedFile(reconstructedVolumeFileName->text());
 
