@@ -141,15 +141,15 @@
   var.setHeight(prefs.value(STRINGIZE(PPCAT(var, _H))).toInt());
 
 #define READ_BOOL_SETTING(prefs, var, emptyValue)\
-  { QString s = prefs.value(#var).toString();\
-    if (s.isEmpty() == false) {\
-      bool bb = prefs.value(#var).toBool();\
-      var->setChecked(bb); } else { var->setChecked(emptyValue); } }
+{ QString s = prefs.value(#var).toString();\
+  if (s.isEmpty() == false) {\
+  bool bb = prefs.value(#var).toBool();\
+  var->setChecked(bb); } else { var->setChecked(emptyValue); } }
 
 #define READ_CHECKBOX_SETTING(prefs, var)\
   bool temp = prefs.value(#var).toBool();\
   var->setChecked(temp);\
-   
+
 #define WRITE_BOOL_SETTING(prefs, var, b)\
   prefs.setValue(#var, (b) );
 
@@ -244,7 +244,7 @@ void BrightFieldGui::readSettings(QSettings& prefs)
 
   READ_STRING_SETTING(prefs, sampleThickness, "150");
   READ_STRING_SETTING(prefs, targetGain, "1")
-  READ_STRING_SETTING(prefs, smoothness, "1.0");
+      READ_STRING_SETTING(prefs, smoothness, "1.0");
   READ_STRING_SETTING(prefs, sigma_x, "1.0");
   READ_STRING_SETTING(prefs, bf_offset, "0");
   READ_STRING_SETTING(prefs, bragg_threshold, "3");
@@ -290,7 +290,7 @@ void BrightFieldGui::writeSettings(QSettings& prefs)
 
   WRITE_STRING_SETTING(prefs, sampleThickness);
   WRITE_STRING_SETTING(prefs, targetGain)
-  WRITE_STRING_SETTING(prefs, sigma_x);
+      WRITE_STRING_SETTING(prefs, sigma_x);
   WRITE_STRING_SETTING(prefs, smoothness);
   WRITE_SETTING(prefs, numResolutions);
   WRITE_SETTING(prefs, finalResolution);
@@ -305,7 +305,7 @@ void BrightFieldGui::writeSettings(QSettings& prefs)
   WRITE_SETTING(prefs, mrf);
   WRITE_CHECKBOX_SETTING(prefs, extendObject);
   WRITE_CHECKBOX_SETTING(prefs, m_DeleteTempFiles)
-  WRITE_CHECKBOX_SETTING(prefs, useDefaultOffset);
+      WRITE_CHECKBOX_SETTING(prefs, useDefaultOffset);
 
   //  WRITE_BOOL_SETTING(prefs, useSubVolume, useSubVolume->isChecked());
   WRITE_SETTING(prefs, xWidthFullRecon);
@@ -614,6 +614,11 @@ void BrightFieldGui::on_m_SingleSliceReconstructionBtn_clicked()
 
   // Get everything up and running in a thred, possibly
   startReconstruction(false);
+  if(m_MultiResSOC == NULL) // Something went wrong
+  {
+    return;
+  }
+
   m_SingleSliceReconstructionBtn->setEnabled(true);
   m_GoBtn->setEnabled(false);
   m_SingleSliceReconstructionBtn->setText("Cancel");
@@ -780,6 +785,11 @@ void BrightFieldGui::on_m_GoBtn_clicked()
   }
 
   startReconstruction(true);
+  if(m_MultiResSOC == NULL) // Something went wrong
+  {
+    return;
+  }
+
   m_SingleSliceReconstructionBtn->setEnabled(false);
   m_GoBtn->setEnabled(true);
   m_GoBtn->setText("Cancel");
@@ -877,7 +887,7 @@ void BrightFieldGui::initializeSOCEngine(bool fullReconstruction)
     QString tempFolder = QDir::tempPath() + QDir::separator() + QString("OpenMBIR");
     m_MultiResSOC->setTempDir(tempFolder.toStdString());
     QString reconVolumeFile = tempFolder + QDir::separator() +
-                              finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(MBIR::Defaults::ReconstructedMrcFile);
+        finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(MBIR::Defaults::ReconstructedMrcFile);
 
     m_MultiResSOC->setOutputFile(reconVolumeFile.toStdString());
 
@@ -1064,7 +1074,7 @@ void BrightFieldGui::singleSliceComplete()
   setWidgetListEnabled(true);
   this->progressBar->setValue(0);
   QString reconVolumeFile = QString::fromStdString(m_MultiResSOC->getTempDir()) + QDir::separator() +
-                            finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(MBIR::Defaults::ReconstructedMrcFile);
+      finalResolution->text() + QString("x") + QDir::separator() + QString::fromStdString(MBIR::Defaults::ReconstructedMrcFile);
 
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(reconVolumeFile);
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(false);
@@ -1261,7 +1271,7 @@ void BrightFieldGui::on_inputMRCFilePathBtn_clicked()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString imageFile =
-    QFileDialog::getOpenFileName(this, tr("Select MRC Data file"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc);;Aligned MRC Files (*.ali);;Reconstructed MRC Files (*.rec);;All Files (*.*)"));
+      QFileDialog::getOpenFileName(this, tr("Select MRC Data file"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc);;Aligned MRC Files (*.ali);;Reconstructed MRC Files (*.rec);;All Files (*.*)"));
 
   if (true == imageFile.isEmpty())
   {
@@ -1344,7 +1354,7 @@ void BrightFieldGui::on_inputBrightFieldFilePathBtn_clicked()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString imageFile =
-    QFileDialog::getOpenFileName(this, tr("Select BrightField Data file"), m_OpenDialogLastDirectory, tr("BrightField Files (*.mrc *.ali)"));
+      QFileDialog::getOpenFileName(this, tr("Select BrightField Data file"), m_OpenDialogLastDirectory, tr("BrightField Files (*.mrc *.ali)"));
 
   if (true == imageFile.isEmpty())
   {
@@ -1386,7 +1396,7 @@ void BrightFieldGui::on_reconstructedVolumeFileName_textChanged(const QString& t
 void BrightFieldGui::on_initialReconstructionPathBtn_clicked()
 {
   QString reconFile =
-    QFileDialog::getOpenFileName(this, tr("Select Initial Reconstruction file"), m_OpenDialogLastDirectory, tr("All Files (*.*)"));
+      QFileDialog::getOpenFileName(this, tr("Select Initial Reconstruction file"), m_OpenDialogLastDirectory, tr("All Files (*.*)"));
 
   if (true == reconFile.isEmpty())
   {
@@ -1501,7 +1511,7 @@ void BrightFieldGui::openRecentBaseImageFile()
 // -----------------------------------------------------------------------------
 void BrightFieldGui::on_actionLayers_Palette_triggered()
 {
-// m_LayersPalette->show();
+  // m_LayersPalette->show();
 }
 
 // -----------------------------------------------------------------------------

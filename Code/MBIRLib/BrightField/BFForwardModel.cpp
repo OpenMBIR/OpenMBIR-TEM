@@ -63,7 +63,7 @@
 #include "MBIRLib/GenericFilters/ComputeInitialOffsets.h"
 #include "MBIRLib/IOFilters/SinogramBinWriter.h"
 
-#define USE_TBB_TASK_GROUP 1
+
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
 #include <tbb/task_scheduler_init.h>
 #include <tbb/task_group.h>

@@ -52,22 +52,12 @@
 
 // Our own includes
 #include "MBIRLib/MBIRLib.h"
-#include "MBIRLib/Common/EIMMath.h"
-#include "MBIRLib/Common/allocate.h"
 #include "MBIRLib/Common/EIMTime.h"
-#include "MBIRLib/Common/CE_ConstraintEquation.hpp"
-#include "MBIRLib/Common/DerivOfCostFunc.hpp"
-#include "MBIRLib/IOFilters/RawGeometryWriter.h"
-#include "MBIRLib/IOFilters/MRCHeader.h"
-#include "MBIRLib/IOFilters/MRCReader.h"
-
 
 #include "MBIRLib/IOFilters/DetectorResponseWriter.h"
 #include "MBIRLib/GenericFilters/DetectorResponse.h"
-#include "MBIRLib/GenericFilters/TomoFilter.h"
 #include "MBIRLib/GenericFilters/MRCSinogramInitializer.h"
 #include "MBIRLib/GenericFilters/RawSinogramInitializer.h"
-#include "MBIRLib/GenericFilters/ComputeInitialOffsets.h"
 #include "MBIRLib/GenericFilters/InitialReconstructionInitializer.h"
 #include "MBIRLib/GenericFilters/InitialReconstructionBinReader.h"
 
@@ -76,8 +66,6 @@
 #include "MBIRLib/Reconstruction/ReconstructionConstants.h"
 #include "MBIRLib/HAADF/HAADF_ForwardProject.h"
 
-
-#define USE_TBB_TASK_GROUP 1
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
 #include <tbb/task_scheduler_init.h>
 #include <tbb/task_group.h>
