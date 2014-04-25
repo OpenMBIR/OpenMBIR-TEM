@@ -28,7 +28,7 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-#include "TEMBIRGui.h"
+#include "HAADFGui.h"
 
 #include <errno.h>
 
@@ -129,7 +129,7 @@ static int tiffCount;
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-TEMBIRGui::TEMBIRGui(QWidget* parent) :
+HAADFGui::HAADFGui(QWidget* parent) :
   QMainWindow(parent),
   m_OutputExistsCheck(false),
   //m_LayersPalette(NULL),
@@ -153,7 +153,7 @@ TEMBIRGui::TEMBIRGui(QWidget* parent) :
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-TEMBIRGui::~TEMBIRGui()
+HAADFGui::~HAADFGui()
 {
 
 }
@@ -161,7 +161,7 @@ TEMBIRGui::~TEMBIRGui()
 // -----------------------------------------------------------------------------
 //  Called when the main window is closed.
 // -----------------------------------------------------------------------------
-void TEMBIRGui::closeEvent(QCloseEvent* event)
+void HAADFGui::closeEvent(QCloseEvent* event)
 {
   qint32 err = checkDirtyDocument();
   if (err < 0)
@@ -184,7 +184,7 @@ void TEMBIRGui::closeEvent(QCloseEvent* event)
 // -----------------------------------------------------------------------------
 //  Read the prefs from the local storage file
 // -----------------------------------------------------------------------------
-void TEMBIRGui::readSettings(QSettings& prefs)
+void HAADFGui::readSettings(QSettings& prefs)
 {
   QString val;
   bool ok;
@@ -237,7 +237,7 @@ void TEMBIRGui::readSettings(QSettings& prefs)
 // -----------------------------------------------------------------------------
 //  Write our prefs to file
 // -----------------------------------------------------------------------------
-void TEMBIRGui::writeSettings(QSettings& prefs)
+void HAADFGui::writeSettings(QSettings& prefs)
 {
   prefs.beginGroup("Parameters");
   WRITE_STRING_SETTING(prefs, inputMRCFilePath);
@@ -281,7 +281,7 @@ void TEMBIRGui::writeSettings(QSettings& prefs)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::readWindowSettings(QSettings& prefs)
+void HAADFGui::readWindowSettings(QSettings& prefs)
 {
   bool ok = false;
   prefs.beginGroup("WindodwSettings");
@@ -302,7 +302,7 @@ void TEMBIRGui::readWindowSettings(QSettings& prefs)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::writeWindowSettings(QSettings& prefs)
+void HAADFGui::writeWindowSettings(QSettings& prefs)
 {
   prefs.beginGroup("WindodwSettings");
   QByteArray geo_data = saveGeometry();
@@ -315,7 +315,7 @@ void TEMBIRGui::writeWindowSettings(QSettings& prefs)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionSave_Config_File_triggered()
+void HAADFGui::on_actionSave_Config_File_triggered()
 {
   QString proposedFile = m_OpenDialogLastDirectory + QDir::separator() + "Tomo-Config.config";
   QString file = QFileDialog::getSaveFileName(this, tr("Save Tomo Configuration"),
@@ -334,7 +334,7 @@ void TEMBIRGui::on_actionSave_Config_File_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionLoad_Config_File_triggered()
+void HAADFGui::on_actionLoad_Config_File_triggered()
 {
   QString file = QFileDialog::getOpenFileName(this, tr("Select Configuration File"),
                                               m_OpenDialogLastDirectory,
@@ -351,7 +351,7 @@ void TEMBIRGui::on_actionLoad_Config_File_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::loadConfigurationFile(QString file)
+void HAADFGui::loadConfigurationFile(QString file)
 {
   QFileInfo fi(file);
   m_OpenDialogLastDirectory = fi.absolutePath();
@@ -414,7 +414,7 @@ void TEMBIRGui::loadConfigurationFile(QString file)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionParameters_triggered()
+void HAADFGui::on_actionParameters_triggered()
 {
   parametersDockWidget->show();
 }
@@ -422,7 +422,7 @@ void TEMBIRGui::on_actionParameters_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::setupGui()
+void HAADFGui::setupGui()
 {
 #ifdef Q_WS_MAC
   // Adjust for the size of the menu bar which is at the top of the screen not in the window
@@ -529,7 +529,7 @@ void TEMBIRGui::setupGui()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool TEMBIRGui::sanityCheckOutputDirectory(QString le, QString msgTitle)
+bool HAADFGui::sanityCheckOutputDirectory(QString le, QString msgTitle)
 {
 
   if (le.isEmpty() == true)
@@ -581,7 +581,7 @@ bool TEMBIRGui::sanityCheckOutputDirectory(QString le, QString msgTitle)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool TEMBIRGui::checkTiltAngles(QVector<float>& tilts)
+bool HAADFGui::checkTiltAngles(QVector<float>& tilts)
 {
   float sum = 0.0;
   for(int i = 0; i < tilts.count(); ++i)
@@ -598,7 +598,7 @@ bool TEMBIRGui::checkTiltAngles(QVector<float>& tilts)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_m_SingleSliceReconstructionBtn_clicked()
+void HAADFGui::on_m_SingleSliceReconstructionBtn_clicked()
 {
   // First make sure we are not already running a reconstruction
   if(m_SingleSliceReconstructionBtn->text().compare("Cancel") == 0)
@@ -677,7 +677,7 @@ void TEMBIRGui::on_m_SingleSliceReconstructionBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_m_GoBtn_clicked()
+void HAADFGui::on_m_GoBtn_clicked()
 {
   tiffCount = 0;
   // First make sure we are not already running a reconstruction
@@ -883,7 +883,7 @@ void TEMBIRGui::on_m_GoBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
+void HAADFGui::initializeSOCEngine(bool fullReconstruction)
 {
   QString path;
   path = QDir::toNativeSeparators(inputMRCFilePath->text());
@@ -1051,7 +1051,7 @@ void TEMBIRGui::initializeSOCEngine(bool fullReconstruction)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_singleSliceXWidth_valueChanged(int value)
+void HAADFGui::on_singleSliceXWidth_valueChanged(int value)
 {
   m_MRCDisplayWidget->graphicsView()->updateXZLine( static_cast<float>(value / 100.0));
 }
@@ -1059,7 +1059,7 @@ void TEMBIRGui::on_singleSliceXWidth_valueChanged(int value)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_xWidthFullRecon_valueChanged(int value)
+void HAADFGui::on_xWidthFullRecon_valueChanged(int value)
 {
   m_MRCDisplayWidget->graphicsView()->reconstructionArea()->updateWidth(static_cast<float>(value / 100.0));
 }
@@ -1067,7 +1067,7 @@ void TEMBIRGui::on_xWidthFullRecon_valueChanged(int value)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::singleSlicePlaneSet(int y)
+void HAADFGui::singleSlicePlaneSet(int y)
 {
   m_SingleSliceReconstructionBtn->setEnabled(true);
   ySingleSliceValue->setText(QString::number(y));
@@ -1076,7 +1076,7 @@ void TEMBIRGui::singleSlicePlaneSet(int y)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::singleSliceComplete()
+void HAADFGui::singleSliceComplete()
 {
   std::cout << "TomoGui::singleSliceComplete" << std::endl;
   m_SingleSliceReconstructionBtn->setText("Single Slice Reconstruction");
@@ -1102,7 +1102,7 @@ void TEMBIRGui::singleSliceComplete()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::loadProgressMRCFile(QString mrcfilePath)
+void HAADFGui::loadProgressMRCFile(QString mrcfilePath)
 {
   //  std::cout << "Loading Progress MRC File: " << filePath.toStdString() << std::endl;
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(mrcfilePath);
@@ -1123,7 +1123,7 @@ void TEMBIRGui::loadProgressMRCFile(QString mrcfilePath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool TEMBIRGui::removeDir(const QString& dirName)
+bool HAADFGui::removeDir(const QString& dirName)
 {
   bool result = true;
   QDir dir(dirName);
@@ -1156,7 +1156,7 @@ bool TEMBIRGui::removeDir(const QString& dirName)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::pipelineComplete()
+void HAADFGui::pipelineComplete()
 {
   std::cout << "TomoGui::pipelineComplete()" << std::endl;
   m_GoBtn->setText("Reconstruct");
@@ -1188,7 +1188,7 @@ void TEMBIRGui::pipelineComplete()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::pipelineProgress(int val)
+void HAADFGui::pipelineProgress(int val)
 {
   this->progressBar->setValue( val );
 }
@@ -1196,7 +1196,7 @@ void TEMBIRGui::pipelineProgress(int val)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::addErrorMessage(QString message)
+void HAADFGui::addErrorMessage(QString message)
 {
   QString title = "TomoGui Error";
   displayDialogBox(title, message, QMessageBox::Critical);
@@ -1205,7 +1205,7 @@ void TEMBIRGui::addErrorMessage(QString message)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::addWarningMessage(QString message)
+void HAADFGui::addWarningMessage(QString message)
 {
   QString title = "TomoGui Warning";
   displayDialogBox(title, message, QMessageBox::Warning);
@@ -1214,7 +1214,7 @@ void TEMBIRGui::addWarningMessage(QString message)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::addProgressMessage(QString message)
+void HAADFGui::addProgressMessage(QString message)
 {
   if (NULL != this->statusBar())
   {
@@ -1225,7 +1225,7 @@ void TEMBIRGui::addProgressMessage(QString message)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_outputDirectoryPathBtn_clicked()
+void HAADFGui::on_outputDirectoryPathBtn_clicked()
 {
   bool canWrite = false;
   QString aDir = QFileDialog::getExistingDirectory(this, tr("Select Output Directory"), m_OpenDialogLastDirectory,
@@ -1252,7 +1252,7 @@ void TEMBIRGui::on_outputDirectoryPathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_reconstructedVolumeFileNameBtn_clicked()
+void HAADFGui::on_reconstructedVolumeFileNameBtn_clicked()
 {
   QString outputFile = m_OpenDialogLastDirectory + QDir::separator() + "Untitled.rec";
   outputFile = QFileDialog::getSaveFileName(this, tr("Save Output File As ..."), outputFile, tr("MRC Files (*.mrc);;REC Files (*.rec)"));
@@ -1278,7 +1278,7 @@ void TEMBIRGui::on_reconstructedVolumeFileNameBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_inputMRCFilePathBtn_clicked()
+void HAADFGui::on_inputMRCFilePathBtn_clicked()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString imageFile =
@@ -1294,7 +1294,7 @@ void TEMBIRGui::on_inputMRCFilePathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_inputMRCFilePath_textChanged(const QString& filepath)
+void HAADFGui::on_inputMRCFilePath_textChanged(const QString& filepath)
 {
   QFileInfo fi(inputMRCFilePath->text());
   if(fi.exists() == true && fi.isDir() == false)
@@ -1351,7 +1351,7 @@ void TEMBIRGui::on_inputMRCFilePath_textChanged(const QString& filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_inputBrightFieldFilePathBtn_clicked()
+void HAADFGui::on_inputBrightFieldFilePathBtn_clicked()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString imageFile =
@@ -1367,7 +1367,7 @@ void TEMBIRGui::on_inputBrightFieldFilePathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_inputBrightFieldFilePath_textChanged(const QString& filepath)
+void HAADFGui::on_inputBrightFieldFilePath_textChanged(const QString& filepath)
 {
   if (verifyPathExists(inputBrightFieldFilePath->text(), inputBrightFieldFilePath))
   {
@@ -1378,7 +1378,7 @@ void TEMBIRGui::on_inputBrightFieldFilePath_textChanged(const QString& filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_reconstructedVolumeFileName_textChanged(const QString& text)
+void HAADFGui::on_reconstructedVolumeFileName_textChanged(const QString& text)
 {
 
 }
@@ -1394,7 +1394,7 @@ void TEMBIRGui::on_reconstructedVolumeFileName_textChanged(const QString& text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_initialReconstructionPathBtn_clicked()
+void HAADFGui::on_initialReconstructionPathBtn_clicked()
 {
   QString reconFile =
     QFileDialog::getOpenFileName(this, tr("Select Initial Reconstruction file"), m_OpenDialogLastDirectory, tr("All Files (*.*)"));
@@ -1409,7 +1409,7 @@ void TEMBIRGui::on_initialReconstructionPathBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_initialReconstructionPath_textChanged(const QString& text)
+void HAADFGui::on_initialReconstructionPath_textChanged(const QString& text)
 {
   verifyPathExists(initialReconstructionPath->text(), initialReconstructionPath);
 }
@@ -1417,7 +1417,7 @@ void TEMBIRGui::on_initialReconstructionPath_textChanged(const QString& text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::setWidgetListEnabled(bool b)
+void HAADFGui::setWidgetListEnabled(bool b)
 {
   foreach (QWidget * w, m_WidgetList)
   {
@@ -1428,7 +1428,7 @@ void TEMBIRGui::setWidgetListEnabled(bool b)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool TEMBIRGui::verifyOutputPathParentExists(QString outFilePath, QLineEdit* lineEdit)
+bool HAADFGui::verifyOutputPathParentExists(QString outFilePath, QLineEdit* lineEdit)
 {
   QFileInfo fileinfo(outFilePath);
   QDir parent(fileinfo.dir());
@@ -1438,7 +1438,7 @@ bool TEMBIRGui::verifyOutputPathParentExists(QString outFilePath, QLineEdit* lin
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-bool TEMBIRGui::verifyPathExists(QString outFilePath, QLineEdit* lineEdit)
+bool HAADFGui::verifyPathExists(QString outFilePath, QLineEdit* lineEdit)
 {
   QFileInfo fileinfo(outFilePath);
   if (false == fileinfo.exists() && lineEdit != NULL)
@@ -1455,7 +1455,7 @@ bool TEMBIRGui::verifyPathExists(QString outFilePath, QLineEdit* lineEdit)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-qint32 TEMBIRGui::checkDirtyDocument()
+qint32 HAADFGui::checkDirtyDocument()
 {
   qint32 err = -1;
   {
@@ -1467,7 +1467,7 @@ qint32 TEMBIRGui::checkDirtyDocument()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::updateBaseRecentFileList(const QString& file)
+void HAADFGui::updateBaseRecentFileList(const QString& file)
 {
   // Clear the Recent Items Menu
   this->menu_FixedRecentFiles->clear();
@@ -1488,7 +1488,7 @@ void TEMBIRGui::updateBaseRecentFileList(const QString& file)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::openRecentBaseImageFile()
+void HAADFGui::openRecentBaseImageFile()
 {
   QAction* action = qobject_cast<QAction*>(sender());
   if (action)
@@ -1510,7 +1510,7 @@ void TEMBIRGui::openRecentBaseImageFile()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionLayers_Palette_triggered()
+void HAADFGui::on_actionLayers_Palette_triggered()
 {
   //m_LayersPalette->show();
 }
@@ -1518,7 +1518,7 @@ void TEMBIRGui::on_actionLayers_Palette_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionOpenMRCFile_triggered()
+void HAADFGui::on_actionOpenMRCFile_triggered()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString file = QFileDialog::getOpenFileName(this, tr("Open MRC File"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc *.rec *.ali)"));
@@ -1535,7 +1535,7 @@ void TEMBIRGui::on_actionOpenMRCFile_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_action_OpenReconstructedMRC_triggered()
+void HAADFGui::on_action_OpenReconstructedMRC_triggered()
 {
   QString file = QFileDialog::getOpenFileName(this, tr("Open MRC File"), m_OpenDialogLastDirectory, tr("MRC Files (*.mrc *.rec *.ali)"));
 
@@ -1555,7 +1555,7 @@ void TEMBIRGui::on_action_OpenReconstructedMRC_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionOpenOverlayImage_triggered()
+void HAADFGui::on_actionOpenOverlayImage_triggered()
 {
   //std::cout << "on_actionOpen_triggered" << std::endl;
   QString imageFile = QFileDialog::getOpenFileName(this, tr("Open Segmented Image File"),
@@ -1575,7 +1575,7 @@ void TEMBIRGui::on_actionOpenOverlayImage_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionAbout_triggered()
+void HAADFGui::on_actionAbout_triggered()
 {
   ApplicationAboutBoxDialog about(OpenMBIR::LicenseList, this);
   QString an = QCoreApplication::applicationName();
@@ -1588,7 +1588,7 @@ void TEMBIRGui::on_actionAbout_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionExit_triggered()
+void HAADFGui::on_actionExit_triggered()
 {
   this->close();
 }
@@ -1597,7 +1597,7 @@ void TEMBIRGui::on_actionExit_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::openReconstructedMRCFile(QString reconMrcFilePath)
+void HAADFGui::openReconstructedMRCFile(QString reconMrcFilePath)
 {
   if ( true == reconMrcFilePath.isEmpty() ) // User cancelled the operation
   {
@@ -1619,7 +1619,7 @@ void TEMBIRGui::openReconstructedMRCFile(QString reconMrcFilePath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::mrcInputFileLoaded(const QString& filename)
+void HAADFGui::mrcInputFileLoaded(const QString& filename)
 {
   // std::cout << "TomoGui::overlayImageFileLoaded" << std::endl;
   reconstructedVolumeFileName->blockSignals(true);
@@ -1630,7 +1630,7 @@ void TEMBIRGui::mrcInputFileLoaded(const QString& filename)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::readMRCHeader(QString filepath)
+void HAADFGui::readMRCHeader(QString filepath)
 {
 
   MRCHeader header;
@@ -1733,7 +1733,7 @@ void TEMBIRGui::readMRCHeader(QString filepath)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::displayDialogBox(QString title, QString text, QMessageBox::Icon icon)
+void HAADFGui::displayDialogBox(QString title, QString text, QMessageBox::Icon icon)
 {
 
   QMessageBox msgBox;
@@ -1748,7 +1748,7 @@ void TEMBIRGui::displayDialogBox(QString title, QString text, QMessageBox::Icon 
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_estimateSigmaX_clicked()
+void HAADFGui::on_estimateSigmaX_clicked()
 {
   //  std::cout << "on_estimateGainSigma_clicked" << std::endl;
   bool ok = false;
@@ -1817,7 +1817,7 @@ void TEMBIRGui::on_estimateSigmaX_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_sigma_x_textChanged(const QString& text)
+void HAADFGui::on_sigma_x_textChanged(const QString& text)
 {
   //  std::cout << "on_sigma_x_textChanged" << std::endl;
   bool ok = false;
@@ -1831,7 +1831,7 @@ void TEMBIRGui::on_sigma_x_textChanged(const QString& text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_smoothness_textChanged(const QString& text)
+void HAADFGui::on_smoothness_textChanged(const QString& text)
 {
   //  std::cout << "on_smoothness_textChanged" << std::endl;
   bool ok = false;
@@ -1845,7 +1845,7 @@ void TEMBIRGui::on_smoothness_textChanged(const QString& text)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_targetGain_editingFinished()
+void HAADFGui::on_targetGain_editingFinished()
 {
   sigmaX_ShouldUpdate(true);
 }
@@ -1853,7 +1853,7 @@ void TEMBIRGui::on_targetGain_editingFinished()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_sampleThickness_editingFinished()
+void HAADFGui::on_sampleThickness_editingFinished()
 {
   sigmaX_ShouldUpdate(true);
   memCalculate();
@@ -1862,7 +1862,7 @@ void TEMBIRGui::on_sampleThickness_editingFinished()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_defaultOffset_editingFinished()
+void HAADFGui::on_defaultOffset_editingFinished()
 {
   sigmaX_ShouldUpdate(true);
 }
@@ -1870,7 +1870,7 @@ void TEMBIRGui::on_defaultOffset_editingFinished()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_tiltSelection_currentIndexChanged(int index)
+void HAADFGui::on_tiltSelection_currentIndexChanged(int index)
 {
   sigmaX_ShouldUpdate(true);
 }
@@ -1879,7 +1879,7 @@ void TEMBIRGui::on_tiltSelection_currentIndexChanged(int index)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_resetSigmaXBtn_clicked()
+void HAADFGui::on_resetSigmaXBtn_clicked()
 {
   sigma_x->blockSignals(true);
   sigma_x->setText(QString::number(m_CachedSigmaX));
@@ -1893,7 +1893,7 @@ void TEMBIRGui::on_resetSigmaXBtn_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::updateProgressAndMessage(const char* message, int progress)
+void HAADFGui::updateProgressAndMessage(const char* message, int progress)
 {
   this->progressBar->setValue(progress);
   if (NULL != this->statusBar())
@@ -1905,7 +1905,7 @@ void TEMBIRGui::updateProgressAndMessage(const char* message, int progress)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::updateProgressAndMessage(const std::string& msg, int progress)
+void HAADFGui::updateProgressAndMessage(const std::string& msg, int progress)
 {
   this->progressBar->setValue(progress);
   if (NULL != this->statusBar())
@@ -1917,7 +1917,7 @@ void TEMBIRGui::updateProgressAndMessage(const std::string& msg, int progress)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
+void HAADFGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
 {
   reconstructionVOIUpdated(reconVOI);
 
@@ -1948,7 +1948,7 @@ void TEMBIRGui::reconstructionVOIAdded(ReconstructionArea* reconVOI)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_yMin_textChanged(const QString& string)
+void HAADFGui::on_yMin_textChanged(const QString& string)
 {
   geometryChanged();
 }
@@ -1956,7 +1956,7 @@ void TEMBIRGui::on_yMin_textChanged(const QString& string)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_yMax_textChanged(const QString& string)
+void HAADFGui::on_yMax_textChanged(const QString& string)
 {
   geometryChanged();
 }
@@ -1966,7 +1966,7 @@ void TEMBIRGui::on_yMax_textChanged(const QString& string)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::geometryChanged()
+void HAADFGui::geometryChanged()
 {
   //   std::cout << "TomoGui::geometryChanged()" << std::endl;
   bool ok = false;
@@ -2004,7 +2004,7 @@ void TEMBIRGui::geometryChanged()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::reconstructionVOIUpdated(ReconstructionArea* recon)
+void HAADFGui::reconstructionVOIUpdated(ReconstructionArea* recon)
 {
   QImage image =  m_MRCDisplayWidget->graphicsView()->getBaseImage();
   QSize size = image.size();
@@ -2029,7 +2029,7 @@ void TEMBIRGui::reconstructionVOIUpdated(ReconstructionArea* recon)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::reconstructionVOISelected(ReconstructionArea* recon)
+void HAADFGui::reconstructionVOISelected(ReconstructionArea* recon)
 {
 
 }
@@ -2037,7 +2037,7 @@ void TEMBIRGui::reconstructionVOISelected(ReconstructionArea* recon)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::reconstructionVOIDeleted(ReconstructionArea* recon)
+void HAADFGui::reconstructionVOIDeleted(ReconstructionArea* recon)
 {
 
 }
@@ -2046,7 +2046,7 @@ void TEMBIRGui::reconstructionVOIDeleted(ReconstructionArea* recon)
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_addResolution_clicked()
+void HAADFGui::on_addResolution_clicked()
 {
   int count = tomoInputHorzLayout->count() - 1;
 
@@ -2070,7 +2070,7 @@ void TEMBIRGui::on_addResolution_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_removeResolution_clicked()
+void HAADFGui::on_removeResolution_clicked()
 {
   // int count = tomoInputHorzLayout->count() -1;
   if(m_TomoInputs.count() == 1)
@@ -2099,7 +2099,7 @@ void TEMBIRGui::on_removeResolution_clicked()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::memCalculate()
+void HAADFGui::memCalculate()
 {
   bool ok = false;
   float GeomN_x, GeomN_y, GeomN_z;
@@ -2181,7 +2181,7 @@ void TEMBIRGui::memCalculate()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionSaveCanvas_triggered()
+void HAADFGui::on_actionSaveCanvas_triggered()
 {
   m_MRCDisplayWidget->saveCanvas();
 }
@@ -2190,7 +2190,7 @@ void TEMBIRGui::on_actionSaveCanvas_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_action_InputMRCInfo_triggered()
+void HAADFGui::on_action_InputMRCInfo_triggered()
 {
   m_MRCInputInfoWidget->setInfo(inputMRCFilePath->text());
   m_MRCInputInfoWidget->show();
@@ -2199,7 +2199,7 @@ void TEMBIRGui::on_action_InputMRCInfo_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_action_OutputMRCInfo_triggered()
+void HAADFGui::on_action_OutputMRCInfo_triggered()
 {
   m_MRCOutputInfoWidget->setInfo(m_ReconstructedDisplayWidget->getMRCFilePath());
   m_MRCOutputInfoWidget->show();
@@ -2208,7 +2208,7 @@ void TEMBIRGui::on_action_OutputMRCInfo_triggered()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::deleteTempFiles()
+void HAADFGui::deleteTempFiles()
 {
   // Remove Any Temp files that have accumulated
   for(int i = 0; i < m_TempFilesToDelete.size(); ++i)
@@ -2222,7 +2222,7 @@ void TEMBIRGui::deleteTempFiles()
 // -----------------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------------
-void TEMBIRGui::on_actionLoad_Tilt_Information_triggered()
+void HAADFGui::on_actionLoad_Tilt_Information_triggered()
 {
   TomogramTiltLoader loader(this);
   loader.setNumTilts(m_nTilts);

@@ -251,7 +251,7 @@ if (OpenMBIR_BUILD_GUI)
     # will not work due to signals/slots mechanism.
     add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/QtSupport ${PROJECT_BINARY_DIR}/QtSupport)
 
-    add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/Applications/TEMBIR ${PROJECT_BINARY_DIR}/Applications/TEMBIR)
+    add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/Applications/HAADFGui ${PROJECT_BINARY_DIR}/Applications/HAADFGui)
     add_subdirectory(${OpenMBIR_SOURCE_DIR}/Code/Applications/BrightFieldGui ${PROJECT_BINARY_DIR}/Applications/BrightFieldGui)
 
 endif()

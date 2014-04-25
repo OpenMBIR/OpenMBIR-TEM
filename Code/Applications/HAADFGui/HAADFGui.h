@@ -50,7 +50,7 @@ class ReconstructionArea;
 class MRCInfoWidget;
 
 //-- UIC generated Header
-#include "ui_TEMBIRGui.h"
+#include "ui_HAADFGui.h"
 #include "QHAADF_MultiResolutionReconstruction.h"
 
 #include "MBIRLib/IOFilters/MRCHeader.h"
@@ -65,13 +65,13 @@ class MRCInfoWidget;
  * @date Dec 26, 2011
  * @version 1.0
  */
-class TEMBIRGui :  public QMainWindow, private Ui::TEMBIRGui, public Observer
+class HAADFGui :  public QMainWindow, private Ui::HAADFGui, public Observer
 {
     Q_OBJECT;
 
   public:
-    TEMBIRGui(QWidget* parent = 0);
-    virtual ~TEMBIRGui();
+    HAADFGui(QWidget* parent = 0);
+    virtual ~HAADFGui();
 
     MXA_INSTANCE_PROPERTY(QString, CurrentImageFile)
     MXA_INSTANCE_PROPERTY(QString, CurrentProcessedFile)
@@ -452,8 +452,8 @@ class TEMBIRGui :  public QMainWindow, private Ui::TEMBIRGui, public Observer
     bool                  m_UpdateCachedSigmaX;
     QVector<QString>      m_TempFilesToDelete;
 
-    TEMBIRGui(const TEMBIRGui&); // Copy Constructor Not Implemented
-    void operator=(const TEMBIRGui&); // Operator '=' Not Implemented
+    HAADFGui(const HAADFGui&); // Copy Constructor Not Implemented
+    void operator=(const HAADFGui&); // Operator '=' Not Implemented
 };
 
 #endif /* EMMPMGUI_H_ */
