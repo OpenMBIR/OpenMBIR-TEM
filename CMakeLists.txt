@@ -65,7 +65,6 @@ if(UNIX AND NOT APPLE)
     set(OpenMBIR_LINUX_SYSTEM ${CMAKE_SYSTEM_NAME} CACHE STRING "The Name of the linux distrubution for packaging")
 endif()
 
-
 # --------------------------------------------------------------------
 # In order to increment the version of OpenMBIR simply adjust these variables.
 # we are using a 3 part Version scheme commonly found in software development. The
@@ -218,12 +217,12 @@ add_subdirectory(${PROJECT_CODE_DIR}/Test ${PROJECT_BINARY_DIR}/Test)
 # Build the Qt Based GUI
 option(OpenMBIR_BUILD_GUI "Build the Qt Based Gui Application" ON)
 if (OpenMBIR_BUILD_GUI)
-	# ------------------------------------------------------------------------------
-	#  Qt 4 Section
-	#  if we are going to build Qt based applications then we need to find Qt 4 first
-	# ------------------------------------------------------------------------------
-	# by default only QtCore and QtGui modules are enabled
-	# other modules must be enabled like this:
+  # ------------------------------------------------------------------------------
+  #  Qt 4 Section
+  #  if we are going to build Qt based applications then we need to find Qt 4 first
+  # ------------------------------------------------------------------------------
+  # by default only QtCore and QtGui modules are enabled
+  # other modules must be enabled like this:
     IF (WIN32)
         SET (QT_USE_QTMAIN TRUE)
     ENDIF (WIN32)
