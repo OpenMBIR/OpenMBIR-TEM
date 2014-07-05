@@ -407,8 +407,8 @@ void BFMultiResolutionReconstruction::execute()
     engine->setAdvParams(m_AdvParams);
     engine->setForwardModel(forwardModel);
 
-    engine->setVerbose(false);
-    engine->setVeryVerbose(false);
+    engine->setVerbose(true);
+    engine->setVeryVerbose(true);
 
     // We need to get messages to the gui or command line
     engine->addObserver(this);

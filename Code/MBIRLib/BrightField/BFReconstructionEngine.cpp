@@ -231,8 +231,8 @@ void BFReconstructionEngine::InitializeTomoInputs(TomoInputsPtr v)
   v->delta_xz = 0;
   v->delta_xy = 0;
   v->tilts.resize(0);
-  v->verbose = false;
-  v->veryVerbose = false;
+  v->verbose = true;
+  v->veryVerbose = true;
 }
 
 // -----------------------------------------------------------------------------

@@ -917,7 +917,7 @@ void BrightFieldGui::initializeSOCEngine(bool fullReconstruction)
   m_MultiResSOC->setTargetGain(1);
 
   m_MultiResSOC->setBraggThreshold(bragg_threshold->text().toFloat(&ok));
-  m_MultiResSOC->setBraggDelta(targetGain->text().toFloat(&ok));
+  m_MultiResSOC->setBraggDelta(targetGain->text().toFloat(&ok));//TODO: To reuse the HAADF GUI, the target gain input was changed to BraggDelta for BF; Need to clean up
   m_MultiResSOC->setBfOffset(bf_offset->text().toFloat(&ok));
 
   Real_t true_offset = -log(defaultOffset->text().toDouble() + bf_offset->text().toDouble());
@@ -1788,7 +1788,8 @@ void BrightFieldGui::on_estimateSigmaX_clicked()
     estimate->setInputFile(inputMRCFilePath->text().toStdString());
     estimate->setSampleThickness(sampleThickness->text().toDouble(&ok));
     estimate->setDefaultOffset(defaultOffset->text().toDouble(&ok));
-    estimate->setTargetGain(targetGain->text().toDouble(&ok));
+    //estimate->setTargetGain(targetGain->text().toDouble(&ok));
+    estimate->setTargetGain(1);// For the BF case there is no unknwon gain factor, unlike the HAADF code
     estimate->setBfOffset(bf_offset->text().toDouble());
     estimate->setUseBFOffset(true);
     //TODO : Set the Offset from the UI
