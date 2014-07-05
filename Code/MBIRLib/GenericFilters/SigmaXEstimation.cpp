@@ -60,16 +60,16 @@ namespace Detail
   }
 
   template<typename T>
-  void calcAvgDeviation(T* data, int total, Real_t& dev)
+  void calcAvgDeviation(T* data, int32_t total, Real_t& dev)
   {
     dev = 0;
     Real_t mean = 0;
-    for (int i = 0; i < total; i++)
+    for (int32_t i = 0; i < total; i++)
     {
       mean += data[i];
     }
     mean /= total;
-    for (int i = 0; i < total; i++)
+    for (int32_t i = 0; i < total; i++)
     {
       dev += fabs(data[i] - mean);
     }
@@ -77,24 +77,27 @@ namespace Detail
   }
 
   template<typename T>
-  void calcBFAvgDeviation(T* data, int total, Real_t& dev, double bf_offset)
+  void calcBFAvgDeviation(T* data, int32_t total, Real_t& dev, double bf_offset)
   {
     dev = 0;
     Real_t mean = 0;
-    for (int i = 0; i < total; i++)
+    for (int32_t i = 0; i < total; i++)
     {
       Real_t temp = data[i] + bf_offset;
       if(temp > 0)
-      { mean += log(data[i] + bf_offset); }
+      { mean += log(temp); }
     }
     mean /= total;
-    for (int i = 0; i < total; i++)
+    std::cout<<"Mean value = "<<mean<<std::endl;
+    
+    for (int32_t i = 0; i < total; i++)
     {
       Real_t temp = data[i] + bf_offset;
       if(temp > 0)
-      { dev += fabs(log(data[i] + bf_offset) - mean); }
+      { dev += fabs(log(temp) - mean); }
     }
     dev /= total;
+    std::cout<<"Mean absolute deviation = "<<dev<<std::endl;
   }
 
 }
@@ -161,7 +164,7 @@ void SigmaXEstimation::execute()
   //    Real_t max = std::numeric_limits<Real_t>::min();
 
   std::vector<Real_t> sum2s(header.nz);
-  int voxelCount = (m_XDims[1] - m_XDims[0]) * (m_YDims[1] - m_YDims[0]);
+  int32_t voxelCount = (m_XDims[1] - m_XDims[0]) * (m_YDims[1] - m_YDims[0]);
   float progress = 0.0;
   // Loop over each tilt angle to compute the Target Gain Estimation
   for(int i_theta = 0; i_theta < header.nz; ++i_theta)
@@ -184,8 +187,8 @@ void SigmaXEstimation::execute()
         else {  Detail::calcAvgDeviation<uint8_t>(static_cast<uint8_t*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 1:
-        if(m_UseBFOffset) { Detail::calcBFAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
-        else {  Detail::calcAvgDeviation<uint16_t>(static_cast<uint16_t*>(reader->getDataPointer()), voxelCount, sum2); }
+        if(m_UseBFOffset) { Detail::calcBFAvgDeviation<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
+        else {  Detail::calcAvgDeviation<int16_t>(static_cast<int16_t*>(reader->getDataPointer()), voxelCount, sum2); }
         break;
       case 2:
         if(m_UseBFOffset) { Detail::calcBFAvgDeviation<float>(static_cast<float*>(reader->getDataPointer()), voxelCount, sum2, m_BfOffset); }
