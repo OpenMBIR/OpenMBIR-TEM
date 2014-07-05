@@ -1097,6 +1097,7 @@ void BrightFieldGui::singleSliceComplete()
 void BrightFieldGui::loadProgressMRCFile(QString mrcfilePath)
 {
   //  std::cout << "Loading Progress MRC File: " << filePath.toStdString() << std::endl;
+  m_ReconstructedDisplayWidget->resetImageScaling();
   m_ReconstructedDisplayWidget->loadXZSliceReconstruction(mrcfilePath);
   m_ReconstructedDisplayWidget->setImageWidgetsEnabled(true);
   m_ReconstructedDisplayWidget->setMovieWidgetsEnabled(false);
