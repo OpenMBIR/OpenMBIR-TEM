@@ -70,6 +70,7 @@ class BFMultiResolutionReconstruction : public FilterPipeline
     MXA_INSTANCE_STRING_PROPERTY(OutputFile)
     MXA_INSTANCE_STRING_PROPERTY(BrightFieldFile)
     MXA_INSTANCE_STRING_PROPERTY(InitialReconstructionFile)
+    MXA_INSTANCE_STRING_PROPERTY(TiltsFile)
     MXA_INSTANCE_PROPERTY(bool, DeleteTempFiles)
 
     MXA_INSTANCE_PROPERTY(int, NumberResolutions)

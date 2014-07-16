@@ -212,7 +212,7 @@ int BFReconstructionArgsParser::parseArguments(int argc, char** argv, BFMultiRes
   TCLAP::ValueArg<int16_t> numThreads("", "num_threads", "Number of threads to use for reconstruction." , false, -1, "-1");
   cmd.add(numThreads);
     
-  TCLAP::ValueArg<std::string> tiltsFile("", "tilts_file", "Full path name of text file containing a list of tilts. If this is present the header tilts will be IGNORED.", false, "", "");
+  TCLAP::ValueArg<std::string> tiltsFile("", "tilts_file", "Full path name of text file containing a list of tilts. If this is present the header tilts will be OVER-WRITTEN.", false, "", "");
   cmd.add(tiltsFile);
 
 #if 0
@@ -261,7 +261,7 @@ int BFReconstructionArgsParser::parseArguments(int argc, char** argv, BFMultiRes
 
     path = MXADir::toNativeSeparators(initialReconstructionPath.getValue());
     m_MultiResSOC->setInitialReconstructionFile(path);
-
+      
     m_MultiResSOC->setNumberResolutions(numResolutions.getValue());
 
     m_MultiResSOC->setFinalResolution(finalResolution.getValue());
@@ -333,7 +333,8 @@ int BFReconstructionArgsParser::parseArguments(int argc, char** argv, BFMultiRes
     {
       return -1;
     }
-    
+      
+      
     if(header.feiHeaders != NULL)
     {
       std::vector<float> tilts(header.nz, 0.0f);
@@ -351,7 +352,46 @@ int BFReconstructionArgsParser::parseArguments(int argc, char** argv, BFMultiRes
       }
       m_MultiResSOC->setTilts(tilts);
     }
-
+    else
+    {
+        std::cout<<"FEI Header missing"<<std::endl;
+    }
+    
+    //Code to read in values of tilts from a text file and OVERWRITE the header tilts
+    path = MXADir::toNativeSeparators(tiltsFile.getValue());
+    if(path != "")
+    {
+      std::string line;
+      std::vector<float> new_tilts(header.nz, 0.0f);
+      int16_t count=0;
+      float temp;
+      std::cout<<"Tilts File :"<<path<<std::endl;
+      //Code to read in a text file into the tilts vector by converting to floats
+      std::ifstream tiltFile(path);
+      if (!tiltFile)
+      {
+        return -1;
+      }
+      while (std::getline(tiltFile, line))
+      {
+          
+          temp = std::stof(line);
+          std::cout<<temp<<std::endl;
+          new_tilts[count]=-temp;
+          count++;
+      }
+      if(count != header.nz)
+      {
+          std::cout<<"Reading from tilts file failed due to mismatch in number of angles"<<std::endl;
+          return -1;
+      }
+      else
+         m_MultiResSOC->setTilts(new_tilts);
+    }
+    else
+      std::cout<<"Using tilts from FEI header"<<std::endl;
+      
+      
   }
   catch (TCLAP::ArgException& e)
   {

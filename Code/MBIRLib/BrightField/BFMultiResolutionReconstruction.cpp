@@ -374,7 +374,6 @@ void BFMultiResolutionReconstruction::execute()
 
 
     inputs->excludedViews = m_ViewMasks;
-      
     inputs->NumThreads = getNumThreads();
 
     SinogramPtr sinogram = SinogramPtr(new Sinogram);
