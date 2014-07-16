@@ -233,6 +233,7 @@ void BFReconstructionEngine::InitializeTomoInputs(TomoInputsPtr v)
   v->tilts.resize(0);
   v->verbose = true;
   v->veryVerbose = true;
+  v->NumThreads=-1;
 }
 
 // -----------------------------------------------------------------------------

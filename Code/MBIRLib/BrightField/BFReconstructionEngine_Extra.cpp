@@ -512,9 +512,17 @@ uint8_t BFReconstructionEngine::updateVoxels(int16_t OuterIter,
 
 #if defined (OpenMBIR_USE_PARALLEL_ALGORITHMS)
   tbb::task_scheduler_init init;
-  int m_NumThreads = init.default_num_threads();
+  if(m_TomoInputs->NumThreads == -1) //If user has not input number of threads get it from the OS
+  {
+    m_NumThreads = init.default_num_threads();
+  }
+  else{
+    if(m_TomoInputs->NumThreads <= init.default_num_threads()) //Ensure the user has not inputs more threads than the max from the tbb initializer
+      m_NumThreads = m_TomoInputs->NumThreads;
+  }
+    
 #else
-  int m_NumThreads = 1;
+  int16_t m_NumThreads = 1;
 #endif //Parallel algorithms
 
   std::stringstream ss;

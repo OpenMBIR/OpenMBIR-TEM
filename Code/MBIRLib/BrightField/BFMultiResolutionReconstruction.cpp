@@ -77,6 +77,7 @@ BFMultiResolutionReconstruction::BFMultiResolutionReconstruction() :
   m_DefaultVariance(1.0f),
   m_InitialReconstructionValue(0.0f),
   m_DefaultPixelSize(1.0),
+  m_NumThreads(-1),
   m_Cancel(false)
 {
 
@@ -123,7 +124,7 @@ void BFMultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std::ost
   PRINT_VAR(out, inputs, extendObject);
   PRINT_VAR(out, inputs, interpolateFactor);
   PRINT_VAR(out, inputs, defaultInitialRecon);
-
+  PRINT_VAR(out, inputs, NumThreads);
 #if 0
   PRINT_VAR(out, inputs, targetGain);
   PRINT_VAR(out, inputs, useDefaultOffset);
@@ -373,6 +374,8 @@ void BFMultiResolutionReconstruction::execute()
 
 
     inputs->excludedViews = m_ViewMasks;
+      
+    inputs->NumThreads = getNumThreads();
 
     SinogramPtr sinogram = SinogramPtr(new Sinogram);
     GeometryPtr geometry = GeometryPtr(new Geometry);

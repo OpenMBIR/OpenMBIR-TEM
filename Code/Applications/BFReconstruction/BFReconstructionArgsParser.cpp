@@ -204,6 +204,16 @@ int BFReconstructionArgsParser::parseArguments(int argc, char** argv, BFMultiRes
 
   TCLAP::ValueArg<std::string> initialReconstructionPath("i", "initial_recon_file", "Initial Reconstruction to initialize algorithm", false, "", "");
   cmd.add(initialReconstructionPath);
+    
+  TCLAP::ValueArg<std::string> viewMask("", "exclude_views", "Comma separated list of tilts to exclude by index", false, "", "");
+  cmd.add(viewMask);
+    
+  // New parameters for CroEM Data sets
+  TCLAP::ValueArg<int16_t> numThreads("", "num_threads", "Number of threads to use for reconstruction." , false, -1, "-1");
+  cmd.add(numThreads);
+    
+  TCLAP::ValueArg<std::string> tiltsFile("", "tilts_file", "Full path name of text file containing a list of tilts. If this is present the header tilts will be IGNORED.", false, "", "");
+  cmd.add(tiltsFile);
 
 #if 0
   TCLAP::ValueArg<std::string> in_Gains("", "gains", "Initial Gains to use.", false, "", "");
@@ -223,13 +233,11 @@ int BFReconstructionArgsParser::parseArguments(int argc, char** argv, BFMultiRes
   TCLAP::ValueArg<Real_t> xy_size("", "xy_size", "Size in nm of output pixel xy plane", true, 1, "1");
   cmd.add(xy_size);
 #endif
-  TCLAP::ValueArg<std::string> viewMask("", "exclude_views", "Comma separated list of tilts to exclude by index", false, "", "");
-  cmd.add(viewMask);
 
 
   if(argc < 2)
   {
-    std::cout << "Scale Offset Correction Command Line Version " << cmd.getVersion() << std::endl;
+    std::cout << "BFMBIR Command Line Version " << cmd.getVersion() << std::endl;
     std::vector<std::string> args;
     args.push_back(argv[0]);
     args.push_back("-h");
@@ -312,8 +320,9 @@ int BFReconstructionArgsParser::parseArguments(int argc, char** argv, BFMultiRes
 
     m_MultiResSOC->setViewMasks(viewMasks);
 
-
-
+    //For CryoEM tomo
+    m_MultiResSOC->setNumThreads(numThreads.getValue());
+      
     // Read the proper tilts from the mrc file
     MRCHeader header;
     ::memset(&header, 0, sizeof(header));
@@ -324,7 +333,7 @@ int BFReconstructionArgsParser::parseArguments(int argc, char** argv, BFMultiRes
     {
       return -1;
     }
-    //  int tiltIndex = 0;
+    
     if(header.feiHeaders != NULL)
     {
       std::vector<float> tilts(header.nz, 0.0f);
@@ -333,11 +342,11 @@ int BFReconstructionArgsParser::parseArguments(int argc, char** argv, BFMultiRes
       {
         if(tiltSelection.getValue() == 0)
         {
-          tilts[l] = header.feiHeaders[l].a_tilt;
+          tilts[l] = -header.feiHeaders[l].a_tilt; //Negation is done to reconstruct the data in the correct orientation
         }
         else
         {
-          tilts[l] = header.feiHeaders[l].b_tilt;
+          tilts[l] = -header.feiHeaders[l].b_tilt;//Negation is done to reconstruct the data in the correct orientation
         }
       }
       m_MultiResSOC->setTilts(tilts);

@@ -103,6 +103,7 @@ typedef struct
 {
   uint16_t NumIter;
   uint16_t NumOuterIter;
+  int16_t  NumThreads;
   Real_t SigmaX;
   Real_t p;
   Real_t StopThreshold;

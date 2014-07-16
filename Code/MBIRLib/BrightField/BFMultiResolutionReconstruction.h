@@ -105,6 +105,8 @@ class BFMultiResolutionReconstruction : public FilterPipeline
     MXA_INSTANCE_PROPERTY(float, BraggThreshold)
     MXA_INSTANCE_PROPERTY(float, BraggDelta)
     MXA_INSTANCE_PROPERTY(float, BfOffset)
+    
+    MXA_INSTANCE_PROPERTY(int16_t, NumThreads)
 
     /**
      * @brief
