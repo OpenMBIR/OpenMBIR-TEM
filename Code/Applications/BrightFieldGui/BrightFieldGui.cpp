@@ -1709,8 +1709,8 @@ void BrightFieldGui::readMRCHeader(QString filepath)
     for(int l = 0; l < header.nz; ++l)
     {
       indices[l] = l;
-      a_tilts[l] = header.feiHeaders[l].a_tilt;
-      b_tilts[l] = header.feiHeaders[l].b_tilt;
+      a_tilts[l] = -header.feiHeaders[l].a_tilt;//Negation done to flip the reconstruction for Cryo
+      b_tilts[l] = -header.feiHeaders[l].b_tilt;//Negation done to flip the reconstruction for Cryo
 
       if (abs(a_tilts[l]) > m_CachedLargestAngle)
       {
@@ -2307,6 +2307,8 @@ void BrightFieldGui::on_actionLoad_Tilt_Information_triggered()
     {
       indices[l] = l;
 
+      a_tilts[l]=-a_tilts[l];//Negation done to flip reconstructions for Cryo data
+      b_tilts[l]=-b_tilts[l];//Negation done to flip reconstructions for Cryo data
 
       if (abs(a_tilts[l]) > m_CachedLargestAngle)
       {
