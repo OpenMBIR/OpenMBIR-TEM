@@ -44,15 +44,17 @@ Running the command line code :
                       --outputfile : Full path of the output .rec/mrc file
                       --thickness : Sample thickness in nano-meters 
                       --sigma_x  : The scaling parameter in the q-GGMRF prior in units of nm^{-1}
-                      --target_gain <> : Average value of the direct beam (normalizing) measurement in counts; This effects 
+                      --target_gain <1> : Average value of the direct beam (normalizing) measurement in counts; This effects 
                                          the choice of sigma_x. The GUI version can automatically estimate the sigma_x given 
                                          this value
-                      [--default_offset] :  The value in counts when the material is not present (dark counts). If not present 
-                                            the program automatically initializes it  
-                      [--use_default_offset]    :  A flag to tell the code to use the default input offset value. MUST BE 
+                      --default_dosage       : Value of the blank-scan/brights used or normalization of BF data  
+                      --use_default_dosage    :  A flag to tell the code to use the default input offset value. MUST BE 
                                                   used if default_offset is used
+                      [--bragg_T <3>] :Value of Bragg threshold T
+                      [--bragg_delta <0.5]> : Value of delta in the bragg rejector
+                      [--bf_offset <0>] : Value of offset in the BF data
                       [--diffuseness <0.2>]  : The value used to compute the prior model parameter "p" (p = diffuseness + 1)
-                      [--default_variance]    : The scaling value for the variance (\sigma^{2} in the paper)                      
+                      [--default_variance<1>]    : The scaling value for the variance (\sigma^{2} in the paper)                      
                       [--tilt_selection <0>] : Which was the tilt axis : 0 is default (y-axis)                                          
                       [--final_resolution <1>] : The resolution of the reconstructed pixels in integer multiples 
                                                 of the detector size 
@@ -60,8 +62,8 @@ Running the command line code :
                                                   to the previous iteration
                       [--num_resolutions <3>]  : Number of resolutions of the multi-resolution reconstruction
                                                  before log(.) is applied
-                      [ --outer_iterations <30>] : Maximum number of outer iterations
-                      [ --inner_iterations <10>] : Maximum number of inner iterations 
+                      [ --outer_iterations <600>] : Maximum number of outer sub-iterations (20 sub-iterations = 1 full iteration)
+                      [ --inner_iterations <100>] : Maximum number of inner iterations 
                                                     at the coarsest resolution. 
                                                     This is done to provide a reasonable initial condition to the algo 
                       [--default_recon_value <0>] : At the coarsest resolution the object is initialized to this value
@@ -71,10 +73,12 @@ Running the command line code :
                       [--delete_tmp_files]   : This flag is used to clear the temporary files created
                       [--exclude_views]      : Used to exclude certain views. Indicate the views to exclude 
                                                separated by "," (Ex: --exclude_views 5,10,30)
+******************Cryo Tomo Extras *********************************************************************************************
                       [--num_threads]        : Specify the number of threads. If not specified the default is to use the number 
-                                               of cores present in the machine. (Only present in CryoTomo branch)
+                                               of cores present in the machine. 
                       [--tilts_file]         : Full path name of text file containing a list of tilts. 
-                                               If this is present the header tilts will be OVER-WRITTEN. (Only present in CryoTomo branch)
+                                               If this is present the header tilts will be OVER-WRITTEN. 
+
 
 ***********************
 Running the GUI 
