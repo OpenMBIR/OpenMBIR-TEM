@@ -241,6 +241,7 @@ void MRCSinogramInitializer::execute()
 
   // Read the subvolume of the MRC file which may contain extra views
   err = reader->read(inputs->sinoFile, voxelMin, voxelMax);
+  
   if (err < 0)
   {
     FREE_FEI_HEADERS( header.feiHeaders )
@@ -268,6 +269,7 @@ void MRCSinogramInitializer::execute()
   for (uint16_t z = 0; z < sinogram->N_theta; z++)
   {
     int dataZOffset = inputs->goodViews[z] - voxelMin[2];
+    std::cout<<"tilt angle :"<<inputs->tilts[z]<<std::endl;
     // Copy the value of the tilt angle into the sinogram->angles vector. The angles should have
     // already been set into the inputs structure before this is ever called. This allows a user
     // to use manually specified angles for the reconstruction if the file does not have any angles

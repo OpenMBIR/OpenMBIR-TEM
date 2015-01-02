@@ -103,11 +103,15 @@ int HAADF_ReconstructionEngine::initializeBrightFieldData()
       notify("A supported file reader for the Bright Field file was not found.", 100, Observable::UpdateErrorMessage);
       return -1;
     }
-    dataReader->setTomoInputs(m_BFTomoInputs);
+    dataReader->setTomoInputs(m_TomoInputs);
     dataReader->setSinogram(m_BFSinogram);
     dataReader->setAdvParams(m_AdvParams);
     dataReader->setObservers(getObservers());
+    std::cout<<"x_start "<<m_BFTomoInputs->xStart<<" x_end "<<m_BFTomoInputs->xEnd<<std::endl;
+    std::cout<<"y_start "<<m_BFTomoInputs->yStart<<" y_end "<<m_BFTomoInputs->yEnd<<std::endl;
+    std::cout<<"z_start "<<m_BFTomoInputs->zStart<<" z_end "<<m_BFTomoInputs->zEnd<<std::endl;
     dataReader->execute();
+
     if(dataReader->getErrorCondition() < 0)
     {
       Flag1 = 0;
@@ -146,7 +150,7 @@ int HAADF_ReconstructionEngine::initializeBrightFieldData()
       setErrorCondition(dataReader->getErrorCondition());
       return -1;
     }
-
+   
     //Normalize the HAADF image
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
     {
@@ -156,8 +160,8 @@ int HAADF_ReconstructionEngine::initializeBrightFieldData()
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
           //1000 is for Marc De Graef data which needed to multiplied
-          //  Real_t ttmp = (m_BFSinogram->counts->getValue(i_theta, i_r, i_t) * 1000);
-          //  m_Sinogram->counts->divideByValue(ttmp, i_theta, i_r, i_t);
+	  // Real_t ttmp = (m_BFSinogram->counts->getValue(i_theta, i_r, i_t) + BF_OFFSET);
+          //m_Sinogram->counts->divideByValue(ttmp, i_theta, i_r, i_t);
           //100 is for Marc De Graef data which needed to multiplied
           //  m_BFSinogram->counts->multiplyByValue(100, i_theta, i_r, i_t);
           m_BFSinogram->counts->setValue(m_BFSinogram->counts->getValue(i_theta, i_r, i_t) + BF_OFFSET, i_theta, i_r, i_t);

@@ -47,7 +47,7 @@
 #define POSITIVITY_CONSTRAINT
 
 #define BF_OFFSET 0 //23696 - Bio data set
-#define BF_MAX  1865 //5689//42122
+//#define BF_MAX  1 //5689//42122
 
 #define SURROGATE_FUNCTION
 
