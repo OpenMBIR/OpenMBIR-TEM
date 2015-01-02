@@ -103,7 +103,8 @@ int HAADF_ReconstructionEngine::initializeBrightFieldData()
       notify("A supported file reader for the Bright Field file was not found.", 100, Observable::UpdateErrorMessage);
       return -1;
     }
-    dataReader->setTomoInputs(m_TomoInputs);
+    m_BFTomoInputs->tilts = m_TomoInputs->tilts; //The inputs tilts be same for HAADF and BF data files 
+    dataReader->setTomoInputs(m_BFTomoInputs); 
     dataReader->setSinogram(m_BFSinogram);
     dataReader->setAdvParams(m_AdvParams);
     dataReader->setObservers(getObservers());
