@@ -351,12 +351,12 @@ class UpdateYSlice
                   {
                     size_t error_idx = m_ErrorSino->calcIndex(i_theta, i_r, i_t);
                     Real_t ProjectionEntry = kConst0 * voxelLineResponse->values[VoxelLineAccessCounter];
-                    if(m_ForwardModel->getBF_Flag() == false)
+                    if(m_ForwardModel->getBF_Flag() == false) 
                     {
                       THETA2 += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
                       THETA1 += (m_ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
-                    }
-                    else
+                    } 
+                    else //modify this section to account for the sinogram selector entry 
                     {
                       ProjectionEntry *= m_BFSinogram->counts->d[error_idx];
                       THETA2 += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
