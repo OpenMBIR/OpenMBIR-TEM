@@ -189,24 +189,6 @@ int HAADFReconstructionArgsParser::parseArguments(int argc, char** argv, HAADF_M
   TCLAP::ValueArg<std::string> initialReconstructionPath("i", "initial_recon_file", "Initial Reconstruction to initialize algorithm", false, "", "");
   cmd.add(initialReconstructionPath);
 
-#if 0
-  TCLAP::ValueArg<std::string> in_Gains("", "gains", "Initial Gains to use.", false, "", "");
-  cmd.add(in_Gains);
-
-  TCLAP::ValueArg<std::string> in_Offsets("", "offsets", "Initial Offsets to use.", false, "", "");
-  cmd.add(in_Offsets);
-
-  TCLAP::ValueArg<std::string> in_Variance("", "variance", "Initial Variance to use.", false, "", "");
-  cmd.add(in_Variance);
-
-  TCLAP::ValueArg<double> in_InterpFactor("", "interpFactor", "Interpolate Factor", false, 0.0, "");
-  cmd.add(in_InterpFactor);
-
-  TCLAP::ValueArg<Real_t> xz_size("", "xz_size", "Size in nm of output pixel xz plane", true, 1, "1");
-  cmd.add(xz_size);
-  TCLAP::ValueArg<Real_t> xy_size("", "xy_size", "Size in nm of output pixel xy plane", true, 1, "1");
-  cmd.add(xy_size);
-#endif
   TCLAP::ValueArg<std::string> viewMask("", "exclude_views", "Comma separated list of tilts to exclude by index", false, "", "");
   cmd.add(viewMask);
 
