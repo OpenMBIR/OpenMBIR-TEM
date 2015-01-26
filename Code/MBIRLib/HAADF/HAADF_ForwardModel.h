@@ -89,6 +89,9 @@ class HAADF_ForwardModel : public Observable
     MXA_INSTANCE_PROPERTY(int, ErrorCondition)
     MXA_INSTANCE_PROPERTY(bool, Cancel)
 
+    MXA_INSTANCE_PROPERTY(Real_t, BraggThreshold)
+    MXA_INSTANCE_PROPERTY(Real_t, BraggDelta)
+    MXA_INSTANCE_PROPERTY(UInt8VolumeType::Pointer,BraggSelector)
 
     MXA_INSTANCE_PROPERTY(AdvancedParametersPtr, AdvParams)
     MXA_INSTANCE_PROPERTY(TomoInputsPtr, TomoInputs)
@@ -115,7 +118,8 @@ class HAADF_ForwardModel : public Observable
     void writeVtkFile(const std::string& vtkFile, uint16_t cropStart, uint16_t cropEnd);
     void writeMRCFile(const std::string& mrcFile, uint16_t cropStart, uint16_t cropEnd);
     void writeAvizoFile(const std::string& file, uint16_t cropStart, uint16_t cropEnd);
-
+    void computeBraggSelector(RealVolumeType::Pointer ErrorSino,RealVolumeType::Pointer Weight);
+    void selectorInitialization(size_t dims[3]);
     int createInitialGainsData();
     int createInitialOffsetsData();
     int createInitialVariancesData();

@@ -113,7 +113,10 @@ class MBIRLib_EXPORT HAADF_ReconstructionEngine : public AbstractFilter
     Real_t computeCost(RealVolumeType::Pointer ErrorSino,
                        RealVolumeType::Pointer Weight);
 
-
+    /*    UInt8VolumeType::Pointer computeBraggSelector(RealVolumeType::Pointer ErrorSino,
+						  RealVolumeType::Pointer Weight, 
+						  HAADF_ForwardModel* forwardModel);
+    */
     /**
      *
      */

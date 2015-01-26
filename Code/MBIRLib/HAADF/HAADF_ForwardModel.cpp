@@ -449,3 +449,31 @@ void HAADF_ForwardModel::initializeHt(RealVolumeType::Pointer H_t, Real_t Offset
     }
   }
 }
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void HAADF_ForwardModel::selectorInitialization(size_t dims[3])
+{
+  //This variable selects which entries to retain in the sinogram
+  m_BraggSelector = UInt8VolumeType::New(dims, "Selector");
+
+}
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void HAADF_ForwardModel::computeBraggSelector(RealVolumeType::Pointer ErrorSino, RealVolumeType::Pointer Weight)
+{
+  Real_t sum = 0;
+  for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
+    for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
+      for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
+      {
+        size_t idx = Weight->calcIndex(i_theta, i_r, i_t);
+        if(ErrorSino->d[idx] * ErrorSino->d[idx] * Weight->d[idx] < m_BraggThreshold * m_BraggThreshold)
+	  { m_BraggSelector->d[idx] = 1; sum+=1;}
+        else
+        { m_BraggSelector->d[idx] = 0; }
+      }
+  std::cout<<"Non-zero selector entries = "<<sum<<std::endl;
+}
+

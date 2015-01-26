@@ -89,6 +89,9 @@ class HAADF_MultiResolutionReconstruction : public FilterPipeline
     MXA_INSTANCE_PROPERTY(float, InitialReconstructionValue)
     MXA_INSTANCE_PROPERTY(Real_t, DefaultPixelSize)
 
+    MXA_INSTANCE_PROPERTY(Real_t, BraggThreshold)
+    MXA_INSTANCE_PROPERTY(Real_t, BraggDelta)
+
     MXA_INSTANCE_PROPERTY(std::vector<float>, Tilts)
     MXA_INSTANCE_PROPERTY(AdvancedParametersPtr, AdvParams)
 

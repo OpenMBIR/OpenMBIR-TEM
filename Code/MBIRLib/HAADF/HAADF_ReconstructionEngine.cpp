@@ -351,6 +351,8 @@ void HAADF_ReconstructionEngine::execute()
   RealVolumeType::Pointer ErrorSino; //Error Sinogram
   RealVolumeType::Pointer Weight; //This contains weights for each measurement = The diagonal covariance matrix in the Cost Func formulation
 
+  //std::cout<<"Forward model paras = "<<m_ForwardModel->getBraggThreshold()<<std::endl;
+
   std::string indent("");
 
   //#ifdef COST_CALCULATE //Commented out because if not the code fails to run.
@@ -392,6 +394,7 @@ void HAADF_ReconstructionEngine::execute()
     return;
   }
 
+ 
   // Read the Input data from the supplied data file
   err = readInputData();
   if(err < 0)
@@ -701,6 +704,12 @@ void HAADF_ReconstructionEngine::execute()
   err = calculateCost(cost, Weight, ErrorSino);
 #endif //Cost calculation endif
   //  int totalLoops = m_TomoInputs->NumOuterIter * m_TomoInputs->NumIter;
+ dims[0] = m_Sinogram->N_theta;
+ dims[1] = m_Sinogram->N_r;
+ dims[2] = m_Sinogram->N_t;
+ m_ForwardModel->selectorInitialization(dims);
+
+ m_ForwardModel->computeBraggSelector(ErrorSino,Weight);
 
   //Loop through every voxel updating it by solving a cost function
   for (int16_t reconOuterIter = 0; reconOuterIter < m_TomoInputs->NumOuterIter; reconOuterIter++)
@@ -1947,4 +1956,6 @@ Real_t HAADF_ReconstructionEngine::estimateSigmaX(RealVolumeType::Pointer ErrorS
   std::cout << "Ratio = " << m_TomoInputs->SigmaX / pow(sigmaxEst, 1.0 / m_TomoInputs->p) << std::endl;
   return sigmaxEst;
 }
+
+
 

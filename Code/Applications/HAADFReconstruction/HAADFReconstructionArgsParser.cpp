@@ -190,8 +190,12 @@ int HAADFReconstructionArgsParser::parseArguments(int argc, char** argv, HAADF_M
   cmd.add(initialReconstructionPath);
 
   TCLAP::ValueArg<std::string> viewMask("", "exclude_views", "Comma separated list of tilts to exclude by index", false, "", "");
-  cmd.add(viewMask);
 
+  TCLAP::ValueArg<Real_t> bragg_thresh("", "bragg_T", "Value of Bragg threshold", false, 3,"3");
+  cmd.add(bragg_thresh);
+
+  TCLAP::ValueArg<Real_t> bragg_delta("", "bragg_delta", "Value of Bragg weight", false, 0.5,"0.5");
+  cmd.add(bragg_delta);
 
   if(argc < 2)
   {
@@ -240,6 +244,9 @@ int HAADFReconstructionArgsParser::parseArguments(int argc, char** argv, HAADF_M
     m_MultiResSOC->setExtendObject(extendObject.getValue());
     m_MultiResSOC->setDefaultVariance(defaultVariance.getValue());
     m_MultiResSOC->setInitialReconstructionValue(defaultInitialRecon.getValue());
+
+    m_MultiResSOC->setBraggThreshold(bragg_thresh.getValue());
+    m_MultiResSOC->setBraggDelta(bragg_delta.getValue());
 
     m_MultiResSOC->setInterpolateInitialReconstruction(interpolateInitialRecontruction.getValue());
     m_MultiResSOC->setDeleteTempFiles(m_DeleteTempFiles.getValue());

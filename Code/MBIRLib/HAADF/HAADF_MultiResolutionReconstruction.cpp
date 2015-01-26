@@ -77,6 +77,8 @@ HAADF_MultiResolutionReconstruction::HAADF_MultiResolutionReconstruction() :
   m_DefaultVariance(1.0f),
   m_InitialReconstructionValue(0.0f),
   m_DefaultPixelSize(1.0),
+  m_BraggThreshold(3),
+  m_BraggDelta(0.5),
   m_Cancel(false)
 {
 
@@ -124,6 +126,8 @@ void HAADF_MultiResolutionReconstruction::printInputs(TomoInputsPtr inputs, std:
   PRINT_VAR(out, inputs, interpolateFactor);
   PRINT_VAR(out, inputs, defaultInitialRecon);
 
+  //  PRINT_VAR(out, inputs, BraggThresh);
+  //  PRINT_VAR(out, inputs, BraggDelta);
 
   PRINT_VAR(out, inputs, targetGain);
   PRINT_VAR(out, inputs, useDefaultOffset);
@@ -182,6 +186,8 @@ void HAADF_MultiResolutionReconstruction::execute()
   ss << "-- There are " << m_NumberResolutions << " resolutions to reconstruct." ;
   pipelineProgressMessage(ss.str());
   ss.str("");
+
+  std::cout<<"Bragg parameters = "<<m_BraggThreshold<<" "<<m_BraggDelta<<std::endl;
 
   TomoInputsPtr prevInputs = TomoInputsPtr(new TomoInputs);
   HAADF_ReconstructionEngine::InitializeTomoInputs(prevInputs);
@@ -394,6 +400,8 @@ void HAADF_MultiResolutionReconstruction::execute()
     forwardModel->setTomoInputs(inputs);
     forwardModel->setSinogram(sinogram);
     forwardModel->setGeometry(geometry);
+    forwardModel->setBraggDelta(getBraggDelta()); //Set the Bragg function Delta value
+    forwardModel->setBraggThreshold(getBraggThreshold());
     forwardModel->addObserver(this);
 
     HAADF_ReconstructionEngine::InitializeScaleOffsetParams(forwardModel.get());
