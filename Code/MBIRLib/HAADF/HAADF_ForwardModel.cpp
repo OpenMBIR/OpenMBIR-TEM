@@ -490,3 +490,48 @@ void HAADF_ForwardModel::updateBraggSelector(size_t idx,Real_t error, Real_t wei
         m_BraggSelector->d[idx] = 0;
 	}
 }
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void HAADF_ForwardModel::writeMRCSelector(const std::string& mrcFile)
+{
+  //const std::string mrcFile="Selector.mrc";
+  m_Geometry->N_x = m_Sinogram->N_r;
+  m_Geometry->N_y = m_Sinogram->N_t;
+  m_Geometry->N_z = m_Sinogram->N_theta;
+  m_Geometry->Object = m_Sinogram->counts;
+  for(uint32_t i_theta = 0; i_theta <  m_Geometry->N_z; i_theta++)
+  {
+    for(uint32_t i_r = 0; i_r < m_Geometry->N_x; i_r++)
+      for(uint32_t i_t = 0; i_t < m_Geometry->N_y; i_t++)
+      {
+        size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
+        Real_t value = m_BraggSelector->d[counts_idx];
+        m_Geometry->Object->d[counts_idx] = value;
+      }
+  }
+  /* Write the output to the MRC File */
+  std::stringstream ss;
+  ss.str("");
+  ss << "Writing MRC file to '" << mrcFile << "'";
+  notify(ss.str(), 0, Observable::UpdateProgressMessage);
+
+  MRCWriter::Pointer mrcWriter = MRCWriter::New();
+  mrcWriter->setOutputFile(mrcFile);
+  mrcWriter->setGeometry(m_Geometry);
+  mrcWriter->setAdvParams(m_AdvParams);
+  mrcWriter->setXDims(0, m_Geometry->N_x);
+  mrcWriter->setYDims(0, m_Geometry->N_y);
+  mrcWriter->setZDims(0, m_Geometry->N_z);
+  mrcWriter->setObservers(getObservers());
+  mrcWriter->execute();
+  if(mrcWriter->getErrorCondition() < 0)
+  {
+    ss.str("");
+    ss << "Error writing MRC file\n    '" << mrcFile << "'" << std::endl;
+    setErrorCondition(mrcWriter->getErrorCondition());
+    notify(ss.str(), 0, Observable::UpdateErrorMessage);
+  }
+
+}

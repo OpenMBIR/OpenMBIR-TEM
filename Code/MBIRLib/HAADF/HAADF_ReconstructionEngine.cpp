@@ -915,6 +915,10 @@ void HAADF_ReconstructionEngine::execute()
   std::cout << "  Ny = " << m_Geometry->N_y << std::endl;
   std::cout << "  Nz = " << m_Geometry->N_z << std::endl;
 
+  /* TODO : Hack to write out the selector. This line has to be the LAST of the writes else it 
+can break the code */
+  m_ForwardModel->writeMRCSelector("Selector.mrc");
+
   notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
   setErrorCondition(0);
   std::cout << "Total Running Time for Execute: " << (EIMTOMO_getMilliSeconds() - totalTime) / 1000 << std::endl;
