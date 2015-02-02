@@ -917,7 +917,11 @@ void HAADF_ReconstructionEngine::execute()
 
   /* TODO : Hack to write out the selector. This line has to be the LAST of the writes else it 
 can break the code */
-  m_ForwardModel->writeMRCSelector("Selector.mrc");
+  {
+    //std::stringstream ss;
+  //  ss << m_TomoInputs->tempDir << MXADir::getSeparator() << m_TomobraggSelectorFile;
+  m_ForwardModel->writeMRCSelector(m_TomoInputs->braggSelectorFile);
+  }
 
   notify("Reconstruction Complete", 100, Observable::UpdateProgressValueAndMessage);
   setErrorCondition(0);
