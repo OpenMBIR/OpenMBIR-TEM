@@ -351,17 +351,17 @@ class UpdateYSlice
                   {
                     size_t error_idx = m_ErrorSino->calcIndex(i_theta, i_r, i_t);
                     Real_t ProjectionEntry = kConst0 * voxelLineResponse->values[VoxelLineAccessCounter];
-                    if(m_ForwardModel->getBF_Flag() == false) 
+                    if(m_ForwardModel->getBraggSelector()->d[error_idx]) 
                     {
                       THETA2 += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
                       THETA1 += (m_ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
                     } 
-                    else //modify this section to account for the sinogram selector entry 
-                    {
-                      ProjectionEntry *= m_BFSinogram->counts->d[error_idx];
-                      THETA2 += (ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
-                      THETA1 += (m_ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
-                    }
+		    else
+		    {
+		      Real_t QuadCoeff = (m_ForwardModel->getBraggDelta() * m_ForwardModel->getBraggThreshold()) / (fabs(m_ErrorSino->d[error_idx]) * sqrt(m_Weight->d[error_idx]));
+		      THETA2 += QuadCoeff *(ProjectionEntry * ProjectionEntry * m_Weight->d[error_idx]);
+                      THETA1 += QuadCoeff *(m_ErrorSino->d[error_idx] * ProjectionEntry * m_Weight->d[error_idx]);
+		    }
                     VoxelLineAccessCounter++;
                   }
                 }
@@ -441,10 +441,10 @@ class UpdateYSlice
                     }
                     else
                     {
-
                       m_ErrorSino->d[error_idx] -= (m_BFSinogram->counts->d[error_idx] * kConst2);
                     }
                     VoxelLineAccessCounter++;
+		    m_ForwardModel->updateBraggSelector(error_idx,m_ErrorSino->d[error_idx],m_Weight->d[error_idx]);
                   }
                 }
               }

@@ -120,6 +120,7 @@ class HAADF_ForwardModel : public Observable
     void writeAvizoFile(const std::string& file, uint16_t cropStart, uint16_t cropEnd);
     void computeBraggSelector(RealVolumeType::Pointer ErrorSino,RealVolumeType::Pointer Weight);
     void selectorInitialization(size_t dims[3]);
+    void updateBraggSelector(size_t idx,Real_t error, Real_t weight);
     int createInitialGainsData();
     int createInitialOffsetsData();
     int createInitialVariancesData();

@@ -894,7 +894,7 @@ void HAADF_ReconstructionEngine::execute()
     //  ss << m_TomoInputs->tempDir << MXADir::getSeparator() << MBIR::Defaults::ReconstructedVtkFile;
     m_ForwardModel->writeVtkFile(m_TomoInputs->vtkOutputFile, cropStart, cropEnd);
   }
-  // Write out the MRC File
+  // Write out the MRC reconstruction File
   if (m_TomoInputs->mrcOutputFile.empty() == false)
   {
     //  std::stringstream ss;

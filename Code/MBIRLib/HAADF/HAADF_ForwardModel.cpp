@@ -477,3 +477,16 @@ void HAADF_ForwardModel::computeBraggSelector(RealVolumeType::Pointer ErrorSino,
   std::cout<<"Non-zero selector entries = "<<sum<<std::endl;
 }
 
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void HAADF_ForwardModel::updateBraggSelector(size_t idx,Real_t error, Real_t weight)
+{
+// Update the selector variable
+    if(fabs(error*sqrt(weight)) < m_BraggThreshold)
+	{ m_BraggSelector->d[idx] = 1; }
+    else
+	{
+        m_BraggSelector->d[idx] = 0;
+	}
+}

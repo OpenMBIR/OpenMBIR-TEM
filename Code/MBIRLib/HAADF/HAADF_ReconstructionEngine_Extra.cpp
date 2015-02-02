@@ -424,7 +424,7 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
   std::string indent("  ");
   RealArrayType::Pointer I_0 = m_ForwardModel->getI_0();
   RealArrayType::Pointer mu = m_ForwardModel->getMu();
-
+  RealArrayType::Pointer sigma = m_ForwardModel->getAlpha();
   //Estimate only offsets
 
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
@@ -432,12 +432,25 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
       Real_t num_sum = 0;
       Real_t den_sum = 0;
       Real_t alpha = 0;
+      Real_t temp =0;
       for (uint16_t i_r = 0; i_r < m_Sinogram->N_r; i_r++)
       {
         for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
         {
+	  size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
+	  if(m_ForwardModel->getBraggSelector()->d[error_idx])
+	    {
           num_sum += (ErrorSino->getValue(i_theta, i_r, i_t) * Weight->getValue(i_theta, i_r, i_t));
           den_sum += Weight->getValue(i_theta, i_r, i_t);
+	    }
+	  else
+	    {
+	      temp = m_ForwardModel->getBraggDelta()*m_ForwardModel->getBraggThreshold();
+              temp /= abs(ErrorSino->getValue(i_theta,i_r,i_t));
+              temp *= sqrt(Weight->getValue(i_theta,i_r,i_t)*sigma->d[i_theta]);
+	      num_sum += temp*ErrorSino->getValue(i_theta,i_r,i_t);
+	      den_sum += temp;
+	    }
         }
       }
       alpha = num_sum / den_sum;
@@ -455,6 +468,7 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
         std::cout << "Theta: " << i_theta << " Mu: " << mu->d[i_theta] << std::endl;
       }
     }
+    m_ForwardModel->computeBraggSelector(ErrorSino,Weight);
 #ifdef COST_CALCULATE
     /*********************Cost Calculation*************************************/
     Real_t cost_value = computeCost(ErrorSino, Weight);
@@ -596,8 +610,6 @@ void HAADF_ReconstructionEngine::updateWeights(RealVolumeType::Pointer Weight,
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
         size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
-        //     size_t yest_idx = Y_Est->calcIndex(i_theta, i_r, i_t);
-        //    size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
 #ifndef IDENTITY_NOISE_MODEL
         size_t counts_idx = m_Sinogram->counts->calcIndex(i_theta, i_r, i_t);
         if(m_Sinogram->counts->d[counts_idx] != 0)
@@ -619,8 +631,12 @@ void HAADF_ReconstructionEngine::updateWeights(RealVolumeType::Pointer Weight,
       for (uint16_t i_t = 0; i_t < m_Sinogram->N_t; i_t++)
       {
         size_t error_idx = ErrorSino->calcIndex(i_theta, i_r, i_t);
-        size_t weight_idx = Weight->calcIndex(i_theta, i_r, i_t);
-        sum += (ErrorSino->d[error_idx] * ErrorSino->d[error_idx] * Weight->d[weight_idx]); //Changed to only account for the counts
+        if(m_ForwardModel->getBraggSelector()->d[error_idx])
+	  sum += (ErrorSino->d[error_idx] * ErrorSino->d[error_idx] * Weight->d[error_idx]); //Changed to only account for the counts
+	else
+	  {
+	    sum += m_ForwardModel->getBraggThreshold()*m_ForwardModel->getBraggDelta()*sqrt(Weight->d[error_idx])*alpha->d[i_theta];
+	  }
       }
     }
     sum /= (m_Sinogram->N_r * m_Sinogram->N_t);
@@ -652,6 +668,8 @@ void HAADF_ReconstructionEngine::updateWeights(RealVolumeType::Pointer Weight,
     }
 
   }
+  
+  m_ForwardModel->computeBraggSelector(ErrorSino,Weight);
 
   if(getVeryVerbose())
   {
