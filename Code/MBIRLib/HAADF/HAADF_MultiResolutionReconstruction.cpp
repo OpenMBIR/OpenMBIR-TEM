@@ -402,6 +402,11 @@ void HAADF_MultiResolutionReconstruction::execute()
     forwardModel->setGeometry(geometry);
     forwardModel->setBraggDelta(getBraggDelta()); //Set the Bragg function Delta value
     forwardModel->setBraggThreshold(getBraggThreshold());
+    //At the coarsest scale do not do Bragg selection
+    if(i == 0){
+      forwardModel->setBraggThreshold(3e10);
+    }
+
     forwardModel->addObserver(this);
 
     HAADF_ReconstructionEngine::InitializeScaleOffsetParams(forwardModel.get());
