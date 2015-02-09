@@ -402,7 +402,7 @@ void HAADF_MultiResolutionReconstruction::execute()
     forwardModel->setGeometry(geometry);
     forwardModel->setBraggDelta(getBraggDelta()); //Set the Bragg function Delta value
     forwardModel->setBraggThreshold(getBraggThreshold());
-    //At the coarsest scale do not do Bragg selection
+    //At the coarsest scale do not do Bragg selection TODO: Remove hard wiring
     if(i == 0){
       forwardModel->setBraggThreshold(3e10);
     }
