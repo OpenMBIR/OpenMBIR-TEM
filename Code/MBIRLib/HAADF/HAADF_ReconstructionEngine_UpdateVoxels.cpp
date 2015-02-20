@@ -266,17 +266,7 @@ class UpdateYSlice
               //Neighborhood of (i,j,k) should be initialized to zeros each time
               ::memset(NEIGHBORHOOD, 0, 27 * sizeof(Real_t));
               ::memset(BOUNDARYFLAG, 0, 27 * sizeof(uint8_t));
-//              for (int32_t p = 0; p <= 2; p++)
-//              {
-//                for (int32_t q = 0; q <= 2; q++)
-//                {
-//                  for (int32_t r = 0; r <= 2; r++)
-//                  {
-//                    NEIGHBORHOOD[INDEX_3(p, q, r)] = 0.0;
-//                    BOUNDARYFLAG[INDEX_3(p, q, r)] = 0;
-//                  }
-//                }
-//              }
+
               //For a given (i,j,k) store its 26 point neighborhood
               for (int32_t p = -1; p <= 1; p++)
               {

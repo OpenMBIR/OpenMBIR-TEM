@@ -474,7 +474,7 @@ void HAADF_ForwardModel::computeBraggSelector(RealVolumeType::Pointer ErrorSino,
         else
         { m_BraggSelector->d[idx] = 0; }
       }
-  std::cout<<"Non-zero selector entries = "<<sum<<std::endl;
+  std::cout<<"Fraction of non-zero selector entries = "<<sum/(m_Sinogram->N_theta*m_Sinogram->N_r*m_Sinogram->N_t)<<std::endl;
 }
 
 // -----------------------------------------------------------------------------

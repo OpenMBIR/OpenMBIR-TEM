@@ -747,7 +747,10 @@ void HAADF_ReconstructionEngine::execute()
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
       status =
         updateVoxels(reconOuterIter, reconInnerIter, updateType, VisitCount, TempCol, ErrorSino, Weight, VoxelLineResponse, m_ForwardModel.get(), Mask, cost);
+
+      m_ForwardModel.get()->computeBraggSelector(ErrorSino,Weight);//DEBUG
       /* %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
+
 
       if(status == 0)
       {

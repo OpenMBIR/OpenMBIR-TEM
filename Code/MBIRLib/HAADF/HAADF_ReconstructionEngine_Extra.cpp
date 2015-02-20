@@ -446,8 +446,9 @@ int HAADF_ReconstructionEngine::jointEstimation(RealVolumeType::Pointer Weight,
 	  else
 	    {
 	      temp = m_ForwardModel->getBraggDelta()*m_ForwardModel->getBraggThreshold();
-              temp /= abs(ErrorSino->getValue(i_theta,i_r,i_t));
-              temp *= sqrt(Weight->getValue(i_theta,i_r,i_t)*sigma->d[i_theta]);
+              temp /= fabs(ErrorSino->getValue(i_theta,i_r,i_t));
+	      //              temp *= sqrt(Weight->getValue(i_theta,i_r,i_t)*sigma->d[i_theta]);
+	      temp *= sqrt(Weight->getValue(i_theta,i_r,i_t));
 	      num_sum += temp*ErrorSino->getValue(i_theta,i_r,i_t);
 	      den_sum += temp;
 	    }

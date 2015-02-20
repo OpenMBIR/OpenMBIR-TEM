@@ -53,6 +53,6 @@
 
 #define RANDOM_ORDER_UPDATES
 
-//#define IDENTITY_NOISE_MODEL//May need to use this for negative valued data sets
+#define IDENTITY_NOISE_MODEL//May need to use this for negative valued data sets
 
 #endif /* _HAADFConstants_H_ */
