@@ -350,7 +350,7 @@ int HAADFReconstructionArgsParser::parseArguments(int argc, char** argv, HAADF_M
 	    m_MultiResSOC->setTilts(new_tilts);  
 	  //Set the pixel size as well
 	  std::cout<<"Entered pixel value ="<<pix_size.getValue()<<std::endl;
-	  //	  m_MultiResSOC->setPixSize(pix_size.getValue());	  
+	  m_MultiResSOC->setDetPixSize(pix_size.getValue());	  
 	}
       
   }

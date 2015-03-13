@@ -468,6 +468,9 @@ void HAADF_ReconstructionEngine::execute()
 
   //Pre compute sine and cos theta to speed up computations
   m_DetectorParameters = DetectorParameters::New();
+
+  std::cout<<"*****************Pixel sizes ***************"<<m_TomoInputs->delta_xz<<" "<<m_Sinogram->delta_r<<std::endl;
+
   m_DetectorParameters->setOffsetR(((m_TomoInputs->delta_xz / sqrt(3.0)) + m_Sinogram->delta_r / 2) / m_AdvParams->DETECTOR_RESPONSE_BINS);
   m_DetectorParameters->setOffsetT(((m_TomoInputs->delta_xz / 2) + m_Sinogram->delta_t / 2) / m_AdvParams->DETECTOR_RESPONSE_BINS);
   m_DetectorParameters->setBeamWidth(m_Sinogram->delta_r);

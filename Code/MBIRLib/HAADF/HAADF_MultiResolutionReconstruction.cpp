@@ -413,8 +413,10 @@ void HAADF_MultiResolutionReconstruction::execute()
 
     //This load the pixel size from a user based input if the headers are NOT FEI compliant
     //If the header is FEI compliant, this value WILL be overwritten in HAADF_ReconstructionEngine.cpp
-    sinogram->delta_r = getDefaultPixelSize();
-    sinogram->delta_t = getDefaultPixelSize();
+    sinogram->delta_r = getDetPixSize();//getDefaultPixelSize();
+    sinogram->delta_t = getDetPixSize();//getDefaultPixelSize();
+
+    std::cout<<"****************** Initializing pixels to ****************"<<getDetPixSize()<<std::endl;
 
     //Calculate approximate memory required
     memCalculate(inputs);
