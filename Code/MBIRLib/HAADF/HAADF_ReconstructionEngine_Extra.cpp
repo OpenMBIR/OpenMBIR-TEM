@@ -672,8 +672,8 @@ void HAADF_ReconstructionEngine::updateWeights(RealVolumeType::Pointer Weight,
   
   m_ForwardModel->computeBraggSelector(ErrorSino,Weight);
 
-  if(getVeryVerbose())
-  {
+  // if(getVeryVerbose())
+  // {
     std::cout << "Noise Model Weights:" << std::endl;
     std::cout << "Tilt\tWeight" << std::endl;
     for (uint16_t i_theta = 0; i_theta < m_Sinogram->N_theta; i_theta++)
@@ -681,7 +681,7 @@ void HAADF_ReconstructionEngine::updateWeights(RealVolumeType::Pointer Weight,
       std::cout << i_theta << "\t" << alpha->d[i_theta] << std::endl;
     }
     std::cout << "Ratio of change in Variance " << AverageVarUpdate / AverageMagVar << std::endl;
-  }
+    //}
 
   notify("Update Weights Complete", 0, Observable::UpdateProgressMessage);
 }

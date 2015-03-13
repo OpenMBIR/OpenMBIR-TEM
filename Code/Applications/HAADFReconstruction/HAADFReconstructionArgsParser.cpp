@@ -191,6 +191,12 @@ int HAADFReconstructionArgsParser::parseArguments(int argc, char** argv, HAADF_M
 
   TCLAP::ValueArg<std::string> viewMask("", "exclude_views", "Comma separated list of tilts to exclude by index", false, "", "");
 
+  TCLAP::ValueArg<std::string> tiltsFile("", "tilts_file", "Full path name of text file containing a list of tilts. If this is present the header tilts will be OVER-WRITTEN.", false, "", "");
+  cmd.add(tiltsFile);
+
+  TCLAP::ValueArg<Real_t> pix_size("", "pix_size", "Value of pixel size in nano-meters", false, 1,"1");
+  cmd.add(pix_size);
+
   TCLAP::ValueArg<Real_t> bragg_thresh("", "bragg_T", "Value of Bragg threshold", false, 3,"3");
   cmd.add(bragg_thresh);
 
@@ -309,6 +315,44 @@ int HAADFReconstructionArgsParser::parseArguments(int argc, char** argv, HAADF_M
       }
       m_MultiResSOC->setTilts(tilts);
     }
+    else{
+      std::cout<<"FEI Header missing. Looking for a text file with tilts "<<std::endl;
+    }
+      //Code to read in values of tilts from a text file and OVERWRITE the header tilts if any   
+      path = MXADir::toNativeSeparators(tiltsFile.getValue());
+      if(path != "")
+	{
+	  std::string line;
+	  std::vector<float> new_tilts(header.nz, 0.0f);
+	  int16_t count=0;
+	  float temp;
+	  std::cout<<"Tilts File :"<<path<<std::endl;
+	  //Code to read in a text file into the tilts vector by converting to floats                                        
+	  std::ifstream tiltFile(path);
+	  if (!tiltFile)
+	    {
+	      std::cout<<"Tilt file not found"<<std::endl;
+	      return -1;
+	    }
+	  while (std::getline(tiltFile, line))
+	    {
+	      temp = std::stof(line);
+	      std::cout<<temp<<std::endl;
+	      new_tilts[count]=-temp;
+	      count++;
+	    }
+	  if(count != header.nz)
+	   {
+	      std::cout<<"Reading from tilts file failed due to mismatch in number of angles"<<std::endl;
+	      return -1;
+	   }
+	  else
+	    m_MultiResSOC->setTilts(new_tilts);  
+	  //Set the pixel size as well
+	  std::cout<<"Entered pixel value ="<<pix_size.getValue()<<std::endl;
+	  //	  m_MultiResSOC->setPixSize(pix_size.getValue());	  
+	}
+      
   }
   catch (TCLAP::ArgException& e)
   {

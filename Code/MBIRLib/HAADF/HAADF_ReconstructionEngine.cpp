@@ -788,7 +788,7 @@ void HAADF_ReconstructionEngine::execute()
 
     if(m_AdvParams->NOISE_MODEL)
     {
-      updateWeights(Weight, ErrorSino);
+       updateWeights(Weight, ErrorSino);
 #ifdef COST_CALCULATE
       err = calculateCost(cost, Weight, ErrorSino);
       if (err < 0)
