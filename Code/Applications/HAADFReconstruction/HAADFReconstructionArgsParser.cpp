@@ -328,7 +328,7 @@ int HAADFReconstructionArgsParser::parseArguments(int argc, char** argv, HAADF_M
 	  float temp;
 	  std::cout<<"Tilts File :"<<path<<std::endl;
 	  //Code to read in a text file into the tilts vector by converting to floats                                        
-	  std::ifstream tiltFile(path);
+	  std::ifstream tiltFile(path.c_str());
 	  if (!tiltFile)
 	    {
 	      std::cout<<"Tilt file not found"<<std::endl;
@@ -336,7 +336,7 @@ int HAADFReconstructionArgsParser::parseArguments(int argc, char** argv, HAADF_M
 	    }
 	  while (std::getline(tiltFile, line))
 	    {
-	      temp = std::stof(line);
+	      temp = std::atof(line.c_str());
 	      std::cout<<temp<<std::endl;
 	      new_tilts[count]=-temp;
 	      count++;
