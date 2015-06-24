@@ -782,16 +782,16 @@ void HAADF_ReconstructionEngine::execute()
 
     if(m_AdvParams->JOINT_ESTIMATION)
     {
-      err = jointEstimation(Weight, ErrorSino, Y_Est, cost);
+      //                    err = jointEstimation(Weight, ErrorSino, Y_Est, cost);
       if(err < 0)
       {
         break;
-      }
+	}
     } //Joint estimation endif
 
     if(m_AdvParams->NOISE_MODEL)
     {
-       updateWeights(Weight, ErrorSino);
+      /*         updateWeights(Weight, ErrorSino);
 #ifdef COST_CALCULATE
       err = calculateCost(cost, Weight, ErrorSino);
       if (err < 0)
@@ -814,10 +814,8 @@ void HAADF_ReconstructionEngine::execute()
         //&& I_kRatio < STOPPING_THRESHOLD_I_k && Delta_kRatio < STOPPING_THRESHOLD_Delta_k)
         std::cout << "Exiting the code because status =0" << std::endl;
         break;
-      }
+	}*/ 
     } //Noise Model
-
-
 
     if(m_AdvParams->ESTIMATE_PRIOR)
     {
