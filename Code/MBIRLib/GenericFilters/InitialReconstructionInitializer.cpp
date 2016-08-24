@@ -74,17 +74,21 @@ Real_t InitialReconstructionInitializer::absMaxArray(std::vector<Real_t>& Array)
 void InitialReconstructionInitializer::initializeData()
 {
   GeometryPtr geometry = getGeometry();
-
+  Real_t random_var;
   TomoInputsPtr input = getTomoInputs();
+
+  //  srand (time(NULL));
+
   for (uint16_t z = 0; z < geometry->N_z; z++)
   {
     for (uint16_t x = 0; x < geometry->N_x; x++)
     {
       for (uint16_t y = 0; y < geometry->N_y; y++)
       {
-
+	//random_var = input->defaultInitialRecon*(double(rand()%1000)/1000);
         //geometry->Object->d[k][j][i] = 0;
         geometry->Object->setValue(input->defaultInitialRecon, z, x, y);
+	//geometry->Object->setValue(random_var, z, x, y);
       }
     }
   }
@@ -115,6 +119,11 @@ void InitialReconstructionInitializer::execute()
 //However if its close to 90 this would result in a very large value - so truncate
   if(max > MBIR::Constants::k_MaxAngleStretch)
   { max = MBIR::Constants::k_MaxAngleStretch; }
+
+  if(max < 45)
+    { max = MBIR::Constants::k_MaxAngleStretch; 
+      std::cout<<"Extending the stretch factor"<<std::endl;
+    } //If angle is too small this can result in issues with the extension
 
   // Convert Max to radians
   max = max * M_PI / 180.0;
