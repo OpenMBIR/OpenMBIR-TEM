@@ -1,8 +1,8 @@
-# OpenMBIR #
+# OpenMBIR-TEM #
 
 ## Introduction ##
 
-OpenMBIR is an open source project that develops model-based imaging algorithms for various applications. Model-based approaches to imaging combine the physics of data formation, the noise characteristics of the sensors and a probabilistic model for the object to formulate the image reconstruction problem. In several applications MBIR translates to minimizing a very high-dimensional cost-function which requires efficient algorithms. 
+OpenMBIR-TEM is an open source project that develops model-based imaging algorithms for electron tomography. Model-based approaches to imaging combine the physics of data formation, the noise characteristics of the sensors and a probabilistic model for the object to formulate the image reconstruction problem. In several applications MBIR translates to minimizing a very high-dimensional cost-function which requires efficient algorithms. 
 
 This package contains source codes to reconstruct STEM HAADF and BrightField tomographic data using the Model Based Iterative Reconstruction Method. Newer versions now available will also reconstruct tomography data stored in the [MRC](http://bio3d.colorado.edu/imod/doc/mrc_format.txt) file format. A number of output files are written including a new MRC file that is a regular grid of stacked data instead of a tilt series, a Uniform Coordinate file for ParaView in the form of a vtk file and also an Aviso .am file of Uniform Coordinate type. More information about the MBIR algorithm can be found at [OpenMBIR.org](http://www.openmbir.org)
 
